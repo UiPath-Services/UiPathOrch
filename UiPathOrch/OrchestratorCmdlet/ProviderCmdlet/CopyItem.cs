@@ -1513,31 +1513,39 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             return false;
         }
 
-        try
+        // Reproduce the full source link graph: link newFolder to *every* dst
+        // folder that already has the asset, not just the first one found.
+        // The same shared asset has the same Id when seen from any of its link
+        // targets, so the seenIds dedup avoids redundant ShareAssetsToFolders
+        // calls when the dst already has the asset linked across multiple
+        // folders. Per-iteration try/catch lets one folder's failure not block
+        // the others; we return true if at least one link was established so
+        // the caller skips the duplicate-creation path for newFolder.
+        bool linked = false;
+        var seenIds = new HashSet<Int64>();
+        foreach (var dstLinkFolder in dstLinkFolders)
         {
-            foreach (var dstLinkFolder in dstLinkFolders)
+            try
             {
                 var assets = dstDrive.Assets.Get(dstLinkFolder);
                 var dstAsset = assets.FirstOrDefault(a => string.Compare(a.Name, asset.Name, StringComparison.OrdinalIgnoreCase) == 0);
-                if (dstAsset is null)
-                {
-                    continue;
-                }
-                //_this.WriteWarning($"{msg}: The same link found in the target drive: {dstLinkFolder.GetPSPath()}. The contents of this asset won't be copied.");
+                if (dstAsset is null) continue;
+                if (!seenIds.Add(dstAsset.Id ?? 0)) continue;
+
                 dstDrive.OrchAPISession.ShareAssetsToFolders(dstLinkFolder.Id ?? 0,
                                 new List<Int64> { dstAsset.Id ?? 0 },
                                 new List<Int64> { newFolder.Id ?? 0 },
                                 new List<Int64>());
-                return true;
+                linked = true;
+            }
+            catch (Exception ex)
+            {
+                string target = $"{dstLinkFolder.GetPSPath()} → {newFolder.GetPSPath()}";
+                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "LinkAssetError", ErrorCategory.InvalidOperation, target));
+                // continue — one folder's failure shouldn't block the others
             }
         }
-        catch (Exception ex)
-        {
-            string target = newFolder.GetPSPath();
-            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "LinkAssetError", ErrorCategory.InvalidOperation, target));
-            return false;
-        }
-        return false;
+        return linked;
     }
 
     internal static void CopyAssets(IWritableHost _this,
@@ -1776,31 +1784,34 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             return false;
         }
 
-        try
+        // Reproduce the full source link graph: link newFolder to *every* dst
+        // folder that already has the queue, not just the first one found.
+        // See LinkAsset for the full rationale (seenIds dedup + per-iteration
+        // try/catch + linked-tracker semantics).
+        bool linked = false;
+        var seenIds = new HashSet<Int64>();
+        foreach (var dstLinkFolder in dstLinkFolders)
         {
-            foreach (var dstLinkFolder in dstLinkFolders)
+            try
             {
                 var queues = dstDrive.Queues.Get(dstLinkFolder);
                 var dstQueue = queues.FirstOrDefault(a => string.Compare(a.Name, queue.Name, StringComparison.OrdinalIgnoreCase) == 0);
-                if (dstQueue is null)
-                {
-                    continue;
-                }
-                //_this.WriteWarning($"{msg}: The same link found in the target drive: {dstLinkFolder.GetPSPath()}. The contents of this queue won't be copied.");
+                if (dstQueue is null) continue;
+                if (!seenIds.Add(dstQueue.Id ?? 0)) continue;
+
                 dstDrive.OrchAPISession.ShareQueuesToFolders(dstLinkFolder.Id ?? 0,
                                 [dstQueue.Id ?? 0],
                                 [newFolder.Id ?? 0],
                                 []);
-                return true;
+                linked = true;
+            }
+            catch (Exception ex)
+            {
+                string target = $"{dstLinkFolder.GetPSPath()} → {newFolder.GetPSPath()}";
+                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "LinkQueueError", ErrorCategory.InvalidOperation, target));
             }
         }
-        catch (Exception ex)
-        {
-            string target = newFolder.GetPSPath();
-            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "LinkQueueError", ErrorCategory.InvalidOperation, target));
-            return false;
-        }
-        return false;
+        return linked;
     }
 
     internal static void CopyQueueItem(IWritableHost _this,
@@ -2292,30 +2303,34 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             return false;
         }
 
-        try
+        // Reproduce the full source link graph: link newFolder to *every* dst
+        // folder that already has the bucket, not just the first one found.
+        // See LinkAsset for the full rationale (seenIds dedup + per-iteration
+        // try/catch + linked-tracker semantics).
+        bool linked = false;
+        var seenIds = new HashSet<Int64>();
+        foreach (var dstLinkFolder in dstLinkFolders)
         {
-            foreach (var dstLinkFolder in dstLinkFolders)
+            try
             {
                 var buckets = dstDrive.Buckets.Get(dstLinkFolder);
                 var dstBucket = buckets.FirstOrDefault(a => string.Compare(a.Name, bucket.Name, StringComparison.OrdinalIgnoreCase) == 0);
-                if (dstBucket is null)
-                {
-                    continue;
-                }
+                if (dstBucket is null) continue;
+                if (!seenIds.Add(dstBucket.Id ?? 0)) continue;
+
                 dstDrive.OrchAPISession.ShareBucketsToFolders(dstLinkFolder.Id ?? 0,
                                 new List<Int64> { dstBucket.Id ?? 0 },
                                 new List<Int64> { newFolder.Id ?? 0 },
                                 new List<Int64>());
-                return true;
+                linked = true;
+            }
+            catch (Exception ex)
+            {
+                string target = $"{dstLinkFolder.GetPSPath()} → {newFolder.GetPSPath()}";
+                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "LinkBucketError", ErrorCategory.InvalidOperation, target));
             }
         }
-        catch (Exception ex)
-        {
-            string target = newFolder.GetPSPath();
-            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "LinkBucketError", ErrorCategory.InvalidOperation, target));
-            return false;
-        }
-        return false;
+        return linked;
     }
 
     internal static void CopyBuckets(IWritableHost _this,
