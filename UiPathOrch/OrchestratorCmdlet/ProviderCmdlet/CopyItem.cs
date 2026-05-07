@@ -3091,10 +3091,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     {
                         WriteWarning($"Subfolders of \"{srcFolder.GetPSPath()}\" cannot be copied into a personal workspace. Skipping {subfolders.Count} subfolder(s).");
                     }
-                    else foreach (var subfolder in subfolders)
+                    else
                     {
-                        CopyItemRecurse(srcDrive, subfolder, dstDrive, newFolder, true, cancelToken, userMapping);
-                        cancelToken.ThrowIfCancellationRequested();
+                        foreach (var subfolder in subfolders)
+                        {
+                            CopyItemRecurse(srcDrive, subfolder, dstDrive, newFolder, true, cancelToken, userMapping);
+                            cancelToken.ThrowIfCancellationRequested();
+                        }
                     }
                 }
 
