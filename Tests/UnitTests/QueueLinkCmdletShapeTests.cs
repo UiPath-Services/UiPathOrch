@@ -44,8 +44,8 @@ public class QueueLinkCmdletShapeTests
     }
 
     [Theory]
-    [InlineData(typeof(AddQueueLinkCommand),    "Name")]
-    [InlineData(typeof(AddQueueLinkCommand),    "Link")]
+    [InlineData(typeof(AddQueueLinkCommand), "Name")]
+    [InlineData(typeof(AddQueueLinkCommand), "Link")]
     [InlineData(typeof(RemoveQueueLinkCommand), "Name")]
     [InlineData(typeof(RemoveQueueLinkCommand), "Link")]
     public void MutatingCmdlet_HasMandatoryNameAndLink(System.Type cmdletType, string paramName)
@@ -59,11 +59,11 @@ public class QueueLinkCmdletShapeTests
     }
 
     [Theory]
-    [InlineData(typeof(GetQueueLinkCommand),    "Name")]
-    [InlineData(typeof(GetQueueLinkCommand),    "Path")]
-    [InlineData(typeof(AddQueueLinkCommand),    "Name")]
-    [InlineData(typeof(AddQueueLinkCommand),    "Link")]
-    [InlineData(typeof(AddQueueLinkCommand),    "Path")]
+    [InlineData(typeof(GetQueueLinkCommand), "Name")]
+    [InlineData(typeof(GetQueueLinkCommand), "Path")]
+    [InlineData(typeof(AddQueueLinkCommand), "Name")]
+    [InlineData(typeof(AddQueueLinkCommand), "Link")]
+    [InlineData(typeof(AddQueueLinkCommand), "Path")]
     [InlineData(typeof(RemoveQueueLinkCommand), "Name")]
     [InlineData(typeof(RemoveQueueLinkCommand), "Link")]
     [InlineData(typeof(RemoveQueueLinkCommand), "Path")]

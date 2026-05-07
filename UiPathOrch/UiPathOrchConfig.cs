@@ -254,9 +254,9 @@ public class PSDrive
                 : "";
             IdentityUrl = ResolvedEdition switch
             {
-                OrchEdition.Cloud           => $"{uri.Scheme}://{uri.Authority}{basePath}/identity_",
+                OrchEdition.Cloud => $"{uri.Scheme}://{uri.Authority}{basePath}/identity_",
                 OrchEdition.AutomationSuite => $"{uri.Scheme}://{uri.Authority}/identity_",
-                _                           => $"{uri.Scheme}://{uri.Authority}{basePath}/identity",
+                _ => $"{uri.Scheme}://{uri.Authority}{basePath}/identity",
             };
         }
 

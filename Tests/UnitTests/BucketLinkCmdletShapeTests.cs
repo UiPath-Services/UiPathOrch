@@ -44,8 +44,8 @@ public class BucketLinkCmdletShapeTests
     }
 
     [Theory]
-    [InlineData(typeof(AddBucketLinkCommand),    "Name")]
-    [InlineData(typeof(AddBucketLinkCommand),    "Link")]
+    [InlineData(typeof(AddBucketLinkCommand), "Name")]
+    [InlineData(typeof(AddBucketLinkCommand), "Link")]
     [InlineData(typeof(RemoveBucketLinkCommand), "Name")]
     [InlineData(typeof(RemoveBucketLinkCommand), "Link")]
     public void MutatingCmdlet_HasMandatoryNameAndLink(System.Type cmdletType, string paramName)
@@ -59,11 +59,11 @@ public class BucketLinkCmdletShapeTests
     }
 
     [Theory]
-    [InlineData(typeof(GetBucketLinkCommand),    "Name")]
-    [InlineData(typeof(GetBucketLinkCommand),    "Path")]
-    [InlineData(typeof(AddBucketLinkCommand),    "Name")]
-    [InlineData(typeof(AddBucketLinkCommand),    "Link")]
-    [InlineData(typeof(AddBucketLinkCommand),    "Path")]
+    [InlineData(typeof(GetBucketLinkCommand), "Name")]
+    [InlineData(typeof(GetBucketLinkCommand), "Path")]
+    [InlineData(typeof(AddBucketLinkCommand), "Name")]
+    [InlineData(typeof(AddBucketLinkCommand), "Link")]
+    [InlineData(typeof(AddBucketLinkCommand), "Path")]
     [InlineData(typeof(RemoveBucketLinkCommand), "Name")]
     [InlineData(typeof(RemoveBucketLinkCommand), "Link")]
     [InlineData(typeof(RemoveBucketLinkCommand), "Path")]

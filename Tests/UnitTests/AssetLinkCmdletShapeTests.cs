@@ -66,11 +66,11 @@ public class AssetLinkCmdletShapeTests
     }
 
     [Theory]
-    [InlineData(typeof(GetAssetLinkCommand),    "Name")]
-    [InlineData(typeof(GetAssetLinkCommand),    "Path")]
-    [InlineData(typeof(AddAssetLinkCommand),    "Name")]
-    [InlineData(typeof(AddAssetLinkCommand),    "Link")]
-    [InlineData(typeof(AddAssetLinkCommand),    "Path")]
+    [InlineData(typeof(GetAssetLinkCommand), "Name")]
+    [InlineData(typeof(GetAssetLinkCommand), "Path")]
+    [InlineData(typeof(AddAssetLinkCommand), "Name")]
+    [InlineData(typeof(AddAssetLinkCommand), "Link")]
+    [InlineData(typeof(AddAssetLinkCommand), "Path")]
     [InlineData(typeof(RemoveAssetLinkCommand), "Name")]
     [InlineData(typeof(RemoveAssetLinkCommand), "Link")]
     [InlineData(typeof(RemoveAssetLinkCommand), "Path")]
