@@ -130,6 +130,7 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             var existingMachines = drive.Machines.Get();
             var targetMachines = existingMachines.FilterByWildcards(m => m?.Name, wpName);
 

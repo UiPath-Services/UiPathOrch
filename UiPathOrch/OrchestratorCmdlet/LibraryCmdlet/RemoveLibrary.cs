@@ -32,6 +32,7 @@ public class RemoveLibraryCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var libraries = drive.LibrariesInTenant.Get()

@@ -337,8 +337,10 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
 
         string filter = MakeFilter();
 
+        using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             //if (ParameterSetName == "Filter")
             {
                 try
@@ -346,6 +348,10 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
                     // Cmdlets that support Skip and First must not sort here;
                     // the order returned by the server must be respected.
                     WriteLog(drive, drive.GetAuditLogs(filter, skip, first));
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
                 }
                 catch (Exception ex)
                 {

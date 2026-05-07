@@ -47,10 +47,15 @@ public class UpdateWebhookCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             ICollection<Webhook>? webhooks;
             try
             {
                 webhooks = drive.Webhooks.Get();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

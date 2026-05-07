@@ -28,6 +28,7 @@ public class RemoveTmTestCaseCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var driveProject in drivesProjects)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             var (drive, project) = driveProject;
 
             try

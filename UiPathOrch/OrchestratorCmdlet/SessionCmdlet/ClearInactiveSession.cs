@@ -29,6 +29,7 @@ public class ClearInactiveSessionCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var sessions = drive.MachineSessionRuntimes.Get();

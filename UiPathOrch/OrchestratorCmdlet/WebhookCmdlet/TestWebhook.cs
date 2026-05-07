@@ -25,6 +25,7 @@ public class TestWebhookCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var webhooks = drive.Webhooks.Get();

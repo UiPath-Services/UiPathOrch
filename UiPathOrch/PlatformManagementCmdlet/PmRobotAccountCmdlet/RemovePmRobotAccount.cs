@@ -23,6 +23,7 @@ public class RemovePmRobotAccountCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var entities = drive.PmRobotAccounts.Get();

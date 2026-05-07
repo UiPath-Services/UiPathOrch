@@ -49,8 +49,10 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
             int index = 0;
             foreach (var srcRobotAccount in targetRobots.OrderBy(r => r!.displayName))
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
                 foreach (var dstDrive in dstDrives)
                 {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
                     var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
 
                     // Do nothing if source and destination are the same

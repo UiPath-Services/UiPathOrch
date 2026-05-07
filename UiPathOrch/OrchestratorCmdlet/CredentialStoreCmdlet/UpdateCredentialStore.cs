@@ -40,10 +40,15 @@ public class UpdateCredentialStoreCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             ICollection<CredentialStore>? stores;
             try
             {
                 stores = drive.CredentialStores.Get();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {

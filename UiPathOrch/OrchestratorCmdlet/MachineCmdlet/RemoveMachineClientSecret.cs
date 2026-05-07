@@ -127,10 +127,15 @@ public class RemoveMachineClientSecretCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             IEnumerable<ExtendedMachine> machines = null;
             try
             {
                 machines = drive.Machines.Get();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -154,6 +159,10 @@ public class RemoveMachineClientSecretCommand : OrchestratorPSCmdlet
                 {
                     secrets = drive.GetMachineClientSecret(m.LicenseKey);
                 }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetMachineClientSecretsError", ErrorCategory.InvalidOperation, drive));
@@ -166,6 +175,7 @@ public class RemoveMachineClientSecretCommand : OrchestratorPSCmdlet
                     .FilterByWildcards(secret_id => secret_id.Item2, wpSecretId)
                     .OrderBy(secret_id => secret_id.Item2))
                 {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
                     string target = System.IO.Path.Combine(m.GetPSPath(), secret.Item2!);
 
                     if (ShouldProcess(target, "Remove ClientSecret"))
@@ -174,6 +184,10 @@ public class RemoveMachineClientSecretCommand : OrchestratorPSCmdlet
                         {
                             drive.OrchAPISession.DeleteMachineClientSecret(secret.Item2!);
                             drive._dicMachineClientSecrets = null;
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            throw;
                         }
                         catch (Exception ex)
                         {

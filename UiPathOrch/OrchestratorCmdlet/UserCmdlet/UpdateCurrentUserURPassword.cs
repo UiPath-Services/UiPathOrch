@@ -27,6 +27,7 @@ public class UpdateUserURCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var user = drive.GetCurrentUser();

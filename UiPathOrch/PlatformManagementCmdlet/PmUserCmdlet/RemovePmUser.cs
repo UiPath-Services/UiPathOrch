@@ -29,6 +29,7 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             User? currentUser = null;
             try
             {

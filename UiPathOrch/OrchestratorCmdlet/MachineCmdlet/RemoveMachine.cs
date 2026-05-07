@@ -25,6 +25,7 @@ public class RemoveMachineCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 string targetFolder = drive.NameColonSeparator;

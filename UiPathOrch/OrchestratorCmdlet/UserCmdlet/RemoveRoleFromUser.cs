@@ -104,6 +104,7 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             List<Entities.User> users;
             try
             {
@@ -113,6 +114,10 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
                     .FilterByWildcards(u => u?.Type, wpType)
                     .OrderBy(u => u.UserName)
                     .ToList();
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
