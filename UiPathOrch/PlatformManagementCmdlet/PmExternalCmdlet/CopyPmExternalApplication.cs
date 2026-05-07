@@ -37,9 +37,11 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
             .FilterByWildcards(app => app?.name, wpName)
             .OrderBy(app => app.name))
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             string target = srcApp.GetPSPath();
             foreach (var dstDrive in dstDrives)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
                 var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
                 if (string.IsNullOrEmpty(dstPartitionGlobalId)) continue;
                 if (srcPartitionGlobalId == dstPartitionGlobalId) continue;
@@ -99,6 +101,7 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                         var srcGroups = srcDrive.PmGroups.Get();
                         foreach (var srcGroup in srcGroups)
                         {
+                            cancelHandler.Token.ThrowIfCancellationRequested();
                             try
                             {
                                 var detailedSrcGroup = srcDrive.PmGroups.Get(srcGroup.id);
@@ -123,6 +126,10 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                                 WriteWarning($"\"{dstDrive.NameColonSeparator}\": Failed to add {newApp.name} to PmGroup {srcGroup.name}. {ex.Message}");
                             }
                         }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
                     }
                     catch (Exception ex)
                     {

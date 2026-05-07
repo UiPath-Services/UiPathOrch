@@ -109,6 +109,7 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
         {
             foreach (var robotType in specifiedRobotType)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
                 var licenses = drive.GetLicenseRuntime(robotType);
 
                 foreach (var license in licenses

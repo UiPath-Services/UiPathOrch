@@ -136,6 +136,7 @@ public class RemoveAssetUserValueCommand : OrchestratorPSCmdlet
 
             foreach (var existing in assets)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
                 if (existing.UserValues is null || existing.UserValues.Count == 0) continue;
 
                 var copy = OrchCollectionExtensions.DeepCopy(existing);

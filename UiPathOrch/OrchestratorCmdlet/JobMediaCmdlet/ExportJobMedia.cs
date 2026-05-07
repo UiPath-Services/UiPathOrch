@@ -77,7 +77,10 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
+        // Materialize once — the same enumerable is iterated three times below
+        // (prefetch, count, download). EnumFolders is lazy and would re-walk
+        // its drive/folder resolution on each pass otherwise.
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth).ToList();
 
         if (Destination is null)
         {
@@ -88,19 +91,27 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
             throw new DirectoryNotFoundException($"Directory {Destination} doesn't exist.");
         }
 
+        using var cancelHandler = new ConsoleCancelHandler();
+        var token = cancelHandler.Token;
+
         #region Pre-fetch target ExecutionMedia asynchronously
-        Parallel.ForEach(drivesFolders, (driveFolder, state, index) =>
+        try
         {
-            var (drive, folder) = driveFolder;
-            try
-            {
-                drive.GetExecutionMedia(folder);
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"ExecutionMedia prefetch failed for '{folder.GetPSPath()}': {ex.Message}");
-            }
-        });
+            Parallel.ForEach(drivesFolders, new ParallelOptions { CancellationToken = token },
+                (driveFolder, state, index) =>
+                {
+                    var (drive, folder) = driveFolder;
+                    try
+                    {
+                        drive.GetExecutionMedia(folder);
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine($"ExecutionMedia prefetch failed for '{folder.GetPSPath()}': {ex.Message}");
+                    }
+                });
+        }
+        catch (OperationCanceledException) { throw; }
         #endregion
 
         #region Count the total number of files to download
@@ -139,6 +150,13 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
         int index = 0;
         foreach (var (drive, folder) in drivesFolders)
         {
+            // Throw rather than swallow the cancel — OperationCanceledException
+            // propagates to PowerShell which surfaces the standard "Operation
+            // was canceled" message. In-flight DownloadMediaByJobId completes
+            // (no token plumbed through OrchAPISession), but no further
+            // downloads start.
+            token.ThrowIfCancellationRequested();
+
             string path = folder.GetPSPath();
 
             if (drive._dicJobsHavingExecutionMedia is null)
@@ -170,6 +188,8 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
 
             foreach (var media in mediasToBeSaved!)
             {
+                token.ThrowIfCancellationRequested();
+
                 string target = path + System.IO.Path.DirectorySeparatorChar + media.JobId;
 
                 if (ShouldProcess(target, "Export JobMedia"))

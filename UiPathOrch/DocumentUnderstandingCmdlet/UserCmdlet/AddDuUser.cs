@@ -213,6 +213,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 
         foreach (var lines in _csvLines.GroupBy(line => (line.Key.Item1.drive, line.Key.type)))
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             var (drive, type) = lines.Key;
 
             Dictionary<string, PmGroupMember?>? entries = null;
@@ -270,6 +271,7 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 
             foreach (var line in lines)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
                 var project = line.Key.Item1.Item2;
                 var type = line.Key.type;
                 var name = line.Key.name;

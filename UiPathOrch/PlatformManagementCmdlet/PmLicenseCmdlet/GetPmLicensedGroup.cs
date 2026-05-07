@@ -140,6 +140,7 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
             {
                 foreach (var group in groups)
                 {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
                     try
                     {
                         var entities = drive.GetPmLicensedGroupAllocations(group);
@@ -157,6 +158,10 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
                         {
                             WriteCsvContent(writer, targetEntities);
                         }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
                     }
                     catch (Exception ex)
                     {

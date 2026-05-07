@@ -44,12 +44,17 @@ public class RemoveUserLicenseGroup : OrchestratorPSCmdlet
 
             foreach (var group in groups)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
                 if (ShouldProcess(group.GetPSPath(), "Remove PmLicensedGroup"))
                 {
                     try
                     {
                         drive.OrchAPISession.RemovePmLicensedGroup(group.id);
                         drive.PmLicensedGroups.ClearCache();
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
                     }
                     catch (Exception ex)
                     {

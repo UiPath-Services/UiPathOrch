@@ -88,10 +88,15 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
 
         foreach (var srcGroup in targetGroups.OrderBy(g => g.name))
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             PmGroup srcDetailedGroup = null;
             try
             {
                 srcDetailedGroup = srcDrive.PmGroups.Get(srcGroup.id);
+            }
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -102,6 +107,7 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
 
             foreach (var dstDrive in dstDrives)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
                 if (srcDrive.GetPartitionGlobalId() == dstDrive.GetPartitionGlobalId()) continue;
 
                 string target = $"Item: {srcGroup.GetPSPath()} Destination: {dstDrive.NameColonSeparator}";
@@ -177,6 +183,10 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
                                 newGroup = dstDrive.AddMemberToPmGroup(dstGroup.id, srcDetailedGroup.name, addingMemberIds);
                             }
                         }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
                     }
                     catch (Exception ex)
                     {

@@ -203,6 +203,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                 {
                     foreach (var id in Id)
                     {
+                        cancelHandler.Token.ThrowIfCancellationRequested();
                         string target = System.IO.Path.Combine(folder.GetPSPath(), id.ToString());
                         if (Version is null)
                         {

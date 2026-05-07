@@ -40,6 +40,7 @@ public class RemoveLibraryCommand : OrchestratorPSCmdlet
 
                 foreach (var library in libraries)
                 {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
                     try
                     {
                         var matchingVersions = drive.GetLibraryVersions(library.Id!)

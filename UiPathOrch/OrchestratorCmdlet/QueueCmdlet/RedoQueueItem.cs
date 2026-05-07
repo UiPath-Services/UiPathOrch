@@ -166,6 +166,7 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
 
         foreach (var csvLine in _csvLines)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             var (drive, folder, queue) = csvLine.Key;
             var ids = csvLine.Value.Order();
 
@@ -185,10 +186,13 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
                         retryableQueueItems[item.Id!.Value] = item;
                     }
 
-                    Thread.Sleep(600); // Wait to avoid API call rate limit
-
                     if (items.Count < 100) break;
                     skip += (ulong)items.Count;
+
+                    // Cancellable rate-limit wait — Ctrl+C bails out of the
+                    // 600 ms sleep promptly instead of always burning the
+                    // full delay.
+                    cancelHandler.Token.WaitHandle.WaitOne(600);
                 }
 
             }

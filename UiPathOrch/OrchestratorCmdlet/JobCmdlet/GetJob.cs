@@ -442,6 +442,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
                 var allJobs = isBatched ? new List<object>() : null;
                 foreach (var robotBatch in robotBatches)
                 {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
                     string filter = MakeFilter(drive, folder, robotBatch);
                     if (filter == "null") continue;
                     try
@@ -455,13 +456,18 @@ public class GetJobCommand : OrchestratorPSCmdlet
                         else
                             WriteObject(jobs, true);
                     }
+                    catch (OperationCanceledException)
+                    {
+                        throw;
+                    }
                     catch (Exception ex)
                     {
                         string target = folder.GetPSPath();
                         var errorRecord = new ErrorRecord(new OrchException(target, ex), "GetJobError", ErrorCategory.InvalidOperation, target);
                         WriteError(errorRecord);
                     }
-                    Thread.Sleep(600); // Wait to avoid API call rate limit
+                    // Cancellable rate-limit wait — Ctrl+C bails promptly.
+                    cancelHandler.Token.WaitHandle.WaitOne(600);
                 }
                 if (allJobs is not null)
                 {
@@ -488,13 +494,18 @@ public class GetJobCommand : OrchestratorPSCmdlet
                         WriteObject(job);
                     }
                 }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     string target = System.IO.Path.Combine(folder.GetPSPath(), jobId.ToString());
                     var errorRecord = new ErrorRecord(new OrchException(target, ex), "GetJobError", ErrorCategory.InvalidOperation, target);
                     WriteError(errorRecord);
                 }
-                Thread.Sleep(600); // Wait to avoid API call rate limit
+                // Cancellable rate-limit wait — Ctrl+C bails promptly.
+                cancelHandler.Token.WaitHandle.WaitOne(600);
             }
         }
     }

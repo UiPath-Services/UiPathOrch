@@ -76,8 +76,13 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
 
         // Preserve the specified parameters.
         // Expand drives, groups, and users.
+        // ProcessRecord makes per-group API calls (PmGroups.Get(id)) during
+        // collection, so it needs its own cancel handler — EndProcessing's
+        // handler only covers the execution phase.
+        using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            cancelHandler.Token.ThrowIfCancellationRequested();
             var targetGroups = drive.PmGroups.Get()
                 .Where(g => g is not null)
                 .FilterByWildcards(g => g!.name ?? "", wpGroupName);
@@ -90,6 +95,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
 
             foreach (var group in targetGroups)
             {
+                cancelHandler.Token.ThrowIfCancellationRequested();
                 // Get the members of this group
                 var detailedGroup = drive.PmGroups.Get(group?.id);
 

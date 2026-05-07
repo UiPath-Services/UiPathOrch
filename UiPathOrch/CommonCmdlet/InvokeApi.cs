@@ -156,19 +156,6 @@ public class InvokeOrchApiCommand : OrchestratorPSCmdlet
             request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
         }
 
-        if (Headers is not null)
-        {
-            foreach (DictionaryEntry kv in Headers)
-            {
-                if (kv.Key is null) continue;
-                string key = kv.Key.ToString()!;
-                // Drive owns auth — don't let callers override it.
-                if (string.Equals(key, "Authorization", StringComparison.OrdinalIgnoreCase)) continue;
-                string value = kv.Value?.ToString() ?? "";
-                request.Headers.TryAddWithoutValidation(key, value);
-            }
-        }
-
         if (InFile is not null)
         {
             string resolved = SessionState.Path.GetUnresolvedProviderPathFromPSPath(InFile);
@@ -181,6 +168,42 @@ public class InvokeOrchApiCommand : OrchestratorPSCmdlet
         else if (Body is not null)
         {
             request.Content = BuildBodyContent(Body, ContentType);
+        }
+
+        // Apply -Headers AFTER content is built so HTTP content headers
+        // (Content-Type, Content-Disposition, etc.) can be routed to
+        // request.Content.Headers. Adding them to request.Headers silently
+        // fails (HttpClient rejects content headers there with TryAddWithout-
+        // Validation reporting false), which used to make caller-supplied
+        // Content-Type effectively a no-op.
+        if (Headers is not null)
+        {
+            foreach (DictionaryEntry kv in Headers)
+            {
+                if (kv.Key is null) continue;
+                string key = kv.Key.ToString()!;
+                // Drive owns auth — don't let callers override it.
+                if (string.Equals(key, "Authorization", StringComparison.OrdinalIgnoreCase)) continue;
+                string value = kv.Value?.ToString() ?? "";
+
+                if (ContentHeaderNames.Contains(key))
+                {
+                    if (request.Content is not null)
+                    {
+                        // Remove any default already set (e.g., Content-Type
+                        // from -ContentType / BuildBodyContent) so the caller
+                        // value wins — explicit -Headers overrides the default.
+                        request.Content.Headers.Remove(key);
+                        request.Content.Headers.TryAddWithoutValidation(key, value);
+                    }
+                    // else: no body → silently ignore. GET/HEAD with content
+                    // headers in -Headers has no meaningful target.
+                }
+                else
+                {
+                    request.Headers.TryAddWithoutValidation(key, value);
+                }
+            }
         }
 
         // ShouldProcess for non-idempotent / non-read methods. Bypassable via -Confirm:$false.
@@ -313,6 +336,17 @@ public class InvokeOrchApiCommand : OrchestratorPSCmdlet
     }
 
     private const int ErrorBodyMaxBytes = 8192;
+
+    // HTTP entity-body headers — these belong on HttpContent.Headers, not
+    // HttpRequestMessage.Headers. List per RFC 7231 §3.1 (representation
+    // metadata) plus a couple of payload-related headers HttpClient routes
+    // the same way (Content-Disposition, Last-Modified, Expires, Allow).
+    private static readonly HashSet<string> ContentHeaderNames = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Content-Type", "Content-Length", "Content-Encoding", "Content-Language",
+        "Content-Location", "Content-MD5", "Content-Range", "Content-Disposition",
+        "Last-Modified", "Expires", "Allow",
+    };
 
     private static string ReadBodyCapped(HttpContent? content, int maxBytes)
     {
