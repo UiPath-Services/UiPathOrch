@@ -57,6 +57,14 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
             df => df.folder,
             df => df.drive.Buckets.Get(df.folder));
 
+        // Dedup buckets across the recursive folder walk: a bucket linked to
+        // multiple folders shows up in each enumerated folder with the same Id,
+        // and without this the -Recurse path would write the same items once per
+        // folder the bucket is accessible from (the "Celine repro"). First-seen
+        // wins, so a bucket's items land under the relative path of whichever
+        // folder OrchThreadPool returns first.
+        var seenBucketIds = new HashSet<Int64>();
+
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)
         {
@@ -71,6 +79,8 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
                     .FilterByWildcards(e => e?.Name, wpName)
                     .OrderBy(e => e.Name))
                 {
+                    if (!seenBucketIds.Add(bucket.Id ?? 0)) continue;
+
                     // Get the relative path from Path
                     var eachDestination = System.IO.Path.Combine(Destination, folder.GetRelativePath(srcRootFolder), bucket.Name!.MakeValidFolderName());
 
