@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.1.0'
+ModuleVersion = '1.2.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -453,25 +453,22 @@ PrivateData = @{
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
 ## New Features
-- **Multi-tenant Automation Suite support.** UiPathOrch now correctly assembles `/{org}/{tenant}/orchestrator_/...` URLs for self-hosted Automation Suite deployments, where the gateway routes by service segment and rejects paths that don't begin with `/orchestrator_/`. Earlier releases mis-classified AS as on-premises, stripped the tenant out of the URL into the `X-UIPATH-TenantName` header, and produced broken paths like `/{org}/odata/...` — all data cmdlets returned HTML and tripped the JSON deserializer.
-- **`Edition` config field.** `UiPathOrchConfig.json` accepts an optional `Edition` per PSDrive: `Cloud`, `AutomationSuite`, or `OnPremises`. If omitted, the edition is auto-detected from the `Root` URL (`*.uipath.com` → Cloud, 2-segment path → AutomationSuite, otherwise OnPremises). `Get-OrchPSDrive` now exposes the resolved value so users can verify the auto-detection.
-- **Multi-tenant AS sample (`Orch7`) in the bundled config template** for `https://YOUR_AS_HOST/YOUR_ORGANIZATION/YOUR_TENANT` URLs. The existing `Orch5` sample is now scoped to single-tenant Orchestrator on Azure App Service (which has always worked via the on-prem code path).
-- **`Update-OrchWebhook` / `Update-OrchBucket` / `Update-OrchCredentialStore`** — partial-update cmdlets that close post-migration gaps. `Copy-Orch*` cannot carry write-only fields (Webhook `Secret`, Bucket `Password`, CredentialStore `AdditionalConfiguration`) because the API never returns them; the new `Update-Orch*` cmdlets let you re-supply just those fields after migration.
-
-## Changed
-- **`Copy-OrchWebhook` nulls the masked `Secret` on copy** instead of forwarding the masked literal (which would silently break signature verification on the destination). A warning points at `Update-OrchWebhook` for re-supplying the real secret. `Copy-OrchBucket` / `Copy-OrchCredentialStore` warnings now name the corresponding `Update-Orch*` cmdlet.
-
-## Migration / Compatibility Notes
-- Existing Cloud (`*.uipath.com`) and standalone on-premises Orchestrator users: no behavioural change.
-- Existing on-premises Orchestrator behind a multi-level reverse proxy that produces a 2-segment Root path (rare): the new heuristic mis-classifies as AS. Set `"Edition": "OnPremises"` explicitly to restore previous behaviour.
+- **Asset / Bucket / Queue link management cmdlets.** Nine new cmdlets — `Get-OrchAssetLink`, `Add-OrchAssetLink`, `Remove-OrchAssetLink`, plus the same trio for `OrchBucketLink` and `OrchQueueLink` — manage UiPath's folder-link feature, which lets a single asset / bucket / queue be shared across multiple folders. The `Get-Orch*Link` cmdlets stream output in folder order via a per-folder lookahead window so consumer drain overlaps producer-side API calls.
 
 ## Bug Fixes
-- `Invoke-OrchApi` with a relative path (default base = Orchestrator) now resolves through the edition-aware base URL, so `-ApiPath /odata/Folders` works against AS without the user having to spell out `/orchestrator_/odata/Folders`.
-- `Identity` / `Token` endpoint resolution: AS deployments now correctly build `/identity_/connect/token` and `/identity_/connect/authorize` (matching the Cloud convention) instead of the on-prem `/identity` paths.
+- **Ctrl+C now interrupts long-running operations consistently** across more than 150 sites. Cmdlets that iterate over folders, drives, or per-item collections now check the cancel token between iterations. Previously many cmdlets only bailed at coarse boundaries — `Remove-OrchLibrary` against hundreds of versions, or `Update-PmUser` across many drives, would run to completion after Ctrl+C.
+- **Cancellable rate-limit waits**: `Get-OrchJob`, `Redo-OrchQueueItem`, and `Get-OrchQueueItem` no longer block Ctrl+C for the full 600 ms pacing delay between paged API calls.
+- **`Invoke-OrchApi -Headers` content-type routing**: caller-supplied `Content-Type` and other content headers used to be silently dropped (added to `HttpRequestMessage.Headers`, which `HttpClient` rejects). They now route to `HttpContent.Headers` correctly. **Behaviour change**: explicit `-Headers` `Content-Type` overrides `-ContentType`.
+- `Export-OrchJobMedia` no longer walks its drive/folder enumerable three times (lazy enumerable was iterated for prefetch / count / download).
+- `Get-OrchAssetLink` / `Get-OrchBucketLink` / `Get-OrchQueueLink` Ctrl+C bails the consumer drain promptly while in-flight API calls run to completion (cache stays atomic per folder).
+
+## Removed
+- Four unregistered experimental cmdlet files (`GetMaintenanceSetting.cs`, `GetPmUserProfile.cs`, `GetDirectoryScope.cs`, `UpdatePmUserSetting.cs`). Each was left in the tree with a comment stating it did not actually work; none were in the psd1 export list. Internal `OrchAPISession` helpers remain for future reuse.
+- `Test.cs` (`Get-OrchTest`) debug-only experimental cmdlet.
 
 ## Internal
-- New regression test (`BaseUrlRoutingTests`) scans the source for code composing Orchestrator API URLs from the raw tenant base instead of the Orchestrator-service base, so the AS routing bug cannot quietly come back.
-- New regression test (`EmbeddedConfigTemplateTests`) parses every per-locale `UiPathOrchConfig.json` template and deserializes into `UiPathOrchConfig`, catching JSONC syntax errors and shape mismatches at CI time instead of at first Mount on a user's machine.
+- New `IEnumerable<T>.WithCancellation(CancellationToken)` and `CancellationToken.Sleep(int ms)` extension methods replace ~150 sites of cancel-token boilerplate. Net -211 lines of cmdlet source.
+- `catch (Exception)` blocks that wrapped per-iteration API calls now re-throw `OperationCanceledException` first, so cancellation is no longer silently turned into a `WriteError` record.
 '@
 
         # Prerelease string of this module

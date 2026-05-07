@@ -1,3 +1,33 @@
+# Version: 1.2.0
+
+Two themes: nine new **link-management cmdlets** for shared assets, buckets, and queues — the folder-link feature that the Orchestrator UI surfaces but UiPathOrch had no way to inspect or manage from PowerShell — plus **comprehensive Ctrl+C support** across the cmdlet surface.
+
+## New
+
+- **Asset link trio**: `Get-OrchAssetLink` / `Add-OrchAssetLink` / `Remove-OrchAssetLink` for managing folder-shared assets. Enumerates assets shared across folders, links an asset to additional folders, or unlinks. The `AssetLink` entity surfaces `Path / Name / Link / AssetId / FolderId / LinkFolderId` for pipeline composition. `Get-OrchAssetLink` streams output in folder/asset order with a per-folder lookahead window so consumer drain overlaps producer-side API calls.
+- **Bucket link trio**: `Get-OrchBucketLink` / `Add-OrchBucketLink` / `Remove-OrchBucketLink` mirroring the asset-link cmdlets.
+- **Queue link trio**: `Get-OrchQueueLink` / `Add-OrchQueueLink` / `Remove-OrchQueueLink` mirroring the asset-link cmdlets.
+
+## Bug Fixes
+
+- **Ctrl+C now interrupts long-running operations consistently** across more than 150 sites. Cmdlets that iterate over folders, drives, or per-item collections now check the cancel token between iterations. Previously many cmdlets only bailed at coarse boundaries — a `Remove-OrchLibrary` against hundreds of versions, or an `Update-PmUser` across many drives, would run to completion even after Ctrl+C.
+- **Cancellable rate-limit waits**: `Get-OrchJob`, `Redo-OrchQueueItem`, and `Get-OrchQueueItem` no longer block Ctrl+C for the full 600 ms pacing delay between paged API calls.
+- **`Invoke-OrchApi -Headers` content-type routing**: caller-supplied `Content-Type` and other content headers used to be silently dropped (added to `HttpRequestMessage.Headers`, which `HttpClient` rejects). They now route to `HttpContent.Headers` correctly. **Behaviour change**: explicit `-Headers` `Content-Type` overrides `-ContentType`.
+- `Export-OrchJobMedia` no longer walks its drive/folder enumerable three times (lazy enumerable was iterated for prefetch / count / download).
+- `Get-OrchAssetLink` / `Get-OrchBucketLink` / `Get-OrchQueueLink` Ctrl+C now bails the consumer drain promptly while in-flight API calls run to completion (cache stays atomic per folder).
+
+## Removed
+
+- Four unregistered experimental cmdlet files (`GetMaintenanceSetting.cs`, `GetPmUserProfile.cs`, `GetDirectoryScope.cs`, `UpdatePmUserSetting.cs`). Each was left in the tree with a comment stating it did not actually work; none were in the psd1 export list. Internal `OrchAPISession` helpers remain available for future reuse.
+- `Test.cs` (`Get-OrchTest`) debug-only experimental cmdlet.
+
+## Internal
+
+- New `IEnumerable<T>.WithCancellation(CancellationToken)` and `CancellationToken.Sleep(int ms)` extension methods on the cancel token. The first replaces the `foreach (var x in xs) { token.ThrowIfCancellationRequested(); ... }` boilerplate that had accumulated to ~150 sites; the second is a cancellable drop-in for `Thread.Sleep` for rate-limit pacing. Net −211 lines of cmdlet source.
+- `catch (Exception)` blocks that wrapped per-iteration API calls now re-throw `OperationCanceledException` first, so cancellation is no longer silently turned into a `WriteError` record.
+
+---
+
 # Version: 1.1.0
 
 The headline change is **multi-tenant Automation Suite support** — earlier releases mis-classified AS as on-premises, stripped the tenant out of the URL, and broke every data cmdlet against AS with `'<' is an invalid start of a value` (an HTML response misparsed as JSON).
