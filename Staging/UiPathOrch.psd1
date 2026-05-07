@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.2.0'
+ModuleVersion = '1.2.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -452,23 +452,16 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-## New Features
-- **Asset / Bucket / Queue link management cmdlets.** Nine new cmdlets — `Get-OrchAssetLink`, `Add-OrchAssetLink`, `Remove-OrchAssetLink`, plus the same trio for `OrchBucketLink` and `OrchQueueLink` — manage UiPath's folder-link feature, which lets a single asset / bucket / queue be shared across multiple folders. The `Get-Orch*Link` cmdlets stream output in folder order via a per-folder lookahead window so consumer drain overlaps producer-side API calls.
+Patch release: three Copy-Item / Export-OrchBucketItem bugs that surfaced once users started exercising the asset / queue / bucket link feature shipped in 1.2.0.
 
 ## Bug Fixes
-- **Ctrl+C now interrupts long-running operations consistently** across more than 150 sites. Cmdlets that iterate over folders, drives, or per-item collections now check the cancel token between iterations. Previously many cmdlets only bailed at coarse boundaries — `Remove-OrchLibrary` against hundreds of versions, or `Update-PmUser` across many drives, would run to completion after Ctrl+C.
-- **Cancellable rate-limit waits**: `Get-OrchJob`, `Redo-OrchQueueItem`, and `Get-OrchQueueItem` no longer block Ctrl+C for the full 600 ms pacing delay between paged API calls.
-- **`Invoke-OrchApi -Headers` content-type routing**: caller-supplied `Content-Type` and other content headers used to be silently dropped (added to `HttpRequestMessage.Headers`, which `HttpClient` rejects). They now route to `HttpContent.Headers` correctly. **Behaviour change**: explicit `-Headers` `Content-Type` overrides `-ContentType`.
-- `Export-OrchJobMedia` no longer walks its drive/folder enumerable three times (lazy enumerable was iterated for prefetch / count / download).
-- `Get-OrchAssetLink` / `Get-OrchBucketLink` / `Get-OrchQueueLink` Ctrl+C bails the consumer drain promptly while in-flight API calls run to completion (cache stays atomic per folder).
-
-## Removed
-- Four unregistered experimental cmdlet files (`GetMaintenanceSetting.cs`, `GetPmUserProfile.cs`, `GetDirectoryScope.cs`, `UpdatePmUserSetting.cs`). Each was left in the tree with a comment stating it did not actually work; none were in the psd1 export list. Internal `OrchAPISession` helpers remain for future reuse.
-- `Test.cs` (`Get-OrchTest`) debug-only experimental cmdlet.
+- **`Copy-Item` reproduces every link relationship.** When a multi-link entity (asset / queue / bucket) had to be re-linked in the destination, only the FIRST destination folder containing it was linked — sibling dst folders that should have shared the entity were skipped. `LinkAsset` / `LinkBucket` / `LinkQueue` now iterate every dst folder that contains a matching entity (with Id-based dedup so shared entities make exactly one API call), reproducing the source link graph faithfully.
+- **`Copy-Item` no longer shares the SOURCE entity into destination folders on same-drive copies.** `FindDstFolders` matched src folders to dst folders by full FQN equality against the global folder pool, so on a same-drive copy the src folders matched only themselves and `LinkAsset` ended up adding the new folder to the SOURCE entity's share list — the dst became a link to the src rather than a true copy. `FindDstFolders` now rebases on the (srcAnchor, dstAnchor) pair so same-drive copies produce cleanly-separated dst entities linked together within the dst tree only.
+- **`Export-OrchBucketItem -Recurse` no longer downloads linked bucket items multiple times.** A bucket linked to N folders used to produce N copies of every file under `-Destination` (3 items × 3 folders = 9 file writes for what should have been 3 unique files). Now dedupes by bucket Id across the recursive walk; first-seen wins.
 
 ## Internal
-- New `IEnumerable<T>.WithCancellation(CancellationToken)` and `CancellationToken.Sleep(int ms)` extension methods replace ~150 sites of cancel-token boilerplate. Net -211 lines of cmdlet source.
-- `catch (Exception)` blocks that wrapped per-iteration API calls now re-throw `OperationCanceledException` first, so cancellation is no longer silently turned into a `WriteError` record.
+- `release.yml` now runs `dotnet format --verify-no-changes` and `dotnet test` before `Publish-Module`, mirroring CI. The 1.2.0 release exposed that the Release workflow could publish to PSGallery before CI reported failure — the two ran in parallel and Release usually finished first.
+- 3-link fixture entities (`asset-shared3` / `bucket-shared3` / `queue-shared3`) added to `TestData/Fixture`, plus a new Pester `Copy-Item link reproduction` Describe verifying the three Copy-Item / Export bugs above end-to-end against a real tenant.
 '@
 
         # Prerelease string of this module

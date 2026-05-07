@@ -6,6 +6,63 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-05-08
+
+Patch release that addresses three Copy-Item / Export-OrchBucketItem
+bugs that surfaced once users started exercising the asset / queue /
+bucket link feature shipped in 1.2.0.
+
+### Fixed
+
+- **`Copy-Item` reproduces every link relationship.** When a multi-link
+  entity (asset / queue / bucket) had to be re-linked in the
+  destination, only the FIRST destination folder containing it was
+  linked — sibling dst folders that should have shared the entity
+  were skipped. `LinkAsset` / `LinkBucket` / `LinkQueue` now iterate
+  every dst folder that contains a matching entity (deduplicating by
+  entity Id so shared entities make exactly one API call), reproducing
+  the source link graph faithfully. Per-iteration error handling lets
+  one folder's failure not abort the others.
+- **`Copy-Item` no longer shares the SOURCE entity into destination
+  folders on same-drive copies.** `FindDstFolders` matched src folders
+  to dst folders by full FQN equality against the global folder pool,
+  so on a same-drive copy (e.g. `Copy-Item Orch1:\TestFixture_Base
+  Orch1:\TestFixture_CopyDest -Recurse`) the src folders matched only
+  themselves and `LinkAsset` / `LinkBucket` / `LinkQueue` ended up
+  adding the new folder to the SOURCE entity's share list — the dst
+  became a link to the src rather than a true copy. `FindDstFolders`
+  now rebases src link folders relative to the (srcAnchor, dstAnchor)
+  pair (handling descendant / ancestor / sibling-cousin shapes) so
+  same-drive copies produce cleanly-separated dst entities linked
+  together within the dst tree only.
+- **`Export-OrchBucketItem -Recurse` no longer downloads linked bucket
+  items multiple times.** A bucket linked to N folders appeared in
+  each folder's enumeration with the same Id, and the cmdlet wrote the
+  same items into one path per folder it was accessible from
+  (the "Celine repro": 3 items × 3 folders = 9 file writes for what
+  should have been 3 unique files). Now dedupes by bucket Id across
+  the recursive walk; first-seen wins.
+
+### Internal
+
+- **`release.yml` now runs `dotnet format --verify-no-changes` and
+  `dotnet test` before `Publish-Module`.** The Release and CI
+  workflows previously fired in parallel on a release commit and ran
+  on separate runners, so Release usually finished — and shipped to
+  PSGallery — before CI reported any failure. The 1.2.0 release
+  exposed this when latent format violations on master were caught by
+  CI a few seconds after PSGallery had already accepted the publish.
+- **3-link fixture entities added to `TestData/Fixture`**
+  (`asset-shared3` / `bucket-shared3` / `queue-shared3`, each owned
+  by Production and linked to Development / QA / SubA), plus a Pester
+  `Copy-Item link reproduction` Describe in `CleanTenant.Tests.ps1`
+  that copies the fixture tree into a sibling root and asserts every
+  multi-link entity's link set is reproduced end-to-end. Catches all
+  three of the bugs above as Pester regressions.
+- Pre-existing `dotnet format` violations across `UiPathOrchConfig.cs`,
+  the link cmdlet shape tests, and one `else foreach` construct in
+  `CopyItem.cs` (where local and CI formatters disagreed) cleaned up.
+
 ## [1.2.0] - 2026-05-07
 
 Two themes: **link-management cmdlets for shared assets, buckets, and queues** —

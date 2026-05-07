@@ -1,3 +1,20 @@
+# Version: 1.2.1
+
+Patch release: three Copy-Item / Export-OrchBucketItem bugs that surfaced once users started exercising the asset / queue / bucket link feature shipped in 1.2.0.
+
+## Bug Fixes
+
+- **`Copy-Item` reproduces every link relationship.** When a multi-link entity (asset / queue / bucket) had to be re-linked in the destination, only the FIRST destination folder containing it was linked — sibling dst folders that should have shared the entity were skipped. `LinkAsset` / `LinkBucket` / `LinkQueue` now iterate every dst folder that contains a matching entity (with Id-based dedup so shared entities make exactly one API call), reproducing the source link graph faithfully.
+- **`Copy-Item` no longer shares the SOURCE entity into destination folders on same-drive copies.** `FindDstFolders` matched src folders to dst folders by full FQN equality against the global folder pool, so on a same-drive copy the src folders matched only themselves and `LinkAsset` ended up adding the new folder to the SOURCE entity's share list — the dst became a link to the src rather than a true copy. `FindDstFolders` now rebases on the (srcAnchor, dstAnchor) pair so same-drive copies produce cleanly-separated dst entities linked together within the dst tree only.
+- **`Export-OrchBucketItem -Recurse` no longer downloads linked bucket items multiple times.** A bucket linked to N folders used to produce N copies of every file under `-Destination` (3 items × 3 folders = 9 file writes for what should have been 3 unique files). Now dedupes by bucket Id across the recursive walk; first-seen wins.
+
+## Internal
+
+- `release.yml` now runs `dotnet format --verify-no-changes` and `dotnet test` before `Publish-Module`, mirroring CI. The 1.2.0 release exposed that the Release workflow could publish to PSGallery before CI reported failure — the two ran in parallel and Release usually finished first.
+- 3-link fixture entities (`asset-shared3` / `bucket-shared3` / `queue-shared3`) added to `TestData/Fixture`, plus a new Pester `Copy-Item link reproduction` Describe verifying the three Copy-Item / Export bugs above end-to-end against a real tenant.
+
+---
+
 # Version: 1.2.0
 
 Two themes: nine new **link-management cmdlets** for shared assets, buckets, and queues — the folder-link feature that the Orchestrator UI surfaces but UiPathOrch had no way to inspect or manage from PowerShell — plus **comprehensive Ctrl+C support** across the cmdlet surface.
