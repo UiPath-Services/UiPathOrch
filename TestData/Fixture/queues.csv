@@ -6,3 +6,4 @@ Orch1:\TestFixture_Base\Production,queue-orders,"Test queue (orders, SLA)",FALSE
 Orch1:\TestFixture_Base\Production\SubA,queue-suba,,FALSE,FALSE,0,FALSE,FALSE,,0,0,,,,Delete,30,,Delete,180,,
 Orch1:\TestFixture_Base\Production\SubB,queue-subb,,FALSE,FALSE,0,FALSE,FALSE,,0,0,,,,Delete,30,,Delete,180,,
 Orch1:\TestFixture_Base\QA,queue-qa,QA queue,FALSE,FALSE,0,FALSE,FALSE,,0,0,,,,Delete,30,,Delete,180,,
+Orch1:\TestFixture_Base\Production,queue-shared3,Multi-link queue for Copy-Item link reproduction test,FALSE,FALSE,0,FALSE,FALSE,,0,0,,,,Delete,30,,Delete,180,,

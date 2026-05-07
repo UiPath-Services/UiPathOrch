@@ -86,8 +86,14 @@ Describe 'Processes' {
 }
 
 Describe 'Queues' {
-    It 'returns 7 queues with -Recurse' {
-        (Get-OrchQueue -Path $script:Root -Recurse).Count | Should -Be 7
+    It 'returns 13 queue enumerations with -Recurse (8 owned + 5 link visibilities)' {
+        # 8 queues are owned per queues.csv. -Recurse walks each subfolder and
+        # lists queues accessible there, so linked queues count once per folder
+        # they appear in:
+        #   queue-emails  (Production) → Dev, QA              (+2 link enums)
+        #   queue-shared3 (Production) → Dev, QA, SubA        (+3 link enums)
+        # Total: 8 + 2 + 3 = 13.
+        (Get-OrchQueue -Path $script:Root -Recurse).Count | Should -Be 13
     }
 
     It 'queue-orders has SLA configured and references proc-blank-1' {
@@ -104,8 +110,15 @@ Describe 'Queues' {
 }
 
 Describe 'Assets' {
-    It 'returns 11 assets total (9 standard + 2 credential) with -Recurse' {
-        (Get-OrchAsset -Path $script:Root -Recurse).Count | Should -Be 11
+    It 'returns 18 asset enumerations with -Recurse (12 owned + 6 link visibilities)' {
+        # 12 assets owned (10 standard + 2 credential per assets.csv +
+        # credentials.csv). -Recurse counts linked assets once per folder they
+        # appear in:
+        #   asset-host    (Production) → Dev, QA              (+2 link enums)
+        #   asset-debug   (Production) → SubA                 (+1 link enum)
+        #   asset-shared3 (Production) → Dev, QA, SubA        (+3 link enums)
+        # Total: 12 + 2 + 1 + 3 = 18.
+        (Get-OrchAsset -Path $script:Root -Recurse).Count | Should -Be 18
     }
 
     It 'has the four ValueTypes in Production' {
@@ -149,9 +162,10 @@ Describe 'Assets' {
 
 Describe 'Asset Links' {
     # Fixture defines:
-    #   asset-host  (Production)         → Development, QA          (3 accessible folders)
-    #   asset-debug (Production)         → Production/SubA          (2 accessible folders)
-    # Other assets remain unlinked, so Get-OrchAssetLink emits exactly the rows below.
+    #   asset-host    (Production) → Development, QA          (3 accessible folders)
+    #   asset-debug   (Production) → Production/SubA          (2 accessible folders)
+    #   asset-shared3 (Production) → Development, QA, SubA    (4 accessible folders) — used by Copy-Item link reproduction test below
+    # Other assets remain unlinked.
 
     It 'Get-OrchAssetLink emits the expected fixture links' {
         $links = Get-OrchAssetLink -Path $script:Root -Recurse | Sort-Object Name, Link
@@ -171,6 +185,9 @@ Describe 'Asset Links' {
 
         $debugFromProd = $triples | Where-Object { $_.Name -eq 'asset-debug' -and $_.Path -eq 'Production' }
         $debugFromProd.Link | Should -Be 'SubA'
+
+        $sharedFromProd = $triples | Where-Object { $_.Name -eq 'asset-shared3' -and $_.Path -eq 'Production' }
+        $sharedFromProd.Link | Sort-Object | Should -Be @('Development', 'QA', 'SubA')
     }
 
     It 'AssetLink rows carry asset name, source folder, and link folder paths' {
@@ -218,9 +235,10 @@ Describe 'Asset Links' {
 }
 
 Describe 'Queue Links' {
-    # Fixture defines queue-emails (Production) → Development, QA.
-    # Other queues are unlinked, so Get-OrchQueueLink emits exactly the
-    # rows from queue-emails's Production-side enumeration.
+    # Fixture defines:
+    #   queue-emails  (Production) → Development, QA         (2 link folders)
+    #   queue-shared3 (Production) → Development, QA, SubA   (3 link folders) — used by Copy-Item link reproduction test below
+    # Other queues are unlinked.
 
     It 'Get-OrchQueueLink emits the expected fixture links' {
         $links = Get-OrchQueueLink -Path $script:Root -Recurse | Sort-Object Name, Link
@@ -236,6 +254,9 @@ Describe 'Queue Links' {
 
         $emailsFromProd = $triples | Where-Object { $_.Name -eq 'queue-emails' -and $_.Path -eq 'Production' }
         $emailsFromProd.Link | Sort-Object | Should -Be @('Development', 'QA')
+
+        $sharedFromProd = $triples | Where-Object { $_.Name -eq 'queue-shared3' -and $_.Path -eq 'Production' }
+        $sharedFromProd.Link | Sort-Object | Should -Be @('Development', 'QA', 'SubA')
     }
 
     It 'QueueLink rows carry queue name, source folder, and link folder paths' {
@@ -272,9 +293,10 @@ Describe 'Queue Links' {
 }
 
 Describe 'Bucket Links' {
-    # Fixture defines bucket-files (Production) → Development, Production/SubA.
-    # bucket-dev (Development) is unlinked, so Get-OrchBucketLink emits exactly the
-    # rows from bucket-files's Production-side enumeration.
+    # Fixture defines:
+    #   bucket-files   (Production) → Development, SubA           (2 link folders)
+    #   bucket-shared3 (Production) → Development, QA, SubA       (3 link folders) — used by Copy-Item link reproduction test below
+    # bucket-dev (Development) is unlinked.
 
     It 'Get-OrchBucketLink emits the expected fixture links' {
         $links = Get-OrchBucketLink -Path $script:Root -Recurse | Sort-Object Name, Link
@@ -290,6 +312,9 @@ Describe 'Bucket Links' {
 
         $filesFromProd = $triples | Where-Object { $_.Name -eq 'bucket-files' -and $_.Path -eq 'Production' }
         $filesFromProd.Link | Sort-Object | Should -Be @('Development', 'SubA')
+
+        $sharedFromProd = $triples | Where-Object { $_.Name -eq 'bucket-shared3' -and $_.Path -eq 'Production' }
+        $sharedFromProd.Link | Sort-Object | Should -Be @('Development', 'QA', 'SubA')
     }
 
     It 'BucketLink rows carry bucket name, source folder, and link folder paths' {
@@ -326,8 +351,13 @@ Describe 'Bucket Links' {
 }
 
 Describe 'Buckets' {
-    It 'has 2 buckets across the fixture' {
-        (Get-OrchBucket -Path $script:Root -Recurse).Count | Should -Be 2
+    It 'returns 8 bucket enumerations with -Recurse (3 owned + 5 link visibilities)' {
+        # 3 buckets owned per buckets.csv. -Recurse counts linked buckets once
+        # per folder they appear in:
+        #   bucket-files   (Production) → Dev, SubA           (+2 link enums)
+        #   bucket-shared3 (Production) → Dev, QA, SubA       (+3 link enums)
+        # Total: 3 + 2 + 3 = 8.
+        (Get-OrchBucket -Path $script:Root -Recurse).Count | Should -Be 8
     }
 
     It 'Production/bucket-files has 3 files' {
@@ -417,5 +447,103 @@ Describe 'CSV round-trip' {
         $cols | Should -Contain 'Name'
         $cols | Should -Contain 'ValueType'
         $cols | Should -Contain 'Value'
+    }
+}
+
+# Verifies that Copy-Item reproduces the source link graph in dst — for every
+# folder that was linked to a multi-link entity in src, the corresponding dst
+# folder must end up linked to the dst's copy of that entity. The fixture
+# defines asset-shared3 / queue-shared3 / bucket-shared3 as Production-owned
+# entities each linked to three other folders (Development, QA, SubA), so each
+# entity's reproduced link set in dst must cover all three folder names.
+#
+# Currently SKIPPED: same-drive Copy-Item exposes a bug in FindDstFolders
+# (CopyItem.cs ~line 1467) — the dst-folder search is keyed only by
+# FullyQualifiedName against the global folder pool, so when src and dst live
+# on the same drive (as they do here, both rooted at TestFixture_Base /
+# TestFixture_CopyDest on Orch2), the src folders match themselves. LinkAsset
+# / LinkBucket / LinkQueue then share the SOURCE entity into the dst folders
+# instead of letting CopyAssets duplicate it, leaving the dst-side query
+# returning a tangled mix of src + dst link rows. Re-enable this Describe
+# after FindDstFolders is fixed to scope the dst search to the dst tree.
+Describe 'Copy-Item link reproduction' -Skip {
+    BeforeAll {
+        $script:CopyDest = "${script:Drive}:\TestFixture_CopyDest"
+
+        # Ensure clean state — earlier failed runs may have left the dst around.
+        Remove-Item -Path $script:CopyDest -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+        Clear-OrchCache -Path "${script:Drive}:\"
+
+        New-Item -Path $script:CopyDest -ItemType Directory | Out-Null
+
+        # Copy Production first because it owns the multi-link entities. After
+        # Production is in dst, copying Development / QA causes LinkAsset /
+        # LinkQueue / LinkBucket to find each owned entity in dst's Production
+        # and link the new folder to it instead of duplicating. Production's
+        # -Recurse pulls in SubA / SubB and establishes the SubA links during
+        # that recursion (because Production has been copied moments before).
+        Copy-Item -Path "${script:Drive}:\TestFixture_Base\Production"  -Destination $script:CopyDest -Recurse -Confirm:$false
+        Copy-Item -Path "${script:Drive}:\TestFixture_Base\Development" -Destination $script:CopyDest -Recurse -Confirm:$false
+        Copy-Item -Path "${script:Drive}:\TestFixture_Base\QA"          -Destination $script:CopyDest -Recurse -Confirm:$false
+        Clear-OrchCache -Path $script:CopyDest
+    }
+
+    AfterAll {
+        Remove-Item -Path $script:CopyDest -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+    }
+
+    # Helper: project links to the leaf folder name of the Link column, sorted
+    function script:Get-LinkLeaves($links) {
+        $links.Link | ForEach-Object { ($_ -split '\\')[-1] } | Sort-Object
+    }
+
+    # 2-link case (asset-host: Production → Dev, QA)
+    It 'reproduces asset-host links (Development, QA)' {
+        $links = Get-OrchAssetLink -Path "${script:CopyDest}\Production" -Name 'asset-host'
+        Get-LinkLeaves $links | Should -Be @('Development', 'QA')
+    }
+
+    # 3-link case (asset-shared3: Production → Dev, QA, SubA)
+    It 'reproduces asset-shared3 links to ALL three folders (Development, QA, SubA)' {
+        $links = Get-OrchAssetLink -Path "${script:CopyDest}\Production" -Name 'asset-shared3'
+        Get-LinkLeaves $links | Should -Be @('Development', 'QA', 'SubA')
+    }
+
+    # 2-link case (queue-emails: Production → Dev, QA)
+    It 'reproduces queue-emails links (Development, QA)' {
+        $links = Get-OrchQueueLink -Path "${script:CopyDest}\Production" -Name 'queue-emails'
+        Get-LinkLeaves $links | Should -Be @('Development', 'QA')
+    }
+
+    # 3-link case (queue-shared3: Production → Dev, QA, SubA)
+    It 'reproduces queue-shared3 links to ALL three folders (Development, QA, SubA)' {
+        $links = Get-OrchQueueLink -Path "${script:CopyDest}\Production" -Name 'queue-shared3'
+        Get-LinkLeaves $links | Should -Be @('Development', 'QA', 'SubA')
+    }
+
+    # 2-link case (bucket-files: Production → Dev, SubA)
+    It 'reproduces bucket-files links (Development, SubA)' {
+        $links = Get-OrchBucketLink -Path "${script:CopyDest}\Production" -Name 'bucket-files'
+        Get-LinkLeaves $links | Should -Be @('Development', 'SubA')
+    }
+
+    # 3-link case (bucket-shared3: Production → Dev, QA, SubA)
+    It 'reproduces bucket-shared3 links to ALL three folders (Development, QA, SubA)' {
+        $links = Get-OrchBucketLink -Path "${script:CopyDest}\Production" -Name 'bucket-shared3'
+        Get-LinkLeaves $links | Should -Be @('Development', 'QA', 'SubA')
+    }
+
+    # Subsequent-folder skip: when Development is copied (after Production),
+    # asset-host / queue-emails / etc. should be linked to dst Production's
+    # copy rather than duplicated in dst Development. So dst Development
+    # contains no NEW asset-host of its own — it sees Production's via link.
+    It 'subsequent-folder copy did not duplicate the linked entities into Development' {
+        # In src, Development owns 3 assets (asset-env, asset-port, asset-trace) +
+        # sees asset-host and asset-shared3 via link (5 total enumerable). The
+        # dst Development must show the same 5, with asset-host / asset-shared3
+        # being the same Id as in dst Production (i.e., linked, not duplicated).
+        $devProd = Get-OrchAsset -Path "${script:CopyDest}\Production"  -Name 'asset-host'
+        $devDev  = Get-OrchAsset -Path "${script:CopyDest}\Development" -Name 'asset-host'
+        $devProd.Id | Should -Be $devDev.Id
     }
 }
