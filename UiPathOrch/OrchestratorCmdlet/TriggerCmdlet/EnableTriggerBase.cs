@@ -75,10 +75,8 @@ public class EnableTriggerCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
                         ? !t.Enabled.GetValueOrDefault()
                         : t.Enabled.GetValueOrDefault())
                     .FilterByWildcards(t => t?.Name, wpName)
-                    .OrderBy(t => t.Name))
+                    .OrderBy(t => t.Name).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     if (ShouldProcess(trigger.GetPSPath(), action))
                     {
                         try

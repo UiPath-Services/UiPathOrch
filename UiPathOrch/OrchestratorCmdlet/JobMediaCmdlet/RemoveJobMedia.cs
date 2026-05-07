@@ -85,10 +85,8 @@ public class RemoveJobMediaCommand : OrchestratorPSCmdlet
             try
             {
                 string path = folder.GetPSPath();
-                foreach (var jobId in JobId!)
+                foreach (var jobId in JobId!.WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     string target = path + System.IO.Path.DirectorySeparatorChar + jobId;
                     if (ShouldProcess(target, "Remove JobMedia"))
                     {

@@ -128,16 +128,13 @@ public class UpdateMachineCommand : OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             var existingMachines = drive.Machines.Get();
             var targetMachines = existingMachines.FilterByWildcards(m => m?.Name, wpName);
 
-            foreach (var machine in targetMachines.OrderBy(m => m.Name))
+            foreach (var machine in targetMachines.OrderBy(m => m.Name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 if (machine.Scope == "AutomationCloudRobot")
                 {
                     WriteWarning($"{machine.Name}: Updating a machine with a Scope of 'AutomationCloudRobot' is not supported.");

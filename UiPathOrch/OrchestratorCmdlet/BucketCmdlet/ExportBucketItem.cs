@@ -82,10 +82,8 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
                         foreach (var file in files
                             .Where(f => !string.IsNullOrEmpty(f?.FullPath))
                             .FilterByWildcards(f => f!.FullPath, wpFullPath)
-                            .OrderBy(f => f.FullPath))
+                            .OrderBy(f => f.FullPath).WithCancellation(cancelHandler.Token))
                         {
-                            cancelHandler.Token.ThrowIfCancellationRequested();
-
                             var destinationFullPath = System.IO.Path.Combine(eachDestination, file.FullPath!.MakeValidFileName());
 
                             target = $"Item: {file.GetPSPath()} Destination: {destinationFullPath}";

@@ -21,9 +21,8 @@ public class RemovePmRobotAccountCommand : OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var entities = drive.PmRobotAccounts.Get();
@@ -32,10 +31,8 @@ public class RemovePmRobotAccountCommand : OrchestratorPSCmdlet
                 foreach (var robot in entities
                     .Where(r => r is not null)
                     .FilterByWildcards(r => r!.name!, wpName)
-                    .OrderBy(r => r!.name))
+                    .OrderBy(r => r!.name).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     string target = robot.GetPSPath();
                     if (ShouldProcess(target, "Remove PmRobotAccount"))
                     {

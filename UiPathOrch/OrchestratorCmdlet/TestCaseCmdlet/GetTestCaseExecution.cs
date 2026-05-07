@@ -147,10 +147,8 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
         }
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
+        foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             try
             {
                 // Resolve Id from TestSetExecutionName

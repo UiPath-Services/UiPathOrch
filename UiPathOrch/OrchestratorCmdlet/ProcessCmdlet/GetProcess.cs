@@ -198,9 +198,8 @@ public class GetProcessCommand : OrchestratorPSCmdlet
                     release => release,
                     release => drive.GetReleaseById(folder, release.Id!.Value));
 
-                foreach (var result in results)
+                foreach (var result in results.WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
                     try
                     {
                         var releaseDetailed = result.GetResult(cancelHandler.Token);

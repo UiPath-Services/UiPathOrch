@@ -66,10 +66,8 @@ public class AddQueueLinkCommand : OrchestratorPSCmdlet
 
             foreach (var queue in queues
                 .FilterByWildcards(q => q?.Name, wpName)
-                .OrderBy(q => q.Name))
+                .OrderBy(q => q.Name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 // Batch all targets for this (folder, queue) into a single API call.
                 var toAddIds = sameDriveLinks
                     .Select(dl => dl.folder.Id ?? 0)

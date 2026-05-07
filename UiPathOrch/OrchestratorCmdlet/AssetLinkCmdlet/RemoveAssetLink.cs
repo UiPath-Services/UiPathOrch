@@ -66,10 +66,8 @@ public class RemoveAssetLinkCommand : OrchestratorPSCmdlet
 
             foreach (var asset in assets
                 .FilterByWildcards(a => a?.Name, wpName)
-                .OrderBy(a => a.Name))
+                .OrderBy(a => a.Name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 // Batch all targets for this (folder, asset) into a single API call.
                 // The ShareToFolders endpoint accepts both ToAdd and ToRemove arrays;
                 // we pass an empty ToAdd here and the targets as ToRemove.

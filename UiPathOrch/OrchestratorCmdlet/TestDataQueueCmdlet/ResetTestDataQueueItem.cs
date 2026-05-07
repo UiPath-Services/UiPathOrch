@@ -38,10 +38,8 @@ public class ResetTestDataQueueItemCommand : OrchestratorPSCmdlet
                 var queues = drive.TestDataQueues.Get(folder);
                 foreach (var queue in queues
                     .FilterByWildcards(e => e?.Name, wpName)
-                    .OrderBy(e => e.Name))
+                    .OrderBy(e => e.Name).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     if (ShouldProcess(queue.GetPSPath(), "Reset TestDataQueueItem"))
                     {
                         try

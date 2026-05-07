@@ -40,10 +40,8 @@ public class CopyFolderMachineCommand : OrchestratorPSCmdlet
 
         using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, "Copying folder machines...");
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (_, srcFolder) in srcDrivesFolders)
+        foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             try
             {
                 // No need to search for dstFolder if there are no entities to copy

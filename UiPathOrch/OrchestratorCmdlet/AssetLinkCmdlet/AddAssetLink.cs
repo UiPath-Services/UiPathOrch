@@ -66,10 +66,8 @@ public class AddAssetLinkCommand : OrchestratorPSCmdlet
 
             foreach (var asset in assets
                 .FilterByWildcards(a => a?.Name, wpName)
-                .OrderBy(a => a.Name))
+                .OrderBy(a => a.Name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 // Batch all targets for this (folder, asset) into a single API call.
                 // ShareAssetsToFolders accepts arrays for both the asset list and the
                 // ToAdd folder list, so 1 asset × N targets is one round-trip.

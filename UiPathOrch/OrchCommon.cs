@@ -167,6 +167,42 @@ public class ConsoleCancelHandler : IDisposable
     }
 }
 
+/// <summary>
+/// Sugar for the two cancel-related boilerplates that crop up in nearly
+/// every cmdlet that uses <see cref="ConsoleCancelHandler"/>.
+/// </summary>
+public static class CancellationExtensions
+{
+    /// <summary>
+    /// Wraps an enumerable so each iteration throws
+    /// <see cref="OperationCanceledException"/> if the token is signaled
+    /// before the next element is produced. Drop-in for the boilerplate
+    /// <c>foreach (var x in xs) { token.ThrowIfCancellationRequested(); ... }</c>:
+    /// write <c>foreach (var x in xs.WithCancellation(token)) { ... }</c>
+    /// instead. Place the call on the source the loop iterates so the body
+    /// stays uncluttered.
+    /// </summary>
+    public static IEnumerable<T> WithCancellation<T>(this IEnumerable<T> source, CancellationToken token)
+    {
+        foreach (var item in source)
+        {
+            token.ThrowIfCancellationRequested();
+            yield return item;
+        }
+    }
+
+    /// <summary>
+    /// Cancellable replacement for <see cref="Thread.Sleep(int)"/>. Blocks
+    /// for at most <paramref name="millisecondsTimeout"/> ms, returning early
+    /// if the token is signaled. Useful for rate-limit pacing between API
+    /// calls where Ctrl+C should not be blocked for the full delay.
+    /// </summary>
+    public static void Sleep(this CancellationToken token, int millisecondsTimeout)
+    {
+        token.WaitHandle.WaitOne(millisecondsTimeout);
+    }
+}
+
 public class OrchTask<TSource, TResult> : IDisposable
 {
     public ManualResetEventSlim CompletedEvent { get; }

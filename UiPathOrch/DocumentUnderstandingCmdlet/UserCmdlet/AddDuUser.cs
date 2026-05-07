@@ -211,9 +211,8 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
 
-        foreach (var lines in _csvLines.GroupBy(line => (line.Key.Item1.drive, line.Key.type)))
+        foreach (var lines in _csvLines.GroupBy(line => (line.Key.Item1.drive, line.Key.type)).WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             var (drive, type) = lines.Key;
 
             Dictionary<string, PmGroupMember?>? entries = null;
@@ -265,13 +264,11 @@ public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
         HashSet<DuProject> updatedProjects = []; // Used at the end to clear the cache
         foreach (var lines in _csvLines.GroupBy(line => line.Key.Item1.drive))
         {
-
             var drive = lines.Key;
             var (_, tenantKey) = drive.ParentDrive.GetTenantId();
 
-            foreach (var line in lines)
+            foreach (var line in lines.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 var project = line.Key.Item1.Item2;
                 var type = line.Key.type;
                 var name = line.Key.name;

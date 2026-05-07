@@ -77,9 +77,8 @@ public class ResumeJobCommand : OrchestratorPSCmdlet
         if (Job is not null)
         {
             var drivesFolders = SessionState.EnumFolders(new string[] { Job.Path! });
-            foreach (var (drive, folder) in drivesFolders)
+            foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 ResumeOne(drive, folder, Job.Key ?? "");
             }
             return;
@@ -88,9 +87,8 @@ public class ResumeJobCommand : OrchestratorPSCmdlet
         var dfs = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         foreach (var (drive, folder) in dfs)
         {
-            foreach (var jobKey in Key!)
+            foreach (var jobKey in Key!.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 ResumeOne(drive, folder, jobKey);
             }
         }

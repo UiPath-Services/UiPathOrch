@@ -26,9 +26,8 @@ public class RemoveTaskCommand : OrchestratorPSCmdlet
         if (Task is not null)
         {
             var dfs = SessionState.EnumFolders(new string[] { Task.Path! });
-            foreach (var (drive, folder) in dfs)
+            foreach (var (drive, folder) in dfs.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 RemoveOne(drive, folder, Task.Id ?? 0);
             }
             return;
@@ -37,9 +36,8 @@ public class RemoveTaskCommand : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFolders(Path);
         foreach (var (drive, folder) in drivesFolders)
         {
-            foreach (var taskId in Id!)
+            foreach (var taskId in Id!.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 RemoveOne(drive, folder, taskId);
             }
         }

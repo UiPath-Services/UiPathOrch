@@ -31,10 +31,8 @@ public class GetProcessRequirementCmdlet : OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
+        foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             IEnumerable<Release> targetReleases;
             try
             {
@@ -54,10 +52,8 @@ public class GetProcessRequirementCmdlet : OrchestratorPSCmdlet
                 release => release,
                 release => drive.ReleaseRequirements.Get(folder, release));
 
-            foreach (var result in results)
+            foreach (var result in results.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 try
                 {
                     var entities = result.GetResult(cancelHandler.Token);

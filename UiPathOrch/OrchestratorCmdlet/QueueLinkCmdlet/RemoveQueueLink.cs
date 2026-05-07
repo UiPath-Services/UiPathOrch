@@ -65,10 +65,8 @@ public class RemoveQueueLinkCommand : OrchestratorPSCmdlet
 
             foreach (var queue in queues
                 .FilterByWildcards(q => q?.Name, wpName)
-                .OrderBy(q => q.Name))
+                .OrderBy(q => q.Name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 var toRemoveIds = sameDriveLinks
                     .Select(dl => dl.folder.Id ?? 0)
                     .Where(id => id != 0 && id != folder.Id)

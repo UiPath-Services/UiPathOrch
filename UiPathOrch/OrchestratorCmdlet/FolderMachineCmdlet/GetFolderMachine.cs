@@ -72,10 +72,8 @@ public class GetFolderMachineCommand : OrchestratorPSCmdlet
             df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        foreach (var result in results.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             try
             {
                 var machines = result.GetResult(cancelHandler.Token);

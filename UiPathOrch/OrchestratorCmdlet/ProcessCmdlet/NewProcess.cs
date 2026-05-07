@@ -293,10 +293,8 @@ public class NewProcessCommand : OrchestratorPSCmdlet
             }
 
             //foreach (var id in packages.Select(p => p.Id).SelectByWildcards(id => id, wpPackageId))
-            foreach (var targetPackage in targetPackages)
+            foreach (var targetPackage in targetPackages.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 string name = Name;
                 if (string.IsNullOrEmpty(name))
                 {

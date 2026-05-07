@@ -89,9 +89,8 @@ public class GetFolderMachineAccountMappingCommand : OrchestratorPSCmdlet
             });
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        foreach (var result in results.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var robotsList = result.GetResult(cancelHandler.Token);

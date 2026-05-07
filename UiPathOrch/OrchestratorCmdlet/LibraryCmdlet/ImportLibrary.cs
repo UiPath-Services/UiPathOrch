@@ -51,10 +51,8 @@ public class ImportLibraryCommand : OrchestratorPSCmdlet
 
         int index = 0;
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var importTask in importTasks)
+        foreach (var importTask in importTasks.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             var (drive, fullPath, relativePath) = importTask;
             string target = drive.NameColonSeparator;
             if (ShouldProcess(target, $"Import Library {fullPath}"))

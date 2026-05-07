@@ -150,10 +150,8 @@ public class UpdateQueueCommand : OrchestratorPSCmdlet
 
             var targetQueues = queues.SelectByWildcards(p => p?.Name, wpName).OrderBy(q => q.Name);
 
-            foreach (var queue in targetQueues)
+            foreach (var queue in targetQueues.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 string target = queue.GetPSPath();
                 QueueDefinition newQueue = OrchCollectionExtensions.DeepCopy<QueueDefinition>(queue);
 

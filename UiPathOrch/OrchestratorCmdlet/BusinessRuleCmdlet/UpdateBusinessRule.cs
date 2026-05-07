@@ -63,9 +63,8 @@ class UpdateBusinessRuleCommand : OrchestratorPSCmdlet
                     .OrderBy(r => r.Name)
                     .ToList();
 
-                foreach (var existing in rules)
+                foreach (var existing in rules.WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
                     if (string.IsNullOrEmpty(existing.Id)) continue;
 
                     string target = existing.GetPSPath();

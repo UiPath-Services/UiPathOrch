@@ -241,10 +241,8 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
                     }
                 }
 
-                foreach (var targetBucket in targetBuckets ?? [])
+                foreach (var targetBucket in (targetBuckets ?? []).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     // Upload filePath to the bucket in targetFolder
                     string target = $"Item: '{filePath}' Folder: '{targetFolder.GetPSPath()}' Bucket: '{targetBucket.Name}'";
                     if (ShouldProcess(target, "Import BucketItem"))

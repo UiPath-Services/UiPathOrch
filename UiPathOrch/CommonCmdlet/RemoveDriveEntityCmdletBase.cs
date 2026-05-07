@@ -50,10 +50,8 @@ public abstract class RemoveDriveEntityCmdletBase<TEntity> : OrchestratorPSCmdle
 
                 foreach (var entity in entities
                     .FilterByWildcards(getName, wpName)
-                    .OrderBy(getName))
+                    .OrderBy(getName).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     if (ShouldProcess(getPSPath(entity), $"Remove {EntityNoun}"))
                     {
                         try

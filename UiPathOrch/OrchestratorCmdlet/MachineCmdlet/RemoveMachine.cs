@@ -23,16 +23,13 @@ public class RemoveMachineCommand : OrchestratorPSCmdlet
         var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 string targetFolder = drive.NameColonSeparator;
-                foreach (var machine in drive.Machines.Get().FilterByWildcards(m => m?.Name, wpName).OrderBy(m => m.Name))
+                foreach (var machine in drive.Machines.Get().FilterByWildcards(m => m?.Name, wpName).OrderBy(m => m.Name).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     if (ShouldProcess(machine.GetPSPath(), "Remove Machine"))
                     {
                         try

@@ -60,9 +60,8 @@ public class EnableWebhookCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
         string action = $"{(Enable.Value ? "Enable" : "Disable")} Webhook";
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var webhooks = drive.Webhooks.Get();
@@ -72,10 +71,8 @@ public class EnableWebhookCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
                         ? !e.Enabled.GetValueOrDefault()
                         : e.Enabled.GetValueOrDefault())
                     .FilterByWildcards(e => e?.Name, wpName)
-                    .OrderBy(e => e.Name))
+                    .OrderBy(e => e.Name).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     if (ShouldProcess(webhook.GetPSPath(), action))
                     {
                         try

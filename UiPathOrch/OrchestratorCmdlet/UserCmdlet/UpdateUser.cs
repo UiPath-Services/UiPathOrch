@@ -168,17 +168,13 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
-            foreach (var identityName in UserName!)
+            foreach (var identityName in UserName!.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 var users = drive.GetUsers();
                 var targetUsers = users.SelectByWildcards(u => u?.UserName, wpUserName).OrderBy(u => u.UserName);
 
-                foreach (var user in targetUsers)
+                foreach (var user in targetUsers.WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     string target = user.GetPSPath();
                     if (!string.IsNullOrEmpty(user.FullName))
                         target += $" ({user.FullName})";

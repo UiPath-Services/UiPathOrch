@@ -78,10 +78,8 @@ public class ExportLibraryCommand : OrchestratorPSCmdlet
 
                         int index = 0;
                         reporter.TotalNum = versions.Count;
-                        foreach (var version in versions)
+                        foreach (var version in versions.WithCancellation(cancelHandler.Token))
                         {
-                            cancelHandler.Token.ThrowIfCancellationRequested();
-
                             string target = $"{version.Id}.{version.Version}.nupkg";
                             reporter.WriteProgress(++index, target);
                             if (ShouldProcess(target, "Export Library"))

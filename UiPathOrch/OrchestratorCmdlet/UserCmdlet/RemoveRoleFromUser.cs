@@ -102,9 +102,8 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
         var wpRoles = processedRoles.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             List<Entities.User> users;
             try
             {

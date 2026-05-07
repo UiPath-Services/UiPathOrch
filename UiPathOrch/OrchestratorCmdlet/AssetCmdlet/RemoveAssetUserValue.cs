@@ -128,15 +128,12 @@ public class RemoveAssetUserValueCommand : OrchestratorPSCmdlet
         List<(OrchDriveInfo drive, Int64 folderId)> cachesToClear = [];
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
+        foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             var assets = drive.Assets.Get(folder).FilterByWildcards(a => a?.Name, wpName).ToList();
 
-            foreach (var existing in assets)
+            foreach (var existing in assets.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 if (existing.UserValues is null || existing.UserValues.Count == 0) continue;
 
                 var copy = OrchCollectionExtensions.DeepCopy(existing);

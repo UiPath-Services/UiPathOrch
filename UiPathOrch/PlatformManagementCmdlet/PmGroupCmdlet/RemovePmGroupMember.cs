@@ -80,9 +80,8 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
         // collection, so it needs its own cancel handler — EndProcessing's
         // handler only covers the execution phase.
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             var targetGroups = drive.PmGroups.Get()
                 .Where(g => g is not null)
                 .FilterByWildcards(g => g!.name ?? "", wpGroupName);
@@ -93,9 +92,8 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
                 continue;
             }
 
-            foreach (var group in targetGroups)
+            foreach (var group in targetGroups.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 // Get the members of this group
                 var detailedGroup = drive.PmGroups.Get(group?.id);
 
@@ -154,10 +152,8 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var param in _parameterSets
             .OrderBy(p => p.Key.drive.Name)
-            .ThenBy(p => p.Key.group.name))
+            .ThenBy(p => p.Key.group.name).WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             var (drive, group) = param.Key;
             var toBeRemoved = param.Value;
 

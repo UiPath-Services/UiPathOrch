@@ -66,10 +66,8 @@ public class StopTestExecutionCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
-            foreach (var id in Id!)
+            foreach (var id in Id!.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 string target = System.IO.Path.Combine(folder.GetPSPath(), id.ToString());
                 if (ShouldProcess(target, "Stop TestSetExecution"))
                 {

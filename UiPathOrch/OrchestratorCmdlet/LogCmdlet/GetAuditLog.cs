@@ -262,10 +262,8 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
                 log => drive.GetAuditLogDetails(log));
 
             using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var result in results)
+            foreach (var result in results.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 try
                 {
                     result.GetResult(cancelHandler.Token);
@@ -338,9 +336,8 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
         string filter = MakeFilter();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             //if (ParameterSetName == "Filter")
             {
                 try

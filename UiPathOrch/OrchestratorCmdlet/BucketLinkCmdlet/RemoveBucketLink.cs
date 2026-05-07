@@ -66,10 +66,8 @@ public class RemoveBucketLinkCommand : OrchestratorPSCmdlet
 
             foreach (var bucket in buckets
                 .FilterByWildcards(b => b?.Name, wpName)
-                .OrderBy(b => b.Name))
+                .OrderBy(b => b.Name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 var toRemoveIds = sameDriveLinks
                     .Select(dl => dl.folder.Id ?? 0)
                     .Where(id => id != 0 && id != folder.Id)

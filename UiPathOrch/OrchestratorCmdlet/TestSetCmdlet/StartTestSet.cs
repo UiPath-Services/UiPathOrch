@@ -42,10 +42,8 @@ public class StartTestSetCommand : OrchestratorPSCmdlet
 
                 foreach (var testSet in testSets
                     .FilterByWildcards(ts => ts?.Name, wpName)
-                    .OrderBy(ts => ts.Name))
+                    .OrderBy(ts => ts.Name).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     if (ShouldProcess(testSet.GetPSPath(), "Start TestSet"))
                     {
                         try

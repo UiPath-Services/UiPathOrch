@@ -339,10 +339,8 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         using ProgressReporter reporterFolder = new(this, 1, drivesFolders.Count, "Folder");
         int indexFolder = 0;
-        foreach (var (drive, folder) in drivesFolders)
+        foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             if (drivesFolders.Count > 1)
             {
                 reporterFolder.WriteProgress(++indexFolder, folder.GetPSPath());
@@ -388,10 +386,8 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
                 .OrderBy(q => q.Name).ToList();
             using ProgressReporter reporterQueue = new(this, 2, targetQueues.Count, "Queue ");
             int indexQueue = 0;
-            foreach (var queue in targetQueues)
+            foreach (var queue in targetQueues.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 //reporterQueue.WriteProgress(++indexQueue, queue.GetPSPath());
                 reporterQueue.WriteProgress(++indexQueue);
 
@@ -431,7 +427,7 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
 
                                 // Rate-limit wait before the next page. Cancellable: WaitOne returns early
                                 // if the token is signaled, so Ctrl+C isn't blocked for up to 600ms.
-                                cancelHandler.Token.WaitHandle.WaitOne(600);
+                                cancelHandler.Token.Sleep(600);
                             }
                         }
                     }

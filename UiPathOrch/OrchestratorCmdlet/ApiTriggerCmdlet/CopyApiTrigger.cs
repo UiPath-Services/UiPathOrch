@@ -41,10 +41,8 @@ public class CopyApiTriggerCommand : OrchestratorPSCmdlet
 
         using var reporterApiTriggers = new ProgressReporter(this, 900, Int32.MaxValue, "Copying API triggers...");
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (_, srcFolder) in srcDrivesFolders)
+        foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             try
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder

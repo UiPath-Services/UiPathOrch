@@ -58,10 +58,8 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
         string action = keepSource ? "Copy PMGroupMember" : "Move PmGroupMember";
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             IEnumerable<PmGroup> existingGroups = null;
             try
             {

@@ -47,12 +47,10 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
 
             reporter.TotalNum = targetRobots.Count * dstDrives.Count;
             int index = 0;
-            foreach (var srcRobotAccount in targetRobots.OrderBy(r => r!.displayName))
+            foreach (var srcRobotAccount in targetRobots.OrderBy(r => r!.displayName).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-                foreach (var dstDrive in dstDrives)
+                foreach (var dstDrive in dstDrives.WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
                     var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
 
                     // Do nothing if source and destination are the same

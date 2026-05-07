@@ -78,10 +78,8 @@ public class EnableTestSetScheduleCommandBase<Enable> : OrchestratorPSCmdlet whe
 
                 foreach (var schedule in schedules
                     .FilterByWildcards(ts => ts?.Name, wpName)
-                    .OrderBy(ts => ts.Name))
+                    .OrderBy(ts => ts.Name).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     var target = schedule.GetPSPath();
 
                     if (ShouldProcess(target, action))

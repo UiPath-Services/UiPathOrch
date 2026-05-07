@@ -30,28 +30,24 @@ public class RemoveLibraryCommand : OrchestratorPSCmdlet
         var wpVersion = Version.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var libraries = drive.LibrariesInTenant.Get()
                     .FilterByWildcards(l => l?.Id, wpId!)
                     .OrderBy(l => l.Id!.ToLower());
 
-                foreach (var library in libraries)
+                foreach (var library in libraries.WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
                     try
                     {
                         var matchingVersions = drive.GetLibraryVersions(library.Id!)
                             .FilterByWildcards(v => v?.Version, wpVersion);
                         //.OrderBy(v => v.Version!, VersionComparer.Instance);
 
-                        foreach (var matchingVersion in matchingVersions)
+                        foreach (var matchingVersion in matchingVersions.WithCancellation(cancelHandler.Token))
                         {
-                            cancelHandler.Token.ThrowIfCancellationRequested();
-
                             string target = $"{drive.NameColonSeparator}{matchingVersion.Id}:{matchingVersion.Version}";
                             if (ShouldProcess(target, "Remove Library"))
                             {

@@ -168,10 +168,8 @@ public class StartJobCommand : OrchestratorPSCmdlet
             try
             {
                 var processes = drive.GetReleases(folder);
-                foreach (var process in processes.FilterByWildcards(p => p?.Name, wpName))
+                foreach (var process in processes.FilterByWildcards(p => p?.Name, wpName).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     if (ShouldProcess(process.GetPSPath(), "Start Job"))
                     {
                         try

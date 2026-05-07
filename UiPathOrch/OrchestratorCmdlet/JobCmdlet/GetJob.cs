@@ -413,10 +413,8 @@ public class GetJobCommand : OrchestratorPSCmdlet
         {
             using ProgressReporter reporter = new(this, 1, drivesFolders.Count, "Get Job");
             int index = 0;
-            foreach (var (drive, folder) in drivesFolders)
+            foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested(); // This line must be placed outside the try block.
-
                 var targetRobotIds = ResolveRobotIds(drive);
                 if (targetRobotIds is not null && targetRobotIds.Count == 0)
                 {
@@ -440,9 +438,8 @@ public class GetJobCommand : OrchestratorPSCmdlet
                 }
 
                 var allJobs = isBatched ? new List<object>() : null;
-                foreach (var robotBatch in robotBatches)
+                foreach (var robotBatch in robotBatches.WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
                     string filter = MakeFilter(drive, folder, robotBatch);
                     if (filter == "null") continue;
                     try
@@ -467,7 +464,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
                         WriteError(errorRecord);
                     }
                     // Cancellable rate-limit wait — Ctrl+C bails promptly.
-                    cancelHandler.Token.WaitHandle.WaitOne(600);
+                    cancelHandler.Token.Sleep(600);
                 }
                 if (allJobs is not null)
                 {
@@ -483,9 +480,8 @@ public class GetJobCommand : OrchestratorPSCmdlet
         // If Id is specified, retrieve only that specific Job
         foreach (var (drive, folder) in drivesFolders)
         {
-            foreach (var jobId in Id!)
+            foreach (var jobId in Id!.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested(); // This line must be placed outside the try block.
                 try
                 {
                     var job = drive.GetJob(folder, jobId);
@@ -505,7 +501,7 @@ public class GetJobCommand : OrchestratorPSCmdlet
                     WriteError(errorRecord);
                 }
                 // Cancellable rate-limit wait — Ctrl+C bails promptly.
-                cancelHandler.Token.WaitHandle.WaitOne(600);
+                cancelHandler.Token.Sleep(600);
             }
         }
     }

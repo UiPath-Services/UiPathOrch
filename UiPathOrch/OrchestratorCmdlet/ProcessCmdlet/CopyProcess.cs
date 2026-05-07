@@ -42,10 +42,8 @@ public class CopyProcessCommand : OrchestratorPSCmdlet
         using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, "Copying processes...");
         using var cancelHandler = new ConsoleCancelHandler();
 
-        foreach (var (_, srcFolder) in srcDrivesFolders)
+        foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             try
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder

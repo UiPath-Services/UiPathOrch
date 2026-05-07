@@ -67,10 +67,8 @@ public class RemoveBucketItemCommand : OrchestratorPSCmdlet
 
                     foreach (var file in files
                         .FilterByWildcards(file => file?.FullPath, wpFullPath)
-                        .OrderBy(file => file.FullPath))
+                        .OrderBy(file => file.FullPath).WithCancellation(cancelHandler.Token))
                     {
-                        cancelHandler.Token.ThrowIfCancellationRequested();
-
                         string target = System.IO.Path.Combine(bucket.GetPSPath(), file.FullPath ?? "");
                         bool bRemoved = false;
                         if (ShouldProcess(target, "Remove BucketItem"))

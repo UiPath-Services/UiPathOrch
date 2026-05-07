@@ -86,9 +86,8 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
 
-        foreach (var srcGroup in targetGroups.OrderBy(g => g.name))
+        foreach (var srcGroup in targetGroups.OrderBy(g => g.name).WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             PmGroup srcDetailedGroup = null;
             try
             {
@@ -105,9 +104,8 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
             }
             if (srcDetailedGroup is null) continue;
 
-            foreach (var dstDrive in dstDrives)
+            foreach (var dstDrive in dstDrives.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 if (srcDrive.GetPartitionGlobalId() == dstDrive.GetPartitionGlobalId()) continue;
 
                 string target = $"Item: {srcGroup.GetPSPath()} Destination: {dstDrive.NameColonSeparator}";

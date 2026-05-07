@@ -46,9 +46,8 @@ public class TestTriggerCommand : OrchestratorPSCmdlet
                     .OrderBy(t => t.Name)
                     .ToList();
 
-                foreach (var trigger in triggers)
+                foreach (var trigger in triggers.WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
                     try
                     {
                         var result = drive.OrchAPISession.ValidateProcessSchedule(folder.Id ?? 0, trigger);

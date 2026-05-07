@@ -48,9 +48,8 @@ public class RemoveUserCmdlet : OrchestratorPSCmdlet
         var wpType = Type.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var users = drive.GetUsers();
@@ -66,10 +65,8 @@ public class RemoveUserCmdlet : OrchestratorPSCmdlet
                     continue;
                 }
 
-                foreach (var user in targetUsers.OrderBy(u => u.UserName))
+                foreach (var user in targetUsers.OrderBy(u => u.UserName).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     string target = user.GetPSPath();
                     if (!string.IsNullOrEmpty(user.FullName))
                     {

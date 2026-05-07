@@ -125,9 +125,8 @@ public class RemoveMachineClientSecretCommand : OrchestratorPSCmdlet
         var wpSecretId = SecretId.Split1stValueByUnescapedCommas()?.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             IEnumerable<ExtendedMachine> machines = null;
             try
             {
@@ -148,10 +147,8 @@ public class RemoveMachineClientSecretCommand : OrchestratorPSCmdlet
                 .FilterByWildcards(m => m?.Name, wpName)
                 .OrderBy(m => m.Name);
 
-            foreach (var m in targetMachines)
+            foreach (var m in targetMachines.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 if (m.LicenseKey is null) continue;
 
                 MachineClientSecretResponse[] secrets = null;

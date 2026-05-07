@@ -27,9 +27,8 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
         var wpEmail = Email.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             User? currentUser = null;
             try
             {
@@ -54,10 +53,8 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
                     continue;
                 }
 
-                foreach (var user in targetUsers.OrderBy(u => u.email))
+                foreach (var user in targetUsers.OrderBy(u => u.email).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     if (user.id == currentUser?.Key) continue;
 
                     string target = user.GetPSPath();

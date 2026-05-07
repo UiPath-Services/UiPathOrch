@@ -355,10 +355,8 @@ public class GetLogCommand : OrchestratorPSCmdlet
         using ProgressReporter reporter = new(this, 1, drivesFolders.Count, "Get log");
         int index = 0;
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
+        foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             reporter.WriteProgress(++index, folder.GetPSPath());
 
             string query = MakeFilter(drive, folder);

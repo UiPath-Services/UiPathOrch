@@ -78,9 +78,8 @@ public class RestartJobCommand : OrchestratorPSCmdlet
         {
             // Pipeline input from Get-OrchJob
             var drivesFolders = SessionState.EnumFolders(new string[] { Job.Path! });
-            foreach (var (drive, folder) in drivesFolders)
+            foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 RestartOne(drive, folder, Job.Id ?? 0);
             }
             return;
@@ -89,9 +88,8 @@ public class RestartJobCommand : OrchestratorPSCmdlet
         var dfs = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         foreach (var (drive, folder) in dfs)
         {
-            foreach (var jobId in Id!)
+            foreach (var jobId in Id!.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 RestartOne(drive, folder, jobId);
             }
         }

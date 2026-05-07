@@ -604,10 +604,8 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                 wpMachineName = param.MachineName.ConvertToWildcardPatternList();
 
             var drivesFolders = SessionState.EnumFolders(param.Path);
-            foreach (var (drive, folder) in drivesFolders)
+            foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 string targetFolder = $"{folder.GetPSPath()}";
 
                 IEnumerable<User> specifiedUsers = null;
@@ -669,9 +667,8 @@ public class SetAssetCommand : OrchestratorPSCmdlet
 
                 var existingAssets = drive.Assets.Get(folder).Where(a => a.ValueType != "Credential" && a.ValueType != "Secret");
 
-                foreach (var name in param.Name!)
+                foreach (var name in param.Name!.WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
                     var matchingAssets = existingAssets.FilterByWildcards(n => n?.Name, wpName);
                     if (matchingAssets.Any())
                     {
@@ -722,10 +719,8 @@ public class SetAssetCommand : OrchestratorPSCmdlet
         {
             int index = 0;
             using var cancelHandler = new ConsoleCancelHandler();
-            foreach (var asset in pendingAssets.Values)
+            foreach (var asset in pendingAssets.Values.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 var drivesFolders = SessionState.EnumFolders([WildcardPattern.Escape(asset.Path!)]);
                 var (drive, folder) = drivesFolders[0];
 

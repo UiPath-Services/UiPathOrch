@@ -73,10 +73,8 @@ public class AddFolderMachineCommand : OrchestratorPSCmdlet
             df => df.drive.FolderMachinesAssignable.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        foreach (var result in results.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             try
             {
                 var machines = result.GetResult(cancelHandler.Token);
@@ -122,10 +120,8 @@ public class AddFolderMachineCommand : OrchestratorPSCmdlet
             .ThenBy(kv => kv.Key.Folder.FullyQualifiedNameOrderable);
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var param in sortedParameters)
+        foreach (var param in sortedParameters.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             var (drive, folder) = param.Key;
             var machinesPropagatesPairs = param.Value;
             var machineIds = machinesPropagatesPairs.Keys.Where(m => m.Id is not null).Select(m => m.Id!.Value).ToList();
@@ -142,10 +138,8 @@ public class AddFolderMachineCommand : OrchestratorPSCmdlet
                 WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "AddFolderMachineError", ErrorCategory.InvalidOperation, folder));
             }
 
-            foreach (var (machine, propagateToSubFolders) in machinesPropagatesPairs)
+            foreach (var (machine, propagateToSubFolders) in machinesPropagatesPairs.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 if (propagateToSubFolders.GetValueOrDefault())
                 {
                     try

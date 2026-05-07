@@ -75,9 +75,8 @@ public class RemoveAllocationFromUserLicenseGroup : OrchestratorPSCmdlet
         var wpUserName = UserName.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             var groups = drive.PmLicensedGroups.Get();
 
             var targetGroups = groups.FilterByWildcards(g => g?.name, wpGroupName);
@@ -90,9 +89,8 @@ public class RemoveAllocationFromUserLicenseGroup : OrchestratorPSCmdlet
                 continue;
             }
 
-            foreach (var group in targetGroups.OrderBy(g => g?.name))
+            foreach (var group in targetGroups.OrderBy(g => g?.name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 var users = drive.GetPmLicensedGroupAllocations(group);
 
                 var targetUsers = users.FilterByWildcards(u => u?.name, wpUserName);
@@ -105,10 +103,8 @@ public class RemoveAllocationFromUserLicenseGroup : OrchestratorPSCmdlet
                     continue;
                 }
 
-                foreach (var user in targetUsers.OrderBy(u => u?.name))
+                foreach (var user in targetUsers.OrderBy(u => u?.name).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     string target = user.name;
                     if (!string.IsNullOrEmpty(user.displayName))
                     {

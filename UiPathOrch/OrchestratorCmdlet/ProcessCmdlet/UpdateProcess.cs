@@ -344,10 +344,8 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                 proc => proc,
                 proc => drive.GetReleaseById(folder, proc.Id!.Value));
 
-            foreach (var result in results)
+            foreach (var result in results.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 var process = result.GetResult(cancelHandler.Token);
                 if (process is null) continue;
 

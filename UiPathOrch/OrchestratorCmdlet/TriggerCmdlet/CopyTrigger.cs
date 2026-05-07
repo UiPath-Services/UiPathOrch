@@ -41,10 +41,8 @@ public class CopyTriggerCommand : OrchestratorPSCmdlet
 
         using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, "Copying triggers...");
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (_, srcFolder) in srcDrivesFolders)
+        foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             try
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder

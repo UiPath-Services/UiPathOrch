@@ -45,9 +45,8 @@ public class UpdateWebhookCommand : OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             ICollection<Webhook>? webhooks;
             try
             {
@@ -65,10 +64,8 @@ public class UpdateWebhookCommand : OrchestratorPSCmdlet
 
             foreach (var webhook in webhooks
                 .FilterByWildcards(e => e?.Name, wpName)
-                .OrderBy(e => e.Name))
+                .OrderBy(e => e.Name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 // Build a PATCH payload with only the properties that need updating.
                 // Properties left null are excluded from JSON serialization (WhenWritingNull).
                 var patch = new Webhook { Id = webhook.Id };

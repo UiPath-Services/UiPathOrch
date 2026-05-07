@@ -26,9 +26,8 @@ public class RemoveTmTestSetCommand : OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var driveProject in drivesProjects)
+        foreach (var driveProject in drivesProjects.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             var (drive, project) = driveProject;
             try
             {
@@ -36,10 +35,8 @@ public class RemoveTmTestSetCommand : OrchestratorPSCmdlet
 
                 foreach (var testSet in entity
                     .FilterByWildcards(e => e?.name, wpName)
-                    .OrderBy(e => e.objKey!, ObjKeyComparer.Instance))
+                    .OrderBy(e => e.objKey!, ObjKeyComparer.Instance).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     if (ShouldProcess(testSet.GetPSPath(), "Remove TmTestSet"))
                     {
                         try

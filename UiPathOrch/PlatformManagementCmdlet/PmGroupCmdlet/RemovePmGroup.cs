@@ -23,9 +23,8 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var groups = drive.PmGroups.Get();
@@ -35,10 +34,8 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
                 foreach (var group in groups
                     .Where(g => g is not null)
                     .FilterByWildcards(g => g?.name!, wpGroupName)
-                    .OrderBy(g => g?.name))
+                    .OrderBy(g => g?.name).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     if (ShouldProcess(group!.GetPSPath(), "Remove PmGroup"))
                     {
                         try

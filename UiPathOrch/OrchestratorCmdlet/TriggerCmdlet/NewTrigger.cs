@@ -293,10 +293,8 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
-            foreach (var name in Name!)
+            foreach (var name in Name!.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 string target = System.IO.Path.Combine(folder.GetPSPath(), name);
 
                 ProcessSchedule schedule = new()

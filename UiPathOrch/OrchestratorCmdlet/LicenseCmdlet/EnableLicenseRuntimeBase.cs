@@ -107,19 +107,16 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
-            foreach (var robotType in specifiedRobotType)
+            foreach (var robotType in specifiedRobotType.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 var licenses = drive.GetLicenseRuntime(robotType);
 
                 foreach (var license in licenses
                     .Where(t => Enable.Value
                         ? !t.Enabled.GetValueOrDefault()
                         : t.Enabled.GetValueOrDefault())
-                    .FilterByWildcards(l => l?.Key, wpKey))
+                    .FilterByWildcards(l => l?.Key, wpKey).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     string target = drive.NameColonSeparator + license.Key;
 
                     string action = $"{(Enable.Value ? "Enable" : "Disable")} LicenseRuntime {robotType}";

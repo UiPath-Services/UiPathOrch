@@ -201,9 +201,8 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
             {
                 if (Id is not null && Id.Length != 0)
                 {
-                    foreach (var id in Id)
+                    foreach (var id in Id.WithCancellation(cancelHandler.Token))
                     {
-                        cancelHandler.Token.ThrowIfCancellationRequested();
                         string target = System.IO.Path.Combine(folder.GetPSPath(), id.ToString());
                         if (Version is null)
                         {
@@ -240,16 +239,13 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
 
                 if (Name is not null && Name.Length != 0)
                 {
-
                     var releases = drive.GetReleases(folder);
 
                     foreach (var release in releases
                         .Where(r => r.ProcessType != "TestAutomationProcess")
                         .FilterByWildcards(r => r?.Name, wpName)
-                        .OrderBy(r => r.Name))
+                        .OrderBy(r => r.Name).WithCancellation(cancelHandler.Token))
                     {
-                        cancelHandler.Token.ThrowIfCancellationRequested();
-
                         if (wpVersion is null)
                         {
                             if (release.IsLatestVersion ?? false)

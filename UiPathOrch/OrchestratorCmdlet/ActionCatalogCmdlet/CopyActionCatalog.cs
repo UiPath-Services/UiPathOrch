@@ -41,10 +41,8 @@ public class CopyActionCatalogCommand : OrchestratorPSCmdlet
 
         using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, "Copying action catalogs...");
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (_, srcFolder) in srcDrivesFolders)
+        foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             try
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder

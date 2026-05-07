@@ -81,10 +81,8 @@ public class UpdateBucketCommand : OrchestratorPSCmdlet
 
             foreach (var bucket in buckets
                 .FilterByWildcards(b => b?.Name, wpName)
-                .OrderBy(b => b.Name))
+                .OrderBy(b => b.Name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 string target = bucket.GetPSPath();
 
                 // Deep copy the existing entity, then layer the user's overrides on top

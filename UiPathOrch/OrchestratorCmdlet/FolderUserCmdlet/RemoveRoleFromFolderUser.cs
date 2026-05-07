@@ -220,10 +220,8 @@ public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
                         .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
                         .ToList();
 
-                    foreach (var user in editingUsers.OrderBy(user => user.UserEntity!.FullName))
+                    foreach (var user in editingUsers.OrderBy(user => user.UserEntity!.FullName).WithCancellation(cancelHandler.Token))
                     {
-                        cancelHandler.Token.ThrowIfCancellationRequested();
-
                         IEnumerable<SimpleRole> existingRoles = user.Roles;
 
                         // Extract roles to be removed

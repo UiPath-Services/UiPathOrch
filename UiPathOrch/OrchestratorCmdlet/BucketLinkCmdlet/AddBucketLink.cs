@@ -67,10 +67,8 @@ public class AddBucketLinkCommand : OrchestratorPSCmdlet
 
             foreach (var bucket in buckets
                 .FilterByWildcards(b => b?.Name, wpName)
-                .OrderBy(b => b.Name))
+                .OrderBy(b => b.Name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 // Batch all targets for this (folder, bucket) into a single API call.
                 var toAddIds = sameDriveLinks
                     .Select(dl => dl.folder.Id ?? 0)

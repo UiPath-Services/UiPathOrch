@@ -62,9 +62,8 @@ public class SetTaskCommand : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFolders(Path);
         foreach (var (drive, folder) in drivesFolders)
         {
-            foreach (var taskId in Id!)
+            foreach (var taskId in Id!.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 EditOne(drive, folder, taskId);
             }
         }

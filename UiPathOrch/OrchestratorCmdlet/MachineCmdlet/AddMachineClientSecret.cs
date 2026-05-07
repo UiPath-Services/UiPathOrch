@@ -71,19 +71,16 @@ public class AddMachineClientSecretCommand : OrchestratorPSCmdlet
         var wpName = Name.Split1stValueByUnescapedCommas()?.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             var machines = drive.Machines.Get();
             var targetMachines = machines
                 .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot")
                 .FilterByWildcards(m => m?.Name, wpName)
                 .OrderBy(m => m.Name);
 
-            foreach (var m in targetMachines)
+            foreach (var m in targetMachines.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 if (ShouldProcess(m.GetPSPath(), "Add ClientSecret"))
                 {
                     try

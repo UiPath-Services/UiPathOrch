@@ -168,10 +168,8 @@ public class GetTriggerCommand : OrchestratorPSCmdlet
         );
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        foreach (var result in results.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             try
             {
                 var entities = result.GetResult(cancelHandler.Token);

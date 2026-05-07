@@ -293,10 +293,8 @@ public class ImportQueueItemCommand : OrchestratorPSCmdlet
                 var queues = drive.Queues.Get(folder);
                 foreach (var queue in queues.FilterByWildcards(q => q?.Name, wpName))
                 {
-                    foreach (var queueItem in queueItemData)
+                    foreach (var queueItem in queueItemData.WithCancellation(cancelHandler.Token))
                     {
-                        cancelHandler.Token.ThrowIfCancellationRequested();
-
                         string target = System.IO.Path.Combine(targetFolder, queue.Name ?? "");
                         try
                         {

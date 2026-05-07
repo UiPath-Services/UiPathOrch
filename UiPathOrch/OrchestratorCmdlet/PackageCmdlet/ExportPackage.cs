@@ -162,10 +162,8 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
 
                 foreach (var package in packages!
                     .FilterByWildcards(p => p?.Id, wpId)
-                    .OrderBy(p => p.Id!.ToLower()))
+                    .OrderBy(p => p.Id!.ToLower()).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     try
                     {
                         var versions = drive.GetPackageVersions(folder, package.Id!)
@@ -175,10 +173,8 @@ public class ExportPackageCommand : OrchestratorPSCmdlet
 
                         int index = 0;
                         reporter.TotalNum = versions!.Count;
-                        foreach (var version in versions!)
+                        foreach (var version in versions!.WithCancellation(cancelHandler.Token))
                         {
-                            cancelHandler.Token.ThrowIfCancellationRequested();
-
                             string target = version.GetPSPath() + ':' + version.Version;
                             reporter.WriteProgress(++index, target);
                             if (ShouldProcess(target, "Export Package"))

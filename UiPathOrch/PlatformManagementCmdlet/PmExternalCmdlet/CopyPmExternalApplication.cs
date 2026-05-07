@@ -35,13 +35,11 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var srcApp in srcClients
             .FilterByWildcards(app => app?.name, wpName)
-            .OrderBy(app => app.name))
+            .OrderBy(app => app.name).WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             string target = srcApp.GetPSPath();
-            foreach (var dstDrive in dstDrives)
+            foreach (var dstDrive in dstDrives.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
                 if (string.IsNullOrEmpty(dstPartitionGlobalId)) continue;
                 if (srcPartitionGlobalId == dstPartitionGlobalId) continue;
@@ -99,9 +97,8 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                         var newAppDirEntry = dirEntries.Values.FirstOrDefault(e => string.Compare(e?.name, newApp.name, StringComparison.OrdinalIgnoreCase) == 0);
                         if (newAppDirEntry is null) continue;
                         var srcGroups = srcDrive.PmGroups.Get();
-                        foreach (var srcGroup in srcGroups)
+                        foreach (var srcGroup in srcGroups.WithCancellation(cancelHandler.Token))
                         {
-                            cancelHandler.Token.ThrowIfCancellationRequested();
                             try
                             {
                                 var detailedSrcGroup = srcDrive.PmGroups.Get(srcGroup.id);

@@ -152,10 +152,8 @@ public class StopJobCommand : OrchestratorPSCmdlet
         string action = Force ? "Kill Job " : "Stop Job ";
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var group in parameters.GroupBy(p => p.Folder))
+        foreach (var group in parameters.GroupBy(p => p.Folder).WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             OrchDriveInfo drive = group.First().Drive;
             Folder folder = group.Key;
             string targetFolder = group.Key!.GetPSPath();

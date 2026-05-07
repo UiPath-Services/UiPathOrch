@@ -23,19 +23,16 @@ public class TestWebhookCommand : OrchestratorPSCmdlet
         var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var webhooks = drive.Webhooks.Get();
 
                 foreach (var webhook in webhooks
                     .FilterByWildcards(wh => wh?.Name, wpName)
-                    .OrderBy(wh => wh.Name))
+                    .OrderBy(wh => wh.Name).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     if (ShouldProcess(webhook.GetPSPath(), "Send Ping"))
                     {
                         try

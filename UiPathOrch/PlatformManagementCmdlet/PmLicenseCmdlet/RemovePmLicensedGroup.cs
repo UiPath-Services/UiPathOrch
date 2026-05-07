@@ -27,9 +27,8 @@ public class RemoveUserLicenseGroup : OrchestratorPSCmdlet
             .ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             IEnumerable<NuLicensedGroup> groups = null;
             try
             {
@@ -43,9 +42,8 @@ public class RemoveUserLicenseGroup : OrchestratorPSCmdlet
                 continue;
             }
 
-            foreach (var group in groups)
+            foreach (var group in groups.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 if (ShouldProcess(group.GetPSPath(), "Remove PmLicensedGroup"))
                 {
                     try

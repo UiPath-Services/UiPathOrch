@@ -38,9 +38,8 @@ public class UpdateCredentialStoreCommand : OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             ICollection<CredentialStore>? stores;
             try
             {
@@ -58,10 +57,8 @@ public class UpdateCredentialStoreCommand : OrchestratorPSCmdlet
 
             foreach (var store in stores
                 .FilterByWildcards(s => s?.Name, wpName)
-                .OrderBy(s => s.Name))
+                .OrderBy(s => s.Name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 string target = store.GetPSPath();
 
                 // Fetch full details (the list endpoint omits Type and possibly other

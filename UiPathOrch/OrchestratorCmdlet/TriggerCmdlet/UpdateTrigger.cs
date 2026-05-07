@@ -259,10 +259,8 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
 
             var targetTriggers = triggers.SelectByWildcards(t => t?.Name, wpName).OrderBy(t => t.Name);
 
-            foreach (var trigger in targetTriggers)
+            foreach (var trigger in targetTriggers.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 string target = trigger.GetPSPath();
 
                 ProcessSchedule postTrigger = OrchCollectionExtensions.DeepCopy(trigger);

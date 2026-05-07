@@ -51,10 +51,8 @@ public class AddPmGroupCommand : OrchestratorPSCmdlet
         foreach (var drive in drives)
         {
             var partitionGlobalId = drive.GetPartitionGlobalId();
-            foreach (var groupName in GroupName!)
+            foreach (var groupName in GroupName!.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 string target = System.IO.Path.Combine(drive.NameColonSeparator, groupName);
                 if (ShouldProcess(target, "New PmGroup"))
                 {

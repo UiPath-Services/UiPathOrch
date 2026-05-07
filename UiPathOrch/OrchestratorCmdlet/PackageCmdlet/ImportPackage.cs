@@ -61,9 +61,8 @@ public class ImportPackageCommand : OrchestratorPSCmdlet
 
         int index = 0;
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var task in tasks)
+        foreach (var task in tasks.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             var (drive, folder, fullPath, relativePath) = task;
 
             HashSet<string> ignoredFolders = new();

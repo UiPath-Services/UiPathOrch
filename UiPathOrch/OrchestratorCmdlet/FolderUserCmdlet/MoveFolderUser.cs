@@ -104,10 +104,8 @@ public class MoveFolderUserCommand : OrchestratorPSCmdlet
         string action = keepSource ? "Copy Folder User" : "Move Folder User";
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (srcDrive, srcFolder) in srcDrivesFolders)
+        foreach (var (srcDrive, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             IEnumerable<UserRoles> targetUsers;
             try
             {
@@ -125,10 +123,8 @@ public class MoveFolderUserCommand : OrchestratorPSCmdlet
             foreach (var targetUser in targetUsers
                 .OrderBy(u => u.UserEntity!.UserName))
             {
-                foreach (var (dstDrive, dstFolder) in dstDrivesFolders)
+                foreach (var (dstDrive, dstFolder) in dstDrivesFolders.WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     if (srcFolder == dstFolder) continue;
 
                     string targetUserPath = targetUser!.GetPSPath();

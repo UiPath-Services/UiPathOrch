@@ -43,10 +43,8 @@ public class CopyBucketCommand : OrchestratorPSCmdlet
         using var reporterBuckets = new ProgressReporter(this, 1000, Int32.MaxValue, "Copying buckets...");
         using var cancelHandler = new ConsoleCancelHandler();
 
-        foreach (var (_, srcFolder) in srcDrivesFolders)
+        foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             try
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder

@@ -152,10 +152,8 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
                     continue;
                 }
 
-                foreach (var folderUser in filteredUsers.OrderBy(u => u.UserEntity!.UserName))
+                foreach (var folderUser in filteredUsers.OrderBy(u => u.UserEntity!.UserName).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     var targetUser = folderUser.GetPSPath();
                     if (!string.IsNullOrEmpty(folderUser?.UserEntity?.FullName))
                     {

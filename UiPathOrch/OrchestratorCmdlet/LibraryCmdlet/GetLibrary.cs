@@ -40,9 +40,8 @@ public class GetLibraryCommand : OrchestratorPSCmdlet
 
                 // When outputting with WriteObject(coll, true), Ctrl+C doesn't stop it when processing is slow..
                 // It might be better to output one at a time, as shown below.
-                foreach (var library in libraries.FilterByWildcards(l => l?.Id, wpId).OrderBy(l => l.Id!.ToLower()))
+                foreach (var library in libraries.FilterByWildcards(l => l?.Id, wpId).OrderBy(l => l.Id!.ToLower()).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
                     WriteObject(library);
                 }
             }

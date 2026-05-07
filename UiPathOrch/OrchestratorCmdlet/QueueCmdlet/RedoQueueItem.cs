@@ -164,9 +164,8 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
 
-        foreach (var csvLine in _csvLines)
+        foreach (var csvLine in _csvLines.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             var (drive, folder, queue) = csvLine.Key;
             var ids = csvLine.Value.Order();
 
@@ -192,7 +191,7 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
                     // Cancellable rate-limit wait — Ctrl+C bails out of the
                     // 600 ms sleep promptly instead of always burning the
                     // full delay.
-                    cancelHandler.Token.WaitHandle.WaitOne(600);
+                    cancelHandler.Token.Sleep(600);
                 }
 
             }
@@ -204,10 +203,8 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
 
             List<QueueItem> retryingItems = [];
 
-            foreach (var id in ids)
+            foreach (var id in ids.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 QueueItem item = null;
                 bool found = retryableQueueItems.TryGetValue(id, out item);
 

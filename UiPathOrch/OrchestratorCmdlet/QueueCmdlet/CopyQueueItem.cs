@@ -50,10 +50,8 @@ public class CopyQueueItemCommand : OrchestratorPSCmdlet
         );
 
         int idxQueue = 0;
-        foreach (var (_, srcFolder) in srcDrivesFolders)
+        foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
             if (dstFolder is null || srcFolder == dstFolder) continue;
 

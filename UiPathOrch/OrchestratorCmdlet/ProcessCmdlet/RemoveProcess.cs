@@ -32,10 +32,8 @@ public class RemoveProcessCommand : OrchestratorPSCmdlet
         {
             try
             {
-                foreach (var proc in drive.GetReleases(folder).FilterByWildcards(p => p?.Name, wpName))
+                foreach (var proc in drive.GetReleases(folder).FilterByWildcards(p => p?.Name, wpName).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
-
                     string target = proc.GetPSPath();
                     if (ShouldProcess(target, "Remove Process"))
                     {
