@@ -87,7 +87,8 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
         // Zero out the time component
         ExcludedDate = ExcludedDate!.Select(d => d.Date).ToArray();
 
-        foreach (var drive in drives)
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
             ICollection<ExtendedCalendar> calendars = null;
             try
@@ -103,7 +104,7 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
 
             var targetCalendars = calendars.FilterByWildcards(c => c?.Name, wpName);
 
-            foreach (var targetCalendar in targetCalendars)
+            foreach (var targetCalendar in targetCalendars.WithCancellation(cancelHandler.Token))
             {
                 if (_parameters.TryGetValue((drive, targetCalendar.Name!), out var calendarExcludedDates))
                 {
@@ -121,7 +122,8 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
 
     protected override void EndProcessing()
     {
-        foreach (var p in _parameters)
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var p in _parameters.WithCancellation(cancelHandler.Token))
         {
             var (drive, calendarName) = p.Key;
             var (calendar, excludedDates) = p.Value;

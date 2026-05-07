@@ -21,11 +21,12 @@ public class OpenJobCommand : OrchestratorPSCmdlet
     {
         var drivesFolders = SessionState.EnumFolders(Path);
 
-        foreach (var (drive, folder) in drivesFolders)
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
         {
             var dicJobs = drive.Jobs.GetCache(folder);
 
-            foreach (var id in Id!)
+            foreach (var id in Id!.WithCancellation(cancelHandler.Token))
             {
                 Job? job = null;
                 dicJobs?.TryGetValue(id, out job);

@@ -184,7 +184,8 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
         var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpGroupName = groupNames.ConvertToWildcardPatternList();
 
-        foreach (var drive in drives)
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
             var existingRobots = drive.PmRobotAccounts.Get();
             string partitionGlobalId = null;
@@ -227,7 +228,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
 
             if (groupIdsToSet?.Count == 0) groupIdsToSet = null;
 
-            foreach (var userNames in UserName!)
+            foreach (var userNames in UserName!.WithCancellation(cancelHandler.Token))
             {
                 var targetRobots = existingRobots.SelectByWildcards(r => r?.name, wpUserName);
 
@@ -263,7 +264,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
                 {
                     foreach (var robot in targetRobots
                         .Where(r => r is not null)
-                        .OrderBy(r => r.name))
+                        .OrderBy(r => r.name).WithCancellation(cancelHandler.Token))
                     {
                         // Check if there are any updates; skip if none
                         bool areEqual = robot.groupIds!.Length == groupIdsToSet!.Count &&

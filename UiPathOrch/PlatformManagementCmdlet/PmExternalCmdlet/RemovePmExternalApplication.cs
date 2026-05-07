@@ -25,7 +25,8 @@ public class RemovePmExternalApplicationCommand : OrchestratorPSCmdlet
         var drives = SessionState.EnumPmDrives(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        foreach (var drive in drives)
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
             try
             {
@@ -34,7 +35,7 @@ public class RemovePmExternalApplicationCommand : OrchestratorPSCmdlet
 
                 foreach (var app in entities
                     .FilterByWildcards(e => e?.name, wpName)
-                    .OrderBy(e => e.name))
+                    .OrderBy(e => e.name).WithCancellation(cancelHandler.Token))
                 {
                     string target = app.GetPSPath();
 

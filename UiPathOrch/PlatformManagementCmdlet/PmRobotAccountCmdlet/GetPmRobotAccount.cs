@@ -68,7 +68,8 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        foreach (var drive in drives)
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
             try
             {

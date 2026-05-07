@@ -125,9 +125,10 @@ public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
         Email = Email.Split1stValueByUnescapedCommas()?.ToArray();
         var wpLicense = License.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
-        foreach (var drive in drives)
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            foreach (var email in Email ?? [])
+            foreach (var email in (Email ?? []).WithCancellation(cancelHandler.Token))
             {
                 // If not a licensed user,
                 // call POST /portal_/api/license/accountant/UserLicense/users

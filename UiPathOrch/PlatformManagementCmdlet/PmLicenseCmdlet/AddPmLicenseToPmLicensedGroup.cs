@@ -133,16 +133,17 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
         GroupName = GroupName.Split1stValueByUnescapedCommas()?.ToArray();
         var wpLicense = License.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
-        foreach (var drive in drives)
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            foreach (var groupName in GroupName ?? [])
+            foreach (var groupName in (GroupName ?? []).WithCancellation(cancelHandler.Token))
             {
                 var groups = drive.SearchPmDirectory(groupName);
                 if (groups is null) continue;
 
                 foreach (var group in groups
                     .Where(g => g.objectType == "DirectoryGroup" || g.objectType == "LocalGroup")
-                    .OrderBy(e => e.identityName))
+                    .OrderBy(e => e.identityName).WithCancellation(cancelHandler.Token))
                 {
                     //var licenseGroups = drive.GetPmLicensedGroups();
                     //var targetGroups = licenseGroups.SelectByWildcards(g => g?.name, wpGroupName);
@@ -169,9 +170,10 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
     {
         if (_parameterSets is null) return;
 
+        using var cancelHandler = new ConsoleCancelHandler();
         foreach (var parameterSet in _parameterSets
             .OrderBy(p => p.Key.drive.Name)
-            .OrderBy(p => p.Key.group.identityName))
+            .OrderBy(p => p.Key.group.identityName).WithCancellation(cancelHandler.Token))
         {
             var (drive, group) = parameterSet.Key;
             var codesToAdd = parameterSet.Value;

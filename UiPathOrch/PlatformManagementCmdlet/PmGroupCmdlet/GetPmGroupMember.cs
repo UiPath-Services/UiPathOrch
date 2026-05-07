@@ -64,14 +64,15 @@ public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        foreach (var drive in drives)
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
             var groups = drive.PmGroups.Get()
                 .Where(g => g is not null)
                 .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g.name);
 
-            foreach (var group in groups)
+            foreach (var group in groups.WithCancellation(cancelHandler.Token))
             {
                 try
                 {
