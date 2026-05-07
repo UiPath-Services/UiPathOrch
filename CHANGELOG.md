@@ -18,23 +18,35 @@ bucket link feature shipped in 1.2.0.
   entity (asset / queue / bucket) had to be re-linked in the
   destination, only the FIRST destination folder containing it was
   linked — sibling dst folders that should have shared the entity
-  were skipped. `LinkAsset` / `LinkBucket` / `LinkQueue` now iterate
-  every dst folder that contains a matching entity (deduplicating by
-  entity Id so shared entities make exactly one API call), reproducing
-  the source link graph faithfully. Per-iteration error handling lets
-  one folder's failure not abort the others.
+  were skipped. `Copy-Item` now establishes the link to every
+  matching destination folder so the source link graph is reproduced
+  faithfully. Per-iteration error handling lets one folder's failure
+  not abort the others. (Internally, `LinkAsset` / `LinkBucket` /
+  `LinkQueue` in `CopyItem.cs` switched from "return after the first
+  match" to iterating all matches with Id-based dedup so shared
+  entities still make exactly one API call.)
 - **`Copy-Item` no longer shares the SOURCE entity into destination
-  folders on same-drive copies.** `FindDstFolders` matched src folders
-  to dst folders by full FQN equality against the global folder pool,
-  so on a same-drive copy (e.g. `Copy-Item Orch1:\TestFixture_Base
-  Orch1:\TestFixture_CopyDest -Recurse`) the src folders matched only
-  themselves and `LinkAsset` / `LinkBucket` / `LinkQueue` ended up
-  adding the new folder to the SOURCE entity's share list — the dst
-  became a link to the src rather than a true copy. `FindDstFolders`
-  now rebases src link folders relative to the (srcAnchor, dstAnchor)
-  pair (handling descendant / ancestor / sibling-cousin shapes) so
-  same-drive copies produce cleanly-separated dst entities linked
-  together within the dst tree only.
+  folders on same-drive copies.** When you copied a folder containing
+  linked assets / queues / buckets to another folder on the same drive
+  (e.g. `Copy-Item Orch1:\TestFixture_Base Orch1:\TestFixture_CopyDest
+  -Recurse`), the dst didn't actually get its own copy of those
+  entities — it got a pointer to the src. `Get-OrchAsset` against the
+  dst returned the same Id as the src, and `Set-OrchAsset` against
+  what looked like the dst's asset silently mutated the src's value.
+  Only entities that already had at least one link in src were
+  affected (unlinked entities were copied cleanly). Cross-drive copies
+  between two different drives were unaffected.
+
+  Root cause: `FindDstFolders` matched src folders to dst folders by
+  full FQN equality against the global folder pool, so on a same-drive
+  copy the src folders matched only themselves — `LinkAsset` /
+  `LinkBucket` / `LinkQueue` then added the new dst folder to the
+  SOURCE entity's share list rather than letting `CopyAssets` create a
+  fresh dst entity. `FindDstFolders` now rebases src link folders
+  relative to the (srcAnchor, dstAnchor) pair (handling descendant /
+  ancestor / sibling-cousin shapes) so same-drive copies produce
+  cleanly-separated dst entities linked together within the dst tree
+  only.
 - **`Export-OrchBucketItem -Recurse` no longer downloads linked bucket
   items multiple times.** A bucket linked to N folders appeared in
   each folder's enumeration with the same Id, and the cmdlet wrote the
