@@ -456,17 +456,7 @@ Describe 'CSV round-trip' {
 # defines asset-shared3 / queue-shared3 / bucket-shared3 as Production-owned
 # entities each linked to three other folders (Development, QA, SubA), so each
 # entity's reproduced link set in dst must cover all three folder names.
-#
-# Currently SKIPPED: same-drive Copy-Item exposes a bug in FindDstFolders
-# (CopyItem.cs ~line 1467) — the dst-folder search is keyed only by
-# FullyQualifiedName against the global folder pool, so when src and dst live
-# on the same drive (as they do here, both rooted at TestFixture_Base /
-# TestFixture_CopyDest on Orch2), the src folders match themselves. LinkAsset
-# / LinkBucket / LinkQueue then share the SOURCE entity into the dst folders
-# instead of letting CopyAssets duplicate it, leaving the dst-side query
-# returning a tangled mix of src + dst link rows. Re-enable this Describe
-# after FindDstFolders is fixed to scope the dst search to the dst tree.
-Describe 'Copy-Item link reproduction' -Skip {
+Describe 'Copy-Item link reproduction' {
     BeforeAll {
         $script:CopyDest = "${script:Drive}:\TestFixture_CopyDest"
 

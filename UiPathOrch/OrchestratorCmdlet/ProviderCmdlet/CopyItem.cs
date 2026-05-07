@@ -1464,14 +1464,114 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         return dstCalendar;
     }
 
+    /// <summary>
+    /// Finds, for each src link folder identified by <paramref name="folderIds"/>, the
+    /// corresponding dst folder by rebasing src's relative position around
+    /// <paramref name="srcAnchor"/> onto dst's tree around <paramref name="dstAnchor"/>.
+    /// Replaces the older FQN-equality match, which was correct for cross-drive copies
+    /// (where src and dst trees share FQN shape) but broken for same-drive copies
+    /// (src and dst FQNs differ, so the equality only ever matched src against itself,
+    /// leaving Link*/Bucket/Queue sharing the SOURCE entity into dst folders).
+    /// </summary>
     internal static IEnumerable<Folder>? FindDstFolders(
-        List<Int64>? folderIds, IEnumerable<Folder> srcFolders, IEnumerable<Folder> dstFolders)
+        List<Int64>? folderIds,
+        IEnumerable<Folder> srcFolders,
+        IEnumerable<Folder> dstFolders,
+        Folder srcAnchor,
+        Folder dstAnchor)
     {
-        if (folderIds is null)
-            return null;
+        if (folderIds is null) return null;
 
         var selectedSrcFolders = srcFolders.Where(src => folderIds.Contains(src.Id ?? 0)).ToList();
-        return dstFolders.Where(dst => selectedSrcFolders.Any(src => string.Compare(src.FullyQualifiedName, dst.FullyQualifiedName, StringComparison.OrdinalIgnoreCase) == 0));
+        if (selectedSrcFolders.Count == 0) return Enumerable.Empty<Folder>();
+
+        var dstByFqn = new Dictionary<string, Folder>(StringComparer.OrdinalIgnoreCase);
+        foreach (var d in dstFolders)
+        {
+            if (d.FullyQualifiedName is not null) dstByFqn[d.FullyQualifiedName] = d;
+        }
+
+        string srcAnchorFqn = srcAnchor.FullyQualifiedName ?? "";
+        string dstAnchorFqn = dstAnchor.FullyQualifiedName ?? "";
+
+        var result = new List<Folder>();
+        foreach (var srcLink in selectedSrcFolders)
+        {
+            string? candidateDstFqn = ComputeDstFqn(srcLink.FullyQualifiedName ?? "", srcAnchorFqn, dstAnchorFqn);
+            if (candidateDstFqn is null) continue;
+            if (!dstByFqn.TryGetValue(candidateDstFqn, out var dstMatch)) continue;
+            // Defensive: when src and dst share the folder pool (same drive), refuse to
+            // return a dst folder that is itself one of the src link folders. Without
+            // this, same-drive copies whose dst tree happens to alias an src link folder
+            // would re-introduce the "share src into dst" foot-gun.
+            if (folderIds.Contains(dstMatch.Id ?? 0)) continue;
+            result.Add(dstMatch);
+        }
+        return result;
+    }
+
+    /// <summary>
+    /// Returns the FQN of the dst folder corresponding to a src link folder, by rebasing
+    /// the src→link relationship around the (srcAnchor, dstAnchor) pair. Handles three
+    /// shapes: srcLink is a descendant of srcAnchor, srcLink is an ancestor of srcAnchor,
+    /// or srcLink is reachable via a common ancestor higher up the src tree (sibling or
+    /// cousin). Returns null when the relationship has no expressible dst equivalent
+    /// (e.g., disjoint top-level subtrees).
+    /// </summary>
+    private static string? ComputeDstFqn(string srcLinkFqn, string srcAnchorFqn, string dstAnchorFqn)
+    {
+        // Identical → dst equivalent is dstAnchor itself
+        if (string.Equals(srcLinkFqn, srcAnchorFqn, StringComparison.OrdinalIgnoreCase))
+        {
+            return dstAnchorFqn;
+        }
+
+        // Descendant of srcAnchor: replace srcAnchor prefix with dstAnchor
+        if (srcLinkFqn.StartsWith(srcAnchorFqn + "/", StringComparison.OrdinalIgnoreCase))
+        {
+            return dstAnchorFqn + srcLinkFqn.Substring(srcAnchorFqn.Length);
+        }
+
+        // Ancestor of srcAnchor: walk up dstAnchor by the same number of segments
+        if (srcAnchorFqn.StartsWith(srcLinkFqn + "/", StringComparison.OrdinalIgnoreCase))
+        {
+            int upSteps = srcAnchorFqn.Substring(srcLinkFqn.Length).Count(c => c == '/');
+            return WalkUp(dstAnchorFqn, upSteps);
+        }
+
+        // Sibling / cousin: find longest common prefix that ends at a "/" boundary,
+        // walk up dstAnchor by the number of segments below that prefix in srcAnchor,
+        // then descend into the dst tree by srcLink's tail under the common prefix.
+        int lastBoundary = -1;
+        int minLen = Math.Min(srcAnchorFqn.Length, srcLinkFqn.Length);
+        for (int i = 0; i < minLen; i++)
+        {
+            if (char.ToLowerInvariant(srcAnchorFqn[i]) != char.ToLowerInvariant(srcLinkFqn[i])) break;
+            if (srcAnchorFqn[i] == '/') lastBoundary = i;
+        }
+        if (lastBoundary < 0) return null; // no shared ancestor
+
+        string srcCommon = srcAnchorFqn.Substring(0, lastBoundary);
+        string srcSuffixToLink = srcLinkFqn.Substring(lastBoundary + 1);
+        int upStepsFromAnchor = srcAnchorFqn.Substring(srcCommon.Length).Count(c => c == '/');
+
+        string? dstCommon = WalkUp(dstAnchorFqn, upStepsFromAnchor);
+        if (dstCommon is null) return null;
+
+        return dstCommon.Length == 0 ? srcSuffixToLink : dstCommon + "/" + srcSuffixToLink;
+    }
+
+    /// <summary>Strips <paramref name="upSteps"/> trailing "/segment" pieces from
+    /// <paramref name="fqn"/>. Returns null if the path can't go that high.</summary>
+    private static string? WalkUp(string fqn, int upSteps)
+    {
+        for (int i = 0; i < upSteps; i++)
+        {
+            int lastSlash = fqn.LastIndexOf('/');
+            if (lastSlash < 0) return null;
+            fqn = fqn.Substring(0, lastSlash);
+        }
+        return fqn;
     }
 
     internal static bool LinkAsset(IWritableHost _this,
@@ -1499,7 +1599,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             dstLinkFolders = FindDstFolders(
                 srcLinkFolderIds,
                 srcDrive.GetFolders(),
-                dstDrive.GetFolders());
+                dstDrive.GetFolders(),
+                srcFolder,
+                newFolder);
 
             if (dstLinkFolders is null || !dstLinkFolders.Any())
             {
@@ -1770,7 +1872,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             dstLinkFolders = FindDstFolders(
                 srcLinkFolderIds,
                 srcDrive.GetFolders(),
-                dstDrive.GetFolders());
+                dstDrive.GetFolders(),
+                srcFolder,
+                newFolder);
 
             if (dstLinkFolders is null || !dstLinkFolders.Any())
             {
@@ -2289,7 +2393,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             dstLinkFolders = FindDstFolders(
                 srcLinkFolderIds,
                 srcDrive.GetFolders(),
-                dstDrive.GetFolders());
+                dstDrive.GetFolders(),
+                srcFolder,
+                newFolder);
 
             if (dstLinkFolders is null || !dstLinkFolders.Any())
             {
