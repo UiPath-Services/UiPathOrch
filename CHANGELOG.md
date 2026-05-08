@@ -8,23 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [1.2.1] - 2026-05-08
 
-Patch release that addresses three Copy-Item / Export-OrchBucketItem
+Patch release that addresses two Copy-Item / Export-OrchBucketItem
 bugs that surfaced once users started exercising the asset / queue /
 bucket link feature shipped in 1.2.0.
 
 ### Fixed
 
-- **`Copy-Item` reproduces every link relationship.** When a multi-link
-  entity (asset / queue / bucket) had to be re-linked in the
-  destination, only the FIRST destination folder containing it was
-  linked — sibling dst folders that should have shared the entity
-  were skipped. `Copy-Item` now establishes the link to every
-  matching destination folder so the source link graph is reproduced
-  faithfully. Per-iteration error handling lets one folder's failure
-  not abort the others. (Internally, `LinkAsset` / `LinkBucket` /
-  `LinkQueue` in `CopyItem.cs` switched from "return after the first
-  match" to iterating all matches with Id-based dedup so shared
-  entities still make exactly one API call.)
 - **`Copy-Item` no longer shares the SOURCE entity into destination
   folders on same-drive copies.** When you copied a folder containing
   linked assets / queues / buckets to another folder on the same drive
@@ -37,16 +26,17 @@ bucket link feature shipped in 1.2.0.
   affected (unlinked entities were copied cleanly). Cross-drive copies
   between two different drives were unaffected.
 
-  Root cause: `FindDstFolders` matched src folders to dst folders by
-  full FQN equality against the global folder pool, so on a same-drive
-  copy the src folders matched only themselves — `LinkAsset` /
-  `LinkBucket` / `LinkQueue` then added the new dst folder to the
-  SOURCE entity's share list rather than letting `CopyAssets` create a
-  fresh dst entity. `FindDstFolders` now rebases src link folders
-  relative to the (srcAnchor, dstAnchor) pair (handling descendant /
-  ancestor / sibling-cousin shapes) so same-drive copies produce
-  cleanly-separated dst entities linked together within the dst tree
-  only.
+  Root cause: the source-to-destination folder mapping inside
+  `Copy-Item` matched source folders against the global folder pool by
+  full path, so on a same-drive copy the source folders matched only
+  themselves — the link-re-establishing step then added the new
+  destination folder to the SOURCE entity's share list rather than
+  letting `Copy-Item` create a fresh destination entity. The mapping
+  now rebases each source link folder relative to the source folder
+  being copied and its destination counterpart (handling descendant /
+  ancestor / sibling-cousin shapes), so same-drive copies produce
+  cleanly-separated destination entities linked together within the
+  destination tree only.
 - **`Export-OrchBucketItem -Recurse` no longer downloads linked bucket
   items multiple times.** A bucket linked to N folders appeared in
   each folder's enumeration with the same Id, and the cmdlet wrote the
@@ -57,6 +47,15 @@ bucket link feature shipped in 1.2.0.
 
 ### Internal
 
+- `Copy-Item`'s link-re-establishing step switched from "return after
+  the first matching destination folder" to iterating all matches with
+  Id-based dedup. Defensive — in normal incremental copies the dedup
+  catches the duplicate Ids of shared entities so the end state is
+  identical, but the new code is more robust if a single share-API
+  call fails partway (the remaining folders still get tried) or if the
+  destination happens to contain non-linked duplicates of the same
+  name (each Id gets its own attempt instead of silently losing the
+  rest).
 - **`release.yml` now runs `dotnet format --verify-no-changes` and
   `dotnet test` before `Publish-Module`.** The Release and CI
   workflows previously fired in parallel on a release commit and ran
@@ -64,16 +63,16 @@ bucket link feature shipped in 1.2.0.
   PSGallery — before CI reported any failure. The 1.2.0 release
   exposed this when latent format violations on master were caught by
   CI a few seconds after PSGallery had already accepted the publish.
-- **3-link fixture entities added to `TestData/Fixture`**
+- **3-link test data entities added to `TestData/Fixture`**
   (`asset-shared3` / `bucket-shared3` / `queue-shared3`, each owned
   by Production and linked to Development / QA / SubA), plus a Pester
   `Copy-Item link reproduction` Describe in `CleanTenant.Tests.ps1`
-  that copies the fixture tree into a sibling root and asserts every
-  multi-link entity's link set is reproduced end-to-end. Catches all
-  three of the bugs above as Pester regressions.
-- Pre-existing `dotnet format` violations across `UiPathOrchConfig.cs`,
-  the link cmdlet shape tests, and one `else foreach` construct in
-  `CopyItem.cs` (where local and CI formatters disagreed) cleaned up.
+  that copies the test data tree into a sibling root and asserts
+  every multi-link entity's link set is reproduced end-to-end.
+  Catches the bugs above as Pester regressions.
+- Pre-existing `dotnet format` violations across several source files
+  cleaned up, including a control-flow construct where local and CI
+  formatters disagreed about indentation.
 
 ## [1.2.0] - 2026-05-07
 

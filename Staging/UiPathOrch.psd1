@@ -452,16 +452,16 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-Patch release: three Copy-Item / Export-OrchBucketItem bugs that surfaced once users started exercising the asset / queue / bucket link feature shipped in 1.2.0.
+Patch release: two Copy-Item / Export-OrchBucketItem bugs that surfaced once users started exercising the asset / queue / bucket link feature shipped in 1.2.0.
 
 ## Bug Fixes
-- **`Copy-Item` reproduces every link relationship.** When a multi-link entity (asset / queue / bucket) had to be re-linked in the destination, only the FIRST destination folder containing it was linked — sibling dst folders that should have shared the entity were skipped. `Copy-Item` now establishes the link to every matching destination folder so the source link graph is reproduced faithfully.
-- **`Copy-Item` no longer shares the SOURCE entity into destination folders on same-drive copies.** When you copied a folder containing linked assets / queues / buckets to another folder on the same drive, the dst didn't actually get its own copy of those entities — it got a pointer to the src. `Get-OrchAsset` against the dst returned the same Id as the src, and `Set-OrchAsset` against what looked like the dst's asset silently mutated the src's value. Only entities that already had at least one link in src were affected; unlinked entities were copied cleanly. Cross-drive copies were unaffected. (Root cause: `FindDstFolders` matched src folders against themselves on same-drive runs; now uses a relative-path rebase keyed on (srcAnchor, dstAnchor).)
+- **`Copy-Item` no longer shares the SOURCE entity into destination folders on same-drive copies.** When you copied a folder containing linked assets / queues / buckets to another folder on the same drive, the dst didn't actually get its own copy of those entities — it got a pointer to the src. `Get-OrchAsset` against the dst returned the same Id as the src, and `Set-OrchAsset` against what looked like the dst's asset silently mutated the src's value. Only entities that already had at least one link in src were affected; unlinked entities were copied cleanly. Cross-drive copies were unaffected. (Root cause: `Copy-Item`'s source-to-destination folder mapping matched source folders against themselves on same-drive runs; now uses a relative-path rebase based on the source folder being copied and its destination counterpart.)
 - **`Export-OrchBucketItem -Recurse` no longer downloads linked bucket items multiple times.** A bucket linked to N folders used to produce N copies of every file under `-Destination` (3 items × 3 folders = 9 file writes for what should have been 3 unique files). Now dedupes by bucket Id across the recursive walk; first-seen wins.
 
 ## Internal
+- `Copy-Item`'s link-re-establishing step switched from "return after the first matching destination folder" to iterating all matches with Id-based dedup. Defensive — same end state as before in normal incremental copies, but more robust if a single share-API call fails partway or if the destination happens to contain non-linked duplicates of the same name.
 - `release.yml` now runs `dotnet format --verify-no-changes` and `dotnet test` before `Publish-Module`, mirroring CI. The 1.2.0 release exposed that the Release workflow could publish to PSGallery before CI reported failure — the two ran in parallel and Release usually finished first.
-- 3-link fixture entities (`asset-shared3` / `bucket-shared3` / `queue-shared3`) added to `TestData/Fixture`, plus a new Pester `Copy-Item link reproduction` Describe verifying the three Copy-Item / Export bugs above end-to-end against a real tenant.
+- 3-link test data entities (`asset-shared3` / `bucket-shared3` / `queue-shared3`) added to `TestData/Fixture`, plus a new Pester `Copy-Item link reproduction` Describe verifying the Copy-Item / Export bugs above end-to-end against a real tenant.
 '@
 
         # Prerelease string of this module
