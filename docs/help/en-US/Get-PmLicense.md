@@ -42,7 +42,7 @@ OAuth required scopes: (License Accountant API - no per-endpoint scopes)
 
 Required permissions: (managed by Identity Server)
 
-This cmdlet works only on UiPath Automation Cloud deployments; standalone on-premises Orchestrator does not expose the Portal Management API.
+This cmdlet works only on UiPath Automation Cloud deployments; on-premises Orchestrator does not expose the Portal Management API.
 
 ## EXAMPLES
 

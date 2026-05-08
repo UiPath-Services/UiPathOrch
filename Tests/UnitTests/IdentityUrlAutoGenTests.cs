@@ -23,7 +23,7 @@ public class IdentityUrlAutoGenTests
     [InlineData("https://orchestrator.local/mytenant",
                 "https://orchestrator.local/identity")]
     // On-premises with no tenant in path (single-tenant Orchestrator on Azure
-    // App Service / standalone MSI): /identity at host root
+    // App Service or self-hosted): /identity at host root
     [InlineData("https://orchestrator.local",
                 "https://orchestrator.local/identity")]
     [InlineData("https://my-orch.azurewebsites.net",

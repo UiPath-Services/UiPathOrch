@@ -77,7 +77,7 @@ The headline change is **multi-tenant Automation Suite support** — earlier rel
 
 ## Migration / Compatibility Notes
 
-- Existing Cloud (`*.uipath.com`) and standalone on-premises Orchestrator users: no behavioural change.
+- Existing Cloud (`*.uipath.com`) and on-premises Orchestrator users: no behavioural change.
 - Existing on-premises Orchestrator behind a multi-level reverse proxy that produces a 2-segment Root path (rare): the new heuristic mis-classifies as AS. Set `"Edition": "OnPremises"` explicitly in `UiPathOrchConfig.json` to restore previous behaviour.
 
 ## Internal

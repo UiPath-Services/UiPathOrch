@@ -37,7 +37,7 @@ public enum OrchEdition
     Cloud,
     // Self-hosted Automation Suite – same URL shape as Cloud but on a customer domain.
     AutomationSuite,
-    // MSI / Standalone Orchestrator – tenant is sent via the X-UIPATH-TenantName header,
+    // On-premises Orchestrator – tenant is sent via the X-UIPATH-TenantName header,
     // not embedded in the URL path.
     OnPremises,
 }

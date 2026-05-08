@@ -14,7 +14,7 @@ UiPathOrch is a PowerShell module that enables you to mount multiple Orchestrato
 
 This module uses the Orchestrator API to mount modern folders as local drives, making them accessible from the PowerShell console with file system-like operations.
 
-Works against **Automation Cloud**, self-hosted **Automation Suite**, and on-premises **Standalone Orchestrator** deployments — the deployment kind is auto-detected from the drive's Root URL (or pinned explicitly via the `Edition` config field).
+Works against **Automation Cloud**, **Automation Suite**, and **on-premises Orchestrator** deployments — the deployment kind is auto-detected from the drive's Root URL (or pinned explicitly via the `Edition` config field).
 
 **Note:** This module functions even in environments where Studio/Assistant is not installed.
 
