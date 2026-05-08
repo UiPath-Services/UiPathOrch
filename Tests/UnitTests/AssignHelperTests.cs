@@ -56,65 +56,13 @@ public class AssignStringIfNotNullTests
         Assert.Equal("new", t.Str);
     }
 
-    // --- Overload with target getter (change-detection / PUT semantics) ---
-
-    [Fact]
-    public void WithGetter_NullValue_ReturnsFalse()
-    {
-        var t = new TestEntity { Str = "original" };
-        bool changed = t.AssignStringIfNotNull(null, e => e.Str, (e, v) => e.Str = v);
-        Assert.False(changed);
-        Assert.Equal("original", t.Str);
-    }
-
-    [Fact]
-    public void WithGetter_EmptyValueAndCurrentNull_ReturnsFalse()
-    {
-        // Documented behaviour: null and "" are treated as equivalent, so an
-        // empty value against a null current does NOT count as a change.
-        var t = new TestEntity { Str = null };
-        bool changed = t.AssignStringIfNotNull("", e => e.Str, (e, v) => e.Str = v);
-        Assert.False(changed);
-        Assert.Null(t.Str);
-    }
-
-    [Fact]
-    public void WithGetter_EmptyValueAndCurrentEmpty_ReturnsFalse()
-    {
-        var t = new TestEntity { Str = "" };
-        bool changed = t.AssignStringIfNotNull("", e => e.Str, (e, v) => e.Str = v);
-        Assert.False(changed);
-        Assert.Equal("", t.Str);
-    }
-
-    [Fact]
-    public void WithGetter_EmptyValueAndCurrentNonEmpty_ReturnsTrue()
-    {
-        // Setting "" over an existing non-empty value IS a change.
-        var t = new TestEntity { Str = "old" };
-        bool changed = t.AssignStringIfNotNull("", e => e.Str, (e, v) => e.Str = v);
-        Assert.True(changed);
-        Assert.Equal("", t.Str);
-    }
-
-    [Fact]
-    public void WithGetter_SameValue_ReturnsFalse()
-    {
-        var t = new TestEntity { Str = "x" };
-        bool changed = t.AssignStringIfNotNull("x", e => e.Str, (e, v) => e.Str = v);
-        Assert.False(changed);
-    }
-
-    [Fact]
-    public void WithGetter_DifferentValue_ReturnsTrueAndAssigns()
-    {
-        var t = new TestEntity { Str = "x" };
-        bool changed = t.AssignStringIfNotNull("y", e => e.Str, (e, v) => e.Str = v);
-        Assert.True(changed);
-        Assert.Equal("y", t.Str);
-    }
-
     // --- Overload with source getter (PATCH / DeepCopy semantics) ---
+    // Note: a target-only-getter PUT overload existed historically but had
+    // zero callsites in the codebase, so it was removed. Update cmdlets all
+    // use the source-getter form for PATCH semantics. The empty-vs-null
+    // equivalence is exercised through the WithSource_* tests below — the
+    // PATCH form's body is structurally identical to the deleted PUT form
+    // (just compares against source instead of target).
 
     [Fact]
     public void WithSource_ComparesAgainstSourceNotTarget()
@@ -198,43 +146,8 @@ public class AssignNumberIfNotNullOrZeroTests
         Assert.Equal(7, t.Num);
     }
 
-    // --- Overload with target getter (change detection) ---
-
-    [Fact]
-    public void WithGetter_NullValue_ReturnsFalse()
-    {
-        var t = new TestEntity { Num = 5 };
-        bool changed = t.AssignNumberIfNotNullOrZero<TestEntity, int>(null, e => e.Num, (e, v) => e.Num = v);
-        Assert.False(changed);
-    }
-
-    [Fact]
-    public void WithGetter_ZeroValue_ReturnsFalse()
-    {
-        var t = new TestEntity { Num = 5 };
-        bool changed = t.AssignNumberIfNotNullOrZero<TestEntity, int>(0, e => e.Num, (e, v) => e.Num = v);
-        Assert.False(changed);
-        Assert.Equal(5, t.Num);
-    }
-
-    [Fact]
-    public void WithGetter_SameValue_ReturnsFalse()
-    {
-        var t = new TestEntity { Num = 7 };
-        bool changed = t.AssignNumberIfNotNullOrZero<TestEntity, int>(7, e => e.Num, (e, v) => e.Num = v);
-        Assert.False(changed);
-    }
-
-    [Fact]
-    public void WithGetter_DifferentValue_ReturnsTrueAndAssigns()
-    {
-        var t = new TestEntity { Num = 7 };
-        bool changed = t.AssignNumberIfNotNullOrZero<TestEntity, int>(9, e => e.Num, (e, v) => e.Num = v);
-        Assert.True(changed);
-        Assert.Equal(9, t.Num);
-    }
-
     // --- Overload with source getter (PATCH semantics) ---
+    // (PUT overload with target-only getter was removed — zero callsites.)
 
     [Fact]
     public void WithSource_ComparesAgainstSource()
@@ -418,35 +331,8 @@ public class AssignBoolIfNotNullTests
         Assert.False(t.Flag);
     }
 
-    // --- string? + getter (change detection) ---
-
-    [Fact]
-    public void WithGetter_FromStringSameValue_ReturnsFalse()
-    {
-        var t = new TestEntity { Flag = true };
-        bool changed = t.AssignBoolIfNotNull("true", e => e.Flag, (e, v) => e.Flag = v);
-        Assert.False(changed);
-    }
-
-    [Fact]
-    public void WithGetter_FromStringDifferentValue_ReturnsTrueAndAssigns()
-    {
-        var t = new TestEntity { Flag = false };
-        bool changed = t.AssignBoolIfNotNull("true", e => e.Flag, (e, v) => e.Flag = v);
-        Assert.True(changed);
-        Assert.True(t.Flag);
-    }
-
-    [Fact]
-    public void WithGetter_UnparseableSetsNullIfCurrentNotNull()
-    {
-        var t = new TestEntity { Flag = true };
-        bool changed = t.AssignBoolIfNotNull("abc", e => e.Flag, (e, v) => e.Flag = v);
-        Assert.True(changed);
-        Assert.Null(t.Flag);
-    }
-
     // --- string? + source + getter (PATCH semantics) ---
+    // (PUT overload with target-only getter was removed — zero callsites.)
 
     [Fact]
     public void WithSource_FromStringSameAsSource_ReturnsFalse()
