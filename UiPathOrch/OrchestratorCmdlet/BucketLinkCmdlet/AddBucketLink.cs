@@ -90,7 +90,11 @@ public class AddBucketLinkCommand : OrchestratorPSCmdlet
                         new List<Int64> { bucket.Id ?? 0 },
                         toAddIds,
                         new List<Int64>());
-                    drive._dicBucketLinks = null;
+                    drive.ClearBucketLinkCache(bucket.Id ?? 0);
+                    foreach (var dl in sameDriveLinks.Where(dl => toAddIds.Contains(dl.folder.Id ?? 0)))
+                    {
+                        drive.Buckets.ClearCache(dl.folder);
+                    }
                 }
                 catch (Exception ex)
                 {

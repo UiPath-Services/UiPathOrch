@@ -9,11 +9,12 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveAssetLinkCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(AssetNameCompleter))]
+    [ArgumentCompleter(typeof(LinkedAssetNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(AssetLinkFolderCompleter))]
     [SupportsWildcards]
     public string[]? Link { get; set; }
 
@@ -91,7 +92,14 @@ public class RemoveAssetLinkCommand : OrchestratorPSCmdlet
                         new List<Int64> { asset.Id ?? 0 },
                         new List<Int64>(),
                         toRemoveIds);
-                    drive._dicAssetLinks = null;
+                    // Invalidate just what changed: this asset's link set, and the
+                    // per-folder asset list for each unlinked folder (which no
+                    // longer exposes this asset).
+                    drive.ClearAssetLinkCache(asset.Id ?? 0);
+                    foreach (var dl in sameDriveLinks.Where(dl => toRemoveIds.Contains(dl.folder.Id ?? 0)))
+                    {
+                        drive.Assets.ClearCache(dl.folder);
+                    }
                 }
                 catch (Exception ex)
                 {

@@ -10,11 +10,12 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveBucketLinkCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<False>))]
+    [ArgumentCompleter(typeof(LinkedBucketNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(BucketLinkFolderCompleter))]
     [SupportsWildcards]
     public string[]? Link { get; set; }
 
@@ -88,7 +89,11 @@ public class RemoveBucketLinkCommand : OrchestratorPSCmdlet
                         new List<Int64> { bucket.Id ?? 0 },
                         new List<Int64>(),
                         toRemoveIds);
-                    drive._dicBucketLinks = null;
+                    drive.ClearBucketLinkCache(bucket.Id ?? 0);
+                    foreach (var dl in sameDriveLinks.Where(dl => toRemoveIds.Contains(dl.folder.Id ?? 0)))
+                    {
+                        drive.Buckets.ClearCache(dl.folder);
+                    }
                 }
                 catch (Exception ex)
                 {

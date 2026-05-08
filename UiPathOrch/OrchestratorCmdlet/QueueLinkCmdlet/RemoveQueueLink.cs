@@ -9,11 +9,12 @@ namespace UiPath.PowerShell.Commands;
 public class RemoveQueueLinkCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(QueueNameCompleter))]
+    [ArgumentCompleter(typeof(LinkedQueueNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(QueueLinkFolderCompleter))]
     [SupportsWildcards]
     public string[]? Link { get; set; }
 
@@ -87,7 +88,11 @@ public class RemoveQueueLinkCommand : OrchestratorPSCmdlet
                         new List<Int64> { queue.Id ?? 0 },
                         new List<Int64>(),
                         toRemoveIds);
-                    drive._dicQueueLinks = null;
+                    drive.ClearQueueLinkCache(queue.Id ?? 0);
+                    foreach (var dl in sameDriveLinks.Where(dl => toRemoveIds.Contains(dl.folder.Id ?? 0)))
+                    {
+                        drive.Queues.ClearCache(dl.folder);
+                    }
                 }
                 catch (Exception ex)
                 {

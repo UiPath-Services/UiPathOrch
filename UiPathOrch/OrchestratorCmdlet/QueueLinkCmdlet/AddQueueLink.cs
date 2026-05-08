@@ -89,7 +89,11 @@ public class AddQueueLinkCommand : OrchestratorPSCmdlet
                         new List<Int64> { queue.Id ?? 0 },
                         toAddIds,
                         new List<Int64>());
-                    drive._dicQueueLinks = null;
+                    drive.ClearQueueLinkCache(queue.Id ?? 0);
+                    foreach (var dl in sameDriveLinks.Where(dl => toAddIds.Contains(dl.folder.Id ?? 0)))
+                    {
+                        drive.Queues.ClearCache(dl.folder);
+                    }
                 }
                 catch (Exception ex)
                 {

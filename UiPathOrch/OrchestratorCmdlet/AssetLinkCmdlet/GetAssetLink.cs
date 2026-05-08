@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetAssetLinkCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(AssetNameCompleter))]
+    [ArgumentCompleter(typeof(LinkedAssetNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

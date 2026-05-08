@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetBucketLinkCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BucketNameCompleter<False>))]
+    [ArgumentCompleter(typeof(LinkedBucketNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 

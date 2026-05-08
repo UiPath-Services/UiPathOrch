@@ -904,6 +904,25 @@ public partial class OrchDriveInfo : PSDriveInfo
         return folderShare;
     }
 
+    /// <summary>
+    /// Drop all cached AccessibleFoldersDto entries for a single asset, plus any
+    /// matching exception entries. Call after Add/Remove-OrchAssetLink so the
+    /// next GetFoldersForAsset call re-fetches just this asset's link set
+    /// without flushing unrelated assets' caches.
+    /// </summary>
+    public void ClearAssetLinkCache(Int64 assetId)
+    {
+        if (_dicAssetLinks is not null)
+        {
+            // Snapshot keys before mutation: ConcurrentDictionary.Keys is a live view.
+            foreach (var key in _dicAssetLinks.Keys.Where(k => k.assetId == assetId).ToList())
+            {
+                _dicAssetLinks.TryRemove(key, out _);
+                _dicAssetLinks_Exception.ClearCache(key);
+            }
+        }
+    }
+
     #endregion
 
     #region OrchProcess cache
@@ -1211,9 +1230,9 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
     #endregion
 
-    // key: (folderId, assetId)
-    // bucketId alone should be unique, but include folderId in the key as well just in case.
-    internal ConcurrentDictionary<(Int64 folderId, Int64 bucketId), AccessibleFoldersDto?>? _dicQueueLinks = null;
+    // key: (folderId, queueId)
+    // queueId alone should be unique, but include folderId in the key as well just in case.
+    internal ConcurrentDictionary<(Int64 folderId, Int64 queueId), AccessibleFoldersDto?>? _dicQueueLinks = null;
     public AccessibleFoldersDto? GetFoldersForQueue(Folder folder, QueueDefinition queue)
     {
         if (_dicQueueLinks is null)
@@ -1240,6 +1259,23 @@ public partial class OrchDriveInfo : PSDriveInfo
             _dicQueueLinks[(folder.Id ?? 0, queue.Id ?? 0)] = folderShare;
         }
         return folderShare;
+    }
+
+    /// <summary>
+    /// Drop all cached AccessibleFoldersDto entries for a single queue. Call
+    /// after Add/Remove-OrchQueueLink so the next GetFoldersForQueue call
+    /// re-fetches just this queue's link set without flushing unrelated
+    /// queues' caches.
+    /// </summary>
+    public void ClearQueueLinkCache(Int64 queueId)
+    {
+        if (_dicQueueLinks is not null)
+        {
+            foreach (var key in _dicQueueLinks.Keys.Where(k => k.queueId == queueId).ToList())
+            {
+                _dicQueueLinks.TryRemove(key, out _);
+            }
+        }
     }
 
     #region OrchQueueItem cache
@@ -1529,7 +1565,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         {
             lock (_dicBucketLinks_Exceptions)
             {
-                _dicBucketLinks ??= new ConcurrentDictionary<(Int64 folderId, Int64 assetId), AccessibleFoldersDto?>();
+                _dicBucketLinks ??= new ConcurrentDictionary<(Int64 folderId, Int64 bucketId), AccessibleFoldersDto?>();
             }
         }
 
@@ -1557,6 +1593,24 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         }
         return folderShare;
+    }
+
+    /// <summary>
+    /// Drop all cached AccessibleFoldersDto entries for a single bucket, plus
+    /// any matching exception entries. Call after Add/Remove-OrchBucketLink so
+    /// the next GetFoldersForBucket call re-fetches just this bucket's link
+    /// set without flushing unrelated buckets' caches.
+    /// </summary>
+    public void ClearBucketLinkCache(Int64 bucketId)
+    {
+        if (_dicBucketLinks is not null)
+        {
+            foreach (var key in _dicBucketLinks.Keys.Where(k => k.bucketId == bucketId).ToList())
+            {
+                _dicBucketLinks.TryRemove(key, out _);
+                _dicBucketLinks_Exceptions.ClearCache(key);
+            }
+        }
     }
 
     #endregion

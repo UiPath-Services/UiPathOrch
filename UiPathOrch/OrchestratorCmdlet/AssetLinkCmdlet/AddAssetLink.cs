@@ -91,7 +91,14 @@ public class AddAssetLinkCommand : OrchestratorPSCmdlet
                         new List<Int64> { asset.Id ?? 0 },
                         toAddIds,
                         new List<Int64>());
-                    drive._dicAssetLinks = null;
+                    // Invalidate just what changed: this asset's link set, and the
+                    // per-folder asset list for each newly-targeted folder (which
+                    // now exposes this asset where it didn't before).
+                    drive.ClearAssetLinkCache(asset.Id ?? 0);
+                    foreach (var dl in sameDriveLinks.Where(dl => toAddIds.Contains(dl.folder.Id ?? 0)))
+                    {
+                        drive.Assets.ClearCache(dl.folder);
+                    }
                 }
                 catch (Exception ex)
                 {

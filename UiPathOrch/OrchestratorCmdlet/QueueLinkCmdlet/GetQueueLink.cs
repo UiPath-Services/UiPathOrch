@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetQueueLinkCommand : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(QueueNameCompleter))]
+    [ArgumentCompleter(typeof(LinkedQueueNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
