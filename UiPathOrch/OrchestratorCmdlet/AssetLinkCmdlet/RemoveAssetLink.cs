@@ -1,4 +1,5 @@
 using System.Management.Automation;
+using UiPath.OrchAPI;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -6,107 +7,28 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchAssetLink", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium)]
-public class RemoveAssetLinkCommand : OrchestratorPSCmdlet
+public class RemoveAssetLinkCommand : RemoveOrchLinkCmdletBase<Asset>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(LinkedAssetNameCompleter))]
     [SupportsWildcards]
-    public string[]? Name { get; set; }
+    public override string[]? Name { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(AssetLinkFolderCompleter))]
     [SupportsWildcards]
-    public string[]? Link { get; set; }
+    public override string[]? Link { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [SupportsWildcards]
-    public string[]? Path { get; set; }
+    protected override string ErrorId => "RemoveAssetLinkError";
+    protected override string LinkNoun => "AssetLink";
 
-    [Parameter]
-    public SwitchParameter Recurse { get; set; }
+    protected override ICollection<Asset> GetEntities(OrchDriveInfo drive, Folder folder) => drive.Assets.Get(folder);
+    protected override string? GetEntityName(Asset? e) => e?.Name;
+    protected override long GetEntityId(Asset e) => e.Id ?? 0;
 
-    [Parameter]
-    public uint Depth { get; set; }
+    protected override void Share(OrchAPISession api, long srcFolderId, List<long> entityIds, List<long> toAdd, List<long> toRemove)
+        => api.ShareAssetsToFolders(srcFolderId, entityIds, toAdd, toRemove);
 
-    protected override void ProcessRecord()
-    {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth).ToList();
-        var drivesLinks = SessionState.EnumFolders(Link).ToList();
-        var wpName = Name.ConvertToWildcardPatternList();
-
-        // Parallel prefetch warms the per-folder Assets cache.
-        Parallel.ForEach(drivesFolders, df =>
-        {
-            try { df.drive.Assets.Get(df.folder); }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine(
-                    $"RemoveAssetLink prefetch failed for '{df.folder.GetPSPath()}': {ex.Message}");
-            }
-        });
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
-        {
-            ICollection<Asset> assets;
-            try
-            {
-                assets = drive.Assets.Get(folder);
-            }
-            catch (Exception ex)
-            {
-                string target = folder.GetPSPath();
-                WriteError(new ErrorRecord(new OrchException(target, ex), "RemoveAssetLinkError",
-                    ErrorCategory.InvalidOperation, target));
-                continue;
-            }
-
-            // Cross-drive operations are not supported by the API; only same-drive targets apply.
-            var sameDriveLinks = drivesLinks.Where(dl => dl.drive == drive).ToList();
-            if (sameDriveLinks.Count == 0) continue;
-
-            foreach (var asset in assets
-                .FilterByWildcards(a => a?.Name, wpName)
-                .OrderBy(a => a.Name).WithCancellation(cancelHandler.Token))
-            {
-                // Batch all targets for this (folder, asset) into a single API call.
-                // The ShareToFolders endpoint accepts both ToAdd and ToRemove arrays;
-                // we pass an empty ToAdd here and the targets as ToRemove.
-                var toRemoveIds = sameDriveLinks
-                    .Select(dl => dl.folder.Id ?? 0)
-                    .Where(id => id != 0 && id != folder.Id)
-                    .Distinct()
-                    .ToList();
-                if (toRemoveIds.Count == 0) continue;
-
-                string source = folder.GetPSPath();
-                string target = System.IO.Path.Combine(source, asset.Name!);
-                string action = $"Remove AssetLink ✗ {string.Join(", ", sameDriveLinks.Select(dl => dl.folder.GetPSPath()))}";
-
-                if (!ShouldProcess(target, action)) continue;
-
-                try
-                {
-                    drive.OrchAPISession.ShareAssetsToFolders(
-                        folder.Id ?? 0,
-                        new List<Int64> { asset.Id ?? 0 },
-                        new List<Int64>(),
-                        toRemoveIds);
-                    // Invalidate just what changed: this asset's link set, and the
-                    // per-folder asset list for each unlinked folder (which no
-                    // longer exposes this asset).
-                    drive.ClearAssetLinkCache(asset.Id ?? 0);
-                    foreach (var dl in sameDriveLinks.Where(dl => toRemoveIds.Contains(dl.folder.Id ?? 0)))
-                    {
-                        drive.Assets.ClearCache(dl.folder);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(target, ex), "RemoveAssetLinkError",
-                        ErrorCategory.InvalidOperation, target));
-                }
-            }
-        }
-    }
+    protected override void ClearLinkCache(OrchDriveInfo drive, long entityId) => drive.ClearAssetLinkCache(entityId);
+    protected override void ClearPerFolderCache(OrchDriveInfo drive, Folder folder) => drive.Assets.ClearCache(folder);
 }
