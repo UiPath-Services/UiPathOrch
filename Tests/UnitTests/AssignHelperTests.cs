@@ -524,6 +524,97 @@ public class AssignTagsTests
     }
 }
 
+public class MergeNonEmptyValueTests
+{
+    // Pinned semantics for the multi-row CSV-aggregation merge rule.
+    // Priority: non-empty > "" > null. Among non-empty values, last-writer-wins.
+    // Originally duplicated as MergeDescription in SetAsset / SetCredentialAsset /
+    // SetSecretAsset; extracted to a shared helper in OrchExtensions.cs.
+
+    [Fact]
+    public void NullValue_DoesNothing()
+    {
+        var d = new Dictionary<string, string> { ["k"] = "old" };
+        d.MergeNonEmptyValue("k", null);
+        Assert.Equal("old", d["k"]);
+    }
+
+    [Fact]
+    public void NullValueOnEmptyDictionary_DoesNotInsert()
+    {
+        var d = new Dictionary<string, string>();
+        d.MergeNonEmptyValue("k", null);
+        Assert.False(d.ContainsKey("k"));
+    }
+
+    [Fact]
+    public void EmptyValueOnEmptyDictionary_InsertsEmpty()
+    {
+        // First write: existing absent → matches "!TryGetValue" branch and inserts "".
+        // Reflects current behaviour: "" is recorded so a later read sees it.
+        var d = new Dictionary<string, string>();
+        d.MergeNonEmptyValue("k", "");
+        Assert.True(d.ContainsKey("k"));
+        Assert.Equal("", d["k"]);
+    }
+
+    [Fact]
+    public void EmptyValueOverExisting_DoesNotOverwrite()
+    {
+        // Priority rule: empty cannot beat existing non-empty.
+        var d = new Dictionary<string, string> { ["k"] = "OLD" };
+        d.MergeNonEmptyValue("k", "");
+        Assert.Equal("OLD", d["k"]);
+    }
+
+    [Fact]
+    public void EmptyValueOverExistingEmpty_DoesNotOverwrite()
+    {
+        var d = new Dictionary<string, string> { ["k"] = "" };
+        d.MergeNonEmptyValue("k", "");
+        Assert.Equal("", d["k"]);
+    }
+
+    [Fact]
+    public void NonEmptyValueOnEmptyDictionary_Inserts()
+    {
+        var d = new Dictionary<string, string>();
+        d.MergeNonEmptyValue("k", "NEW");
+        Assert.Equal("NEW", d["k"]);
+    }
+
+    [Fact]
+    public void NonEmptyOverEmpty_Overwrites()
+    {
+        // Priority: non-empty beats "".
+        var d = new Dictionary<string, string> { ["k"] = "" };
+        d.MergeNonEmptyValue("k", "NEW");
+        Assert.Equal("NEW", d["k"]);
+    }
+
+    [Fact]
+    public void NonEmptyOverNonEmpty_LastWriterWins()
+    {
+        // Among non-empty values, last writer wins.
+        var d = new Dictionary<string, string> { ["k"] = "OLD" };
+        d.MergeNonEmptyValue("k", "NEW");
+        Assert.Equal("NEW", d["k"]);
+    }
+
+    [Fact]
+    public void TupleKeys_WorkLikeAnyOther()
+    {
+        // Real-world callsite uses (name, path) tuple keys.
+        var d = new Dictionary<(string name, string path), string>();
+        d.MergeNonEmptyValue(("asset1", "Orch1:\\Folder"), "first");
+        d.MergeNonEmptyValue(("asset1", "Orch1:\\Folder"), "");      // empty: skip
+        d.MergeNonEmptyValue(("asset1", "Orch1:\\Folder"), "second"); // non-empty: overwrite
+        d.MergeNonEmptyValue(("asset2", "Orch1:\\Folder"), "other");  // different key: inserts
+        Assert.Equal("second", d[("asset1", "Orch1:\\Folder")]);
+        Assert.Equal("other", d[("asset2", "Orch1:\\Folder")]);
+    }
+}
+
 public class AssignIdFromNameTests
 {
     private sealed class TestEntry

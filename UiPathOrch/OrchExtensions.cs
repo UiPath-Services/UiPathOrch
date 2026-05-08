@@ -726,6 +726,30 @@ internal static class OrchStringExtensions
         }
     }
 
+    /// <summary>
+    /// Multi-row CSV-aggregation merge for a string field. Records the "best opinion seen so far"
+    /// per <paramref name="key"/> with priority <c>non-empty &gt; "" &gt; null</c>, last-writer-wins
+    /// among non-empty values. Used by Set-OrchAsset / Set-OrchCredentialAsset / Set-OrchSecretAsset
+    /// for Description, where the CSV exporter writes the value on the first row and leaves later
+    /// rows empty: the lone non-empty value on row 1 wins over the empty cells, while a single
+    /// direct call with <c>""</c> still records the empty as a "clear" intent for that key.
+    /// <para>
+    /// null incoming values are ignored entirely (the row simply didn't carry the column).
+    /// </para>
+    /// </summary>
+    public static void MergeNonEmptyValue<TKey>(this IDictionary<TKey, string> resolvedValues, TKey key, string? rowValue)
+        where TKey : notnull
+    {
+        if (rowValue is null) return;
+        if (!resolvedValues.TryGetValue(key, out var existing)
+            || (existing.Length == 0 && rowValue.Length > 0)
+            || (existing.Length > 0 && rowValue.Length > 0))
+        {
+            resolvedValues[key] = rowValue;
+        }
+        // else: existing is non-empty and incoming is "", or both are "" — keep existing.
+    }
+
     // keyValues are key-value pairs separated by =. e.g., "tag1" or "tag2=value".
     // Used inside Add-OrchHoge, Update-OrchHoge, etc.
     public static IEnumerable<Tag> ConvertToTags(this string[]? keyValues)

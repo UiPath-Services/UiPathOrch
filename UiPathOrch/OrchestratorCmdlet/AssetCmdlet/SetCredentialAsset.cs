@@ -28,26 +28,16 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
     private readonly List<SetCredentialAssetCommandParameter> parameters = [];
     private readonly Dictionary<(string name, string path), Asset> pendingAssets = [];
 
-    // Merged Description per asset across all input rows. Treated as "best opinion seen so far"
-    // with priority: non-empty > "" > null. Among non-empty values, last-writer-wins. The merged
-    // result is applied to each pendingAssets entry in EndProcessing, before POST. This lets a
-    // single direct call (`-Description ""`) clear the field while a CSV roundtrip — where the
-    // exporter writes Description on the first row only and emits empty cells thereafter — is
-    // preserved (the lone non-empty 'A' wins over the empty cells).
+    // Merged Description per asset across all input rows. The merged result is applied to each
+    // pendingAssets entry in EndProcessing, before POST. The shared OrchExtensions.MergeNonEmptyValue
+    // helper documents the priority rule (non-empty > "" > null, last-writer-wins among non-empty);
+    // this lets a single direct call (`-Description ""`) clear the field while a CSV roundtrip —
+    // where the exporter writes Description on the first row only and emits empty cells
+    // thereafter — is preserved (the lone non-empty 'A' wins over the empty cells).
     private readonly Dictionary<(string name, string path), string> _resolvedDescriptions = [];
 
     private void MergeDescription(string name, string folderPath, string? rowDescription)
-    {
-        if (rowDescription is null) return;
-        var key = (name, folderPath);
-        if (!_resolvedDescriptions.TryGetValue(key, out var existing)
-            || (existing.Length == 0 && rowDescription.Length > 0)
-            || (existing.Length > 0 && rowDescription.Length > 0))
-        {
-            _resolvedDescriptions[key] = rowDescription;
-        }
-        // else: existing is non-empty and incoming is "", or both are "" — keep existing.
-    }
+        => _resolvedDescriptions.MergeNonEmptyValue((name, folderPath), rowDescription);
 
     private const string Default = "DefaultParameterSet";
     private const string Plain = "SpecifyPlainPasswordParameterSet";

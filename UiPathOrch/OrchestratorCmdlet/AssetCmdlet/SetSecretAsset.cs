@@ -28,20 +28,11 @@ public class SetSecretAssetCommand : OrchestratorPSCmdlet
     private readonly List<SetSecretAssetCommandParameter> parameters = [];
     private readonly Dictionary<(string name, string path), Asset> pendingAssets = [];
 
-    // See SetCredentialAsset.cs for the merge spec; same rule applies here.
+    // See OrchExtensions.MergeNonEmptyValue for the merge spec.
     private readonly Dictionary<(string name, string path), string> _resolvedDescriptions = [];
 
     private void MergeDescription(string name, string folderPath, string? rowDescription)
-    {
-        if (rowDescription is null) return;
-        var key = (name, folderPath);
-        if (!_resolvedDescriptions.TryGetValue(key, out var existing)
-            || (existing.Length == 0 && rowDescription.Length > 0)
-            || (existing.Length > 0 && rowDescription.Length > 0))
-        {
-            _resolvedDescriptions[key] = rowDescription;
-        }
-    }
+        => _resolvedDescriptions.MergeNonEmptyValue((name, folderPath), rowDescription);
 
     private const string Default = "DefaultParameterSet";
     private const string Plain = "SpecifyPlainSecretParameterSet";
