@@ -8,9 +8,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [1.2.1] - 2026-05-08
 
-Patch release that addresses two Copy-Item / Export-OrchBucketItem
-bugs that surfaced once users started exercising the asset / queue /
-bucket link feature shipped in 1.2.0.
+Patch release: a `Copy-Item` bug that silently shared the source
+entity into destination folders on same-drive copies, plus a
+behaviour change to `Export-OrchBucketItem -Recurse` so it no longer
+duplicates downloads of linked buckets. Both surfaced once users
+started exercising the asset / queue / bucket link feature shipped
+in 1.2.0.
 
 ### Fixed
 
@@ -37,13 +40,22 @@ bucket link feature shipped in 1.2.0.
   ancestor / sibling-cousin shapes), so same-drive copies produce
   cleanly-separated destination entities linked together within the
   destination tree only.
-- **`Export-OrchBucketItem -Recurse` no longer downloads linked bucket
-  items multiple times.** A bucket linked to N folders appeared in
-  each folder's enumeration with the same Id, and the cmdlet wrote the
-  same items into one path per folder it was accessible from
-  (the "Celine repro": 3 items × 3 folders = 9 file writes for what
-  should have been 3 unique files). Now dedupes by bucket Id across
-  the recursive walk; first-seen wins.
+### Changed
+
+- **`Export-OrchBucketItem -Recurse` deduplicates linked buckets
+  across the walk.** A bucket linked to N folders appears in every
+  folder's enumeration with the same Id, so the previous code wrote
+  the same items into one folder path per folder it was accessible
+  from (e.g. 3 items × 3 folders = 9 file writes for what represents
+  3 unique files). The duplicates were technically a faithful mirror
+  of the source folder layout, but they wasted disk space and download
+  bandwidth, and most users wanted just one copy of each unique file.
+  The cmdlet now writes the items under the first folder it sees the
+  bucket from and emits a `WriteWarning` for each subsequent
+  encounter — the link is surfaced rather than silently dropped, so
+  the user can choose to scope their next call (e.g.
+  `-Path SomeSpecificFolder`) if they actually wanted the per-folder
+  mirror.
 
 ### Internal
 

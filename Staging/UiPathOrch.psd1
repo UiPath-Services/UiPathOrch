@@ -452,11 +452,13 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-Patch release: two Copy-Item / Export-OrchBucketItem bugs that surfaced once users started exercising the asset / queue / bucket link feature shipped in 1.2.0.
+Patch release: a `Copy-Item` bug that silently shared the source entity into destination folders on same-drive copies, plus a behaviour change to `Export-OrchBucketItem -Recurse` so it no longer duplicates downloads of linked buckets. Both surfaced once users started exercising the asset / queue / bucket link feature shipped in 1.2.0.
 
 ## Bug Fixes
 - **`Copy-Item` no longer shares the SOURCE entity into destination folders on same-drive copies.** When you copied a folder containing linked assets / queues / buckets to another folder on the same drive, the dst didn't actually get its own copy of those entities — it got a pointer to the src. `Get-OrchAsset` against the dst returned the same Id as the src, and `Set-OrchAsset` against what looked like the dst's asset silently mutated the src's value. Only entities that already had at least one link in src were affected; unlinked entities were copied cleanly. Cross-drive copies were unaffected. (Root cause: `Copy-Item`'s source-to-destination folder mapping matched source folders against themselves on same-drive runs; now uses a relative-path rebase based on the source folder being copied and its destination counterpart.)
-- **`Export-OrchBucketItem -Recurse` no longer downloads linked bucket items multiple times.** A bucket linked to N folders used to produce N copies of every file under `-Destination` (3 items × 3 folders = 9 file writes for what should have been 3 unique files). Now dedupes by bucket Id across the recursive walk; first-seen wins.
+
+## Changed
+- **`Export-OrchBucketItem -Recurse` deduplicates linked buckets across the walk.** A bucket linked to N folders appears in every folder's enumeration with the same Id, so the previous code wrote the same items into one folder path per folder it was accessible from (e.g. 3 items × 3 folders = 9 file writes for 3 unique files). That was a faithful mirror of the source folder layout but wasted disk and bandwidth. The cmdlet now writes the items under the first folder it sees the bucket from and emits a `WriteWarning` for each subsequent encounter, so the link is surfaced rather than silently dropped. If you want the per-folder mirror, scope the next call (e.g. `-Path SomeSpecificFolder`) to a single accessible folder at a time.
 
 ## Internal
 - `Copy-Item`'s link-re-establishing step switched from "return after the first matching destination folder" to iterating all matches with Id-based dedup. Defensive — same end state as before in normal incremental copies, but more robust if a single share-API call fails partway or if the destination happens to contain non-linked duplicates of the same name.

@@ -58,12 +58,16 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
             df => df.drive.Buckets.Get(df.folder));
 
         // Dedup buckets across the recursive folder walk: a bucket linked to
-        // multiple folders shows up in each enumerated folder with the same Id,
-        // and without this the -Recurse path would write the same items once per
-        // folder the bucket is accessible from (the "Celine repro"). First-seen
-        // wins, so a bucket's items land under the relative path of whichever
-        // folder OrchThreadPool returns first.
-        var seenBucketIds = new HashSet<Int64>();
+        // multiple folders shows up in each enumerated folder with the same
+        // Id, and the -Recurse path would otherwise write the same items
+        // once per folder it is accessible from. First-seen wins (the items
+        // land under the relative path of whichever folder is processed
+        // first), and we WriteWarning the second / third / ... encounters so
+        // the user sees the link rather than silently losing the per-folder
+        // mirror behaviour the previous code shipped.
+        // Maps bucket Id → the folder whose path actually held the items, for
+        // a precise warning message on the duplicate side.
+        var seenBuckets = new Dictionary<Int64, string>();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)
@@ -79,7 +83,12 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
                     .FilterByWildcards(e => e?.Name, wpName)
                     .OrderBy(e => e.Name))
                 {
-                    if (!seenBucketIds.Add(bucket.Id ?? 0)) continue;
+                    if (seenBuckets.TryGetValue(bucket.Id ?? 0, out var firstFolderPath))
+                    {
+                        WriteWarning($"Bucket '{bucket.Name}' is also accessible from '{folder.GetPSPath()}' via a folder link. Items already downloaded under '{firstFolderPath}'; skipping to avoid duplicate writes.");
+                        continue;
+                    }
+                    seenBuckets[bucket.Id ?? 0] = folder.GetPSPath();
 
                     // Get the relative path from Path
                     var eachDestination = System.IO.Path.Combine(Destination, folder.GetRelativePath(srcRootFolder), bucket.Name!.MakeValidFolderName());
