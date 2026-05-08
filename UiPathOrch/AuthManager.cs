@@ -448,9 +448,16 @@ internal class OrchestratorAuthManager
                             break;
                         }
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
-                        //Console.WriteLine($"Unexpected exception: {ex}");
+                        // Don't surface to the user — the outer Wait(cts) /
+                        // capturedException path is responsible for that. But
+                        // a silent break here historically hid PKCE listener
+                        // bugs (e.g. port collisions, cert issues) entirely.
+                        // Debug.WriteLine is compiled out in Release; in Debug
+                        // it surfaces to DebugView / VS Output for diagnosis.
+                        System.Diagnostics.Debug.WriteLine(
+                            $"PKCE listener loop terminated: {ex.GetType().Name}: {ex.Message}");
                         break;
                     }
                 }
