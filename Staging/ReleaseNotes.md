@@ -1,20 +1,24 @@
 # Version: 1.2.1
 
-Patch release: a `Copy-Item` bug that silently shared the source entity into destination folders on same-drive copies, plus a behaviour change to `Export-OrchBucketItem -Recurse` so it no longer duplicates downloads of linked buckets. Both surfaced once users started exercising the asset / queue / bucket link feature shipped in 1.2.0.
+Patch release: a `Copy-Item` bug that silently shared the source entity into destination folders on same-drive copies, plus a follow-up cache-invalidation bug in the link cmdlets that left the target folder's view stale until the next `Clear-OrchCache`. `Export-OrchBucketItem -Recurse` also stops duplicating downloads of linked buckets, and tab completion on the link cmdlets has been tightened. Most of these surfaced once users started exercising the asset / queue / bucket link feature shipped in 1.2.0.
 
 ## Bug Fixes
 
 - **`Copy-Item` no longer shares the SOURCE entity into destination folders on same-drive copies.** When you copied a folder containing linked assets / queues / buckets to another folder on the same drive, the dst didn't actually get its own copy of those entities — it got a pointer to the src. `Get-OrchAsset` against the dst returned the same Id as the src, and `Set-OrchAsset` against what looked like the dst's asset silently mutated the src's value. Only entities that already had at least one link in src were affected; unlinked entities were copied cleanly. Cross-drive copies between two different drives were unaffected. (Root cause: `Copy-Item`'s source-to-destination folder mapping matched source folders against themselves on same-drive runs because both source and destination pulled from the same folder pool; replaced with a relative-path rebase based on the source folder being copied and its destination counterpart.)
+- **Stale target-folder cache after `Add-Orch{Asset|Bucket|Queue}Link` and `Remove-Orch{Asset|Bucket|Queue}Link`.** After linking an entity from `Orch1:\Foo` to `Orch1:\Bar`, queries against `Bar` (e.g. `Get-OrchAsset`, `Get-OrchAssetLink`) returned the cached pre-link snapshot — the freshly-shared entity was missing from `Bar`'s view until the next `Clear-OrchCache`. The cmdlets now precisely invalidate the affected entity's link-visibility cache and the link target folders' per-folder entity list, instead of either flushing every entity's link cache drive-wide or leaving the per-folder list cache stale.
 
 ## Changed
 
 - **`Export-OrchBucketItem -Recurse` deduplicates linked buckets across the walk.** A bucket linked to N folders appears in every folder's enumeration with the same Id, so the previous code wrote the same items into one folder path per folder it was accessible from (e.g. 3 items × 3 folders = 9 file writes for 3 unique files). That was technically a faithful mirror of the source folder layout but wasted disk and bandwidth. The cmdlet now writes the items under the first folder it sees the bucket from and emits a `WriteWarning` for each subsequent encounter, so the link is surfaced rather than silently dropped. If you want the per-folder mirror, scope the next call (e.g. `-Path SomeSpecificFolder`) to a single accessible folder at a time.
+- **Tab completion tightened on the link cmdlets.** `Get-Orch{Asset|Bucket|Queue}Link` and `Remove-Orch{Asset|Bucket|Queue}Link` `-Name` now only suggests entity names that actually have a link beyond their home folder (the previous behaviour offered every entity in the folder, most of which would no-op when the cmdlet ran). `Remove-Orch{...}Link -Link` now also has a completer that suggests the folders the entity is currently linked to. Both filter against `-Name` / `-Link` values already supplied in the same call.
 
 ## Internal
 
 - `Copy-Item`'s link-re-establishing step switched from "return after the first matching destination folder" to iterating all matches with Id-based dedup. Defensive — same end state as before in normal incremental copies (the dedup catches duplicate Ids of shared entities), but more robust if a single share-API call fails partway or if the destination happens to contain non-linked duplicates of the same name.
 - `release.yml` now runs `dotnet format --verify-no-changes` and `dotnet test` before `Publish-Module`, mirroring CI. The 1.2.0 release exposed that the Release workflow could publish to PSGallery before CI reported failure — the two ran in parallel and Release usually finished first.
 - 3-link test data entities (`asset-shared3` / `bucket-shared3` / `queue-shared3`) added to `TestData/Fixture`, plus a new Pester `Copy-Item link reproduction` Describe verifying the Copy-Item / Export bugs above end-to-end against a real tenant.
+- Per-entity precision in the link cache invalidation that runs after Add/Remove-Link API calls — replaces the previous drive-wide flush of every entity's link-visibility cache. Unrelated entities' cached data is no longer collateral damage of an unrelated link change.
+- Tightened completers share scaffolding through a small generic base hierarchy, so the asset / bucket / queue variants are each defined in a few lines that just supply the entity-specific API hooks.
 
 ---
 

@@ -10,10 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 Patch release: a `Copy-Item` bug that silently shared the source
 entity into destination folders on same-drive copies, plus a
-behaviour change to `Export-OrchBucketItem -Recurse` so it no longer
-duplicates downloads of linked buckets. Both surfaced once users
-started exercising the asset / queue / bucket link feature shipped
-in 1.2.0.
+follow-up cache-invalidation bug in the link cmdlets that left the
+target folder's view stale until the next `Clear-OrchCache`.
+`Export-OrchBucketItem -Recurse` also stops duplicating downloads of
+linked buckets, and tab completion on the link cmdlets has been
+tightened. Most of these surfaced once users started exercising the
+asset / queue / bucket link feature shipped in 1.2.0.
 
 ### Fixed
 
@@ -40,6 +42,17 @@ in 1.2.0.
   ancestor / sibling-cousin shapes), so same-drive copies produce
   cleanly-separated destination entities linked together within the
   destination tree only.
+
+- **Stale target-folder cache after `Add-Orch{Asset|Bucket|Queue}Link`
+  and `Remove-Orch{Asset|Bucket|Queue}Link`.** After linking an entity
+  from `Orch1:\Foo` to `Orch1:\Bar`, queries against `Bar` (e.g.
+  `Get-OrchAsset`, `Get-OrchAssetLink`) returned the cached pre-link
+  snapshot — the freshly-shared entity was missing from `Bar`'s view
+  until the next `Clear-OrchCache`. The cmdlets now precisely
+  invalidate the affected entity's link-visibility cache and the link
+  target folders' per-folder entity list, instead of either flushing
+  every entity's link cache drive-wide or leaving the per-folder list
+  cache stale.
 ### Changed
 
 - **`Export-OrchBucketItem -Recurse` deduplicates linked buckets
@@ -56,6 +69,17 @@ in 1.2.0.
   the user can choose to scope their next call (e.g.
   `-Path SomeSpecificFolder`) if they actually wanted the per-folder
   mirror.
+
+- **Tab completion tightened on the link cmdlets.**
+  `Get-Orch{Asset|Bucket|Queue}Link` and
+  `Remove-Orch{Asset|Bucket|Queue}Link` `-Name` now only suggests
+  entity names that actually have a link beyond their home folder
+  (the previous behaviour offered every entity in the folder, most of
+  which would no-op when the cmdlet ran). `Remove-Orch{...}Link`
+  `-Link` now also has a completer that suggests the folders the
+  entity is currently linked to, instead of letting PowerShell fall
+  back to provider path completion. Both filter against `-Name` /
+  `-Link` values already supplied in the same call.
 
 ### Internal
 
@@ -82,6 +106,13 @@ in 1.2.0.
   that copies the test data tree into a sibling root and asserts
   every multi-link entity's link set is reproduced end-to-end.
   Catches the bugs above as Pester regressions.
+- Per-entity precision in the link cache invalidation that runs after
+  Add/Remove-Link API calls — replaces the previous drive-wide flush
+  of every entity's link-visibility cache. Unrelated entities' cached
+  data is no longer collateral damage of an unrelated link change.
+- Tightened completers share scaffolding through a small generic base
+  hierarchy, so the asset / bucket / queue variants are each defined
+  in a few lines that just supply the entity-specific API hooks.
 - Pre-existing `dotnet format` violations across several source files
   cleaned up, including a control-flow construct where local and CI
   formatters disagreed about indentation.
