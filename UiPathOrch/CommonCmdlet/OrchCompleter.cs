@@ -919,6 +919,187 @@ internal class AssetValueTypeCompleter : OrchArgumentCompleter
     }
 }
 
+/// <summary>
+/// Shared scaffolding for completers that enumerate entities in a folder and
+/// probe each one's AccessibleFoldersDto link visibility. Used by the
+/// Remove-Orch{Asset|Bucket|Queue}Link completers so they can share a single
+/// parallel enumeration / probe pipeline.
+/// </summary>
+internal abstract class EntityLinkCompleterBase<TEntity> : OrchArgumentCompleter
+    where TEntity : class
+{
+    protected abstract IEnumerable<TEntity> GetEntities(OrchDriveInfo drive, Folder folder);
+    protected abstract AccessibleFoldersDto? GetLinks(OrchDriveInfo drive, Folder folder, TEntity entity);
+    protected abstract string GetName(TEntity entity);
+
+    /// <summary>
+    /// For each (drive, folder) in scope, enumerates entities in parallel,
+    /// applies <paramref name="entityFilter"/>, then probes each surviving
+    /// entity's links in parallel. Yields tuples whose AccessibleFolders is
+    /// non-null; failures from GetLinks are swallowed (completers must not
+    /// surface errors).
+    /// </summary>
+    protected IEnumerable<(OrchDriveInfo drive, Folder folder, TEntity entity, AccessibleFoldersDto links)>
+        ProbeEntityLinks(
+            List<(OrchDriveInfo drive, Folder folder)> drivesFolders,
+            Func<TEntity, bool> entityFilter)
+    {
+        var grouped = ParallelResults.GroupBy(drivesFolders, df => GetEntities(df.drive, df.folder));
+
+        foreach (var group in grouped)
+        {
+            var (drive, folder) = group.Source;
+            var matched = group.Where(entityFilter).OrderBy(GetName).ToList();
+
+            var probed = ParallelResults.ForEach(matched, e =>
+            {
+                try { return GetLinks(drive, folder, e); }
+                catch { return null; }
+            });
+
+            foreach (var ws in probed)
+            {
+                if (ws.Item.AccessibleFolders is null) continue;
+                yield return (drive, folder, ws.Source, ws.Item);
+            }
+        }
+    }
+}
+
+/// <summary>
+/// Completer for the entity-name parameter of Remove-Orch{Asset|Bucket|Queue}Link:
+/// only enumerates entities that are currently linked to at least one folder
+/// other than their home folder. Plain *NameCompleter would happily list every
+/// entity and most would no-op when the cmdlet actually ran.
+/// </summary>
+internal abstract class LinkedEntityNameCompleter<TEntity> : EntityLinkCompleterBase<TEntity>
+    where TEntity : class
+{
+    protected abstract string GetTipHelp(TEntity entity);
+
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+        var wpSelfExcl = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        bool Match(TEntity e)
+        {
+            var name = GetName(e);
+            if (!wp.IsMatch(name)) return false;
+            if (wpSelfExcl is { Count: > 0 } && wpSelfExcl.Any(p => p.IsMatch(name))) return false;
+            return true;
+        }
+
+        foreach (var (_, _, entity, links) in ProbeEntityLinks(drivesFolders, Match))
+        {
+            // AccessibleFolders always includes the entity's home folder; Length > 1
+            // means at least one real link exists (same predicate used by
+            // Get-Orch{Asset|Bucket|Queue}Link).
+            if (links.AccessibleFolders is not { Length: > 1 }) continue;
+            var name = GetName(entity);
+            yield return new CompletionResult(
+                PathTools.EscapePSText(name), name,
+                CompletionResultType.Text, GetTipHelp(entity));
+        }
+    }
+}
+
+/// <summary>
+/// Completer for the -Link parameter of Remove-Orch{Asset|Bucket|Queue}Link:
+/// lists folder PSPaths the entity specified via -Name is currently linked to
+/// (excluding the entity's own home folder). When -Name isn't bound yet, falls
+/// back to the union of link folders for every entity in the source folder.
+/// </summary>
+internal abstract class EntityLinkFolderCompleter<TEntity> : EntityLinkCompleterBase<TEntity>
+    where TEntity : class
+{
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
+        var wpSelfExcl = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        bool Match(TEntity e) =>
+            wpName is null || wpName.Count == 0 || wpName.Any(p => p.IsMatch(GetName(e)));
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var (drive, folder, _, links) in ProbeEntityLinks(drivesFolders, Match))
+        {
+            Int64 srcId = folder.Id ?? 0;
+            foreach (var linkFolder in links.AccessibleFolders!.OrderBy(f => f.FullyQualifiedName))
+            {
+                if ((linkFolder.Id ?? 0) == srcId) continue;
+                var fqn = (linkFolder.FullyQualifiedName ?? "").Replace('/', Path.DirectorySeparatorChar);
+                string psPath = drive.NameColonSeparator + fqn;
+                if (!wp.IsMatch(psPath)) continue;
+                if (wpSelfExcl is { Count: > 0 } && wpSelfExcl.Any(p => p.IsMatch(psPath))) continue;
+                if (!seen.Add(psPath)) continue;
+                yield return new CompletionResult(
+                    PathTools.EscapePSText(psPath), psPath,
+                    CompletionResultType.ParameterValue, psPath);
+            }
+        }
+    }
+}
+
+internal class LinkedAssetNameCompleter : LinkedEntityNameCompleter<Asset>
+{
+    protected override IEnumerable<Asset> GetEntities(OrchDriveInfo drive, Folder folder) => drive.Assets.Get(folder);
+    protected override AccessibleFoldersDto? GetLinks(OrchDriveInfo drive, Folder folder, Asset e) => drive.GetFoldersForAsset(folder, e);
+    protected override string GetName(Asset e) => e.Name!;
+    protected override string GetTipHelp(Asset e) => e.GetPSPath();
+}
+
+internal class AssetLinkFolderCompleter : EntityLinkFolderCompleter<Asset>
+{
+    protected override IEnumerable<Asset> GetEntities(OrchDriveInfo drive, Folder folder) => drive.Assets.Get(folder);
+    protected override AccessibleFoldersDto? GetLinks(OrchDriveInfo drive, Folder folder, Asset e) => drive.GetFoldersForAsset(folder, e);
+    protected override string GetName(Asset e) => e.Name!;
+}
+
+internal class LinkedBucketNameCompleter : LinkedEntityNameCompleter<Bucket>
+{
+    protected override IEnumerable<Bucket> GetEntities(OrchDriveInfo drive, Folder folder) => drive.Buckets.Get(folder);
+    protected override AccessibleFoldersDto? GetLinks(OrchDriveInfo drive, Folder folder, Bucket e) => drive.GetFoldersForBucket(folder, e);
+    protected override string GetName(Bucket e) => e.Name!;
+    protected override string GetTipHelp(Bucket e) => e.GetPSPath();
+}
+
+internal class BucketLinkFolderCompleter : EntityLinkFolderCompleter<Bucket>
+{
+    protected override IEnumerable<Bucket> GetEntities(OrchDriveInfo drive, Folder folder) => drive.Buckets.Get(folder);
+    protected override AccessibleFoldersDto? GetLinks(OrchDriveInfo drive, Folder folder, Bucket e) => drive.GetFoldersForBucket(folder, e);
+    protected override string GetName(Bucket e) => e.Name!;
+}
+
+internal class LinkedQueueNameCompleter : LinkedEntityNameCompleter<QueueDefinition>
+{
+    protected override IEnumerable<QueueDefinition> GetEntities(OrchDriveInfo drive, Folder folder) => drive.Queues.Get(folder);
+    protected override AccessibleFoldersDto? GetLinks(OrchDriveInfo drive, Folder folder, QueueDefinition e) => drive.GetFoldersForQueue(folder, e);
+    protected override string GetName(QueueDefinition e) => e.Name!;
+    protected override string GetTipHelp(QueueDefinition e) => e.GetPSPath();
+}
+
+internal class QueueLinkFolderCompleter : EntityLinkFolderCompleter<QueueDefinition>
+{
+    protected override IEnumerable<QueueDefinition> GetEntities(OrchDriveInfo drive, Folder folder) => drive.Queues.Get(folder);
+    protected override AccessibleFoldersDto? GetLinks(OrchDriveInfo drive, Folder folder, QueueDefinition e) => drive.GetFoldersForQueue(folder, e);
+    protected override string GetName(QueueDefinition e) => e.Name!;
+}
+
 internal class BucketNameCompleter<WritableOnly> : FolderScopedCompleter<Bucket> where WritableOnly : IBoolParameter
 {
     protected override IEnumerable<Bucket> GetEntities(OrchDriveInfo drive, Folder folder)
