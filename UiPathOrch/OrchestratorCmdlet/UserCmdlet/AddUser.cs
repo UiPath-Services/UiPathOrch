@@ -99,112 +99,112 @@ public class AddUserCommand : OrchestratorPSCmdlet
 
         public void Update(AddUserCommand cmdl, OrchDriveInfo drive, string identityName)
         {
-            AssignBoolValue(cmdl, drive, identityName,
+            AssignBoolValue(cmdl, drive.Name, identityName,
                 this.IsExternalLicensed,
                 cmdl.IsExternalLicensed, v =>
                 this.IsExternalLicensed = v);
 
-            AssignBoolValue(cmdl, drive, identityName,
+            AssignBoolValue(cmdl, drive.Name, identityName,
                 this.MayHaveUserSession,
                 cmdl.MayHaveUserSession, v =>
                 this.MayHaveUserSession = v);
 
-            AssignBoolValue(cmdl, drive, identityName,
+            AssignBoolValue(cmdl, drive.Name, identityName,
                 this.MayHaveRobotSession,
                 cmdl.MayHaveRobotSession, v =>
                 this.MayHaveRobotSession = v);
 
-            AssignBoolValue(cmdl, drive, identityName,
+            AssignBoolValue(cmdl, drive.Name, identityName,
                 this.MayHaveUnattendedSession,
                 cmdl.MayHaveUnattendedSession, v =>
                 this.MayHaveUnattendedSession = v);
 
-            AssignBoolValue(cmdl, drive, identityName,
+            AssignBoolValue(cmdl, drive.Name, identityName,
                 this.MayHavePersonalWorkspace,
                 cmdl.MayHavePersonalWorkspace, v =>
                 this.MayHavePersonalWorkspace = v);
 
-            AssignBoolValue(cmdl, drive, identityName,
+            AssignBoolValue(cmdl, drive.Name, identityName,
                 this.RestrictToPersonalWorkspace,
                 cmdl.RestrictToPersonalWorkspace, v =>
                 this.RestrictToPersonalWorkspace = v);
 
-            AssignStringValue(cmdl, drive, identityName,
+            AssignStringValue(cmdl, drive.Name, identityName,
                 this.UpdatePolicyType,
                 cmdl.UpdatePolicyType, v =>
                 this.UpdatePolicyType = v);
 
-            AssignStringValue(cmdl, drive, identityName,
+            AssignStringValue(cmdl, drive.Name, identityName,
                 this.UpdatePolicyVersion,
                 cmdl.UpdatePolicyVersion, v =>
                 this.UpdatePolicyVersion = v);
 
-            AssignStringValue(cmdl, drive, identityName,
+            AssignStringValue(cmdl, drive.Name, identityName,
                 this.UR_UserName,
                 cmdl.UR_UserName, v =>
                 this.UR_UserName = v);
 
-            AssignStringValue(cmdl, drive, identityName,
+            AssignStringValue(cmdl, drive.Name, identityName,
                 this.UR_CredentialStore,
                 cmdl.UR_CredentialStore, v =>
                 this.UR_CredentialStore = v);
 
-            AssignStringValue(cmdl, drive, identityName,
+            AssignStringValue(cmdl, drive.Name, identityName,
                 this.UR_Password,
                 cmdl.UR_Password, v =>
                 this.UR_Password = v);
 
-            AssignStringValue(cmdl, drive, identityName,
+            AssignStringValue(cmdl, drive.Name, identityName,
                 this.UR_CredentialExternalName,
                 cmdl.UR_CredentialExternalName, v =>
                 this.UR_CredentialExternalName = v);
 
-            AssignStringValue(cmdl, drive, identityName,
+            AssignStringValue(cmdl, drive.Name, identityName,
                 this.UR_CredentialType,
                 cmdl.UR_CredentialType, v =>
                 this.UR_CredentialType = v);
 
-            AssignBoolValue(cmdl, drive, identityName,
+            AssignBoolValue(cmdl, drive.Name, identityName,
                 this.UR_LimitConcurrentExecution,
                 cmdl.UR_LimitConcurrentExecution, v =>
                 this.UR_LimitConcurrentExecution = v);
 
-            AssignStringValue(cmdl, drive, identityName,
+            AssignStringValue(cmdl, drive.Name, identityName,
                 this.ES_TracingLevel,
                 cmdl.ES_TracingLevel, v =>
                 this.ES_TracingLevel = v);
 
-            AssignBoolValue(cmdl, drive, identityName,
+            AssignBoolValue(cmdl, drive.Name, identityName,
                 this.ES_StudioNotifyServer,
                 cmdl.ES_StudioNotifyServer, v =>
                 this.ES_StudioNotifyServer = v);
 
-            AssignBoolValue(cmdl, drive, identityName,
+            AssignBoolValue(cmdl, drive.Name, identityName,
                 this.ES_LoginToConsole,
                 cmdl.ES_LoginToConsole, v =>
                 this.ES_LoginToConsole = v);
 
-            AssignIntValue(cmdl, drive, identityName,
+            AssignIntValue(cmdl, drive.Name, identityName,
                 this.ES_ResolutionWidth,
                 cmdl.ES_ResolutionWidth, v =>
                 this.ES_ResolutionWidth = v);
 
-            AssignIntValue(cmdl, drive, identityName,
+            AssignIntValue(cmdl, drive.Name, identityName,
                 this.ES_ResolutionHeight,
                 cmdl.ES_ResolutionHeight, v =>
                 this.ES_ResolutionHeight = v);
 
-            AssignIntValue(cmdl, drive, identityName,
+            AssignIntValue(cmdl, drive.Name, identityName,
                 this.ES_ResolutionDepth,
                 cmdl.ES_ResolutionDepth, v =>
                 this.ES_ResolutionDepth = v);
 
-            AssignBoolValue(cmdl, drive, identityName,
+            AssignBoolValue(cmdl, drive.Name, identityName,
                 this.ES_FontSmoothing,
                 cmdl.ES_FontSmoothing, v =>
                 this.ES_FontSmoothing = v);
 
-            AssignBoolValue(cmdl, drive, identityName,
+            AssignBoolValue(cmdl, drive.Name, identityName,
                 this.ES_AutoDownloadProcess,
                 cmdl.ES_AutoDownloadProcess, v =>
                 this.ES_AutoDownloadProcess = v);

@@ -1,10 +1,22 @@
 using System.Management.Automation;
 using UiPath.PowerShell.Commands;
+using UiPath.PowerShell.Commands.CsvHelper;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using Xunit;
 
 namespace UnitTests;
+
+internal sealed class CapturingHost : IWritableHost
+{
+    public List<ErrorRecord> Errors { get; } = new();
+    public List<string> Warnings { get; } = new();
+    public List<ProgressRecord> Progress { get; } = new();
+    public void WriteError(ErrorRecord errorRecord) => Errors.Add(errorRecord);
+    public void WriteWarning(string text) => Warnings.Add(text);
+    public void WriteProgress(ProgressRecord progressRecord) => Progress.Add(progressRecord);
+    public bool ShouldProcess(string target, string action) => true;
+}
 
 // Baseline tests for the Assign* extension helpers in OrchExtensions.cs.
 // Pre-refactor: 22 method signatures, 231 callsites across 20 cmdlet files,
@@ -623,17 +635,6 @@ public class AssignIdFromNameTests
         public long Id { get; init; }
     }
 
-    private sealed class CapturingHost : IWritableHost
-    {
-        public List<ErrorRecord> Errors { get; } = new();
-        public List<string> Warnings { get; } = new();
-        public List<ProgressRecord> Progress { get; } = new();
-        public void WriteError(ErrorRecord errorRecord) => Errors.Add(errorRecord);
-        public void WriteWarning(string text) => Warnings.Add(text);
-        public void WriteProgress(ProgressRecord progressRecord) => Progress.Add(progressRecord);
-        public bool ShouldProcess(string target, string action) => true;
-    }
-
     [Fact]
     public void NullName_ReturnsTrueAndDoesNotAssign()
     {
@@ -732,5 +733,174 @@ public class AssignIdFromNameTests
         Assert.False(ok);
         Assert.Single(host.Errors);
         Assert.Contains("Multiple Thing found", host.Errors[0].Exception.Message);
+    }
+}
+
+// CsvLineBase.AssignStringValue / AssignIntValue / AssignBoolValue are the multi-
+// row CSV aggregation helpers used by Add-OrchUser. They detect collisions across
+// rows that share an identity (e.g. one user appearing in multiple CSV rows for
+// different roles): the first row populates the CsvLine, subsequent rows pass
+// through Update() which calls these helpers to either no-op (matching value),
+// warn (different value), or skip (current row didn't specify the field).
+//
+// Pre-fix bug: the string and int variants used to fall through to setter(newValue)
+// when newValue was null/empty (string) or null/0 (int), silently clobbering a
+// value set by an earlier row with whatever the later row left blank. The bool
+// variant always had the correct early-return; the string and int variants were
+// brought into line.
+
+public class AssignStringValueTests
+{
+    [Fact]
+    public void NullNewValue_DoesNotInvokeSetterOrWarn()
+    {
+        // Pre-fix: setter(null) was called, clobbering the earlier row's value.
+        // Post-fix: early return preserves the earlier row's value.
+        var host = new CapturingHost();
+        string? captured = "untouched";
+        CsvLineBase.AssignStringValue(host, "OrchTest", "alice", "previousValue", null, v => captured = v);
+        Assert.Equal("untouched", captured);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void EmptyNewValue_DoesNotInvokeSetterOrWarn()
+    {
+        // Pre-fix: setter("") was called, clobbering the earlier row's value with empty.
+        // Post-fix: empty CSV cell on a later row leaves the earlier row's value alone.
+        var host = new CapturingHost();
+        string? captured = "untouched";
+        CsvLineBase.AssignStringValue(host, "OrchTest", "alice", "previousValue", "", v => captured = v);
+        Assert.Equal("untouched", captured);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void NewValueMatchingCurrent_InvokesSetter_NoWarning()
+    {
+        // Same value across rows: no collision, setter fires (effectively a no-op
+        // since current already equals new). Behaviour is unchanged from pre-fix.
+        var host = new CapturingHost();
+        string? captured = null;
+        CsvLineBase.AssignStringValue(host, "OrchTest", "alice", "alice@example", "alice@example", v => captured = v);
+        Assert.Equal("alice@example", captured);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void NewValueDifferingFromCurrent_DoesNotSet_EmitsWarning()
+    {
+        // Collision across rows: warning emitted, current row's value NOT applied.
+        // The warning text quotes the previously-specified value for diagnostics.
+        var host = new CapturingHost();
+        string? captured = "previous";
+        CsvLineBase.AssignStringValue(host, "OrchTest", "alice", "previous", "different", v => captured = v);
+        Assert.Equal("previous", captured); // setter not invoked
+        Assert.Single(host.Warnings);
+        Assert.Contains("OrchTest", host.Warnings[0]);
+        Assert.Contains("alice", host.Warnings[0]);
+        Assert.Contains("'previous'", host.Warnings[0]);
+    }
+}
+
+public class AssignIntValueTests
+{
+    [Fact]
+    public void NullNewValue_DoesNotInvokeSetterOrWarn()
+    {
+        // Pre-fix: setter(null) was called, clobbering the earlier row.
+        // Post-fix: early return preserves the earlier row's value.
+        var host = new CapturingHost();
+        int? captured = 99;
+        CsvLineBase.AssignIntValue(host, "OrchTest", "alice", 1024, null, v => captured = v);
+        Assert.Equal(99, captured);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void ZeroNewValue_DoesNotInvokeSetterOrWarn()
+    {
+        // Pre-fix: setter(0) was called when CSV empty cell coerced to 0.
+        // Post-fix: 0 is treated as unspecified (CSV empty-cell sentinel) and skipped.
+        var host = new CapturingHost();
+        int? captured = 99;
+        CsvLineBase.AssignIntValue(host, "OrchTest", "alice", 1024, 0, v => captured = v);
+        Assert.Equal(99, captured);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void NewValueMatchingCurrent_InvokesSetter_NoWarning()
+    {
+        var host = new CapturingHost();
+        int? captured = null;
+        CsvLineBase.AssignIntValue(host, "OrchTest", "alice", 1024, 1024, v => captured = v);
+        Assert.Equal(1024, captured);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void NewValueDifferingFromCurrent_DoesNotSet_EmitsWarning()
+    {
+        var host = new CapturingHost();
+        int? captured = 1024;
+        CsvLineBase.AssignIntValue(host, "OrchTest", "alice", 1024, 768, v => captured = v);
+        Assert.Equal(1024, captured);
+        Assert.Single(host.Warnings);
+        Assert.Contains("1024", host.Warnings[0]);
+    }
+}
+
+public class AssignBoolValueTests
+{
+    [Fact]
+    public void NullNewValue_DoesNotInvokeSetterOrWarn()
+    {
+        var host = new CapturingHost();
+        bool? captured = true;
+        CsvLineBase.AssignBoolValue(host, "OrchTest", "alice", true, null, v => captured = v);
+        Assert.True(captured);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void EmptyNewValue_DoesNotInvokeSetterOrWarn()
+    {
+        var host = new CapturingHost();
+        bool? captured = true;
+        CsvLineBase.AssignBoolValue(host, "OrchTest", "alice", true, "", v => captured = v);
+        Assert.True(captured);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void UnparseableNewValue_DoesNotInvokeSetterOrWarn()
+    {
+        // bool.TryParse on garbage → silently skip (NOT clear or warn).
+        var host = new CapturingHost();
+        bool? captured = true;
+        CsvLineBase.AssignBoolValue(host, "OrchTest", "alice", true, "yes-please", v => captured = v);
+        Assert.True(captured);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void ParseableSameAsCurrent_InvokesSetter_NoWarning()
+    {
+        var host = new CapturingHost();
+        bool? captured = null;
+        CsvLineBase.AssignBoolValue(host, "OrchTest", "alice", true, "true", v => captured = v);
+        Assert.True(captured);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void ParseableDifferentFromCurrent_DoesNotSet_EmitsWarning()
+    {
+        var host = new CapturingHost();
+        bool? captured = true;
+        CsvLineBase.AssignBoolValue(host, "OrchTest", "alice", true, "false", v => captured = v);
+        Assert.True(captured); // setter not invoked
+        Assert.Single(host.Warnings);
     }
 }

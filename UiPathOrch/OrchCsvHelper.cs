@@ -87,11 +87,25 @@ internal class CsvLineBase
     // OrchDriveInfo �� OrchDuDriveInfo �̃x�[�X������āANameColonSeparator �͂������Ɉړ����ׂ����B
     // �ŁAPSDriveInfo ���� OrchDriveInfoBase ���g�������ǂ��B
     // ���̂܂܂ł��������ǁA���� string �̍\�z�����ʂ��ȁB�B
-    internal static void AssignStringValue(IWritableHost host, PSDriveInfo drive, string identityName, string? currentValue, string? newValue, Action<string?> setter)
+    // Multi-row CSV-aggregation helpers used by Add-OrchUser when several CSV rows
+    // identify the same user (e.g. one row per role): the first row populates the
+    // CsvLine via the constructor, subsequent rows pass through Update() which calls
+    // these helpers to detect collisions. The intended semantic is "first-row wins,
+    // warn on disagreement". All three skip null/unspecified inputs (null/empty for
+    // strings, null/0 for ints, null/empty/unparseable for bools) so that an empty
+    // cell on a later row does NOT silently clobber a value set by an earlier row.
+    //
+    // Note on the int 0 sentinel: when a CSV column is empty, the PowerShell binder
+    // coerces it to default(int) = 0 for int? parameters, so we cannot distinguish
+    // "user specified 0" from "user specified nothing" — we treat both as unspecified
+    // here, consistent with AssignNumberIfNotNullOrZero in OrchExtensions.
+
+    internal static void AssignStringValue(IWritableHost host, string driveName, string identityName, string? currentValue, string? newValue, Action<string?> setter)
     {
-        if (!string.IsNullOrEmpty(newValue) && currentValue != newValue)
+        if (string.IsNullOrEmpty(newValue)) return; // unspecified on this row → leave prior row's value alone
+        if (currentValue != newValue)
         {
-            host.WriteWarning($"'{drive.Name}:{Path.DirectorySeparatorChar}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value '{currentValue}'.");
+            host.WriteWarning($"'{driveName}:{Path.DirectorySeparatorChar}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value '{currentValue}'.");
         }
         else
         {
@@ -99,11 +113,12 @@ internal class CsvLineBase
         }
     }
 
-    internal static void AssignIntValue(IWritableHost host, PSDriveInfo drive, string identityName, int? currentValue, int? newValue, Action<int?> setter)
+    internal static void AssignIntValue(IWritableHost host, string driveName, string identityName, int? currentValue, int? newValue, Action<int?> setter)
     {
-        if (newValue is not null && newValue != 0 && currentValue != newValue)
+        if (newValue is null || newValue == 0) return; // unspecified on this row (CSV empty cell coerces to 0)
+        if (currentValue != newValue)
         {
-            host.WriteWarning($"'{drive.Name}:{Path.DirectorySeparatorChar}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value {currentValue}.");
+            host.WriteWarning($"'{driveName}:{Path.DirectorySeparatorChar}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value {currentValue}.");
         }
         else
         {
@@ -111,13 +126,13 @@ internal class CsvLineBase
         }
     }
 
-    internal static void AssignBoolValue(IWritableHost host, PSDriveInfo drive, string identityName, bool? currentValue, string? newValue, Action<bool?> setter)
+    internal static void AssignBoolValue(IWritableHost host, string driveName, string identityName, bool? currentValue, string? newValue, Action<bool?> setter)
     {
         if (string.IsNullOrEmpty(newValue)) return;
         if (!bool.TryParse(newValue, out var boolValue)) return;
         if (currentValue != boolValue)
         {
-            host.WriteWarning($"'{drive.Name}:{Path.DirectorySeparatorChar}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value {currentValue}.");
+            host.WriteWarning($"'{driveName}:{Path.DirectorySeparatorChar}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value {currentValue}.");
         }
         else
         {
