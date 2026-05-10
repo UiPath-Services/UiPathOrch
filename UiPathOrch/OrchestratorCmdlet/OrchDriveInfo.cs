@@ -225,8 +225,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicPmAuditLogs = null;
         _dicPmAuditLogs_Exception.ClearCache();
 
-        _dicPmAvailableUserBundles = null;
-        _dicPmAvailableUserBundles_Exceptions.ClearCache();
+        // _dicPmAvailableUserBundles auto-cleared via _allTenantCache (PmAvailableUserBundles: KeyedSingleCachePerTenant).
 
         _dicPmBulkResolveByName = null;
         _dicPmBulkResolveByName_Exception.ClearCache();
@@ -1859,48 +1858,18 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #endregion
 
-    internal ConcurrentDictionary<string, AvailableUserBundles>? _dicPmAvailableUserBundles = null;
-    internal readonly ExceptionsCachePer<string> _dicPmAvailableUserBundles_Exceptions = new();
-    //public AvailableUserBundles? GetPmUserLicenseGroupsAvailableLicenses(NuLicensedGroup? group)
+    // Backwards-compat wrapper: PmAvailableUserBundles (KeyedSingleCachePerTenant) is
+    // keyed by groupId. GroupName / PathGroupName depend on the caller's groupName arg
+    // and are set per-call so the same cache entry stays correct across callers.
     public AvailableUserBundles? GetPmUserLicenseGroupsAvailableLicenses(string? groupId, string groupName)
     {
         if (groupId is null) return null;
 
-        _dicPmAvailableUserBundles_Exceptions.ThrowCachedExceptionIfAny(groupId);
-
-        if (_dicPmAvailableUserBundles is null)
+        var ret = PmAvailableUserBundles.Get(groupId);
+        if (ret is not null)
         {
-            lock (_dicPmAvailableUserBundles_Exceptions)
-            {
-                _dicPmAvailableUserBundles ??= [];
-            }
-        }
-
-        if (!_dicPmAvailableUserBundles.TryGetValue(groupId, out var ret))
-        {
-            try
-            {
-                ret = OrchAPISession.GetPmLicensedGroupsAvailableLicenses(groupId);
-                if (ret is not null)
-                {
-                    ret.Path = NameColonSeparator;
-                    ret.GroupName = groupName;
-                    ret.PathGroupName = System.IO.Path.Combine(NameColonSeparator, groupName);
-                    foreach (var bundle in ret.availableUserBundles ?? [])
-                    {
-                        if (AvailableUserBundlesItems.Items.TryGetValue(bundle.code ?? "", out var name))
-                        {
-                            bundle.name = name;
-                        }
-                    }
-                    _dicPmAvailableUserBundles[groupId] = ret;
-                }
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicPmAvailableUserBundles_Exceptions.CacheException(groupId, ex);
-                throw;
-            }
+            ret.GroupName = groupName;
+            ret.PathGroupName = System.IO.Path.Combine(NameColonSeparator, groupName);
         }
         return ret;
     }
@@ -1999,6 +1968,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<int, ExecutionSettingDefinition[]?> ExecutionSettings;
     public readonly KeyedSingleCachePerTenant<string, PmDirectoryEntityInfo[]?> SearchPmDirectoryCache;
     public readonly KeyedSingleCachePerTenant<string, DirectoryObject[]?> SearchDirectoryCache;
+    public readonly KeyedSingleCachePerTenant<string, AvailableUserBundles> PmAvailableUserBundles;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2358,6 +2328,20 @@ public partial class OrchDriveInfo : PSDriveInfo
                 foreach (var v in arr)
                 {
                     v.Path = NameColonSeparator;
+                }
+            });
+
+        PmAvailableUserBundles = new(this,
+            groupId => OrchAPISession.GetPmLicensedGroupsAvailableLicenses(groupId),
+            (bundles, _) =>
+            {
+                bundles.Path = NameColonSeparator;
+                foreach (var bundle in bundles.availableUserBundles ?? [])
+                {
+                    if (AvailableUserBundlesItems.Items.TryGetValue(bundle.code ?? "", out var name))
+                    {
+                        bundle.name = name;
+                    }
                 }
             });
 

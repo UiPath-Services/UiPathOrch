@@ -211,7 +211,7 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
                     }
                     drive.PmLicensedGroups.ClearCache();
                     drive.PmUserLicenseGroupAllocations.ClearCache();
-                    drive._dicPmAvailableUserBundles = null;
+                    drive.PmAvailableUserBundles.ClearCache();
                 }
                 catch (Exception ex)
                 {
