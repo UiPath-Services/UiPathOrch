@@ -55,7 +55,7 @@ public class RemoveLibraryCommand : OrchestratorPSCmdlet
                                 {
                                     drive.OrchAPISession.RemoveLibrary(matchingVersion.Id!, matchingVersion.Version!);
                                     drive.LibrariesInTenant.ClearCache();
-                                    drive._dicLibraryVersions?.TryRemove(matchingVersion.Id!, out List<LibraryVersion>? _);
+                                    drive.LibraryVersions.ClearCache(matchingVersion.Id!);
                                 }
                                 catch (Exception ex)
                                 {

@@ -109,7 +109,7 @@ public class CopyLibraryCommand : OrchestratorPSCmdlet
                 reporter1.WriteProgress(++index1);
                 try
                 {
-                    srcDrive._dicLibraryVersions = null;
+                    srcDrive.LibraryVersions.ClearCache();
                     var versions = srcDrive.GetLibraryVersions(library.Id!)
                         .FilterByWildcards(l => l?.Version, wpVersion)
                         //.OrderBy(version => version.Version!, VersionComparer.Instance)
