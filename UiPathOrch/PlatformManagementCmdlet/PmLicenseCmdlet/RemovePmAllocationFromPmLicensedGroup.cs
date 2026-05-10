@@ -116,8 +116,7 @@ public class RemoveAllocationFromUserLicenseGroup : OrchestratorPSCmdlet
                         try
                         {
                             drive.OrchAPISession.DeletePmLicenseGroupAllocations(group.id, user.id!);
-                            drive._dicPmUserLicenseGroupAllocations = null;
-                            drive._dicPmUserLicenseGroupAllocations_Exceptions.ClearCache();
+                            drive.PmUserLicenseGroupAllocations.ClearCache();
                         }
                         catch (Exception ex)
                         {

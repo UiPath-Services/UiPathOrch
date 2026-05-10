@@ -240,8 +240,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         //_dicPmGroups = null;
         //_dicPmGroups_Exception?.ClearCache();
 
-        _dicPmUserLicenseGroupAllocations = null;
-        _dicPmUserLicenseGroupAllocations_Exceptions.ClearCache();
+        // _dicPmUserLicenseGroupAllocations auto-cleared via _allTenantCache (PmUserLicenseGroupAllocations: KeyedListCachePerTenant).
 
 
         #endregion
@@ -2042,40 +2041,20 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
 
     #region GetPmUserLicenseGroupAllocations Cache
-    internal ConcurrentDictionary<string, List<NuLicensedGroupMember>>? _dicPmUserLicenseGroupAllocations = null;
-    internal readonly ExceptionsCachePer<string> _dicPmUserLicenseGroupAllocations_Exceptions = new();
+    // Backwards-compat shim: delegates to PmUserLicenseGroupAllocations
+    // (KeyedListCachePerTenant). Path / GroupName / PathGroupName are set per-call
+    // in the wrapper because they depend on group.name (the cache key is group.id).
     public ReadOnlyCollection<NuLicensedGroupMember> GetPmLicensedGroupAllocations(NuLicensedGroup group)
     {
-        _dicPmUserLicenseGroupAllocations_Exceptions.ThrowCachedExceptionIfAny(group.id!);
-
-        if (_dicPmUserLicenseGroupAllocations is null)
+        var members = PmUserLicenseGroupAllocations.Get(group.id!);
+        string pathGroupName = System.IO.Path.Combine(NameColonSeparator, group?.name ?? "");
+        foreach (var user in members)
         {
-            lock (_dicPmUserLicenseGroupAllocations_Exceptions)
-            {
-                _dicPmUserLicenseGroupAllocations ??= [];
-            }
+            user.Path = NameColonSeparator;
+            user.GroupName = group?.name;
+            user.PathGroupName = pathGroupName;
         }
-
-        if (!_dicPmUserLicenseGroupAllocations.TryGetValue(group.id!, out var ret))
-        {
-            try
-            {
-                ret = OrchAPISession.GetPmLicenseGroupAllocations(group.id).ToList();
-                foreach (var user in ret)
-                {
-                    user.Path = NameColonSeparator;
-                    user.GroupName = group?.name;
-                    user.PathGroupName = System.IO.Path.Combine(NameColonSeparator, group?.name ?? "");
-                }
-                _dicPmUserLicenseGroupAllocations[group!.id!] = ret;
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicPmUserLicenseGroupAllocations_Exceptions.CacheException(group.id!, ex);
-                throw;
-            }
-        }
-        return ret.AsReadOnly();
+        return members;
     }
     #endregion
 
@@ -2147,6 +2126,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedListCachePerTenant<string, LibraryVersion> LibraryVersions;
     public readonly KeyedListCachePerTenant<string, LibraryVersion> LibraryVersionsInHostFeed;
     public readonly KeyedListCachePerTenant<string, Package> Packages;
+    public readonly KeyedListCachePerTenant<string, NuLicensedGroupMember> PmUserLicenseGroupAllocations;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2457,6 +2437,12 @@ public partial class OrchDriveInfo : PSDriveInfo
             feedId => OrchAPISession.GetPackages(feedId));
             // No initializer: GetPackages wrapper sets Path per-call from the
             // caller's folder context (feedFolder isn't derivable from feedId alone).
+
+        PmUserLicenseGroupAllocations = new(this,
+            groupId => OrchAPISession.GetPmLicenseGroupAllocations(groupId));
+            // No initializer: GetPmLicensedGroupAllocations wrapper sets
+            // GroupName / PathGroupName per-call from the NuLicensedGroup arg
+            // (only group.id participates in the cache key).
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?

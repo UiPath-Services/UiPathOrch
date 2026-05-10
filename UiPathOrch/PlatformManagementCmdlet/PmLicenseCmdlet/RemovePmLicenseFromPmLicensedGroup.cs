@@ -146,7 +146,7 @@ public class RemoveLicenseFromLicenseGroup : OrchestratorPSCmdlet
                         WriteObject(ret);
                     }
                     drive.PmLicensedGroups.ClearCache();
-                    drive._dicPmUserLicenseGroupAllocations = null;
+                    drive.PmUserLicenseGroupAllocations.ClearCache();
                     drive._dicPmAvailableUserBundles = null;
                 }
                 catch (Exception ex)
