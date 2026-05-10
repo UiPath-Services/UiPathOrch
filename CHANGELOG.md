@@ -6,6 +6,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.2.2] - 2026-05-10
+
+Patch release: two fixes for `Add-OrchUser` and `Copy-Item`, plus
+internal cleanup.
+
+### Fixed
+
+- **`Add-OrchUser` multi-row CSV no longer clobbers earlier-row scalar
+  values when a later row's cell is blank.** In the per-(user, role)
+  CSV pattern, blank cells on rows 2+ silently cleared values set by
+  row 1, dropping the user's `UnattendedRobot` / `ExecutionSettings`
+  configuration at POST time.
+
+- **`Copy-Item -Recurse` no longer spams HTTP 500 warnings from
+  Test Manager copies on older Orchestrator.** Test Manager API
+  endpoints (`/odata/TestSets` etc.) are not serviceable on Orch
+  ≤ 23.4 (ApiVersion ≤ 16), and partially broken through Orch 25.10
+  (v17). `Copy-Item` now skips those copies on those versions.
+
+### Changed
+
+- **Edition wording aligned with the `OrchEdition` enum.** README,
+  release notes, and `Get-PmLicense*` help pages now say "on-premises
+  Orchestrator" rather than "Standalone" or "MSI". `"msi"` and
+  `"standalone"` aliases in the edition parser are retained for
+  backwards compatibility.
+
+- **`AuthManager`'s PKCE listener loop logs caught exceptions** for
+  diagnosis (DebugView / VS Output only; Release binaries unchanged).
+
+### Internal
+
+- Link cmdlets consolidated onto three generic base classes; public
+  surface preserved.
+- `Assign*` / `MergeDescription` helpers cleaned up.
+- `AsyncLogTest` console-app project replaced with xunit tests so CI
+  exercises `AsyncLogWriter` every build.
+- Test coverage expanded: xunit 205 → 292.
+
 ## [1.2.1] - 2026-05-08
 
 Patch release: a `Copy-Item` bug that silently shared the source
