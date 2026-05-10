@@ -583,6 +583,119 @@ public class KeyedListCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     }
 }
 
+/// <summary>
+/// Tenant-scoped cache of a single <typeparamref name="TEntity"/> per
+/// <typeparamref name="TKey"/>. Same lifecycle and exception-caching contract
+/// as <see cref="KeyedListCachePerTenant{TKey,TEntity}"/>, but each key maps
+/// to one entity instead of a list. <typeparamref name="TKey"/> can be a
+/// tuple (e.g. <c>(folderId, assetId)</c>) for composite-key caches such as
+/// the asset/queue/bucket "folders accessible from this folder" links.
+///
+/// The <see cref="ClearCache(Func{TKey, bool})"/> overload exists for
+/// composite keys: callers can drop entries matching a partial key (for
+/// example, all entries for a single asset across all folders) without
+/// flushing the entire cache.
+/// </summary>
+public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
+    where TKey : notnull, IEquatable<TKey>
+{
+    private readonly object _lock = new();
+    private readonly OrchDriveInfo _drive;
+
+    private volatile ConcurrentDictionary<TKey, TEntity?>? _cache = null;
+    private readonly ExceptionsCachePer<TKey> _exceptions = new();
+    private readonly Func<TKey, TEntity?> _fetchFunc;
+    private readonly Action<TEntity, TKey>? _initializer;
+    private readonly IEqualityComparer<TKey>? _keyComparer;
+    private readonly int? _supportedApiVersionFrom;
+
+    public KeyedSingleCachePerTenant(
+        OrchDriveInfo drive,
+        Func<TKey, TEntity?> fetchFunc,
+        Action<TEntity, TKey>? initializer = null,
+        IEqualityComparer<TKey>? keyComparer = null,
+        int? supportedApiVersionFrom = null)
+    {
+        _drive = drive;
+        _drive._allTenantCache.Add(this);
+        _fetchFunc = fetchFunc;
+        _initializer = initializer;
+        _keyComparer = keyComparer;
+        _supportedApiVersionFrom = supportedApiVersionFrom;
+    }
+
+    public TEntity? Get(TKey key)
+    {
+        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
+        {
+            return default;
+        }
+
+        _exceptions.ThrowCachedExceptionIfAny(key);
+
+        if (_cache is null)
+        {
+            lock (_lock)
+            {
+                _cache ??= _keyComparer is null
+                    ? new ConcurrentDictionary<TKey, TEntity?>()
+                    : new ConcurrentDictionary<TKey, TEntity?>(_keyComparer);
+            }
+        }
+
+        if (!_cache.TryGetValue(key, out var entity))
+        {
+            try
+            {
+                entity = _fetchFunc(key);
+                if (entity is not null)
+                {
+                    _initializer?.Invoke(entity, key);
+                }
+                // Publish only after init so concurrent readers never observe
+                // a partially-initialized entity.
+                _cache[key] = entity;
+            }
+            catch (HttpResponseException ex)
+            {
+                _exceptions.CacheException(key, ex);
+                throw;
+            }
+        }
+
+        return entity;
+    }
+
+    public void ClearCache(TKey key)
+    {
+        _cache?.TryRemove(key, out _);
+        _exceptions.ClearCache(key);
+    }
+
+    /// <summary>
+    /// Drop all entries (and their exception cache entries) whose key matches
+    /// the predicate. Useful for composite-key caches when an external mutation
+    /// invalidates only a slice of the cache (e.g. one asset's link set across
+    /// all folders).
+    /// </summary>
+    public void ClearCache(Func<TKey, bool> predicate)
+    {
+        if (_cache is null) return;
+        // Snapshot keys before mutation: ConcurrentDictionary.Keys is a live view.
+        foreach (var key in _cache.Keys.Where(predicate).ToList())
+        {
+            _cache.TryRemove(key, out _);
+            _exceptions.ClearCache(key);
+        }
+    }
+
+    public void ClearCache()
+    {
+        _cache = null;
+        _exceptions.ClearCache();
+    }
+}
+
 public class SingleCachePerFolder<T> : IFolderCacheClearable
 {
     private readonly object _lock = new();
