@@ -43,28 +43,15 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
                 // .OrderBy(rt => rt);
                 .ToList();
 
-            var results = new ConcurrentBag<IEnumerable<LicenseRuntime>>();
+            // Prefetch in parallel; LicenseRuntimes (KeyedListCachePerTenant) handles
+            // "fetch only if not cached" internally, so no explicit ContainsKey filter is needed.
             Parallel.ForEach(drives, drive =>
             {
-                // Only fetch via GetLicenseRuntime() for robotTypes that are not cached
-                IEnumerable<string> nonCachedRobotTypes;
-                if (drive._dicLicenseRuntime is null)
-                {
-                    // If there is no cache, fetch all
-                    nonCachedRobotTypes = specifiedRobotTypes;
-                }
-                else
-                {
-                    // If cache exists, only fetch those not yet cached
-                    nonCachedRobotTypes = specifiedRobotTypes
-                        .Where(rt => !drive._dicLicenseRuntime!.ContainsKey(rt));
-                }
-
-                Parallel.ForEach(nonCachedRobotTypes, robotType =>
+                Parallel.ForEach(specifiedRobotTypes, robotType =>
                 {
                     try
                     {
-                        results.Add(drive.GetLicenseRuntime(robotType));
+                        drive.GetLicenseRuntime(robotType);
                     }
                     catch (Exception ex)
                     {
@@ -76,9 +63,11 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
             foreach (var drive in drives)
             {
                 foreach (var license in specifiedRobotTypes
-                    .Where(key => drive._dicLicenseRuntime!.ContainsKey(key))
-                    .Select(key => drive._dicLicenseRuntime![key])
-                    .SelectMany(l => l)
+                    .SelectMany(rt =>
+                    {
+                        try { return (IEnumerable<LicenseRuntime>)drive.GetLicenseRuntime(rt); }
+                        catch { return Enumerable.Empty<LicenseRuntime>(); }
+                    })
                     .Where(l => wp.IsMatch(l.Key))
                     .Where(t => Enable.Value
                         ? !t.Enabled.GetValueOrDefault()
@@ -126,7 +115,7 @@ public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet wher
                         try
                         {
                             drive.OrchAPISession.ToggleLicenseRuntime(robotType, license.Key!, license.MachineName!, Enable.Value);
-                            drive._dicLicenseRuntime?.TryRemove(robotType, out _);
+                            drive.LicenseRuntimes.ClearCache(robotType);
                         }
                         catch (Exception ex)
                         {

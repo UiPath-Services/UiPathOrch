@@ -169,8 +169,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         _dicJobsHavingExecutionMedia = null;
 
-
-        _dicLicenseRuntime = null;
+        // _dicLicenseRuntime auto-cleared via _allTenantCache (LicenseRuntimes: KeyedListCachePerTenant).
 
         _dicMachineClientSecrets = null;
         _dicMachineClientSecrets_Exception.ClearCache();
@@ -715,29 +714,9 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #region OrchRuntimeLicense cache
     // key: RobotType
-    internal ConcurrentDictionary<string, List<LicenseRuntime>>? _dicLicenseRuntime = null;
-    public ReadOnlyCollection<LicenseRuntime> GetLicenseRuntime(string robotType)
-    {
-        if (_dicLicenseRuntime is null)
-        {
-            lock (this)
-            {
-                _dicLicenseRuntime ??= new ConcurrentDictionary<string, List<LicenseRuntime>>(StringComparer.OrdinalIgnoreCase);
-            }
-        }
-        // LicenseRuntime is not cached; query each time
-        //            if (!_dicRuntimeLicense.TryGetValue(robotType, out var ret))
-        //            {
-        List<LicenseRuntime> ret = OrchAPISession.GetLicensesRuntime(robotType).ToList();
-        foreach (var license in ret)
-        {
-            license.RobotType = robotType;
-            license.Path = NameColonSeparator + robotType;
-        }
-        _dicLicenseRuntime[robotType] = ret;
-        //           }
-        return ret.AsReadOnly();
-    }
+    // Backwards-compat shim: delegates to LicenseRuntimes (KeyedListCachePerTenant).
+    public ReadOnlyCollection<LicenseRuntime> GetLicenseRuntime(string robotType) =>
+        LicenseRuntimes.Get(robotType);
     #endregion
 
     #region OrchTrigger cache
@@ -2127,6 +2106,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedListCachePerTenant<string, LibraryVersion> LibraryVersionsInHostFeed;
     public readonly KeyedListCachePerTenant<string, Package> Packages;
     public readonly KeyedListCachePerTenant<string, NuLicensedGroupMember> PmUserLicenseGroupAllocations;
+    public readonly KeyedListCachePerTenant<string, LicenseRuntime> LicenseRuntimes;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2443,6 +2423,15 @@ public partial class OrchDriveInfo : PSDriveInfo
             // No initializer: GetPmLicensedGroupAllocations wrapper sets
             // GroupName / PathGroupName per-call from the NuLicensedGroup arg
             // (only group.id participates in the cache key).
+
+        LicenseRuntimes = new(this,
+            robotType => OrchAPISession.GetLicensesRuntime(robotType),
+            (license, robotType) =>
+            {
+                license.RobotType = robotType;
+                license.Path = NameColonSeparator + robotType;
+            },
+            StringComparer.OrdinalIgnoreCase);
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
