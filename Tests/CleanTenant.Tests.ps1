@@ -537,3 +537,123 @@ Describe 'Copy-Item link reproduction' {
         $devProd.Id | Should -Be $devDev.Id
     }
 }
+
+# Cross-drive variant of the same link-reproduction asserts: src tree on
+# $script:Drive, dst tree on a separate $script:DstDrive (set via env var
+# UIPATHORCH_TEST_DST_DRIVE). This pins the 1.2.1 commit's claim that
+# "Cross-drive copies between two different drives were unaffected" by the
+# same-drive FindDstFolders bug — the new (srcAnchor, dstAnchor) rebase
+# logic must work for both same-drive AND cross-drive cases.
+#
+# Run prerequisites:
+#   $env:UIPATHORCH_TEST_DRIVE     = 'local'   # source (must hold imported fixture)
+#   $env:UIPATHORCH_TEST_DST_DRIVE = 'local2'  # destination (clean / no fixture)
+# When UIPATHORCH_TEST_DST_DRIVE is unset, equals the src drive, or names an
+# unmounted drive, all tests in this Describe are Set-ItResult -Skipped.
+Describe 'Cross-drive Copy-Item link reproduction' {
+    BeforeAll {
+        $script:DstDrive = $env:UIPATHORCH_TEST_DST_DRIVE
+        $script:CrossDriveSkipReason = $null
+
+        if ([string]::IsNullOrEmpty($script:DstDrive)) {
+            $script:CrossDriveSkipReason = 'UIPATHORCH_TEST_DST_DRIVE not set'
+        } elseif ($script:DstDrive -eq $script:Drive) {
+            $script:CrossDriveSkipReason = "UIPATHORCH_TEST_DST_DRIVE ($($script:DstDrive)) equals UIPATHORCH_TEST_DRIVE — same-drive case is covered above"
+        } elseif (-not (Get-PSDrive -Name $script:DstDrive -ErrorAction SilentlyContinue)) {
+            $script:CrossDriveSkipReason = "drive '$($script:DstDrive)' not mounted"
+        }
+
+        if ($script:CrossDriveSkipReason) { return }
+
+        $script:DstRoot = "${script:DstDrive}:\TestFixture_CrossDriveCopyDest"
+
+        # Clean any leftover from a prior failed run.
+        Remove-Item -Path $script:DstRoot -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+        Clear-OrchCache -Path "${script:DstDrive}:\"
+
+        New-Item -Path $script:DstRoot -ItemType Directory | Out-Null
+
+        # Same Production-first ordering as the same-drive test: the multi-link
+        # entities live in Production, so once Production exists in dst, copying
+        # Development / QA later finds dst Production's entities and links to
+        # them rather than duplicating.
+        Copy-Item -Path "${script:Drive}:\TestFixture_Base\Production"  -Destination $script:DstRoot -Recurse -Confirm:$false
+        Copy-Item -Path "${script:Drive}:\TestFixture_Base\Development" -Destination $script:DstRoot -Recurse -Confirm:$false
+        Copy-Item -Path "${script:Drive}:\TestFixture_Base\QA"          -Destination $script:DstRoot -Recurse -Confirm:$false
+        Clear-OrchCache -Path $script:DstRoot
+    }
+
+    AfterAll {
+        if ($script:DstRoot) {
+            Remove-Item -Path $script:DstRoot -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    BeforeEach {
+        if ($script:CrossDriveSkipReason) {
+            Set-ItResult -Skipped -Because $script:CrossDriveSkipReason
+        }
+    }
+
+    # Helper duplicated locally so this Describe is self-contained even when
+    # the same-drive Describe's script-scoped Get-LinkLeaves is out of scope.
+    function script:Get-LinkLeavesXD($links) {
+        $links.Link | ForEach-Object { ($_ -split '\\')[-1] } | Sort-Object
+    }
+
+    # 2-link case (asset-host: Production → Dev, QA)
+    It 'reproduces asset-host links across drives (Development, QA)' {
+        $links = Get-OrchAssetLink -Path "${script:DstRoot}\Production" -Name 'asset-host'
+        Get-LinkLeavesXD $links | Should -Be @('Development', 'QA')
+    }
+
+    # 3-link case (asset-shared3: Production → Dev, QA, SubA)
+    It 'reproduces asset-shared3 links across drives to ALL three folders (Development, QA, SubA)' {
+        $links = Get-OrchAssetLink -Path "${script:DstRoot}\Production" -Name 'asset-shared3'
+        Get-LinkLeavesXD $links | Should -Be @('Development', 'QA', 'SubA')
+    }
+
+    # 2-link case (queue-emails: Production → Dev, QA)
+    It 'reproduces queue-emails links across drives (Development, QA)' {
+        $links = Get-OrchQueueLink -Path "${script:DstRoot}\Production" -Name 'queue-emails'
+        Get-LinkLeavesXD $links | Should -Be @('Development', 'QA')
+    }
+
+    # 3-link case (queue-shared3: Production → Dev, QA, SubA)
+    It 'reproduces queue-shared3 links across drives to ALL three folders (Development, QA, SubA)' {
+        $links = Get-OrchQueueLink -Path "${script:DstRoot}\Production" -Name 'queue-shared3'
+        Get-LinkLeavesXD $links | Should -Be @('Development', 'QA', 'SubA')
+    }
+
+    # 2-link case (bucket-files: Production → Dev, SubA)
+    It 'reproduces bucket-files links across drives (Development, SubA)' {
+        $links = Get-OrchBucketLink -Path "${script:DstRoot}\Production" -Name 'bucket-files'
+        Get-LinkLeavesXD $links | Should -Be @('Development', 'SubA')
+    }
+
+    # 3-link case (bucket-shared3: Production → Dev, QA, SubA)
+    It 'reproduces bucket-shared3 links across drives to ALL three folders (Development, QA, SubA)' {
+        $links = Get-OrchBucketLink -Path "${script:DstRoot}\Production" -Name 'bucket-shared3'
+        Get-LinkLeavesXD $links | Should -Be @('Development', 'QA', 'SubA')
+    }
+
+    It 'cross-drive: dst Production and dst Development share a SINGLE asset-host (linked, not duplicated)' {
+        # Same internal Id assertion as the same-drive case, but the dst tree
+        # lives on a different drive — the link topology must still be preserved.
+        $devProd = Get-OrchAsset -Path "${script:DstRoot}\Production"  -Name 'asset-host'
+        $devDev  = Get-OrchAsset -Path "${script:DstRoot}\Development" -Name 'asset-host'
+        $devProd.Id | Should -Be $devDev.Id
+    }
+
+    It 'cross-drive: dst entity has a DIFFERENT Id from src entity (no leakage of source Id across drives)' {
+        # Sanity: cross-drive copy must produce a fresh dst entity with its own
+        # Id, NOT somehow share the src entity's Id (which would be impossible
+        # anyway since Ids are tenant-scoped, but pinning the assertion catches
+        # any future bug where, say, src entity is accidentally returned as the
+        # WriteObject result of Copy-Item across drives).
+        $srcAsset = Get-OrchAsset -Path "${script:Drive}:\TestFixture_Base\Production" -Name 'asset-host'
+        $dstAsset = Get-OrchAsset -Path "${script:DstRoot}\Production" -Name 'asset-host'
+        $dstAsset.Id | Should -Not -Be $srcAsset.Id `
+            -Because 'cross-drive copy must create a fresh dst entity, not reference the src entity'
+    }
+}
