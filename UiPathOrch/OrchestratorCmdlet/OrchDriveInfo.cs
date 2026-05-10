@@ -175,7 +175,8 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicMachineClientSecrets = null;
         _dicMachineClientSecrets_Exception.ClearCache();
 
-        _dicPackages = null;
+        // _dicPackages auto-cleared via _allTenantCache (Packages: KeyedListCachePerTenant).
+        // _dicPackages_Exceptions still cleared here because GetPackageVersions uses it independently.
         _dicPackages_Exceptions?.ClearCache();
 
         _dicPackageVersions = null; // If an exception occurs, it should have already been thrown when getting _dicPackages, so this should be fine..
@@ -1014,41 +1015,27 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchPackage cache
-    // Key: FeedId
-    internal ConcurrentDictionary<string, List<Package>>? _dicPackages = null;
+    // _dicPackages_Exceptions is still referenced by GetPackageVersions (separate
+    // method, separate cache _dicPackageVersions); the field stays until that
+    // method is migrated too.
     internal ExceptionsCachePer<string> _dicPackages_Exceptions = new();
+
+    // Backwards-compat shim: delegates to Packages (KeyedListCachePerTenant).
+    // Path is set per-call in the wrapper rather than in the cache initializer
+    // because feedFolder depends on the *calling* folder (multiple folders may
+    // share the same feedId on FolderHierarchy feeds, but they do live in the
+    // same hierarchy so the feedFolder string is the same — preserved here for
+    // safety with the small per-call assignment cost).
     public ReadOnlyCollection<Package> GetPackages(Folder folder)
     {
         string feedId = FolderFeedId.Get(folder) ?? "";
-        _dicPackages_Exceptions.ThrowCachedExceptionIfAny(feedId);
-
-        if (_dicPackages is null)
-        {
-            lock (_dicPackages_Exceptions)
-            {
-                _dicPackages ??= new ConcurrentDictionary<string, List<Package>>();
-            }
-        }
-
+        var packages = Packages.Get(feedId);
         string feedFolder = System.IO.Path.Combine(NameColonSeparator, folder.GetPackageFeedFolder());
-        if (!_dicPackages.TryGetValue(feedId, out List<Package> packages))
+        foreach (var package in packages)
         {
-            try
-            {
-                packages = OrchAPISession.GetPackages(feedId).ToList();
-                foreach (var package in packages)
-                {
-                    package.Path = feedFolder;
-                }
-                _dicPackages[feedId] = packages;
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicPackages_Exceptions.CacheException(feedId, ex);
-                throw;
-            }
+            package.Path = feedFolder;
         }
-        return packages.AsReadOnly();
+        return packages;
     }
     #endregion
 
@@ -2159,6 +2146,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedListCachePerTenant<string, LicenseNamedUser> LicenseNamedUsers;
     public readonly KeyedListCachePerTenant<string, LibraryVersion> LibraryVersions;
     public readonly KeyedListCachePerTenant<string, LibraryVersion> LibraryVersionsInHostFeed;
+    public readonly KeyedListCachePerTenant<string, Package> Packages;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2464,6 +2452,11 @@ public partial class OrchDriveInfo : PSDriveInfo
             libraryId => OrchAPISession.GetLibraryVersions(libraryId, LibraryHostFeedId)
                 .OrderBy(v => v.Version!, VersionComparer.Instance),
             (library, _) => library.Path = NameColonSeparator);
+
+        Packages = new(this,
+            feedId => OrchAPISession.GetPackages(feedId));
+            // No initializer: GetPackages wrapper sets Path per-call from the
+            // caller's folder context (feedFolder isn't derivable from feedId alone).
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?

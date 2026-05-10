@@ -186,7 +186,7 @@ public class RemovePackageCommand : OrchestratorPSCmdlet
                                 {
                                     string feedId = drive.FolderFeedId.Get(folder);
                                     drive.OrchAPISession.RemovePackage(version.Id!, version.Version!, feedId);
-                                    drive._dicPackages?.TryRemove(feedId ?? "", out _);
+                                    drive.Packages.ClearCache(feedId ?? "");
                                     if (drive._dicPackageVersions?.TryGetValue(feedId ?? "", out var packageVersionsByPackageId) ?? false)
                                     {
                                         packageVersionsByPackageId.TryRemove(version.Id!, out _);

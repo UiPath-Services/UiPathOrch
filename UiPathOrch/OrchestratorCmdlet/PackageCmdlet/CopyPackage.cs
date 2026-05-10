@@ -193,7 +193,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
             var copiedPackage = dstDrive.OrchAPISession.UploadPackage(dstFeedId, fileName!, fileContent!);
             if (copiedPackage is not null)
             {
-                dstDrive._dicPackages?.TryRemove(dstFeedId ?? "", out var _);
+                dstDrive.Packages.ClearCache(dstFeedId ?? "");
                 dstDrive._dicPackageVersions?.TryRemove(dstFeedId ?? "", out var _);
 
                 // If the destination feed is a personal workspace, also clear the process cache
