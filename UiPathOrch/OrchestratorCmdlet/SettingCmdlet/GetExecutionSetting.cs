@@ -114,11 +114,12 @@ public class GetExecutionSettingCommand : OrchestratorPSCmdlet
             drive => drive,
             drive =>
             {
+                var local = new Dictionary<int, ExecutionSettingDefinition[]?>();
                 foreach (var scope in specifiedScopes)
                 {
-                    drive.GetExecutionSettings(scope.Key, scope.Value);
+                    local[scope.Key] = drive.GetExecutionSettings(scope.Key, scope.Value);
                 }
-                return drive._dicExecutionSettings;
+                return local;
             });
 
         using var cancelHandler = new ConsoleCancelHandler();

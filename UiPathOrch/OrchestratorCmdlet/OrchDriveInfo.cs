@@ -1570,45 +1570,22 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchExecutionSettings Cache
-    // key: scope
-    internal Dictionary<int, ExecutionSettingDefinition[]?>? _dicExecutionSettings = null;
-    internal readonly ExceptionsCachePer<int> _dicExecutionSettingsException = new();
+    // Backwards-compat wrapper: ExecutionSettings (KeyedSingleCachePerTenant) is keyed
+    // by `scope` only; PathScope / Scope depend on `strScope` and are set per-call so
+    // the same cache entry stays correct across different strScope arguments.
     public ExecutionSettingDefinition[]? GetExecutionSettings(int scope, string strScope)
     {
-        _dicExecutionSettingsException.ThrowCachedExceptionIfAny(scope);
-
-        if (_dicExecutionSettings is null)
+        var arr = ExecutionSettings.Get(scope);
+        if (arr is not null)
         {
-            lock (_dicExecutionSettingsException)
+            string pathScope = Path.Combine(NameColonSeparator, strScope);
+            foreach (var setting in arr)
             {
-                _dicExecutionSettings ??= [];
+                setting.PathScope = pathScope;
+                setting.Scope = strScope;
             }
         }
-
-        if (!_dicExecutionSettings.TryGetValue(scope, out var ret))
-        {
-            try
-            {
-                var executionConf = OrchAPISession.GetExecutionSettings(scope);
-                if (executionConf is not null)
-                {
-                    foreach (var setting in executionConf.Configuration ?? [])
-                    {
-                        setting.Path = NameColonSeparator;
-                        setting.PathScope = Path.Combine(NameColonSeparator, strScope);
-                        setting.Scope = strScope;
-                    }
-                    ret = executionConf.Configuration;
-                    _dicExecutionSettings[scope] = ret;
-                }
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicExecutionSettingsException.CacheException(scope, ex);
-                throw;
-            }
-        }
-        return ret;
+        return arr;
     }
     #endregion
 
@@ -2086,6 +2063,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     // Single-keyed entities (one entity per key, exception cached per key)
     public readonly KeyedSingleCachePerTenant<string, MachineClientSecretResponse[]?> MachineClientSecrets;
+    public readonly KeyedSingleCachePerTenant<int, ExecutionSettingDefinition[]?> ExecutionSettings;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2414,6 +2392,17 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         // Single-keyed entities
         MachineClientSecrets = new(this, licenseKey => OrchAPISession.GetMachineClientSecret(licenseKey));
+
+        ExecutionSettings = new(this,
+            scope => OrchAPISession.GetExecutionSettings(scope)?.Configuration,
+            (arr, _) =>
+            {
+                if (arr is null) return;
+                foreach (var setting in arr)
+                {
+                    setting.Path = NameColonSeparator;
+                }
+            });
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
