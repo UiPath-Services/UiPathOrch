@@ -489,6 +489,100 @@ public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearabl
     }
 }
 
+/// <summary>
+/// Tenant-scoped cache of List&lt;TEntity&gt; entries keyed by an arbitrary
+/// <typeparamref name="TKey"/> (typically string — e.g. robot type, feed id,
+/// query string). Each key is fetched on first access via <c>fetchFunc</c>;
+/// subsequent <c>Get(key)</c> calls return the cached list. Per-key
+/// HttpResponseException caching mirrors the other indexed cache classes,
+/// so a 4xx/5xx for one key sticks until the next <c>ClearCache(key)</c>.
+/// </summary>
+public class KeyedListCachePerTenant<TKey, TEntity> : ITenantCacheClearable
+    where TKey : notnull, IEquatable<TKey>
+{
+    private readonly object _lock = new();
+    private readonly OrchDriveInfo _drive;
+
+    private volatile ConcurrentDictionary<TKey, List<TEntity>>? _cache = null;
+    private readonly ExceptionsCachePer<TKey> _exceptions = new();
+    private readonly Func<TKey, IEnumerable<TEntity>> _fetchFunc;
+    private readonly Action<TEntity, TKey>? _initializer;
+    private readonly IEqualityComparer<TKey>? _keyComparer;
+    private readonly int? _supportedApiVersionFrom;
+
+    public KeyedListCachePerTenant(
+        OrchDriveInfo drive,
+        Func<TKey, IEnumerable<TEntity>> fetchFunc,
+        Action<TEntity, TKey>? initializer = null,
+        IEqualityComparer<TKey>? keyComparer = null,
+        int? supportedApiVersionFrom = null)
+    {
+        _drive = drive;
+        _drive._allTenantCache.Add(this);
+        _fetchFunc = fetchFunc;
+        _initializer = initializer;
+        _keyComparer = keyComparer;
+        _supportedApiVersionFrom = supportedApiVersionFrom;
+    }
+
+    public ReadOnlyCollection<TEntity> Get(TKey key)
+    {
+        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
+        {
+            return new List<TEntity>().AsReadOnly();
+        }
+
+        _exceptions.ThrowCachedExceptionIfAny(key);
+
+        if (_cache is null)
+        {
+            lock (_lock)
+            {
+                _cache ??= _keyComparer is null
+                    ? new ConcurrentDictionary<TKey, List<TEntity>>()
+                    : new ConcurrentDictionary<TKey, List<TEntity>>(_keyComparer);
+            }
+        }
+
+        if (!_cache.TryGetValue(key, out var list))
+        {
+            try
+            {
+                list = _fetchFunc(key).ToList();
+                if (_initializer is not null)
+                {
+                    foreach (var entity in list)
+                    {
+                        _initializer(entity, key);
+                    }
+                }
+                // Publish to the cache only after init, so concurrent readers never
+                // observe a partially-initialized list.
+                _cache[key] = list;
+            }
+            catch (HttpResponseException ex)
+            {
+                _exceptions.CacheException(key, ex);
+                throw;
+            }
+        }
+
+        return list.AsReadOnly();
+    }
+
+    public void ClearCache(TKey key)
+    {
+        _cache?.TryRemove(key, out _);
+        _exceptions.ClearCache(key);
+    }
+
+    public void ClearCache()
+    {
+        _cache = null;
+        _exceptions.ClearCache();
+    }
+}
+
 public class SingleCachePerFolder<T> : IFolderCacheClearable
 {
     private readonly object _lock = new();

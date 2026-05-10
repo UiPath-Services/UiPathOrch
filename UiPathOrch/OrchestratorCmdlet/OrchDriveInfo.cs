@@ -172,8 +172,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicLibraryVersions = null; // If an exception occurs, it should have already been thrown when getting _dicLibraries, so this should be fine..
         _dicLibraryVersionsInHostFeed = null;
 
-        _dicLicenseNamedUser = null;
-
         _dicLicenseRuntime = null;
 
         _dicMachineClientSecrets = null;
@@ -710,31 +708,11 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchNamedUserLicense cache
-    // key: RobotType
-    internal ConcurrentDictionary<string, List<LicenseNamedUser>>? _dicLicenseNamedUser = null;
+    // Backwards-compat shim: delegates to LicenseNamedUsers (KeyedListCachePerTenant).
+    // The cache itself lives as a public field initialised in the OrchDriveInfo
+    // constructor; ClearAllCache flushes it via the _allTenantCache iteration.
     public ReadOnlyCollection<LicenseNamedUser> GetLicenseNamedUser(string robotType)
-    {
-        if (_dicLicenseNamedUser is null)
-        {
-            lock (this)
-            {
-                _dicLicenseNamedUser ??= new ConcurrentDictionary<string, List<LicenseNamedUser>>(StringComparer.OrdinalIgnoreCase);
-            }
-        }
-        if (!_dicLicenseNamedUser.TryGetValue(robotType, out var ret))
-        {
-            ret = OrchAPISession.GetLicensesNamedUser(robotType).ToList();
-            string pathRobotType = NameColonSeparator + robotType;
-            foreach (var license in ret)
-            {
-                license.RobotType = robotType;
-                license.Path = NameColonSeparator;
-                license.PathRobotType = pathRobotType;
-            }
-            _dicLicenseNamedUser[robotType] = ret;
-        }
-        return ret.AsReadOnly();
-    }
+        => LicenseNamedUsers.Get(robotType);
     #endregion
 
     #region OrchRuntimeLicense cache
@@ -2225,6 +2203,10 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerTenant<Webhook> Webhooks;
     public readonly ListCachePerTenant<WebhookEventType> WebhookEventTypes;
     public readonly ListCachePerTenant<ResponseDictionaryItem> WebSettings;
+
+    // Keyed list entities (tenant-scoped, per-key list)
+    public readonly KeyedListCachePerTenant<string, LicenseNamedUser> LicenseNamedUsers;
+
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
     // Non-indexed folder entities
@@ -2508,6 +2490,17 @@ public partial class OrchDriveInfo : PSDriveInfo
                 e.UserName = userName;
             }
         );
+
+        // Keyed list entities
+        LicenseNamedUsers = new(this,
+            robotType => OrchAPISession.GetLicensesNamedUser(robotType),
+            (license, robotType) =>
+            {
+                license.RobotType = robotType;
+                license.Path = NameColonSeparator;
+                license.PathRobotType = NameColonSeparator + robotType;
+            },
+            StringComparer.OrdinalIgnoreCase);
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
