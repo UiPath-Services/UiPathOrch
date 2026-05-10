@@ -2735,6 +2735,44 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         }
     }
 
+    It 'R17: Add-OrchUser multi-row CSV preserves row-1 scalar values when row-2 cells blank' {
+        # Bug fix: OrchCsvHelper.AssignStringValue / AssignIntValue used to fall
+        # through to setter(newValue) when newValue was unspecified, silently
+        # clobbering whatever an earlier row had set. The string and int helpers
+        # now early-return on null/empty/zero, matching AssignBoolValue's existing
+        # pattern. Affected the per-(user, role) CSV import shape:
+        #   UserName,Type,Role,UR_CredentialType
+        #   bot1,Robot,Robot,NoCredential
+        #   bot1,Robot,SomeOtherRole,                   <- blank cell would clobber
+        # Pre-fix: this.UR_CredentialType="" → EndProcessing's
+        #   AssignStringIfNotNullOrEmpty skips → posted user had no CredentialType.
+        # Post-fix: row-1's "NoCredential" survives → posted as specified.
+
+        $robotName = "${script:Prefix}Reg_Robot"
+
+        # Use a Robot-type user (tenant-local, no external directory dependency).
+        # 'Robot' role is a built-in mixed-scope role on every Orchestrator install.
+        try {
+            $csv = @"
+UserName,Type,Role,UR_CredentialType
+$robotName,Robot,Robot,NoCredential
+$robotName,Robot,Robot,
+"@ | ConvertFrom-Csv
+
+            $csv | Add-OrchUser -Path "${script:Drive}:\" -ErrorAction Stop -WarningAction SilentlyContinue
+            Clear-OrchCache
+
+            $created = Get-OrchUser -Path "${script:Drive}:\" -UserName $robotName
+            $created | Should -Not -BeNullOrEmpty -Because 'robot user must be created'
+            $created.UnattendedRobot | Should -Not -BeNullOrEmpty `
+                -Because 'row 1 specified UR_CredentialType, so UnattendedRobot block must be posted'
+            $created.UnattendedRobot.CredentialType | Should -Be 'NoCredential' `
+                -Because "row 2's blank UR_CredentialType cell must NOT clobber row 1's value"
+        } finally {
+            Remove-OrchUser -UserName $robotName -Path "${script:Drive}:\" -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
     It 'R12: Add-OrchCalendarDate compares against UTC.Today, not local Today' {
         # Bug fix: -ExcludedDate values were stamped Kind=Utc but the "drop past dates"
         # filter compared against `DateTime.Today` (local). On a TZ ahead of UTC the local

@@ -904,3 +904,217 @@ public class AssignBoolValueTests
         Assert.Single(host.Warnings);
     }
 }
+
+// Scenario tests that simulate AddUser.cs CsvLine.Update calls in sequence,
+// modelling the per-(user, role) CSV import pattern: row 1 populates all
+// scalar fields via the constructor, rows 2..N typically only specify a
+// different Role and leave the scalar cells blank. These tests pin the
+// post-fix behaviour of the multi-row aggregation as a whole, complementing
+// the per-helper unit tests above.
+//
+// FakeCsvLine mirrors the shape of AddUser.cs's private CsvLine class for
+// the fields actually exercised by the scenarios (UR_*, ES_*, MayHave*).
+// CsvLine itself is a private nested type and not directly testable; this
+// fake stands in for the same orchestration of helper calls.
+
+public class MultiRowCsvScenarioTests
+{
+    private sealed class FakeCsvLine
+    {
+        // String scalars
+        public string? UR_UserName { get; set; }
+        public string? UR_CredentialType { get; set; }
+        public string? ES_TracingLevel { get; set; }
+
+        // Int scalars
+        public int? ES_ResolutionWidth { get; set; }
+        public int? ES_ResolutionHeight { get; set; }
+
+        // Bool scalars (parsed from string at the parameter binder)
+        public bool? IsExternalLicensed { get; set; }
+        public bool? MayHaveRobotSession { get; set; }
+
+        // Roles HashSet — accumulated, not collision-detected
+        public HashSet<string> Roles { get; } = new();
+    }
+
+    // Helper: simulate one row's worth of Update() calls against an existing FakeCsvLine.
+    // Mirrors the structure of AddUser.cs CsvLine.Update.
+    private static void SimulateRowUpdate(
+        IWritableHost host,
+        FakeCsvLine line,
+        string userName,
+        string? ur_userName, string? ur_credentialType,
+        string? es_tracingLevel,
+        int? es_resolutionWidth, int? es_resolutionHeight,
+        string? isExternalLicensed, string? mayHaveRobotSession,
+        IEnumerable<string>? roles)
+    {
+        const string drive = "OrchTest";
+        CsvLineBase.AssignStringValue(host, drive, userName, line.UR_UserName, ur_userName, v => line.UR_UserName = v);
+        CsvLineBase.AssignStringValue(host, drive, userName, line.UR_CredentialType, ur_credentialType, v => line.UR_CredentialType = v);
+        CsvLineBase.AssignStringValue(host, drive, userName, line.ES_TracingLevel, es_tracingLevel, v => line.ES_TracingLevel = v);
+        CsvLineBase.AssignIntValue(host, drive, userName, line.ES_ResolutionWidth, es_resolutionWidth, v => line.ES_ResolutionWidth = v);
+        CsvLineBase.AssignIntValue(host, drive, userName, line.ES_ResolutionHeight, es_resolutionHeight, v => line.ES_ResolutionHeight = v);
+        CsvLineBase.AssignBoolValue(host, drive, userName, line.IsExternalLicensed, isExternalLicensed, v => line.IsExternalLicensed = v);
+        CsvLineBase.AssignBoolValue(host, drive, userName, line.MayHaveRobotSession, mayHaveRobotSession, v => line.MayHaveRobotSession = v);
+        if (roles is not null)
+        {
+            line.Roles.UnionWith(roles.Where(r => !string.IsNullOrEmpty(r)));
+        }
+    }
+
+    [Fact]
+    public void TypicalCsv_TwoRowsSameUserDifferentRoles_PreservesRow1ScalarsAndAccumulatesRoles()
+    {
+        // Realistic CSV pattern (per-(user, role) export):
+        //   UserName,Role,IsExternalLicensed,UR_UserName,UR_CredentialType,ES_TracingLevel,ES_ResolutionWidth
+        //   alice,RoleA,true,domain\alice,UsernamePassword,Verbose,1024
+        //   alice,RoleB,,,,,
+        //
+        // Row 1 populates everything via ctor (here: direct field init).
+        // Row 2 carries only the additional Role; all other cells are blank.
+        // Expected: scalar fields stay at row-1 values, Roles accumulates {A, B}.
+        // Pre-fix: row 2's blank string/int cells would clobber row 1 → POST-time
+        // EndProcessing checks would skip the UnattendedRobot block entirely.
+
+        var host = new CapturingHost();
+        var line = new FakeCsvLine
+        {
+            // Simulate ctor from row 1
+            UR_UserName = @"domain\alice",
+            UR_CredentialType = "UsernamePassword",
+            ES_TracingLevel = "Verbose",
+            ES_ResolutionWidth = 1024,
+            IsExternalLicensed = true,
+            MayHaveRobotSession = false,
+        };
+        line.Roles.Add("RoleA");
+
+        // Simulate row 2: only Role specified, all other cells blank
+        SimulateRowUpdate(host, line, "alice",
+            ur_userName: "", ur_credentialType: "",
+            es_tracingLevel: "",
+            es_resolutionWidth: 0, es_resolutionHeight: 0,
+            isExternalLicensed: "", mayHaveRobotSession: "",
+            roles: new[] { "RoleB" });
+
+        Assert.Equal(@"domain\alice", line.UR_UserName);
+        Assert.Equal("UsernamePassword", line.UR_CredentialType);
+        Assert.Equal("Verbose", line.ES_TracingLevel);
+        Assert.Equal(1024, line.ES_ResolutionWidth);
+        Assert.True(line.IsExternalLicensed);
+        Assert.False(line.MayHaveRobotSession);
+
+        Assert.Equal(2, line.Roles.Count);
+        Assert.Contains("RoleA", line.Roles);
+        Assert.Contains("RoleB", line.Roles);
+
+        // No collision: every blank cell was unspecified, not conflicting.
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void ConflictingScalarOnRow2_TriggersWarning_KeepsRow1Value()
+    {
+        // Row 2 explicitly disagrees on a scalar — should warn and keep row 1's value.
+        var host = new CapturingHost();
+        var line = new FakeCsvLine { UR_UserName = @"domain\alice", IsExternalLicensed = true };
+        line.Roles.Add("RoleA");
+
+        SimulateRowUpdate(host, line, "alice",
+            ur_userName: @"domain\bob",      // conflict with row 1's "alice"
+            ur_credentialType: null,
+            es_tracingLevel: null,
+            es_resolutionWidth: null, es_resolutionHeight: null,
+            isExternalLicensed: "false",     // conflict with row 1's true
+            mayHaveRobotSession: null,
+            roles: new[] { "RoleB" });
+
+        // First-wins: row 1's values survive
+        Assert.Equal(@"domain\alice", line.UR_UserName);
+        Assert.True(line.IsExternalLicensed);
+        // Two warnings: one per conflicting scalar
+        Assert.Equal(2, host.Warnings.Count);
+        // Roles still accumulate normally
+        Assert.Contains("RoleA", line.Roles);
+        Assert.Contains("RoleB", line.Roles);
+    }
+
+    [Fact]
+    public void Row2RepeatsSameScalars_NoWarning_ValuesUnchanged()
+    {
+        // Row 2 carries the same scalar values as row 1 (e.g. duplicated CSV).
+        // Should be silent — no warning, no harm.
+        var host = new CapturingHost();
+        var line = new FakeCsvLine
+        {
+            UR_UserName = @"domain\alice",
+            IsExternalLicensed = true,
+            ES_ResolutionWidth = 1024,
+        };
+
+        SimulateRowUpdate(host, line, "alice",
+            ur_userName: @"domain\alice", ur_credentialType: null,
+            es_tracingLevel: null,
+            es_resolutionWidth: 1024, es_resolutionHeight: null,
+            isExternalLicensed: "true", mayHaveRobotSession: null,
+            roles: null);
+
+        Assert.Equal(@"domain\alice", line.UR_UserName);
+        Assert.True(line.IsExternalLicensed);
+        Assert.Equal(1024, line.ES_ResolutionWidth);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void ManyBlankRowsAfterRow1_ScalarsRemainStable()
+    {
+        // Stress: simulate a CSV where one user has 5 roles split across 5 rows.
+        // Rows 2..5 all leave scalar cells blank. Scalars must not drift.
+        var host = new CapturingHost();
+        var line = new FakeCsvLine
+        {
+            UR_UserName = @"domain\alice",
+            IsExternalLicensed = true,
+            ES_ResolutionWidth = 1024,
+        };
+        line.Roles.Add("RoleA");
+
+        for (int i = 2; i <= 5; i++)
+        {
+            SimulateRowUpdate(host, line, "alice",
+                ur_userName: "", ur_credentialType: "",
+                es_tracingLevel: "",
+                es_resolutionWidth: 0, es_resolutionHeight: 0,
+                isExternalLicensed: "", mayHaveRobotSession: "",
+                roles: new[] { $"Role{(char)('A' + i - 1)}" });
+        }
+
+        Assert.Equal(@"domain\alice", line.UR_UserName);
+        Assert.True(line.IsExternalLicensed);
+        Assert.Equal(1024, line.ES_ResolutionWidth);
+        Assert.Empty(host.Warnings);
+        Assert.Equal(5, line.Roles.Count); // RoleA..RoleE
+    }
+
+    [Fact]
+    public void Row2EmptyCellOnFieldRow1DidNotSet_LeavesFieldUnset()
+    {
+        // Row 1 didn't specify ES_ResolutionWidth (column missing or empty).
+        // Row 2 also doesn't specify it. The field stays null, no warning.
+        var host = new CapturingHost();
+        var line = new FakeCsvLine(); // ES_ResolutionWidth = null
+
+        SimulateRowUpdate(host, line, "alice",
+            ur_userName: null, ur_credentialType: null,
+            es_tracingLevel: null,
+            es_resolutionWidth: 0, es_resolutionHeight: 0,
+            isExternalLicensed: null, mayHaveRobotSession: null,
+            roles: null);
+
+        Assert.Null(line.ES_ResolutionWidth);
+        Assert.Null(line.ES_ResolutionHeight);
+        Assert.Empty(host.Warnings);
+    }
+}
