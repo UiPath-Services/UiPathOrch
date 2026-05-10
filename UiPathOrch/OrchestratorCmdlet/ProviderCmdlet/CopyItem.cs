@@ -2555,17 +2555,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     {
         if (newFolder.FolderType == "Personal") return;
 
-        // TODO: Is this version number correct?
-        // Confirmed that test entities do not exist in v16
-        //if (srcDrive.OrchAPISession.ApiVersion < 17) return;
-        //if (dstDrive.OrchAPISession.ApiVersion < 17) return;
-
-        // Considering that cmdlets may be executed consecutively in a script,
-        // we shouldn't have been clearing the cache each time..
-        // Comment out the below.
-
-        // Clear this folder's cache so we can copy the latest state
-        //srcDrive._dicTestSets?.TryRemove(srcFolder.Id ?? 0, out _);
+        // Test entities do not exist in v16 and earlier; v15 (e.g. Orch 22.10)
+        // returns HTTP 500 from /odata/TestSets rather than 404, so without the
+        // gate users on older Orch see "An internal error occurred during your
+        // request!" noise in every Copy-Item recursion. v17+ has stable APIs.
+        if (srcDrive.OrchAPISession.ApiVersion < 17) return;
+        if (dstDrive.OrchAPISession.ApiVersion < 17) return;
 
         string msg = $"Copying test sets";
 
@@ -2648,9 +2643,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     {
         if (newFolder.FolderType == "Personal") return;
 
-        // Confirmed that test entities do not exist in v17
-        //if (srcDrive.OrchAPISession.ApiVersion < 18) return;
-        //if (dstDrive.OrchAPISession.ApiVersion < 18) return;
+        // TestDataQueue endpoints stabilised in v18; older Orch returns HTTP 500.
+        if (srcDrive.OrchAPISession.ApiVersion < 18) return;
+        if (dstDrive.OrchAPISession.ApiVersion < 18) return;
 
         ICollection<TestDataQueueItem> items;
         try
@@ -2709,16 +2704,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     {
         if (newFolder.FolderType == "Personal") return;
 
-        // Confirmed that test entities do not exist in v17
-        //if (srcDrive.OrchAPISession.ApiVersion < 18) return;
-        //if (dstDrive.OrchAPISession.ApiVersion < 18) return;
-
-        // Considering that cmdlets may be executed consecutively in a script,
-        // we shouldn't have been clearing the cache each time..
-        // Comment out the below.
-
-        // Clear this folder's cache so we can copy the latest state
-        //srcDrive._dicTestSetSchedules?.TryRemove(srcFolder.Id ?? 0, out _);
+        // TestSetSchedule endpoints stabilised in v18; older Orch returns HTTP 500.
+        if (srcDrive.OrchAPISession.ApiVersion < 18) return;
+        if (dstDrive.OrchAPISession.ApiVersion < 18) return;
 
         string msg = $"Copying test schedules";
 
@@ -2776,16 +2764,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     {
         if (newFolder.FolderType == "Personal") return;
 
-        // Confirmed that test entities do not exist in v17
-        //if (srcDrive.OrchAPISession.ApiVersion < 18) return;
-        //if (srcDrive.OrchAPISession.ApiVersion < 18) return;
-
-        // Considering that cmdlets may be executed consecutively in a script,
-        // we shouldn't have been clearing the cache each time..
-        // Comment out the below.
-
-        // Clear this folder's cache so we can copy the latest state
-        //srcDrive._dicTestDataQueues?.TryRemove(srcFolder.Id ?? 0, out _);
+        // TestDataQueue endpoints stabilised in v18; older Orch returns HTTP 500.
+        // (Pre-fix: the second guard accidentally checked srcDrive twice; fixed below
+        // to guard dstDrive as the symmetric src/dst pair the other helpers use.)
+        if (srcDrive.OrchAPISession.ApiVersion < 18) return;
+        if (dstDrive.OrchAPISession.ApiVersion < 18) return;
 
         string msg = $"Copying test data queues";
 
