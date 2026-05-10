@@ -52,7 +52,7 @@ public class RemovePmExternalApplicationCommand : OrchestratorPSCmdlet
                             drive.OrchAPISession.DeletePmExternalClient(drive.GetPartitionGlobalId() ?? "", app.id ?? "");
                             drive.PmExternalClients.ClearCache();
                             drive.PmGroups.ClearCache();
-                            drive._dicSearchPmDirectory = null;
+                            drive.SearchPmDirectoryCache.ClearCache();
                             drive._dicSearchDirectory = null;
                         }
                         catch (Exception ex)

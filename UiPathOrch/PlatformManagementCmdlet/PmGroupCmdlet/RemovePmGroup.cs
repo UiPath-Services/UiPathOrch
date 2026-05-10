@@ -42,7 +42,7 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
                         {
                             drive.OrchAPISession.RemovePmGroup(partitionGlobalId!, group?.id);
                             drive.PmGroups.ClearCache(group?.id);
-                            drive._dicSearchPmDirectory = null;
+                            drive.SearchPmDirectoryCache.ClearCache();
                             drive._dicSearchDirectory = null;
                         }
                         catch (Exception ex)

@@ -232,8 +232,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicPmBulkResolveByName = null;
         _dicPmBulkResolveByName_Exception.ClearCache();
 
-        _dicSearchPmDirectory = null;
-        _dicSearchPmDirectory_Exception.ClearCache();
+        SearchPmDirectoryCache.ClearCache();
 
         //_dicPmGroups = null;
         //_dicPmGroups_Exception?.ClearCache();
@@ -1615,41 +1614,10 @@ public partial class OrchDriveInfo : PSDriveInfo
         return logs.AsReadOnly();
     }
 
-    // key: search text
-    internal ConcurrentDictionary<string, PmDirectoryEntityInfo[]?>? _dicSearchPmDirectory = null;
-    internal readonly ExceptionsCachePer<string> _dicSearchPmDirectory_Exception = new();
-    public PmDirectoryEntityInfo[]? SearchPmDirectory(string key)
-    {
-        key = key.ToLower();
-        _dicSearchPmDirectory_Exception.ThrowCachedExceptionIfAny(key);
-
-        if (_dicSearchPmDirectory is null)
-        {
-            lock (_dicSearchPmDirectory_Exception)
-            {
-                _dicSearchPmDirectory ??= [];
-            }
-        }
-        if (!_dicSearchPmDirectory.TryGetValue(key, out PmDirectoryEntityInfo[] ret))
-        {
-            try
-            {
-                var partitionGlobalId = GetPartitionGlobalId();
-                ret = OrchAPISession.SearchPmDirectory(partitionGlobalId!, key);
-                foreach (var user in ret ?? [])
-                {
-                    user.Path = NameColonSeparator;
-                }
-                _dicSearchPmDirectory[key] = ret;
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicSearchPmDirectory_Exception.CacheException(key, ex);
-                throw;
-            }
-        }
-        return ret;
-    }
+    // Backwards-compat shim: SearchPmDirectoryCache (KeyedSingleCachePerTenant)
+    // is keyed by the lowercased search text. Caller passes any case.
+    public PmDirectoryEntityInfo[]? SearchPmDirectory(string key) =>
+        SearchPmDirectoryCache.Get(key.ToLower());
 
     // key: (name, kind)
     // kind: "user", "group", or "application" - robots cannot be searched apparently.
@@ -1815,8 +1783,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         _dicSearchDirectory = null;
         _dicSearchDirectory_Exception.ClearCache();
-        _dicSearchPmDirectory = null;
-        _dicSearchPmDirectory_Exception.ClearCache();
+        SearchPmDirectoryCache.ClearCache();
 
         return ret;
     }
@@ -1837,8 +1804,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             newGroup.Path = NameColonSeparator; // Not needed for the cache, but necessary to set on the PmGroup returned by this method.
             _dicSearchDirectory = null;
             _dicSearchDirectory_Exception.ClearCache();
-            _dicSearchPmDirectory = null;
-            _dicSearchPmDirectory_Exception.ClearCache();
+            SearchPmDirectoryCache.ClearCache();
 
             // If we clear the PmGroup cache, the newly created PmGroup may not be included
             // in the return value when PmGroups.Get() is called immediately after.
@@ -1865,8 +1831,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         _dicSearchDirectory = null;
         _dicSearchDirectory_Exception.ClearCache();
-        _dicSearchPmDirectory = null;
-        _dicSearchPmDirectory_Exception.ClearCache();
+        SearchPmDirectoryCache.ClearCache();
         return ret;
     }
 
@@ -2064,6 +2029,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     // Single-keyed entities (one entity per key, exception cached per key)
     public readonly KeyedSingleCachePerTenant<string, MachineClientSecretResponse[]?> MachineClientSecrets;
     public readonly KeyedSingleCachePerTenant<int, ExecutionSettingDefinition[]?> ExecutionSettings;
+    public readonly KeyedSingleCachePerTenant<string, PmDirectoryEntityInfo[]?> SearchPmDirectoryCache;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2401,6 +2367,17 @@ public partial class OrchDriveInfo : PSDriveInfo
                 foreach (var setting in arr)
                 {
                     setting.Path = NameColonSeparator;
+                }
+            });
+
+        SearchPmDirectoryCache = new(this,
+            key => OrchAPISession.SearchPmDirectory(GetPartitionGlobalId()!, key),
+            (arr, _) =>
+            {
+                if (arr is null) return;
+                foreach (var user in arr)
+                {
+                    user.Path = NameColonSeparator;
                 }
             });
 

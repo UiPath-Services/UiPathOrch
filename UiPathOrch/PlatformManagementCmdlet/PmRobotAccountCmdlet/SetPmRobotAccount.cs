@@ -295,7 +295,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
                             {
                                 var updatedRobot = drive.OrchAPISession.UpdatePmRobot(robot.id!, cmd);
                                 drive.PmRobotAccounts.ClearCache();
-                                drive._dicSearchPmDirectory = null;
+                                drive.SearchPmDirectoryCache.ClearCache();
                                 drive._dicSearchDirectory = null;
 
                                 if (updatedRobot is not null)
