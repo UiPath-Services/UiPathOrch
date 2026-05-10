@@ -152,6 +152,9 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicAssetLinks = null;
         _dicAssetLinks_Exception.ClearCache();
 
+        _dicQueueLinks = null;
+        _dicQueueLinks_Exceptions?.ClearCache();
+
         _dicAuditLogs = null;
         _dicAuditLogs_Exceptions.ClearCache();
 
@@ -198,7 +201,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicTriggersDetailed = null;
         _dicTriggersDetailed_Exceptions.ClearCache();
 
-        _dicQueueLinks = null;
         _dicQueueItems = null;
 
         //_dicReleaseList = null;
@@ -1233,11 +1235,14 @@ public partial class OrchDriveInfo : PSDriveInfo
     // key: (folderId, queueId)
     // queueId alone should be unique, but include folderId in the key as well just in case.
     internal ConcurrentDictionary<(Int64 folderId, Int64 queueId), AccessibleFoldersDto?>? _dicQueueLinks = null;
+    internal ExceptionsCachePer<(Int64, Int64)> _dicQueueLinks_Exceptions = new();
     public AccessibleFoldersDto? GetFoldersForQueue(Folder folder, QueueDefinition queue)
     {
+        _dicQueueLinks_Exceptions.ThrowCachedExceptionIfAny((folder.Id ?? 0, queue.Id ?? 0));
+
         if (_dicQueueLinks is null)
         {
-            lock (this)
+            lock (_dicQueueLinks_Exceptions)
             {
                 _dicQueueLinks ??= new ConcurrentDictionary<(Int64 folderId, Int64 queueId), AccessibleFoldersDto?>();
             }
@@ -1245,27 +1250,35 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         if (!_dicQueueLinks.TryGetValue((folder.Id ?? 0, queue.Id ?? 0), out var folderShare))
         {
-            folderShare = OrchAPISession.GetFoldersForQueue(folder.Id ?? 0, queue.Id ?? 0);
-
-            if (folderShare is not null && folderShare.AccessibleFolders is not null)
+            try
             {
-                string folderPath = folder.GetPSPath();
-                foreach (var accessibleFolder in folderShare.AccessibleFolders)
+                folderShare = OrchAPISession.GetFoldersForQueue(folder.Id ?? 0, queue.Id ?? 0);
+
+                if (folderShare is not null && folderShare.AccessibleFolders is not null)
                 {
-                    accessibleFolder.Path = folderPath;
-                    accessibleFolder.PathName = queue.GetPSPath();
+                    string folderPath = folder.GetPSPath();
+                    foreach (var accessibleFolder in folderShare.AccessibleFolders)
+                    {
+                        accessibleFolder.Path = folderPath;
+                        accessibleFolder.PathName = queue.GetPSPath();
+                    }
                 }
+                _dicQueueLinks[(folder.Id ?? 0, queue.Id ?? 0)] = folderShare;
             }
-            _dicQueueLinks[(folder.Id ?? 0, queue.Id ?? 0)] = folderShare;
+            catch (HttpResponseException ex)
+            {
+                _dicQueueLinks_Exceptions.CacheException((folder.Id ?? 0, queue.Id ?? 0), ex);
+                throw;
+            }
         }
         return folderShare;
     }
 
     /// <summary>
-    /// Drop all cached AccessibleFoldersDto entries for a single queue. Call
-    /// after Add/Remove-OrchQueueLink so the next GetFoldersForQueue call
-    /// re-fetches just this queue's link set without flushing unrelated
-    /// queues' caches.
+    /// Drop all cached AccessibleFoldersDto entries for a single queue, plus
+    /// any matching exception entries. Call after Add/Remove-OrchQueueLink so
+    /// the next GetFoldersForQueue call re-fetches just this queue's link
+    /// set without flushing unrelated queues' caches.
     /// </summary>
     public void ClearQueueLinkCache(Int64 queueId)
     {
@@ -1274,6 +1287,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             foreach (var key in _dicQueueLinks.Keys.Where(k => k.queueId == queueId).ToList())
             {
                 _dicQueueLinks.TryRemove(key, out _);
+                _dicQueueLinks_Exceptions.ClearCache(key);
             }
         }
     }
