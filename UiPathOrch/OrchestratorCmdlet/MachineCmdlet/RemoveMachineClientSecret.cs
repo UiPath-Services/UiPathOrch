@@ -180,7 +180,7 @@ public class RemoveMachineClientSecretCommand : OrchestratorPSCmdlet
                         try
                         {
                             drive.OrchAPISession.DeleteMachineClientSecret(secret.Item2!);
-                            drive._dicMachineClientSecrets = null;
+                            drive.MachineClientSecrets.ClearCache();
                         }
                         catch (OperationCanceledException)
                         {

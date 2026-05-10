@@ -171,8 +171,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         // _dicLicenseRuntime auto-cleared via _allTenantCache (LicenseRuntimes: KeyedListCachePerTenant).
 
-        _dicMachineClientSecrets = null;
-        _dicMachineClientSecrets_Exception.ClearCache();
+        // _dicMachineClientSecrets auto-cleared via _allTenantCache (MachineClientSecrets: KeyedSingleCachePerTenant).
 
         // _dicPackages auto-cleared via _allTenantCache (Packages: KeyedListCachePerTenant).
         // _dicPackages_Exceptions still cleared here because GetPackageVersions uses it independently.
@@ -1098,32 +1097,9 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchMachineClientSecret cache
-    internal Dictionary<string, MachineClientSecretResponse[]?>? _dicMachineClientSecrets = null;
-    internal readonly ExceptionsCachePer<string> _dicMachineClientSecrets_Exception = new();
-    public MachineClientSecretResponse[]? GetMachineClientSecret(string licenseKey)
-    {
-        _dicMachineClientSecrets_Exception.ThrowCachedExceptionIfAny(licenseKey);
-
-        if (_dicMachineClientSecrets is null || !_dicMachineClientSecrets.TryGetValue(licenseKey, out var secrets))
-        {
-            lock (_dicMachineClientSecrets_Exception)
-            {
-                try
-                {
-                    var secretValues = OrchAPISession.GetMachineClientSecret(licenseKey);
-                    _dicMachineClientSecrets ??= [];
-                    _dicMachineClientSecrets[licenseKey] = secretValues;
-                    return secretValues;
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicMachineClientSecrets_Exception.CacheException(licenseKey, ex);
-                    throw;
-                }
-            }
-        }
-        return secrets;
-    }
+    // Backwards-compat shim: delegates to MachineClientSecrets (KeyedSingleCachePerTenant).
+    public MachineClientSecretResponse[]? GetMachineClientSecret(string licenseKey) =>
+        MachineClientSecrets.Get(licenseKey);
     #endregion
 
     // key: (folderId, queueId)
@@ -2108,6 +2084,9 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedListCachePerTenant<string, NuLicensedGroupMember> PmUserLicenseGroupAllocations;
     public readonly KeyedListCachePerTenant<string, LicenseRuntime> LicenseRuntimes;
 
+    // Single-keyed entities (one entity per key, exception cached per key)
+    public readonly KeyedSingleCachePerTenant<string, MachineClientSecretResponse[]?> MachineClientSecrets;
+
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
     // Non-indexed folder entities
@@ -2432,6 +2411,9 @@ public partial class OrchDriveInfo : PSDriveInfo
                 license.Path = NameColonSeparator + robotType;
             },
             StringComparer.OrdinalIgnoreCase);
+
+        // Single-keyed entities
+        MachineClientSecrets = new(this, licenseKey => OrchAPISession.GetMachineClientSecret(licenseKey));
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
