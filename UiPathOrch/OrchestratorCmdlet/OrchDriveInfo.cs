@@ -170,7 +170,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicJobsHavingExecutionMedia = null;
 
         _dicLibraryVersions = null; // If an exception occurs, it should have already been thrown when getting _dicLibraries, so this should be fine..
-        _dicLibraryVersionsInHostFeed = null;
 
         _dicLicenseRuntime = null;
 
@@ -1034,32 +1033,9 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #region OrchLibraryVersion cache
     // key: Id
-    internal ConcurrentDictionary<string, List<LibraryVersion>>? _dicLibraryVersionsInHostFeed = null;
+    // Backwards-compat shim: delegates to LibraryVersionsInHostFeed (KeyedListCachePerTenant).
     public ReadOnlyCollection<LibraryVersion> GetLibraryVersionsInHostFeed(string libraryId)
-    {
-        if (_dicLibraryVersionsInHostFeed is null)
-        {
-            lock (this)
-            {
-                _dicLibraryVersionsInHostFeed ??= new();
-            }
-        }
-
-        if (!_dicLibraryVersionsInHostFeed.TryGetValue(libraryId, out List<LibraryVersion> libraryVersions))
-        {
-            libraryVersions = OrchAPISession.GetLibraryVersions(libraryId, LibraryHostFeedId)
-                .OrderBy(v => v.Version!, VersionComparer.Instance)
-                .ToList();
-            string path = NameColonSeparator;
-            foreach (var library in libraryVersions)
-            {
-                //library.Name = $"{library.Id}.{library.Version}.nupkg";
-                library.Path = path;
-            }
-            _dicLibraryVersionsInHostFeed[libraryId] = libraryVersions;
-        }
-        return libraryVersions.AsReadOnly();
-    }
+        => LibraryVersionsInHostFeed.Get(libraryId);
     #endregion
 
     #region OrchPackage cache
@@ -2206,6 +2182,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     // Keyed list entities (tenant-scoped, per-key list)
     public readonly KeyedListCachePerTenant<string, LicenseNamedUser> LicenseNamedUsers;
+    public readonly KeyedListCachePerTenant<string, LibraryVersion> LibraryVersionsInHostFeed;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2501,6 +2478,11 @@ public partial class OrchDriveInfo : PSDriveInfo
                 license.PathRobotType = NameColonSeparator + robotType;
             },
             StringComparer.OrdinalIgnoreCase);
+
+        LibraryVersionsInHostFeed = new(this,
+            libraryId => OrchAPISession.GetLibraryVersions(libraryId, LibraryHostFeedId)
+                .OrderBy(v => v.Version!, VersionComparer.Instance),
+            (library, _) => library.Path = NameColonSeparator);
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
