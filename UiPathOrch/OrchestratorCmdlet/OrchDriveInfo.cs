@@ -209,8 +209,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         _dicRobotLogs = null;
 
-        _dicSearchDirectory = null;
-        _dicSearchDirectory_Exception.ClearCache();
+        // _dicSearchDirectory auto-cleared via _allTenantCache (SearchDirectoryCache: KeyedSingleCachePerTenant).
 
         _dicTenantId = null;
         _dicTenantKey = null;
@@ -1723,49 +1722,21 @@ public partial class OrchDriveInfo : PSDriveInfo
         return ret;
     }
 
-    // key: name
-    internal ConcurrentDictionary<string, DirectoryObject[]?>? _dicSearchDirectory = null;
-    internal readonly ExceptionsCachePer<string> _dicSearchDirectory_Exception = new();
+    // Backwards-compat shim: SearchDirectoryCache (KeyedSingleCachePerTenant) is keyed
+    // by `searchWord` (`name` truncated at the first '+', '-', or '_'); the underlying
+    // API can't handle those characters. Cached entries are then post-filtered by full
+    // `name` prefix match.
     public IEnumerable<DirectoryObject> SearchDirectory(string name)
     {
-        // This API cannot search for user names containing '+'.
-        // As a precaution, also exclude '-' and '_' from the search word
         int index = name.IndexOfAny(['+', '-', '_']);
         string searchWord = index >= 0 ? name.Substring(0, index) : name;
 
-        _dicSearchDirectory_Exception.ThrowCachedExceptionIfAny(searchWord);
+        var value = SearchDirectoryCache.Get(searchWord);
 
-        if (_dicSearchDirectory is null)
-        {
-            lock (_dicSearchDirectory_Exception)
-            {
-                _dicSearchDirectory ??= [];
-            }
-        }
-        if (!_dicSearchDirectory.TryGetValue(searchWord, out var value))
-        {
-            try
-            {
-                value = OrchAPISession.SearchDirectory(searchWord);
-                foreach (var v in value ?? [])
-                {
-                    v.Path = NameColonSeparator;
-                }
-                _dicSearchDirectory[searchWord] = value;
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicSearchDirectory_Exception.CacheException(searchWord, ex);
-                throw;
-            }
-        }
-
-        // Search by name prefix match, return results if found
+        // Prefer prefix match against the full name; fall back to all results when
+        // none match (a single entry in `value` is likely the desired user).
         var ret = value?.Where(obj => obj.identityName?.StartsWith(name, StringComparison.OrdinalIgnoreCase) ?? false) ?? [];
-        if (ret.Any()) return ret;
-
-        // If no prefix match, return all results. If there's only one entry, it should be the desired user.
-        return value ?? [];
+        return ret.Any() ? ret : (value ?? []);
     }
 
     #region PmGroup Cache
@@ -1781,8 +1752,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             PmGroups.ClearCache(groupId);
         }
 
-        _dicSearchDirectory = null;
-        _dicSearchDirectory_Exception.ClearCache();
+        SearchDirectoryCache.ClearCache();
         SearchPmDirectoryCache.ClearCache();
 
         return ret;
@@ -1802,8 +1772,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         if (newGroup is not null)
         {
             newGroup.Path = NameColonSeparator; // Not needed for the cache, but necessary to set on the PmGroup returned by this method.
-            _dicSearchDirectory = null;
-            _dicSearchDirectory_Exception.ClearCache();
+            SearchDirectoryCache.ClearCache();
             SearchPmDirectoryCache.ClearCache();
 
             // If we clear the PmGroup cache, the newly created PmGroup may not be included
@@ -1829,8 +1798,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             PmGroups.ClearCache(groupId);
         }
 
-        _dicSearchDirectory = null;
-        _dicSearchDirectory_Exception.ClearCache();
+        SearchDirectoryCache.ClearCache();
         SearchPmDirectoryCache.ClearCache();
         return ret;
     }
@@ -2030,6 +1998,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<string, MachineClientSecretResponse[]?> MachineClientSecrets;
     public readonly KeyedSingleCachePerTenant<int, ExecutionSettingDefinition[]?> ExecutionSettings;
     public readonly KeyedSingleCachePerTenant<string, PmDirectoryEntityInfo[]?> SearchPmDirectoryCache;
+    public readonly KeyedSingleCachePerTenant<string, DirectoryObject[]?> SearchDirectoryCache;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2378,6 +2347,17 @@ public partial class OrchDriveInfo : PSDriveInfo
                 foreach (var user in arr)
                 {
                     user.Path = NameColonSeparator;
+                }
+            });
+
+        SearchDirectoryCache = new(this,
+            searchWord => OrchAPISession.SearchDirectory(searchWord),
+            (arr, _) =>
+            {
+                if (arr is null) return;
+                foreach (var v in arr)
+                {
+                    v.Path = NameColonSeparator;
                 }
             });
 

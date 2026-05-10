@@ -53,7 +53,7 @@ public class RemovePmExternalApplicationCommand : OrchestratorPSCmdlet
                             drive.PmExternalClients.ClearCache();
                             drive.PmGroups.ClearCache();
                             drive.SearchPmDirectoryCache.ClearCache();
-                            drive._dicSearchDirectory = null;
+                            drive.SearchDirectoryCache.ClearCache();
                         }
                         catch (Exception ex)
                         {
