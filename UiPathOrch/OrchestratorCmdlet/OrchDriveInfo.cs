@@ -218,7 +218,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicUsers = null;
         _dicUsers_Exception?.ClearCache();
 
-        _dicUsersDetailed = null;
+        // _dicUsersDetailed auto-cleared via _allTenantCache (UsersDetailed: KeyedSingleCachePerTenant).
         #endregion
 
         #region Platform Management cache
@@ -513,33 +513,10 @@ public partial class OrchDriveInfo : PSDriveInfo
         return _dicUsers.Values;
     }
 
-    internal ConcurrentDictionary<long, User>? _dicUsersDetailed = null;
-    public User? GetUser(User user)
-    {
-        if (_dicUsersDetailed is null)
-        {
-            lock (this)
-            {
-                _dicUsersDetailed = [];
-            }
-        }
-
-        if (_dicUsersDetailed.TryGetValue(user.Id!.Value, out var detailedUser))
-        {
-            return detailedUser;
-        }
-        detailedUser = OrchAPISession.GetUser(user.Id!.Value);
-        if (detailedUser is not null)
-        {
-            detailedUser.Path = NameColonSeparator;
-            if (_dicUsers is not null)
-            {
-                _dicUsers[detailedUser.Id!.Value] = detailedUser;
-            }
-            _dicUsersDetailed[detailedUser.Id!.Value] = detailedUser;
-        }
-        return detailedUser;
-    }
+    // Backwards-compat shim: delegates to UsersDetailed (KeyedSingleCachePerTenant).
+    // The initializer also writes the detailed user back into _dicUsers so the list
+    // cache stays in sync (only when _dicUsers is already populated).
+    public User? GetUser(User user) => UsersDetailed.Get(user.Id!.Value);
     #endregion
 
     #region OrchCurrentUser cache
@@ -663,7 +640,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             {
                 // We can pinpoint-delete the cache here, so let's do it.
                 // This is not a frequently executed operation, and it's safer this way..
-                _dicUsersDetailed?.TryRemove(owner.Id!.Value, out _);
+                UsersDetailed.ClearCache(owner.Id!.Value);
 
                 var detailedOwner = GetUser(owner);
 
@@ -682,7 +659,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                     postingUser.MayHavePersonalWorkspace = false;
                     OrchAPISession.PutUser(postingUser);
                     _dicUsers = null;
-                    _dicUsersDetailed = null;
+                    UsersDetailed.ClearCache();
                 }
             }
         }
@@ -1969,6 +1946,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<string, PmDirectoryEntityInfo[]?> SearchPmDirectoryCache;
     public readonly KeyedSingleCachePerTenant<string, DirectoryObject[]?> SearchDirectoryCache;
     public readonly KeyedSingleCachePerTenant<string, AvailableUserBundles> PmAvailableUserBundles;
+    public readonly KeyedSingleCachePerTenant<long, User> UsersDetailed;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2342,6 +2320,20 @@ public partial class OrchDriveInfo : PSDriveInfo
                     {
                         bundle.name = name;
                     }
+                }
+            });
+
+        UsersDetailed = new(this,
+            userId => OrchAPISession.GetUser(userId),
+            (detailedUser, _) =>
+            {
+                detailedUser.Path = NameColonSeparator;
+                // Mirror into the list cache so callers iterating GetUsers() see
+                // the detailed payload — but only if the list cache has already
+                // been populated; we don't want to materialize it on demand.
+                if (_dicUsers is not null && detailedUser.Id is not null)
+                {
+                    _dicUsers[detailedUser.Id.Value] = detailedUser;
                 }
             });
 

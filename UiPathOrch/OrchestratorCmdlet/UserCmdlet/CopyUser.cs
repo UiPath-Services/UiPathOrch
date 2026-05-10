@@ -50,7 +50,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
         Dictionary<string, string>? userMapping = null)
     {
         srcDrive._dicUsers = null;
-        srcDrive._dicUsersDetailed = null;
+        srcDrive.UsersDetailed.ClearCache();
 
         srcDrive._dicUsers_Exception.ClearCache();
 
@@ -285,7 +285,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                                 _this.WriteWarning($"{System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser))}: Please update -UR_Password with Update-OrchUser cmdlet.");
                             }
                             dstDrive._dicUsers = null;
-                            dstDrive._dicUsersDetailed = null;
+                            dstDrive.UsersDetailed.ClearCache();
                         }
                     }
                     catch (Exception ex)

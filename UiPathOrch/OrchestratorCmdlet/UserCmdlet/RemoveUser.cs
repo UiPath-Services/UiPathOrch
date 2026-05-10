@@ -79,7 +79,7 @@ public class RemoveUserCmdlet : OrchestratorPSCmdlet
                         {
                             drive.OrchAPISession.DeleteUser(user.Id ?? 0);
                             drive._dicUsers = null;
-                            drive._dicUsersDetailed = null;
+                            drive.UsersDetailed.ClearCache();
                         }
                         catch (Exception ex)
                         {
