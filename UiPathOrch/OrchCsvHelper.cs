@@ -103,6 +103,11 @@ internal class CsvLineBase
     internal static void AssignStringValue(IWritableHost host, string driveName, string identityName, string? currentValue, string? newValue, Action<string?> setter)
     {
         if (string.IsNullOrEmpty(newValue)) return; // unspecified on this row → leave prior row's value alone
+        if (string.IsNullOrEmpty(currentValue))
+        {
+            setter(newValue); // first real value across rows; not a collision
+            return;
+        }
         if (currentValue != newValue)
         {
             host.WriteWarning($"'{driveName}:{Path.DirectorySeparatorChar}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value '{currentValue}'.");
@@ -116,6 +121,11 @@ internal class CsvLineBase
     internal static void AssignIntValue(IWritableHost host, string driveName, string identityName, int? currentValue, int? newValue, Action<int?> setter)
     {
         if (newValue is null || newValue == 0) return; // unspecified on this row (CSV empty cell coerces to 0)
+        if (currentValue is null || currentValue == 0)
+        {
+            setter(newValue); // first real value across rows; not a collision
+            return;
+        }
         if (currentValue != newValue)
         {
             host.WriteWarning($"'{driveName}:{Path.DirectorySeparatorChar}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value {currentValue}.");
@@ -130,6 +140,11 @@ internal class CsvLineBase
     {
         if (string.IsNullOrEmpty(newValue)) return;
         if (!bool.TryParse(newValue, out var boolValue)) return;
+        if (currentValue is null)
+        {
+            setter(boolValue); // first real value across rows; not a collision
+            return;
+        }
         if (currentValue != boolValue)
         {
             host.WriteWarning($"'{driveName}:{Path.DirectorySeparatorChar}{identityName}': '{nameof(newValue)}' has been specified multiple times. Using the previously specified value {currentValue}.");

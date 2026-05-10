@@ -801,6 +801,32 @@ public class AssignStringValueTests
         Assert.Contains("alice", host.Warnings[0]);
         Assert.Contains("'previous'", host.Warnings[0]);
     }
+
+    [Fact]
+    public void NewValueSpecifiedWhenCurrentNull_AssignsValue_NoWarning()
+    {
+        // Row 1 didn't specify this field (currentValue is null) and Row 2 does.
+        // This is "first real value", not a collision — assign and stay silent.
+        // Pre-fix the helper warned "specified multiple times" with a `''`
+        // previously-specified value, AND silently rejected Row 2's value.
+        var host = new CapturingHost();
+        string? captured = null;
+        CsvLineBase.AssignStringValue(host, "OrchTest", "alice", null, "first-real-value", v => captured = v);
+        Assert.Equal("first-real-value", captured);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void NewValueSpecifiedWhenCurrentEmpty_AssignsValue_NoWarning()
+    {
+        // Row 1 had an empty cell for this field (currentValue = ""); Row 2
+        // specifies a real value. Same logic as the null case — assign, no warn.
+        var host = new CapturingHost();
+        string? captured = "";
+        CsvLineBase.AssignStringValue(host, "OrchTest", "alice", "", "first-real-value", v => captured = v);
+        Assert.Equal("first-real-value", captured);
+        Assert.Empty(host.Warnings);
+    }
 }
 
 public class AssignIntValueTests
@@ -848,6 +874,30 @@ public class AssignIntValueTests
         Assert.Equal(1024, captured);
         Assert.Single(host.Warnings);
         Assert.Contains("1024", host.Warnings[0]);
+    }
+
+    [Fact]
+    public void NewValueSpecifiedWhenCurrentNull_AssignsValue_NoWarning()
+    {
+        // Row 1 didn't specify (currentValue=null); Row 2 specifies a real value.
+        // First-real-value, not a collision — assign and stay silent.
+        var host = new CapturingHost();
+        int? captured = null;
+        CsvLineBase.AssignIntValue(host, "OrchTest", "alice", null, 1024, v => captured = v);
+        Assert.Equal(1024, captured);
+        Assert.Empty(host.Warnings);
+    }
+
+    [Fact]
+    public void NewValueSpecifiedWhenCurrentZero_AssignsValue_NoWarning()
+    {
+        // Row 1's empty CSV cell coerced to 0 (currentValue=0); Row 2 specifies.
+        // Same logic as the null case — 0 is the CSV-empty sentinel for int?.
+        var host = new CapturingHost();
+        int? captured = 0;
+        CsvLineBase.AssignIntValue(host, "OrchTest", "alice", 0, 1024, v => captured = v);
+        Assert.Equal(1024, captured);
+        Assert.Empty(host.Warnings);
     }
 }
 
@@ -902,6 +952,20 @@ public class AssignBoolValueTests
         CsvLineBase.AssignBoolValue(host, "OrchTest", "alice", true, "false", v => captured = v);
         Assert.True(captured); // setter not invoked
         Assert.Single(host.Warnings);
+    }
+
+    [Fact]
+    public void ParseableNewValueWhenCurrentNull_AssignsValue_NoWarning()
+    {
+        // Row 1 didn't specify (currentValue=null); Row 2 parses to a real bool.
+        // First-real-value, not a collision. (Less impactful than the string/int
+        // cases because AddUser's CsvLine constructor defaults bool fields to
+        // false via `?? false`, but the helper should still behave consistently.)
+        var host = new CapturingHost();
+        bool? captured = null;
+        CsvLineBase.AssignBoolValue(host, "OrchTest", "alice", null, "true", v => captured = v);
+        Assert.True(captured);
+        Assert.Empty(host.Warnings);
     }
 }
 
@@ -1096,6 +1160,50 @@ public class MultiRowCsvScenarioTests
         Assert.Equal(1024, line.ES_ResolutionWidth);
         Assert.Empty(host.Warnings);
         Assert.Equal(5, line.Roles.Count); // RoleA..RoleE
+    }
+
+    [Fact]
+    public void Row1FieldUnsetRow2SetsIt_AssignsRow2Value_NoWarning()
+    {
+        // The complementary case to TypicalCsv_TwoRowsSameUserDifferentRoles_*:
+        // row 1 leaves a scalar field blank (e.g. user identifies but doesn't
+        // configure UR), row 2 then provides the value. Should be treated as
+        // first-real-value, not a "specified multiple times" collision.
+        //
+        //   UserName,Type,Role,UR_UserName,ES_TracingLevel
+        //   alice,DirectoryUser,RoleA,,Verbose
+        //   alice,DirectoryUser,RoleB,domain\alice,
+        //
+        // Pre-fix: row 2's UR_UserName was rejected with a confusing
+        //   "specified multiple times. Using the previously specified value ''"
+        // warning, and the user got POSTed with no UnattendedRobot block.
+
+        var host = new CapturingHost();
+        var line = new FakeCsvLine
+        {
+            UR_UserName = null,                  // row 1 didn't specify
+            ES_TracingLevel = "Verbose",
+            ES_ResolutionWidth = null,
+            IsExternalLicensed = null,
+        };
+        line.Roles.Add("RoleA");
+
+        SimulateRowUpdate(host, line, "alice",
+            ur_userName: @"domain\alice",        // row 2 specifies for the first time
+            ur_credentialType: null,
+            es_tracingLevel: "",                 // already on row 1
+            es_resolutionWidth: 1024,            // also a first-time set
+            es_resolutionHeight: null,
+            isExternalLicensed: "true",          // first-time set
+            mayHaveRobotSession: null,
+            roles: new[] { "RoleB" });
+
+        Assert.Equal(@"domain\alice", line.UR_UserName);
+        Assert.Equal("Verbose", line.ES_TracingLevel);   // preserved from row 1
+        Assert.Equal(1024, line.ES_ResolutionWidth);     // first-time set from row 2
+        Assert.True(line.IsExternalLicensed);            // first-time set from row 2
+        Assert.Equal(2, line.Roles.Count);
+        Assert.Empty(host.Warnings);                     // no spurious collisions
     }
 
     [Fact]
