@@ -754,7 +754,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
                         createdUser.Path = drive.NameColonSeparator;
                         WriteObject(createdUser);
                     }
-                    drive._dicUsers = null;
+                    drive.Users.ClearCache();
                     drive.UsersDetailed.ClearCache();
                 }
                 catch (Exception ex)

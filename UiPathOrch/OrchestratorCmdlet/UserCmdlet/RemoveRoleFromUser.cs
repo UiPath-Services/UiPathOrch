@@ -149,7 +149,7 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
                     try
                     {
                         drive.OrchAPISession.PutUser(postingUser);
-                        drive._dicUsers = null;
+                        drive.Users.ClearCache();
                         drive.UsersDetailed.ClearCache();
                     }
                     catch (Exception ex)

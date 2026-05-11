@@ -49,10 +49,8 @@ public class CopyUserCommand : OrchestratorPSCmdlet
         bool shouldProcess, CancellationToken cancelToken,
         Dictionary<string, string>? userMapping = null)
     {
-        srcDrive._dicUsers = null;
+        srcDrive.Users.ClearCache();
         srcDrive.UsersDetailed.ClearCache();
-
-        srcDrive._dicUsers_Exception.ClearCache();
 
         var srcUsers = srcDrive.GetUsers()
             .FilterByWildcards(user => user?.UserName, wpUserName)
@@ -284,7 +282,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                             {
                                 _this.WriteWarning($"{System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser))}: Please update -UR_Password with Update-OrchUser cmdlet.");
                             }
-                            dstDrive._dicUsers = null;
+                            dstDrive.Users.ClearCache();
                             dstDrive.UsersDetailed.ClearCache();
                         }
                     }

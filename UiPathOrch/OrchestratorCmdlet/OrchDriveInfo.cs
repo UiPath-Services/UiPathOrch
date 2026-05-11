@@ -214,9 +214,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicTenantKey = null;
 
 
-        _dicUsers = null;
-        _dicUsers_Exception?.ClearCache();
-
+        // _dicUsers auto-cleared via _allTenantCache (Users: ListCachePerTenant).
         // _dicUsersDetailed auto-cleared via _allTenantCache (UsersDetailed: KeyedSingleCachePerTenant).
         #endregion
 
@@ -478,43 +476,13 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchUser cache
-    // Key: userId
-    internal ConcurrentDictionary<long, User>? _dicUsers = null;
-    internal readonly ExceptionCachePerTenant _dicUsers_Exception = new();
-    public ICollection<User> GetUsers()
-    {
-        _dicUsers_Exception.ThrowCachedExceptionIfAny();
-
-        if (_dicUsers is null)
-        {
-            lock (_dicUsers_Exception)
-            {
-                if (_dicUsers is null)
-                {
-                    try
-                    {
-                        _dicUsers = new ConcurrentDictionary<long, User>(OrchAPISession.GetUsers().ToDictionary(u => u.Id ?? 0, u => u));
-
-                        string driveName = NameColonSeparator;
-                        foreach (var user in _dicUsers.Values)
-                        {
-                            user.Path = driveName;
-                        }
-                    }
-                    catch (HttpResponseException ex)
-                    {
-                        _dicUsers_Exception.CacheException(ex);
-                        throw;
-                    }
-                }
-            }
-        }
-        return _dicUsers.Values;
-    }
+    // Backwards-compat shim: delegates to Users (ListCachePerTenant).
+    public ICollection<User> GetUsers() => Users.Get();
 
     // Backwards-compat shim: delegates to UsersDetailed (KeyedSingleCachePerTenant).
-    // The initializer also writes the detailed user back into _dicUsers so the list
-    // cache stays in sync (only when _dicUsers is already populated).
+    // The list cache (Users) is intentionally NOT mirror-updated here — the two
+    // caches are independent (same trade-off as Calendar's split). Callers
+    // wanting the detailed payload must go through GetUser() / UsersDetailed.
     public User? GetUser(User user) => UsersDetailed.Get(user.Id!.Value);
     #endregion
 
@@ -657,7 +625,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                     }
                     postingUser.MayHavePersonalWorkspace = false;
                     OrchAPISession.PutUser(postingUser);
-                    _dicUsers = null;
+                    Users.ClearCache();
                     UsersDetailed.ClearCache();
                 }
             }
@@ -1891,6 +1859,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<string, DirectoryObject[]?> SearchDirectoryCache;
     public readonly KeyedSingleCachePerTenant<string, AvailableUserBundles> PmAvailableUserBundles;
     public readonly KeyedSingleCachePerTenant<long, User> UsersDetailed;
+    public readonly ListCachePerTenant<User> Users;
     public readonly ListCachePerTenant<ExtendedCalendar> Calendars;
     public readonly KeyedSingleCachePerTenant<long, ExtendedCalendar> CalendarsDetailed;
 
@@ -2271,17 +2240,11 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         UsersDetailed = new(this,
             userId => OrchAPISession.GetUser(userId),
-            (detailedUser, _) =>
-            {
-                detailedUser.Path = NameColonSeparator;
-                // Mirror into the list cache so callers iterating GetUsers() see
-                // the detailed payload — but only if the list cache has already
-                // been populated; we don't want to materialize it on demand.
-                if (_dicUsers is not null && detailedUser.Id is not null)
-                {
-                    _dicUsers[detailedUser.Id.Value] = detailedUser;
-                }
-            });
+            (detailedUser, _) => detailedUser.Path = NameColonSeparator);
+
+        Users = new(this,
+            () => OrchAPISession.GetUsers() ?? [],
+            user => user.Path = NameColonSeparator);
 
         Calendars = new(this,
             () => OrchAPISession.GetCalendars() ?? [],

@@ -1056,7 +1056,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             {
                 // If AssignDirectoryUser was already executed in CopyFolderUsers,
                 // the tenant user cache may be stale, so clear it and retry
-                dstDrive._dicUsers = null;
+                dstDrive.Users.ClearCache();
                 dstUsers = dstDrive.GetUsers();
                 dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, searchName, StringComparison.OrdinalIgnoreCase) == 0);
             }
