@@ -155,8 +155,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicQueueLinks = null;
         _dicQueueLinks_Exceptions?.ClearCache();
 
-        _dicAuditLogs = null;
-        _dicAuditLogs_Exceptions.ClearCache();
+        // _dicAuditLogs auto-cleared via _allTenantCache (AuditLogs: IncrementalCachePerTenant).
 
         _dicBucketLinks = null;
         _dicBucketLinks_Exceptions?.ClearCache();
@@ -265,59 +264,9 @@ public partial class OrchDriveInfo : PSDriveInfo
     //    ClearFolderCache(folder);
     //}
 
-    internal ConcurrentDictionary<Int64, AuditLog>? _dicAuditLogs = null;
-    internal ExceptionCachePerTenant _dicAuditLogs_Exceptions = new();
+    // Backwards-compat shim: delegates to AuditLogs (IncrementalCachePerTenant).
     public ReadOnlyCollection<AuditLog> GetAuditLogs(string? query, ulong skip, ulong first)
-    {
-        _dicAuditLogs_Exceptions.ThrowCachedExceptionIfAny();
-
-        if (_dicAuditLogs is null)
-        {
-            // It was working fine, but concurrent might be safer?
-            // Let's just rewrite it with ConcurrentDictionary.
-            //_dicAuditLogs = new HashSet<AuditLog>(new EntityEqualityComparer<AuditLog, Int64>(log => log.Id ?? 0));
-            lock (_dicAuditLogs_Exceptions)
-            {
-                _dicAuditLogs ??= new();
-            }
-        }
-        List<AuditLog> queriedLogs;
-        try
-        {
-            queriedLogs = OrchAPISession.GetAuditLogs(query, skip, first).ToList();
-        }
-        catch (HttpResponseException ex)
-        {
-            _dicAuditLogs_Exceptions.CacheException(ex);
-            throw;
-        }
-        foreach (var log in queriedLogs)
-        {
-            log.Path = NameColonSeparator;
-            if (log.Entities is not null && log.Entities.Length > 0)
-            {
-                //string auditLogInfo = $"{Path.Combine(Name, log.Id?.ToString() ?? "")} {log.ExecutionTime?.ToLocalTime():yyyy/MM/dd HH:mm:ss} {log.OperationText}";
-                string pathId = log.GetPSPath();
-                foreach (var entity in log.Entities)
-                {
-                    entity.Path = NameColonSeparator;
-                    entity.PathId = pathId;
-                    entity.CustomDataExpanded = JsonTools.JsonToDictionary(entity.CustomData);
-                }
-            }
-
-            // If Details were already fetched and cached, replace them
-            if (_dicAuditLogs.TryGetValue(log.Id!.Value, out var cached))
-            {
-                log.Details = cached?.Details;
-            }
-
-            _dicAuditLogs[log.Id!.Value] = log;
-        }
-
-        // Return only the results from this query
-        return queriedLogs.AsReadOnly();
-    }
+        => AuditLogs.Fetch(query, skip, first);
 
     // Returns true if an API call was made
     public bool GetAuditLogDetails(AuditLog log)
@@ -1702,6 +1651,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<string, AvailableUserBundles> PmAvailableUserBundles;
     public readonly KeyedSingleCachePerTenant<long, User> UsersDetailed;
     public readonly ListCachePerTenant<User> Users;
+    public readonly IncrementalCachePerTenant<long, AuditLog> AuditLogs;
     public readonly ListCachePerTenant<ExtendedCalendar> Calendars;
     public readonly KeyedSingleCachePerTenant<long, ExtendedCalendar> CalendarsDetailed;
 
@@ -2091,6 +2041,31 @@ public partial class OrchDriveInfo : PSDriveInfo
         Users = new(this,
             () => OrchAPISession.GetUsers() ?? [],
             user => user.Path = NameColonSeparator);
+
+        AuditLogs = new(this,
+            (query, skip, first) => OrchAPISession.GetAuditLogs(query, skip, first),
+            log => log.Id ?? 0,
+            (log, drivePath) =>
+            {
+                log.Path = drivePath;
+                if (log.Entities is not null && log.Entities.Length > 0)
+                {
+                    string pathId = log.GetPSPath();
+                    foreach (var entity in log.Entities)
+                    {
+                        entity.Path = drivePath;
+                        entity.PathId = pathId;
+                        entity.CustomDataExpanded = JsonTools.JsonToDictionary(entity.CustomData);
+                    }
+                }
+            },
+            // Preserve previously-fetched Details when an updated row arrives in
+            // a subsequent batch — GetAuditLogDetails populates Details on the
+            // cached entity and we don't want a fresh list-query to wipe that.
+            (newLog, cached) =>
+            {
+                if (cached?.Details is not null) newLog.Details = cached.Details;
+            });
 
         Calendars = new(this,
             () => OrchAPISession.GetCalendars() ?? [],

@@ -82,9 +82,9 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
             var results = new List<AuditLog>();
             foreach (var drive in drives)
             {
-                if (drive._dicAuditLogs is null)
-                    continue;
-                results.AddRange(drive._dicAuditLogs.Values
+                var cache = drive.AuditLogs.GetCache();
+                if (cache is null) continue;
+                results.AddRange(cache.Values
                     .Where(log => wp.IsMatch(log.Id.ToString()))
                     .ExcludeByWildcards(log => log?.Id.ToString(), wpId));
             }
@@ -323,7 +323,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
             var wpId = Id.ConvertToWildcardPatternList();
             foreach (var drive in drives)
             {
-                WriteLog(drive, drive._dicAuditLogs?.Values
+                WriteLog(drive, drive.AuditLogs.GetCache()?.Values
                     .FilterByWildcards(log => (log?.Id ?? 0).ToString(), wpId)
                     .OrderByDescending(log => log.Id));
             }
