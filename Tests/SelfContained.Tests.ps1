@@ -1950,6 +1950,19 @@ Describe 'Read-Only Cmdlets' {
         { Get-OrchProcess -Path "${script:Drive}:\Shared" } | Should -Not -Throw
     }
 
+    It 'Get-OrchProcessDetail does not throw with wildcard -Name' {
+        # -Name is mandatory by design; '*' is the explicit "all releases" form.
+        { Get-OrchProcessDetail -Path "${script:Drive}:\Shared" -Name '*' } | Should -Not -Throw
+    }
+
+    It 'Get-OrchProcess -ExpandDetails emits a deprecation warning naming Get-OrchProcessDetail' {
+        $warnings = $null
+        Get-OrchProcess -Path "${script:Drive}:\Shared" -ExpandDetails `
+                        -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+        ($warnings | Where-Object { $_ -match "Get-OrchProcessDetail" }) | Should -Not -BeNullOrEmpty `
+            -Because "the deprecation warning must name the canonical cmdlet"
+    }
+
     It 'Get-OrchTrigger does not throw' {
         { Get-OrchTrigger -Path "${script:Drive}:\Shared" } | Should -Not -Throw
     }

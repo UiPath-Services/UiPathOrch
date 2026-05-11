@@ -30,7 +30,9 @@ Get-OrchProcess [[-Name] <string[]>] [-ExpandDetails] [-Path <string[]>] [-Recur
 
 Gets process information from UiPath Orchestrator folders. A process (Release entity) links a published package (NuGet) to a folder, making the automation available for execution. The PackageId (ProcessKey) identifies the underlying package, while the process Name is the display name within the folder.
 
-By default, this cmdlet returns basic Release properties such as Name, Description, ProcessVersion, IsLatestVersion, and ProcessType. When -ExpandDetails is specified, additional properties are fetched including ProcessSettings, VideoRecordingSettings, RetentionAction, RetentionPeriod, RetentionBucketId, and EntryPointPath.
+By default, this cmdlet returns basic Release properties such as Name, Description, ProcessVersion, IsLatestVersion, and ProcessType. To fetch additional properties (ProcessSettings, VideoRecordingSettings, RetentionAction / RetentionPeriod / RetentionBucketId, EntryPointPath), use `Get-OrchProcessDetail` — which makes one API call per matched release and requires an explicit `-Name` selector.
+
+> **Deprecated:** `-ExpandDetails` is deprecated and will be removed in a future major release. Use `Get-OrchProcessDetail` instead. `-ExportCsv` continues to be supported and transparently uses the detail cache to enrich the exported rows (the CSV row shape is the Release entity, matching this cmdlet's output type).
 
 The -Name parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see available process names dynamically populated from the target folders. Multiple values can be specified using comma-separated text that includes wildcards.
 
@@ -60,13 +62,13 @@ PS Orch1:\Shared> Get-OrchProcess Blank*
 
 Gets all processes whose name starts with "Blank" from the current folder. The -Name parameter is positional (position 0) and supports wildcards.
 
-### Example 3: Get a process with expanded details
+### Example 3 (deprecated): -ExpandDetails
 
 ```powershell
 PS Orch1:\Shared> Get-OrchProcess BlankProcess19 -ExpandDetails
 ```
 
-Gets the process named "BlankProcess19" and fetches full details including ProcessSettings, VideoRecordingSettings, EntryPointPath, RetentionAction, and RetentionPeriod. Without -ExpandDetails, these properties are not populated.
+Emits a deprecation warning and routes through `Get-OrchProcessDetail`. Use `Get-OrchProcessDetail BlankProcess19` directly instead.
 
 ### Example 4: Get processes from a specific folder
 
@@ -188,7 +190,7 @@ HelpMessage: ''
 
 ### -ExpandDetails
 
-Fetches full process details from the server, including ProcessSettings, VideoRecordingSettings, EntryPointPath, RetentionAction, RetentionPeriod, and RetentionBucketId. Without this switch, only basic Release properties are returned.
+**Deprecated.** Routes to `Get-OrchProcessDetail` and emits a deprecation warning. Use `Get-OrchProcessDetail` directly. When `-ExportCsv` is specified the same detail enrichment runs automatically (and `-ExportCsv` is NOT deprecated, since the CSV row shape matches this cmdlet's output type).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -277,6 +279,8 @@ A process is a Release entity that links a published package (identified by Pack
 The -ExportCsv parameter automatically calls -ExpandDetails internally to populate all detail fields. BucketId values are resolved to human-readable BucketName in the exported CSV.
 
 ## RELATED LINKS
+
+[Get-OrchProcessDetail](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchProcessDetail.md)
 
 [Update-OrchProcess](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Update-OrchProcess.md)
 

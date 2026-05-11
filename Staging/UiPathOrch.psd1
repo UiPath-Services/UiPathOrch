@@ -117,6 +117,7 @@ CmdletsToExport = @(
 'Remove-OrchJobMedia',
 
 'Get-OrchProcess',
+'Get-OrchProcessDetail',
 'New-OrchProcess',
 'Update-OrchProcess',
 'Copy-OrchProcess',
