@@ -48,7 +48,14 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
             {
                 drive.OrchAPISession.ClearPendingWarning();
                 drive.OrchAPISession.EntraIdWarningChecked = true;
-                WriteWarning(warning);
+                // Producers concatenate multiple warnings with "\n\n". A single
+                // WriteWarning() with embedded newlines would render the blank
+                // separator as a stray "WARNING:" line, so emit each paragraph
+                // as its own WriteWarning call.
+                foreach (var segment in warning.Split(["\n\n"], StringSplitOptions.RemoveEmptyEntries))
+                {
+                    WriteWarning(segment);
+                }
             }
         }
     }
