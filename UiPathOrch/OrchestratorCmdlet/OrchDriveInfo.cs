@@ -1648,7 +1648,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<int, ExecutionSettingDefinition[]?> ExecutionSettings;
     public readonly KeyedSingleCachePerOrganization<string, PmDirectoryEntityInfo[]?> SearchPmDirectoryCache;
     public readonly KeyedSingleCachePerTenant<string, DirectoryObject[]?> SearchDirectoryCache;
-    public readonly KeyedSingleCachePerTenant<string, AvailableUserBundles> PmAvailableUserBundles;
+    public readonly KeyedSingleCachePerOrganization<string, AvailableUserBundles> PmAvailableUserBundles;
     public readonly KeyedSingleCachePerTenant<long, User> UsersDetailed;
     public readonly ListCachePerTenant<User> Users;
     public readonly IncrementalCachePerTenant<long, AuditLog> AuditLogs;
@@ -2021,7 +2021,10 @@ public partial class OrchDriveInfo : PSDriveInfo
             });
 
         PmAvailableUserBundles = new(this,
-            groupId => OrchAPISession.GetPmLicensedGroupsAvailableLicenses(groupId),
+            // The API doesn't take partitionGlobalId (just groupId), but the
+            // result is still org-scoped, so the cache is keyed by
+            // (partitionGlobalId, groupId).
+            (_, groupId) => OrchAPISession.GetPmLicensedGroupsAvailableLicenses(groupId),
             (bundles, _) =>
             {
                 bundles.Path = NameColonSeparator;
