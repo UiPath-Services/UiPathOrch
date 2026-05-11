@@ -697,6 +697,217 @@ public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 }
 
 /// <summary>
+/// Organization-scoped sibling of <see cref="KeyedSingleCachePerTenant{TKey, TEntity}"/>.
+/// Caches a single <typeparamref name="TEntity"/> per
+/// <c>(partitionGlobalId, TKey)</c>. Storage is <c>static</c>, so all
+/// <see cref="OrchDriveInfo"/> instances pointing to the same organization
+/// share one cache (no duplicate fetch / storage when multiple drives map to
+/// the same org).
+///
+/// Used by Platform Management (PM) entities that are org-scoped at the API
+/// layer (the path includes <c>partitionGlobalId</c>) — e.g. PmAvailableUserBundles,
+/// SearchPmDirectoryCache, PmBulkResolveByName.
+///
+/// Concurrency: PM API calls are serialized via a single static lock per
+/// closed generic to avoid duplicate in-flight requests across drives in the
+/// same org. Cache reads (hits) are lock-free via ConcurrentDictionary.
+/// <see cref="ClearCache()"/> clears only the current drive's org entry, so
+/// <c>Clear-OrchCache -Path X</c> on a drive in org A leaves org B's cache
+/// intact (but does affect other drives in org A — which is correct, since
+/// they share the storage).
+///
+/// Bails out early (returns default / no-op) when the drive's
+/// <c>partitionGlobalId</c> is null or empty.
+/// </summary>
+public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheClearable
+    where TKey : notnull, IEquatable<TKey>
+{
+    // Storage shared across all drives in the same closed generic instantiation.
+    private static readonly object _lock = new();
+    private static readonly ConcurrentDictionary<(string partitionGlobalId, TKey key), TEntity?> _cache = new();
+    private static readonly ExceptionsCachePer<(string partitionGlobalId, TKey key)> _exceptions = new();
+
+    private readonly OrchDriveInfo _drive;
+    private readonly Func<string, TKey, TEntity?> _fetchFunc;
+    private readonly Action<TEntity, TKey>? _initializer;
+    private readonly int? _supportedApiVersionFrom;
+
+    public KeyedSingleCachePerOrganization(
+        OrchDriveInfo drive,
+        Func<string, TKey, TEntity?> fetchFunc,
+        Action<TEntity, TKey>? initializer = null,
+        IEqualityComparer<TKey>? keyComparer = null,
+        int? supportedApiVersionFrom = null)
+    {
+        _drive = drive;
+        _drive._allTenantCache.Add(this);
+        _fetchFunc = fetchFunc;
+        _initializer = initializer;
+        // keyComparer parameter accepted for signature parity with the per-tenant
+        // sibling; since the cache is keyed by tuple (string, TKey), the equality
+        // comparer is implicitly the tuple's. Reserved for future use.
+        _ = keyComparer;
+        _supportedApiVersionFrom = supportedApiVersionFrom;
+    }
+
+    public TEntity? Get(TKey key)
+    {
+        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom) return default;
+
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        if (string.IsNullOrEmpty(partitionGlobalId)) return default;
+
+        var compositeKey = (partitionGlobalId, key);
+        _exceptions.ThrowCachedExceptionIfAny(compositeKey);
+
+        if (_cache.TryGetValue(compositeKey, out var cached)) return cached;
+
+        // Serialize fetches across all drives in this closed generic — PM API
+        // calls under concurrent load yield duplicate work and inconsistent
+        // snapshots. Single global lock is the simplest correct design.
+        lock (_lock)
+        {
+            // Re-check after acquiring the lock (another thread may have populated).
+            if (_cache.TryGetValue(compositeKey, out cached)) return cached;
+
+            try
+            {
+                var entity = _fetchFunc(partitionGlobalId, key);
+                if (entity is not null) _initializer?.Invoke(entity, key);
+                _cache[compositeKey] = entity;
+                return entity;
+            }
+            catch (HttpResponseException ex)
+            {
+                _exceptions.CacheException(compositeKey, ex);
+                throw;
+            }
+        }
+    }
+
+    public void ClearCache(TKey key)
+    {
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        if (string.IsNullOrEmpty(partitionGlobalId)) return;
+
+        var compositeKey = (partitionGlobalId, key);
+        _cache.TryRemove(compositeKey, out _);
+        _exceptions.ClearCache(compositeKey);
+    }
+
+    public void ClearCache()
+    {
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        if (string.IsNullOrEmpty(partitionGlobalId)) return;
+
+        // Drop every entry whose first tuple element is this drive's partition.
+        // Other orgs' entries (from drives mapped elsewhere) stay intact.
+        foreach (var k in _cache.Keys.Where(k => k.partitionGlobalId == partitionGlobalId).ToList())
+        {
+            _cache.TryRemove(k, out _);
+        }
+        _exceptions.ClearCache(k => k.partitionGlobalId == partitionGlobalId);
+    }
+}
+
+/// <summary>
+/// Organization-scoped sibling of <see cref="KeyedListCachePerTenant{TKey, TEntity}"/>.
+/// Caches a <see cref="List{TEntity}"/> per <c>(partitionGlobalId, TKey)</c>.
+/// Same storage / locking / clearing pattern as
+/// <see cref="KeyedSingleCachePerOrganization{TKey, TEntity}"/>; see that class
+/// for the design rationale.
+/// </summary>
+public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearable
+    where TKey : notnull, IEquatable<TKey>
+{
+    private static readonly object _lock = new();
+    private static readonly ConcurrentDictionary<(string partitionGlobalId, TKey key), List<TEntity>> _cache = new();
+    private static readonly ExceptionsCachePer<(string partitionGlobalId, TKey key)> _exceptions = new();
+
+    private readonly OrchDriveInfo _drive;
+    private readonly Func<string, TKey, IEnumerable<TEntity>> _fetchFunc;
+    private readonly Action<TEntity, TKey>? _initializer;
+    private readonly int? _supportedApiVersionFrom;
+
+    public KeyedListCachePerOrganization(
+        OrchDriveInfo drive,
+        Func<string, TKey, IEnumerable<TEntity>> fetchFunc,
+        Action<TEntity, TKey>? initializer = null,
+        IEqualityComparer<TKey>? keyComparer = null,
+        int? supportedApiVersionFrom = null)
+    {
+        _drive = drive;
+        _drive._allTenantCache.Add(this);
+        _fetchFunc = fetchFunc;
+        _initializer = initializer;
+        _ = keyComparer;  // see KeyedSingleCachePerOrganization comment
+        _supportedApiVersionFrom = supportedApiVersionFrom;
+    }
+
+    public ReadOnlyCollection<TEntity> Get(TKey key)
+    {
+        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
+        {
+            return new List<TEntity>().AsReadOnly();
+        }
+
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        if (string.IsNullOrEmpty(partitionGlobalId))
+        {
+            return new List<TEntity>().AsReadOnly();
+        }
+
+        var compositeKey = (partitionGlobalId, key);
+        _exceptions.ThrowCachedExceptionIfAny(compositeKey);
+
+        if (_cache.TryGetValue(compositeKey, out var list)) return list.AsReadOnly();
+
+        lock (_lock)
+        {
+            if (_cache.TryGetValue(compositeKey, out list)) return list.AsReadOnly();
+
+            try
+            {
+                list = _fetchFunc(partitionGlobalId, key).ToList();
+                if (_initializer is not null)
+                {
+                    foreach (var entity in list) _initializer(entity, key);
+                }
+                _cache[compositeKey] = list;
+                return list.AsReadOnly();
+            }
+            catch (HttpResponseException ex)
+            {
+                _exceptions.CacheException(compositeKey, ex);
+                throw;
+            }
+        }
+    }
+
+    public void ClearCache(TKey key)
+    {
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        if (string.IsNullOrEmpty(partitionGlobalId)) return;
+
+        var compositeKey = (partitionGlobalId, key);
+        _cache.TryRemove(compositeKey, out _);
+        _exceptions.ClearCache(compositeKey);
+    }
+
+    public void ClearCache()
+    {
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        if (string.IsNullOrEmpty(partitionGlobalId)) return;
+
+        foreach (var k in _cache.Keys.Where(k => k.partitionGlobalId == partitionGlobalId).ToList())
+        {
+            _cache.TryRemove(k, out _);
+        }
+        _exceptions.ClearCache(k => k.partitionGlobalId == partitionGlobalId);
+    }
+}
+
+/// <summary>
 /// Folder-scoped sibling of <see cref="KeyedSingleCachePerTenant{TKey, TEntity}"/>:
 /// caches a single <typeparamref name="TEntity"/> per <typeparamref name="TKey"/>
 /// per folder. Used by per-folder per-id detail caches (Releases by id within a
