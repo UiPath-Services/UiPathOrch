@@ -53,7 +53,7 @@ public class StartTestSetCommand : OrchestratorPSCmdlet
                             {
                                 WriteObject(ret);
                             }
-                            drive._dicTestSetExecutions?.TryRemove(folder.Id ?? 0, out _);
+                            drive.TestSetExecutions.ClearCache(folder);
                         }
                         catch (Exception ex)
                         {

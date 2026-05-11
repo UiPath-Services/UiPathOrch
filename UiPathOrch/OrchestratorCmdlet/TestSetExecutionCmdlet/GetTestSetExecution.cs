@@ -87,9 +87,10 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
             foreach (var (drive, folder) in drivesFolders)
             {
                 ICollection<TestSetExecution> testSetExecutions;
-                if (drive._dicTestSetExecutions is not null && drive._dicTestSetExecutions.TryGetValue(folder.Id ?? 0, out var entities))
+                var entities = drive.TestSetExecutions.GetCache(folder);
+                if (entities is not null)
                 {
-                    testSetExecutions = entities!.Values;
+                    testSetExecutions = entities.Values;
                 }
                 else
                 {
@@ -238,7 +239,8 @@ public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                if (drive._dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out var entities) ?? false)
+                var entities = drive.TestSetExecutions.GetCache(folder);
+                if (entities is not null)
                 {
                     WriteObject(entities.Values
                         .FilterByWildcards(e => e?.Name, wpName),

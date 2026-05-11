@@ -175,10 +175,9 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         //_dicPartitionGlobalId = null; // This doesn't change, so no need to clear it..
 
-        _dicTestSetExecutions = null;
+        // _dicTestSetExecutions auto-cleared via _allFolderCache (TestSetExecutions: IncrementalCachePerFolder).
         // _dicTestCaseExecutions auto-cleared via _allFolderCache (TestCaseExecutions: IncrementalCachePerFolder).
         _dicTestCaseAssertions = null;
-        _dicTestSetExecutions_Exceptions?.ClearCache();
 
         // _dicTriggers / _dicTriggersDetailed auto-cleared via _allFolderCache
         // (Triggers: ListCachePerFolder, TriggersDetailed: KeyedSingleCachePerFolder).
@@ -242,7 +241,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         // Drop QueueLinks entries for this folder only (matching the AssetLinks pattern).
         QueueLinks.ClearCache(k => k.folderId == folderId);
         // Releases auto-cleared per folder via _allFolderCache (ListCachePerFolder).
-        _dicTestSetExecutions?.TryRemove(folderId, out _);
+        // TestSetExecutions auto-cleared per folder via _allFolderCache (IncrementalCachePerFolder).
     }
 
     //public void ClearFolderCacheRecurse(Folder folder)
@@ -807,52 +806,9 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchTestSetExecution cache
-    // Key: <folderId, <TestSetExecutionId, TestSetExecution>>
-    internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, TestSetExecution>>? _dicTestSetExecutions = null;
-    internal ExceptionsCachePer<Int64> _dicTestSetExecutions_Exceptions = new();
-    //private ReadOnlyCollection<TestSetExecution>? _dicTestSetExecutionsEmpty = null;
-    public ReadOnlyCollection<TestSetExecution> GetTestSetExecutions(Folder folder, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
-    {
-        // TODO: Is the threshold of < 16 correct? Confirmed that retrieval errors occur on 15.0,
-        // but actually, the error seems to be independent of ApiVersion..
-        //if (OrchAPISession.ApiVersion < 16)
-        //{
-        //    _dicTestSetExecutionsEmpty ??= new List<TestSetExecution>().AsReadOnly();
-        //    return _dicTestSetExecutionsEmpty;
-        //}
-
-        _dicTestSetExecutions_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-        if (_dicTestSetExecutions is null)
-        {
-            lock (_dicTestSetExecutions_Exceptions)
-            {
-                _dicTestSetExecutions ??= new();
-            }
-        }
-
-        if (!_dicTestSetExecutions.TryGetValue(folder.Id ?? 0, out var folderTestSetExecutions))
-        {
-            folderTestSetExecutions = [];
-            _dicTestSetExecutions[folder.Id ?? 0] = folderTestSetExecutions;
-        }
-        try
-        {
-            var testSetExecutions = OrchAPISession.GetTestSetExecutions(folder.Id ?? 0, query, skip, first).ToList();
-            string folderPath = folder.GetPSPath();
-            foreach (var testSetExecution in testSetExecutions)
-            {
-                testSetExecution.Path = folderPath;
-                folderTestSetExecutions![testSetExecution.Id ?? 0] = testSetExecution;
-            }
-            return testSetExecutions.AsReadOnly();
-        }
-        catch (HttpResponseException ex)
-        {
-            _dicTestSetExecutions_Exceptions.CacheException(folder.Id ?? 0, ex);
-            throw;
-        }
-    }
+    // Backwards-compat shim: delegates to TestSetExecutions (IncrementalCachePerFolder).
+    public ReadOnlyCollection<TestSetExecution> GetTestSetExecutions(Folder folder, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue) =>
+        TestSetExecutions.Fetch(folder, query, skip, first);
 
     /// <summary>
     /// Searches for a TestSetExecution by name from cache or API and returns its Id.
@@ -861,9 +817,10 @@ public partial class OrchDriveInfo : PSDriveInfo
     public Int64? ResolveTestSetExecutionId(Folder folder, string name)
     {
         // First search the cache
-        if (_dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
+        var cached = TestSetExecutions.GetCache(folder)?.Values;
+        if (cached is not null)
         {
-            var found = cached.Values.FirstOrDefault(e =>
+            var found = cached.FirstOrDefault(e =>
                 string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase));
             if (found is not null)
             {
@@ -907,7 +864,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         // here after Fetch, batch-fetching any TestSetExecutionIds we're
         // missing.
         ConcurrentDictionary<Int64, TestSetExecution>? folderTestSetExecutions = null;
-        _dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out folderTestSetExecutions);
+        folderTestSetExecutions = TestSetExecutions.GetCache(folder);
 
         var missingTestSetExecutionIds = testCaseExecutions
             .Where(t => t.TestSetExecutionId is not null)
@@ -928,7 +885,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                     GetTestSetExecutions(folder, query, 0, ulong.MaxValue);
                 }
             }
-            _dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out folderTestSetExecutions);
+            folderTestSetExecutions = TestSetExecutions.GetCache(folder);
         }
 
         foreach (var testCaseExecution in testCaseExecutions)
@@ -1410,6 +1367,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedListCachePerTenant<(string feedId, string packageId, string version), PackageEntryPoint> PackageEntryPoints;
     public readonly IncrementalCachePerFolder<long, ExecutionMedia> JobsHavingExecutionMedia;
     public readonly IncrementalCachePerFolder<long, TestCaseExecution> TestCaseExecutions;
+    public readonly IncrementalCachePerFolder<long, TestSetExecution> TestSetExecutions;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -1879,6 +1837,14 @@ public partial class OrchDriveInfo : PSDriveInfo
         // TestSetExecutionName / PathTestSetExecutionName are set in the
         // GetTestCaseExecutions wrapper after Fetch (they require cross-cache
         // lookup into TestSetExecutions, which the initializer can't access).
+
+        TestSetExecutions = new(this,
+            // GetTestSetExecutions takes (folderId, query, skip, first); same
+            // signature shape as TestCaseExecutions.
+            (folderId, query, skip, first, _, _) =>
+                OrchAPISession.GetTestSetExecutions(folderId, query, skip, first),
+            tse => tse.Id ?? 0,
+            (tse, folderPath) => tse.Path = folderPath);
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?

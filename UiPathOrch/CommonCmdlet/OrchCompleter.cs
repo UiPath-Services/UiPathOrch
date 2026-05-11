@@ -1888,7 +1888,8 @@ internal class TestSetExecutionNameCompleter : OrchArgumentCompleter
         foreach (var (drive, folder) in drivesFolders)
         {
             // Get TestSetExecution name list from cache (deduplicated by name)
-            if (drive._dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
+            var cached = drive.TestSetExecutions.GetCache(folder);
+            if (cached is not null)
             {
                 foreach (var testSetExecution in cached.Values
                     .Where(te => te.Name is not null && wp.IsMatch(te.Name))
