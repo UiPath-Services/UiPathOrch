@@ -294,42 +294,45 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                if (drive._dicQueueItems?.TryGetValue(folder.Id!.Value, out var queueItemsPerFolder) ?? false)
+                // Flat (folderId → itemId) cache; regroup by item.Name for the
+                // per-queue display structure.
+                var allItems = drive.QueueItems.GetCache(folder)?.Values;
+                if (allItems is null) continue;
+
+                foreach (var queueGroup in allItems
+                    .Where(i => i.Name is not null)
+                    .GroupBy(i => i.Name!)
+                    .OrderBy(g => g.Key))
                 {
-                    foreach (var queuesItems in queueItemsPerFolder.OrderBy(q => q.Key)) // Sort by queue name
+                    var queueName = queueGroup.Key;
+                    if (wpName is not null && !wpName.Any(wp => wp.IsMatch(queueName))) continue;
+
+                    switch (OrderBy)
                     {
-                        var queueName = queuesItems.Key;
-                        var queueItemId_items = queuesItems.Value;
-
-                        if (wpName is not null && !wpName.Any(wp => wp.IsMatch(queueName))) continue;
-
-                        switch (OrderBy)
-                        {
-                            case "DueDate":
-                                if (OrderAscending.IsPresent)
-                                    WriteObject(queueItemId_items.Values.OrderBy(i => i.DueDate), true);
-                                else
-                                    WriteObject(queueItemId_items.Values.OrderByDescending(i => i.DueDate), true);
-                                break;
-                            case "DeferDate":
-                                if (OrderAscending.IsPresent)
-                                    WriteObject(queueItemId_items.Values.OrderBy(i => i.DeferDate), true);
-                                else
-                                    WriteObject(queueItemId_items.Values.OrderByDescending(i => i.DeferDate), true);
-                                break;
-                            case "StartProcessing":
-                                if (OrderAscending.IsPresent)
-                                    WriteObject(queueItemId_items.Values.OrderBy(i => i.StartProcessing), true);
-                                else
-                                    WriteObject(queueItemId_items.Values.OrderByDescending(i => i.StartProcessing), true);
-                                break;
-                            case "EndProcessing":
-                                if (OrderAscending.IsPresent)
-                                    WriteObject(queueItemId_items.Values.OrderBy(i => i.EndProcessing), true);
-                                else
-                                    WriteObject(queueItemId_items.Values.OrderByDescending(i => i.EndProcessing), true);
-                                break;
-                        }
+                        case "DueDate":
+                            if (OrderAscending.IsPresent)
+                                WriteObject(queueGroup.OrderBy(i => i.DueDate), true);
+                            else
+                                WriteObject(queueGroup.OrderByDescending(i => i.DueDate), true);
+                            break;
+                        case "DeferDate":
+                            if (OrderAscending.IsPresent)
+                                WriteObject(queueGroup.OrderBy(i => i.DeferDate), true);
+                            else
+                                WriteObject(queueGroup.OrderByDescending(i => i.DeferDate), true);
+                            break;
+                        case "StartProcessing":
+                            if (OrderAscending.IsPresent)
+                                WriteObject(queueGroup.OrderBy(i => i.StartProcessing), true);
+                            else
+                                WriteObject(queueGroup.OrderByDescending(i => i.StartProcessing), true);
+                            break;
+                        case "EndProcessing":
+                            if (OrderAscending.IsPresent)
+                                WriteObject(queueGroup.OrderBy(i => i.EndProcessing), true);
+                            else
+                                WriteObject(queueGroup.OrderByDescending(i => i.EndProcessing), true);
+                            break;
                     }
                 }
             }

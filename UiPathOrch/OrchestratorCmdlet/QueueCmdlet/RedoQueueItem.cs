@@ -63,15 +63,13 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
                     List<QueueItem> items = null;
 
                     #region Get cached items
-                    if (drive._dicQueueItems?.TryGetValue(folder.Id!.Value, out var itemsPerFolder) ?? false)
+                    // Flat cache; filter by item.Name == queue.Name for the
+                    // per-queue subset.
+                    var allItems = drive.QueueItems.GetCache(folder)?.Values;
+                    if (allItems is not null)
                     {
-                        if (itemsPerFolder.TryGetValue(queue.Name!, out var itemsPerQueue))
-                        {
-                            if (itemsPerQueue is not null)
-                            {
-                                items = itemsPerQueue.Values.ToList();
-                            }
-                        }
+                        var perQueue = allItems.Where(i => i.Name == queue.Name).ToList();
+                        if (perQueue.Count > 0) items = perQueue;
                     }
                     #endregion
 
@@ -262,7 +260,7 @@ public class RedoQueueItemCommand : OrchestratorPSCmdlet
                     result.Queue = queue.Name;
                     WriteObject(result);
                 }
-                drive._dicQueueItems?.TryRemove(folder.Id.Value, out _);
+                drive.QueueItems.ClearCache(folder);
             }
             catch (Exception ex)
             {

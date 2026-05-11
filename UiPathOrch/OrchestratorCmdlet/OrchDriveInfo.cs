@@ -182,7 +182,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         // _dicTriggers / _dicTriggersDetailed auto-cleared via _allFolderCache
         // (Triggers: ListCachePerFolder, TriggersDetailed: KeyedSingleCachePerFolder).
 
-        _dicQueueItems = null;
+        // _dicQueueItems auto-cleared via _allFolderCache (QueueItems: IncrementalCachePerFolder).
 
         //_dicReleaseList = null;
         //_dicReleaseList_Exceptions?.ClearCache();
@@ -733,41 +733,22 @@ public partial class OrchDriveInfo : PSDriveInfo
         QueueLinks.ClearCache(k => k.queueId == queueId);
 
     #region OrchQueueItem cache
-    // key: folderId, <queueName, <queueItemId>>
-    internal ConcurrentDictionary<Int64, Dictionary<string, Dictionary<Int64, QueueItem>>>? _dicQueueItems = null;
+    // Backwards-compat wrappers: delegate to QueueItems (IncrementalCachePerFolder
+    // keyed by folder + item.Id). The original 3-level structure (folderId →
+    // queueName → itemId) is flattened — per-queue grouping is a display-time
+    // concern (each QueueItem carries its queue.Name) and external readers
+    // regroup via GroupBy when needed.
     public List<QueueItem> GetQueueItems(Folder folder, QueueDefinition queue, string filter, ulong skip, ulong first, string? orderBy = null, bool orderAscending = false)
     {
-        if (_dicQueueItems is null)
-        {
-            lock (this)
-            {
-                _dicQueueItems ??= [];
-            }
-        }
-        if (!_dicQueueItems.TryGetValue(folder.Id!.Value, out var queueItemsPerFolder))
-        {
-            queueItemsPerFolder = [];
-            _dicQueueItems[folder.Id!.Value] = queueItemsPerFolder;
-        }
-
-        if (!queueItemsPerFolder.TryGetValue(queue.Name!, out var queueItemsPerQueue))
-        {
-            queueItemsPerQueue = [];
-            queueItemsPerFolder[queue.Name!] = queueItemsPerQueue;
-        }
-
-        var items = OrchAPISession.GetQueueItems(folder.Id!.Value, filter, skip, first, orderBy, orderAscending).ToList();
+        var items = QueueItems.Fetch(folder, filter, skip, first, orderBy, orderAscending).ToList();
+        string folderPath = folder.GetPSPath();
+        string queuePath = queue.GetPSPath();
         foreach (var item in items)
         {
-            item.Path = folder.GetPSPath();
-            item.PathName = queue.GetPSPath();
+            item.Path = folderPath;
+            item.PathName = queuePath;
             item.Name = queue.Name;
-            if (item.Id.HasValue)
-            {
-                queueItemsPerQueue[item.Id.Value] = item;
-            }
         }
-
         return items;
     }
 
@@ -779,27 +760,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             item.Path = folder.GetPSPath();
             item.PathName = queue.GetPSPath();
             item.Name = queue.Name;
-
-            if (_dicQueueItems is null)
-            {
-                lock (this)
-                {
-                    _dicQueueItems ??= [];
-                }
-            }
-            if (!_dicQueueItems.TryGetValue(folder.Id!.Value, out var queueItemsPerFolder))
-            {
-                queueItemsPerFolder = [];
-                _dicQueueItems[folder.Id!.Value] = queueItemsPerFolder;
-            }
-
-            if (!queueItemsPerFolder.TryGetValue(queue.Name!, out var queueItemsPerQueue))
-            {
-                queueItemsPerQueue = [];
-                queueItemsPerFolder[queue.Name!] = queueItemsPerQueue;
-            }
-
-            queueItemsPerQueue[item.Id!.Value] = item;
+            QueueItems.AddToCache(folder, item);
         }
         return item;
     }
@@ -1368,6 +1329,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly IncrementalCachePerFolder<long, ExecutionMedia> JobsHavingExecutionMedia;
     public readonly IncrementalCachePerFolder<long, TestCaseExecution> TestCaseExecutions;
     public readonly IncrementalCachePerFolder<long, TestSetExecution> TestSetExecutions;
+    public readonly IncrementalCachePerFolder<long, QueueItem> QueueItems;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -1845,6 +1807,16 @@ public partial class OrchDriveInfo : PSDriveInfo
                 OrchAPISession.GetTestSetExecutions(folderId, query, skip, first),
             tse => tse.Id ?? 0,
             (tse, folderPath) => tse.Path = folderPath);
+
+        QueueItems = new(this,
+            // OrchAPISession.GetQueueItems takes (folderId, filter, skip, first,
+            // orderBy, orderAscending); matches IncrementalCachePerFolder's
+            // fetcher signature exactly.
+            OrchAPISession.GetQueueItems,
+            qi => qi.Id ?? 0);
+        // No initializer: GetQueueItems wrapper sets Path / PathName / Name
+        // per-call from the caller's Folder + QueueDefinition references (none
+        // are derivable from just the item id).
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?

@@ -65,15 +65,18 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
             {
                 var (drive, folder) = queues.Source;
 
-                if (drive._dicQueueItems?.TryGetValue(folder.Id!.Value, out var itemsPerFolder) ?? false)
+                var allItems = drive.QueueItems.GetCache(folder)?.Values;
+                if (allItems is not null)
                 {
                     foreach (var q in queues
                         .FilterByWildcards(q => q?.Name, wpName)
                         .OrderBy(q => q.Name))
                     {
-                        if (itemsPerFolder.TryGetValue(q.Name ?? "", out var itemsPerQueue))
+                        // Per-queue subset via filter on item.Name (the flat
+                        // cache no longer groups by queue name internally).
+                        var itemsPerQueue = allItems.Where(i => i.Name == q.Name);
                         {
-                            foreach (var item in itemsPerQueue.Values
+                            foreach (var item in itemsPerQueue
                                 .Where(i => i.Status != "Deleted")
                                 .Where(i => wp.IsMatch(i.Id!.Value.ToString()))
                                 .ExcludeByClassValues(i => i?.Id?.ToString(), ids)
@@ -162,16 +165,12 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
                     // If rowVersion is not specified
                     if (string.IsNullOrEmpty(line.RowVersion))
                     {
-                        // First, look in the cache
-                        if (line.Drive._dicQueueItems?.TryGetValue(line.Folder.Id!.Value, out var itemsPerFolder) ?? false)
+                        // First, look in the cache (flat by id; queue.Name no
+                        // longer participates in the cache key).
+                        var allItems = line.Drive.QueueItems.GetCache(line.Folder);
+                        if (allItems is not null && allItems.TryGetValue(line.Id, out var itemToRemove))
                         {
-                            if (itemsPerFolder?.TryGetValue(queue.Name!, out var itemsPerQueue) ?? false)
-                            {
-                                if (itemsPerQueue?.TryGetValue(line.Id, out var itemToRemove) ?? false)
-                                {
-                                    line.RowVersion = itemToRemove.RowVersion;
-                                }
-                            }
+                            line.RowVersion = itemToRemove.RowVersion;
                         }
 
                         // If not in the cache, retrieve via API
@@ -220,12 +219,10 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
                 {
                     var result = drive.OrchAPISession.DeleteBulkQueueItem(folder.Id!.Value, payload);
 
-                    // Get the cache
-                    Dictionary<string, Dictionary<Int64, QueueItem>> itemsPerFolder = null;
-                    drive._dicQueueItems?.TryGetValue(folder.Id.Value, out itemsPerFolder);
-
-                    Dictionary<Int64, QueueItem> itemsPerQueue = null;
-                    itemsPerFolder?.TryGetValue(queue.Name!, out itemsPerQueue);
+                    // Get the cache (flat by id). The original code reached
+                    // through a per-queue inner dict; with the flat structure
+                    // we look up directly by item id.
+                    var itemsPerQueue = drive.QueueItems.GetCache(folder);
 
                     // Output items that failed to delete. Better not to output RowVersion.
                     if (result?.FailedItems is not null && result.FailedItems.Length > 0)
@@ -261,7 +258,7 @@ public class RemoveQueueItemCommand : OrchestratorPSCmdlet
                             if (entry.Id is null) continue;
                             // If processed correctly, it might be enough to just set Status to Deleted instead of removing the cache,
                             // but the RowVersion should have changed..
-                            itemsPerQueue.Remove(entry.Id.Value);
+                            itemsPerQueue?.TryRemove(entry.Id.Value, out _);
                         }
                     }
                     //Thread.Sleep(600); // There is no API call rate limit, but should we add it?
