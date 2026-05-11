@@ -194,7 +194,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
             if (copiedPackage is not null)
             {
                 dstDrive.Packages.ClearCache(dstFeedId ?? "");
-                dstDrive._dicPackageVersions?.TryRemove(dstFeedId ?? "", out var _);
+                dstDrive.PackageVersions.ClearCache(k => k.feedId == (dstFeedId ?? ""));
 
                 // If the destination feed is a personal workspace, also clear the process cache
                 if (dstFolder.FolderType == "Personal")

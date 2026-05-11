@@ -117,7 +117,7 @@ public class ImportPackageCommand : OrchestratorPSCmdlet
                         WriteObject(result);
                     }
                     drive.Packages.ClearCache(feedId ?? "");
-                    drive._dicPackageVersions?.TryRemove(feedId ?? "", out var _);
+                    drive.PackageVersions.ClearCache(k => k.feedId == (feedId ?? ""));
                 }
                 catch (Exception ex)
                 {

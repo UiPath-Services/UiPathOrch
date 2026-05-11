@@ -169,10 +169,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         // _dicMachineClientSecrets auto-cleared via _allTenantCache (MachineClientSecrets: KeyedSingleCachePerTenant).
 
         // _dicPackages auto-cleared via _allTenantCache (Packages: KeyedListCachePerTenant).
-        // _dicPackages_Exceptions still cleared here because GetPackageVersions uses it independently.
-        _dicPackages_Exceptions?.ClearCache();
-
-        _dicPackageVersions = null; // If an exception occurs, it should have already been thrown when getting _dicPackages, so this should be fine..
+        // _dicPackageVersions auto-cleared via _allTenantCache (PackageVersions: KeyedListCachePerTenant).
 
         _dicPackageEntryPoint = null;
         _dicPackageEntryPoint_Exception?.ClearCache();
@@ -248,8 +245,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         QueueLinks.ClearCache(k => k.folderId == folderId);
         // Releases auto-cleared per folder via _allFolderCache (ListCachePerFolder).
         _dicTestSetExecutions?.TryRemove(folderId, out _);
-
-        _dicPackages_Exceptions?.ClearCache();
     }
 
     //public void ClearFolderCacheRecurse(Folder folder)
@@ -693,11 +688,6 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchPackage cache
-    // _dicPackages_Exceptions is still referenced by GetPackageVersions (separate
-    // method, separate cache _dicPackageVersions); the field stays until that
-    // method is migrated too.
-    internal ExceptionsCachePer<string> _dicPackages_Exceptions = new();
-
     // Backwards-compat shim: delegates to Packages (KeyedListCachePerTenant).
     // Path is set per-call in the wrapper rather than in the cache initializer
     // because feedFolder depends on the *calling* folder (multiple folders may
@@ -718,48 +708,23 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchPackageVersion cache
-    // <Key: FeedId, <Key: Id, Package>>
-    internal ConcurrentDictionary<string, ConcurrentDictionary<string, List<Package>>>? _dicPackageVersions = null;
+    // Backwards-compat wrapper: PackageVersions (KeyedListCachePerTenant) keyed
+    // by (feedId, packageId). Path depends on caller's Folder reference (not
+    // derivable from the id tuple), set per-call.
     // Do not pass "id:version" as processId. Doing so will corrupt the cache.
     public ReadOnlyCollection<Package> GetPackageVersions(Folder folder, string processId)
     {
         string feedId = FolderFeedId.Get(folder) ?? "";
-        _dicPackages_Exceptions.ThrowCachedExceptionIfAny(feedId);
-
-        if (_dicPackageVersions is null)
+        var versions = PackageVersions.Get((feedId, processId));
+        if (versions.Count > 0)
         {
-            lock (this)
+            string folderPath = folder.GetPSPath();
+            foreach (var package in versions)
             {
-                _dicPackageVersions ??= new ConcurrentDictionary<string, ConcurrentDictionary<string, List<Package>>>();
+                package.Path = folderPath;
             }
         }
-        // GetOrAdd is atomic; the previous TryGetValue + new + index-set pattern raced when
-        // two threads (e.g., Parallel.ForEach folder iterations) both missed for the same
-        // feedId and overwrote each other's inner dictionary, dropping cached package lists.
-        var packageVersionsByProcId = _dicPackageVersions.GetOrAdd(
-            feedId, _ => new ConcurrentDictionary<string, List<Package>>());
-
-        if (!packageVersionsByProcId.TryGetValue(processId, out List<Package> packageVersions))
-        {
-            try
-            {
-                packageVersions = OrchAPISession.GetPackageVersions(feedId, processId)
-                    .OrderBy(p => p.Version!, VersionComparer.Instance)
-                    .ToList();
-                string folderPath = folder.GetPSPath();
-                foreach (var package in packageVersions)
-                {
-                    package.Path = folderPath;
-                }
-                packageVersionsByProcId[processId] = packageVersions;
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicPackages_Exceptions.CacheException(feedId, ex);
-                throw;
-            }
-        }
-        return packageVersions.AsReadOnly();
+        return versions;
     }
     #endregion
 
@@ -1562,6 +1527,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 assetId), AccessibleFoldersDto?> AssetLinks;
     public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 queueId), AccessibleFoldersDto?> QueueLinks;
     public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 bucketId), AccessibleFoldersDto?> BucketLinks;
+    public readonly KeyedListCachePerTenant<(string feedId, string packageId), Package> PackageVersions;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2001,6 +1967,12 @@ public partial class OrchDriveInfo : PSDriveInfo
         BucketLinks = new(this,
             key => OrchAPISession.GetFoldersForBucket(key.folderId, key.bucketId));
         // Same pattern as AssetLinks / QueueLinks.
+
+        PackageVersions = new(this,
+            key => OrchAPISession.GetPackageVersions(key.feedId, key.packageId)
+                .OrderBy(p => p.Version!, VersionComparer.Instance));
+        // No initializer: GetPackageVersions wrapper sets Path per-call from
+        // the caller's Folder reference (not derivable from the id tuple).
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?

@@ -576,6 +576,21 @@ public class KeyedListCachePerTenant<TKey, TEntity> : ITenantCacheClearable
         _exceptions.ClearCache(key);
     }
 
+    /// <summary>
+    /// Drop every entry whose key matches the predicate. Useful for composite-
+    /// key caches when an external mutation invalidates only a slice of the
+    /// cache (mirrors KeyedSingleCachePerTenant.ClearCache(Func) behavior).
+    /// </summary>
+    public void ClearCache(Func<TKey, bool> predicate)
+    {
+        if (_cache is null) return;
+        foreach (var key in _cache.Keys.Where(predicate).ToList())
+        {
+            _cache.TryRemove(key, out _);
+            _exceptions.ClearCache(key);
+        }
+    }
+
     public void ClearCache()
     {
         _cache = null;
