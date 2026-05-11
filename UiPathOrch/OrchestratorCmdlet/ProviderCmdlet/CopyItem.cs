@@ -637,8 +637,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         // Clear the process cache so the subsequent CopyProcesses() sees the correct state.
         if (newFolder.FolderType == "Personal")
         {
-            dstDrive._dicReleases?.TryRemove(newFolder.Id ?? 0, out var _);
-            dstDrive._dicReleasesDetailed?.TryRemove(newFolder.Id ?? 0, out var _);
+            dstDrive.Releases.ClearCache(newFolder);
+            dstDrive.ReleasesDetailed.ClearCache(newFolder);
         }
     }
 
@@ -922,7 +922,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         if (isNewFolderProcessCacheDirty)
         {
-            dstDrive._dicReleases?.TryRemove(newFolder.Id ?? 0, out _);
+            dstDrive.Releases.ClearCache(newFolder);
         }
     }
 
@@ -3058,8 +3058,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         if (newFolder is null) return false;
                     }
 
-                    srcDrive._dicReleases?.TryRemove(srcFolder.Id ?? 0, out _);
-                    dstDrive._dicReleases?.TryRemove(dstFolder.Id ?? 0, out _);
+                    srcDrive.Releases.ClearCache(srcFolder);
+                    dstDrive.Releases.ClearCache(dstFolder);
                     dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
 
                     if (!ExcludeEntities)

@@ -445,7 +445,7 @@ public class NewProcessCommand : OrchestratorPSCmdlet
                         {
                             newProcess.Path = folder.GetPSPath();
                             WriteObject(newProcess);
-                            drive._dicReleases?.TryRemove(folder.Id ?? 0, out var _);
+                            drive.Releases.ClearCache(folder);
                             //drive._dicReleaseList?.TryRemove(folder.Id ?? 0, out var _);
                         }
                     }

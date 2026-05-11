@@ -696,6 +696,123 @@ public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     }
 }
 
+/// <summary>
+/// Folder-scoped sibling of <see cref="KeyedSingleCachePerTenant{TKey, TEntity}"/>:
+/// caches a single <typeparamref name="TEntity"/> per <typeparamref name="TKey"/>
+/// per folder. Used by per-folder per-id detail caches (Releases by id within a
+/// folder, ProcessSchedules by id within a folder, etc.).
+///
+/// Per-key HttpResponseException caching uses a <c>(folderId, key)</c> tuple so
+/// failures don't leak across folders.
+///
+/// <see cref="IFolderCacheClearable"/> registration via
+/// <c>_drive._allFolderCache.Add(this)</c> means a folder removal flushes the
+/// folder's slice automatically; callers don't need to remember per-cache cleanup.
+/// </summary>
+public class KeyedSingleCachePerFolder<TKey, TEntity> : IFolderCacheClearable
+    where TKey : notnull, IEquatable<TKey>
+{
+    private readonly object _lock = new();
+    private readonly OrchDriveInfo _drive;
+
+    // Outer dict: folderId -> inner dict (key -> entity).
+    private volatile ConcurrentDictionary<Int64, ConcurrentDictionary<TKey, TEntity?>>? _cache = null;
+    private readonly ExceptionsCachePer<(Int64 folderId, TKey key)> _exceptions = new();
+    private readonly Func<Int64, TKey, TEntity?> _fetchFunc;
+    private readonly Action<TEntity, string, TKey>? _initializer;
+    private readonly IEqualityComparer<TKey>? _keyComparer;
+    private readonly int? _supportedApiVersionFrom;
+
+    public KeyedSingleCachePerFolder(
+        OrchDriveInfo drive,
+        Func<Int64, TKey, TEntity?> fetchFunc,
+        Action<TEntity, string, TKey>? initializer = null,
+        IEqualityComparer<TKey>? keyComparer = null,
+        int? supportedApiVersionFrom = null)
+    {
+        _drive = drive;
+        _drive._allFolderCache.Add(this);
+        _fetchFunc = fetchFunc;
+        _initializer = initializer;
+        _keyComparer = keyComparer;
+        _supportedApiVersionFrom = supportedApiVersionFrom;
+    }
+
+    public TEntity? Get(Folder folder, TKey key)
+    {
+        if (folder?.Id is null || _drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
+        {
+            return default;
+        }
+
+        Int64 folderId = folder.Id.Value;
+        _exceptions.ThrowCachedExceptionIfAny((folderId, key));
+
+        if (_cache is null)
+        {
+            lock (_lock)
+            {
+                _cache ??= [];
+            }
+        }
+
+        if (!_cache.TryGetValue(folderId, out var inner))
+        {
+            inner = _keyComparer is null
+                ? new ConcurrentDictionary<TKey, TEntity?>()
+                : new ConcurrentDictionary<TKey, TEntity?>(_keyComparer);
+            inner = _cache.GetOrAdd(folderId, inner);
+        }
+
+        if (!inner.TryGetValue(key, out var entity))
+        {
+            try
+            {
+                entity = _fetchFunc(folderId, key);
+                if (entity is not null && _initializer is not null)
+                {
+                    string folderPath = folder.GetPSPath();
+                    _initializer(entity, folderPath, key);
+                }
+                // Publish only after init so concurrent readers never observe a
+                // partially-initialized entity.
+                inner[key] = entity;
+            }
+            catch (HttpResponseException ex)
+            {
+                _exceptions.CacheException((folderId, key), ex);
+                throw;
+            }
+        }
+
+        return entity;
+    }
+
+    public void ClearCache(Folder folder, TKey key)
+    {
+        var folderId = folder.Id ?? 0;
+        if (_cache is not null && _cache.TryGetValue(folderId, out var inner))
+        {
+            inner.TryRemove(key, out _);
+        }
+        _exceptions.ClearCache((folderId, key));
+    }
+
+    public void ClearCache(Folder folder)
+    {
+        var folderId = folder.Id ?? 0;
+        _cache?.TryRemove(folderId, out _);
+        // Drop all per-key exception entries belonging to this folder.
+        _exceptions.ClearCache(k => k.folderId == folderId);
+    }
+
+    public void ClearCache()
+    {
+        _cache = null;
+        _exceptions.ClearCache();
+    }
+}
+
 public class SingleCachePerFolder<T> : IFolderCacheClearable
 {
     private readonly object _lock = new();

@@ -66,7 +66,7 @@ public class CopyProcessCommand : OrchestratorPSCmdlet
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterProcesses,
                     false, cancelHandler.Token);
-                dstDrive._dicReleases?.TryRemove(dstFolder.Id ?? 0, out _);
+                dstDrive.Releases.ClearCache(dstFolder);
                 //dstDrive._dicReleaseList?.TryRemove(dstFolder.Id ?? 0, out _);
             }
             catch (OperationCanceledException)

@@ -200,11 +200,8 @@ public partial class OrchDriveInfo : PSDriveInfo
         //_dicReleaseList = null;
         //_dicReleaseList_Exceptions?.ClearCache();
 
-        _dicReleases = null;
-        _dicReleases_Exceptions?.ClearCache();
-
-        _dicReleasesDetailed = null;
-        _dicReleasesDetailed_Exceptions.ClearCache();
+        // _dicReleases / _dicReleasesDetailed auto-cleared via _allFolderCache
+        // (Releases: ListCachePerFolder, ReleasesDetailed: KeyedSingleCachePerFolder).
 
         _dicRobotLogs = null;
 
@@ -253,7 +250,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicJobsHavingExecutionMedia?.TryRemove(folderId, out _);
         _dicTriggers?.TryRemove(folderId, out _);
         _dicQueueLinks = null;
-        _dicReleases?.TryRemove(folderId, out _);
+        // Releases auto-cleared per folder via _allFolderCache (ListCachePerFolder).
         _dicTestSetExecutions?.TryRemove(folderId, out _);
 
         _dicPackages_Exceptions?.ClearCache();
@@ -823,100 +820,18 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchProcess cache
-    // Key: folderId, release.Id
-    internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, Release>>? _dicReleases = null;
-    internal ExceptionsCachePer<Int64> _dicReleases_Exceptions = new();
-    public ICollection<Release> GetReleases(Folder folder)
-    {
-        _dicReleases_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
+    // Backwards-compat shim: delegates to Releases (ListCachePerFolder).
+    public ICollection<Release> GetReleases(Folder folder) => Releases.Get(folder);
 
-        if (_dicReleases is null)
-        {
-            lock (_dicReleases_Exceptions)
-            {
-                _dicReleases ??= [];
-            }
-        }
-        if (!_dicReleases.TryGetValue(folder.Id!.Value, out var releasesPerFolder))
-        {
-            // TODO: Something seems unoptimized around here?
-            lock (_dicReleases)
-            {
-                releasesPerFolder ??= [];
-                _dicReleases[folder.Id.Value] = releasesPerFolder;
-            }
-
-            try
-            {
-                string query = null;
-                if (OrchAPISession.ApiVersion >= 12)
-                {
-                    query = "&$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint";
-                }
-                else
-                {
-                    query = "&$expand=Environment,CurrentVersion,ReleaseVersions";
-                }
-                var releases = OrchAPISession.GetReleases(folder.Id.Value, query).ToList();
-                string folderPath = folder.GetPSPath();
-                foreach (var release in releases)
-                {
-                    release.Path = folderPath;
-                    releasesPerFolder[release.Id!.Value] = release;
-                }
-                return releases;
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicReleases_Exceptions.CacheException(folder.Id ?? 0, ex);
-                throw;
-            }
-        }
-        return releasesPerFolder.Values;
-    }
-
-    internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, Release>>? _dicReleasesDetailed = null;
-    internal ExceptionsCachePer<(Int64, Int64)> _dicReleasesDetailed_Exceptions = new();
-    public Release? GetReleaseById(Folder folder, Int64 releaseId)
-    {
-        _dicReleasesDetailed_Exceptions.ThrowCachedExceptionIfAny((folder.Id!.Value, releaseId));
-
-        if (_dicReleasesDetailed is null)
-        {
-            lock (_dicReleasesDetailed_Exceptions)
-            {
-                _dicReleasesDetailed ??= [];
-            }
-        }
-        if (!_dicReleasesDetailed.TryGetValue(folder.Id!.Value, out var releasesDetailedPerFolder))
-        {
-            lock (_dicReleasesDetailed)
-            {
-                releasesDetailedPerFolder ??= [];
-                _dicReleasesDetailed[folder.Id!.Value] = releasesDetailedPerFolder;
-            }
-        }
-        try
-        {
-            //var release = OrchAPISession.GetReleaseById(folder.Id ?? 0, releaseId, "?$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint");
-            var release = OrchAPISession.GetReleaseById(folder.Id ?? 0, releaseId, "?$expand=ReleaseVersions,EntryPoint");
-            if (release is not null)
-            {
-                release.Path = folder.GetPSPath();
-                releasesDetailedPerFolder[release.Id!.Value] = release;
-                if (_dicReleases is not null && _dicReleases.TryGetValue(folder.Id!.Value, out var releasesPerFolder))
-                {
-                    releasesPerFolder[release.Id.Value] = release;
-                }
-            }
-            return release;
-        }
-        catch (HttpResponseException ex)
-        {
-            _dicReleasesDetailed_Exceptions.CacheException((folder.Id.Value, releaseId), ex);
-            throw;
-        }
-    }
+    // Backwards-compat shim: delegates to ReleasesDetailed
+    // (KeyedSingleCachePerFolder). Behavior change vs the old GetReleaseById:
+    // the old method always re-fetched (the cache write was a side-effect for
+    // the now-removed mirror to _dicReleases); the new path returns the cached
+    // entry on subsequent calls. Mutating cmdlets (UpdateProcess, RemoveProcess,
+    // CopyItem etc.) already invalidate the per-folder cache, so the staleness
+    // window is bounded by user-driven mutations.
+    public Release? GetReleaseById(Folder folder, Int64 releaseId) =>
+        ReleasesDetailed.Get(folder, releaseId);
     #endregion
 
     #region OrchLibraryVersion cache
@@ -1892,6 +1807,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerFolder<TestDataQueue> TestDataQueues;
     //public readonly ListCachePerFolder<TestDataQueueItem> TestDataQueueItems;
     public readonly ListCachePerFolder<TestSet> TestSets;
+    public readonly ListCachePerFolder<Release> Releases;
+    public readonly KeyedSingleCachePerFolder<long, Release> ReleasesDetailed;
     public readonly ListCachePerFolder<TestSetSchedule> TestSetSchedules;
     public readonly ListCachePerFolder<UserRobots> UserRobots;
     public readonly ListCachePerFolder<MachineRuntime> RuntimesForFolder;
@@ -2276,6 +2193,21 @@ public partial class OrchDriveInfo : PSDriveInfo
         TestCases = new(this, OrchAPISession.GetTestCases, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
         TestDataQueues = new(this, OrchAPISession.GetTestDataQueues, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
         TestSets = new(this, OrchAPISession.GetTestSets, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
+
+        Releases = new(this,
+            folderId =>
+            {
+                // The list endpoint accepts an OData $expand string. v12+ adds EntryPoint.
+                string query = OrchAPISession.ApiVersion >= 12
+                    ? "&$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint"
+                    : "&$expand=Environment,CurrentVersion,ReleaseVersions";
+                return OrchAPISession.GetReleases(folderId, query);
+            },
+            (release, folderPath) => release.Path = folderPath);
+
+        ReleasesDetailed = new(this,
+            (folderId, releaseId) => OrchAPISession.GetReleaseById(folderId, releaseId, "?$expand=ReleaseVersions,EntryPoint"),
+            (release, folderPath, _) => release.Path = folderPath);
         TestSetSchedules = new(this, OrchAPISession.GetTestSetSchedules, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
         UserRobots = new(this, OrchAPISession.GetUserRobots);
 

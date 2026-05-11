@@ -211,7 +211,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                                 try
                                 {
                                     drive.OrchAPISession.UpdateReleaseToLatestVersion(folder.Id ?? 0, id);
-                                    drive._dicReleases?.TryRemove(folder.Id ?? 0, out _);
+                                    drive.Releases.ClearCache(folder);
                                 }
                                 catch (Exception ex)
                                 {
@@ -226,7 +226,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                                 try
                                 {
                                     drive.OrchAPISession.UpdateReleaseToSpecificVersion(folder.Id ?? 0, id, Version);
-                                    drive._dicReleases?.TryRemove(folder.Id ?? 0, out _);
+                                    drive.Releases.ClearCache(folder);
                                 }
                                 catch (Exception ex)
                                 {
@@ -255,7 +255,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                                 try
                                 {
                                     drive.OrchAPISession.UpdateReleaseToLatestVersion(folder.Id ?? 0, release.Id ?? 0);
-                                    drive._dicReleases?.TryRemove(folder.Id ?? 0, out _);
+                                    drive.Releases.ClearCache(folder);
                                 }
                                 catch (Exception ex)
                                 {
@@ -277,7 +277,7 @@ public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
                                 try
                                 {
                                     drive.OrchAPISession.UpdateReleaseToSpecificVersion(folder.Id ?? 0, release.Id ?? 0, toVersion);
-                                    drive._dicReleases?.TryRemove(folder.Id ?? 0, out _);
+                                    drive.Releases.ClearCache(folder);
                                 }
                                 catch (Exception ex)
                                 {

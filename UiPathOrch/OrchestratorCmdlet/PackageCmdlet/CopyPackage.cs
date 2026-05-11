@@ -199,7 +199,7 @@ public class CopyPackageCommand : OrchestratorPSCmdlet
                 // If the destination feed is a personal workspace, also clear the process cache
                 if (dstFolder.FolderType == "Personal")
                 {
-                    dstDrive._dicReleases?.TryRemove(dstFolder.Id ?? 0, out var _);
+                    dstDrive.Releases.ClearCache(dstFolder);
                     //dstDrive._dicReleaseList?.TryRemove(dstFolder.Id ?? 0, out var _);
                 }
             }

@@ -40,7 +40,7 @@ public class RemoveProcessCommand : OrchestratorPSCmdlet
                         try
                         {
                             drive.OrchAPISession.RemoveRelease(folder.Id ?? 0, proc.Id ?? 0);
-                            drive._dicReleases?.TryRemove(folder.Id ?? 0, out var _);
+                            drive.Releases.ClearCache(folder);
                             //drive._dicReleaseList?.TryRemove(folder.Id ?? 0, out var _);
                         }
                         catch (Exception ex)

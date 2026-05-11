@@ -516,8 +516,8 @@ public class UpdateProcessCommand : OrchestratorPSCmdlet
                             drive.OrchAPISession.PutReleaseRetention(folder.Id!.Value, process.Id!.Value, staleRetentionUpdate);
                         }
 
-                        drive._dicReleases?.TryRemove(folder.Id ?? 0, out var _);
-                        drive._dicReleasesDetailed?.TryRemove(folder.Id ?? 0, out var _);
+                        drive.Releases.ClearCache(folder);
+                        drive.ReleasesDetailed.ClearCache(folder);
                     }
                     catch (Exception ex)
                     {

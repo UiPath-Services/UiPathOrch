@@ -83,6 +83,21 @@ public class ExceptionsCachePer<T> where T : IEquatable<T>
         return _exceptionsCache.Value.TryRemove(key, out var _);
     }
 
+    /// <summary>
+    /// Drop every cached exception whose key matches the predicate. Useful for
+    /// composite-key exception caches when an external mutation invalidates only
+    /// a slice of the cache (e.g. all entries for one folderId across all keys).
+    /// </summary>
+    public void ClearCache(Func<T, bool> predicate)
+    {
+        if (!_exceptionsCache.IsValueCreated) return;
+        // Snapshot keys before mutation: ConcurrentDictionary.Keys is a live view.
+        foreach (var key in _exceptionsCache.Value.Keys.Where(predicate).ToList())
+        {
+            _exceptionsCache.Value.TryRemove(key, out _);
+        }
+    }
+
     public void ClearCache()
     {
         if (_exceptionsCache.IsValueCreated)
