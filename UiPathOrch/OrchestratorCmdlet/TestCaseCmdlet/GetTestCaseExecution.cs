@@ -134,7 +134,8 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                if (drive._dicTestCaseExecutions?.TryGetValue(folder.Id!.Value, out var cached) ?? false)
+                var cached = drive.TestCaseExecutions.GetCache(folder)?.Values;
+                if (cached is not null)
                 {
                     WriteObject(cached
                         .FilterByWildcards(e => e?.EntryPointPath, wpName)

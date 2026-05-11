@@ -1930,7 +1930,8 @@ internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
             Int64 folderId = folder.Id ?? 0;
 
             // Get Ids from the TestCaseExecution cache
-            if (drive._dicTestCaseExecutions?.TryGetValue(folderId, out var tceCache) ?? false)
+            var tceCache = drive.TestCaseExecutions.GetCache(folder)?.Values;
+            if (tceCache is not null)
             {
                 foreach (var tce in tceCache
                     .Where(tce => tce.Id is not null && wp.IsMatch(tce.Id.ToString()!))
@@ -1989,7 +1990,8 @@ internal class TestCaseExecutionEntryPointCompleter : OrchArgumentCompleter
 
         foreach (var (drive, folder) in drivesFolders)
         {
-            if (drive._dicTestCaseExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
+            var cached = drive.TestCaseExecutions.GetCache(folder)?.Values;
+            if (cached is not null)
             {
                 foreach (var entryPointPath in cached
                     .Select(e => e.EntryPointPath)

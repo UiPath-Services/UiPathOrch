@@ -43,7 +43,8 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
     private static IEnumerable<Int64> GetTestCaseExecutionIds(OrchDriveInfo drive, Folder folder, Int64 testSetExecutionId)
     {
         // Try to get from cache
-        if (drive._dicTestCaseExecutions?.TryGetValue(folder.Id ?? 0, out var cached) ?? false)
+        var cached = drive.TestCaseExecutions.GetCache(folder)?.Values;
+        if (cached is not null)
         {
             var ids = cached
                 .Where(e => e.TestSetExecutionId == testSetExecutionId)
@@ -122,7 +123,8 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
             // Get TestSetExecutionName from cache
             string? testSetExecutionName = null;
-            if (drive._dicTestCaseExecutions?.TryGetValue(folderId, out var tceCache) ?? false)
+            var tceCache = drive.TestCaseExecutions.GetCache(folder)?.Values;
+            if (tceCache is not null)
             {
                 var tce = tceCache.FirstOrDefault(e => e.Id == testCaseExecutionId);
                 testSetExecutionName = tce?.TestSetExecutionName;
@@ -249,7 +251,8 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
                         // Get TestSetExecutionName from _dicTestCaseExecutions
                         string? testSetExecutionName = null;
-                        if (drive._dicTestCaseExecutions?.TryGetValue(folderId, out var tceCache) ?? false)
+                        var tceCache = drive.TestCaseExecutions.GetCache(folder)?.Values;
+                        if (tceCache is not null)
                         {
                             var tce = tceCache.FirstOrDefault(e => e.Id == testCaseExecutionId);
                             testSetExecutionName = tce?.TestSetExecutionName;

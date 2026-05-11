@@ -176,10 +176,9 @@ public partial class OrchDriveInfo : PSDriveInfo
         //_dicPartitionGlobalId = null; // This doesn't change, so no need to clear it..
 
         _dicTestSetExecutions = null;
-        _dicTestCaseExecutions = null;
+        // _dicTestCaseExecutions auto-cleared via _allFolderCache (TestCaseExecutions: IncrementalCachePerFolder).
         _dicTestCaseAssertions = null;
         _dicTestSetExecutions_Exceptions?.ClearCache();
-        _dicTestCaseExecutions_Exceptions?.ClearCache();
 
         // _dicTriggers / _dicTriggersDetailed auto-cleared via _allFolderCache
         // (Triggers: ListCachePerFolder, TriggersDetailed: KeyedSingleCachePerFolder).
@@ -882,127 +881,69 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchTestCaseExecution cache
-    // Key: folderId
-    internal ConcurrentDictionary<Int64, List<TestCaseExecution>>? _dicTestCaseExecutions = null;
-    internal ExceptionsCachePer<Int64> _dicTestCaseExecutions_Exceptions = new();
 
     // TestCaseAssertion cache: Key1=folderId, Key2=testCaseExecutionId
     internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, List<TestCaseAssertion>>>? _dicTestCaseAssertions = null;
 
     /// <summary>
-    /// Retrieves TestCaseExecution from the API and sets Path and TestSetExecutionName.
-    /// Returns from cache if available.
+    /// Backwards-compat wrapper: delegates to TestCaseExecutions
+    /// (IncrementalCachePerFolder). Always fetches with filter/skip/first
+    /// (replacing the original filter-bypass logic — all -First cmdlets now
+    /// follow the always-fetch + accumulate pattern, matching AuditLog /
+    /// QueueItem / TestSetExecution). After fetch, post-processes each result
+    /// to set TestSetExecutionName / PathTestSetExecutionName from the
+    /// TestSetExecutions cache (batch-fetching any missing TestSetExecutionIds).
     /// </summary>
     public List<TestCaseExecution> GetTestCaseExecutions(Folder folder, string? filter = null, ulong skip = 0, ulong first = ulong.MaxValue)
     {
-        // Do not use cache when filter/skip/first are specified
-        bool useCache = (filter is null && skip == 0 && first == ulong.MaxValue);
+        var testCaseExecutions = TestCaseExecutions.Fetch(folder, filter, skip, first).ToList();
+        if (testCaseExecutions.Count == 0) return testCaseExecutions;
 
-        if (useCache)
+        string folderPath = folder.GetPSPath();
+
+        // TestSetExecutionName / PathTestSetExecutionName depend on the
+        // TestSetExecutions cache, which isn't visible to the cache class's
+        // initializer (initializer only has folderPath, not Folder). Resolve
+        // here after Fetch, batch-fetching any TestSetExecutionIds we're
+        // missing.
+        ConcurrentDictionary<Int64, TestSetExecution>? folderTestSetExecutions = null;
+        _dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out folderTestSetExecutions);
+
+        var missingTestSetExecutionIds = testCaseExecutions
+            .Where(t => t.TestSetExecutionId is not null)
+            .Select(t => t.TestSetExecutionId!.Value)
+            .Distinct()
+            .Where(id => folderTestSetExecutions is null || !folderTestSetExecutions.ContainsKey(id))
+            .ToList();
+
+        if (missingTestSetExecutionIds.Count > 0)
         {
-            _dicTestCaseExecutions_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-            if (_dicTestCaseExecutions is null)
+            const int batchSize = 20;
+            foreach (var batch in missingTestSetExecutionIds.Chunk(batchSize))
             {
-                lock (_dicTestCaseExecutions_Exceptions)
+                var orFilter = batch.CreateOrFilter(id => $"Id eq {id}");
+                if (orFilter is not null)
                 {
-                    _dicTestCaseExecutions ??= new();
+                    var query = $"&$filter={orFilter}";
+                    GetTestSetExecutions(folder, query, 0, ulong.MaxValue);
                 }
             }
-
-            if (_dicTestCaseExecutions.TryGetValue(folder.Id ?? 0, out var cached))
-            {
-                return cached;
-            }
-        }
-
-        try
-        {
-            var testCaseExecutions = OrchAPISession.GetTestCaseExecutions(folder.Id ?? 0, filter, skip, first).ToList();
-            string folderPath = folder.GetPSPath();
-
-            // Prepare to retrieve TestSetExecutionName from cache
-            ConcurrentDictionary<Int64, TestSetExecution>? folderTestSetExecutions = null;
             _dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out folderTestSetExecutions);
-
-            // Collect TestSetExecutionIds that are not in the cache
-            var missingTestSetExecutionIds = testCaseExecutions
-                .Where(t => t.TestSetExecutionId is not null)
-                .Select(t => t.TestSetExecutionId!.Value)
-                .Distinct()
-                .Where(id => folderTestSetExecutions is null || !folderTestSetExecutions.ContainsKey(id))
-                .ToList();
-
-            // Fetch TestSetExecutions not in cache from the API (batched in groups of 20)
-            if (missingTestSetExecutionIds.Count > 0)
-            {
-                const int batchSize = 20;
-                foreach (var batch in missingTestSetExecutionIds.Chunk(batchSize))
-                {
-                    var orFilter = batch.CreateOrFilter(id => $"Id eq {id}");
-                    if (orFilter is not null)
-                    {
-                        var query = $"&$filter={orFilter}";
-                        GetTestSetExecutions(folder, query, 0, ulong.MaxValue);
-                    }
-                }
-                // Re-fetch since the cache was updated
-                _dicTestSetExecutions?.TryGetValue(folder.Id ?? 0, out folderTestSetExecutions);
-            }
-
-            foreach (var testCaseExecution in testCaseExecutions)
-            {
-                testCaseExecution.Path = folderPath;
-
-                // Set TestSetExecutionName from cache
-                if (testCaseExecution.TestSetExecutionId is not null && folderTestSetExecutions is not null)
-                {
-                    if (folderTestSetExecutions.TryGetValue(testCaseExecution.TestSetExecutionId.Value, out var testSetExecution))
-                    {
-                        testCaseExecution.TestSetExecutionName = testSetExecution.Name;
-                        testCaseExecution.PathTestSetExecutionName = Path.Combine(folderPath, testSetExecution.Name!);
-                    }
-                }
-            }
-
-            // Save to or merge into cache
-            if (useCache)
-            {
-                _dicTestCaseExecutions![folder.Id ?? 0] = testCaseExecutions;
-            }
-            else if (testCaseExecutions.Count > 0)
-            {
-                // Even with a filter, merge results into the cache
-                if (_dicTestCaseExecutions is null)
-                {
-                    lock (_dicTestCaseExecutions_Exceptions)
-                    {
-                        _dicTestCaseExecutions ??= new();
-                    }
-                }
-                var folderId = folder.Id ?? 0;
-                _dicTestCaseExecutions.AddOrUpdate(
-                    folderId,
-                    testCaseExecutions,
-                    (key, existing) =>
-                    {
-                        var existingIds = existing.Where(e => e.Id is not null).Select(e => e.Id!.Value).ToHashSet();
-                        var newItems = testCaseExecutions.Where(e => e.Id is not null && !existingIds.Contains(e.Id.Value));
-                        existing.AddRange(newItems);
-                        return existing;
-                    });
-            }
-
-            return testCaseExecutions;
         }
-        catch (HttpResponseException ex)
+
+        foreach (var testCaseExecution in testCaseExecutions)
         {
-            if (useCache)
+            if (testCaseExecution.TestSetExecutionId is not null && folderTestSetExecutions is not null)
             {
-                _dicTestCaseExecutions_Exceptions.CacheException(folder.Id ?? 0, ex);
+                if (folderTestSetExecutions.TryGetValue(testCaseExecution.TestSetExecutionId.Value, out var testSetExecution))
+                {
+                    testCaseExecution.TestSetExecutionName = testSetExecution.Name;
+                    testCaseExecution.PathTestSetExecutionName = Path.Combine(folderPath, testSetExecution.Name!);
+                }
             }
-            throw;
         }
+
+        return testCaseExecutions;
     }
 
     #endregion
@@ -1468,6 +1409,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedListCachePerTenant<(string feedId, string packageId), Package> PackageVersions;
     public readonly KeyedListCachePerTenant<(string feedId, string packageId, string version), PackageEntryPoint> PackageEntryPoints;
     public readonly IncrementalCachePerFolder<long, ExecutionMedia> JobsHavingExecutionMedia;
+    public readonly IncrementalCachePerFolder<long, TestCaseExecution> TestCaseExecutions;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -1925,6 +1867,18 @@ public partial class OrchDriveInfo : PSDriveInfo
             (folderId, _, skip, first, _, _) => OrchAPISession.GetExecutionMedia(folderId, skip, first),
             media => media.Id ?? 0,
             (media, folderPath) => media.Path = folderPath);
+
+        TestCaseExecutions = new(this,
+            // GetTestCaseExecutions takes (folderId, filter, skip, first); the
+            // fetcher signature additionally has orderBy/orderAscending which
+            // we ignore.
+            (folderId, filter, skip, first, _, _) =>
+                OrchAPISession.GetTestCaseExecutions(folderId, filter, skip, first),
+            tce => tce.Id ?? 0,
+            (tce, folderPath) => tce.Path = folderPath);
+        // TestSetExecutionName / PathTestSetExecutionName are set in the
+        // GetTestCaseExecutions wrapper after Fetch (they require cross-cache
+        // lookup into TestSetExecutions, which the initializer can't access).
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
