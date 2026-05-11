@@ -75,15 +75,22 @@ warning. No removal in 1.3.0.
 
 | Existing                                          | New (1.3.0)              | Output               |
 | ------------------------------------------------- | ------------------------ | -------------------- |
-| `Get-OrchCalendar [-ExpandExcludedDate]`          | `Get-OrchExcludedDate`   | `ExcludedDateNamed`  |
+| `Get-OrchCalendar [-ExpandExcludedDate]`          | `Get-OrchCalendarDate`   | `ExcludedDateNamed`  |
 | `Get-OrchUser [-ExpandDetails]`                   | `Get-OrchUserDetail`     | `User` (detailed)    |
 | `Get-OrchProcess [-ExpandDetails]`                | `Get-OrchProcessDetail`  | `Release` (detailed) |
 | `Get-OrchTrigger [-ExpandDetails]`                | `Get-OrchTriggerDetail`  | (detailed)           |
 | `Get-OrchAuditLog [-ExpandDetails]`               | `Get-OrchAuditLogDetail` | (detailed)           |
 
-Naming convention: `Get-Orch<Entity>Detail` for the detail-fetch sibling
-of an entity that already has a list cmdlet, except where the detail
-fetch logically returns a different entity (`Get-OrchExcludedDate`).
+Naming convention:
+
+1. If the entity already has `Add-Orch<X>` and/or `Remove-Orch<X>`
+   sibling cmdlets, the new Get cmdlet uses the same noun
+   (`Get-OrchCalendarDate` pairs with `Add-OrchCalendarDate`,
+   `Remove-OrchCalendarDate`). This keeps the verb triple discoverable
+   and gives users a natural mental model: "the noun is the thing,
+   the verb is the operation."
+2. Otherwise, use `Get-Orch<Entity>Detail`
+   (`Get-OrchUserDetail` etc.) since there is no sibling to anchor on.
 
 ### Mandatory selector on new cmdlets
 
@@ -108,66 +115,32 @@ To prevent casual large-fan-out usage:
 
 ### Code dedup via static helper extraction
 
-The new cmdlet owns the canonical implementation as a `static` helper.
-The legacy `-Expand*` branch on the old cmdlet calls the same helper.
-Result: zero duplication; the helper has exactly one definition.
+The new cmdlet owns the canonical implementation as an `internal static`
+helper. The legacy `-Expand*` branch on the old cmdlet calls the same
+helper. Result: zero duplication; the helper has exactly one definition.
 
-```csharp
-// New cmdlet — canonical implementation
-public class GetExcludedDateCommand : OrchestratorPSCmdlet
-{
-    [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
-    [SupportsWildcards]
-    public string[] Name { get; set; } = default!;
+The Calendar reference implementation (commit `8a74209`) follows this
+pattern. See `UiPathOrch/OrchestratorCmdlet/CalendarCmdlet/GetCalendarDate.cs`
+for the canonical helper, and `GetCalendar.cs` for the deprecated-path
+delegate. The same shape applies to User / Process / Trigger / AuditLog.
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter))]
-    public string[]? Path { get; set; }
+### `-ExportCsv` on the legacy cmdlet
 
-    [Parameter] public SwitchParameter IncludePastDate { get; set; }
-    [Parameter] public string? ExportCsv { get; set; }
-    [Parameter, EncodingArgumentTransformation] public Encoding? CsvEncoding { get; set; }
+Type A list cmdlets that historically wrote a "detail-shaped" CSV (e.g.
+`Get-OrchCalendar -ExportCsv` emits per-date rows so the file
+round-trips with `Add-OrchCalendarDate`) follow the same deprecation
+treatment as `-Expand*`: the `-ExportCsv` path on the legacy cmdlet
+emits a deprecation warning pointing users at the new cmdlet's
+`-ExportCsv`. The CSV format is preserved so existing exported files
+still import.
 
-    protected override void ProcessRecord()
-    {
-        var drives = SessionState.EnumOrchDrives(Path);
-        EmitExcludedDates(this, drives, Name, IncludePastDate.IsPresent,
-                          ExportCsv, CsvEncoding);
-    }
-
-    // Single source of truth for the expand logic.
-    internal static void EmitExcludedDates(
-        OrchestratorPSCmdlet caller,
-        IEnumerable<OrchDriveInfo> drives,
-        string[]? calendarNames,
-        bool includePastDate,
-        string? exportCsv,
-        Encoding? csvEncoding) { /* ... */ }
-}
-
-// Legacy cmdlet — switch path delegates
-public class GetCalendarCommand : OrchestratorPSCmdlet
-{
-    [Parameter] public SwitchParameter ExpandExcludedDate { get; set; }
-    // ... other params unchanged
-
-    protected override void ProcessRecord()
-    {
-        if (ExpandExcludedDate.IsPresent)
-        {
-            WriteWarning(
-                "'-ExpandExcludedDate' is deprecated and will be removed in " +
-                "a future major release. Use 'Get-OrchExcludedDate' instead.");
-            var drives = SessionState.EnumOrchDrives(Path);
-            GetExcludedDateCommand.EmitExcludedDates(
-                this, drives, Name, IncludePastDate.IsPresent, ExportCsv, CsvEncoding);
-            return;
-        }
-
-        // Existing list-only path (unchanged)
-    }
-}
-```
+For cmdlets where `-ExportCsv` doesn't change the output type (e.g.
+`Get-OrchUser`'s CSV is just User rows enriched with detail), it stays
+supported on the legacy cmdlet without deprecation, and the new
+`Get-Orch<Entity>Detail -ExportCsv` shares the same writer via the
+helper. Decide per-entity whether the CSV is "detail-shaped" or
+"list-shaped"; deprecate the legacy `-ExportCsv` only when the cmdlet's
+declared output type doesn't match the CSV's row shape.
 
 When the legacy switch is finally removed, the change is mechanical: drop
 the `if (ExpandExcludedDate.IsPresent)` branch and the parameter
@@ -186,7 +159,7 @@ Trigger, and AuditLog as part of the broader cache migration effort
 | Phase | Content                                                                                    |
 | ----- | ------------------------------------------------------------------------------------------ |
 | P0    | Calendar cache split (done — `7293117`)                                                    |
-| P1    | This plan, plus Calendar reference implementation: `Get-OrchExcludedDate` + helper extract |
+| P1    | This plan, plus Calendar reference implementation: `Get-OrchCalendarDate` + helper extract (done — `8a74209`) |
 | P2    | Apply same pattern to User, Process, Trigger, AuditLog                                     |
 | P3    | Type B / Type C re-evaluation (separate planning)                                          |
 | P4    | Removal of `-Expand*` switches (next major; timing TBD)                                    |
