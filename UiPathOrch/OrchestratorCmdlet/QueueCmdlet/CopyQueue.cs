@@ -39,7 +39,7 @@ public class CopyQueueCommand : OrchestratorPSCmdlet
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        srcDrive._dicQueueLinks = null;
+        srcDrive.QueueLinks.ClearCache();
 
         // Since the cache is cleared just before copying, there is no point in retrieving it here
 

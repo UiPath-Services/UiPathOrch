@@ -151,8 +151,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         // _dicAssetLinks auto-cleared via _allTenantCache (AssetLinks: KeyedSingleCachePerTenant).
 
-        _dicQueueLinks = null;
-        _dicQueueLinks_Exceptions?.ClearCache();
+        // _dicQueueLinks auto-cleared via _allTenantCache (QueueLinks: KeyedSingleCachePerTenant).
 
         // _dicAuditLogs auto-cleared via _allTenantCache (AuditLogs: IncrementalCachePerTenant).
 
@@ -246,7 +245,8 @@ public partial class OrchDriveInfo : PSDriveInfo
         AssetLinks.ClearCache(k => k.folderId == folderId);
         _dicJobsHavingExecutionMedia?.TryRemove(folderId, out _);
         // Triggers / TriggersDetailed auto-cleared per folder via _allFolderCache.
-        _dicQueueLinks = null;
+        // Drop QueueLinks entries for this folder only (matching the AssetLinks pattern).
+        QueueLinks.ClearCache(k => k.folderId == folderId);
         // Releases auto-cleared per folder via _allFolderCache (ListCachePerFolder).
         _dicTestSetExecutions?.TryRemove(folderId, out _);
 
@@ -804,43 +804,20 @@ public partial class OrchDriveInfo : PSDriveInfo
         MachineClientSecrets.Get(licenseKey);
     #endregion
 
-    // key: (folderId, queueId)
-    // queueId alone should be unique, but include folderId in the key as well just in case.
-    internal ConcurrentDictionary<(Int64 folderId, Int64 queueId), AccessibleFoldersDto?>? _dicQueueLinks = null;
-    internal ExceptionsCachePer<(Int64, Int64)> _dicQueueLinks_Exceptions = new();
+    // Backwards-compat wrapper: QueueLinks (KeyedSingleCachePerTenant) keyed by
+    // (folderId, queueId). Path / PathName depend on caller's Folder + Queue
+    // references; set per-call (same pattern as AssetLinks).
     public AccessibleFoldersDto? GetFoldersForQueue(Folder folder, QueueDefinition queue)
     {
-        _dicQueueLinks_Exceptions.ThrowCachedExceptionIfAny((folder.Id ?? 0, queue.Id ?? 0));
-
-        if (_dicQueueLinks is null)
+        var folderShare = QueueLinks.Get((folder.Id ?? 0, queue.Id ?? 0));
+        if (folderShare?.AccessibleFolders is not null)
         {
-            lock (_dicQueueLinks_Exceptions)
+            string folderPath = folder.GetPSPath();
+            string queuePath = queue.GetPSPath();
+            foreach (var accessibleFolder in folderShare.AccessibleFolders)
             {
-                _dicQueueLinks ??= new ConcurrentDictionary<(Int64 folderId, Int64 queueId), AccessibleFoldersDto?>();
-            }
-        }
-
-        if (!_dicQueueLinks.TryGetValue((folder.Id ?? 0, queue.Id ?? 0), out var folderShare))
-        {
-            try
-            {
-                folderShare = OrchAPISession.GetFoldersForQueue(folder.Id ?? 0, queue.Id ?? 0);
-
-                if (folderShare is not null && folderShare.AccessibleFolders is not null)
-                {
-                    string folderPath = folder.GetPSPath();
-                    foreach (var accessibleFolder in folderShare.AccessibleFolders)
-                    {
-                        accessibleFolder.Path = folderPath;
-                        accessibleFolder.PathName = queue.GetPSPath();
-                    }
-                }
-                _dicQueueLinks[(folder.Id ?? 0, queue.Id ?? 0)] = folderShare;
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicQueueLinks_Exceptions.CacheException((folder.Id ?? 0, queue.Id ?? 0), ex);
-                throw;
+                accessibleFolder.Path = folderPath;
+                accessibleFolder.PathName = queuePath;
             }
         }
         return folderShare;
@@ -852,17 +829,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     /// the next GetFoldersForQueue call re-fetches just this queue's link
     /// set without flushing unrelated queues' caches.
     /// </summary>
-    public void ClearQueueLinkCache(Int64 queueId)
-    {
-        if (_dicQueueLinks is not null)
-        {
-            foreach (var key in _dicQueueLinks.Keys.Where(k => k.queueId == queueId).ToList())
-            {
-                _dicQueueLinks.TryRemove(key, out _);
-                _dicQueueLinks_Exceptions.ClearCache(key);
-            }
-        }
-    }
+    public void ClearQueueLinkCache(Int64 queueId) =>
+        QueueLinks.ClearCache(k => k.queueId == queueId);
 
     #region OrchQueueItem cache
     // key: folderId, <queueName, <queueItemId>>
@@ -1625,6 +1593,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerTenant<ExtendedCalendar> Calendars;
     public readonly KeyedSingleCachePerTenant<long, ExtendedCalendar> CalendarsDetailed;
     public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 assetId), AccessibleFoldersDto?> AssetLinks;
+    public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 queueId), AccessibleFoldersDto?> QueueLinks;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2056,6 +2025,10 @@ public partial class OrchDriveInfo : PSDriveInfo
         // No initializer: GetFoldersForAsset wrapper sets each AccessibleFolder's
         // Path / PathName per-call from the caller's Folder + Asset references
         // (neither is derivable from just the id tuple).
+
+        QueueLinks = new(this,
+            key => OrchAPISession.GetFoldersForQueue(key.folderId, key.queueId));
+        // Same pattern as AssetLinks: Path / PathName set per-call in the wrapper.
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
