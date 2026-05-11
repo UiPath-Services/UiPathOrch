@@ -1640,7 +1640,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedListCachePerTenant<string, LibraryVersion> LibraryVersions;
     public readonly KeyedListCachePerTenant<string, LibraryVersion> LibraryVersionsInHostFeed;
     public readonly KeyedListCachePerTenant<string, Package> Packages;
-    public readonly KeyedListCachePerTenant<string, NuLicensedGroupMember> PmUserLicenseGroupAllocations;
+    public readonly KeyedListCachePerOrganization<string, NuLicensedGroupMember> PmUserLicenseGroupAllocations;
     public readonly KeyedListCachePerTenant<string, LicenseRuntime> LicenseRuntimes;
 
     // Single-keyed entities (one entity per key, exception cached per key)
@@ -1970,7 +1970,9 @@ public partial class OrchDriveInfo : PSDriveInfo
         // caller's folder context (feedFolder isn't derivable from feedId alone).
 
         PmUserLicenseGroupAllocations = new(this,
-            groupId => OrchAPISession.GetPmLicenseGroupAllocations(groupId));
+            // API doesn't take partitionGlobalId; cache key is (partitionGlobalId, groupId)
+            // because allocations are scoped to an org's groups.
+            (_, groupId) => OrchAPISession.GetPmLicenseGroupAllocations(groupId));
         // No initializer: GetPmLicensedGroupAllocations wrapper sets
         // GroupName / PathGroupName per-call from the NuLicensedGroup arg
         // (only group.id participates in the cache key).
