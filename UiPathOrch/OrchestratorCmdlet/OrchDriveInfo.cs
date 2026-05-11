@@ -161,8 +161,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicBucketLinks = null;
         _dicBucketLinks_Exceptions?.ClearCache();
 
-        _dicCalendars = null;
-        _dicCalendars_Exceptions?.ClearCache();
+        // _dicCalendars auto-cleared via _allTenantCache (Calendars + CalendarsDetailed: ListCachePerTenant + KeyedSingleCachePerTenant).
 
         _dicCurrentUser = null;
         _dicCurrentUser_Exception?.ClearCache();
@@ -1475,71 +1474,16 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #region OrchCalendar cache
 
-    // Key: calenderId
-    internal ConcurrentDictionary<long, ExtendedCalendar>? _dicCalendars = null;
-    internal readonly ExceptionCachePerTenant _dicCalendars_Exceptions = new();
-    public ICollection<ExtendedCalendar> GetCalendars()
-    {
-        _dicCalendars_Exceptions.ThrowCachedExceptionIfAny();
-
-        if (_dicCalendars is null)
-        {
-            lock (_dicCalendars_Exceptions)
-            {
-                _dicCalendars ??= [];
-                try
-                {
-                    var calendars = OrchAPISession.GetCalendars()?.ToList();
-                    if (calendars is not null)
-                    {
-                        foreach (var calendar in calendars)
-                        {
-                            calendar.Path = NameColonSeparator;
-                            if (calendar.Id.HasValue)
-                            {
-                                _dicCalendars[calendar.Id.Value] = calendar;
-                            }
-                        }
-                    }
-                }
-                catch (HttpResponseException ex)
-                {
-                    _dicCalendars_Exceptions.CacheException(ex);
-                    throw;
-                }
-            }
-        }
-        return _dicCalendars?.Values ?? [];
-    }
-
-    // Caching exceptions here probably isn't necessary
-    //internal readonly ExceptionsCachePer<long> _dicCalendar_Exceptions = new();
-    public ExtendedCalendar? GetCalendar(ExtendedCalendar calendar)
-    {
-        if (_dicCalendars is null)
-        {
-            lock (_dicCalendars_Exceptions) // Must lock on the same object to avoid deadlocks.
-            {
-                _dicCalendars ??= [];
-            }
-        }
-
-        if (_dicCalendars.TryGetValue(calendar.Id!.Value, out var extendedCalendar))
-        {
-            if (calendar.ExcludedDates?.Length != 0) // Already fetched and cached, return as-is
-                return calendar;
-        }
-
-        calendar = OrchAPISession.GetCalendar(calendar.Id.Value);
-        if (calendar is null)
-        {
-            //_dicCalendars[calendarId] = null; // Adding null to the collection causes trouble later, so skip caching..
-            return null;
-        }
-        calendar.Path = NameColonSeparator;
-        _dicCalendars[calendar.Id!.Value] = calendar;
-        return calendar;
-    }
+    // Backwards-compat shims. The list endpoint (/odata/Calendars) and the
+    // per-id detail endpoint (/odata/Calendars(id)) return different shapes —
+    // the list omits TimeZoneId / ExcludedDates while the detail returns them
+    // — and there's no server-side field that reliably distinguishes shallow
+    // from detailed across Orchestrator versions. So they live in two
+    // separate caches: callers iterate the list via Calendars.Get() and
+    // resolve a single calendar's detail via CalendarsDetailed.Get(id).
+    public ICollection<ExtendedCalendar> GetCalendars() => Calendars.Get();
+    public ExtendedCalendar? GetCalendar(ExtendedCalendar calendar) =>
+        CalendarsDetailed.Get(calendar.Id!.Value);
 
     #endregion
 
@@ -1947,6 +1891,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<string, DirectoryObject[]?> SearchDirectoryCache;
     public readonly KeyedSingleCachePerTenant<string, AvailableUserBundles> PmAvailableUserBundles;
     public readonly KeyedSingleCachePerTenant<long, User> UsersDetailed;
+    public readonly ListCachePerTenant<ExtendedCalendar> Calendars;
+    public readonly KeyedSingleCachePerTenant<long, ExtendedCalendar> CalendarsDetailed;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2336,6 +2282,14 @@ public partial class OrchDriveInfo : PSDriveInfo
                     _dicUsers[detailedUser.Id.Value] = detailedUser;
                 }
             });
+
+        Calendars = new(this,
+            () => OrchAPISession.GetCalendars() ?? [],
+            calendar => calendar.Path = NameColonSeparator);
+
+        CalendarsDetailed = new(this,
+            calendarId => OrchAPISession.GetCalendar(calendarId),
+            (detailedCalendar, _) => detailedCalendar.Path = NameColonSeparator);
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?

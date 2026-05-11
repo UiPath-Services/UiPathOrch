@@ -31,8 +31,8 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
         IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
-        srcDrive._dicCalendars = null;
-        srcDrive._dicCalendars_Exceptions.ClearCache();
+        srcDrive.Calendars.ClearCache();
+        srcDrive.CalendarsDetailed.ClearCache();
 
         // This implementation is fine as is.
         ICollection<ExtendedCalendar>? srcCalendars;
@@ -84,7 +84,8 @@ public class CopyCalendarCommand : OrchestratorPSCmdlet
                         {
                             //createdCalendar.Path = dstDrive.NameColonSeparator;
                             //WriteObject(createdCalendar);
-                            dstDrive._dicCalendars = null;
+                            dstDrive.Calendars.ClearCache();
+                            dstDrive.CalendarsDetailed.ClearCache();
                         }
                     }
                     catch (Exception ex)

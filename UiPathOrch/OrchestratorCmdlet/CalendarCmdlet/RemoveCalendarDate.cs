@@ -153,7 +153,8 @@ public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
                     };
 
                     var updatedCalendar = drive.OrchAPISession.PutCalendar(postingCalendar);
-                    drive._dicCalendars = null;
+                    drive.Calendars.ClearCache();
+                    drive.CalendarsDetailed.ClearCache();
 
                     // updatedCalendar has incomplete data. Key is also empty.
                     // It's better not to call WriteObject().

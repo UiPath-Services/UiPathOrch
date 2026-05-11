@@ -23,6 +23,7 @@ public class RemoveCalendarCommand : RemoveDriveEntityCmdletBase<ExtendedCalenda
     protected override void Remove(OrchDriveInfo drive, ExtendedCalendar calendar)
     {
         drive.OrchAPISession.RemoveCalendar(calendar.Id ?? 0);
-        drive._dicCalendars = null;
+        drive.Calendars.ClearCache();
+        drive.CalendarsDetailed.ClearCache();
     }
 }

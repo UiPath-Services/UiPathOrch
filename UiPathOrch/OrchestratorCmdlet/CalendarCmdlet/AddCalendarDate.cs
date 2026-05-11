@@ -142,7 +142,8 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
                                 .ToArray() ?? []
                         };
                         var createdCalendar = drive.OrchAPISession.PostCalendar(postingCalendar);
-                        drive._dicCalendars = null;
+                        drive.Calendars.ClearCache();
+                        drive.CalendarsDetailed.ClearCache();
                         //if (createdCalendar is not null)
                         //{
                         //    createdCalendar.Path = drive.NameColon;
@@ -189,7 +190,8 @@ public class AddCalendarDateCommand : OrchestratorPSCmdlet
                         };
 
                         var updatedCalendar = drive.OrchAPISession.PutCalendar(postingCalendar);
-                        drive._dicCalendars = null;
+                        drive.Calendars.ClearCache();
+                        drive.CalendarsDetailed.ClearCache();
                         //if (updatedCalendar is not null)
                         //{
                         //    updatedCalendar.Path = drive.NameColon;
