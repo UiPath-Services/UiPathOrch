@@ -49,9 +49,10 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
             foreach (var (drive, folder) in drivesFolders)
             {
                 // Use the cache if available
-                if (drive._dicJobsHavingExecutionMedia is not null && drive._dicJobsHavingExecutionMedia.TryGetValue(folder.Id ?? 0, out var jobsHavingMedia))
+                var cached = drive.JobsHavingExecutionMedia.GetCache(folder);
+                if (cached is not null)
                 {
-                    foreach (var media in jobsHavingMedia)
+                    foreach (var media in cached.Values)
                     {
                         results.Add((folder.Id ?? 0, media));
                     }
@@ -118,16 +119,7 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
         int totalFileNum = 0;
         foreach (var (drive, folder) in drivesFolders)
         {
-            if (drive._dicJobsHavingExecutionMedia is null)
-            {
-                continue;
-            }
-
-            if (!drive._dicJobsHavingExecutionMedia.TryGetValue(folder.Id ?? 0, out var allMediasInFolder))
-            {
-                continue;
-            }
-
+            var allMediasInFolder = drive.JobsHavingExecutionMedia.GetCache(folder)?.Values;
             if (allMediasInFolder is null)
             {
                 continue;
@@ -159,16 +151,7 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
 
             string path = folder.GetPSPath();
 
-            if (drive._dicJobsHavingExecutionMedia is null)
-            {
-                continue;
-            }
-
-            if (!drive._dicJobsHavingExecutionMedia.TryGetValue(folder.Id ?? 0, out var allMediasInFolder))
-            {
-                continue;
-            }
-
+            var allMediasInFolder = drive.JobsHavingExecutionMedia.GetCache(folder)?.Values;
             if (allMediasInFolder is null)
             {
                 continue;
@@ -177,7 +160,7 @@ public class SaveJobMediaCommand : OrchestratorPSCmdlet
             List<ExecutionMedia> mediasToBeSaved;
             if (JobId is null)
             {
-                mediasToBeSaved = allMediasInFolder;
+                mediasToBeSaved = allMediasInFolder.ToList();
             }
             else
             {

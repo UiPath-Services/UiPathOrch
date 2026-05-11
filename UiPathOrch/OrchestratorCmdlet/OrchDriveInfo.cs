@@ -162,7 +162,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicCurrentUser = null;
         _dicCurrentUser_Exception?.ClearCache();
 
-        _dicJobsHavingExecutionMedia = null;
+        // _dicJobsHavingExecutionMedia auto-cleared via _allFolderCache (JobsHavingExecutionMedia: IncrementalCachePerFolder).
 
         // _dicLicenseRuntime auto-cleared via _allTenantCache (LicenseRuntimes: KeyedListCachePerTenant).
 
@@ -238,7 +238,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         // Drop AssetLinks entries for this folder only (the original code dropped
         // the entire dict; predicate-based clear is more precise).
         AssetLinks.ClearCache(k => k.folderId == folderId);
-        _dicJobsHavingExecutionMedia?.TryRemove(folderId, out _);
+        // JobsHavingExecutionMedia auto-cleared per folder via _allFolderCache (IncrementalCachePerFolder).
         // Triggers / TriggersDetailed auto-cleared per folder via _allFolderCache.
         // Drop QueueLinks entries for this folder only (matching the AssetLinks pattern).
         QueueLinks.ClearCache(k => k.folderId == folderId);
@@ -330,47 +330,13 @@ public partial class OrchDriveInfo : PSDriveInfo
         return logs.AsReadOnly();
     }
 
-    // Key: <folderId, <JobId, ExecutionMedia>>
-    internal ConcurrentDictionary<Int64, List<ExecutionMedia>>? _dicJobsHavingExecutionMedia = null;
-    public ReadOnlyCollection<ExecutionMedia> GetExecutionMedia(Folder folder, ulong skip = 0, ulong first = ulong.MaxValue)
-    {
-        if (_dicJobsHavingExecutionMedia is null)
-        {
-            lock (this)
-            {
-                _dicJobsHavingExecutionMedia ??= [];
-            }
-        }
-
-        var result = OrchAPISession.GetExecutionMedia(folder.Id ?? 0, skip, first).ToList();
-        _dicJobsHavingExecutionMedia[folder.Id ?? 0] = result;
-
-        #region  Add to Jobs cache only if this JobId is not already cached
-        var jobs = Jobs.GetCache(folder);
-        foreach (var media in result)
-        {
-            if (media.JobId.HasValue && (jobs is null || !jobs.ContainsKey(media.JobId.Value!)))
-            {
-                Jobs.AddToCache(folder, new Job
-                {
-                    Id = media.JobId,
-                    Path = folder.GetPSPath(),
-                    ReleaseName = media.ReleaseName,
-                    HasMediaRecorded = true,
-                });
-            }
-        }
-        #endregion
-
-        string path = folder.GetPSPath();
-        foreach (var media in result)
-        {
-            media.Path = path;
-            //jobsHavingExecutionMedia[jobRecording.JobId ?? 0] = jobRecording;
-        }
-
-        return result.AsReadOnly();
-    }
+    // Backwards-compat shim: delegates to JobsHavingExecutionMedia
+    // (IncrementalCachePerFolder<long, ExecutionMedia>). The cross-cache write
+    // to Jobs (originally added synthetic Job entries with HasMediaRecorded=true)
+    // is dropped here, matching the trade-off accepted in the Calendar / User /
+    // Process / Trigger migrations.
+    public ReadOnlyCollection<ExecutionMedia> GetExecutionMedia(Folder folder, ulong skip = 0, ulong first = ulong.MaxValue) =>
+        JobsHavingExecutionMedia.Fetch(folder, query: null, skip, first);
 
     #region OrchReleaseList cache
     // This API is undocumented, and it seems it may not work on older versions of Orchestrator.
@@ -1501,6 +1467,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 bucketId), AccessibleFoldersDto?> BucketLinks;
     public readonly KeyedListCachePerTenant<(string feedId, string packageId), Package> PackageVersions;
     public readonly KeyedListCachePerTenant<(string feedId, string packageId, string version), PackageEntryPoint> PackageEntryPoints;
+    public readonly IncrementalCachePerFolder<long, ExecutionMedia> JobsHavingExecutionMedia;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -1950,6 +1917,14 @@ public partial class OrchDriveInfo : PSDriveInfo
         PackageEntryPoints = new(this,
             key => OrchAPISession.GetPackageEntryPoints(key.feedId, key.packageId, key.version));
         // No initializer needed: PackageEntryPoint has no per-call fields.
+
+        JobsHavingExecutionMedia = new(this,
+            // OrchAPISession.GetExecutionMedia takes only (folderId, skip, first);
+            // the IncrementalCachePerFolder fetcher signature includes query/
+            // orderBy/orderAscending which we ignore.
+            (folderId, _, skip, first, _, _) => OrchAPISession.GetExecutionMedia(folderId, skip, first),
+            media => media.Id ?? 0,
+            (media, folderPath) => media.Path = folderPath);
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
