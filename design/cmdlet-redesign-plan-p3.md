@@ -163,19 +163,25 @@ This matches the existing `PerOrganization` classes' threading model.
 
 External callsite counts measured against `master` at `7015ea5`.
 
-### Group A — Tuple-key single-value, mostly PerTenant (4)
+### Group A — Tuple-key single-value PerTenant (3, link caches only)
 
 P3.1 will be the **first practical use of `KeyedSingleCachePerTenant`
 with a tuple TKey**. Tuple-keyed `ExceptionsCachePer<(folderId, key)>`
 is already in production via `KeyedSingleCachePerFolder` (commit
 `7ec1ec3`), so the exception-cache half is known to work.
 
-| Field                       | TKey                          | TEntity                  | Scope         | Class                                                   |
-| --------------------------- | ----------------------------- | ------------------------ | ------------- | ------------------------------------------------------- |
-| `_dicAssetLinks`            | `(folderId, assetId)`         | `AccessibleFoldersDto?`  | Tenant        | `KeyedSingleCachePerTenant`                             |
-| `_dicQueueLinks`            | `(folderId, queueId)`         | `AccessibleFoldersDto?`  | Tenant        | `KeyedSingleCachePerTenant`                             |
-| `_dicBucketLinks`           | `(folderId, bucketId)`        | `AccessibleFoldersDto?`  | Tenant        | `KeyedSingleCachePerTenant`                             |
-| `_dicPmBulkResolveByName`   | `(string, string)`            | `PmGroupMember?`         | **Organization** | `KeyedSingleCachePerOrganization` (new class from P3.0a) |
+| Field                       | TKey                          | TEntity                  | Class                                                   |
+| --------------------------- | ----------------------------- | ------------------------ | ------------------------------------------------------- |
+| `_dicAssetLinks`            | `(folderId, assetId)`         | `AccessibleFoldersDto?`  | `KeyedSingleCachePerTenant`                             |
+| `_dicQueueLinks`            | `(folderId, queueId)`         | `AccessibleFoldersDto?`  | `KeyedSingleCachePerTenant`                             |
+| `_dicBucketLinks`           | `(folderId, bucketId)`        | `AccessibleFoldersDto?`  | `KeyedSingleCachePerTenant`                             |
+
+`_dicPmBulkResolveByName` was originally in this group but moved to
+out-of-scope (see [Out of scope / future](#out-of-scope--future-p4-candidates)).
+It uses a batched bulk-lookup access pattern (chunks of 20 names per
+API call) that doesn't fit `KeyedSingleCachePerOrganization`'s
+single-key `Get(key)` API. Both the scope correction (org-scoped) and
+the batched-lookup shape need a different design.
 
 The 3 link caches expose invalidation through `Clear<X>LinkCache`
 wrappers (line 683, 885, 1220 in OrchDriveInfo). Wrapper bodies
@@ -324,6 +330,23 @@ Surfaced during P3 review but not addressed by P3 itself:
    variants.** If more PM entities surface that need keyed
    per-organization caching (single or list), the classes added in
    P3.0a become reusable infrastructure.
+3. **`_dicPmBulkResolveByName` migration.** Originally planned as
+   part of P3.1 Group A. Two issues prevent a mechanical migration:
+   - **Shape**: the cache backs `PmBulkResolveByName<T>(...)` which
+     does batched bulk lookup (chunks of 20 names per API call),
+     not single-key Get. The standard `KeyedSingleCachePerOrganization.Get(key)`
+     API doesn't fit; either the wrapper would have to bypass the
+     cache class for bulk fetch (defeating the abstraction) or the
+     class would need a `GetMany / FetchMany` API just for one
+     consumer.
+   - **Scope**: the existing field is per-drive (`internal
+     ConcurrentDictionary<(string kind, string name), PmGroupMember?>`
+     in OrchDriveInfo) but the data is org-scoped — the same
+     mistake category as the P3.0 corrections.
+   Address both together when an org-scoped batched-bulk cache shape
+   is needed elsewhere (or design a one-off org-scoped raw-cache
+   layout that includes partitionGlobalId in the key, similar to
+   what the static-org-cache classes do internally).
 
 ## Process / risk notes
 
