@@ -16,6 +16,8 @@ public class GetCalendarCommand : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
+    // Deprecated. Routes to Get-OrchCalendarDate via the shared helper. Kept
+    // for backward compat; will be removed in a future major release.
     [Parameter]
     public SwitchParameter ExpandExcludedDate { get; set; }
 
@@ -36,93 +38,63 @@ public class GetCalendarCommand : OrchestratorPSCmdlet
     public Encoding? CsvEncoding { get; set; }
 
     private static readonly string DefaultCsvName = "ExportedCalendars.csv";
-    private static readonly string[] CsvHeaders = ["Path", "Name", "ExcludedDate"];
-
-    private static void WriteCsvContent(StreamWriter writer, ExcludedDateNamed output)
-    {
-        // Write a data row for each calendar
-        string[] line = [
-            EscapeCsvValue(output.Path, true),
-            EscapeCsvValue(output.Name, true),
-            EscapeCsvValue(output.ExcludedDate?.ToShortDateString())
-        ];
-        writer.WriteCsvLine(line);
-    }
 
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-        using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
+        // Both -ExpandExcludedDate and -ExportCsv historically emitted
+        // ExcludedDateNamed rows (CSV header [Path,Name,ExcludedDate]) so
+        // the file round-trips with Add-OrchCalendarDate. Both paths now
+        // delegate to Get-OrchCalendarDate via the shared helper and emit
+        // a deprecation warning pointing the user there. The CSV format
+        // itself is unchanged, so existing exported files keep importing.
+        bool useDetailPath = ExpandExcludedDate.IsPresent || !string.IsNullOrEmpty(ExportCsv);
 
+        if (useDetailPath)
+        {
+            string trigger = ExpandExcludedDate.IsPresent ? "'-ExpandExcludedDate'" : "'-ExportCsv'";
+            string suggestion = !string.IsNullOrEmpty(ExportCsv)
+                ? "Use 'Get-OrchCalendarDate -ExportCsv' instead."
+                : "Use 'Get-OrchCalendarDate' instead.";
+            WriteWarning(
+                $"{trigger} on Get-OrchCalendar is deprecated and will be removed in a future " +
+                $"major release. {suggestion}");
+
+            var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetCalendarDateCommand.CsvHeaders);
+
+            GetCalendarDateCommand.EmitCalendarDates(this, drives, wpName, IncludePastDate.IsPresent, writer);
+
+            if (!string.IsNullOrEmpty(ExportCsv))
+            {
+                WriteCSVExportedMessage(this, providerCsvPath);
+            }
+            return;
+        }
+
+        // List-only path: emit shallow ExtendedCalendar entries from each drive.
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
             try
             {
                 var calendars = drive.GetCalendars();
-                var targetCalendars = calendars?.FilterByWildcards(c => c?.Name, wpName).OrderBy(c => c.Name).ToList();
+                var targetCalendars = calendars?
+                    .FilterByWildcards(c => c?.Name, wpName)
+                    .OrderBy(c => c.Name)
+                    .ToList();
 
                 if (targetCalendars is null || targetCalendars.Count == 0) continue;
 
-                if (!ExpandExcludedDate.IsPresent && writer is null)
-                {
-                    WriteObject(targetCalendars, true);
-                }
-                else
-                {
-                    using var results = OrchThreadPool.RunForEach(targetCalendars,
-                        calendar => calendar.GetPSPath(),
-                        calendar => calendar,
-                        calendar => drive.GetCalendar(calendar));
-
-                    foreach (var result in results)
-                    {
-                        try
-                        {
-                            var detailedCalendar = result.GetResult(cancelHandler.Token);
-                            if (detailedCalendar is null) continue;
-
-                            if (detailedCalendar.ExcludedDates is not null)
-                            {
-                                string pathName = detailedCalendar.GetPSPath();
-                                foreach (var date in detailedCalendar.ExcludedDates
-                                    .Where(d => (IncludePastDate.IsPresent || d >= DateTime.Today))
-                                    .OrderBy(d => d))
-                                {
-                                    var output = new ExcludedDateNamed()
-                                    {
-                                        Path = drive.NameColonSeparator,
-                                        Name = detailedCalendar.Name,
-                                        PathName = pathName,
-                                        ExcludedDate = date
-                                    };
-
-                                    if (writer is not null) { WriteCsvContent(writer, output); }
-                                    else { WriteObject(output); }
-                                }
-                            }
-                        }
-                        catch (OrchException ex)
-                        {
-                            WriteError(new ErrorRecord(ex, "GetCalendarError", ErrorCategory.InvalidOperation, ex.Target));
-                            continue;
-                        }
-                    }
-                }
+                WriteObject(targetCalendars, true);
             }
             catch (Exception ex)
             {
                 WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetCalendarError", ErrorCategory.InvalidOperation, drive));
                 continue;
             }
-        }
-
-        if (!string.IsNullOrEmpty(ExportCsv))
-        {
-            WriteCSVExportedMessage(this, providerCsvPath);
         }
     }
 }
