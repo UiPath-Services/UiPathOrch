@@ -2136,6 +2136,19 @@ Describe 'CSV Export Additional Types' {
         $header | Should -Match 'UserName'
     }
 
+    It 'Get-OrchUserDetail does not throw with wildcard -UserName' {
+        # -UserName is mandatory by design; '*' is the explicit "all users" form.
+        { Get-OrchUserDetail -Path "${script:Drive}:\" -UserName '*' } | Should -Not -Throw
+    }
+
+    It 'Get-OrchUser -ExpandDetails emits a deprecation warning naming Get-OrchUserDetail' {
+        $warnings = $null
+        Get-OrchUser -Path "${script:Drive}:\" -ExpandDetails `
+                     -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
+        ($warnings | Where-Object { $_ -match "Get-OrchUserDetail" }) | Should -Not -BeNullOrEmpty `
+            -Because "the deprecation warning must name the canonical cmdlet"
+    }
+
     It 'Get-OrchRole -ExportCsv creates a CSV file' {
         $csv = Join-Path $script:TempDir 'roles.csv'
         Get-OrchRole -Path "${script:Drive}:\" -ExportCsv $csv

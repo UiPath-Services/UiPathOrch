@@ -32,7 +32,9 @@ Gets user information from UiPath Orchestrator tenants. Users are tenant-scoped 
 
 Users have a Type property that indicates their directory type: DirectoryUser, DirectoryGroup, DirectoryRobot, or DirectoryExternalApplication. Each user can have assigned tenant roles, license settings (MayHaveUserSession, MayHaveRobotSession, MayHaveUnattendedSession), personal workspace configuration, and unattended robot settings.
 
-This cmdlet supports filtering by UserName, FullName, and Type. When -ExpandDetails is specified, the cmdlet retrieves detailed information for each user including unattended robot settings, execution settings, and role assignments. Without -ExpandDetails, only summary user information is returned.
+This cmdlet supports filtering by UserName, FullName, and Type. By default it returns shallow user records from the list endpoint. To fetch the per-user detail payload (unattended robot settings, execution settings, role assignments), use `Get-OrchUserDetail` — which makes one API call per matched user and requires an explicit `-UserName` selector.
+
+> **Deprecated:** `-ExpandDetails` is deprecated and will be removed in a future major release. Use `Get-OrchUserDetail` instead. `-ExportCsv` continues to be supported and transparently uses the detail cache to enrich the exported rows (the CSV row shape is the User entity, matching this cmdlet's output type).
 
 The -UserName, -FullName, -Type, and -Path parameters support tab completion. Press [Ctrl+Space] or [Tab] to see available values. The -UserName and -FullName completions are dynamically populated from actual tenant users. The -Type completion suggests DirectoryUser, DirectoryGroup, DirectoryRobot, and DirectoryExternalApplication.
 
@@ -78,13 +80,13 @@ PS Orch1:\> Get-OrchUser -Type DirectoryRobot
 
 Gets all robot accounts registered in the tenant. Valid values for -Type are DirectoryUser, DirectoryGroup, DirectoryRobot, and DirectoryExternalApplication.
 
-### Example 5: Get users with detailed information
+### Example 5 (deprecated): Get users with detailed information
 
 ```powershell
 PS Orch1:\> Get-OrchUser -ExpandDetails
 ```
 
-Gets all users with expanded details including unattended robot settings, execution settings, credential store assignments, and update policy configurations.
+Emits a deprecation warning and routes through `Get-OrchUserDetail`. Use `Get-OrchUserDetail -UserName '*'` directly instead.
 
 ### Example 6: Get a user from a specific drive
 
@@ -148,7 +150,7 @@ HelpMessage: ''
 
 ### -ExpandDetails
 
-Retrieves detailed information for each user by making individual API calls per user. Detailed information includes unattended robot settings (UR_UserName, UR_CredentialStore, UR_CredentialType, etc.), execution settings (ES_TracingLevel, ES_LoginToConsole, etc.), and update policy configuration. When -ExportCsv is specified, -ExpandDetails is implied automatically.
+**Deprecated.** Routes to `Get-OrchUserDetail` and emits a deprecation warning. Use `Get-OrchUserDetail` directly. When `-ExportCsv` is specified the same detail enrichment runs automatically (and `-ExportCsv` is NOT deprecated, since the CSV row shape matches this cmdlet's output type).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -279,6 +281,8 @@ When -ExpandDetails is specified, the cmdlet makes a separate API call for each 
 The -ExportCsv parameter produces a CSV with columns: Path, UserName, FullName, Type, IsExternalLicensed, MayHaveUserSession, MayHaveRobotSession, MayHaveUnattendedSession, MayHavePersonalWorkspace, RestrictToPersonalWorkspace, UpdatePolicyType, UpdatePolicyVersion, UR_UserName, UR_Password, UR_CredentialStore, UR_CredentialExternalName, UR_CredentialType, UR_LimitConcurrentExecution, ES_TracingLevel, ES_StudioNotifyServer, ES_LoginToConsole, ES_ResolutionWidth, ES_ResolutionHeight, ES_ResolutionDepth, ES_FontSmoothing, ES_AutoDownloadProcess, Roles.
 
 ## RELATED LINKS
+
+[Get-OrchUserDetail](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchUserDetail.md)
 
 [Add-OrchUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchUser.md)
 

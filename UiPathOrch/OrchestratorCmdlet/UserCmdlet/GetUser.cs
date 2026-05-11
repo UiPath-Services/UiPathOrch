@@ -27,6 +27,8 @@ public class GetUserCommand : OrchestratorPSCmdlet
     [ValidateDictionaryKey<DirectoryTypeItems, int>(AllowWildcard = true)]
     public string[]? Type { get; set; }
 
+    // Deprecated. Routes to Get-OrchUserDetail via the shared helper. Kept
+    // for backward compat; will be removed in a future major release.
     [Parameter]
     public SwitchParameter ExpandDetails { get; set; }
 
@@ -43,92 +45,43 @@ public class GetUserCommand : OrchestratorPSCmdlet
     public Encoding? CsvEncoding { get; set; }
 
     private static readonly string DefaultCsvName = "ExportedUsers.csv";
-    private static readonly string[] CsvHeaders = [
-        "Path",
-        "UserName",
-        "FullName",
-        "Type",
-        "IsExternalLicensed",
-        "MayHaveUserSession",
-        "MayHaveRobotSession",
-        "MayHaveUnattendedSession",
-        "MayHavePersonalWorkspace",
-        "RestrictToPersonalWorkspace",
-        "UpdatePolicyType",
-        "UpdatePolicyVersion",
-        "UR_UserName",
-        "UR_Password",
-        "UR_CredentialStore",
-        "UR_CredentialExternalName",
-        "UR_CredentialType",
-        "UR_LimitConcurrentExecution",
-        "ES_TracingLevel",
-        "ES_StudioNotifyServer",
-        "ES_LoginToConsole",
-        "ES_ResolutionWidth",
-        "ES_ResolutionHeight",
-        "ES_ResolutionDepth",
-        "ES_FontSmoothing",
-        "ES_AutoDownloadProcess",
-        "Roles"
-    ];
-
-    private static void WriteCsvContent(StreamWriter writer, OrchDriveInfo drive, User? p)
-    {
-        if (p is null) return;
-
-        string ur_credentialStore = null;
-        if (p.UnattendedRobot?.CredentialStoreId is not null)
-        {
-            var credentialStores = drive.CredentialStores.Get();
-            var credentialStore = credentialStores.FirstOrDefault(c => c.Id == p.UnattendedRobot.CredentialStoreId);
-            ur_credentialStore = credentialStore?.Name;
-        }
-
-        string[] line = [
-            EscapeCsvValue(p.Path, true),
-            EscapeCsvValue(p.UserName, true),
-            EscapeCsvValue(p.FullName),
-            EscapeCsvValue(p.Type),
-            EscapeCsvValue(p.IsExternalLicensed),
-            EscapeCsvValue(p.ExplicitMayHaveUserSession ?? p.MayHaveUserSession),
-            EscapeCsvValue(p.ExplicitMayHaveRobotSession ?? p.MayHaveRobotSession),
-            EscapeCsvValue(p.MayHaveUnattendedSession),
-            EscapeCsvValue(p.ExplicitMayHavePersonalWorkspace ?? p.MayHavePersonalWorkspace),
-            EscapeCsvValue(p.ExplicitRestrictToPersonalWorkspace ?? p.RestrictToPersonalWorkspace),
-            EscapeCsvValue(p.UpdatePolicy?.Type),
-            EscapeCsvValue(p.UpdatePolicy?.SpecificVersion),
-            EscapeCsvValue(p.UnattendedRobot?.UserName),
-            EscapeCsvValue(""), // p.UnattendedRobot?.Password // This field contains garbage text, so we skip outputting it
-            EscapeCsvValue(ur_credentialStore, true),
-            EscapeCsvValue(p.UnattendedRobot?.CredentialExternalName),
-            EscapeCsvValue(p.UnattendedRobot?.CredentialType),
-            EscapeCsvValue(p.UnattendedRobot?.LimitConcurrentExecution),
-            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.TracingLevel),
-            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.StudioNotifyServer),
-            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.LoginToConsole),
-            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.ResolutionWidth),
-            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.ResolutionHeight),
-            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.ResolutionDepth),
-            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.FontSmoothing),
-            EscapeCsvValue(p.UnattendedRobot?.ExecutionSettings?.AutoDownloadProcess),
-            EscapeCsvValue(p.RolesList, true)
-        ];
-
-        writer.WriteCsvLine(line);
-    }
 
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(Path);
-
         var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
-        var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-        using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
+        // Detail path: triggered by either the deprecated -ExpandDetails switch
+        // or by -ExportCsv (the CSV row shape includes detail fields, so the
+        // user-facing contract has always been "CSV implies detail enrichment").
+        // -ExportCsv stays supported (output type matches CSV row shape: User);
+        // only -ExpandDetails emits a deprecation warning.
+        bool useDetailPath = ExpandDetails.IsPresent || !string.IsNullOrEmpty(ExportCsv);
 
+        if (useDetailPath)
+        {
+            if (ExpandDetails.IsPresent)
+            {
+                WriteWarning(
+                    "'-ExpandDetails' on Get-OrchUser is deprecated and will be removed in a " +
+                    "future major release. Use 'Get-OrchUserDetail' instead.");
+            }
+
+            var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetUserDetailCommand.CsvHeaders);
+
+            GetUserDetailCommand.EmitDetailedUsers(this, drives, wpUserName, wpFullName, wpType, writer);
+
+            if (!string.IsNullOrEmpty(ExportCsv))
+            {
+                WriteCSVExportedMessage(this, providerCsvPath);
+            }
+            return;
+        }
+
+        // List-only path: emit shallow User entries from each drive.
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
@@ -142,49 +95,14 @@ public class GetUserCommand : OrchestratorPSCmdlet
                     .OrderBy(u => u.UserName)
                     .ToList();
 
-                // If details need to be retrieved, spawn a thread per user
-                // and call GetUser(user)
-                if (ExpandDetails.IsPresent || writer is not null)
-                {
-                    using var results = OrchThreadPool.RunForEach(targetUsers
-                            .FilterByWildcards(u => u?.FullName, wpFullName)
-                            .FilterByWildcards(u => u?.UserName, wpUserName)
-                            .OrderBy(u => u.UserName),
-                        user => user.GetPSPath(),
-                        user => user,
-                        user => drive.GetUser(user));
+                if (targetUsers.Count == 0) continue;
 
-                    int index = 0;
-                    using var reporter = new ProgressReporter(this, 1, targetUsers.Count, "Get users... ");
-                    foreach (var result in results)
-                    {
-                        try
-                        {
-                            var detailedUser = result.GetResult(cancelHandler.Token);
-                            if (detailedUser is null) continue;
-
-                            reporter.WriteProgress(++index, detailedUser.GetPSPath());
-
-                            if (writer is not null) WriteCsvContent(writer, drive, detailedUser);
-                            else WriteObject(detailedUser);
-                        }
-                        catch (OrchException ex)
-                        {
-                            WriteError(new ErrorRecord(ex, "GetUserError", ErrorCategory.InvalidOperation, ex.Target));
-                        }
-                    }
-                }
-                else
-                {
-                    WriteObject(targetUsers, true);
-                }
+                WriteObject(targetUsers, true);
             }
             catch (Exception ex)
             {
                 WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetUserError", ErrorCategory.InvalidOperation, drive));
             }
         }
-
-        WriteCSVExportedMessage(this, providerCsvPath);
     }
 }

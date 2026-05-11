@@ -129,6 +129,7 @@ CmdletsToExport = @(
 'Get-OrchRobot',
 
 'Get-OrchUser',
+'Get-OrchUserDetail',
 'Get-OrchUserPrivilege',
 'Add-OrchUser',
 'Update-OrchUser',
