@@ -3131,7 +3131,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         // #8 Copy triggers
                         msg = "Copying triggers...          ";
                         reporter.WriteProgress(++rootIndex);
-                        srcDrive._dicTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
+                        srcDrive.Triggers.ClearCache(srcFolder);
                         using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, msg);
                         CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTriggers, true, cancelToken);
 

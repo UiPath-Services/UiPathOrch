@@ -410,10 +410,8 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                         {
                             created.Path = folder.GetPSPath();
                             WriteObject(created);
-                            drive._dicTriggers?.TryRemove(folder.Id.Value, out _);
-                            drive._dicTriggers_Exceptions.ClearCache();
-                            drive._dicTriggersDetailed?.TryRemove(folder.Id.Value, out _);
-                            drive._dicTriggersDetailed_Exceptions.ClearCache();
+                            drive.Triggers.ClearCache(folder);
+                            drive.TriggersDetailed.ClearCache(folder);
                         }
                     }
                     catch (Exception ex)

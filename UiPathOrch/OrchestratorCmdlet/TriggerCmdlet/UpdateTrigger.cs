@@ -388,10 +388,8 @@ public class UpdateTriggerCommand : OrchestratorPSCmdlet
                     try
                     {
                         drive.OrchAPISession.PutProcessSchedule(folder.Id!.Value, postTrigger);
-                        drive._dicTriggers?.TryRemove(folder.Id ?? 0, out _);
-                        drive._dicTriggers_Exceptions.ClearCache();
-                        drive._dicTriggersDetailed?.TryRemove(folder.Id ?? 0, out _);
-                        drive._dicTriggersDetailed_Exceptions.ClearCache();
+                        drive.Triggers.ClearCache(folder);
+                        drive.TriggersDetailed.ClearCache(folder);
                     }
                     catch (Exception ex)
                     {

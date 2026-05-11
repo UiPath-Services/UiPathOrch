@@ -68,10 +68,8 @@ public class CopyTriggerCommand : OrchestratorPSCmdlet
                     srcDrive, srcFolder, wpName!,
                     dstDrive, dstFolder, reporterTriggers,
                     false, cancelHandler.Token);
-                dstDrive._dicTriggers?.TryRemove(dstFolder.Id ?? 0, out _);
-                dstDrive._dicTriggers_Exceptions.ClearCache();
-                dstDrive._dicTriggersDetailed?.TryRemove(dstFolder.Id ?? 0, out _);
-                dstDrive._dicTriggersDetailed_Exceptions.ClearCache();
+                dstDrive.Triggers.ClearCache(dstFolder);
+                dstDrive.TriggersDetailed.ClearCache(dstFolder);
             }
             catch (OperationCanceledException)
             {

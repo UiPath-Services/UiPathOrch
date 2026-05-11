@@ -82,10 +82,8 @@ public class EnableTriggerCommandBase<Enable> : OrchestratorPSCmdlet where Enabl
                         try
                         {
                             drive.OrchAPISession.EnableProcessSchedule(folder.Id ?? 0, [trigger.Id ?? 0], Enable.Value);
-                            drive._dicTriggers?.TryRemove(folder.Id ?? 0, out _);
-                            drive._dicTriggers_Exceptions.ClearCache();
-                            drive._dicTriggersDetailed?.TryRemove(folder.Id ?? 0, out _);
-                            drive._dicTriggersDetailed_Exceptions.ClearCache();
+                            drive.Triggers.ClearCache(folder);
+                            drive.TriggersDetailed.ClearCache(folder);
                         }
                         catch (Exception ex)
                         {

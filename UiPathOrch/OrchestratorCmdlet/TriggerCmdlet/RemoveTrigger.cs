@@ -23,9 +23,7 @@ public class RemoveTriggerCommand : RemoveFolderEntityCmdletBase<ProcessSchedule
     protected override void Remove(OrchDriveInfo drive, Folder folder, ProcessSchedule trigger)
     {
         drive.OrchAPISession.DeleteProcessSchedule(folder.Id ?? 0, trigger.Id ?? 0);
-        drive._dicTriggers?.TryRemove(folder.Id ?? 0, out _);
-        drive._dicTriggers_Exceptions.ClearCache();
-        drive._dicTriggersDetailed?.TryRemove(folder.Id ?? 0, out _);
-        drive._dicTriggersDetailed_Exceptions.ClearCache();
+        drive.Triggers.ClearCache(folder);
+        drive.TriggersDetailed.ClearCache(folder);
     }
 }

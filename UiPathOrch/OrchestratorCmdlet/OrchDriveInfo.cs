@@ -189,11 +189,8 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicTestSetExecutions_Exceptions?.ClearCache();
         _dicTestCaseExecutions_Exceptions?.ClearCache();
 
-        _dicTriggers = null;
-        _dicTriggers_Exceptions?.ClearCache();
-
-        _dicTriggersDetailed = null;
-        _dicTriggersDetailed_Exceptions.ClearCache();
+        // _dicTriggers / _dicTriggersDetailed auto-cleared via _allFolderCache
+        // (Triggers: ListCachePerFolder, TriggersDetailed: KeyedSingleCachePerFolder).
 
         _dicQueueItems = null;
 
@@ -248,13 +245,12 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         _dicAssetLinks = null;
         _dicJobsHavingExecutionMedia?.TryRemove(folderId, out _);
-        _dicTriggers?.TryRemove(folderId, out _);
+        // Triggers / TriggersDetailed auto-cleared per folder via _allFolderCache.
         _dicQueueLinks = null;
         // Releases auto-cleared per folder via _allFolderCache (ListCachePerFolder).
         _dicTestSetExecutions?.TryRemove(folderId, out _);
 
         _dicPackages_Exceptions?.ClearCache();
-        _dicTriggers_Exceptions?.ClearCache();
     }
 
     //public void ClearFolderCacheRecurse(Folder folder)
@@ -657,101 +653,32 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchTrigger cache
-    // key: foldlerId
-    internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, ProcessSchedule>>? _dicTriggers = null;
-    internal ExceptionsCachePer<Int64> _dicTriggers_Exceptions = new();
+    // Backwards-compat shim: delegates to Triggers (ListCachePerFolder).
+    // Pre-v12 Personal workspaces have no triggers — short-circuit so we don't
+    // even try to fetch them; the API call itself isn't supported there.
     public ICollection<ProcessSchedule> GetTriggers(Folder folder)
     {
-        // Confirmed that personal workspaces have no triggers when ApiVersion == 11.1
         if (OrchAPISession.ApiVersion < 12 && folder.FolderType == "Personal") return [];
-
-        _dicTriggers_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-        if (_dicTriggers is null)
-        {
-            lock (_dicTriggers_Exceptions)
-            {
-                _dicTriggers ??= [];
-            }
-        }
-        if (!_dicTriggers.TryGetValue(folder.Id ?? 0, out var triggersPerFolder))
-        {
-            triggersPerFolder = [];
-            _dicTriggers[folder.Id ?? 0] = triggersPerFolder;
-            try
-            {
-                var triggers = OrchAPISession.GetProcessSchedules(folder.Id ?? 0).ToList();
-                string folderPath = folder.GetPSPath();
-                foreach (var trigger in triggers)
-                {
-                    trigger.Path = folderPath;
-                    triggersPerFolder[trigger.Id!.Value] = trigger;
-                }
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicTriggers_Exceptions.CacheException(folder.Id ?? 0, ex);
-                throw;
-            }
-        }
-        return triggersPerFolder.Values;
+        return Triggers.Get(folder);
     }
     #endregion
 
-    internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, ProcessSchedule>>? _dicTriggersDetailed = null;
-    internal ExceptionsCachePer<(Int64, Int64)> _dicTriggersDetailed_Exceptions = new();
+    // Backwards-compat shim: delegates to TriggersDetailed
+    // (KeyedSingleCachePerFolder). The detail payload doesn't include the
+    // schedule's executor-robot assignments — those come from a separate
+    // endpoint — so we side-fetch them once per cache entry and stash them on
+    // the cached trigger. Re-fetch only if ExecutorRobots is still null
+    // (which means a previous side-fetch failed or hasn't run yet).
     public ProcessSchedule? GetTrigger(Folder folder, ProcessSchedule schedule)
     {
-        _dicTriggersDetailed_Exceptions.ThrowCachedExceptionIfAny((folder.Id ?? 0, schedule.Id ?? 0));
-
-        if (_dicTriggersDetailed is null)
+        var trigger = TriggersDetailed.Get(folder, schedule.Id!.Value);
+        if (trigger is not null && trigger.ExecutorRobots is null)
         {
-            lock (_dicTriggersDetailed_Exceptions)
-            {
-                _dicTriggersDetailed ??= [];
-            }
+            trigger.ExecutorRobots = OrchAPISession.GetRobotIdsForSchedule(folder.Id ?? 0, schedule.Id!.Value)?
+                .Select(id => new RobotExecutor() { Id = id })
+                .ToArray() ?? [];
         }
-
-        if (!_dicTriggersDetailed.TryGetValue(folder.Id ?? 0, out var detailedTriggersPerFolder))
-        {
-            lock (folder)
-            {
-                if (!_dicTriggersDetailed.TryGetValue(folder.Id ?? 0, out detailedTriggersPerFolder))
-                {
-                    detailedTriggersPerFolder = [];
-                    _dicTriggersDetailed[folder.Id!.Value] = detailedTriggersPerFolder;
-                }
-            }
-        }
-
-        if (!detailedTriggersPerFolder.TryGetValue(schedule.Id!.Value, out var detailedTrigger))
-        {
-            try
-            {
-                detailedTrigger = OrchAPISession.GetProcessSchedule(folder.Id ?? 0, schedule.Id!.Value);
-                if (detailedTrigger is not null)
-                {
-                    detailedTrigger.Path = folder.GetPSPath();
-                    detailedTriggersPerFolder[schedule.Id!.Value] = detailedTrigger;
-                    detailedTrigger.ExecutorRobots = OrchAPISession.GetRobotIdsForSchedule(folder.Id ?? 0, schedule.Id!.Value)?
-                        .Select(id => new RobotExecutor()
-                        {
-                            Id = id
-                        }).ToArray();
-
-                    if (_dicTriggers is not null && _dicTriggers.TryGetValue(folder.Id!.Value, out var triggersPerFolder))
-                    {
-                        triggersPerFolder[schedule.Id!.Value] = detailedTrigger;
-                    }
-                }
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicTriggersDetailed_Exceptions.CacheException((folder.Id ?? 0, schedule.Id ?? 0), ex);
-                throw;
-            }
-        }
-        return detailedTrigger;
+        return trigger;
     }
 
     #region OrchAsset cache
@@ -1809,6 +1736,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerFolder<TestSet> TestSets;
     public readonly ListCachePerFolder<Release> Releases;
     public readonly KeyedSingleCachePerFolder<long, Release> ReleasesDetailed;
+    public readonly ListCachePerFolder<ProcessSchedule> Triggers;
+    public readonly KeyedSingleCachePerFolder<long, ProcessSchedule> TriggersDetailed;
     public readonly ListCachePerFolder<TestSetSchedule> TestSetSchedules;
     public readonly ListCachePerFolder<UserRobots> UserRobots;
     public readonly ListCachePerFolder<MachineRuntime> RuntimesForFolder;
@@ -2208,6 +2137,14 @@ public partial class OrchDriveInfo : PSDriveInfo
         ReleasesDetailed = new(this,
             (folderId, releaseId) => OrchAPISession.GetReleaseById(folderId, releaseId, "?$expand=ReleaseVersions,EntryPoint"),
             (release, folderPath, _) => release.Path = folderPath);
+
+        Triggers = new(this,
+            folderId => OrchAPISession.GetProcessSchedules(folderId),
+            (trigger, folderPath) => trigger.Path = folderPath);
+
+        TriggersDetailed = new(this,
+            (folderId, scheduleId) => OrchAPISession.GetProcessSchedule(folderId, scheduleId),
+            (trigger, folderPath, _) => trigger.Path = folderPath);
         TestSetSchedules = new(this, OrchAPISession.GetTestSetSchedules, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
         UserRobots = new(this, OrchAPISession.GetUserRobots);
 
