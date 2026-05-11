@@ -171,8 +171,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         // _dicPackages auto-cleared via _allTenantCache (Packages: KeyedListCachePerTenant).
         // _dicPackageVersions auto-cleared via _allTenantCache (PackageVersions: KeyedListCachePerTenant).
 
-        _dicPackageEntryPoint = null;
-        _dicPackageEntryPoint_Exception?.ClearCache();
+        // _dicPackageEntryPoint auto-cleared via _allTenantCache (PackageEntryPoints: KeyedListCachePerTenant).
 
         //_dicPartitionGlobalId = null; // This doesn't change, so no need to clear it..
 
@@ -729,37 +728,10 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region PackageEntryPoint cache
-    // key: (feedId, packageId, version)
-    internal ConcurrentDictionary<(string, string, string), List<PackageEntryPoint>>? _dicPackageEntryPoint = null;
-    internal readonly ExceptionsCachePer<(string, string, string)> _dicPackageEntryPoint_Exception = new();
-    public ReadOnlyCollection<PackageEntryPoint> GetPackageEntryPoints(string? feedId, string packageId, string version)
-    {
-        feedId ??= "";
-        _dicPackageEntryPoint_Exception.ThrowCachedExceptionIfAny((feedId, packageId, version));
-
-        if (_dicPackageEntryPoint is null)
-        {
-            lock (_dicPackageEntryPoint_Exception)
-            {
-                _dicPackageEntryPoint ??= new();
-            }
-        }
-
-        if (!_dicPackageEntryPoint.TryGetValue((feedId, packageId, version), out var entrypoints))
-        {
-            try
-            {
-                entrypoints = OrchAPISession.GetPackageEntryPoints(feedId, packageId, version).ToList();
-                _dicPackageEntryPoint[(feedId, packageId, version)] = entrypoints;
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicPackageEntryPoint_Exception.CacheException((feedId, packageId, version), ex);
-                throw;
-            }
-        }
-        return entrypoints.AsReadOnly();
-    }
+    // Backwards-compat shim: delegates to PackageEntryPoints (KeyedListCachePerTenant)
+    // keyed by (feedId, packageId, version).
+    public ReadOnlyCollection<PackageEntryPoint> GetPackageEntryPoints(string? feedId, string packageId, string version) =>
+        PackageEntryPoints.Get((feedId ?? "", packageId, version));
     #endregion
 
     #region OrchMachineClientSecret cache
@@ -1528,6 +1500,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 queueId), AccessibleFoldersDto?> QueueLinks;
     public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 bucketId), AccessibleFoldersDto?> BucketLinks;
     public readonly KeyedListCachePerTenant<(string feedId, string packageId), Package> PackageVersions;
+    public readonly KeyedListCachePerTenant<(string feedId, string packageId, string version), PackageEntryPoint> PackageEntryPoints;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -1973,6 +1946,10 @@ public partial class OrchDriveInfo : PSDriveInfo
                 .OrderBy(p => p.Version!, VersionComparer.Instance));
         // No initializer: GetPackageVersions wrapper sets Path per-call from
         // the caller's Folder reference (not derivable from the id tuple).
+
+        PackageEntryPoints = new(this,
+            key => OrchAPISession.GetPackageEntryPoints(key.feedId, key.packageId, key.version));
+        // No initializer needed: PackageEntryPoint has no per-call fields.
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
