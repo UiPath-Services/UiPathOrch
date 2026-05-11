@@ -1646,7 +1646,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     // Single-keyed entities (one entity per key, exception cached per key)
     public readonly KeyedSingleCachePerTenant<string, MachineClientSecretResponse[]?> MachineClientSecrets;
     public readonly KeyedSingleCachePerTenant<int, ExecutionSettingDefinition[]?> ExecutionSettings;
-    public readonly KeyedSingleCachePerTenant<string, PmDirectoryEntityInfo[]?> SearchPmDirectoryCache;
+    public readonly KeyedSingleCachePerOrganization<string, PmDirectoryEntityInfo[]?> SearchPmDirectoryCache;
     public readonly KeyedSingleCachePerTenant<string, DirectoryObject[]?> SearchDirectoryCache;
     public readonly KeyedSingleCachePerTenant<string, AvailableUserBundles> PmAvailableUserBundles;
     public readonly KeyedSingleCachePerTenant<long, User> UsersDetailed;
@@ -1999,7 +1999,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             });
 
         SearchPmDirectoryCache = new(this,
-            key => OrchAPISession.SearchPmDirectory(GetPartitionGlobalId()!, key),
+            (partitionGlobalId, key) => OrchAPISession.SearchPmDirectory(partitionGlobalId, key),
             (arr, _) =>
             {
                 if (arr is null) return;
