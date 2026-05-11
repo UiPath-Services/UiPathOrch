@@ -186,6 +186,7 @@ CmdletsToExport = @(
 'Remove-OrchCalendar',
 'Copy-OrchCalendar',
 
+'Get-OrchCalendarDate',
 'Add-OrchCalendarDate',
 'Remove-OrchCalendarDate',
 

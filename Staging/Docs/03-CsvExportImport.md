@@ -51,7 +51,7 @@ Use `-CsvEncoding` to specify the encoding.
 | `Get-OrchFolderUser -ExportCsv` | `Import-Csv` → `Add-OrchFolderUser` |
 | `Get-OrchFolderMachine -ExportCsv` | `Import-Csv` → `Add-OrchFolderMachine` |
 | `Get-OrchBucket -ExportCsv` | `Import-Csv` → `New-OrchBucket` |
-| `Get-OrchCalendar -ExportCsv` | (reference only; use `Copy-OrchCalendar` to migrate) |
+| `Get-OrchCalendarDate -ExportCsv` | `Import-Csv` → `Add-OrchCalendarDate` |
 | `Get-PmGroup -ExportCsv` | `Import-Csv` → `New-PmGroup` |
 | `Get-PmRobotAccount -ExportCsv` | `Import-Csv` → `Set-PmRobotAccount` |
 

@@ -28,15 +28,15 @@ Get-OrchCalendar [[-Name] <string[]>] [-ExpandExcludedDate] [-IncludePastDate] [
 
 ## DESCRIPTION
 
-Gets the non-working days calendars from UiPath Orchestrator. By default, the cmdlet returns calendar objects with summary information. Use the -ExpandExcludedDate parameter to expand and list the individual excluded dates (non-business days or holidays) within each calendar.
+Gets the non-working days calendars from UiPath Orchestrator. The cmdlet returns calendar objects with summary information (Name, Id) from the list endpoint.
+
+> **Deprecated:** `-ExpandExcludedDate` and `-ExportCsv` on this cmdlet are deprecated and will be removed in a future major release. Both options have been moved to the new `Get-OrchCalendarDate` cmdlet, which fetches each calendar's detail and emits one row per excluded date. Existing CSV files exported via `-ExportCsv` keep importing into `Add-OrchCalendarDate` because the on-disk format is unchanged.
 
 Calendar is a tenant entity. Therefore, specify the drive names as the targets on this cmdlet.
 
-When -ExpandExcludedDate is specified, by default only dates from today onward are returned. Use -IncludePastDate to include dates that have already passed.
-
 The -Name and -Path parameters support tab completion. Press [Ctrl+Space] or [Tab] to see available values. The -Name completion is dynamically populated from actual calendar names. Multiple values can be specified using comma-separated text that includes wildcards.
 
-Primary Endpoint: GET /odata/Calendars, GET /odata/Calendars({calendarId})
+Primary Endpoint: GET /odata/Calendars
 
 OAuth required scopes: OR.Settings or OR.Settings.Read
 
@@ -60,37 +60,22 @@ PS Orch1:\> Get-OrchCalendar MyCalendar1
 
 Gets the calendar named "MyCalendar1". Since -Name is a positional parameter (Position 0), the parameter name can be omitted.
 
-### Example 3: Get calendars with expanded excluded dates
-
-```powershell
-PS Orch1:\> Get-OrchCalendar -ExpandExcludedDate
-```
-
-Gets all calendars and expands each one to list the individual excluded dates. Only dates from today onward are returned by default.
-
-### Example 4: Get calendars with all excluded dates including past dates
-
-```powershell
-PS Orch1:\> Get-OrchCalendar -ExpandExcludedDate -IncludePastDate
-```
-
-Gets all calendars and lists all excluded dates, including dates that have already passed.
-
-### Example 5: Export calendars to CSV
-
-```powershell
-PS C:\> Get-OrchCalendar -Path Orch1: -ExportCsv C:\temp
-```
-
-Exports the excluded dates of all calendars on Orch1: to a CSV file in the C:\temp directory. The -ExportCsv parameter accepts a directory path, and the CSV file is automatically named ExportedCalendars.csv. The CSV contains columns for Path, Name, and ExcludedDate.
-
-### Example 6: Get calendars using wildcards across multiple drives
+### Example 3: Get calendars using wildcards across multiple drives
 
 ```powershell
 PS C:\> Get-OrchCalendar -Path Orch1: *Calendar*
 ```
 
 Gets all calendars matching `*Calendar*` from the Orch1 drive.
+
+### Example 4 (deprecated): -ExpandExcludedDate / -ExportCsv
+
+```powershell
+PS Orch1:\> Get-OrchCalendar -ExpandExcludedDate -IncludePastDate
+PS C:\>     Get-OrchCalendar -Path Orch1: -ExportCsv C:\temp
+```
+
+Both invocations emit a deprecation warning and route through the new `Get-OrchCalendarDate` cmdlet. Use `Get-OrchCalendarDate -Name '*' -IncludePastDate` or `Get-OrchCalendarDate -Name '*' -ExportCsv C:\temp` directly instead.
 
 ## PARAMETERS
 
@@ -139,7 +124,7 @@ HelpMessage: ''
 
 ### -ExpandExcludedDate
 
-Expands each calendar to list the individual excluded dates (non-business days or holidays). When this parameter is specified, the output type changes from ExtendedCalendar to ExcludedDateNamed, providing the calendar name and each excluded date as separate objects.
+**Deprecated.** Routes to `Get-OrchCalendarDate` and emits a deprecation warning. Use `Get-OrchCalendarDate` directly. When present, the output type becomes `ExcludedDateNamed` (one row per excluded date) instead of `ExtendedCalendar`.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -160,7 +145,7 @@ HelpMessage: ''
 
 ### -ExportCsv
 
-Specifies the directory or file path to export the calendar data as a CSV file. If a directory path is specified, the default file name "ExportedCalendars.csv" is used. When this parameter is specified, the excluded dates are written to the CSV file instead of being output to the pipeline.
+**Deprecated.** Routes to `Get-OrchCalendarDate -ExportCsv` and emits a deprecation warning. The on-disk CSV format is unchanged, so files exported here still import into `Add-OrchCalendarDate`. Use `Get-OrchCalendarDate -ExportCsv` directly. If a directory path is specified, the default file name "ExportedCalendars.csv" is used.
 
 ```yaml
 Type: System.String
@@ -181,7 +166,7 @@ HelpMessage: ''
 
 ### -IncludePastDate
 
-Includes excluded dates that have already passed (dates before today) in the output. By default, only dates from today onward are returned when -ExpandExcludedDate or -ExportCsv is used.
+(Deprecated path only.) Includes excluded dates that have already passed (dates before today). Used in combination with the deprecated `-ExpandExcludedDate` / `-ExportCsv` paths. Has no effect on the default list output.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -249,6 +234,8 @@ Returns individual excluded date objects when -ExpandExcludedDate is specified.
 Calendars are tenant-scoped entities. The -Path parameter targets drives (Orchestrator instances), not folders.
 
 ## RELATED LINKS
+
+[Get-OrchCalendarDate](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchCalendarDate.md)
 
 [Add-OrchCalendarDate](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-OrchCalendarDate.md)
 

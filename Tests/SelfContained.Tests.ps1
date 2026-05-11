@@ -1962,6 +1962,11 @@ Describe 'Read-Only Cmdlets' {
         { Get-OrchCalendar -Path "${script:Drive}:\" } | Should -Not -Throw
     }
 
+    It 'Get-OrchCalendarDate does not throw with wildcard -Name' {
+        # -Name is mandatory by design; '*' is the explicit "all calendars" form.
+        { Get-OrchCalendarDate -Path "${script:Drive}:\" -Name '*' } | Should -Not -Throw
+    }
+
     It 'Get-OrchLibrary does not throw' {
         { Get-OrchLibrary -Path "${script:Drive}:\" } | Should -Not -Throw
     }
@@ -2779,20 +2784,65 @@ $robotName,Robot,Robot,
         # date can already be tomorrow while UTC is still today — so a -ExcludedDate built
         # from DateTime.UtcNow.Date was considered "past" (< local Today) and silently
         # dropped. Filter now uses DateTime.UtcNow.Date so today (UTC) is preserved.
-        # (Get-OrchCalendar returns the list view without ExcludedDates; we fetch the full
-        # calendar via /odata/Calendars(id) to assert the date actually landed.)
         $calName = "${script:Prefix}Reg_Cal"
         try {
             $todayUtc = [DateTime]::UtcNow.Date
             Add-OrchCalendarDate -Name $calName -ExcludedDate $todayUtc -ErrorAction Stop | Out-Null
             Clear-OrchCache
 
-            $cal = Get-OrchCalendar -Name $calName
-            $cal | Should -Not -BeNullOrEmpty
-            $full = Invoke-OrchApi -Method GET -ApiPath "/odata/Calendars($($cal.Id))" -SkipFolderContext
-            ($full.ExcludedDates | Measure-Object).Count | Should -BeGreaterOrEqual 1 `
+            $dates = Get-OrchCalendarDate -Name $calName -IncludePastDate
+            ($dates | Measure-Object).Count | Should -BeGreaterOrEqual 1 `
                 -Because "today (UTC) must survive the past-date filter; if 0, the filter dropped it"
         } finally {
+            Remove-OrchCalendar -Name $calName -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'R13: Get-OrchCalendar -ExpandExcludedDate emits a deprecation warning and routes to Get-OrchCalendarDate' {
+        # The legacy -ExpandExcludedDate switch is a deprecated alias for
+        # Get-OrchCalendarDate. The warning text must point users to the
+        # canonical cmdlet so existing scripts can migrate.
+        $calName = "${script:Prefix}Reg_R13_Cal"
+        try {
+            $todayUtc = [DateTime]::UtcNow.Date
+            Add-OrchCalendarDate -Name $calName -ExcludedDate $todayUtc -ErrorAction Stop | Out-Null
+            Clear-OrchCache
+
+            $warnings = $null
+            $rows = Get-OrchCalendar -Name $calName -ExpandExcludedDate -IncludePastDate `
+                        -WarningVariable warnings -WarningAction SilentlyContinue
+            ($warnings | Where-Object { $_ -match "Get-OrchCalendarDate" }) | Should -Not -BeNullOrEmpty `
+                -Because "the deprecation warning must name the canonical cmdlet"
+            ($rows | Measure-Object).Count | Should -BeGreaterOrEqual 1 `
+                -Because "data still emits even on the deprecated path; only a warning is added"
+        } finally {
+            Remove-OrchCalendar -Name $calName -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'R14: Get-OrchCalendar -ExportCsv and Get-OrchCalendarDate -ExportCsv produce identical files' {
+        # Both paths must produce a byte-identical CSV so the file remains
+        # round-trip compatible with Add-OrchCalendarDate. The legacy path
+        # additionally emits a deprecation warning.
+        $calName = "${script:Prefix}Reg_R14_Cal"
+        $csvLegacy = Join-Path $env:TEMP "ut-cal-legacy-$(Get-Random).csv"
+        $csvCanonical = Join-Path $env:TEMP "ut-cal-canonical-$(Get-Random).csv"
+        try {
+            $todayUtc = [DateTime]::UtcNow.Date
+            Add-OrchCalendarDate -Name $calName -ExcludedDate $todayUtc -ErrorAction Stop | Out-Null
+            Clear-OrchCache
+
+            $warnings = $null
+            Get-OrchCalendar -Path "${script:Drive}:\" -Name $calName -ExportCsv $csvLegacy -IncludePastDate `
+                -WarningVariable warnings -WarningAction SilentlyContinue
+            Clear-OrchCache
+            Get-OrchCalendarDate -Path "${script:Drive}:\" -Name $calName -ExportCsv $csvCanonical -IncludePastDate
+
+            ($warnings | Where-Object { $_ -match "Get-OrchCalendarDate" }) | Should -Not -BeNullOrEmpty
+            (Get-FileHash $csvLegacy).Hash | Should -Be (Get-FileHash $csvCanonical).Hash `
+                -Because "the on-disk CSV format must not diverge between legacy and canonical paths"
+        } finally {
+            Remove-Item $csvLegacy, $csvCanonical -ErrorAction SilentlyContinue
             Remove-OrchCalendar -Name $calName -Confirm:$false -ErrorAction SilentlyContinue
         }
     }
