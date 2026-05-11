@@ -155,8 +155,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         // _dicAuditLogs auto-cleared via _allTenantCache (AuditLogs: IncrementalCachePerTenant).
 
-        _dicBucketLinks = null;
-        _dicBucketLinks_Exceptions?.ClearCache();
+        // _dicBucketLinks auto-cleared via _allTenantCache (BucketLinks: KeyedSingleCachePerTenant).
 
         // _dicCalendars auto-cleared via _allTenantCache (Calendars + CalendarsDetailed: ListCachePerTenant + KeyedSingleCachePerTenant).
 
@@ -1107,43 +1106,20 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #region OrchBucket cache
 
-    // key: (folderId, bucketId)
-    // bucketId alone should be unique, but including folderId in the key just to be safe.
-    internal ConcurrentDictionary<(Int64 folderId, Int64 bucketId), AccessibleFoldersDto?>? _dicBucketLinks = null;
-    internal ExceptionsCachePer<(Int64, Int64)> _dicBucketLinks_Exceptions = new();
+    // Backwards-compat wrapper: BucketLinks (KeyedSingleCachePerTenant) keyed by
+    // (folderId, bucketId). Path / PathName depend on caller's Folder + Bucket
+    // references; set per-call (same pattern as AssetLinks / QueueLinks).
     public AccessibleFoldersDto? GetFoldersForBucket(Folder folder, Bucket bucket)
     {
-        _dicBucketLinks_Exceptions.ThrowCachedExceptionIfAny((folder.Id ?? 0, bucket.Id ?? 0));
-
-        if (_dicBucketLinks is null)
+        var folderShare = BucketLinks.Get((folder.Id ?? 0, bucket.Id ?? 0));
+        if (folderShare?.AccessibleFolders is not null)
         {
-            lock (_dicBucketLinks_Exceptions)
+            string folderPath = folder.GetPSPath();
+            string bucketPath = bucket.GetPSPath();
+            foreach (var accessibleFolder in folderShare.AccessibleFolders)
             {
-                _dicBucketLinks ??= new ConcurrentDictionary<(Int64 folderId, Int64 bucketId), AccessibleFoldersDto?>();
-            }
-        }
-
-        if (!_dicBucketLinks.TryGetValue((folder.Id ?? 0, bucket.Id ?? 0), out var folderShare))
-        {
-            try
-            {
-                folderShare = OrchAPISession.GetFoldersForBucket(folder.Id ?? 0, bucket.Id ?? 0);
-
-                if (folderShare is not null && folderShare.AccessibleFolders is not null)
-                {
-                    string folderPath = folder.GetPSPath();
-                    foreach (var accessibleFolder in folderShare.AccessibleFolders)
-                    {
-                        accessibleFolder.Path = folderPath;
-                        accessibleFolder.PathName = bucket.GetPSPath();
-                    }
-                }
-                _dicBucketLinks[(folder.Id ?? 0, bucket.Id ?? 0)] = folderShare;
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicBucketLinks_Exceptions.CacheException((folder.Id ?? 0, bucket.Id ?? 0), ex);
-                throw;
+                accessibleFolder.Path = folderPath;
+                accessibleFolder.PathName = bucketPath;
             }
         }
         return folderShare;
@@ -1155,17 +1131,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     /// the next GetFoldersForBucket call re-fetches just this bucket's link
     /// set without flushing unrelated buckets' caches.
     /// </summary>
-    public void ClearBucketLinkCache(Int64 bucketId)
-    {
-        if (_dicBucketLinks is not null)
-        {
-            foreach (var key in _dicBucketLinks.Keys.Where(k => k.bucketId == bucketId).ToList())
-            {
-                _dicBucketLinks.TryRemove(key, out _);
-                _dicBucketLinks_Exceptions.ClearCache(key);
-            }
-        }
-    }
+    public void ClearBucketLinkCache(Int64 bucketId) =>
+        BucketLinks.ClearCache(k => k.bucketId == bucketId);
 
     #endregion
 
@@ -1594,6 +1561,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<long, ExtendedCalendar> CalendarsDetailed;
     public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 assetId), AccessibleFoldersDto?> AssetLinks;
     public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 queueId), AccessibleFoldersDto?> QueueLinks;
+    public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 bucketId), AccessibleFoldersDto?> BucketLinks;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2029,6 +1997,10 @@ public partial class OrchDriveInfo : PSDriveInfo
         QueueLinks = new(this,
             key => OrchAPISession.GetFoldersForQueue(key.folderId, key.queueId));
         // Same pattern as AssetLinks: Path / PathName set per-call in the wrapper.
+
+        BucketLinks = new(this,
+            key => OrchAPISession.GetFoldersForBucket(key.folderId, key.bucketId));
+        // Same pattern as AssetLinks / QueueLinks.
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?

@@ -68,7 +68,7 @@ public class CopyBucketCommand : OrchestratorPSCmdlet
                     dstDrive, dstFolder, reporterBuckets,
                     false, cancelHandler.Token);
                 dstDrive.Buckets.ClearCache(dstFolder);
-                dstDrive._dicBucketLinks = null;
+                dstDrive.BucketLinks.ClearCache();
             }
             catch (OperationCanceledException)
             {

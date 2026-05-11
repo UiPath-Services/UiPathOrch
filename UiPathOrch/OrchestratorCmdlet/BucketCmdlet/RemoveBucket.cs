@@ -25,6 +25,6 @@ public class RemoveBucketCommand : RemoveFolderEntityCmdletBase<Bucket>
     {
         drive.OrchAPISession.DeleteBucket(folder.Id ?? 0, bucket.Id ?? 0);
         drive.Buckets.ClearCache(folder);
-        drive._dicBucketLinks = null;
+        drive.BucketLinks.ClearCache();
     }
 }
