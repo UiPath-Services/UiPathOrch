@@ -30,7 +30,9 @@ Get-OrchTrigger [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint
 
 Gets trigger (process schedule) information from UiPath Orchestrator folders. Triggers define time-based or queue-based schedules for starting automation processes.
 
-By default, this cmdlet returns basic trigger properties such as Name, ReleaseName, Enabled, StartProcessCron, and RuntimeType. When -ExpandDetails is specified, the cmdlet fetches individual trigger details by calling GET /odata/ProcessSchedules({processScheduleId}) for each trigger, providing additional properties.
+By default, this cmdlet returns basic trigger properties such as Name, ReleaseName, Enabled, StartProcessCron, and RuntimeType. To fetch the per-trigger detail payload (StopProcessExpression, KillProcessExpression, ExecutorRobots, MachineRobots, etc.), use `Get-OrchTriggerDetail` — which makes one API call per matched trigger plus a side fetch for ExecutorRobots, and requires an explicit `-Name` selector.
+
+> **Deprecated:** `-ExpandDetails` is deprecated and will be removed in a future major release. Use `Get-OrchTriggerDetail` instead. `-ExportCsv` continues to be supported and transparently uses the detail cache to enrich the exported rows (the CSV row shape is the ProcessSchedule entity, matching this cmdlet's output type).
 
 The -Name parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see available trigger names dynamically populated from the target folders. Multiple values can be specified using comma-separated text that includes wildcards.
 
@@ -180,7 +182,7 @@ HelpMessage: ''
 
 ### -ExpandDetails
 
-Fetches detailed trigger information by calling GET /odata/ProcessSchedules({processScheduleId}) for each trigger individually. Without this switch, only the properties returned by the list endpoint are populated.
+**Deprecated.** Routes to `Get-OrchTriggerDetail` and emits a deprecation warning. Use `Get-OrchTriggerDetail` directly. When `-ExportCsv` is specified the same detail enrichment runs automatically (and `-ExportCsv` is NOT deprecated, since the CSV row shape matches this cmdlet's output type).
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -267,6 +269,8 @@ Triggers are folder-scoped entities. You must navigate to a folder on the Orch: 
 The -ExportCsv parameter produces a CSV format that is compatible with Update-OrchTrigger for bulk import and modification workflows.
 
 ## RELATED LINKS
+
+[Get-OrchTriggerDetail](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTriggerDetail.md)
 
 [New-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchTrigger.md)
 

@@ -25,6 +25,8 @@ public class GetTriggerCommand : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
+    // Deprecated. Routes to Get-OrchTriggerDetail via the shared helper. Kept
+    // for backward compat; will be removed in a future major release.
     [Parameter]
     public SwitchParameter ExpandDetails { get; set; }
 
@@ -37,130 +39,42 @@ public class GetTriggerCommand : OrchestratorPSCmdlet
     public Encoding? CsvEncoding { get; set; }
 
     private static readonly string DefaultCsvName = "ExportedTriggers.csv";
-    private static readonly string[] CsvHeaders = [
-        "Path",
-        "Name",
-        "ReleaseName",
-        "Enabled",
-        "SpecificPriorityValue",
-        "StartStrategy",
-        "StopStrategy",
-        "StopProcessExpression",
-        "KillProcessExpression",
-        "AlertPendingExpression",
-        "AlertRunningExpression",
-        "ConsecutiveJobFailuresThreshold",
-        "JobFailuresGracePeriodInHours",
-        "RuntimeType",
-        "InputArguments",
-        "ResumeOnSameContext",
-        "RunAsMe",
-        "IsConnected",
-        "CalendarName",
-        "ActivateOnJobComplete",
-        "ItemsActivationThreshold",
-        "ItemsPerJobActivationTarget",
-        "MaxJobsForActivation",
-        "StartProcessCron",
-        "StartProcessCronDetails",
-        "QueueDefinitionName",
-        "TimeZoneId",
-        "StopProcessDate",
-        "ExecutorRobots",
-        "MachineRobots"
-    ];
-
-    private void WriteCsvContent(StreamWriter writer, ProcessSchedule t)
-    {
-        #region Convert ExecutorRobots IDs to Names for output
-        string executorRobots = null;
-        if (t.ExecutorRobots is not null && t.ExecutorRobots.Length != 0)
-        {
-            try
-            {
-                var (drive, folder) = SessionState.ResolveToSingleFolder(t.Path);
-                executorRobots = SerializeExecutorRobotArray(drive, t.ExecutorRobots);
-            }
-            catch (Exception ex)
-            {
-                WriteWarning($"{t.GetPSPath()}: Failed to retrieve ExecutorRobots: {ex.Message}");
-            }
-        }
-        #endregion
-
-        #region Convert MachineRobots IDs to Names for output
-        string machineRobots = null;
-        if (t.MachineRobots is not null && t.MachineRobots.Length != 0)
-        {
-            try
-            {
-                var (drive, folder) = SessionState.ResolveToSingleFolder(t.Path);
-                machineRobots = SerializeMachineRobotSessions(this, drive, folder!, t.GetPSPath(), t.MachineRobots);
-            }
-            catch (Exception ex)
-            {
-                WriteWarning($"{t.GetPSPath()}: Failed to retrieve MachineRobots: {ex.Message}");
-            }
-        }
-        #endregion
-
-        string[] line = [
-            EscapeCsvValue(t.Path, true),
-            EscapeCsvValue(t.Name, true),
-            EscapeCsvValue(t.ReleaseName),
-            EscapeCsvValue(t.Enabled),
-            EscapeCsvValue(t.SpecificPriorityValue),
-            EscapeCsvValue(t.StartStrategy),
-            EscapeCsvValue(t.StopStrategy),
-            EscapeCsvValue(t.StopProcessExpression),
-            EscapeCsvValue(t.KillProcessExpression),
-            EscapeCsvValue(t.AlertPendingExpression),
-            EscapeCsvValue(t.AlertRunningExpression),
-            EscapeCsvValue(t.ConsecutiveJobFailuresThreshold),
-            EscapeCsvValue(t.JobFailuresGracePeriodInHours),
-            EscapeCsvValue(t.RuntimeType),
-            EscapeCsvValue(t.InputArguments),
-            EscapeCsvValue(t.ResumeOnSameContext),
-            EscapeCsvValue(t.RunAsMe),
-            EscapeCsvValue(t.IsConnected),
-            EscapeCsvValue(t.CalendarName),
-            EscapeCsvValue(t.ActivateOnJobComplete),
-            EscapeCsvValue(t.ItemsActivationThreshold),
-            EscapeCsvValue(t.ItemsPerJobActivationTarget),
-            EscapeCsvValue(t.MaxJobsForActivation),
-            EscapeCsvValue(t.StartProcessCron),
-            EscapeCsvValue(t.StartProcessCronDetails),
-            EscapeCsvValue(t.QueueDefinitionName),
-            EscapeCsvValue(t.TimeZoneId),
-            EscapeCsvValue(FormatDateTimeWithKind(t.StopProcessDate)),
-            EscapeCsvValue(executorRobots),
-            EscapeCsvValue(machineRobots)
-        ];
-        writer.WriteCsvLine(line);
-    }
-
-    private void Output(StreamWriter? writer, ProcessSchedule? trigger)
-    {
-        if (trigger is null) return;
-
-        if (writer is not null)
-        {
-            WriteCsvContent(writer, trigger);
-        }
-        else
-        {
-            WriteObject(trigger);
-        }
-    }
 
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-        using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
+        // Detail path: triggered by either the deprecated -ExpandDetails switch
+        // or by -ExportCsv (the CSV row shape includes detail fields, so the
+        // user-facing contract has always been "CSV implies detail enrichment").
+        // -ExportCsv stays supported (output type matches CSV row shape:
+        // ProcessSchedule); only -ExpandDetails emits a deprecation warning.
+        bool useDetailPath = ExpandDetails.IsPresent || !string.IsNullOrEmpty(ExportCsv);
 
+        if (useDetailPath)
+        {
+            if (ExpandDetails.IsPresent)
+            {
+                WriteWarning(
+                    "'-ExpandDetails' on Get-OrchTrigger is deprecated and will be removed in a " +
+                    "future major release. Use 'Get-OrchTriggerDetail' instead.");
+            }
+
+            var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetTriggerDetailCommand.CsvHeaders);
+
+            var driveFolderList = drivesFolders.ToList();
+            GetTriggerDetailCommand.EmitDetailedTriggers(this, driveFolderList, wpName, writer);
+
+            if (!string.IsNullOrEmpty(ExportCsv))
+            {
+                WriteCSVExportedMessage(this, providerCsvPath);
+            }
+            return;
+        }
+
+        // List-only path: emit shallow ProcessSchedule entries from each folder.
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
             df => df.folder,
@@ -175,32 +89,16 @@ public class GetTriggerCommand : OrchestratorPSCmdlet
                 var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
-                var (drive, folder) = result.Source;
-
                 var targetEntities = entities
                         .FilterByWildcards(s => s?.Name, wpName)
                         .OrderBy(s => s.Name);
 
-                if (ExpandDetails.IsPresent || writer is not null)
-                {
-                    foreach (var entity in targetEntities)
-                    {
-                        var detailedEntity = drive.GetTrigger(folder, entity);
-                        Output(writer, detailedEntity);
-                    }
-                }
-                else
-                {
-                    WriteObject(targetEntities, true);
-                    //Output(writer, targetEntities);
-                }
+                WriteObject(targetEntities, true);
             }
             catch (OrchException ex)
             {
                 WriteError(new ErrorRecord(ex, "GetTriggerError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
-
-        WriteCSVExportedMessage(this, providerCsvPath);
     }
 }

@@ -256,6 +256,7 @@ CmdletsToExport = @(
 'Remove-OrchQueueLink',
 
 'Get-OrchTrigger',
+'Get-OrchTriggerDetail',
 'New-OrchTrigger',
 'Update-OrchTrigger',
 'Remove-OrchTrigger',
