@@ -149,8 +149,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicFolders = null;
         _dicFoldersForEnumFolders = null;
 
-        _dicAssetLinks = null;
-        _dicAssetLinks_Exception.ClearCache();
+        // _dicAssetLinks auto-cleared via _allTenantCache (AssetLinks: KeyedSingleCachePerTenant).
 
         _dicQueueLinks = null;
         _dicQueueLinks_Exceptions?.ClearCache();
@@ -242,7 +241,9 @@ public partial class OrchDriveInfo : PSDriveInfo
             cache.ClearCache(folder);
         }
 
-        _dicAssetLinks = null;
+        // Drop AssetLinks entries for this folder only (the original code dropped
+        // the entire dict; predicate-based clear is more precise).
+        AssetLinks.ClearCache(k => k.folderId == folderId);
         _dicJobsHavingExecutionMedia?.TryRemove(folderId, out _);
         // Triggers / TriggersDetailed auto-cleared per folder via _allFolderCache.
         _dicQueueLinks = null;
@@ -632,43 +633,22 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #region OrchAsset cache
 
-    // key: (folderId, assetId)
-    // assetId alone should be unique, but including folderId in the key just to be safe.
-    internal ConcurrentDictionary<(Int64 folderId, Int64 assetId), AccessibleFoldersDto?>? _dicAssetLinks = null;
-    internal readonly ExceptionsCachePer<(Int64, Int64)> _dicAssetLinks_Exception = new();
+    // Backwards-compat wrapper: AssetLinks (KeyedSingleCachePerTenant) is keyed
+    // by (folderId, assetId). The accessibleFolder.Path / PathName fields depend
+    // on the caller's Folder + Asset reference (not derivable from just the
+    // ids), so they're set per-call in the wrapper rather than in the cache
+    // initializer.
     public AccessibleFoldersDto? GetFoldersForAsset(Folder folder, Asset asset)
     {
-        _dicAssetLinks_Exception.ThrowCachedExceptionIfAny((folder.Id ?? 0, asset.Id ?? 0));
-
-        if (_dicAssetLinks is null)
+        var folderShare = AssetLinks.Get((folder.Id ?? 0, asset.Id ?? 0));
+        if (folderShare?.AccessibleFolders is not null)
         {
-            lock (_dicAssetLinks_Exception)
+            string folderPath = folder.GetPSPath();
+            string assetPath = asset.GetPSPath();
+            foreach (var accessibleFolder in folderShare.AccessibleFolders)
             {
-                _dicAssetLinks ??= new ConcurrentDictionary<(Int64 folderId, Int64 assetId), AccessibleFoldersDto?>();
-            }
-        }
-
-        if (!_dicAssetLinks.TryGetValue((folder.Id ?? 0, asset.Id ?? 0), out var folderShare))
-        {
-            try
-            {
-                folderShare = OrchAPISession.GetFoldersForAsset(folder.Id ?? 0, asset.Id ?? 0);
-
-                if (folderShare is not null && folderShare.AccessibleFolders is not null)
-                {
-                    string folderPath = folder.GetPSPath();
-                    foreach (var accessibleFolder in folderShare.AccessibleFolders)
-                    {
-                        accessibleFolder.Path = folderPath;
-                        accessibleFolder.PathName = asset.GetPSPath();
-                    }
-                }
-                _dicAssetLinks[(folder.Id ?? 0, asset.Id ?? 0)] = folderShare;
-            }
-            catch (HttpResponseException ex)
-            {
-                _dicAssetLinks_Exception.CacheException((folder.Id ?? 0, asset.Id ?? 0), ex);
-                throw;
+                accessibleFolder.Path = folderPath;
+                accessibleFolder.PathName = assetPath;
             }
         }
         return folderShare;
@@ -680,18 +660,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     /// next GetFoldersForAsset call re-fetches just this asset's link set
     /// without flushing unrelated assets' caches.
     /// </summary>
-    public void ClearAssetLinkCache(Int64 assetId)
-    {
-        if (_dicAssetLinks is not null)
-        {
-            // Snapshot keys before mutation: ConcurrentDictionary.Keys is a live view.
-            foreach (var key in _dicAssetLinks.Keys.Where(k => k.assetId == assetId).ToList())
-            {
-                _dicAssetLinks.TryRemove(key, out _);
-                _dicAssetLinks_Exception.ClearCache(key);
-            }
-        }
-    }
+    public void ClearAssetLinkCache(Int64 assetId) =>
+        AssetLinks.ClearCache(k => k.assetId == assetId);
 
     #endregion
 
@@ -1654,6 +1624,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly IncrementalCachePerTenant<long, AuditLog> AuditLogs;
     public readonly ListCachePerTenant<ExtendedCalendar> Calendars;
     public readonly KeyedSingleCachePerTenant<long, ExtendedCalendar> CalendarsDetailed;
+    public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 assetId), AccessibleFoldersDto?> AssetLinks;
 
     public readonly ListCachePerFolder<DfEntity> DfEntities;
 
@@ -2079,6 +2050,12 @@ public partial class OrchDriveInfo : PSDriveInfo
         CalendarsDetailed = new(this,
             calendarId => OrchAPISession.GetCalendar(calendarId),
             (detailedCalendar, _) => detailedCalendar.Path = NameColonSeparator);
+
+        AssetLinks = new(this,
+            key => OrchAPISession.GetFoldersForAsset(key.folderId, key.assetId));
+        // No initializer: GetFoldersForAsset wrapper sets each AccessibleFolder's
+        // Path / PathName per-call from the caller's Folder + Asset references
+        // (neither is derivable from just the id tuple).
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
