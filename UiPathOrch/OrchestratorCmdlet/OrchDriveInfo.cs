@@ -2087,14 +2087,14 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         Packages = new(this,
             feedId => OrchAPISession.GetPackages(feedId));
-            // No initializer: GetPackages wrapper sets Path per-call from the
-            // caller's folder context (feedFolder isn't derivable from feedId alone).
+        // No initializer: GetPackages wrapper sets Path per-call from the
+        // caller's folder context (feedFolder isn't derivable from feedId alone).
 
         PmUserLicenseGroupAllocations = new(this,
             groupId => OrchAPISession.GetPmLicenseGroupAllocations(groupId));
-            // No initializer: GetPmLicensedGroupAllocations wrapper sets
-            // GroupName / PathGroupName per-call from the NuLicensedGroup arg
-            // (only group.id participates in the cache key).
+        // No initializer: GetPmLicensedGroupAllocations wrapper sets
+        // GroupName / PathGroupName per-call from the NuLicensedGroup arg
+        // (only group.id participates in the cache key).
 
         LicenseRuntimes = new(this,
             robotType => OrchAPISession.GetLicensesRuntime(robotType),
