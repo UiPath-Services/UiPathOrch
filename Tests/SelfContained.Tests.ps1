@@ -26,22 +26,47 @@ BeforeAll {
     $script:RootFolder = "${script:Drive}:\${script:Prefix}Root"
     $script:SubFolder = "${script:RootFolder}\${script:Prefix}Sub"
     $script:CopyFolder = "${script:RootFolder}\${script:Prefix}Copy"
+    # SmokeFolder hosts the "does not throw" smoke tests for Task / Trigger /
+    # Job / Queue / Asset / Bucket / Process. Kept separate from RootFolder
+    # because RootFolder has TestUserA bolted on with a restricted role,
+    # which downgrades the current user's access — smoke tests want a
+    # pristine folder.
+    $script:SmokeFolder = "${script:Drive}:\${script:Prefix}Smoke"
     $script:TempDir = Join-Path $env:TEMP "PesterTest_$(Get-Random -Maximum 9999)"
 
-    # PerRobot / UserValue test fixtures — use existing tenant user/machine.
+    # PerRobot / UserValue test fixtures — pick any existing DirectoryUser on
+    # the tenant other than the current user. Creating users / assigning to
+    # the tenant per test run is too heavy, so we accept whatever the tenant
+    # already has.
+    #
     # CAUTION: TestUserA must NOT be the currently-connected user — Add-OrchFolderUser with a
     # restricted role downgrades the current user's folder access, causing "You are not authorized!"
     # errors on subsequent asset operations in that folder.
     $script:CurrentUserName = (Get-OrchCurrentUser -Path "${script:Drive}:\").UserName
-    $script:TestUserA = if ($script:CurrentUserName -eq 'yoshifumi.tsuda@uipath.com') {
-        'ytsuda@gmail.com'
-    } else {
-        'yoshifumi.tsuda@uipath.com'
+    $script:TestUserType = 'DirectoryUser'
+    $alternateUser = Get-OrchUser -Path "${script:Drive}:\" -Type $script:TestUserType -ErrorAction Stop |
+        Where-Object { $_.UserName -ne $script:CurrentUserName } |
+        Select-Object -First 1
+    if (-not $alternateUser) {
+        throw "SelfContained tests require at least 2 ${script:TestUserType}s on tenant ${script:Drive}: (one to be the current user, another to act as TestUserA)."
     }
+    # Prefer EmailAddress over UserName. Azure AD B2B guest users get a
+    # mangled tenant UserName form (e.g. 'foo_bar.com#ext#@tenant.onmicrosoft.com')
+    # that Add-OrchFolderUser's PmBulkResolveByName lookup can't resolve.
+    # The user's original EmailAddress (e.g. 'foo@bar.com') is the form the
+    # identity directory recognizes.
+    $script:TestUserA = if ($alternateUser.EmailAddress) {
+        $alternateUser.EmailAddress
+    } else {
+        $alternateUser.UserName
+    }
+    # UserValues entries on assets/secrets store the tenant-form UserName,
+    # which can differ from $script:TestUserA for B2B guests. Use the stable
+    # UserId to find entries, not the name.
+    $script:TestUserAId = $alternateUser.Id
     # TestUserUnassigned is the other tenant user, NOT added to $script:RootFolder.
     # Used by the T11.9 guard test that asserts the admin API accepts unassigned users.
     $script:TestUserUnassigned = $script:CurrentUserName  # admin user, not added via BeforeAll
-    $script:TestUserType = 'DirectoryUser'
     $script:TestMachine = 'm3'
 
     $script:OriginalConfirmPreference = $ConfirmPreference
@@ -58,14 +83,17 @@ BeforeAll {
     $null = mkdir $script:RootFolder
     $null = mkdir $script:SubFolder
     $null = mkdir $script:CopyFolder
+    $null = mkdir $script:SmokeFolder
 
     # Assign test user/machine to test folder (best practice for PerRobot UserValues)
     Add-OrchFolderUser -Type $script:TestUserType -UserName $script:TestUserA `
         -Roles 'Automation User' -Path $script:RootFolder -ErrorAction SilentlyContinue
     Add-OrchFolderMachine -Path $script:RootFolder -Name $script:TestMachine -ErrorAction SilentlyContinue
 
-    # Discover a package from Orch1: for Process/Trigger tests
-    $script:PackageId = (Get-OrchPackage -Path "${script:RefDrive}:\" |
+    # Discover a package on the test drive for Process/Trigger tests. Must be
+    # a package on $script:Drive itself — New-OrchProcess looks up the package
+    # in the same tenant where the process is being created.
+    $script:PackageId = (Get-OrchPackage -Path "${script:Drive}:\" |
         Select-Object -First 1).Id
 }
 
@@ -92,6 +120,7 @@ AfterAll {
     Remove-Item $script:CopyFolder -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item $script:SubFolder -Recurse -Force -ErrorAction SilentlyContinue
     Remove-Item $script:RootFolder -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item $script:SmokeFolder -Recurse -Force -ErrorAction SilentlyContinue
 
     Remove-Item $script:TempDir -Recurse -Force -ErrorAction SilentlyContinue
     $global:ConfirmPreference = $script:OriginalConfirmPreference
@@ -292,9 +321,11 @@ Describe 'QueueItem Import' {
         $result.Success | Should -Be $true
     }
 
-    It 'Imported items can be retrieved' -Tag 'KnownIssue' {
-        # Known issue: Get-OrchQueueItem returns "Invalid OData query options" in some tenants.
-        # The import itself succeeds (verified by the previous test).
+    It 'Imported items can be retrieved' {
+        # Import-OrchQueueItem returns Success=True before the items are
+        # queryable — the bulk-add endpoint persists asynchronously. A brief
+        # wait lets the queue settle before Get-OrchQueueItem reads it.
+        Start-Sleep -Seconds 2
         Clear-OrchCache
         $items = Get-OrchQueueItem -Name $script:QIQueueName -First 10
         $items.Count | Should -Be 3
@@ -459,7 +490,7 @@ Describe 'Asset' {
         $a | Should -Not -BeNullOrEmpty
         $a.ValueScope | Should -Be 'PerRobot'
         $a.HasDefaultValue | Should -Be $false
-        ($a.UserValues | Where-Object UserName -eq $script:TestUserA).Value | Should -Be 'uv'
+        ($a.UserValues | Where-Object UserId -eq $script:TestUserAId).Value | Should -Be 'uv'
         Remove-OrchAsset -Name $nm -Confirm:$false -ErrorAction SilentlyContinue
     }
 
@@ -470,7 +501,7 @@ Describe 'Asset' {
         Clear-OrchCache
         $a = Get-OrchAsset -Name $nm
         $a.UserValues | Should -Not -BeNullOrEmpty
-        ($a.UserValues | Where-Object UserName -eq $script:TestUserA).Value | Should -Be 'uv1'
+        ($a.UserValues | Where-Object UserId -eq $script:TestUserAId).Value | Should -Be 'uv1'
         Remove-OrchAsset -Name $nm -Confirm:$false -ErrorAction SilentlyContinue
     }
 
@@ -483,7 +514,7 @@ Describe 'Asset' {
         Clear-OrchCache
         $a = Get-OrchAsset -Name $nm
         if ($null -ne $a) {
-            ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -BeNullOrEmpty
+            ($a.UserValues | Where-Object UserId -eq $script:TestUserAId) | Should -BeNullOrEmpty
         }
         Remove-OrchAsset -Name $nm -Confirm:$false -ErrorAction SilentlyContinue
     }
@@ -765,7 +796,7 @@ Describe 'Get-OrchCredentialAsset' {
 
     It 'T5.10 UserValues.CredentialUsername populated (historical bug regression)' {
         $a = Get-OrchCredentialAsset -Name "${script:GcaName}_A"
-        $uv = $a.UserValues | Where-Object UserName -eq $script:TestUserA
+        $uv = $a.UserValues | Where-Object UserId -eq $script:TestUserAId
         $uv | Should -Not -BeNullOrEmpty
         $uv.CredentialUsername | Should -Be 'uvUser'
     }
@@ -831,7 +862,7 @@ Describe 'Set-OrchSecretAsset' {
         Set-OrchSecretAsset -Name "${script:SsaName}_Plain" -UserName $script:TestUserA -SecretValue 'uvSecret'
         Clear-OrchCache
         $a = Get-OrchAsset -Name "${script:SsaName}_Plain"
-        ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -Not -BeNullOrEmpty
+        ($a.UserValues | Where-Object UserId -eq $script:TestUserAId) | Should -Not -BeNullOrEmpty
     }
 
     It 'T6.9 -UserName X with empty SecretValue does NOT delete UserValue (unlike Text empty-delete)' {
@@ -839,7 +870,7 @@ Describe 'Set-OrchSecretAsset' {
         Set-OrchSecretAsset -Name "${script:SsaName}_Plain" -UserName $script:TestUserA -SecretValue ''
         Clear-OrchCache
         $a = Get-OrchAsset -Name "${script:SsaName}_Plain"
-        ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -Not -BeNullOrEmpty
+        ($a.UserValues | Where-Object UserId -eq $script:TestUserAId) | Should -Not -BeNullOrEmpty
     }
 
     It 'T6.10 Name wildcard updates multiple assets' {
@@ -963,7 +994,7 @@ Describe 'Remove-OrchAssetUserValue' {
         Remove-OrchAssetUserValue -Name $nm -UserName $script:TestUserA -Confirm:$false
         Clear-OrchCache
         $a = Get-OrchAsset -Name $nm
-        ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -BeNullOrEmpty
+        ($a.UserValues | Where-Object UserId -eq $script:TestUserAId) | Should -BeNullOrEmpty
     }
 
     It 'T8.2/T8.10 Remove UserValue from Secret asset (type-agnostic)' {
@@ -974,7 +1005,7 @@ Describe 'Remove-OrchAssetUserValue' {
         Remove-OrchAssetUserValue -Name $nm -UserName $script:TestUserA -Confirm:$false
         Clear-OrchCache
         $a = Get-OrchAsset -Name $nm
-        ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -BeNullOrEmpty
+        ($a.UserValues | Where-Object UserId -eq $script:TestUserAId) | Should -BeNullOrEmpty
     }
 
     It 'T8.4 Wildcard -UserName matches UserValue' {
@@ -1009,7 +1040,7 @@ Describe 'Remove-OrchAssetUserValue' {
         Remove-OrchAssetUserValue -Name $nm -UserName $script:TestUserA -WhatIf
         Clear-OrchCache
         $a = Get-OrchAsset -Name $nm
-        ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -Not -BeNullOrEmpty
+        ($a.UserValues | Where-Object UserId -eq $script:TestUserAId) | Should -Not -BeNullOrEmpty
     }
 
     It 'T8.8 Non-existent user name is a no-op' {
@@ -1020,7 +1051,7 @@ Describe 'Remove-OrchAssetUserValue' {
         { Remove-OrchAssetUserValue -Name $nm -UserName 'definitely-not-a-user' -Confirm:$false -ErrorAction Stop } |
             Should -Not -Throw
         Clear-OrchCache
-        ((Get-OrchAsset -Name $nm).UserValues | Where-Object UserName -eq $script:TestUserA) | Should -Not -BeNullOrEmpty
+        ((Get-OrchAsset -Name $nm).UserValues | Where-Object UserId -eq $script:TestUserAId) | Should -Not -BeNullOrEmpty
     }
 
     It 'T8.9/T8.11 Global-only asset (no UserValues) is silently skipped' {
@@ -1041,7 +1072,7 @@ Describe 'Remove-OrchAssetUserValue' {
         Remove-OrchAssetUserValue -Name $nm -UserName $script:TestUserA -Confirm:$false
         Clear-OrchCache
         $a = Get-OrchAsset -Name $nm
-        ($a.UserValues | Where-Object UserName -eq $script:TestUserA) | Should -BeNullOrEmpty
+        ($a.UserValues | Where-Object UserId -eq $script:TestUserAId) | Should -BeNullOrEmpty
     }
 }
 
@@ -1693,11 +1724,11 @@ Describe 'Copy Across Folders' {
 # ---------------------------------------------------------------------------
 Describe 'OrchTask' {
     It 'TK1 Get-OrchTask does not throw' {
-        { Get-OrchTask -Path "${script:Drive}:\Shared" -ErrorAction SilentlyContinue } | Should -Not -Throw
+        { Get-OrchTask -Path $script:SmokeFolder -ErrorAction SilentlyContinue } | Should -Not -Throw
     }
 
     It 'TK2 Get-OrchTask -Status Pending does not throw' {
-        { Get-OrchTask -Path "${script:Drive}:\Shared" -Status Pending -ErrorAction SilentlyContinue } | Should -Not -Throw
+        { Get-OrchTask -Path $script:SmokeFolder -Status Pending -ErrorAction SilentlyContinue } | Should -Not -Throw
     }
 
     It 'TK3 Get-OrchTaskAcrossFolder does not throw' {
@@ -1705,11 +1736,11 @@ Describe 'OrchTask' {
     }
 
     It 'TK4 Set-OrchTask -WhatIf does not throw' {
-        { Set-OrchTask -Path "${script:Drive}:\Shared" -Id 1 -Title 'x' -WhatIf } | Should -Not -Throw
+        { Set-OrchTask -Path $script:SmokeFolder -Id 1 -Title 'x' -WhatIf } | Should -Not -Throw
     }
 
     It 'TK5 Remove-OrchTask -WhatIf does not throw' {
-        { Remove-OrchTask -Path "${script:Drive}:\Shared" -Id 1 -WhatIf } | Should -Not -Throw
+        { Remove-OrchTask -Path $script:SmokeFolder -Id 1 -WhatIf } | Should -Not -Throw
     }
 }
 
@@ -1734,12 +1765,12 @@ Describe 'Clear-OrchInactiveSession' {
 # ---------------------------------------------------------------------------
 Describe 'Test-OrchTrigger' {
     It 'TT1 Test-OrchTrigger on a non-matching name is a no-op' {
-        { Test-OrchTrigger -Path "${script:Drive}:\Shared" -Name 'definitely-not-a-trigger' -ErrorAction SilentlyContinue } |
+        { Test-OrchTrigger -Path $script:SmokeFolder -Name 'definitely-not-a-trigger' -ErrorAction SilentlyContinue } |
             Should -Not -Throw
     }
 
     It 'TT2 Test-OrchTrigger surfaces ValidationResult shape (when triggers exist)' {
-        $triggers = Get-OrchTrigger -Path "${script:Drive}:\Shared" -ErrorAction SilentlyContinue
+        $triggers = Get-OrchTrigger -Path $script:SmokeFolder -ErrorAction SilentlyContinue
         if (-not $triggers) {
             Set-ItResult -Skipped -Because 'No trigger in tenant test folder.'
             return
@@ -1760,17 +1791,17 @@ Describe 'Test-OrchTrigger' {
 # ---------------------------------------------------------------------------
 Describe 'Job lifecycle' {
     It 'J1 Restart-OrchJob with -WhatIf does not throw' {
-        { Restart-OrchJob -Path "${script:Drive}:\Shared" -Id 1 -WhatIf } | Should -Not -Throw
+        { Restart-OrchJob -Path $script:SmokeFolder -Id 1 -WhatIf } | Should -Not -Throw
     }
 
     It 'J2 Resume-OrchJob with -WhatIf does not throw' {
         $fakeKey = '00000000-0000-0000-0000-000000000000'
-        { Resume-OrchJob -Path "${script:Drive}:\Shared" -Key $fakeKey -WhatIf } | Should -Not -Throw
+        { Resume-OrchJob -Path $script:SmokeFolder -Key $fakeKey -WhatIf } | Should -Not -Throw
     }
 
     It 'J3 Restart-OrchJob against non-existent job emits a non-fatal error' {
         $err = $null
-        Restart-OrchJob -Path "${script:Drive}:\Shared" -Id 9999999999 -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err
+        Restart-OrchJob -Path $script:SmokeFolder -Id 9999999999 -Confirm:$false -ErrorAction SilentlyContinue -ErrorVariable err
         # Either zero errors (jobs cmdlets sometimes treat unknown id as no-op) or one OrchException — must not crash.
         $true | Should -BeTrue
     }
@@ -1935,46 +1966,46 @@ Describe 'Read-Only Cmdlets' {
     }
 
     It 'Get-OrchQueue does not throw' {
-        { Get-OrchQueue -Path "${script:Drive}:\Shared" } | Should -Not -Throw
+        { Get-OrchQueue -Path $script:SmokeFolder } | Should -Not -Throw
     }
 
     It 'Get-OrchAsset does not throw' {
-        { Get-OrchAsset -Path "${script:Drive}:\Shared" } | Should -Not -Throw
+        { Get-OrchAsset -Path $script:SmokeFolder } | Should -Not -Throw
     }
 
     It 'Get-OrchBucket does not throw' {
-        { Get-OrchBucket -Path "${script:Drive}:\Shared" } | Should -Not -Throw
+        { Get-OrchBucket -Path $script:SmokeFolder } | Should -Not -Throw
     }
 
     It 'Get-OrchProcess does not throw' {
-        { Get-OrchProcess -Path "${script:Drive}:\Shared" } | Should -Not -Throw
+        { Get-OrchProcess -Path $script:SmokeFolder } | Should -Not -Throw
     }
 
     It 'Get-OrchProcessDetail does not throw with wildcard -Name' {
         # -Name is mandatory by design; '*' is the explicit "all releases" form.
-        { Get-OrchProcessDetail -Path "${script:Drive}:\Shared" -Name '*' } | Should -Not -Throw
+        { Get-OrchProcessDetail -Path $script:SmokeFolder -Name '*' } | Should -Not -Throw
     }
 
     It 'Get-OrchProcess -ExpandDetails emits a deprecation warning naming Get-OrchProcessDetail' {
         $warnings = $null
-        Get-OrchProcess -Path "${script:Drive}:\Shared" -ExpandDetails `
+        Get-OrchProcess -Path $script:SmokeFolder -ExpandDetails `
                         -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
         ($warnings | Where-Object { $_ -match "Get-OrchProcessDetail" }) | Should -Not -BeNullOrEmpty `
             -Because "the deprecation warning must name the canonical cmdlet"
     }
 
     It 'Get-OrchTrigger does not throw' {
-        { Get-OrchTrigger -Path "${script:Drive}:\Shared" } | Should -Not -Throw
+        { Get-OrchTrigger -Path $script:SmokeFolder } | Should -Not -Throw
     }
 
     It 'Get-OrchTriggerDetail does not throw with wildcard -Name' {
         # -Name is mandatory by design; '*' is the explicit "all triggers" form.
-        { Get-OrchTriggerDetail -Path "${script:Drive}:\Shared" -Name '*' } | Should -Not -Throw
+        { Get-OrchTriggerDetail -Path $script:SmokeFolder -Name '*' } | Should -Not -Throw
     }
 
     It 'Get-OrchTrigger -ExpandDetails emits a deprecation warning naming Get-OrchTriggerDetail' {
         $warnings = $null
-        Get-OrchTrigger -Path "${script:Drive}:\Shared" -ExpandDetails `
+        Get-OrchTrigger -Path $script:SmokeFolder -ExpandDetails `
                         -WarningVariable warnings -WarningAction SilentlyContinue | Out-Null
         ($warnings | Where-Object { $_ -match "Get-OrchTriggerDetail" }) | Should -Not -BeNullOrEmpty `
             -Because "the deprecation warning must name the canonical cmdlet"
@@ -2792,29 +2823,36 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         #   AssignStringIfNotNullOrEmpty skips → posted user had no CredentialType.
         # Post-fix: row-1's "NoCredential" survives → posted as specified.
 
-        $robotName = "${script:Prefix}Reg_Robot"
+        # The CSV-clobbering bug is at the OrchCsvHelper layer (parameter assignment),
+        # not robot-specific. Use $script:TestUserA so the test doesn't depend on a
+        # robot identity being pre-registered in the tenant's directory.
+        #
+        # Add-OrchUser fails with "account already exists" if the target user is
+        # already a tenant member, so remove first and let the CSV import re-add
+        # via Identity Server lookup. BeforeAll for the next test run re-assigns
+        # TestUserA to RootFolder, so this cleanup doesn't leak across runs.
+        $user = $script:TestUserA
+        Remove-OrchUser -UserName $user -Path "${script:Drive}:\" -Confirm:$false -ErrorAction SilentlyContinue
+        Clear-OrchCache
 
-        # Use a Robot-type user (tenant-local, no external directory dependency).
-        # 'Robot' role is a built-in mixed-scope role on every Orchestrator install.
-        try {
-            $csv = @"
-UserName,Type,Role,UR_CredentialType
-$robotName,Robot,Robot,NoCredential
-$robotName,Robot,Robot,
+        # MayHaveUnattendedSession=True is required for DirectoryUser to receive an
+        # UnattendedRobot block; without it the server returns the user with
+        # UnattendedRobot=$null regardless of UR_* values, masking the regression.
+        $csv = @"
+UserName,Type,MayHaveUnattendedSession,UR_CredentialType
+$user,DirectoryUser,True,NoCredential
+$user,DirectoryUser,,
 "@ | ConvertFrom-Csv
 
-            $csv | Add-OrchUser -Path "${script:Drive}:\" -ErrorAction Stop -WarningAction SilentlyContinue
-            Clear-OrchCache
+        $csv | Add-OrchUser -Path "${script:Drive}:\" -ErrorAction Stop -WarningAction SilentlyContinue
+        Clear-OrchCache
 
-            $created = Get-OrchUser -Path "${script:Drive}:\" -UserName $robotName
-            $created | Should -Not -BeNullOrEmpty -Because 'robot user must be created'
-            $created.UnattendedRobot | Should -Not -BeNullOrEmpty `
-                -Because 'row 1 specified UR_CredentialType, so UnattendedRobot block must be posted'
-            $created.UnattendedRobot.CredentialType | Should -Be 'NoCredential' `
-                -Because "row 2's blank UR_CredentialType cell must NOT clobber row 1's value"
-        } finally {
-            Remove-OrchUser -UserName $robotName -Path "${script:Drive}:\" -Confirm:$false -ErrorAction SilentlyContinue
-        }
+        $created = Get-OrchUserDetail -Path "${script:Drive}:\" -UserName $user
+        $created | Should -Not -BeNullOrEmpty -Because 'user must be retrievable after Add-OrchUser'
+        $created.UnattendedRobot | Should -Not -BeNullOrEmpty `
+            -Because 'row 1 specified UR_CredentialType, so UnattendedRobot block must be posted'
+        $created.UnattendedRobot.CredentialType | Should -Be 'NoCredential' `
+            -Because "row 2's blank UR_CredentialType cell must NOT clobber row 1's value"
     }
 
     It 'R12: Add-OrchCalendarDate compares against UTC.Today, not local Today' {
