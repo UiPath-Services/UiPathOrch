@@ -4,18 +4,23 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-// Generic base for the Get-Orch{Asset,Bucket,Queue}Link trio. The streaming
-// algorithm — semaphore-capped per-folder chains (Phase 1 entity list,
-// Phase 2 fan-out per-entity GetFoldersFor* calls) with a fixed lookahead
-// window so consumer-side drain overlaps producer-side work — was previously
-// duplicated across three files. Concrete cmdlets supply the per-entity
-// primitives and the link-DTO constructor; the base owns the algorithm.
+// Generic base for the Get-Orch{Asset,Bucket,Queue}Link trio. Uses
+// OrchThreadPool.RunForEachChained: Phase 1 fetches the per-folder entity
+// list, fanout produces (drive, folder, entity) tuples, Phase 2 calls
+// GetFoldersFor* per entity. Phase 1 + Phase 2 share a single semaphore
+// (cap=4) so the total in-flight API call budget stays at 4 across the
+// chain, while consumer drain streams in (folder, entity, link) order.
 //
-// Cancellation: Ctrl+C is signalled into ConsoleCancelHandler.Token. We
-// Wait(token) on each folder task instead of GetAwaiter().GetResult() so
-// the main thread bails promptly. In-flight workers may still complete
-// their current synchronous API call (no token plumbed through OrchAPISession),
-// but new sem.WaitAsync(token) calls bail — and per-key cache atomicity in
+// Output ordering: drivesFolders sorted by PSPath, entities OrderBy(name)
+// inside each Phase 1 result, links OrderBy(FullyQualifiedName) inside
+// each Phase 2 result. ChainedThreadPool yields tasks in flat insertion
+// order (= source order × per-source enumeration order), so no
+// after-the-fact sort is needed.
+//
+// Cancellation: ConsoleCancelHandler.Token forwards to OrchTask.GetResult,
+// which throws OperationCanceledException as soon as the consumer notices.
+// In-flight workers may still complete their current synchronous API call
+// (no token plumbed through OrchAPISession), but per-key cache atomicity in
 // OrchDriveInfo (the link cache is set only after a full successful response)
 // keeps the cache clean either way.
 //
@@ -44,9 +49,6 @@ public abstract class GetOrchLinkCmdletBase<TEntity, TLink> : OrchestratorPSCmdl
     [Parameter]
     public uint Depth { get; set; }
 
-    private const int MaxDegreeOfParallelism = 4;
-    private const int FolderLookaheadWindow = 4;
-
     // Stable identifier emitted on WriteError, e.g. "GetAssetLinkError".
     protected abstract string ErrorId { get; }
 
@@ -55,8 +57,6 @@ public abstract class GetOrchLinkCmdletBase<TEntity, TLink> : OrchestratorPSCmdl
     protected abstract long GetEntityId(TEntity entity);
     protected abstract AccessibleFoldersDto? GetFoldersForEntity(OrchDriveInfo drive, Folder srcFolder, TEntity entity);
     protected abstract TLink BuildLink(string srcPath, TEntity entity, string linkFolderPath, long srcFolderId, long linkFolderId);
-
-    private record FolderRow(TEntity Entity, AccessibleFoldersDto? Accessible);
 
     // SimpleFolder has no GetPSPath() — it's a value type returned by the
     // GetFoldersFor* family. Build the PSPath as drive prefix + FullyQualifiedName,
@@ -69,116 +69,62 @@ public abstract class GetOrchLinkCmdletBase<TEntity, TLink> : OrchestratorPSCmdl
 
     protected sealed override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth).ToList();
+        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth)
+            .OrderBy(df => df.folder.GetPSPath())
+            .ToList();
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        var token = cancelHandler.Token;
 
-        // Single semaphore caps every API round-trip (entity list and
-        // GetFoldersFor* alike) at MaxDegreeOfParallelism — same as a
-        // typical OrchThreadPool inner cap.
-        using var sem = new SemaphoreSlim(MaxDegreeOfParallelism);
-
-        var folderTasks = new Task<FolderRow[]>?[drivesFolders.Count];
-
-        // Per-folder chain: Phase 1 (entity list) → fan-out Phase 2
-        // (GetFoldersFor* per entity). Each await on the semaphore takes
-        // one slot, so a folder with N matching entities uses 1+N slot
-        // acquisitions total, all subject to the global cap.
-        Func<int, Task<FolderRow[]>> startFolder = idx => Task.Run(async () =>
-        {
-            var (drive, folder) = drivesFolders[idx];
-
-            await sem.WaitAsync(token);
-            List<TEntity> entities;
-            try
-            {
-                entities = GetEntities(drive, folder)
-                    .FilterByWildcards(e => GetEntityName(e), wpName)
-                    .OrderBy(e => GetEntityName(e))
-                    .ToList();
-            }
-            finally { sem.Release(); }
-
-            return await Task.WhenAll(entities.Select(entity => Task.Run<FolderRow>(async () =>
-            {
-                await sem.WaitAsync(token);
-                try
-                {
-                    return new FolderRow(entity, GetFoldersForEntity(drive, folder, entity));
-                }
-                finally { sem.Release(); }
-            })));
-        });
-
-        // Prefill the initial lookahead window so the first folders are
-        // already racing while the main thread sets up the consumer loop.
-        for (int i = 0; i < Math.Min(FolderLookaheadWindow, folderTasks.Length); i++)
-        {
-            folderTasks[i] = startFolder(i);
-        }
+        using var pool = OrchThreadPool.RunForEachChained(
+            drivesFolders,
+            df => df.folder.GetPSPath(),
+            df => (object)df.folder,
+            df => GetEntities(df.drive, df.folder)
+                .FilterByWildcards(e => GetEntityName(e), wpName)
+                .OrderBy(e => GetEntityName(e))
+                .Select(e => (df.drive, df.folder, entity: e)),
+            t => t.folder.GetPSPath(),
+            t => (object)t.folder,
+            t => GetFoldersForEntity(t.drive, t.folder, t.entity));
 
         var emitted = new HashSet<(long srcFolderId, long entityId, long linkFolderId)>();
 
-        for (int i = 0; i < drivesFolders.Count; i++)
+        foreach (var task in pool)
         {
-            // Throw rather than swallow the cancel — OperationCanceledException
-            // propagates to PowerShell which surfaces the standard "Operation
-            // was canceled" message, matching how GetBucket and friends behave.
-            token.ThrowIfCancellationRequested();
-
-            // Slide the lookahead window forward: as we begin draining
-            // folder[i], queue up folder[i + window] so it can start
-            // racing in the background while we emit folder[i]'s rows.
-            int next = i + FolderLookaheadWindow;
-            if (next < folderTasks.Length && folderTasks[next] is null)
-            {
-                folderTasks[next] = startFolder(next);
-            }
-
-            var (drive, folder) = drivesFolders[i];
-            FolderRow[] rows;
             try
             {
-                folderTasks[i]!.Wait(token);
-                rows = folderTasks[i]!.Result;
-            }
-            catch (AggregateException aex) when (aex.InnerException is not null)
-            {
-                string target = folder.GetPSPath();
-                WriteError(new ErrorRecord(new OrchException(target, aex.InnerException), ErrorId,
-                    ErrorCategory.InvalidOperation, target));
-                continue;
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                string target = folder.GetPSPath();
-                WriteError(new ErrorRecord(new OrchException(target, ex), ErrorId,
-                    ErrorCategory.InvalidOperation, target));
-                continue;
-            }
+                var accessible = task.GetResult(cancelHandler.Token);
+                if (accessible?.AccessibleFolders is not { Length: > 1 }) continue;
 
-            long srcId = folder.Id ?? 0;
-            string sourcePath = folder.GetPSPath();
+                var (drive, folder, entity) = task.Source;
+                long srcId = folder.Id ?? 0;
+                string sourcePath = folder.GetPSPath();
+                long entityId = GetEntityId(entity);
 
-            foreach (var row in rows)
-            {
-                token.ThrowIfCancellationRequested();
-                if (row.Accessible?.AccessibleFolders is not { Length: > 1 }) continue;
-
-                long entityId = GetEntityId(row.Entity);
-
-                foreach (var linkFolder in row.Accessible.AccessibleFolders.OrderBy(f => f.FullyQualifiedName))
+                foreach (var linkFolder in accessible.AccessibleFolders.OrderBy(f => f.FullyQualifiedName))
                 {
-                    token.ThrowIfCancellationRequested();
+                    cancelHandler.Token.ThrowIfCancellationRequested();
                     long linkId = linkFolder.Id ?? 0;
                     if (linkId == srcId) continue;
                     if (!emitted.Add((srcId, entityId, linkId))) continue;
 
-                    WriteObject(BuildLink(sourcePath, row.Entity, LinkFolderPSPath(drive, linkFolder), srcId, linkId));
+                    WriteObject(BuildLink(sourcePath, entity, LinkFolderPSPath(drive, linkFolder), srcId, linkId));
                 }
             }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, ErrorId, ErrorCategory.InvalidOperation, ex.Target));
+            }
+        }
+
+        // Phase 1 errors (per-folder GetEntities failures) — drained after
+        // Phase 2 completes. Same ErrorId as Phase 2 to keep the link
+        // cmdlets simple; switch to a separate ErrorId here if callers need
+        // to distinguish.
+        foreach (var (_, ex) in pool.Phase1Errors)
+        {
+            WriteError(new ErrorRecord(ex, ErrorId, ErrorCategory.InvalidOperation, ex.Target));
         }
     }
 }

@@ -29,48 +29,45 @@ public class GetPackageVersionCommand : OrchestratorPSCmdlet
         var wpId = Id.ConvertToWildcardPatternList();
         var wpVersion = Version.ConvertToWildcardPatternList();
 
-        using var results = OrchThreadPool.RunForEach(drivesFolders,
-            df => df.folder.GetPSPath(),
-            df => df.folder,
-            df =>
-            {
-                var packages = df.drive.GetPackages(df.folder)
-                    .FilterByWildcards(p => p?.Id, wpId)
-                    .OrderBy(p => p.Id!.ToLower());
-
-                return OrchThreadPool.RunForEach(packages,
-                    package => package.GetPSPath(),
-                    package => package,
-                    package => df.drive.GetPackageVersions(df.folder, package.Id!));
-            });
-
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+
+        // Phase 1 = GetPackages per (drive, folder); fanout to (drive, folder, package).
+        // Phase 2 = GetPackageVersions per package. Cap=4 shared across both phases
+        // by ChainedThreadPool (avoids the cap-multiplication of nested OrchThreadPool).
+        using var pool = OrchThreadPool.RunForEachChained(
+            drivesFolders,
+            df => df.folder.GetPSPath(),
+            df => (object)df.folder,
+            df => df.drive.GetPackages(df.folder)
+                .FilterByWildcards(p => p?.Id, wpId)
+                .OrderBy(p => p.Id!.ToLower())
+                .Select(p => (df.drive, df.folder, package: p)),
+            t => t.package.GetPSPath(),
+            t => (object)t.package,
+            t => t.drive.GetPackageVersions(t.folder, t.package.Id!));
+
+        foreach (var task in pool)
         {
             try
             {
-                using var threads = result.GetResult(cancelHandler.Token);
-
-                foreach (var thread in threads!)
-                {
-                    try
-                    {
-                        var versions = thread.GetResult(cancelHandler.Token);
-                        WriteObject(versions!
-                            .FilterByWildcards(v => v?.Version, wpVersion),
-                            //.OrderBy(v => v.Version!, VersionComparer.Instance),
-                            true);
-                    }
-                    catch (OrchException ex)
-                    {
-                        WriteError(new ErrorRecord(ex, "GetPackageVersionError", ErrorCategory.InvalidOperation, ex.Target));
-                    }
-                }
+                var versions = task.GetResult(cancelHandler.Token);
+                WriteObject(versions!
+                    .FilterByWildcards(v => v?.Version, wpVersion),
+                    //.OrderBy(v => v.Version!, VersionComparer.Instance),
+                    true);
             }
             catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(ex, "GetPackageError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(ex, "GetPackageVersionError", ErrorCategory.InvalidOperation, ex.Target));
             }
+        }
+
+        // Phase 1 errors (GetPackages failures) — distinct ErrorId to
+        // preserve the legacy distinction between "couldn't list packages"
+        // and "couldn't get versions of a specific package".
+        foreach (var (_, ex) in pool.Phase1Errors)
+        {
+            WriteError(new ErrorRecord(ex, "GetPackageError", ErrorCategory.InvalidOperation, ex.Target));
         }
     }
 }

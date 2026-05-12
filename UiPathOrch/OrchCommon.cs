@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Data;
 using System.Management.Automation;
 using System.Text.RegularExpressions;
@@ -366,6 +367,195 @@ public static class OrchThreadPool
         Func<TSource, TResult> getResultFunc)
     {
         return OrchThreadPoolImpl<TSource, TResult>.RunForEach(sources, getPathFunc, getTargetFunc, getResultFunc);
+    }
+
+    /// <summary>
+    /// Two-phase variant of <see cref="RunForEach"/>. Phase 1 runs the
+    /// fanout function per source (typically a list-fetch + projection to
+    /// per-item Phase 2 sources). Phase 2 runs the per-item fetcher. Both
+    /// phases share a single <see cref="SemaphoreSlim"/> capped at 4 so the
+    /// total in-flight API call budget stays at 4 across the entire chain
+    /// (avoiding the cap-multiplication trap of nesting two
+    /// <see cref="RunForEach"/> calls).
+    ///
+    /// Streaming: Phase 2 tasks are enqueued as Phase 1 results arrive; the
+    /// consumer foreach starts emitting in flat order (Phase 1 source order
+    /// × per-source enumeration order) without waiting for all Phase 1 to
+    /// finish.
+    ///
+    /// Phase 1 errors don't appear in the foreach stream — they're collected
+    /// in <see cref="ChainedThreadPool{TSource, TFlat, TResult}.Phase1Errors"/>
+    /// for the caller to drain after the main loop. This lets the caller
+    /// emit a different ErrorRecord ErrorId for Phase 1 vs Phase 2 errors.
+    /// </summary>
+    public static ChainedThreadPool<TSource, TFlat, TResult> RunForEachChained<TSource, TFlat, TResult>(
+        IEnumerable<TSource> sources,
+        Func<TSource, string> phase1PathFunc,
+        Func<TSource, object> phase1TargetFunc,
+        Func<TSource, IEnumerable<TFlat>> phase1Fanout,
+        Func<TFlat, string> phase2PathFunc,
+        Func<TFlat, object> phase2TargetFunc,
+        Func<TFlat, TResult> phase2)
+    {
+        return new ChainedThreadPool<TSource, TFlat, TResult>(
+            sources, phase1PathFunc, phase1TargetFunc, phase1Fanout,
+            phase2PathFunc, phase2TargetFunc, phase2);
+    }
+}
+
+public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IEnumerable<OrchTask<TFlat, TResult>>
+{
+    // Cap=4 hardcoded by design: matches the previous bespoke link-cmdlet
+    // algorithm and the documented Orchestrator-friendly parallelism budget.
+    private const int CapacityHardcoded = 4;
+
+    private readonly BlockingCollection<OrchTask<TFlat, TResult>> _queue = [];
+    private readonly SemaphoreSlim _semaphore = new(CapacityHardcoded);
+    private readonly List<(TSource source, OrchException exception)> _phase1Errors = [];
+    private readonly ConcurrentBag<Task> _phase2Tasks = [];
+    private readonly CancellationTokenSource _cts = new();
+    private readonly Task _producer;
+
+    /// <summary>
+    /// Phase 1 errors that occurred during fanout. Safe to enumerate only
+    /// after the main consumer loop drains all Phase 2 tasks (the getter
+    /// blocks until the producer completes).
+    /// </summary>
+    public IEnumerable<(TSource source, OrchException exception)> Phase1Errors
+    {
+        get
+        {
+            try { _producer.Wait(); }
+            catch { /* producer-internal failures already recorded in _phase1Errors */ }
+            return _phase1Errors;
+        }
+    }
+
+    internal ChainedThreadPool(
+        IEnumerable<TSource> sources,
+        Func<TSource, string> phase1PathFunc,
+        Func<TSource, object> phase1TargetFunc,
+        Func<TSource, IEnumerable<TFlat>> phase1Fanout,
+        Func<TFlat, string> phase2PathFunc,
+        Func<TFlat, object> phase2TargetFunc,
+        Func<TFlat, TResult> phase2)
+    {
+        var mainContext = SynchronizationContext.Current;
+
+        var token = _cts.Token;
+
+        _producer = Task.Run(async () =>
+        {
+            try
+            {
+                foreach (var source in sources)
+                {
+                    if (token.IsCancellationRequested) break;
+
+                    List<TFlat>? items = null;
+                    try
+                    {
+                        await _semaphore.WaitAsync(token);
+                    }
+                    catch (OperationCanceledException) { break; }
+
+                    try
+                    {
+                        // Materialize while the slot is held so the API call
+                        // (and any deferred LINQ wrapping it) is counted
+                        // against the cap, not deferred to consumer time.
+                        items = phase1Fanout(source).ToList();
+                    }
+                    catch (Exception ex)
+                    {
+                        var oex = new OrchException(phase1PathFunc(source), ex)
+                        {
+                            Target = phase1TargetFunc(source)
+                        };
+                        lock (_phase1Errors) { _phase1Errors.Add((source, oex)); }
+                    }
+                    finally { _semaphore.Release(); }
+
+                    if (items is null) continue;
+
+                    foreach (var flat in items)
+                    {
+                        if (token.IsCancellationRequested) break;
+
+                        var task = new OrchTask<TFlat, TResult>();
+                        _queue.Add(task);
+
+                        // Fire-and-forget Phase 2 task; tracked in
+                        // _phase2Tasks so Dispose can wait on stragglers.
+                        var phase2Task = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                await _semaphore.WaitAsync(token);
+                            }
+                            catch (OperationCanceledException ex)
+                            {
+                                // Mark the task cancelled so the consumer's
+                                // GetResult observes it (and the task can be
+                                // disposed cleanly).
+                                task.SetException(flat, phase2PathFunc(flat), phase2TargetFunc(flat), ex);
+                                return;
+                            }
+
+                            try
+                            {
+                                var result = phase2(flat);
+                                if (mainContext is not null)
+                                {
+                                    mainContext.Post(_ => task.SetResult(flat, result), null);
+                                }
+                                else
+                                {
+                                    task.SetResult(flat, result);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                task.SetException(flat, phase2PathFunc(flat), phase2TargetFunc(flat), ex);
+                            }
+                            finally { _semaphore.Release(); }
+                        });
+                        _phase2Tasks.Add(phase2Task);
+                    }
+                }
+            }
+            finally
+            {
+                _queue.CompleteAdding();
+            }
+        });
+    }
+
+    public IEnumerator<OrchTask<TFlat, TResult>> GetEnumerator()
+    {
+        foreach (var task in _queue.GetConsumingEnumerable())
+            yield return task;
+    }
+
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+
+    public void Dispose()
+    {
+        // Cancel first so producer/Phase 2 tasks waiting on the semaphore
+        // bail out immediately. Already-running Phase 2 API calls finish
+        // naturally (we can't cancel synchronous HTTP), so the wait below
+        // is bounded by max-API-latency × cap, not by the size of the queue.
+        try { _cts.Cancel(); } catch { }
+
+        // Wait briefly for producer + Phase 2 tasks so stragglers don't
+        // throw ObjectDisposedException when they release the semaphore.
+        try { _producer.Wait(TimeSpan.FromSeconds(5)); } catch { }
+        try { Task.WaitAll([.. _phase2Tasks], TimeSpan.FromSeconds(5)); } catch { }
+
+        _queue.Dispose();
+        _semaphore.Dispose();
+        _cts.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
 
