@@ -99,7 +99,11 @@ public class GetUserDetailCommand : OrchestratorPSCmdlet
     /// -ExpandDetails path, and by GetUserCommand's -ExportCsv path.
     ///
     /// Any of the three wildcard-pattern lists may be null (= no filter on
-    /// that field). Detail fetches run in parallel via OrchThreadPool.
+    /// that field). Phase 1 (drive.GetUsers + filter) and Phase 2
+    /// (drive.GetUser per matched user) share a single cap=4 semaphore via
+    /// ChainedThreadPool — drive-level fetches can race, and per-drive
+    /// progress streams as Phase 2 results arrive without waiting for all
+    /// drives' Phase 1 to finish.
     /// </summary>
     internal static void EmitDetailedUsers(
         OrchestratorPSCmdlet caller,
@@ -110,49 +114,50 @@ public class GetUserDetailCommand : OrchestratorPSCmdlet
         StreamWriter? writer)
     {
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives)
+
+        using var pool = OrchThreadPool.RunForEachChained(
+            drives,
+            drive => drive.NameColonSeparator,
+            drive => (object)drive,
+            drive => drive.GetUsers()
+                .FilterByWildcards(u => u?.FullName, fullNameWildcards)
+                .FilterByWildcards(u => u?.UserName, userNameWildcards)
+                .FilterByWildcards(u => u?.Type, typeWildcards)
+                .OrderBy(u => u.UserName)
+                .Select(u => (drive, user: u)),
+            t => t.user.GetPSPath(),
+            t => (object)t.user,
+            t => t.drive.GetUser(t.user),
+            cancelHandler.Token);
+
+        // Total user count is unknown until all Phase 1 fetches complete,
+        // so the progress bar shows the running index without a percentage.
+        int index = 0;
+        using var reporter = new ProgressReporter(caller, 1, 0, "Get users... ");
+        foreach (var task in pool)
         {
             try
             {
-                var users = drive.GetUsers();
-                var targetUsers = users
-                    .FilterByWildcards(u => u?.FullName, fullNameWildcards)
-                    .FilterByWildcards(u => u?.UserName, userNameWildcards)
-                    .FilterByWildcards(u => u?.Type, typeWildcards)
-                    .OrderBy(u => u.UserName)
-                    .ToList();
+                var detailedUser = task.GetResult(cancelHandler.Token);
+                if (detailedUser is null) continue;
 
-                if (targetUsers.Count == 0) continue;
+                reporter.WriteProgress(++index, detailedUser.GetPSPath());
 
-                using var results = OrchThreadPool.RunForEach(targetUsers,
-                    user => user.GetPSPath(),
-                    user => user,
-                    user => drive.GetUser(user));
-
-                int index = 0;
-                using var reporter = new ProgressReporter(caller, 1, targetUsers.Count, "Get users... ");
-                foreach (var result in results)
-                {
-                    try
-                    {
-                        var detailedUser = result.GetResult(cancelHandler.Token);
-                        if (detailedUser is null) continue;
-
-                        reporter.WriteProgress(++index, detailedUser.GetPSPath());
-
-                        if (writer is not null) { WriteCsvContent(writer, drive, detailedUser); }
-                        else { caller.WriteObject(detailedUser); }
-                    }
-                    catch (OrchException ex)
-                    {
-                        caller.WriteError(new ErrorRecord(ex, "GetUserDetailError", ErrorCategory.InvalidOperation, ex.Target));
-                    }
-                }
+                var (drive, _) = task.Source;
+                if (writer is not null) { WriteCsvContent(writer, drive, detailedUser); }
+                else { caller.WriteObject(detailedUser); }
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                caller.WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetUserDetailError", ErrorCategory.InvalidOperation, drive));
+                caller.WriteError(new ErrorRecord(ex, "GetUserDetailError", ErrorCategory.InvalidOperation, ex.Target));
             }
+        }
+
+        // Phase 1 errors (per-drive GetUsers failures). Same ErrorId as
+        // Phase 2 to preserve the legacy single-id behavior.
+        foreach (var (_, ex) in pool.Phase1Errors)
+        {
+            caller.WriteError(new ErrorRecord(ex, "GetUserDetailError", ErrorCategory.InvalidOperation, ex.Target));
         }
     }
 
