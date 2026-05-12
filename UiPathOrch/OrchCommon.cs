@@ -452,6 +452,11 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
     private readonly SemaphoreSlim _semaphore = new(CapacityHardcoded);
     private readonly List<(TSource source, OrchException exception)> _phase1Errors = [];
     private readonly ConcurrentBag<Task> _phase2Tasks = [];
+    // Track every OrchTask the producer creates so Dispose can release the
+    // ManualResetEventSlim each one owns. BlockingCollection.Dispose does
+    // not dispose its items, and the queue may still contain undrained
+    // tasks if the consumer abandons the loop early.
+    private readonly ConcurrentBag<OrchTask<TFlat, TResult>> _allTasks = [];
     private readonly CancellationTokenSource _cts;
     private readonly Task _producer;
 
@@ -529,6 +534,7 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
                         if (token.IsCancellationRequested) break;
 
                         var task = new OrchTask<TFlat, TResult>();
+                        _allTasks.Add(task);
                         _queue.Add(task);
 
                         // Fire-and-forget Phase 2 task; tracked in
@@ -595,6 +601,15 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
         // cleanly; in-flight API calls are abandoned to UnobservedTaskException.
         try { _producer.Wait(TimeSpan.FromMilliseconds(100)); } catch { }
         try { Task.WaitAll([.. _phase2Tasks], TimeSpan.FromMilliseconds(100)); } catch { }
+
+        // Dispose every OrchTask the producer created. Tasks the producer
+        // adds after this snapshot (still racing past the cancel) leak their
+        // CompletedEvent — acceptable since MRES uses a kernel handle only
+        // on contended Wait, and the GC will reclaim them eventually.
+        foreach (var task in _allTasks)
+        {
+            try { task.Dispose(); } catch { }
+        }
 
         _queue.Dispose();
         _semaphore.Dispose();
