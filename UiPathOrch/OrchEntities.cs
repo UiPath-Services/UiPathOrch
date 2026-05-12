@@ -4694,6 +4694,28 @@ public class TmRole
     public string? deletedBy { get; set; }
 }
 
+// /api/Status/Version response. PascalCase C# properties map to the
+// endpoint's lowercase JSON keys via [JsonPropertyName] so PowerShell
+// output reads naturally (System.Text.Json default deserialization is
+// case-sensitive, hence the explicit attributes).
+public class OrchProductVersion
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    [JsonPropertyName("version")]
+    public string? Version { get; set; }
+
+    [JsonPropertyName("timestamp")]
+    public DateTime? Timestamp { get; set; }
+
+    [JsonPropertyName("deployment")]
+    public string? Deployment { get; set; }
+
+    [JsonPropertyName("configsVersion")]
+    public string? ConfigsVersion { get; set; }
+}
+
 // UiPath.TestManagementHub.WebAPI.Controllers.ServerInfo
 public class TmServerInfo
 {

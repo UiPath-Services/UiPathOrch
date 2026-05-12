@@ -1285,6 +1285,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly SingleCachePerTenant<UpdateSettings> UpdateSettings;
     public readonly SingleCachePerTenant<License> LicenseSettings;
     public readonly SingleCachePerTenant<LibraryFeed[]> LibraryFeeds;
+    public readonly SingleCachePerTenant<OrchProductVersion> ProductVersion;
 
     // Indexed tenant entities
     public readonly IndexedCachePerTenant<User, UserPrivilege> UserPrivileges;
@@ -1500,6 +1501,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         // Non-indexed tenant entities
         ActivitySettings = new(this, OrchAPISession.GetActivitySettings, e => e.Path = NameColonSeparator);
+        ProductVersion = new(this, OrchAPISession.GetProductVersion, e => e.Path = NameColonSeparator);
         ConnectionString = new(this, OrchAPISession.GetConnectionString, e => e.Path = NameColonSeparator);
         LicenseSettings = new(this, OrchAPISession.GetLicenseSettings, e => e.Path = NameColonSeparator);
         MachineSessionRuntimes = new(this, OrchAPISession.GetMachineSessionRuntimes, e => e.Path = NameColonSeparator);

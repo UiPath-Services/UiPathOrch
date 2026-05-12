@@ -770,6 +770,15 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<ActivitySettings>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetActivitySettings");
     }
 
+    // /api/Status/Version returns the deployed product build version
+    // (e.g. "26.3.0-s192.2662"), distinct from the API contract version
+    // exposed as ApiVersion above. Cloud also returns deployment topology
+    // (primary/primary etc.); on-prem leaves deployment / configsVersion null.
+    public OrchProductVersion? GetProductVersion()
+    {
+        return HttpRequest<OrchProductVersion>(HttpMethod.Get, "/api/Status/Version");
+    }
+
     public UpdateSettings? GetUpdateSettings()
     {
         return HttpRequest<UpdateSettings>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetUpdateSettings");
