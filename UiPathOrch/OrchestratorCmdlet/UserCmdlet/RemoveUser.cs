@@ -52,7 +52,7 @@ public class RemoveUserCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var users = drive.GetUsers();
+                var users = drive.Users.Get();
                 var targetUsers = users
                     .FilterByWildcards(u => u?.UserName, wpUserName)
                     .FilterByWildcards(u => u?.FullName, wpFullName)

@@ -335,7 +335,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         // So also search dstDrive using this user's email address.
 
                         // First, check the srcUser's email.
-                        var srcUserEmail = srcDrive.GetUsers().FirstOrDefault(u => u.Id == userRole.UserEntity?.Id)?.EmailAddress;
+                        var srcUserEmail = srcDrive.Users.Get().FirstOrDefault(u => u.Id == userRole.UserEntity?.Id)?.EmailAddress;
 
                         // TODO: If not found among local users, need to search the directory.
                         //if (string.IsNullOrEmpty(srcUserEmail))
@@ -1029,7 +1029,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         //string msg = $"Migrating the user id {Path.Combine(srcDrive.NameColon, srcUserId?.ToString() ?? "")}";
         try
         {
-            var srcUser = srcDrive.GetUsers().FirstOrDefault(u => u.Id == srcUserId);
+            var srcUser = srcDrive.Users.Get().FirstOrDefault(u => u.Id == srcUserId);
             if (srcUser is null)
             {
                 _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have user with Id = {srcUserId}.");
@@ -1044,7 +1044,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 searchName = mappedName;
             }
 
-            var dstUsers = dstDrive.GetUsers();
+            var dstUsers = dstDrive.Users.Get();
             var dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, searchName, StringComparison.OrdinalIgnoreCase) == 0);
             if (dstUser is null)
             {
@@ -1057,7 +1057,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 // If AssignDirectoryUser was already executed in CopyFolderUsers,
                 // the tenant user cache may be stale, so clear it and retry
                 dstDrive.Users.ClearCache();
-                dstUsers = dstDrive.GetUsers();
+                dstUsers = dstDrive.Users.Get();
                 dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, searchName, StringComparison.OrdinalIgnoreCase) == 0);
             }
 
@@ -2971,7 +2971,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 string? srcOwnerUserName = null;
                 if (srcWorkspace?.OwnerId is not null)
                 {
-                    srcOwnerUserName = srcDrive.GetUsers().FirstOrDefault(u => u.Id == srcWorkspace.OwnerId)?.UserName;
+                    srcOwnerUserName = srcDrive.Users.Get().FirstOrDefault(u => u.Id == srcWorkspace.OwnerId)?.UserName;
                 }
                 // If OwnerId is empty, infer from the folder name
                 if (string.IsNullOrEmpty(srcOwnerUserName) && srcFolder.DisplayName?.EndsWith("'s workspace") == true)
@@ -2984,7 +2984,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     && !string.IsNullOrEmpty(dstUserName))
                 {
                     // Get the dst user's Id and search PersonalWorkspaces by OwnerId
-                    var dstUser = dstDrive.GetUsers().FirstOrDefault(u => string.Compare(u.UserName, dstUserName, StringComparison.OrdinalIgnoreCase) == 0);
+                    var dstUser = dstDrive.Users.Get().FirstOrDefault(u => string.Compare(u.UserName, dstUserName, StringComparison.OrdinalIgnoreCase) == 0);
                     if (dstUser?.Id is not null)
                     {
                         var dstWorkspace = dstDrive.PersonalWorkspaces.Get().FirstOrDefault(pw => pw.OwnerId == dstUser.Id);
@@ -3305,7 +3305,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 CopyRoleCommand.CopyRoles(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
             }
 
-            if (ShouldCopyTenantEntities("User", srcDrive, srcDrive.GetUsers(), dstDrive))
+            if (ShouldCopyTenantEntities("User", srcDrive, srcDrive.Users.Get(), dstDrive))
             {
                 CopyUserCommand.CopyUsers(this, srcDrive, null, null, null, [dstDrive], true, cancelHandler.Token, userMapping);
             }

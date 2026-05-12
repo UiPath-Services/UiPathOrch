@@ -53,7 +53,7 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drives, drive => drive.GetUsers());
+            var results = ParallelResults.GroupBy(drives, drive => drive.Users.Get());
 
             foreach (var result in results)
             {
@@ -107,7 +107,7 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
             List<Entities.User> users;
             try
             {
-                users = drive.GetUsers()
+                users = drive.Users.Get()
                     .FilterByWildcards(u => u?.UserName, wpUserName)
                     .FilterByWildcards(u => u?.FullName, wpFullName)
                     .FilterByWildcards(u => u?.Type, wpType)
@@ -138,7 +138,7 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
 
                 if (ShouldProcess($"{strRolesToRemove} from {user.GetPSPath()}", "Remove Roles from User"))
                 {
-                    var postingUser = drive.GetUser(user);
+                    var postingUser = drive.UsersDetailed.Get(user.Id!.Value);
                     if (postingUser is null) continue;
 
                     postingUser.LoginProviders = null;

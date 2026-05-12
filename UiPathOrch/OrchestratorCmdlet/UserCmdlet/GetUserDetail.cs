@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchUserDetail")]
 [OutputType(typeof(User))]
-public class GetUserDetailCommand : OrchestratorPSCmdlet
+public class GetUserDetailCmdlet : OrchestratorPSCmdlet
 {
     // -UserName is Mandatory by design — the detail path makes one API call
     // per matched user, so accidental fan-out from a default "all users" would
@@ -119,7 +119,7 @@ public class GetUserDetailCommand : OrchestratorPSCmdlet
             drives,
             drive => drive.NameColonSeparator,
             drive => (object)drive,
-            drive => drive.GetUsers()
+            drive => drive.Users.Get()
                 .FilterByWildcards(u => u?.FullName, fullNameWildcards)
                 .FilterByWildcards(u => u?.UserName, userNameWildcards)
                 .FilterByWildcards(u => u?.Type, typeWildcards)
@@ -127,7 +127,7 @@ public class GetUserDetailCommand : OrchestratorPSCmdlet
                 .Select(u => (drive, user: u)),
             t => t.user.GetPSPath(),
             t => (object)t.user,
-            t => t.drive.GetUser(t.user),
+            t => t.drive.UsersDetailed.Get(t.user.Id!.Value),
             cancelHandler.Token);
 
         // Total user count is unknown until all Phase 1 fetches complete,

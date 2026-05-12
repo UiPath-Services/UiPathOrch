@@ -375,17 +375,6 @@ public partial class OrchDriveInfo : PSDriveInfo
     //}
     #endregion
 
-    #region OrchUser cache
-    // Backwards-compat shim: delegates to Users (ListCachePerTenant).
-    public ICollection<User> GetUsers() => Users.Get();
-
-    // Backwards-compat shim: delegates to UsersDetailed (KeyedSingleCachePerTenant).
-    // The list cache (Users) is intentionally NOT mirror-updated here — the two
-    // caches are independent (same trade-off as Calendar's split). Callers
-    // wanting the detailed payload must go through GetUser() / UsersDetailed.
-    public User? GetUser(User user) => UsersDetailed.Get(user.Id!.Value);
-    #endregion
-
     #region OrchCurrentUser cache
     internal User? _dicCurrentUser = null;
     internal readonly ExceptionCachePerTenant _dicCurrentUser_Exception = new();
@@ -449,7 +438,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         lock (_dicPartitionGlobalIdLock)
         {
             // Fallback: query via API (confidential app, or JWT without prt_id)
-            var users = GetUsers();
+            var users = Users.Get();
             foreach (var user in users)
             {
                 var detailedUser = OrchAPISession.GetUser(user.Id ?? 0);
@@ -475,7 +464,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             // For non-confidential apps, GetCurrentUser() should have been called during login.
             try
             {
-                var users = GetUsers();
+                var users = Users.Get();
                 foreach (var user in users)
                 {
                     var detailedUser = OrchAPISession.GetUser(user.Id ?? 0);
@@ -500,7 +489,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         try
         {
-            var users = GetUsers();
+            var users = Users.Get();
 
             var owner = users.FirstOrDefault(o => o.Id == userId);
             if (owner is not null)
@@ -509,7 +498,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 // This is not a frequently executed operation, and it's safer this way..
                 UsersDetailed.ClearCache(owner.Id!.Value);
 
-                var detailedOwner = GetUser(owner);
+                var detailedOwner = UsersDetailed.Get(owner.Id!.Value);
 
                 // If GetUser() fails, we cannot safely update this entity, so skip the update
                 if (detailedOwner is null) return false;
@@ -1535,10 +1524,14 @@ public partial class OrchDriveInfo : PSDriveInfo
                 {
                     // In 11.1, the robot listing did not produce an API call.. Try building something similar from users.
                     // TODO: How does this work in version 12 and later?
-                    var users = GetUsers();
+                    // Null-forgiving on Users / UsersDetailed: this lambda runs only after the
+                    // constructor has finished, by which time both fields are initialized. The
+                    // analyzer can't see that, since these caches are initialized later in the
+                    // same ctor than this Robots assignment.
+                    var users = Users!.Get();
                     foreach (var user in users)
                     {
-                        GetUser(user);
+                        UsersDetailed!.Get(user.Id!.Value);
                     }
                     return users.Select(u => new Robot()
                     {

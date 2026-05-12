@@ -170,7 +170,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
         {
             foreach (var identityName in UserName!.WithCancellation(cancelHandler.Token))
             {
-                var users = drive.GetUsers();
+                var users = drive.Users.Get();
                 var targetUsers = users.SelectByWildcards(u => u?.UserName, wpUserName).OrderBy(u => u.UserName);
 
                 foreach (var user in targetUsers.WithCancellation(cancelHandler.Token))
@@ -179,7 +179,7 @@ public class UpdateUserCommand : OrchestratorPSCmdlet
                     if (!string.IsNullOrEmpty(user.FullName))
                         target += $" ({user.FullName})";
 
-                    var detailedUser = drive.GetUser(user);
+                    var detailedUser = drive.UsersDetailed.Get(user.Id!.Value);
                     if (detailedUser is null)
                     {
                         WriteError(new ErrorRecord(new OrchException(target, $"Failed to retrieve {target}."), "UpdateUserError", ErrorCategory.InvalidOperation, user));

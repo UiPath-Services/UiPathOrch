@@ -1485,7 +1485,7 @@ public abstract class TenantUserDualFieldCompleterBase : OrchArgumentCompleter
         var selfField = SelfField;
         var otherField = OtherField;
 
-        var results = ParallelResults.GroupBy(drives, drive => drive.GetUsers());
+        var results = ParallelResults.GroupBy(drives, drive => drive.Users.Get());
 
         foreach (var result in results)
         {

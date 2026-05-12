@@ -389,7 +389,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
         try
         {
-            var tenantUsers = drive.GetUsers();
+            var tenantUsers = drive.Users.Get();
 
             // This call was previously needed to prevent Orchestrator from failing to find robots,
             // but since we replaced it with GetUsers(), it is no longer necessary.

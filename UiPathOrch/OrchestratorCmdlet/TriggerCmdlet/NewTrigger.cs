@@ -188,7 +188,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
             foreach (var result in results)
             {
                 var (drive, folder) = result.Source;
-                var users = drive.GetUsers();
+                var users = drive.Users.Get();
 
                 foreach (var user in result
                     .Where(e => e.Type == "Unattended")
@@ -267,7 +267,7 @@ public class NewTriggerCommand : OrchestratorPSCmdlet
                 if (c.user is null) continue;
 
                 var drive = SessionState.GetOrchDrive(c.user?.Path);
-                var targetUser = drive.GetUsers().Where(u => u.Id == c.user?.Id).FirstOrDefault();
+                var targetUser = drive.Users.Get().Where(u => u.Id == c.user?.Id).FirstOrDefault();
                 if (targetUser?.UnattendedRobot?.UserName is null) continue;
 
                 string text = MakeCandidateText(targetUser, c.machine, c.session);

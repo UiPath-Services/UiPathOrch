@@ -27,7 +27,7 @@ public class GetUserPrivilegeCommand : OrchestratorPSCmdlet
         {
             try
             {
-                var users = drive.GetUsers();
+                var users = drive.Users.Get();
                 var targetUsers = users
                     .FilterByWildcards(u => u?.UserName, wpUserName)
                     .Where(u => u.Type == "DirectoryUser" || u.Type == "DirectoryGroup")

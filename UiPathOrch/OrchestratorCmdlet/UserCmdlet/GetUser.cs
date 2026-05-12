@@ -70,9 +70,9 @@ public class GetUserCommand : OrchestratorPSCmdlet
             }
 
             var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetUserDetailCommand.CsvHeaders);
+            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetUserDetailCmdlet.CsvHeaders);
 
-            GetUserDetailCommand.EmitDetailedUsers(this, drives, wpUserName, wpFullName, wpType, writer);
+            GetUserDetailCmdlet.EmitDetailedUsers(this, drives, wpUserName, wpFullName, wpType, writer);
 
             if (!string.IsNullOrEmpty(ExportCsv))
             {
@@ -87,7 +87,7 @@ public class GetUserCommand : OrchestratorPSCmdlet
         {
             try
             {
-                var users = drive.GetUsers();
+                var users = drive.Users.Get();
                 var targetUsers = users
                     .FilterByWildcards(u => u?.FullName, wpFullName)
                     .FilterByWildcards(u => u?.UserName, wpUserName)

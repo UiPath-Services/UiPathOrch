@@ -115,7 +115,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drives, drive => drive.GetUsers());
+            var results = ParallelResults.GroupBy(drives, drive => drive.Users.Get());
 
             foreach (var result in results)
             {
@@ -190,7 +190,7 @@ public class GetAuditLogCommand : OrchestratorPSCmdlet
             var userIds = new HashSet<Int64>();
             foreach (var drive in drives)
             {
-                userIds.UnionWith(drive.GetUsers()
+                userIds.UnionWith(drive.Users.Get()
                     .FilterByWildcards(u => u?.UserName, wpUserName)
                     .Select(u => u.Id ?? 0));
             }

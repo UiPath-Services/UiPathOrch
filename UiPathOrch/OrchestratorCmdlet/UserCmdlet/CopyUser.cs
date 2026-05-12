@@ -52,7 +52,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
         srcDrive.Users.ClearCache();
         srcDrive.UsersDetailed.ClearCache();
 
-        var srcUsers = srcDrive.GetUsers()
+        var srcUsers = srcDrive.Users.Get()
             .FilterByWildcards(user => user?.UserName, wpUserName)
             .FilterByWildcards(user => user?.FullName, wpFullName)
             .FilterByWildcards(user => user?.Type, wpType)
@@ -95,7 +95,7 @@ public class CopyUserCommand : OrchestratorPSCmdlet
                         //    newUser.Domain = "autogen";
                         //}
                         //else
-                        User detailedUser = srcDrive.GetUser(srcUser);
+                        User detailedUser = srcDrive.UsersDetailed.Get(srcUser.Id!.Value);
                         if (detailedUser is null)
                         {
                             _this.WriteError(new ErrorRecord(new OrchException(target, $"Failed to retrieve {target}."), "GetUserError", ErrorCategory.InvalidOperation, srcUser));

@@ -537,7 +537,7 @@ public class SetCredentialAssetCommand : OrchestratorPSCmdlet
                         .Where(ur => ur?.UserEntity?.Id is not null)
                         .Select(ur => ur.UserEntity!.Id!.Value)
                         .ToHashSet();
-                    var tenantUsers = drive.GetUsers()
+                    var tenantUsers = drive.Users.Get()
                         .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
                     specifiedUsers = tenantUsers.FilterByWildcards(u => u?.UserName, wpUserName);
                     if (!specifiedUsers.Any())

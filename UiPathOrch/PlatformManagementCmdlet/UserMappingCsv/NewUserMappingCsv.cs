@@ -121,7 +121,7 @@ public class NewUserMappingCsvCommand : OrchestratorPSCmdlet
         ICollection<User> users = null;
         try
         {
-            users = srcDrive.GetUsers();
+            users = srcDrive.Users.Get();
             reporter.TotalNum = users.Count;
         }
         catch (Exception ex)

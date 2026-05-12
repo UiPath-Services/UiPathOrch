@@ -355,7 +355,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
             bool bFound = false;
             foreach (var drive in drives)
             {
-                var existingTenantUser = drive.GetUsers();
+                var existingTenantUser = drive.Users.Get();
                 var users = drive.SearchDirectory(wordToComplete);
                 if (users is null) continue;
 
@@ -498,7 +498,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
         // Create the cache if it hasn't been created yet
         if (!existingUsersPerDrive.TryGetValue(drive, out var existingUsers))
         {
-            var eusers = drive.GetUsers();
+            var eusers = drive.Users.Get();
             existingUsers = eusers
                 .Where(u => !string.IsNullOrEmpty(u.UserName))
                 .ToDictionary(u => u.UserName!, u => u, StringComparer.OrdinalIgnoreCase);
@@ -547,7 +547,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
 
             var targetRoles = ExcludeFolderRoles(drive, line.Roles, warnedNoMatchingRoles);
 
-            //var existingUsers = drive.GetUsers();
+            //var existingUsers = drive.Users.Get();
 
             DirectoryObject? user = null;
             try

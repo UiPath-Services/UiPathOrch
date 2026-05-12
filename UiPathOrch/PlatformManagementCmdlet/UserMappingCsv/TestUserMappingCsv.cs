@@ -97,7 +97,7 @@ public class TestUserMappingCsvCommand : OrchestratorPSCmdlet
         }
 
         // Get the user list from the source tenant
-        var srcUsers = srcDrive.GetUsers();
+        var srcUsers = srcDrive.Users.Get();
 
         int okCount = 0;
         int warningCount = 0;
