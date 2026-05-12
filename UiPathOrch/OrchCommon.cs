@@ -265,6 +265,20 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
     private readonly OrchTask<TSource, TResult>[] _threads;
 
     private readonly SemaphoreSlim _semaphore;
+    private readonly CancellationTokenSource _cts = new();
+    private readonly ConcurrentBag<Task> _backgroundTasks = [];
+
+    // Token that cancels when the pool is disposed. Used by RunForEach's
+    // internal Task.Run lambdas so they bail out promptly on Ctrl+C / consumer
+    // abandonment. Internal: external code constructs pools via the
+    // OrchThreadPool static class only.
+    internal CancellationToken Token => _cts.Token;
+
+    // Track a background Task so Dispose can wait for it before tearing down
+    // the semaphore (otherwise tasks blocked on WaitAsync would race with
+    // SemaphoreSlim.Dispose and throw ObjectDisposedException). Internal for
+    // the same reason as Token.
+    internal void TrackTask(Task task) => _backgroundTasks.Add(task);
 
     private OrchThreadPoolImpl(OrchTask<TSource, TResult>[] threads, SemaphoreSlim semaphore)
     {
@@ -272,17 +286,10 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
         _semaphore = semaphore;
     }
 
-    // Factory method that creates an instance from an externally provided OrchTask array
-    public static OrchThreadPoolImpl<TSource, TResult> CreateInstance(
-        OrchTask<TSource, TResult>[] threads, SemaphoreSlim semaphore)
-    {
-        return new OrchThreadPoolImpl<TSource, TResult>(threads, semaphore);
-    }
-
     // Uses SynchronizationContext instead of await Task.Yield() to yield control to the main thread.
     // The semaphore is needed to prevent thread resource exhaustion and keep threads available.
     // Without the semaphore, there is a risk of deadlock with the main thread's GetResult().
-    public static OrchThreadPoolImpl<TSource, TResult> RunForEach(IEnumerable<TSource> sources,
+    internal static OrchThreadPoolImpl<TSource, TResult> RunForEach(IEnumerable<TSource> sources,
         Func<TSource, string> getPathFunc,
         Func<TSource, object> getTargetFunc,
         Func<TSource, TResult> getResultFunc, int maxDegreeOfParallelism = 4)
@@ -297,11 +304,25 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
             threads[i] = new OrchTask<TSource, TResult>();
         }
 
+        var pool = new OrchThreadPoolImpl<TSource, TResult>(threads, semaphore);
+        var token = pool.Token;
+
         foreach (var (source, index) in srcList.Select((source, index) => (source, index)))
         {
-            Task.Run(async () =>
+            var bgTask = Task.Run(async () =>
             {
-                await semaphore.WaitAsync(); // Manage concurrency limits
+                try
+                {
+                    await semaphore.WaitAsync(token);
+                }
+                catch (OperationCanceledException ex)
+                {
+                    // Mark the task cancelled so the consumer's GetResult
+                    // observes the cancel instead of blocking forever.
+                    threads[index].SetException(source, getPathFunc(source), getTargetFunc(source), ex);
+                    return;
+                }
+
                 try
                 {
                     var result = getResultFunc(source);
@@ -329,18 +350,32 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
                     semaphore.Release();
                 }
             });
+            pool.TrackTask(bgTask);
         }
 
-        return new OrchThreadPoolImpl<TSource, TResult>(threads, semaphore);
+        return pool;
     }
 
     public void Dispose()
     {
+        // Cancel first so background tasks waiting on the semaphore bail
+        // out promptly. Already-running synchronous fetchers finish
+        // naturally — bounded by max-API-latency × cap, not by remaining
+        // queue size.
+        try { _cts.Cancel(); } catch { }
+
+        // Wait briefly for in-flight tasks so they can release the
+        // semaphore without an ObjectDisposedException race. 5s is enough
+        // for cap × API latency in practice; bounded so a hung task can't
+        // block ProcessRecord forever.
+        try { Task.WaitAll([.. _backgroundTasks], TimeSpan.FromSeconds(5)); } catch { }
+
         foreach (var thread in _threads)
         {
             thread.Dispose(); // Release resources
         }
         _semaphore.Dispose();
+        _cts.Dispose();
         GC.SuppressFinalize(this);
     }
 
