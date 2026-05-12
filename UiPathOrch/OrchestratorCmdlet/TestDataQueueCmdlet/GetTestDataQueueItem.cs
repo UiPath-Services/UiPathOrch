@@ -52,64 +52,43 @@ public class GetTestDataQueueItemCommand : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        //foreach (var (drive, folder) in drivesFolders)
-        //{
-        //    var results = drive.GetTestDataQueues(folder).FilterByWildcards(e => e.Name!, wpName);
-        //    foreach (var testDataQueue in results)
-        //    {
-        //        var items = drive.GetTestDataQueueItems(folder, testDataQueue);
-        //        WriteObject(items, true);
-        //    }
-        //}
-
-        using var results = OrchThreadPool.RunForEach(drivesFolders,
-            df => df.folder.GetPSPath(),
-            df => df.folder,
-            df =>
-            {
-                var testDataQueues = df.drive.TestDataQueues.Get(df.folder);
-                return OrchThreadPool.RunForEach(testDataQueues.FilterByWildcards(e => e?.Name, wpName),
-                    queue => queue.GetPSPath(),
-                    queue => queue,
-                    queue => df.drive.TestDataQueueItems.Get(df.folder, queue));
-            });
-
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+
+        // Phase 1 = list TestDataQueues per (drive, folder); fanout to
+        // (drive, folder, queue). Phase 2 = TestDataQueueItems.Get per queue.
+        // Cap=4 shared across both phases via ChainedThreadPool — the
+        // previous nested OrchThreadPool stacked to cap=4×4=16 against a
+        // single Orchestrator.
+        using var pool = OrchThreadPool.RunForEachChained(
+            drivesFolders,
+            df => df.folder.GetPSPath(),
+            df => (object)df.folder,
+            df => df.drive.TestDataQueues.Get(df.folder)
+                .FilterByWildcards(e => e?.Name, wpName)
+                .Select(q => (df.drive, df.folder, queue: q)),
+            t => t.queue.GetPSPath(),
+            t => (object)t.queue,
+            t => t.drive.TestDataQueueItems.Get(t.folder, t.queue));
+
+        foreach (var task in pool)
         {
             try
             {
-                using var threads = result.GetResult(cancelHandler.Token);
-
-                foreach (var thread in threads!)
-                {
-                    try
-                    {
-                        var entities = thread.GetResult(cancelHandler.Token);
-                        WriteObject(entities, true);
-
-                        // Expand JSON and output
-                        // It works, but clean results cannot be obtained unless
-                        // redirected to Format-List on the console side..
-                        //if (entities!.Count == 0) continue;
-                        //var list = new List<PSObject>();
-                        //foreach (var entity in entities!)
-                        //{
-                        //    var psobject = CreatePsObjectFromTestDataQueueItem(entity);
-                        //    list.Add(psobject);
-                        //}
-                        //WriteObject(list, true);
-                    }
-                    catch (OrchException ex)
-                    {
-                        WriteError(new ErrorRecord(ex, "GetTestDataQueueItemError", ErrorCategory.InvalidOperation, ex.Target));
-                    }
-                }
+                var entities = task.GetResult(cancelHandler.Token);
+                WriteObject(entities, true);
             }
             catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(ex, "GetTestDataQueueError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(ex, "GetTestDataQueueItemError", ErrorCategory.InvalidOperation, ex.Target));
             }
+        }
+
+        // Phase 1 errors (per-folder TestDataQueues list failures) — distinct
+        // ErrorId to preserve the legacy split between "couldn't list queues"
+        // and "couldn't get items of a specific queue".
+        foreach (var (_, ex) in pool.Phase1Errors)
+        {
+            WriteError(new ErrorRecord(ex, "GetTestDataQueueError", ErrorCategory.InvalidOperation, ex.Target));
         }
     }
 }

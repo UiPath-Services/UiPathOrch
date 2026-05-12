@@ -1,6 +1,7 @@
 using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -31,53 +32,52 @@ public class GetLibraryVersionCommand : OrchestratorPSCmdlet
         var wpId = Id.ConvertToWildcardPatternList();
         var wpVersion = Version.ConvertToWildcardPatternList();
 
-        using var results = OrchThreadPool.RunForEach(drives,
+        using var cancelHandler = new ConsoleCancelHandler();
+
+        // Phase 1 = list libraries per drive (host- or tenant-feed depending
+        // on -HostFeed); fanout to (drive, lib). Phase 2 = list versions per
+        // library. Cap=4 shared across both phases via ChainedThreadPool —
+        // the previous nested OrchThreadPool stacked to cap=4×4=16 against
+        // a single Orchestrator.
+        using var pool = OrchThreadPool.RunForEachChained(
+            drives,
             drive => drive.NameColonSeparator,
-            drive => drive,
+            drive => (object)drive,
             drive =>
             {
-                if (HostFeed)
-                {
-                    var librariesInHost = drive.LibrariesInHost.Get();
-                    return OrchThreadPool.RunForEach(librariesInHost.FilterByWildcards(l => l?.Id, wpId),
-                        lib => lib.GetPSPath(),
-                        lib => lib,
-                        lib => drive.GetLibraryVersionsInHostFeed(lib.Id!).FilterByWildcards(l => l?.Version, wpVersion));
-                }
-                else
-                {
-                    var librariesInTenant = drive.LibrariesInTenant.Get();
-                    return OrchThreadPool.RunForEach(librariesInTenant.FilterByWildcards(l => l?.Id, wpId),
-                        lib => lib.GetPSPath(),
-                        lib => lib,
-                        lib => drive.GetLibraryVersions(lib.Id!).FilterByWildcards(l => l?.Version, wpVersion));
-                }
-            });
+                var libs = HostFeed
+                    ? drive.LibrariesInHost.Get()
+                    : drive.LibrariesInTenant.Get();
+                return libs
+                    .FilterByWildcards(l => l?.Id, wpId)
+                    .Select(lib => (drive, lib));
+            },
+            t => t.lib.GetPSPath(),
+            t => (object)t.lib,
+            t => (HostFeed
+                ? t.drive.GetLibraryVersionsInHostFeed(t.lib.Id!)
+                : t.drive.GetLibraryVersions(t.lib.Id!))
+                .FilterByWildcards(l => l?.Version, wpVersion));
 
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var result in results)
+        foreach (var task in pool)
         {
             try
             {
-                using var threads = result.GetResult(cancelHandler.Token);
-
-                foreach (var thread in threads!)
-                {
-                    try
-                    {
-                        var versions = thread.GetResult(cancelHandler.Token);
-                        WriteObject(versions, true);
-                    }
-                    catch (OrchException ex)
-                    {
-                        WriteError(new ErrorRecord(ex, "GetLibraryVersionError", ErrorCategory.InvalidOperation, ex.Target));
-                    }
-                }
+                var versions = task.GetResult(cancelHandler.Token);
+                WriteObject(versions, true);
             }
             catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(ex, "GetLibraryError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(ex, "GetLibraryVersionError", ErrorCategory.InvalidOperation, ex.Target));
             }
+        }
+
+        // Phase 1 errors (per-drive library list failures) — distinct ErrorId
+        // to preserve the legacy split between "couldn't list libraries" and
+        // "couldn't get versions of a specific library".
+        foreach (var (_, ex) in pool.Phase1Errors)
+        {
+            WriteError(new ErrorRecord(ex, "GetLibraryError", ErrorCategory.InvalidOperation, ex.Target));
         }
     }
 }
