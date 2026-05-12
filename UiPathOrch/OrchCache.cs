@@ -1039,6 +1039,134 @@ public class KeyedSingleCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     }
 }
 
+/// <summary>
+/// Folder-scoped sibling of <see cref="KeyedListCachePerTenant{TKey, TEntity}"/>:
+/// caches a <see cref="List{TEntity}"/> per <typeparamref name="TKey"/> per
+/// folder. Outer dict is keyed by folderId (matching
+/// <see cref="KeyedSingleCachePerFolder{TKey, TEntity}"/>); inner dict maps
+/// <typeparamref name="TKey"/> to the list (matching the list-shape of
+/// <see cref="KeyedListCachePerTenant{TKey, TEntity}"/>). Used when one fetch
+/// returns a collection of children keyed within a parent — e.g. assertions
+/// belonging to a TestCaseExecution within a folder.
+/// </summary>
+public class KeyedListCachePerFolder<TKey, TEntity> : IFolderCacheClearable
+    where TKey : notnull, IEquatable<TKey>
+{
+    private readonly object _lock = new();
+    private readonly OrchDriveInfo _drive;
+
+    // Outer dict: folderId -> inner dict (key -> list of entities).
+    private volatile ConcurrentDictionary<Int64, ConcurrentDictionary<TKey, List<TEntity>>>? _cache = null;
+    private readonly ExceptionsCachePer<(Int64 folderId, TKey key)> _exceptions = new();
+    private readonly Func<Int64, TKey, IEnumerable<TEntity>> _fetchFunc;
+    private readonly Action<TEntity, string, TKey>? _initializer;
+    private readonly IEqualityComparer<TKey>? _keyComparer;
+    private readonly int? _supportedApiVersionFrom;
+
+    public KeyedListCachePerFolder(
+        OrchDriveInfo drive,
+        Func<Int64, TKey, IEnumerable<TEntity>> fetchFunc,
+        Action<TEntity, string, TKey>? initializer = null,
+        IEqualityComparer<TKey>? keyComparer = null,
+        int? supportedApiVersionFrom = null)
+    {
+        _drive = drive;
+        _drive._allFolderCache.Add(this);
+        _fetchFunc = fetchFunc;
+        _initializer = initializer;
+        _keyComparer = keyComparer;
+        _supportedApiVersionFrom = supportedApiVersionFrom;
+    }
+
+    public ReadOnlyCollection<TEntity> Get(Folder folder, TKey key)
+    {
+        if (folder?.Id is null || _drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
+        {
+            return new List<TEntity>().AsReadOnly();
+        }
+
+        Int64 folderId = folder.Id.Value;
+        _exceptions.ThrowCachedExceptionIfAny((folderId, key));
+
+        if (_cache is null)
+        {
+            lock (_lock)
+            {
+                _cache ??= [];
+            }
+        }
+
+        if (!_cache.TryGetValue(folderId, out var inner))
+        {
+            inner = _keyComparer is null
+                ? new ConcurrentDictionary<TKey, List<TEntity>>()
+                : new ConcurrentDictionary<TKey, List<TEntity>>(_keyComparer);
+            inner = _cache.GetOrAdd(folderId, inner);
+        }
+
+        if (!inner.TryGetValue(key, out var list))
+        {
+            try
+            {
+                list = _fetchFunc(folderId, key).ToList();
+                if (_initializer is not null)
+                {
+                    string folderPath = folder.GetPSPath();
+                    foreach (var entity in list)
+                    {
+                        _initializer(entity, folderPath, key);
+                    }
+                }
+                // Publish only after init so concurrent readers never observe a
+                // partially-initialized list.
+                inner[key] = list;
+            }
+            catch (HttpResponseException ex)
+            {
+                _exceptions.CacheException((folderId, key), ex);
+                throw;
+            }
+        }
+
+        return list.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Returns the per-folder inner dict without fetching. Used by completers
+    /// and "no-filter cache display" paths that must not hit the API.
+    /// </summary>
+    public ConcurrentDictionary<TKey, List<TEntity>>? GetCache(Folder folder)
+    {
+        if (folder?.Id is null) return null;
+        if (_cache is null || !_cache.TryGetValue(folder.Id.Value, out var inner)) return null;
+        return inner;
+    }
+
+    public void ClearCache(Folder folder, TKey key)
+    {
+        var folderId = folder.Id ?? 0;
+        if (_cache is not null && _cache.TryGetValue(folderId, out var inner))
+        {
+            inner.TryRemove(key, out _);
+        }
+        _exceptions.ClearCache((folderId, key));
+    }
+
+    public void ClearCache(Folder folder)
+    {
+        var folderId = folder.Id ?? 0;
+        _cache?.TryRemove(folderId, out _);
+        // Drop all per-key exception entries belonging to this folder.
+        _exceptions.ClearCache(k => k.folderId == folderId);
+    }
+
+    public void ClearCache()
+    {
+        _cache = null;
+        _exceptions.ClearCache();
+    }
+}
+
 public class SingleCachePerFolder<T> : IFolderCacheClearable
 {
     private readonly object _lock = new();

@@ -177,7 +177,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         // _dicTestSetExecutions auto-cleared via _allFolderCache (TestSetExecutions: IncrementalCachePerFolder).
         // _dicTestCaseExecutions auto-cleared via _allFolderCache (TestCaseExecutions: IncrementalCachePerFolder).
-        _dicTestCaseAssertions = null;
+        // _dicTestCaseAssertions auto-cleared via _allFolderCache (TestCaseAssertions: KeyedListCachePerFolder).
 
         // _dicTriggers / _dicTriggersDetailed auto-cleared via _allFolderCache
         // (Triggers: ListCachePerFolder, TriggersDetailed: KeyedSingleCachePerFolder).
@@ -800,8 +800,11 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #region OrchTestCaseExecution cache
 
-    // TestCaseAssertion cache: Key1=folderId, Key2=testCaseExecutionId
-    internal ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, List<TestCaseAssertion>>>? _dicTestCaseAssertions = null;
+    // TestCaseAssertion cache: per-folder, per-TestCaseExecutionId list of
+    // assertions. Initializer sets Path and TestCaseExecutionId; callers still
+    // patch TestSetExecutionName / PathTestSetExecutionName per call because
+    // those require cross-cache lookup into TestSetExecutions.
+    public readonly KeyedListCachePerFolder<long, TestCaseAssertion> TestCaseAssertions;
 
     /// <summary>
     /// Backwards-compat wrapper: delegates to TestCaseExecutions
@@ -1796,6 +1799,21 @@ public partial class OrchDriveInfo : PSDriveInfo
                 OrchAPISession.GetTestCaseExecutions(folderId, filter, skip, first),
             tce => tce.Id ?? 0,
             (tce, folderPath) => tce.Path = folderPath);
+
+        TestCaseAssertions = new(this,
+            // GetTestCaseExecutionWithAssertions returns the parent TestCaseExecution;
+            // we keep only its TestCaseAssertions list (the parent itself lives in
+            // the TestCaseExecutions cache via a different fetch path).
+            (folderId, tceId) =>
+                OrchAPISession.GetTestCaseExecutionWithAssertions(folderId, tceId)?.TestCaseAssertions
+                    ?? Enumerable.Empty<TestCaseAssertion>(),
+            (assertion, folderPath, tceId) =>
+            {
+                assertion.Path = folderPath;
+                assertion.TestCaseExecutionId = tceId;
+            });
+        // TestSetExecutionName / PathTestSetExecutionName are set in callers
+        // because they require a cross-cache lookup into TestSetExecutions.
         // TestSetExecutionName / PathTestSetExecutionName are set in the
         // GetTestCaseExecutions wrapper after Fetch (they require cross-cache
         // lookup into TestSetExecutions, which the initializer can't access).

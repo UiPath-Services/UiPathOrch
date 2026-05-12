@@ -1948,7 +1948,8 @@ internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
             }
 
             // Get TestCaseExecutionId from the TestCaseAssertion cache
-            if (drive._dicTestCaseAssertions?.TryGetValue(folderId, out var tcaCache) ?? false)
+            var tcaCache = drive.TestCaseAssertions.GetCache(folder);
+            if (tcaCache is not null)
             {
                 foreach (var testCaseExecutionId in tcaCache.Keys
                     .Where(id => wp.IsMatch(id.ToString()))

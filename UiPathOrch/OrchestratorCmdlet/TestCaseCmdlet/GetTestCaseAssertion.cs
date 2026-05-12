@@ -86,36 +86,11 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
         try
         {
-            List<TestCaseAssertion>? assertions = null;
             Int64 folderId = folder.Id!.Value;
 
-            // Try to get from cache
-            if (drive._dicTestCaseAssertions?.TryGetValue(folderId, out var folderCache) ?? false)
-            {
-                folderCache.TryGetValue(testCaseExecutionId, out assertions);
-            }
-
-            // If not in cache, get from API
-            if (assertions is null)
-            {
-                var execution = drive.OrchAPISession.GetTestCaseExecutionWithAssertions(folderId, testCaseExecutionId);
-                assertions = execution?.TestCaseAssertions?.ToList() ?? [];
-
-                // Save to cache
-                if (drive._dicTestCaseAssertions is null)
-                {
-                    lock (drive)
-                    {
-                        drive._dicTestCaseAssertions ??= [];
-                    }
-                }
-                if (!drive._dicTestCaseAssertions.TryGetValue(folderId, out folderCache))
-                {
-                    folderCache = new();
-                    drive._dicTestCaseAssertions[folderId] = folderCache;
-                }
-                folderCache[testCaseExecutionId] = assertions;
-            }
+            // Returns cached list, or fetches via GetTestCaseExecutionWithAssertions
+            // when absent. Initializer in OrchDriveInfo sets Path + TestCaseExecutionId.
+            var assertions = drive.TestCaseAssertions.Get(folder, testCaseExecutionId);
 
             if (assertions.Count == 0) return;
 
@@ -239,8 +214,8 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                var folderId = folder.Id!.Value;
-                if (drive._dicTestCaseAssertions?.TryGetValue(folderId, out var folderCache) ?? false)
+                var folderCache = drive.TestCaseAssertions.GetCache(folder);
+                if (folderCache is not null)
                 {
                     string folderPath = folder.GetPSPath();
 
