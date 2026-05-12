@@ -326,6 +326,24 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
         {
             var bgTask = Task.Run(async () =>
             {
+                // Pre-compute path/target so the SetException calls below
+                // can't themselves throw. If the getter funcs fault (e.g.
+                // GetPSPath on a stale entity) we still need to signal the
+                // task — otherwise the consumer's CompletedEvent.Wait would
+                // block forever.
+                string pathStr;
+                object targetObj;
+                try
+                {
+                    pathStr = getPathFunc(source);
+                    targetObj = getTargetFunc(source);
+                }
+                catch (Exception funcEx)
+                {
+                    threads[index].SetException(source, "<getPathFunc/getTargetFunc threw>", source!, funcEx);
+                    return;
+                }
+
                 try
                 {
                     await semaphore.WaitAsync(token);
@@ -334,7 +352,7 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
                 {
                     // Mark the task cancelled so the consumer's GetResult
                     // observes the cancel instead of blocking forever.
-                    threads[index].SetException(source, getPathFunc(source), getTargetFunc(source), ex);
+                    threads[index].SetException(source, pathStr, targetObj, ex);
                     return;
                 }
 
@@ -345,7 +363,7 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
                 }
                 catch (Exception ex)
                 {
-                    threads[index].SetException(source, getPathFunc(source), getTargetFunc(source), ex);
+                    threads[index].SetException(source, pathStr, targetObj, ex);
                 }
                 finally
                 {
@@ -541,6 +559,23 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
                         // _phase2Tasks so Dispose can wait on stragglers.
                         var phase2Task = Task.Run(async () =>
                         {
+                            // Pre-compute path/target so the SetException
+                            // calls below can't themselves throw and leave
+                            // the consumer's CompletedEvent.Wait blocking
+                            // forever. See OrchThreadPoolImpl.RunForEach.
+                            string pathStr;
+                            object targetObj;
+                            try
+                            {
+                                pathStr = phase2PathFunc(flat);
+                                targetObj = phase2TargetFunc(flat);
+                            }
+                            catch (Exception funcEx)
+                            {
+                                task.SetException(flat, "<phase2PathFunc/phase2TargetFunc threw>", flat!, funcEx);
+                                return;
+                            }
+
                             try
                             {
                                 await _semaphore.WaitAsync(token);
@@ -550,7 +585,7 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
                                 // Mark the task cancelled so the consumer's
                                 // GetResult observes it (and the task can be
                                 // disposed cleanly).
-                                task.SetException(flat, phase2PathFunc(flat), phase2TargetFunc(flat), ex);
+                                task.SetException(flat, pathStr, targetObj, ex);
                                 return;
                             }
 
@@ -564,7 +599,7 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
                             }
                             catch (Exception ex)
                             {
-                                task.SetException(flat, phase2PathFunc(flat), phase2TargetFunc(flat), ex);
+                                task.SetException(flat, pathStr, targetObj, ex);
                             }
                             finally { _semaphore.Release(); }
                         });
