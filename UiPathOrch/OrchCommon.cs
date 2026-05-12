@@ -481,13 +481,15 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
     /// <summary>
     /// Phase 1 errors that occurred during fanout. Safe to enumerate only
     /// after the main consumer loop drains all Phase 2 tasks (the getter
-    /// blocks until the producer completes).
+    /// blocks briefly for the producer to finalize). Bounded by a 5 s
+    /// timeout so a hung producer can't permanently stall the cmdlet —
+    /// any Phase 1 errors recorded before the timeout are still returned.
     /// </summary>
     public IEnumerable<(TSource source, OrchException exception)> Phase1Errors
     {
         get
         {
-            try { _producer.Wait(); }
+            try { _producer.Wait(TimeSpan.FromSeconds(5)); }
             catch { /* producer-internal failures already recorded in _phase1Errors */ }
             return _phase1Errors;
         }
