@@ -293,9 +293,18 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
         _semaphore = semaphore;
     }
 
-    // Uses SynchronizationContext instead of await Task.Yield() to yield control to the main thread.
-    // The semaphore is needed to prevent thread resource exhaustion and keep threads available.
-    // Without the semaphore, there is a risk of deadlock with the main thread's GetResult().
+    // The semaphore caps in-flight API calls and keeps thread-pool threads
+    // available; without it, all sources would race to start at once and
+    // could starve the thread pool while the consumer's GetResult is blocked
+    // on CompletedEvent.Wait.
+    //
+    // SetResult is called directly on the background thread (no
+    // SynchronizationContext.Post marshaling). Each task writes to its own
+    // pre-allocated slot in `threads`, so there is no write race; calling
+    // Post would only enqueue work to a SyncContext that the consumer thread
+    // isn't pumping (it's blocked in CompletedEvent.Wait), risking a
+    // message-pump deadlock in WPF-style hosts. PowerShell pipeline threads
+    // have no SyncContext, so the marshaling was a no-op anyway.
     internal static OrchThreadPoolImpl<TSource, TResult> RunForEach(IEnumerable<TSource> sources,
         Func<TSource, string> getPathFunc,
         Func<TSource, object> getTargetFunc,
@@ -304,7 +313,6 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
         var srcList = sources as IList<TSource> ?? sources.ToList();
         var threads = new OrchTask<TSource, TResult>[srcList.Count];
         var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
-        var mainContext = SynchronizationContext.Current;
 
         for (int i = 0; i < threads.Length; i++)
         {
@@ -333,20 +341,7 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
                 try
                 {
                     var result = getResultFunc(source);
-
-                    // Call SetResult() on the main thread.
-                    // This temporarily yields control to the main thread.
-                    if (mainContext is not null)
-                    {
-                        mainContext.Post(_ =>
-                        {
-                            threads[index].SetResult(source, result);
-                        }, null);
-                    }
-                    else
-                    {
-                        threads[index].SetResult(source, result);
-                    }
+                    threads[index].SetResult(source, result);
                 }
                 catch (Exception ex)
                 {
@@ -493,8 +488,6 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
         // yielding a multi-second cancel delay.
         _cts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
 
-        var mainContext = SynchronizationContext.Current;
-
         var token = _cts.Token;
 
         _producer = Task.Run(async () =>
@@ -558,14 +551,10 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
                             try
                             {
                                 var result = phase2(flat);
-                                if (mainContext is not null)
-                                {
-                                    mainContext.Post(_ => task.SetResult(flat, result), null);
-                                }
-                                else
-                                {
-                                    task.SetResult(flat, result);
-                                }
+                                // Direct SetResult on the background thread.
+                                // See OrchThreadPoolImpl.RunForEach for why
+                                // SyncContext.Post is not used.
+                                task.SetResult(flat, result);
                             }
                             catch (Exception ex)
                             {
