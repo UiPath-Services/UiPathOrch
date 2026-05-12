@@ -64,6 +64,11 @@ BeforeAll {
     # which can differ from $script:TestUserA for B2B guests. Use the stable
     # UserId to find entries, not the name.
     $script:TestUserAId = $alternateUser.Id
+    # Tenant UserName form of TestUserA — mangled for B2B guests
+    # ('foo_bar.com#ext#@tenant.onmicrosoft.com'). Held separately so tests
+    # that need the exact tenant form (Update-OrchUser, Remove-OrchRoleFromUser,
+    # raw role manipulation) don't have to re-derive it.
+    $script:TestUserAUserName = $alternateUser.UserName
     # TestUserUnassigned is the other tenant user, NOT added to $script:RootFolder.
     # Used by the T11.9 guard test that asserts the admin API accepts unassigned users.
     $script:TestUserUnassigned = $script:CurrentUserName  # admin user, not added via BeforeAll
@@ -2921,6 +2926,224 @@ $user,DirectoryUser,,
         } finally {
             Remove-Item $csvLegacy, $csvCanonical -ErrorAction SilentlyContinue
             Remove-OrchCalendar -Name $calName -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+}
+
+# ---------------------------------------------------------------------------
+# B2B EmailAddress matching - FolderUser/Role cmdlets
+# ---------------------------------------------------------------------------
+# Regression suite for Azure AD B2B guest users, whose tenant UserName form
+# ('foo_bar.com#ext#@tenant.onmicrosoft.com') differs from their canonical
+# EmailAddress ('foo@bar.com'). The Set-*Asset / Get-/Remove-OrchUser /
+# Remove-OrchAssetUserValue family was already fixed to match against both
+# forms; this Describe covers the remaining FolderUser cmdlets that still
+# match only on UserName.
+#
+# Auto-skips on tenants where TestUserA's UserName equals its EmailAddress
+# (no B2B guest configured), since there's no mismatch to exercise. Note that
+# Remove-OrchRoleFromUser (tenant role) is intentionally NOT covered here —
+# it lacks a paired Add-OrchRoleToUser cmdlet for safe pre-test setup. That
+# cmdlet should be addressed separately.
+Describe 'B2B EmailAddress matching - FolderUser/User cmdlets' -Tag 'B2BRegression' {
+    BeforeAll {
+        # Only meaningful when the two forms differ (Azure AD B2B guest case).
+        $script:HasB2BMismatch = ($script:TestUserAUserName -ne $script:TestUserA)
+
+        # A second folder role distinct from the 'Automation User' baseline,
+        # used by the Add/Remove-Role tests so they have something to toggle.
+        $script:SecondFolderRole = (Get-OrchRole -Path "${script:Drive}:\" |
+            Where-Object { $_.Type -ne 'Tenant' -and $_.Name -ne 'Automation User' } |
+            Select-Object -First 1).Name
+
+        $script:B2BFolder = "${script:Drive}:\${script:Prefix}B2B"
+        $script:B2BDest = "${script:Drive}:\${script:Prefix}B2BDest"
+        if ($script:HasB2BMismatch) {
+            $null = mkdir $script:B2BFolder -ErrorAction SilentlyContinue
+            $null = mkdir $script:B2BDest -ErrorAction SilentlyContinue
+        }
+    }
+
+    AfterAll {
+        Remove-Item $script:B2BFolder -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item $script:B2BDest -Recurse -Force -ErrorAction SilentlyContinue
+    }
+
+    BeforeEach {
+        if (-not $script:HasB2BMismatch) { return }
+        # Reset both folders by removing all non-current-user assignments. We
+        # can't rely on $script:TestUserAUserName as the remove target because
+        # the tenant may have multiple users sharing the same EmailAddress —
+        # Add-OrchFolderUser's Identity Server lookup picks ONE of them and we
+        # don't know which until we read back. Sweep everything but the current
+        # user instead.
+        foreach ($folder in @($script:B2BFolder, $script:B2BDest)) {
+            Get-OrchFolderUser -Path $folder -ErrorAction SilentlyContinue |
+                Where-Object { $_.UserEntity.UserName -ne $script:CurrentUserName } |
+                ForEach-Object {
+                    Remove-OrchFolderUser -Path $folder -UserName $_.UserEntity.UserName `
+                        -Confirm:$false -ErrorAction SilentlyContinue
+                }
+        }
+        Clear-OrchCache
+        Add-OrchFolderUser -Path $script:B2BFolder -Type $script:TestUserType `
+            -UserName $script:TestUserA -Roles 'Automation User' -ErrorAction Stop
+        Clear-OrchCache
+        # Capture the user the Identity Server actually picked — for a tenant
+        # with multiple Email-aliased users it may not be the one BeforeAll's
+        # Get-OrchUser snapshot identified. Subsequent assertions use this
+        # actual record so the test is robust to that ambiguity.
+        $assigned = Get-OrchFolderUser -Path $script:B2BFolder |
+            Where-Object { $_.UserEntity.UserName -ne $script:CurrentUserName } |
+            Select-Object -First 1
+        if (-not $assigned) {
+            throw "BeforeEach: Add-OrchFolderUser -UserName $script:TestUserA did not result in an assignment to $script:B2BFolder"
+        }
+        $script:AssignedUserId = $assigned.UserEntity.Id
+        $script:AssignedUserName = $assigned.UserEntity.UserName
+    }
+
+    It 'BF1: Get-OrchFolderUser matches B2B guest via EmailAddress form' {
+        if (-not $script:HasB2BMismatch) {
+            Set-ItResult -Skipped -Because 'TestUserA UserName == EmailAddress (no B2B mismatch).'
+            return
+        }
+        $u = Get-OrchFolderUser -Path $script:B2BFolder -UserName $script:TestUserA
+        $u | Should -Not -BeNullOrEmpty `
+            -Because 'Get-OrchFolderUser must accept the EmailAddress form for B2B guests'
+        $u.UserEntity.Id | Should -Be $script:AssignedUserId `
+            -Because 'matched user must be the one Add-OrchFolderUser placed in the folder'
+    }
+
+    It 'BF2: Add-OrchRoleToFolderUser adds role to B2B guest via EmailAddress form' {
+        if (-not $script:HasB2BMismatch) {
+            Set-ItResult -Skipped -Because 'TestUserA UserName == EmailAddress (no B2B mismatch).'
+            return
+        }
+        if (-not $script:SecondFolderRole) {
+            Set-ItResult -Skipped -Because 'Tenant has no second folder role to add.'
+            return
+        }
+        Add-OrchRoleToFolderUser -Path $script:B2BFolder -UserName $script:TestUserA `
+            -Roles $script:SecondFolderRole -ErrorAction Stop
+        Clear-OrchCache
+        $u = Get-OrchFolderUser -Path $script:B2BFolder -UserName $script:AssignedUserName
+        $u.Roles.Name | Should -Contain $script:SecondFolderRole `
+            -Because 'Role must be added when -UserName is the EmailAddress form'
+    }
+
+    It 'BF3: Remove-OrchRoleFromFolderUser removes role from B2B guest via EmailAddress form' {
+        if (-not $script:HasB2BMismatch) {
+            Set-ItResult -Skipped -Because 'TestUserA UserName == EmailAddress (no B2B mismatch).'
+            return
+        }
+        if (-not $script:SecondFolderRole) {
+            Set-ItResult -Skipped -Because 'Tenant has no second folder role to add.'
+            return
+        }
+        # Pre-add the role via the assigned user's tenant UserName (preparation
+        # uses the known-working path; the test exercises the EmailAddress path).
+        Add-OrchRoleToFolderUser -Path $script:B2BFolder -UserName $script:AssignedUserName `
+            -Roles $script:SecondFolderRole -ErrorAction Stop
+        Clear-OrchCache
+        # Remove via the EmailAddress form (the path under test).
+        Remove-OrchRoleFromFolderUser -Path $script:B2BFolder -UserName $script:TestUserA `
+            -Roles $script:SecondFolderRole -Confirm:$false -ErrorAction Stop
+        Clear-OrchCache
+        $u = Get-OrchFolderUser -Path $script:B2BFolder -UserName $script:AssignedUserName
+        $u.Roles.Name | Should -Not -Contain $script:SecondFolderRole `
+            -Because 'Role must be removed when -UserName is the EmailAddress form'
+    }
+
+    It 'BF4: Move-OrchFolderUser moves B2B guest via EmailAddress form' {
+        if (-not $script:HasB2BMismatch) {
+            Set-ItResult -Skipped -Because 'TestUserA UserName == EmailAddress (no B2B mismatch).'
+            return
+        }
+        Move-OrchFolderUser -Path $script:B2BFolder -Destination $script:B2BDest `
+            -UserName $script:TestUserA -Confirm:$false -ErrorAction Stop
+        Clear-OrchCache
+        $atDst = Get-OrchFolderUser -Path $script:B2BDest -UserName $script:AssignedUserName
+        $atDst | Should -Not -BeNullOrEmpty `
+            -Because 'Move destination must receive the B2B guest when -UserName is EmailAddress'
+        $atSrc = Get-OrchFolderUser -Path $script:B2BFolder -UserName $script:AssignedUserName -ErrorAction SilentlyContinue
+        $atSrc | Should -BeNullOrEmpty `
+            -Because 'Move source must lose the B2B guest after a non-KeepSource move'
+    }
+
+    It 'BF5: Copy-OrchFolderUser copies B2B guest via EmailAddress form' {
+        if (-not $script:HasB2BMismatch) {
+            Set-ItResult -Skipped -Because 'TestUserA UserName == EmailAddress (no B2B mismatch).'
+            return
+        }
+        Copy-OrchFolderUser -Path $script:B2BFolder -Destination $script:B2BDest `
+            -UserName $script:TestUserA -ErrorAction Stop
+        Clear-OrchCache
+        $atDst = Get-OrchFolderUser -Path $script:B2BDest -UserName $script:AssignedUserName
+        $atDst | Should -Not -BeNullOrEmpty `
+            -Because 'Copy destination must receive the B2B guest when -UserName is EmailAddress'
+        $atSrc = Get-OrchFolderUser -Path $script:B2BFolder -UserName $script:AssignedUserName
+        $atSrc | Should -Not -BeNullOrEmpty `
+            -Because 'Copy retains the source assignment'
+    }
+
+    It 'BF6: Remove-OrchFolderUser removes B2B guest via EmailAddress form' {
+        if (-not $script:HasB2BMismatch) {
+            Set-ItResult -Skipped -Because 'TestUserA UserName == EmailAddress (no B2B mismatch).'
+            return
+        }
+        Remove-OrchFolderUser -Path $script:B2BFolder -UserName $script:TestUserA `
+            -Confirm:$false -ErrorAction Stop
+        Clear-OrchCache
+        $u = Get-OrchFolderUser -Path $script:B2BFolder -UserName $script:AssignedUserName -ErrorAction SilentlyContinue
+        $u | Should -BeNullOrEmpty `
+            -Because 'Remove-OrchFolderUser must accept the EmailAddress form for B2B guests'
+    }
+
+    It 'BF7: Remove-OrchRoleFromUser removes tenant role from B2B guest via EmailAddress form' {
+        if (-not $script:HasB2BMismatch) {
+            Set-ItResult -Skipped -Because 'TestUserA UserName == EmailAddress (no B2B mismatch).'
+            return
+        }
+        # No Add-OrchRoleToUser cmdlet exists; use Update-OrchUser (which replaces
+        # RolesList) to set up. Snapshot original roles, add a candidate tenant
+        # role, then verify removal via the EmailAddress form. finally{} restores
+        # the original RolesList so this test is non-destructive.
+        $detail = Get-OrchUserDetail -Path "${script:Drive}:\" -UserName $script:TestUserAUserName
+        $originalRoles = @($detail.RolesList)
+        $candidateRole = Get-OrchRole -Path "${script:Drive}:\" |
+            Where-Object { $_.Type -eq 'Tenant' -and $_.Name -notin $originalRoles } |
+            Select-Object -First 1
+        if (-not $candidateRole) {
+            Set-ItResult -Skipped -Because 'No spare tenant role available to add/remove on TestUserA.'
+            return
+        }
+
+        try {
+            Update-OrchUser -UserName $script:TestUserAUserName `
+                -Roles ($originalRoles + $candidateRole.Name) -ErrorAction Stop
+            Clear-OrchCache
+
+            Remove-OrchRoleFromUser -UserName $script:TestUserA -Roles $candidateRole.Name `
+                -Confirm:$false -ErrorAction Stop
+            Clear-OrchCache
+
+            $after = Get-OrchUserDetail -Path "${script:Drive}:\" -UserName $script:TestUserAUserName
+            $after.RolesList | Should -Not -Contain $candidateRole.Name `
+                -Because 'Remove-OrchRoleFromUser must accept the EmailAddress form for B2B guests'
+        } finally {
+            # Restore the original RolesList. Use -Roles with the snapshot;
+            # Update-OrchUser replaces RolesList wholesale, so the user is left
+            # exactly as before the test.
+            if ($originalRoles.Count -gt 0) {
+                Update-OrchUser -UserName $script:TestUserAUserName `
+                    -Roles $originalRoles -ErrorAction SilentlyContinue
+            } else {
+                # snapshot was empty — pass an empty role to clear back to none
+                Update-OrchUser -UserName $script:TestUserAUserName `
+                    -Roles @('') -ErrorAction SilentlyContinue
+            }
+            Clear-OrchCache
         }
     }
 }
