@@ -225,6 +225,25 @@ internal static class OrchCollectionExtensions
         return source.Where(item => patterns.Any(pattern => pattern.IsMatch(selector(item))));
     }
 
+    /// <summary>
+    /// Multi-selector variant: keep an item if any pattern matches the
+    /// projection of any selector. Useful when an entity has several
+    /// equivalent identifiers (e.g. a User's <c>UserName</c> vs
+    /// <c>EmailAddress</c> — Azure AD B2B guests get a mangled
+    /// <c>xxx#ext#@tenant.onmicrosoft.com</c> UserName but keep their
+    /// canonical EmailAddress, and callers should be able to pass either
+    /// form interchangeably).
+    /// </summary>
+    public static IEnumerable<T> FilterByWildcards<T>(
+        this IEnumerable<T> source,
+        IReadOnlyList<Func<T?, string?>> selectors,
+        IReadOnlyList<WildcardPattern>? patterns)
+    {
+        if (patterns is null || patterns.Count == 0) return source;
+        return source.Where(item =>
+            patterns.Any(pattern => selectors.Any(sel => pattern.IsMatch(sel(item)))));
+    }
+
     // If patterns is empty, return all elements of source as-is
     public static IEnumerable<T> FilterByWildcards<T>(
         this IEnumerable<T> source,

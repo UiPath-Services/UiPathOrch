@@ -465,7 +465,10 @@ public class SetSecretAssetCommand : OrchestratorPSCmdlet
                         .ToHashSet();
                     var tenantUsers = drive.Users.Get()
                         .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
-                    specifiedUsers = tenantUsers.FilterByWildcards(u => u?.UserName, wpUserName);
+                    // Match both UserName and EmailAddress; see SetAsset.cs.
+                    specifiedUsers = tenantUsers.FilterByWildcards(
+                        [u => u?.UserName, u => u?.EmailAddress],
+                        wpUserName);
                     if (!specifiedUsers.Any())
                     {
                         string strUserNames = string.Join(", ", param.UserName!);
