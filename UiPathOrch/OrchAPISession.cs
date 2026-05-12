@@ -1022,17 +1022,15 @@ public partial class OrchAPISession : IDisposable
     public IEnumerable<QueueItem> GetQueueItems(Int64 folderId, string? filter, ulong skip, ulong first, string? orderBy = null, bool orderAscending = false)
     {
         if (string.IsNullOrEmpty(orderBy)) orderBy = "EndProcessing";
-        string order;
-        if (orderAscending)
-        {
-            order = $"&$orderby={orderBy} asc";
-        }
-        else
-        {
-            order = $"&$orderby={orderBy} desc";
-        }
+        // Spaces in OData query values must be percent-encoded; some Orchestrator
+        // builds reject the raw space.
+        string direction = orderAscending ? "asc" : "desc";
+        string order = $"&$orderby={orderBy}%20{direction}";
 
-        return GetEnumerable<QueueItem>("/odata/QueueItems", folderId, $"{filter}{order}&$expand=Robot,ReviewerUser&orderby=Id%20desc", skip, first);
+        // Trailing "&orderby=Id desc" was a non-$-prefixed duplicate that strict
+        // Orchestrator builds reject as "Invalid OData query options". The
+        // $orderby above is the canonical form.
+        return GetEnumerable<QueueItem>("/odata/QueueItems", folderId, $"{filter}{order}&$expand=Robot,ReviewerUser", skip, first);
     }
 
     public QueueItem? GetQueueItemById(Int64 folderId, Int64 id)

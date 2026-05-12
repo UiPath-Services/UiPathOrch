@@ -268,7 +268,15 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
         }
 
         //filter.Add("Id gt 18288985"); // It seems Id can also be used in queries.
-        string ret = filter.CreateAndFilter(s => s);
+        // OData filter values use raw spaces and single quotes in the
+        // expression builders above (e.g. "Status eq '0'"); strict
+        // Orchestrator builds reject those as "Invalid OData query options"
+        // unless the URL-encoded forms are sent. None of the QueueItem
+        // filter values contain literal spaces or quotes inside themselves,
+        // so a blanket replace is safe.
+        string ret = (filter.CreateAndFilter(s => s) ?? "")
+            .Replace(" ", "%20")
+            .Replace("'", "%27");
         return $"&$filter={ret}";
     }
 
@@ -277,7 +285,13 @@ public class GetQueueItemCommand : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        if (string.IsNullOrEmpty(OrderBy)) OrderBy = "DeferDate";
+        // 'DeferDate' is rejected by some Orchestrator builds with
+        // "Invalid OData query options: The property 'DeferDate' cannot be
+        // used in the $orderby query option." Use Id, which is universally
+        // sortable and matches the original intent — the legacy
+        // GetQueueItems API call appended a (non-spec) `&orderby=Id desc`
+        // alongside the `$orderby` parameter to force Id ordering server-side.
+        if (string.IsNullOrEmpty(OrderBy)) OrderBy = "Id";
 
         bool bOutCache = (
             Status is null &&
