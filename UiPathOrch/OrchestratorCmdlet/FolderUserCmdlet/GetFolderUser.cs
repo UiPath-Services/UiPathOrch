@@ -202,8 +202,12 @@ public class GetFolderUserCommand : OrchestratorPSCmdlet
                 var userRoles = result.GetResult(cancelHandler.Token);
                 if (userRoles is null) continue;
 
+                var (drive, _) = result.Source;
                 var targets = userRoles
-                    .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
+                    // Match -UserName against tenant UserName OR EmailAddress
+                    // (B2B aware); UserEntity itself lacks EmailAddress, so we
+                    // resolve via drive.Users.Get() inside the helper.
+                    .FilterFolderUsersByUserName(drive, wpUserName)
                     .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
                     .FilterByWildcards(u => u?.UserEntity?.Type, wpType)
                     .OrderBy(u => u.UserEntity!.Type!)

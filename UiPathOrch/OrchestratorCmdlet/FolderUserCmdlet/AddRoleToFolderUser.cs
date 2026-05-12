@@ -231,7 +231,9 @@ public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
                 // Extract the users to be edited
                 List<UserRoles> editingUsers = existingUsers!
                     .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
-                    .FilterByWildcards(eu => eu?.UserEntity?.UserName, wpUserName)
+                    // -UserName matches tenant UserName OR EmailAddress (B2B);
+                    // see FilterFolderUsersByUserName.
+                    .FilterFolderUsersByUserName(drive, wpUserName)
                     .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
                     .ToList();
 

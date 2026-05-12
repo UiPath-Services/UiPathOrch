@@ -141,7 +141,9 @@ public class RemoveFolderUserCommand : OrchestratorPSCmdlet
                 var folderUsers = drive.FolderUsersWithNoInherited.Get(folder);
 
                 var filteredUsers = folderUsers
-                    .FilterByWildcards(fu => fu?.UserEntity?.UserName, wpUserName)
+                    // -UserName matches tenant UserName OR EmailAddress (B2B);
+                    // see FilterFolderUsersByUserName.
+                    .FilterFolderUsersByUserName(drive, wpUserName)
                     .FilterByWildcards(fu => fu?.UserEntity?.FullName, wpFullName);
 
                 if (NoMatchWarning.IsPresent && !filteredUsers.Any())

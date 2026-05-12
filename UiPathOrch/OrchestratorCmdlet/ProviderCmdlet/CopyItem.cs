@@ -242,7 +242,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         if (newFolder.FolderType == "Personal") return;
 
         var srcFolderUsers = srcDrive.FolderUsersWithNoInherited.Get(srcFolder)
-            .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName).ToList();
+            // -UserName matches tenant UserName OR EmailAddress (B2B).
+            .FilterFolderUsersByUserName(srcDrive, wpUserName).ToList();
         if (srcFolderUsers.Count == 0)
         {
             return;
@@ -250,7 +251,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         // Get already-assigned users
         var dstFolderUsers = dstDrive.FolderUsersWithNoInherited.Get(newFolder)
-            .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
+            .FilterFolderUsersByUserName(dstDrive, wpUserName)
             .FilterByWildcards(u => u?.UserEntity?.Type, wpType).ToList();
 
         string targetFolder = newFolder.GetPSPath();

@@ -123,7 +123,7 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
                 .FilterByWildcards(u => u?.FullName, fullNameWildcards)
                 // Match both UserName (tenant form) and EmailAddress (canonical);
                 // see GetUserCommand for the rationale.
-                .FilterByWildcards([u => u?.UserName, u => u?.EmailAddress], userNameWildcards)
+                .FilterByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], userNameWildcards)
                 .FilterByWildcards(u => u?.Type, typeWildcards)
                 .OrderBy(u => u.UserName)
                 .Select(u => (drive, user: u)),

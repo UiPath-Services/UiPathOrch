@@ -105,7 +105,9 @@ public class CopyFolderUserCommand : OrchestratorPSCmdlet
                 //srcDrive.FolderUsersWithInherited.ClearCache();
                 //srcDrive.FolderUsersWithNoInherited.ClearCache();
                 var srcEntities = srcDrive.FolderUsersWithNoInherited.Get(srcFolder)
-                    .FilterByWildcards(u => u?.UserEntity?.UserName, wpUserName)
+                    // -UserName matches tenant UserName OR EmailAddress (B2B);
+                    // see FilterFolderUsersByUserName.
+                    .FilterFolderUsersByUserName(srcDrive, wpUserName)
                     .FilterByWildcards(u => u?.UserEntity?.Type, wpType);
                 if (!srcEntities.Any()) continue;
             }

@@ -94,7 +94,7 @@ public class GetUserCommand : OrchestratorPSCmdlet
                     // Azure AD B2B guest users have a mangled tenant UserName that
                     // differs from their EmailAddress, and callers should be able to
                     // pass either form.
-                    .FilterByWildcards([u => u?.UserName, u => u?.EmailAddress], wpUserName)
+                    .FilterByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], wpUserName)
                     .FilterByWildcards(u => u?.Type, wpType)
                     .OrderBy(u => u.UserName)
                     .ToList();

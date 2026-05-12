@@ -233,8 +233,15 @@ internal static class OrchCollectionExtensions
     /// <c>xxx#ext#@tenant.onmicrosoft.com</c> UserName but keep their
     /// canonical EmailAddress, and callers should be able to pass either
     /// form interchangeably).
+    ///
+    /// Named <c>FilterByWildcardsAny</c> (not an overload of
+    /// <c>FilterByWildcards</c>) so collection-expression callers don't
+    /// race the single-selector overload during type inference. C# 12
+    /// resolves a bare <c>[a, b]</c> against the single-selector signature
+    /// for certain nested generic T, even though it's a valid two-element
+    /// collection — having a distinct name sidesteps that ambiguity.
     /// </summary>
-    public static IEnumerable<T> FilterByWildcards<T>(
+    public static IEnumerable<T> FilterByWildcardsAny<T>(
         this IEnumerable<T> source,
         IReadOnlyList<Func<T?, string?>> selectors,
         IReadOnlyList<WildcardPattern>? patterns)
@@ -242,6 +249,32 @@ internal static class OrchCollectionExtensions
         if (patterns is null || patterns.Count == 0) return source;
         return source.Where(item =>
             patterns.Any(pattern => selectors.Any(sel => pattern.IsMatch(sel(item)))));
+    }
+
+    /// <summary>
+    /// Filter a Folder <c>UserRoles</c> list by <c>-UserName</c> wildcards.
+    /// Matching considers both <c>UserName</c> (tenant form) and
+    /// <c>EmailAddress</c> (canonical) by indirecting through
+    /// <c>drive.Users.Get()</c> — the Folder users API returns
+    /// <c>UserEntity</c> without an <c>EmailAddress</c> field, so direct
+    /// Folder-level matching can't honor Azure AD B2B guest aliases.
+    /// A folder user whose <c>UserEntity.Id</c> has no matching tenant
+    /// user is excluded. Returns the source unchanged when patterns is
+    /// null/empty (= no UserName filter applied).
+    /// </summary>
+    public static IEnumerable<UserRoles> FilterFolderUsersByUserName(
+        this IEnumerable<UserRoles> source,
+        OrchDriveInfo drive,
+        IReadOnlyList<WildcardPattern>? wpUserName)
+    {
+        if (wpUserName is null || wpUserName.Count == 0) return source;
+        var matchedIds = drive.Users.Get()
+            .Where(u => u.Id is not null &&
+                wpUserName.Any(p => p.IsMatch(u.UserName ?? "") || p.IsMatch(u.EmailAddress ?? "")))
+            .Select(u => u.Id!.Value)
+            .ToHashSet();
+        return source.Where(fu =>
+            fu.UserEntity?.Id is not null && matchedIds.Contains(fu.UserEntity.Id.Value));
     }
 
     // If patterns is empty, return all elements of source as-is

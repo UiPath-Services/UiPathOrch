@@ -620,7 +620,7 @@ public class SetAssetCommand : OrchestratorPSCmdlet
                     // Match both UserName (tenant form) and EmailAddress (canonical)
                     // so Azure AD B2B guests resolve regardless of which form the
                     // caller supplies — see FilterByWildcards multi-selector overload.
-                    specifiedUsers = tenantUsers.FilterByWildcards(
+                    specifiedUsers = tenantUsers.FilterByWildcardsAny(
                         [u => u?.UserName, u => u?.EmailAddress],
                         wpUserName);
                     if (!specifiedUsers.Any())

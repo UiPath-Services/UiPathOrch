@@ -112,7 +112,9 @@ public class MoveFolderUserCommand : OrchestratorPSCmdlet
                 targetUsers = srcDrive.FolderUsersWithNoInherited.Get(srcFolder)
                     .Where(u => u is not null)
                     .Where(u => u.Id is not null)
-                    .FilterByWildcards(fu => fu?.UserEntity?.UserName, wpUserName);
+                    // -UserName matches tenant UserName OR EmailAddress (B2B);
+                    // see FilterFolderUsersByUserName.
+                    .FilterFolderUsersByUserName(srcDrive, wpUserName);
             }
             catch (Exception ex)
             {

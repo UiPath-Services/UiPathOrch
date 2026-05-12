@@ -108,7 +108,8 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
             try
             {
                 users = drive.Users.Get()
-                    .FilterByWildcards(u => u?.UserName, wpUserName)
+                    // Match both UserName and EmailAddress; see GetUserCommand.
+                    .FilterByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], wpUserName)
                     .FilterByWildcards(u => u?.FullName, wpFullName)
                     .FilterByWildcards(u => u?.Type, wpType)
                     .OrderBy(u => u.UserName)
