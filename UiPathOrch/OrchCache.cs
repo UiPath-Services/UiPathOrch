@@ -802,7 +802,13 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
 
     public void ClearCache(TKey key)
     {
-        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        // Read the cached partition id directly instead of calling
+        // GetPartitionGlobalId(), which falls back to an authenticated API
+        // call when the JWT lacks prt_id. If the drive has never authed
+        // (_dicPartitionGlobalId is null), it can't have contributed entries
+        // to this static cache, so a no-op is correct — and avoids
+        // triggering PKCE for every unauthed drive on Clear-OrchCache -AllDrives.
+        var partitionGlobalId = _drive._dicPartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return;
 
         var compositeKey = (partitionGlobalId, key);
@@ -812,7 +818,7 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
 
     public void ClearCache()
     {
-        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        var partitionGlobalId = _drive._dicPartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return;
 
         // Drop every entry whose first tuple element is this drive's partition.
@@ -901,7 +907,9 @@ public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearabl
 
     public void ClearCache(TKey key)
     {
-        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        // Read the cached partition id directly; see KeyedSingleCachePerOrganization
+        // for the rationale (don't trigger auth on Clear-OrchCache).
+        var partitionGlobalId = _drive._dicPartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return;
 
         var compositeKey = (partitionGlobalId, key);
@@ -911,7 +919,7 @@ public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearabl
 
     public void ClearCache()
     {
-        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        var partitionGlobalId = _drive._dicPartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return;
 
         foreach (var k in _cache.Keys.Where(k => k.partitionGlobalId == partitionGlobalId).ToList())
