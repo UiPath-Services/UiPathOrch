@@ -8,6 +8,8 @@
 
 PowerShell Drive and Cmdlets for managing UiPath Orchestrator.
 
+> **Note:** UiPathOrch is an open-source PowerShell module for managing UiPath Orchestrator. It is not an official abbreviation of, or part of, the UiPath Orchestrator product.
+
 ## Overview
 
 UiPathOrch is a PowerShell module that enables you to mount multiple Orchestrator tenants as PSDrives, allowing you to navigate through their folders using familiar commands like `cd`, `dir`, `mkdir`, `rmdir` within the PowerShell console. Beyond simple folder navigation, it facilitates the manipulation of various entities through a range of cmdlets and wildcards.

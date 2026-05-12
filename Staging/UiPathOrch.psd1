@@ -30,7 +30,7 @@ CompanyName = 'UiPath'
 Copyright = 'Copyright 2023-2026 UiPath'
 
 # Description of the functionality provided by this module
-Description = 'PSDrives and cmdlets for UiPath Orchestrator. 💡 First time? Run: Get-OrchHelp'
+Description = 'Open-source PSDrives and cmdlets for managing UiPath Orchestrator. Not an official abbreviation of, or part of, the Orchestrator product. 💡 First time? Run: Get-OrchHelp'
 
 # Minimum version of the PowerShell engine required by this module
 PowerShellVersion = '7.4.2'
