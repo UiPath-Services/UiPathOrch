@@ -86,7 +86,8 @@ public abstract class GetOrchLinkCmdletBase<TEntity, TLink> : OrchestratorPSCmdl
                 .Select(e => (df.drive, df.folder, entity: e)),
             t => t.folder.GetPSPath(),
             t => (object)t.folder,
-            t => GetFoldersForEntity(t.drive, t.folder, t.entity));
+            t => GetFoldersForEntity(t.drive, t.folder, t.entity),
+            cancelHandler.Token);
 
         var emitted = new HashSet<(long srcFolderId, long entityId, long linkFolderId)>();
 

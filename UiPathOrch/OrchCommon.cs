@@ -237,7 +237,14 @@ public class OrchTask<TSource, TResult> : IDisposable
 
     public TResult? GetResult(CancellationToken token)
     {
-        CompletedEvent.Wait(token); // Wait until the thread result is set
+        // ManualResetEventSlim.Wait returns immediately if IsSet is already
+        // true and never observes the token in that fast path. When the
+        // consumer is draining a backlog of already-completed tasks (e.g.
+        // -Recurse over many small folders), Ctrl+C wouldn't fire until the
+        // consumer hit a not-yet-complete task. Explicit check up front so
+        // cancel propagates on every iteration.
+        token.ThrowIfCancellationRequested();
+        CompletedEvent.Wait(token);
 
         if (Exception is not null)
         {
@@ -358,17 +365,18 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
 
     public void Dispose()
     {
-        // Cancel first so background tasks waiting on the semaphore bail
-        // out promptly. Already-running synchronous fetchers finish
-        // naturally — bounded by max-API-latency × cap, not by remaining
-        // queue size.
+        // Cancel so background tasks waiting on the semaphore bail immediately.
         try { _cts.Cancel(); } catch { }
 
-        // Wait briefly for in-flight tasks so they can release the
-        // semaphore without an ObjectDisposedException race. 5s is enough
-        // for cap × API latency in practice; bounded so a hung task can't
-        // block ProcessRecord forever.
-        try { Task.WaitAll([.. _backgroundTasks], TimeSpan.FromSeconds(5)); } catch { }
+        // Brief wait so tasks that bail via OCE on WaitAsync (microseconds)
+        // can release their slot cleanly. Don't wait for in-flight synchronous
+        // API calls — they can't be cancelled mid-flight (no token plumbed
+        // through OrchAPISession), so waiting only delays Ctrl+C response
+        // without changing what the user observes. Stragglers calling
+        // semaphore.Release / task.SetResult after dispose throw
+        // ObjectDisposedException which is silent under .NET 5+
+        // UnobservedTaskException default.
+        try { Task.WaitAll([.. _backgroundTasks], TimeSpan.FromMilliseconds(100)); } catch { }
 
         foreach (var thread in _threads)
         {
@@ -430,11 +438,12 @@ public static class OrchThreadPool
         Func<TSource, IEnumerable<TFlat>> phase1Fanout,
         Func<TFlat, string> phase2PathFunc,
         Func<TFlat, object> phase2TargetFunc,
-        Func<TFlat, TResult> phase2)
+        Func<TFlat, TResult> phase2,
+        CancellationToken cancellationToken = default)
     {
         return new ChainedThreadPool<TSource, TFlat, TResult>(
             sources, phase1PathFunc, phase1TargetFunc, phase1Fanout,
-            phase2PathFunc, phase2TargetFunc, phase2);
+            phase2PathFunc, phase2TargetFunc, phase2, cancellationToken);
     }
 }
 
@@ -448,7 +457,7 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
     private readonly SemaphoreSlim _semaphore = new(CapacityHardcoded);
     private readonly List<(TSource source, OrchException exception)> _phase1Errors = [];
     private readonly ConcurrentBag<Task> _phase2Tasks = [];
-    private readonly CancellationTokenSource _cts = new();
+    private readonly CancellationTokenSource _cts;
     private readonly Task _producer;
 
     /// <summary>
@@ -473,8 +482,17 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
         Func<TSource, IEnumerable<TFlat>> phase1Fanout,
         Func<TFlat, string> phase2PathFunc,
         Func<TFlat, object> phase2TargetFunc,
-        Func<TFlat, TResult> phase2)
+        Func<TFlat, TResult> phase2,
+        CancellationToken externalToken = default)
     {
+        // Link the internal CTS to the caller-supplied token so consumer
+        // Ctrl+C (signaled into externalToken) propagates instantly into the
+        // pool's internals without waiting for Dispose. Without this link
+        // GetConsumingEnumerable would block on an empty queue while the
+        // producer is mid-Phase 1 (synchronous API calls aren't cancellable),
+        // yielding a multi-second cancel delay.
+        _cts = CancellationTokenSource.CreateLinkedTokenSource(externalToken);
+
         var mainContext = SynchronizationContext.Current;
 
         var token = _cts.Token;
@@ -568,7 +586,10 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
 
     public IEnumerator<OrchTask<TFlat, TResult>> GetEnumerator()
     {
-        foreach (var task in _queue.GetConsumingEnumerable())
+        // Pass _cts.Token (linked to the external cancellation token in the
+        // ctor) so MoveNext bails immediately on Ctrl+C even when the queue
+        // is empty (producer is mid-Phase 1 synchronous API call).
+        foreach (var task in _queue.GetConsumingEnumerable(_cts.Token))
             yield return task;
     }
 
@@ -576,16 +597,15 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
 
     public void Dispose()
     {
-        // Cancel first so producer/Phase 2 tasks waiting on the semaphore
-        // bail out immediately. Already-running Phase 2 API calls finish
-        // naturally (we can't cancel synchronous HTTP), so the wait below
-        // is bounded by max-API-latency × cap, not by the size of the queue.
+        // Cancel so producer + Phase 2 tasks waiting on the semaphore bail
+        // immediately. See OrchThreadPoolImpl.Dispose for the rationale on
+        // not waiting for in-flight synchronous API calls.
         try { _cts.Cancel(); } catch { }
 
-        // Wait briefly for producer + Phase 2 tasks so stragglers don't
-        // throw ObjectDisposedException when they release the semaphore.
-        try { _producer.Wait(TimeSpan.FromSeconds(5)); } catch { }
-        try { Task.WaitAll([.. _phase2Tasks], TimeSpan.FromSeconds(5)); } catch { }
+        // Brief wait so cancellation-bail tasks (microseconds) release
+        // cleanly; in-flight API calls are abandoned to UnobservedTaskException.
+        try { _producer.Wait(TimeSpan.FromMilliseconds(100)); } catch { }
+        try { Task.WaitAll([.. _phase2Tasks], TimeSpan.FromMilliseconds(100)); } catch { }
 
         _queue.Dispose();
         _semaphore.Dispose();

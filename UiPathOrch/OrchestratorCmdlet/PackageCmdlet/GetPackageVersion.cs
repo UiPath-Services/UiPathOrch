@@ -44,7 +44,8 @@ public class GetPackageVersionCommand : OrchestratorPSCmdlet
                 .Select(p => (df.drive, df.folder, package: p)),
             t => t.package.GetPSPath(),
             t => (object)t.package,
-            t => t.drive.GetPackageVersions(t.folder, t.package.Id!));
+            t => t.drive.GetPackageVersions(t.folder, t.package.Id!),
+            cancelHandler.Token);
 
         foreach (var task in pool)
         {

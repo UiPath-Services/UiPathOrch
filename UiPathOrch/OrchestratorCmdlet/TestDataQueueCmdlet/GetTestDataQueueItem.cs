@@ -68,7 +68,8 @@ public class GetTestDataQueueItemCommand : OrchestratorPSCmdlet
                 .Select(q => (df.drive, df.folder, queue: q)),
             t => t.queue.GetPSPath(),
             t => (object)t.queue,
-            t => t.drive.TestDataQueueItems.Get(t.folder, t.queue));
+            t => t.drive.TestDataQueueItems.Get(t.folder, t.queue),
+            cancelHandler.Token);
 
         foreach (var task in pool)
         {

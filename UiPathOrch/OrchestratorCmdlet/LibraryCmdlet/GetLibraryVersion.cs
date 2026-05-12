@@ -57,7 +57,8 @@ public class GetLibraryVersionCommand : OrchestratorPSCmdlet
             t => (HostFeed
                 ? t.drive.GetLibraryVersionsInHostFeed(t.lib.Id!)
                 : t.drive.GetLibraryVersions(t.lib.Id!))
-                .FilterByWildcards(l => l?.Version, wpVersion));
+                .FilterByWildcards(l => l?.Version, wpVersion),
+            cancelHandler.Token);
 
         foreach (var task in pool)
         {
