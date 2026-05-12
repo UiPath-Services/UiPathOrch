@@ -132,6 +132,22 @@ public class RemoveAssetUserValueCommand : OrchestratorPSCmdlet
         {
             var assets = drive.Assets.Get(folder).FilterByWildcards(a => a?.Name, wpName).ToList();
 
+            // Resolve -UserName patterns to a set of tenant User IDs, matching against
+            // both UserName (tenant form) and EmailAddress (canonical). The asset's
+            // UserValues store the tenant UserName form for B2B guests, which differs
+            // from the user's EmailAddress — name-only matching would silently miss
+            // the caller's target. UserValues carry the stable UserId, so we filter
+            // by Id below.
+            HashSet<long>? matchedUserIds = null;
+            if (wpUserName is not null && wpUserName.Count > 0)
+            {
+                matchedUserIds = drive.Users.Get()
+                    .Where(u => u.Id is not null &&
+                        wpUserName.Any(p => p.IsMatch(u.UserName ?? "") || p.IsMatch(u.EmailAddress ?? "")))
+                    .Select(u => u.Id!.Value)
+                    .ToHashSet();
+            }
+
             foreach (var existing in assets.WithCancellation(cancelHandler.Token))
             {
                 if (existing.UserValues is null || existing.UserValues.Count == 0) continue;
@@ -144,11 +160,9 @@ public class RemoveAssetUserValueCommand : OrchestratorPSCmdlet
 
                 foreach (var uv in copy.UserValues!)
                 {
-                    // wpUserName comes from a Mandatory parameter so PowerShell guarantees it is
-                    // populated by the time we reach ProcessRecord; the null guard satisfies the
-                    // compiler (CS8604) without changing observable behavior.
-                    bool userMatch = wpUserName is not null
-                        && wpUserName.Any(p => p.IsMatch(uv.UserName ?? ""));
+                    bool userMatch = matchedUserIds is not null
+                        && uv.UserId is not null
+                        && matchedUserIds.Contains(uv.UserId.Value);
                     bool machineMatch = wpMachineName is null
                         || wpMachineName.Any(p => p.IsMatch(uv.MachineName ?? ""));
 
