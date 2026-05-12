@@ -90,7 +90,11 @@ public class GetUserCommand : OrchestratorPSCmdlet
                 var users = drive.Users.Get();
                 var targetUsers = users
                     .FilterByWildcards(u => u?.FullName, wpFullName)
-                    .FilterByWildcards(u => u?.UserName, wpUserName)
+                    // Match both UserName (tenant form) and EmailAddress (canonical) —
+                    // Azure AD B2B guest users have a mangled tenant UserName that
+                    // differs from their EmailAddress, and callers should be able to
+                    // pass either form.
+                    .FilterByWildcards([u => u?.UserName, u => u?.EmailAddress], wpUserName)
                     .FilterByWildcards(u => u?.Type, wpType)
                     .OrderBy(u => u.UserName)
                     .ToList();

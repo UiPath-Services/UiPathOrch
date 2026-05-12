@@ -54,7 +54,9 @@ public class RemoveUserCmdlet : OrchestratorPSCmdlet
             {
                 var users = drive.Users.Get();
                 var targetUsers = users
-                    .FilterByWildcards(u => u?.UserName, wpUserName)
+                    // Match both UserName (tenant form) and EmailAddress (canonical);
+                    // see GetUserCommand for the rationale.
+                    .FilterByWildcards([u => u?.UserName, u => u?.EmailAddress], wpUserName)
                     .FilterByWildcards(u => u?.FullName, wpFullName)
                     .FilterByWildcards(u => u?.Type, wpType)
                     .ToList();
