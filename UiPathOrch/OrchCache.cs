@@ -1400,8 +1400,9 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
     // folderId. A plain Dictionary can throw InvalidOperationException on rehash
     // or surface stale lookups when a writer is mid-insert.
     private volatile ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, List<TEntity>>>? _cache = null;
-    // The exception cache functionality is not great... It would be nice to be able to clear the cache per folder.
-    private readonly ExceptionsCachePer<(Int64, Int64)> _exceptions = new();
+    // Labeled tuple so ClearCache overloads can scope their clears via
+    // k.folderId / k.indexId predicates (cf. KeyedSingleCachePerFolder).
+    private readonly ExceptionsCachePer<(Int64 folderId, Int64 indexId)> _exceptions = new();
     private readonly Func<Int64, TIndexEntity, IEnumerable<TEntity>> _fetchFunc; // Passes folderId and index, returns an enumeration of TEntity
     private readonly Func<TIndexEntity, Int64> _getIdFunc;
     private readonly Func<TIndexEntity, string> _getNameFunc;
@@ -1487,7 +1488,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
     public void ClearCache(Int64 folderId)
     {
         _cache?.TryRemove(folderId, out _);
-        _exceptions.ClearCache(); // A bit of a lazy implementation, but should be functionally fine
+        _exceptions.ClearCache(k => k.folderId == folderId);
     }
 
     public void ClearCache(Folder folder)
@@ -1500,7 +1501,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
         if (_cache?.TryGetValue(folder.Id.GetValueOrDefault(), out var cachePerFolder) ?? false)
         {
             cachePerFolder.TryRemove(id, out _);
-            _exceptions.ClearCache(); // A bit of a lazy implementation, but should be functionally fine
+            _exceptions.ClearCache((folder.Id ?? 0, id));
         }
     }
 
