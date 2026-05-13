@@ -1356,7 +1356,13 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
 
     // 1st key: folderId
     // 2nd key: TIndexEntity.Id
-    private volatile ConcurrentDictionary<Int64, Dictionary<Int64, List<TEntity>>>? _cache = null;
+    // Inner must be ConcurrentDictionary too — cmdlets like Get-OrchTestDataQueueItem
+    // (ChainedThreadPool Phase2 over the queues in one folder) and
+    // Get-OrchProcessRequirement (OrchThreadPool.RunForEach over the releases in
+    // one folder) hit the inner dict from multiple threads sharing the same
+    // folderId. A plain Dictionary can throw InvalidOperationException on rehash
+    // or surface stale lookups when a writer is mid-insert.
+    private volatile ConcurrentDictionary<Int64, ConcurrentDictionary<Int64, List<TEntity>>>? _cache = null;
     // The exception cache functionality is not great... It would be nice to be able to clear the cache per folder.
     private readonly ExceptionsCachePer<(Int64, Int64)> _exceptions = new();
     private readonly Func<Int64, TIndexEntity, IEnumerable<TEntity>> _fetchFunc; // Passes folderId and index, returns an enumeration of TEntity
@@ -1406,11 +1412,11 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
 
         Int64 folderId = folder.Id!.Value;
 
-        if (!_cache.TryGetValue(folderId, out var cachePerFolder))
-        {
-            cachePerFolder = [];
-            _cache[folderId] = cachePerFolder;
-        }
+        // GetOrAdd is atomic — replaces the "TryGetValue → new → assign" sequence
+        // whose race could leak inner dicts under concurrent first-touch on the
+        // same folder.
+        var cachePerFolder = _cache.GetOrAdd(folderId,
+            _ => new ConcurrentDictionary<Int64, List<TEntity>>());
 
         if (!cachePerFolder.TryGetValue(index, out var entities))
         {
@@ -1456,7 +1462,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
     {
         if (_cache?.TryGetValue(folder.Id.GetValueOrDefault(), out var cachePerFolder) ?? false)
         {
-            cachePerFolder.Remove(id);
+            cachePerFolder.TryRemove(id, out _);
             _exceptions.ClearCache(); // A bit of a lazy implementation, but should be functionally fine
         }
     }
