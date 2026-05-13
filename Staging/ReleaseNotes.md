@@ -1,3 +1,33 @@
+# Version: 1.3.0
+
+Minor release. Two themes: **Azure AD B2B guest support** across the user / folder-user cmdlets, and **cache-class hardening** — race conditions and thread-safety issues uncovered by a methodical review. Plus a new `Get-OrchProductVersion` cmdlet, an internal `ChainedThreadPool` to bound the cap on 2-phase fetchers, and near-instant Ctrl+C across more cmdlets.
+
+## Added
+
+- **`Get-OrchProductVersion`** — hits `/api/Status/Version` to surface the Orchestrator product version (distinct from the API version surfaced by `Get-OrchSetting`). Useful for scripts that need to gate behaviour on Orchestrator version rather than API contract.
+
+## Bug Fixes
+
+- **Azure AD B2B guest users can now be addressed by their canonical EmailAddress.** B2B guests have a mangled tenant-form `UserName` (`foo_bar.com#ext#@tenant.onmicrosoft.com`) that differs from their EmailAddress (`foo@bar.com`). Previously many cmdlets only matched `-UserName` against the mangled tenant form, breaking the add/remove symmetry with `Add-OrchFolderUser` (which had always accepted EmailAddress via Identity Server lookup). Now `-UserName` matches against UserName OR EmailAddress on: `Get-OrchUser`, `Get-OrchUserDetail`, `Remove-OrchUser`, `Set-OrchAsset`, `Set-OrchSecretAsset`, `Set-OrchCredentialAsset`, `Get-OrchFolderUser`, `Add-OrchRoleToFolderUser`, `Remove-OrchRoleFromFolderUser`, `Remove-OrchFolderUser`, `Move-OrchFolderUser`, `Copy-OrchFolderUser`, `Remove-OrchRoleFromUser`, `Remove-OrchAssetUserValue`. `Copy-Item -Recurse` folder-user copy path covered too.
+- **`Get-OrchQueueItem` no longer fails on strict-OData Orchestrators.** Three issues: the default `-OrderBy DeferDate` was rejected ("The property 'DeferDate' cannot be used in the `$orderby`"), filter values had unencoded spaces, and a non-`$`-prefixed legacy `&orderby=Id desc` was always appended alongside the canonical `$orderby`. Default is now `Id`, filter values are percent-encoded, the duplicate clause is dropped.
+- **`Remove-OrchAssetUserValue` matches by UserId instead of by user-value `UserName`.** UserValue entries store the tenant-form UserName for B2B guests, which doesn't match the EmailAddress form a caller would naturally type. The cmdlet now resolves `-UserName` patterns to a set of tenant User IDs (matching either field) and filters UserValues by the stable UserId. Wildcard semantics preserved.
+
+## Changed
+
+- **Near-instant Ctrl+C across more cmdlets.** `Get-OrchUserDetail`, `Get-OrchLibraryVersion`, `Get-OrchTestDataQueueItem`, `Get-Orch{Asset,Bucket,Queue}Link`, `Get-OrchPackageVersion` were migrated to a new internal `ChainedThreadPool` plumbing that bounds the concurrency cap on 2-phase fetchers (previously each phase opened its own `OrchThreadPool` and stacked to cap=4×4=16 against a single Orchestrator). The consumer also now bails immediately on Ctrl+C instead of waiting for the next iteration boundary.
+- **`Tests/SelfContained.Tests.ps1` is tenant-state independent.** The suite no longer assumes specific user accounts or folders on the tenant, picks an alternate `DirectoryUser` dynamically, and creates its own smoke folder. Added the `B2BRegression` Describe (`BF1`-`BF7`) covering EmailAddress-form matching on the FolderUser / User cmdlets.
+
+## Internal
+
+- **Cache classes — race-condition fixes.** `IndexedListCachePerFolder` inner switched to `ConcurrentDictionary` (was plain `Dictionary` while outer was concurrent; cmdlets fanning out over a single folder hit it from multiple threads). `IncrementalCache.Fetch` / `AddToCache` use `AddOrUpdate` so merge + publish is atomic. Per-Tenant `Indexed` / `KeyedSingle` / `KeyedList` and the three `Tm*` siblings gained the double-check lock pattern (was lock-free TryGet → fetch → assign, allowing duplicate API calls under contention). Per-Organization 4 classes now serialize per-partition rather than per-instance (which allowed cross-drive duplicate fetches) or per-global (which serialized fetches across unrelated orgs); same-org → serialized, cross-org → parallel. `_exceptionDetailed` cache routing also fixed (detailed-fetch failures were being cached in the wrong slot and never re-thrown). `IndexedListCachePerFolder.ClearCache` overloads scope their exception clears to the folder being invalidated.
+- **`OrchThreadPool`**: dispose race tamed, `Impl` class hidden from callers, factory functions no longer marshal through `SyncContext.Post`.
+- 5 raw dictionaries on `OrchDriveInfo` migrated to typed cache classes: `_dicQueueItems`, `_dicTestCaseExecutions`, `_dicTestSetExecutions`, `_dicJobsHavingExecutionMedia` → `IncrementalCachePerFolder`; `_dicTestCaseAssertions` → `KeyedListCachePerFolder`.
+- `OrchDriveInfo` drops the `GetUsers()` / `GetUser(user)` backwards-compat shims; callers now use `drive.Users.Get()` / `drive.UsersDetailed.Get(id)` directly.
+- README / `psd1` clarify UiPathOrch is open-source and not part of the product. (No functional change.)
+- `design/per-organization-cache-path-isolation.md` captures the planned PSObject-NoteProperty refactor for moving the drive-local `Path` field off shared org-scoped entities — deferred to the next release.
+
+---
+
 # Version: 1.2.2
 
 Patch release: two fixes for `Add-OrchUser` and `Copy-Item`, plus internal cleanup.
