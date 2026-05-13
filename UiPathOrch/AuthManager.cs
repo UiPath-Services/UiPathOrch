@@ -315,226 +315,226 @@ internal class OrchestratorAuthManager
         // completes (or fails) so the next pending drive's auth can proceed.
         lock (_pkceLock)
         {
-        LogAuthSettings();
-        string endPoint;
-        string acrValues = "";
-        if (!string.IsNullOrEmpty(_drive._psDrive.IdentityUrl))
-        {
-            endPoint = _drive._psDrive.IdentityUrl + "/connect/authorize";
-        }
-        else if (_drive._psDrive.IsCloud)
-        {
-            // Cloud: The authorize endpoint uses a common path without the org prefix,
-            // and specifies the organization name via acr_values (to accommodate UiPath Identity spec changes).
-            var baseUri = new Uri(BaseUrl);
-            string orgName = baseUri.AbsolutePath.Trim('/');
-            endPoint = $"{baseUri.Scheme}://{baseUri.Host}/identity_/connect/authorize";
-            acrValues = UseInPrivate
-                ? "" // InPrivate: omit acr_values to display the authentication provider selection screen
-                : $"&acr_values=tenantName:{orgName}";
-        }
-        else
-        {
-            endPoint = BaseUrl + "/identity/connect/authorize";
-        }
-
-        string authUrl = !string.IsNullOrEmpty(codeVerifier)
-            ? $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256{acrValues}"
-            : $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}{acrValues}";
-
-        using var listener = new HttpListener();
-        try
-        {
-            listener.Prefixes.Add(_drive._psDrive.HttpListener!);
-            listener.Start();
-        }
-        catch (HttpListenerException ex)
-        {
-            // If starting the listener failed
-            var uri = new Uri(_drive._psDrive.RedirectUrl!);
-            string message = uri.Port <= 1024
-                ? $"Failed to start the HttpListener. The port {uri.Port} specified in 'RedirectUrl' may require administrative privileges. Please ensure you have the necessary permissions or try changing this port in the configuration file, which can be opened using the Edit-OrchConfig cmdlet."
-                : $"Failed to start the HttpListener. The port {uri.Port} specified in 'RedirectUrl' may be in use. Try changing this port in the configuration file, which can be opened using the Edit-OrchConfig cmdlet.";
-            throw new InvalidOperationException(message, ex);
-        }
-
-        if (UseInPrivate)
-        {
-            // Open in InPrivate browser (Edge + temporary profile for complete cookie isolation)
-            string edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86),
-                @"Microsoft\Edge\Application\msedge.exe");
-            if (!File.Exists(edgePath))
+            LogAuthSettings();
+            string endPoint;
+            string acrValues = "";
+            if (!string.IsNullOrEmpty(_drive._psDrive.IdentityUrl))
             {
-                edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles),
-                    @"Microsoft\Edge\Application\msedge.exe");
+                endPoint = _drive._psDrive.IdentityUrl + "/connect/authorize";
             }
-            string tempProfile = Path.Combine(Path.GetTempPath(), "UiPathOrch_" + Guid.NewGuid().ToString("N")[..8]);
-            Process.Start(new ProcessStartInfo(edgePath, $"--inprivate --user-data-dir=\"{tempProfile}\" \"{authUrl}\"") { UseShellExecute = false });
-        }
-        else
-        {
-            Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
-        }
+            else if (_drive._psDrive.IsCloud)
+            {
+                // Cloud: The authorize endpoint uses a common path without the org prefix,
+                // and specifies the organization name via acr_values (to accommodate UiPath Identity spec changes).
+                var baseUri = new Uri(BaseUrl);
+                string orgName = baseUri.AbsolutePath.Trim('/');
+                endPoint = $"{baseUri.Scheme}://{baseUri.Host}/identity_/connect/authorize";
+                acrValues = UseInPrivate
+                    ? "" // InPrivate: omit acr_values to display the authentication provider selection screen
+                    : $"&acr_values=tenantName:{orgName}";
+            }
+            else
+            {
+                endPoint = BaseUrl + "/identity/connect/authorize";
+            }
 
-        string? authorizationCode = null;
-        Exception? capturedException = null;
+            string authUrl = !string.IsNullOrEmpty(codeVerifier)
+                ? $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256{acrValues}"
+                : $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}{acrValues}";
 
-        // Manage the Ctrl+C event with ConsoleCancelHandler
-        using var consoleCancelHandler = new ConsoleCancelHandler();
-        var cts = consoleCancelHandler.Token;
-
-        // Start the listening in a separate task
-        var listeningTask = Task.Run(async () =>
-        {
+            using var listener = new HttpListener();
             try
             {
-                while (listener.IsListening && !cts.IsCancellationRequested)
+                listener.Prefixes.Add(_drive._psDrive.HttpListener!);
+                listener.Start();
+            }
+            catch (HttpListenerException ex)
+            {
+                // If starting the listener failed
+                var uri = new Uri(_drive._psDrive.RedirectUrl!);
+                string message = uri.Port <= 1024
+                    ? $"Failed to start the HttpListener. The port {uri.Port} specified in 'RedirectUrl' may require administrative privileges. Please ensure you have the necessary permissions or try changing this port in the configuration file, which can be opened using the Edit-OrchConfig cmdlet."
+                    : $"Failed to start the HttpListener. The port {uri.Port} specified in 'RedirectUrl' may be in use. Try changing this port in the configuration file, which can be opened using the Edit-OrchConfig cmdlet.";
+                throw new InvalidOperationException(message, ex);
+            }
+
+            if (UseInPrivate)
+            {
+                // Open in InPrivate browser (Edge + temporary profile for complete cookie isolation)
+                string edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86),
+                    @"Microsoft\Edge\Application\msedge.exe");
+                if (!File.Exists(edgePath))
                 {
-                    try
+                    edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles),
+                        @"Microsoft\Edge\Application\msedge.exe");
+                }
+                string tempProfile = Path.Combine(Path.GetTempPath(), "UiPathOrch_" + Guid.NewGuid().ToString("N")[..8]);
+                Process.Start(new ProcessStartInfo(edgePath, $"--inprivate --user-data-dir=\"{tempProfile}\" \"{authUrl}\"") { UseShellExecute = false });
+            }
+            else
+            {
+                Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
+            }
+
+            string? authorizationCode = null;
+            Exception? capturedException = null;
+
+            // Manage the Ctrl+C event with ConsoleCancelHandler
+            using var consoleCancelHandler = new ConsoleCancelHandler();
+            var cts = consoleCancelHandler.Token;
+
+            // Start the listening in a separate task
+            var listeningTask = Task.Run(async () =>
+            {
+                try
+                {
+                    while (listener.IsListening && !cts.IsCancellationRequested)
                     {
-                        var context = await listener.GetContextAsync();
-                        authorizationCode = context.Request.QueryString["code"];
-                        if (!string.IsNullOrEmpty(authorizationCode))
+                        try
                         {
-                            // Exchange the auth code for tokens inline so we can display
-                            // the authenticated user's name on the success page. The
-                            // caller (RequestToken) will skip its own exchange when
-                            // _access_token is already set. If exchange fails here, we
-                            // continue to render the page without a username and let the
-                            // caller's retry surface the error through the normal path.
-                            string userName = "";
-                            if (!string.IsNullOrEmpty(codeVerifier))
+                            var context = await listener.GetContextAsync();
+                            authorizationCode = context.Request.QueryString["code"];
+                            if (!string.IsNullOrEmpty(authorizationCode))
                             {
-                                try
+                                // Exchange the auth code for tokens inline so we can display
+                                // the authenticated user's name on the success page. The
+                                // caller (RequestToken) will skip its own exchange when
+                                // _access_token is already set. If exchange fails here, we
+                                // continue to render the page without a username and let the
+                                // caller's retry surface the error through the normal path.
+                                string userName = "";
+                                if (!string.IsNullOrEmpty(codeVerifier))
                                 {
-                                    (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
+                                    try
                                     {
+                                        (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
+                                        {
                                         { "grant_type", "authorization_code" },
                                         { "code", authorizationCode },
                                         { "redirect_uri", _drive._psDrive.RedirectUrl! },
                                         { "client_id", _drive._psDrive.AppId! },
                                         { "code_verifier", codeVerifier }
-                                    });
+                                        });
 
-                                    try
-                                    {
-                                        using JsonDocument doc = ParseJwtPayload();
-                                        if (doc.RootElement.TryGetProperty("preferred_username", out var puElement))
-                                            userName = puElement.GetString() ?? "";
-                                        else if (doc.RootElement.TryGetProperty("name", out var nameElement))
-                                            userName = nameElement.GetString() ?? "";
+                                        try
+                                        {
+                                            using JsonDocument doc = ParseJwtPayload();
+                                            if (doc.RootElement.TryGetProperty("preferred_username", out var puElement))
+                                                userName = puElement.GetString() ?? "";
+                                            else if (doc.RootElement.TryGetProperty("name", out var nameElement))
+                                                userName = nameElement.GetString() ?? "";
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            // JWT unparseable; fall through to generic display.
+                                            System.Diagnostics.Debug.WriteLine($"JWT parse failed: {ex.GetType().Name}: {ex.Message}");
+                                        }
                                     }
-                                    catch (Exception ex)
+                                    catch
                                     {
-                                        // JWT unparseable; fall through to generic display.
-                                        System.Diagnostics.Debug.WriteLine($"JWT parse failed: {ex.GetType().Name}: {ex.Message}");
+                                        // Reset so caller's retry path runs the exchange and surfaces the real error.
+                                        _access_token = null;
+                                        _refresh_token = null;
                                     }
                                 }
-                                catch
-                                {
-                                    // Reset so caller's retry path runs the exchange and surfaces the real error.
-                                    _access_token = null;
-                                    _refresh_token = null;
-                                }
+
+                                // Send a response back to the browser
+                                string lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+                                string[] supportedLangs = ["de", "en", "fr", "ja", "ko", "ro", "tr"];
+                                if (!supportedLangs.Contains(lang)) lang = "en";
+
+                                using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"UiPathOrch.Resources.{lang}.MountSuccessNotification.html");
+                                using StreamReader reader = new(stream!);
+                                string htmlTemplate = await reader.ReadToEndAsync();
+
+                                bool hasUser = !string.IsNullOrEmpty(userName);
+                                string userStyle = hasUser ? "" : "display:none";
+                                string userEncoded = hasUser ? System.Net.WebUtility.HtmlEncode(userName) : "";
+
+                                // Embed image and version information.
+                                // Assembly.GetName().Version is always 4 parts (Major.Minor.Build.Revision),
+                                // but the manifest / PSGallery version is 3-part SemVer — use ToString(3) so the
+                                // rendered string and the PSGallery URL match what was actually published.
+                                string versionStr = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "";
+                                string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, _drive.NameColon, versionStr, LoadBotImageRandomly(), userStyle, userEncoded);
+
+                                byte[] buffer = Encoding.UTF8.GetBytes(responseString);
+                                context.Response.ContentLength64 = buffer.Length;
+                                context.Response.ContentType = "text/html; charset=UTF-8";
+                                context.Response.Headers["Connection"] = "close";
+
+                                // Send the response
+                                await using var output = context.Response.OutputStream;
+                                await output.WriteAsync(buffer, cts);
+                                await output.FlushAsync();
+
+                                await Task.Delay(50); // The screen sometimes goes blank -- not sure if this delay helps...
+
+                                // Explicitly close the response
+                                context.Response.Close();
+
+                                // Exit the loop
+                                break;
                             }
-
-                            // Send a response back to the browser
-                            string lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-                            string[] supportedLangs = ["de", "en", "fr", "ja", "ko", "ro", "tr"];
-                            if (!supportedLangs.Contains(lang)) lang = "en";
-
-                            using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"UiPathOrch.Resources.{lang}.MountSuccessNotification.html");
-                            using StreamReader reader = new(stream!);
-                            string htmlTemplate = await reader.ReadToEndAsync();
-
-                            bool hasUser = !string.IsNullOrEmpty(userName);
-                            string userStyle = hasUser ? "" : "display:none";
-                            string userEncoded = hasUser ? System.Net.WebUtility.HtmlEncode(userName) : "";
-
-                            // Embed image and version information.
-                            // Assembly.GetName().Version is always 4 parts (Major.Minor.Build.Revision),
-                            // but the manifest / PSGallery version is 3-part SemVer — use ToString(3) so the
-                            // rendered string and the PSGallery URL match what was actually published.
-                            string versionStr = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "";
-                            string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, _drive.NameColon, versionStr, LoadBotImageRandomly(), userStyle, userEncoded);
-
-                            byte[] buffer = Encoding.UTF8.GetBytes(responseString);
-                            context.Response.ContentLength64 = buffer.Length;
-                            context.Response.ContentType = "text/html; charset=UTF-8";
-                            context.Response.Headers["Connection"] = "close";
-
-                            // Send the response
-                            await using var output = context.Response.OutputStream;
-                            await output.WriteAsync(buffer, cts);
-                            await output.FlushAsync();
-
-                            await Task.Delay(50); // The screen sometimes goes blank -- not sure if this delay helps...
-
-                            // Explicitly close the response
-                            context.Response.Close();
-
-                            // Exit the loop
+                        }
+                        catch (Exception ex)
+                        {
+                            // Don't surface to the user — the outer Wait(cts) /
+                            // capturedException path is responsible for that. But
+                            // a silent break here historically hid PKCE listener
+                            // bugs (e.g. port collisions, cert issues) entirely.
+                            // Debug.WriteLine is compiled out in Release; in Debug
+                            // it surfaces to DebugView / VS Output for diagnosis.
+                            System.Diagnostics.Debug.WriteLine(
+                                $"PKCE listener loop terminated: {ex.GetType().Name}: {ex.Message}");
                             break;
                         }
                     }
-                    catch (Exception ex)
-                    {
-                        // Don't surface to the user — the outer Wait(cts) /
-                        // capturedException path is responsible for that. But
-                        // a silent break here historically hid PKCE listener
-                        // bugs (e.g. port collisions, cert issues) entirely.
-                        // Debug.WriteLine is compiled out in Release; in Debug
-                        // it surfaces to DebugView / VS Output for diagnosis.
-                        System.Diagnostics.Debug.WriteLine(
-                            $"PKCE listener loop terminated: {ex.GetType().Name}: {ex.Message}");
-                        break;
-                    }
+                }
+                catch (Exception ex)
+                {
+                    capturedException = ex;
+                }
+            }, cts);
+
+            try
+            {
+                // Block the main thread until the task completes or is canceled
+                listeningTask.Wait(cts);
+            }
+            catch (AggregateException ae)
+            {
+                if (ae.InnerExceptions.Any(e => e is OperationCanceledException))
+                {
+                    throw new OperationCanceledException("The operation was canceled by the user.", ae);
+                }
+                else
+                {
+                    throw;
                 }
             }
-            catch (Exception ex)
+            finally
             {
-                capturedException = ex;
-            }
-        }, cts);
+                // Stop the listener
+                if (listener.IsListening)
+                {
+                    listener.Stop();
+                }
 
-        try
-        {
-            // Block the main thread until the task completes or is canceled
-            listeningTask.Wait(cts);
-        }
-        catch (AggregateException ae)
-        {
-            if (ae.InnerExceptions.Any(e => e is OperationCanceledException))
-            {
-                throw new OperationCanceledException("The operation was canceled by the user.", ae);
-            }
-            else
-            {
-                throw;
-            }
-        }
-        finally
-        {
-            // Stop the listener
-            if (listener.IsListening)
-            {
-                listener.Stop();
+                listener.Close();
             }
 
-            listener.Close();
-        }
+            if (capturedException is not null)
+            {
+                throw capturedException;
+            }
 
-        if (capturedException is not null)
-        {
-            throw capturedException;
-        }
+            if (authorizationCode is null)
+            {
+                throw new InvalidOperationException("Authorization code was not received.");
+            }
 
-        if (authorizationCode is null)
-        {
-            throw new InvalidOperationException("Authorization code was not received.");
-        }
-
-        return authorizationCode;
+            return authorizationCode;
         }
     }
 
