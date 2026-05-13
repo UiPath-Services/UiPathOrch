@@ -29,7 +29,7 @@ public partial class OrchAPISession : IDisposable
         return JsonSerializer.Serialize(singleValueHeaders, JsonTools.jsoOneLine);
     }
 
-    private static string? BuildCombinedLogBlock(DateTime reqTime, HttpRequestMessage message, DateTime resTime, HttpResponseMessage? response, int callId, LoggingLevel? currentLevel, bool isErrorOrCancelled = false)
+    internal static string? BuildCombinedLogBlock(DateTime reqTime, HttpRequestMessage message, DateTime resTime, HttpResponseMessage? response, int callId, LoggingLevel? currentLevel, bool isErrorOrCancelled = false)
     {
         currentLevel ??= LoggingLevel.Info;
 
@@ -349,7 +349,7 @@ public partial class OrchAPISession : IDisposable
     //    GetAsyncLogWriter().Write(logBlock);
     //}
 
-    private async ValueTask WriteLogBlockAsync(string? logBlock, CancellationToken cancellationToken = default)
+    internal async ValueTask WriteLogBlockAsync(string? logBlock, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(logBlock))
             return;

@@ -84,9 +84,16 @@ public partial class OrchAPISession : IDisposable
     private readonly RateLimiter limiter = new(15);
 
     private int http_call_num = 0;
+    internal int NextCallId() => Interlocked.Increment(ref http_call_num);
     private HttpResponseMessage HttpClient_Send(HttpRequestMessage message, HttpClient? httpClient = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+
+        // PAT mode never enters an auth flow, so trigger the one-shot
+        // PSDrive settings dump here on the first HTTP call. The flag
+        // inside AuthManager guards against duplicate writes for the
+        // other auth modes (which already log via their own flow).
+        _authManager.LogAuthSettings();
 
         limiter.Wait();
         HttpResponseMessage? ret = null;

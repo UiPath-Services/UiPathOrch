@@ -18,6 +18,12 @@ internal class OrchestratorAuthManager
     // can still fetch in parallel for the cached-token case.
     private static readonly object _pkceLock = new();
 
+    // One-shot per drive: write the PSDrive auth settings dump to the log
+    // file the first time we hit any auth flow (or any HTTP call for the
+    // PAT mode which doesn't have its own auth call). Diagnostic only;
+    // requires the drive's Logging.Enabled.
+    private bool _authSettingsLogged;
+
     private readonly HttpClient _httpClient;
     private readonly OrchDriveInfo _drive;
     internal string BaseUrl { get; }
@@ -155,6 +161,8 @@ internal class OrchestratorAuthManager
         }
         else // user/pass auth
         {
+            LogAuthSettings();
+
             LoginModel payload = new()
             {
                 tenancyName = OnpremiseTenancy,
@@ -168,7 +176,7 @@ internal class OrchestratorAuthManager
             request.Content = new StringContent(strPayload, Encoding.UTF8, @"application/json");
 
             using var cts = new ConsoleCancelHandler();
-            using var response = _httpClient.Send(request, cts.Token);
+            using var response = SendWithLogging(request, cts.Token);
             var body = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
             return JsonSerializer.Deserialize<AjaxResponse>(body)?.result ?? "";
         }
@@ -195,6 +203,14 @@ internal class OrchestratorAuthManager
 
     private (string access_token, string refresh_token) GetAccessToken(Dictionary<string, string> postData)
     {
+        // Confidential App's client_credentials and refresh_token flows both
+        // funnel through here; PKCE's code → token exchange also reuses this
+        // method via the listener task. Cover the dump on all three by
+        // logging at the entry of GetAccessToken — LogAuthSettings is
+        // one-shot so the duplicate calls from PKCE / Confidential App
+        // paths are harmless.
+        LogAuthSettings();
+
         string endPoint;
 
         if (!string.IsNullOrEmpty(_drive._psDrive.IdentityUrl))
@@ -215,7 +231,7 @@ internal class OrchestratorAuthManager
         };
 
         using var cts = new ConsoleCancelHandler();
-        using HttpResponseMessage response = _httpClient.Send(request, cts.Token);
+        using HttpResponseMessage response = SendWithLogging(request, cts.Token);
 
         string body = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
 
@@ -299,6 +315,7 @@ internal class OrchestratorAuthManager
         // completes (or fails) so the next pending drive's auth can proceed.
         lock (_pkceLock)
         {
+        LogAuthSettings();
         string endPoint;
         string acrValues = "";
         if (!string.IsNullOrEmpty(_drive._psDrive.IdentityUrl))
@@ -593,4 +610,237 @@ internal class OrchestratorAuthManager
         var json = Encoding.UTF8.GetString(jsonBytes);
         return json;
     }
+
+    #region Auth diagnostics logging
+
+    // Fields that must never appear in plaintext in the log file.
+    private static readonly System.Collections.Generic.HashSet<string> _authSecretKeys = new(System.StringComparer.OrdinalIgnoreCase)
+    {
+        "access_token", "refresh_token", "id_token",
+        "client_secret", "code", "code_verifier", "assertion",
+        "password",
+    };
+
+    private const string _redactedValue = "***REDACTED***";
+
+    /// <summary>
+    /// Redact tokens / codes / secrets from a request URL, JSON body, or
+    /// form-encoded body before it lands in the auth log file. We only
+    /// recognize the limited set of OAuth2 / OIDC parameter names listed
+    /// in <see cref="_authSecretKeys"/>; any other token-shaped value is
+    /// left as-is (auth flow bodies are well-defined, no need to be
+    /// over-eager and corrupt diagnostic detail).
+    /// </summary>
+    internal static string MaskAuthSecrets(string content, string? contentType)
+    {
+        if (string.IsNullOrEmpty(content)) return content;
+
+        // application/json: replace "<key>" : "<value>" with "<key>" : "***REDACTED***"
+        if (contentType is not null && contentType.Contains("json", System.StringComparison.OrdinalIgnoreCase))
+        {
+            return System.Text.RegularExpressions.Regex.Replace(
+                content,
+                @"""(?<k>[A-Za-z_][A-Za-z0-9_]*)""\s*:\s*""(?<v>[^""]*)""",
+                match =>
+                {
+                    var key = match.Groups["k"].Value;
+                    return _authSecretKeys.Contains(key)
+                        ? $@"""{key}"": ""{_redactedValue}"""
+                        : match.Value;
+                });
+        }
+
+        // application/x-www-form-urlencoded or query string fragment.
+        return System.Text.RegularExpressions.Regex.Replace(
+            content,
+            @"(?<k>[A-Za-z_][A-Za-z0-9_]*)=(?<v>[^&\s]*)",
+            match =>
+            {
+                var key = match.Groups["k"].Value;
+                return _authSecretKeys.Contains(key)
+                    ? $"{key}={_redactedValue}"
+                    : match.Value;
+            });
+    }
+
+    /// <summary>
+    /// Mask query-string secrets on a request URI (e.g. the PKCE redirect
+    /// callback carries the authorization <c>code</c> as a query
+    /// parameter).
+    /// </summary>
+    internal static string MaskAuthSecretsInUri(string uri)
+    {
+        var queryIdx = uri.IndexOf('?');
+        if (queryIdx < 0) return uri;
+        var prefix = uri[..(queryIdx + 1)];
+        var query = uri[(queryIdx + 1)..];
+        return prefix + MaskAuthSecrets(query, contentType: null);
+    }
+
+    /// <summary>
+    /// Dump the drive's authentication-relevant PSDrive settings plus
+    /// runtime info to the log file. Runs at most once per AuthManager
+    /// instance (i.e. once per session per drive) and only when the
+    /// drive's <c>Logging.Enabled</c> is on. Credentials (AppSecret,
+    /// AccessToken, Password, proxy credentials) are intentionally
+    /// excluded.
+    /// </summary>
+    internal void LogAuthSettings()
+    {
+        if (_authSettingsLogged) return;
+
+        var logging = _drive._psDrive.Logging;
+        if (!(logging?.Enabled.GetValueOrDefault() ?? false)) return;
+
+        _authSettingsLogged = true;
+
+        var psd = _drive._psDrive;
+        string mode = !string.IsNullOrEmpty(psd.AccessToken) ? "Personal Access Token"
+                    : _isConfidentialApp ? "Confidential App"
+                    : _isUserPassword ? "Username/Password"
+                    : "PKCE (Non-Confidential App)";
+
+        var orchVersion = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "(unknown)";
+        var psAssembly = Assembly.GetAssembly(typeof(System.Management.Automation.PSCmdlet));
+        var psVersion = psAssembly?.GetName().Version?.ToString() ?? "(unknown)";
+        var dotnetVersion = System.Runtime.InteropServices.RuntimeInformation.FrameworkDescription;
+        var osVersion = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+
+        var sb = new StringBuilder();
+        sb.AppendLine($"{DateTime.Now:HH:mm:ss.fff} === Auth diagnostics for '{_drive.NameColonSeparator}' (mode: {mode}) ===");
+        sb.AppendLine($"  UiPathOrch    : {orchVersion}");
+        sb.AppendLine($"  PowerShell    : {psVersion}");
+        sb.AppendLine($"  .NET          : {dotnetVersion}");
+        sb.AppendLine($"  OS            : {osVersion}");
+        sb.AppendLine($"  Root          : {psd.Root}");
+        sb.AppendLine($"  Edition       : {psd.ResolvedEdition}");
+        sb.AppendLine($"  IdentityUrl   : {psd.IdentityUrl ?? "(default)"}");
+        sb.AppendLine($"  AppId         : {psd.AppId ?? "(none)"}");
+        sb.AppendLine($"  RedirectUrl   : {psd.RedirectUrl ?? "(none)"}");
+        sb.AppendLine($"  HttpListener  : {psd.HttpListener ?? "(none)"}");
+        sb.AppendLine($"  Scope         : {psd.Scope ?? "(none)"}");
+        sb.AppendLine($"  Username      : {psd.Username ?? "(none)"}");
+        sb.AppendLine($"  UseInPrivate  : {UseInPrivate}");
+        sb.AppendLine($"  IgnoreSslErrors: {psd.IgnoreSslErrors.GetValueOrDefault()}");
+        sb.AppendLine($"  ProxyEnabled  : {psd.Proxy?.Enabled.GetValueOrDefault() ?? false}");
+        sb.AppendLine();
+
+        var block = sb.ToString();
+        _ = System.Threading.Tasks.Task.Run(async () =>
+        {
+            try { await _drive.OrchAPISession.WriteLogBlockAsync(block, System.Threading.CancellationToken.None); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Auth settings log write failed: {ex.Message}"); }
+        });
+    }
+
+    /// <summary>
+    /// Wrapper around <c>_httpClient.Send</c> that mirrors
+    /// <see cref="OrchAPISession.HttpClient_Send"/>'s logging behavior so
+    /// PKCE / Confidential App / Username-password auth call traffic
+    /// shows up in the drive's HTTP log file (LoggingLevel-controlled,
+    /// secrets redacted). The X-UIPATH-TenantName header / Bearer header
+    /// injection that <c>HttpClient_Send</c> does for API calls is
+    /// intentionally skipped here — auth calls don't carry a tenant or
+    /// access token.
+    /// </summary>
+    private HttpResponseMessage SendWithLogging(HttpRequestMessage request, System.Threading.CancellationToken token)
+    {
+        var session = _drive.OrchAPISession;
+        var logging = _drive._psDrive.Logging;
+        bool logEnabled = logging?.Enabled.GetValueOrDefault() ?? false;
+
+        DateTime reqTime = DateTime.Now;
+        DateTime resTime = reqTime;
+        HttpResponseMessage? ret = null;
+        bool hasException = false;
+        int callId = session.NextCallId();
+
+        try
+        {
+            reqTime = DateTime.Now;
+            ret = _httpClient.Send(request, HttpCompletionOption.ResponseHeadersRead, token);
+            resTime = DateTime.Now;
+
+            // Buffer body up-front so the async logger doesn't race the
+            // caller's response.Content read. Same pattern as
+            // HttpClient_Send.
+            if (logEnabled && ret.Content != null)
+            {
+                var level = logging?.InternalLogLevel ?? LoggingLevel.Info;
+                if (!ret.IsSuccessStatusCode || level >= LoggingLevel.Trace)
+                {
+                    ret.Content.LoadIntoBufferAsync().GetAwaiter().GetResult();
+                }
+            }
+
+            return ret;
+        }
+        catch
+        {
+            resTime = DateTime.Now;
+            hasException = true;
+            throw;
+        }
+        finally
+        {
+            if (logEnabled)
+            {
+                // Mask request URI's query string in place so the log block
+                // never carries an authorization code (PKCE redirect URI
+                // case). Restore after building the block to avoid changing
+                // observable behavior for callers that read request.RequestUri
+                // after Send.
+                var originalUri = request.RequestUri;
+                if (originalUri is not null)
+                {
+                    var masked = MaskAuthSecretsInUri(originalUri.ToString());
+                    if (masked != originalUri.ToString())
+                    {
+                        request.RequestUri = new Uri(masked, UriKind.RelativeOrAbsolute);
+                    }
+                }
+
+                string? combinedLogBlock;
+                try
+                {
+                    combinedLogBlock = hasException
+                        ? $"{reqTime:HH:mm:ss.fff} #{callId:D4} {request.Method} {request.RequestUri}\n{resTime:HH:mm:ss.fff} RES Status: ERROR/CANCELLED\n\n"
+                        : OrchAPISession.BuildCombinedLogBlock(reqTime, request, resTime, ret, callId, logging?.InternalLogLevel);
+
+                    if (combinedLogBlock is not null)
+                    {
+                        // Mask any tokens that may have leaked into the request/response body section.
+                        var requestContentType = request.Content?.Headers.ContentType?.MediaType;
+                        var responseContentType = ret?.Content?.Headers.ContentType?.MediaType;
+                        combinedLogBlock = MaskAuthSecrets(combinedLogBlock, requestContentType);
+                        if (responseContentType is not null && responseContentType != requestContentType)
+                        {
+                            combinedLogBlock = MaskAuthSecrets(combinedLogBlock, responseContentType);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Auth log block build failed: {ex.Message}");
+                    combinedLogBlock = null;
+                }
+                finally
+                {
+                    request.RequestUri = originalUri;
+                }
+
+                if (!string.IsNullOrEmpty(combinedLogBlock))
+                {
+                    var blockToWrite = combinedLogBlock;
+                    _ = System.Threading.Tasks.Task.Run(async () =>
+                    {
+                        try { await session.WriteLogBlockAsync(blockToWrite, System.Threading.CancellationToken.None); }
+                        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Async auth log write failed: {ex.Message}"); }
+                    });
+                }
+            }
+        }
+    }
+
+    #endregion
 }
