@@ -11,6 +11,13 @@ namespace UiPath.OrchAPI;
 
 internal class OrchestratorAuthManager
 {
+    // PKCE flow binds an HttpListener to a fixed redirect port (8085 by
+    // default). Two concurrent flows in the same process would crash on
+    // "address already in use". Serialize across all drives — already-
+    // authenticated drives skip this path entirely, so multi-drive cmdlets
+    // can still fetch in parallel for the cached-token case.
+    private static readonly object _pkceLock = new();
+
     private readonly HttpClient _httpClient;
     private readonly OrchDriveInfo _drive;
     internal string BaseUrl { get; }
@@ -287,6 +294,11 @@ internal class OrchestratorAuthManager
 
     private string GetAuthorizationCode(string? codeVerifier)
     {
+        // See _pkceLock declaration for the rationale. Held for the full
+        // browser-auth round-trip; released as soon as the token exchange
+        // completes (or fails) so the next pending drive's auth can proceed.
+        lock (_pkceLock)
+        {
         string endPoint;
         string acrValues = "";
         if (!string.IsNullOrEmpty(_drive._psDrive.IdentityUrl))
@@ -506,6 +518,7 @@ internal class OrchestratorAuthManager
         }
 
         return authorizationCode;
+        }
     }
 
     private static string GetHash(string input)
