@@ -133,22 +133,28 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
 // This represents the cache of unique entities across all organizations.
 public class ListCachePerOrganization<T> : ITenantCacheClearable
 {
-    private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
     private static readonly ConcurrentDictionary<string, List<T>> _cache = [];
     private static readonly ExceptionsCachePer<string> _exception = new(); // Holds per-org exceptions
+    // Per-partition lock for the list fetch path. Same partition → same lock
+    // instance → fetch serialized; different partitions → different locks →
+    // parallel. Replaces the prior instance-_lock-guards-a-static-cache anti-
+    // pattern under which two drives in the same org would each enter their
+    // own critical section and double-fetch.
+    private static readonly ConcurrentDictionary<string, object> _partitionLocks = new();
     // input: partitionGlobalId
     private readonly Func<string, IEnumerable<T>> _getter;
     private readonly Action<T>? _initializer;
 
     // The following is also needed for entities that support -ExpandDetail
     private readonly Func<T, string?>? _getterId;
-    // Detailed cache of organization entities keyed by (partitionGlobalId, id)
-    private static volatile ConcurrentDictionary<(string partitionGlobalId, string id), T?>? _cacheDetailed = null;
-    // Static lock for the static _cacheDetailed field. Using the instance _lock
-    // here would let different drives racing the same partition each enter
-    // their own critical section, defeating the singleton intent.
-    private static readonly object _detailedLock = new();
+    // Detailed cache of organization entities keyed by (partitionGlobalId, id).
+    // Eagerly initialized — the empty ConcurrentDictionary cost is trivial and
+    // the null state was only there to avoid that cost.
+    private static readonly ConcurrentDictionary<(string partitionGlobalId, string id), T?> _cacheDetailed = new();
+    // Separate per-partition lock dict for the detail path so a list fetch and
+    // a detail fetch on the same org can proceed concurrently.
+    private static readonly ConcurrentDictionary<string, object> _detailedPartitionLocks = new();
     private readonly Func<string, string, T?>? _getterDetailed;
     // Exception cache for detailed organization entity retrieval keyed by (partitionGlobalId, id)
     private static readonly ExceptionsCachePer<(string partitionGlobalId, string id)> _exceptionDetailed = new(); // Holds per (org, id) exceptions
@@ -179,7 +185,8 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
         if (!_cache.TryGetValue(partitionGlobalId, out var cachePerOrg))
         {
-            lock (_lock)
+            var partitionLock = _partitionLocks.GetOrAdd(partitionGlobalId, _ => new object());
+            lock (partitionLock)
             {
                 if (!_cache.TryGetValue(partitionGlobalId, out cachePerOrg))
                 {
@@ -228,17 +235,10 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
         _exceptionDetailed.ThrowCachedExceptionIfAny((partitionGlobalId, id));
 
-        if (_cacheDetailed is null)
-        {
-            lock (_detailedLock)
-            {
-                _cacheDetailed ??= [];
-            }
-        }
-
         if (!_cacheDetailed.TryGetValue((partitionGlobalId, id), out var cachePerOrgDetailed))
         {
-            lock (_detailedLock)
+            var partitionLock = _detailedPartitionLocks.GetOrAdd(partitionGlobalId, _ => new object());
+            lock (partitionLock)
             {
                 if (!_cacheDetailed.TryGetValue((partitionGlobalId, id), out cachePerOrgDetailed))
                 {
@@ -249,11 +249,6 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
                     }
                     catch (HttpResponseException ex)
                     {
-                        // Detailed-fetch exceptions belong in the per-(org, id)
-                        // detailed cache; the earlier _exception.CacheException
-                        // call wrote to the org-level cache, where the matching
-                        // ThrowCachedExceptionIfAny at the top of this method
-                        // would never find them.
                         _exceptionDetailed.CacheException((partitionGlobalId, id), ex);
                         throw;
                     }
@@ -339,12 +334,14 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 // This represents the cache of a single entity shared across the entire organization.
 public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : class
 {
-    private readonly object _lock = new();
     private readonly OrchDriveInfo _drive;
 
     // Cache per organization (static = shared across all drive instances)
     private static readonly ConcurrentDictionary<string, T> _cache = [];
     private static readonly ExceptionsCachePer<string> _exception = new();
+    // Per-partition lock: same partition → serialized fetch (no duplicate API
+    // calls); different partitions → parallel.
+    private static readonly ConcurrentDictionary<string, object> _partitionLocks = new();
 
     // getter: takes partitionGlobalId as argument and returns T
     private readonly Func<string, T?> _getter;
@@ -370,7 +367,8 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
 
         if (!_cache.TryGetValue(partitionGlobalId, out var entity))
         {
-            lock (_lock)
+            var partitionLock = _partitionLocks.GetOrAdd(partitionGlobalId, _ => new object());
+            lock (partitionLock)
             {
                 if (!_cache.TryGetValue(partitionGlobalId, out entity))
                 {
@@ -772,9 +770,12 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
     where TKey : notnull, IEquatable<TKey>
 {
     // Storage shared across all drives in the same closed generic instantiation.
-    private static readonly object _lock = new();
     private static readonly ConcurrentDictionary<(string partitionGlobalId, TKey key), TEntity?> _cache = new();
     private static readonly ExceptionsCachePer<(string partitionGlobalId, TKey key)> _exceptions = new();
+    // Per-partition lock: same partition → serialized fetch; different
+    // partitions → parallel. Previously a single global static lock serialized
+    // every fetch across all orgs, which was correct but unnecessarily coarse.
+    private static readonly ConcurrentDictionary<string, object> _partitionLocks = new();
 
     private readonly OrchDriveInfo _drive;
     private readonly Func<string, TKey, TEntity?> _fetchFunc;
@@ -811,10 +812,10 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
 
         if (_cache.TryGetValue(compositeKey, out var cached)) return cached;
 
-        // Serialize fetches across all drives in this closed generic — PM API
-        // calls under concurrent load yield duplicate work and inconsistent
-        // snapshots. Single global lock is the simplest correct design.
-        lock (_lock)
+        // Serialize fetches within the same partition only — different orgs
+        // are independent and can fetch in parallel.
+        var partitionLock = _partitionLocks.GetOrAdd(partitionGlobalId, _ => new object());
+        lock (partitionLock)
         {
             // Re-check after acquiring the lock (another thread may have populated).
             if (_cache.TryGetValue(compositeKey, out cached)) return cached;
@@ -875,9 +876,10 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
 public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearable
     where TKey : notnull, IEquatable<TKey>
 {
-    private static readonly object _lock = new();
     private static readonly ConcurrentDictionary<(string partitionGlobalId, TKey key), List<TEntity>> _cache = new();
     private static readonly ExceptionsCachePer<(string partitionGlobalId, TKey key)> _exceptions = new();
+    // Per-partition lock — see KeyedSingleCachePerOrganization.
+    private static readonly ConcurrentDictionary<string, object> _partitionLocks = new();
 
     private readonly OrchDriveInfo _drive;
     private readonly Func<string, TKey, IEnumerable<TEntity>> _fetchFunc;
@@ -917,7 +919,8 @@ public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearabl
 
         if (_cache.TryGetValue(compositeKey, out var list)) return list.AsReadOnly();
 
-        lock (_lock)
+        var partitionLock = _partitionLocks.GetOrAdd(partitionGlobalId, _ => new object());
+        lock (partitionLock)
         {
             if (_cache.TryGetValue(compositeKey, out list)) return list.AsReadOnly();
 
