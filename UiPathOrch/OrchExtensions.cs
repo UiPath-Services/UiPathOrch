@@ -998,7 +998,10 @@ internal static class SessionStateExtentios
                     drives.Add(orchDrive);
             }
         }
-        return drives.Distinct().ToList();
+        // Sort by drive name so multi-drive cmdlets emit results in a
+        // predictable order regardless of -Path argument order
+        // (matches the behavior already in EnumPmDrives).
+        return drives.Distinct().OrderBy(d => d.Name, StringComparer.OrdinalIgnoreCase).ToList();
     }
 
     // If paths is not specified, return only the current drive
