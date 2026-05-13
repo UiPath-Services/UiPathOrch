@@ -6,6 +6,106 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.4.0] - 2026-05-13
+
+The headline is the **per-organization cache `Path`-isolation refactor**
+that was queued by 1.3.0's plan doc and shipped here in three phases.
+Org-scoped entities (PM users, groups, robot accounts, external apps,
+licenses, allocations, directory search results, etc.) used to carry a
+drive-local `Path` field on what was actually a singleton instance
+shared across all drives in the same org, which raced under
+multi-drive cmdlets. Their `Path` now lands on a `PSObject`
+`NoteProperty` per `WriteObject`, so the singleton stays a singleton
+and each emitted record carries its own drive context.
+
+Plus: **per-drive auth logging with secret masking** (to support
+diagnosing PKCE issues like "user has not accepted the invitation"
+errors from the Identity Provider), **PKCE serialization** so
+multi-drive auth doesn't crash on a port-8085 listener collision, and
+a few smaller table / sort polish items.
+
+### Added
+
+- **Per-drive auth diagnostics + auth HTTP traffic logging** in the
+  existing drive log file (`Get-OrchLogLocation`). Triggers once per
+  drive per session on first auth flow (PKCE / Confidential App /
+  Refresh / Username-Password) or on first API call (PAT mode), so
+  support requests can lean on "send me the log file" instead of
+  "what's the org URL, what's the IdP, what's the scope, what's the
+  app type" round trips. The block includes UiPathOrch / PowerShell
+  / .NET / OS versions and the drive's auth-relevant PSDrive settings
+  (Root, Edition, IdentityUrl, AppId, RedirectUrl, HttpListener,
+  Scope, Username, UseInPrivate, IgnoreSslErrors, ProxyEnabled —
+  AppSecret / AccessToken / Password / proxy credentials are
+  intentionally excluded). Auth call traffic (`/connect/token`,
+  `/api/Account/Authenticate`) is also recorded at the same
+  `LoggingLevel` granularity as API calls (Info: summary only;
+  Trace/Verbose: with bodies; errors: full), with `access_token`,
+  `refresh_token`, `id_token`, `client_secret`, `code`,
+  `code_verifier`, `assertion`, `password` redacted to
+  `***REDACTED***`.
+
+### Fixed
+
+- **Multi-drive cmdlets no longer crash with "port 8085 in use"
+  when more than one drive needs PKCE auth.** PKCE flow's
+  `HttpListener` is serialized across drives via a static lock —
+  already-authenticated drives still fetch in parallel; only drives
+  that need to open the browser queue up behind each other so the
+  port handoff is clean.
+
+### Changed
+
+- **Per-organization cache entities no longer carry their
+  drive-local `Path` field.** Affected:
+  `LicenseInventory`, `AccountLicense`, `PmAuthenticationRoot` (Phase
+  1 — `SingleCachePerOrganization`); `PmUser`, `PmGroup`,
+  `PmRobotAccount`, `ExternalClient`, `ExternalResource`,
+  `AvailableUserBundle`, `TenantAllocation`, `NuLicensedGroup`,
+  `NuLicensedUser`, `AccessAllowedMember` and the inherited
+  `NuLicensedGroupMember` (Phase 2 —
+  `ListCachePerOrganization`); `PmGroupMember`,
+  `PmDirectoryEntityInfo` (Phase 3 — sub-entities). Drive context is
+  attached as a `PSObject` `NoteProperty` at `WriteObject` time via
+  the new `OrchExtensions.WithPath<T>` helper. PowerShell-level
+  property access (`$x.Path`) is unchanged from the caller's
+  perspective; only the underlying type-system structure moves.
+
+- **Multi-drive output is now sorted by drive name in
+  `EnumOrchDrives`** (already true for `EnumPmDrives`). Cmdlets like
+  `Get-OrchProductVersion -Path B:,A:` emit in `A:` then `B:` order,
+  which makes multi-drive tables read predictably. Fetches still
+  run in parallel; only the consumer-side yield order is fixed.
+
+- **`Get-OrchProductVersion` has a typed format view.** Five-column
+  table — `Path` / `Version` / `Deployment` / `ConfigsVersion` /
+  `Timestamp` — instead of the generic property-list fallback.
+
+### Internal
+
+- `GetPSPath` extension methods for the org-shared entity types now
+  take an explicit `drivePath` argument (was: read `entity.Path`).
+  Around 50 call sites updated. `DriveScopedCompleter<TEntity>.GetTipHelp`
+  also gained an `OrchDriveInfo drive` parameter so PM entity
+  completers can supply the path.
+- `ListCachePerOrganization.Get` / `Get(id)` run their initializer
+  exactly once at publish time (inside the partition lock) rather
+  than on every cache hit. The cache-hit re-init was a leftover from
+  the `Path`-on-entity model and would race with itself across
+  drives in the same org. Detail-lookup path also short-circuits
+  when `_getterId` is null.
+- `OrchLog`'s `BuildCombinedLogBlock` and `WriteLogBlockAsync` are
+  now `internal` so `AuthManager.SendWithLogging` can reuse the same
+  block format and writer instead of re-rolling them. A shared
+  call-id counter (`OrchAPISession.NextCallId`) means auth calls
+  appear in the same chronological log sequence as API calls.
+- `design/per-organization-cache-path-isolation.md` updated with
+  Phase 1-3 completion notes and a short list of remaining
+  cosmetic-alignment work (`UpdateLicensedGroupResponse.Path`,
+  `NuLicensedGroupMember.PathGroupName`,
+  `AvailableUserBundles.GroupName`/`PathGroupName` — all Response
+  wrappers with caller-supplied drive context, not race-prone).
+
 ## [1.3.0] - 2026-05-13
 
 Two themes: **Azure AD B2B guest support** across the user/folder-user
