@@ -22,7 +22,8 @@ public class GetPmAuthenticationSettingCommand : OrchestratorPSCmdlet
         {
             try
             {
-                WriteObject(drive.PmAuthenticationSetting.Get());
+                var entity = drive.PmAuthenticationSetting.Get();
+                if (entity is not null) WriteObject(entity.WithPath(drive.NameColonSeparator));
             }
             catch (Exception ex)
             {

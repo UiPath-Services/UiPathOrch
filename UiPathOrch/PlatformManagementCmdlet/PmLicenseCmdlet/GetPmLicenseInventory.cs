@@ -21,7 +21,7 @@ public class GetPmLicenseInventory : OrchestratorPSCmdlet
             try
             {
                 var inventory = drive.PmLicenseInventory.Get();
-                if (inventory is not null) WriteObject(inventory);
+                if (inventory is not null) WriteObject(inventory.WithPath(drive.NameColonSeparator));
             }
             catch (Exception ex)
             {

@@ -3816,9 +3816,10 @@ public class ProductAllocation
 // (the Robots & Services tab dashboard: product totals + entitlement usage + service catalog).
 public class LicenseInventory
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
-
+    // Path was removed: this entity is shared across all drives in the same
+    // organization (SingleCachePerOrganization), so a drive-local Path field
+    // can't live on the singleton. Cmdlets attach Path via PSObject
+    // NoteProperty at WriteObject time instead.
     public ProductAllocation[]? productAllocations { get; set; }
     public AvailableUserBundle[]? userLicensingBundles { get; set; }
     public EntitlementUsage[]? entitlementUsages { get; set; }
@@ -3866,9 +3867,7 @@ public class AvailableService
 // a single object carries the complete response.
 public class AccountLicense
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
-
+    // Path was removed; see LicenseInventory for the rationale.
     public MlKey[]? mlKeys { get; set; } // promoted from wrapper response root
 
     public string? accountId { get; set; } // Guid
@@ -4157,8 +4156,7 @@ public class PmAuthenticationSetting
 // AuthenticationSettingRoot // added by UiPathOrch
 public class PmAuthenticationRoot
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
+    // Path was removed; see LicenseInventory for the rationale.
     public PmExternalIdentityProvider? externalIdentityProviderDto { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]

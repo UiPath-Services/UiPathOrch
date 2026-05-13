@@ -21,7 +21,7 @@ public class GetPmLicenseContract : OrchestratorPSCmdlet
             try
             {
                 var contract = drive.PmLicenseContract.Get();
-                if (contract is not null) WriteObject(contract);
+                if (contract is not null) WriteObject(contract.WithPath(drive.NameColonSeparator));
             }
             catch (Exception ex)
             {

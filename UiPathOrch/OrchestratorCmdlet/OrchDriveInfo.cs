@@ -1461,9 +1461,11 @@ public partial class OrchDriveInfo : PSDriveInfo
         // Non-indexed organization entities
         PmAuthenticationSetting = new(this,
             OrchAPISession.GetPmAuthenticationSetting,
+            // Drive-local Path is no longer set here — cmdlets wrap output in a
+            // PSObject with a Path NoteProperty. Only the entity's own derived
+            // state (parsed JSON settings) is computed here.
             e =>
             {
-                e.Path = NameColonSeparator;
                 if (e.settingsExpanded is null && !string.IsNullOrEmpty(e.externalIdentityProviderDto?.settings))
                 {
                     try
@@ -1478,15 +1480,11 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
-        PmLicenseInventory = new(this,
-            OrchAPISession.GetPmLicenseInventory,
-            e => e.Path = NameColonSeparator
-        );
+        // No initializer: Path is attached by the cmdlet via PSObject
+        // NoteProperty; no other derived state to compute on this entity.
+        PmLicenseInventory = new(this, OrchAPISession.GetPmLicenseInventory);
 
-        PmLicenseContract = new(this,
-            OrchAPISession.GetPmLicenseContract,
-            e => e.Path = NameColonSeparator
-        );
+        PmLicenseContract = new(this, OrchAPISession.GetPmLicenseContract);
 
         // Non-indexed tenant entities
         ActivitySettings = new(this, OrchAPISession.GetActivitySettings, e => e.Path = NameColonSeparator);

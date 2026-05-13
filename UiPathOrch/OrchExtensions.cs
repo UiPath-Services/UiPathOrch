@@ -382,6 +382,22 @@ internal static class OrchCollectionExtensions
     }
     #endregion
 
+    /// <summary>
+    /// Wrap <paramref name="entity"/> in a <see cref="PSObject"/> with a
+    /// per-output <c>Path</c> note property. Used by cmdlets that emit
+    /// org-shared entities (<see cref="SingleCachePerOrganization{T}"/>,
+    /// <see cref="ListCachePerOrganization{T}"/>) so each <c>WriteObject</c>
+    /// can carry its own drive context without mutating the shared cached
+    /// instance. <c>$x[0].BaseObject</c> stays the singleton; <c>$x[0].Path</c>
+    /// resolves through the note property and is independent per emit.
+    /// </summary>
+    public static PSObject WithPath<T>(this T entity, string path) where T : notnull
+    {
+        var pso = new PSObject(entity);
+        pso.Properties.Add(new PSNoteProperty("Path", path));
+        return pso;
+    }
+
     public static T DeepCopy<T>(T obj)
     {
         var jsonString = JsonSerializer.Serialize(obj);

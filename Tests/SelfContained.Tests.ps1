@@ -3147,3 +3147,36 @@ Describe 'B2B EmailAddress matching - FolderUser/User cmdlets' -Tag 'B2BRegressi
         }
     }
 }
+
+# ---------------------------------------------------------------------------
+# H1 Phase 1: SingleCachePerOrganization Path moved to PSObject NoteProperty
+# ---------------------------------------------------------------------------
+# Org-scoped entities (LicenseInventory, AccountLicense, PmAuthenticationRoot)
+# are static singletons shared across drives in the same organization. Their
+# Path field used to be written by the cache class's initializer on every
+# Get (race-prone when multiple drives hit the same cached entity). The field
+# is now removed from the entity, and cmdlets emit a PSObject wrapper with a
+# Path NoteProperty so each WriteObject carries its own drive context without
+# mutating the shared instance.
+Describe 'H1 Phase 1: SingleCachePerOrganization Path via NoteProperty' -Tag 'H1Phase1' {
+
+    It 'BF8: Get-PmLicenseInventory output carries Path as a PSObject NoteProperty (not on entity)' {
+        $inv = $null
+        try {
+            $inv = Get-PmLicenseInventory -Path "${script:Drive}:" -ErrorAction Stop
+        } catch {
+            Set-ItResult -Skipped -Because "PmLicenseInventory unavailable on this drive: $($_.Exception.Message)"
+            return
+        }
+        if (-not $inv) {
+            Set-ItResult -Skipped -Because 'PmLicenseInventory returned null on this drive.'
+            return
+        }
+        $inv.Path | Should -Be "${script:Drive}:\" `
+            -Because 'NoteProperty should carry the drive-local Path (drive.NameColonSeparator)'
+        $inv.PSObject.Properties['Path'].MemberType | Should -Be 'NoteProperty' `
+            -Because 'Path should be attached via PSObject, not via the underlying entity'
+        $inv.PSObject.BaseObject.GetType().GetProperty('Path') | Should -BeNullOrEmpty `
+            -Because 'The entity type itself no longer carries a Path property'
+    }
+}

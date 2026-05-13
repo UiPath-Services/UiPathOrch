@@ -391,11 +391,11 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
                 }
             }
         }
-        else if (entity is not null && _initializer is not null)
-        {
-            // Execute initializer even when cached (e.g., setting Path)
-            _initializer(entity);
-        }
+        // No cached-hit re-initializer call here. The previous code re-ran
+        // _initializer on every cache hit so each drive could write its own
+        // Path into the shared static entity — a race-prone hack now obsolete:
+        // entity types in this cache have lost their Path field, and cmdlets
+        // attach drive context via PSObject NoteProperty at WriteObject time.
 
         return entity;
     }
