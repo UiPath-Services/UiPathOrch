@@ -34,7 +34,7 @@ public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
     private static readonly string DefaultCsvName = "ExportedPmGroups.csv";
     private static readonly string[] CsvHeaders = ["Path", "GroupName", "Type", "UserName", "Email", "Source"];
 
-    private static void WriteCsvContent(StreamWriter writer, PmGroup group)
+    private static void WriteCsvContent(StreamWriter writer, PmGroup group, string drivePath)
     {
         // Write data rows for each group
         if (group?.members is null) return;
@@ -45,7 +45,7 @@ public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
             .ThenBy(m => m.name))
         {
             string[] line = [
-                EscapeCsvValue(member.Path, true),
+                EscapeCsvValue(drivePath, true),
                 EscapeCsvValue(member.groupName, true),
                 EscapeCsvValue(member.objectType), ////////// TODO: Does this need conversion?
                 EscapeCsvValue(member.name),
@@ -81,13 +81,23 @@ public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
 
                     if (writer is not null)
                     {
-                        WriteCsvContent(writer, detailedGroup);
+                        WriteCsvContent(writer, detailedGroup, drive.NameColonSeparator);
                     }
                     else
                     {
                         if (detailedGroup.members is null) continue;
 
-                        WriteObject(detailedGroup.members.OrderBy(m => m.name), true);
+                        // PmGroupMember is org-shared (PmGroups cache is keyed by
+                        // organization); attach drive-local Path and PathGroupName as
+                        // PSObject note properties per emit. PathGroupName drives the
+                        // ps1xml GroupBy ("Group: Orch1:\<GroupName>" header).
+                        string pathGroupName = System.IO.Path.Combine(drive.NameColonSeparator, detailedGroup.name ?? "");
+                        WriteObject(detailedGroup.members
+                            .OrderBy(m => m.name)
+                            .Select(m => m
+                                .WithPath(drive.NameColonSeparator)
+                                ?.WithNoteProperty("PathGroupName", pathGroupName)),
+                            true);
                     }
                 }
                 catch (Exception ex)

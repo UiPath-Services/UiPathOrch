@@ -1000,10 +1000,8 @@ public partial class OrchDriveInfo : PSDriveInfo
 
                     foreach (var kvp in result ?? [])
                     {
-                        if (kvp.Value is not null)
-                        {
-                            kvp.Value.Path = NameColonSeparator;
-                        }
+                        // Drive-local Path is attached by the caller cmdlet via
+                        // PSObject NoteProperty (Phase 3).
                         _dicPmBulkResolveByName.AddOrUpdate((kind, kvp.Key), kvp.Value, (key, oldValue) => kvp.Value);
                     }
                 }
@@ -1398,16 +1396,12 @@ public partial class OrchDriveInfo : PSDriveInfo
         PmUsers = new(this, OrchAPISession.GetPmUsers);
         PmGroups = new(this, OrchAPISession.GetPmGroups, e =>
             {
-                // PmGroupMember.Path / PathGroupName are still set in place
-                // here pending Phase 3 of the per-org Path-isolation refactor
-                // (see design/per-organization-cache-path-isolation.md).
-                // groupName is a parent-derived value (no drive context) and
-                // stays in the initializer.
+                // PmGroupMember.Path / PathGroupName were drive-local and moved
+                // to PSObject NoteProperties in Phase 3 (Get-PmGroupMember wraps
+                // its output). groupName is parent-derived and stays.
                 foreach (var m in e.members ?? [])
                 {
-                    m.Path = NameColonSeparator;
                     m.groupName = e.name;
-                    m.PathGroupName = NameColonSeparator + e.name;
                 }
             },
                                 e => e.id, OrchAPISession.GetPmGroup);
@@ -1662,15 +1656,9 @@ public partial class OrchDriveInfo : PSDriveInfo
             });
 
         SearchPmDirectoryCache = new(this,
-            (partitionGlobalId, key) => OrchAPISession.SearchPmDirectory(partitionGlobalId, key),
-            (arr, _) =>
-            {
-                if (arr is null) return;
-                foreach (var user in arr)
-                {
-                    user.Path = NameColonSeparator;
-                }
-            });
+            (partitionGlobalId, key) => OrchAPISession.SearchPmDirectory(partitionGlobalId, key));
+        // No initializer: PmDirectoryEntityInfo's drive-local Path is attached
+        // by the caller cmdlet via PSObject NoteProperty (Phase 3).
 
         SearchDirectoryCache = new(this,
             searchWord => OrchAPISession.SearchDirectory(searchWord),

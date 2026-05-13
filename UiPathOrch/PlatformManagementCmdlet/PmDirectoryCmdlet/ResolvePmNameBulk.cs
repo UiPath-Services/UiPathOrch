@@ -48,6 +48,9 @@ public class SearchPmDirectoryBulkCommand : OrchestratorPSCmdlet
                     var psObject = new PSObject(directoryObject);
                     psObject.TypeNames.Clear();
                     psObject.TypeNames.Add(viewName);
+                    // PmGroupMember (DirectoryUser/Group/Application) is org-shared after
+                    // Phase 3; carry the drive-local Path on the PSObject wrapper.
+                    psObject.Properties.Add(new PSNoteProperty("Path", drive.NameColonSeparator));
                     WriteObject(psObject);
                 }
             }

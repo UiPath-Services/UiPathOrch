@@ -106,7 +106,7 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                     // Note: SearchPmDirectory() does not return non-confidential apps, so this is fine
 
                     bFound = true;
-                    string tiphelp = user.TipHelp();
+                    string tiphelp = user.TipHelp(drive.NameColonSeparator);
                     yield return new CompletionResult(PathTools.EscapePSText(user?.identityName), user?.identityName, CompletionResultType.Text, tiphelp);
                 }
             }

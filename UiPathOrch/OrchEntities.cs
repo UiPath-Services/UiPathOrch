@@ -1011,8 +1011,7 @@ public class DirectoryObject
 // DirectoryEntityInfo
 public class PmDirectoryEntityInfo
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
+    // Path removed; see PmGroupMember / LicenseInventory for rationale.
     public string? source { get; set; }
     public string? identifier { get; set; } // Guid
     public string? identityName { get; set; }
@@ -4010,10 +4009,11 @@ public class BulkResolveByNameCommand
 
 public abstract class PmGroupMember
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? PathGroupName { get; set; } // added by UiPathOrch
+    // Path and PathGroupName removed — both are drive-local but the entity is
+    // shared across drives in the same org via the PmGroups cache. They are
+    // attached as PSObject NoteProperties by Get-PmGroupMember at WriteObject
+    // time. `groupName` (parent group's name) is org-scoped — same value for
+    // every drive in the same org — and stays as a field.
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? groupName { get; set; } // added by UiPathOrch
 

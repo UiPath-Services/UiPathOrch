@@ -722,14 +722,6 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return tiphelp;
     }
 
-    protected static string TipHelp(DirectoryUser entity)
-    {
-        string tiphelp = entity.GetPSPath();
-        if (!string.IsNullOrEmpty(entity.displayName))
-            tiphelp += $" ({entity.displayName})";
-        return tiphelp;
-    }
-
     // Matches comma-separated tokens, where single-quoted segments preserve embedded commas.
     [GeneratedRegex(@"(?:[^',]+|'[^']*')+")]
     private static partial Regex CommaSeparatedTokenRegex();

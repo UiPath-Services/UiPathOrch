@@ -67,7 +67,7 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
                     .OrderBy(e => e.identityName))
                 {
                     bFound = true;
-                    string tiphelp = group.TipHelp();
+                    string tiphelp = group.TipHelp(drive.NameColonSeparator);
                     yield return new CompletionResult(PathTools.EscapePSText(group?.identityName), group?.identityName, CompletionResultType.Text, tiphelp);
                 }
             }
@@ -189,7 +189,7 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
             // Skip processing if there are no licenses to add
             if (existingSet.Count == initialCount) continue;
 
-            string target = group.GetPSPath();
+            string target = group.GetPSPath(drive.NameColonSeparator);
             if (ShouldProcess(target, "Add License to PmLicenseGroup"))
             {
                 try

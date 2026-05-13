@@ -89,7 +89,7 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
 
                     foreach (var member in targetMembers.OrderBy(m => m.name))
                     {
-                        if (ShouldProcess(member.GetPSPath(), action))
+                        if (ShouldProcess(member.GetPSPath(drive.NameColonSeparator), action))
                         {
                             // First, record the addition to dstGroup
                             if (updates.TryGetValue((drive, dstGroup), out var groupToAddMember))

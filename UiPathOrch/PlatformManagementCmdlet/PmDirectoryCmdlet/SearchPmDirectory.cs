@@ -43,10 +43,13 @@ public class SearchPmDirectoryCommand : OrchestratorPSCmdlet
 
             foreach (var result in results)
             {
+                // PmDirectoryEntityInfo is org-shared (no drive-local Path field
+                // after Phase 3); take the drivePath from the SourceGroup.
+                string drivePath = result.Source.NameColonSeparator;
                 foreach (var directoryEntry in result
                     .OrderBy(s => s.identityName))
                 {
-                    string tiphelp = directoryEntry.GetPSPath();
+                    string tiphelp = directoryEntry.GetPSPath(drivePath);
                     yield return new CompletionResult(PathTools.EscapePSText(directoryEntry.identityName), directoryEntry.identityName, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
@@ -64,7 +67,9 @@ public class SearchPmDirectoryCommand : OrchestratorPSCmdlet
                 var entityInfo = drive.SearchPmDirectory(Name!);
                 if (entityInfo is null) continue;
 
-                WriteObject(entityInfo, true);
+                // PmDirectoryEntityInfo is org-shared (KeyedSingleCachePerOrganization);
+                // attach the drive-local Path as a PSObject note property per emit.
+                WriteObject(entityInfo.Select(e => e.WithPath(drive.NameColonSeparator)), true);
             }
             catch (Exception ex)
             {

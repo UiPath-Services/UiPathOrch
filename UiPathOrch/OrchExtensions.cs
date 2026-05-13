@@ -92,26 +92,27 @@ internal static class FolderExtensions
         return tiphelp;
     }
 
-    // Org-shared entities (ListCachePerOrganization) take an explicit drivePath
-    // because the entity instance is a singleton across all drives in the org
-    // and can't carry a drive-local Path field. PmGroupMember /
-    // PmDirectoryEntityInfo / NuLicensedGroupMember keep the entity.Path-based
-    // signature for now; their Path-isolation work is queued as Phase 3 (see
-    // design/per-organization-cache-path-isolation.md).
+    // Org-shared entities (ListCachePerOrganization plus the
+    // KeyedSingleCachePerOrganization-backed SearchPmDirectoryCache) take an
+    // explicit drivePath because the entity instance is a singleton across all
+    // drives in the org and can't carry a drive-local Path field.
     public static string GetPSPath(this PmUser entity, string drivePath) => Path.Combine(drivePath, entity?.userName ?? "");
     public static string GetPSPath(this PmRobotAccount entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
     public static string GetPSPath(this PmGroup entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
-    public static string GetPSPath(this PmGroupMember entity) => Path.Combine(entity?.Path ?? "", entity?.groupName ?? "", entity?.name ?? "");
-    public static string GetPSPath(this PmDirectoryEntityInfo entity) => Path.Combine(entity?.Path ?? "", entity?.identityName ?? "");
+    public static string GetPSPath(this PmGroupMember entity, string drivePath) => Path.Combine(drivePath, entity?.groupName ?? "", entity?.name ?? "");
+    public static string GetPSPath(this PmDirectoryEntityInfo entity, string drivePath) => Path.Combine(drivePath, entity?.identityName ?? "");
     public static string GetPSPath(this ExternalResource entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
     public static string GetPSPath(this ExternalClient entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
     public static string GetPSPath(this NuLicensedGroup entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
     public static string GetPSPath(this NuLicensedGroupMember entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
     public static string GetPSPath(this AccessAllowedMember entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
 
-    public static string GetPSPath(this DirectoryUser entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this DirectoryRobotUser entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this DirectoryApplication entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    // DirectoryUser / DirectoryRobotUser / DirectoryApplication inherit from
+    // PmGroupMember (whose Path field was removed in Phase 3); their GetPSPath
+    // takes drivePath the same way the parent does.
+    public static string GetPSPath(this DirectoryUser entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
+    public static string GetPSPath(this DirectoryRobotUser entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
+    public static string GetPSPath(this DirectoryApplication entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
 
     public static string GetPSPath(this DuProject entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
     public static string GetPSPath(this DuRole entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
@@ -127,7 +128,7 @@ internal static class FolderExtensions
     public static string GetPSPath(this TmTestExecution entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
 
     public static string TipHelp(this PmGroupMember? entity) => $"{entity?.name}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";
-    public static string TipHelp(this PmDirectoryEntityInfo? entity) => $"{entity?.GetPSPath()}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";
+    public static string TipHelp(this PmDirectoryEntityInfo? entity, string drivePath) => $"{entity?.GetPSPath(drivePath)}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";
     public static string TipHelp(this ExtendedRobot entity) => $"{entity?.GetPSPath()}{(string.IsNullOrEmpty(entity?.Username) ? "" : $" ({entity.Username})")}";
     public static string TipHelp(this Library? entity) => $"{entity?.GetPSPath()}";
 }
@@ -407,6 +408,19 @@ internal static class OrchCollectionExtensions
         if (entity is null) return null;
         var pso = new PSObject(entity);
         pso.Properties.Add(new PSNoteProperty("Path", path));
+        return pso;
+    }
+
+    /// <summary>
+    /// Attach an additional note property to a wrapped PSObject. Designed to
+    /// chain after <see cref="WithPath{T}"/> when an entity needs more than
+    /// one drive-local property (e.g. <c>PathGroupName</c> on
+    /// <c>PmGroupMember</c>). Null-safe to match WithPath.
+    /// </summary>
+    public static PSObject? WithNoteProperty(this PSObject? pso, string name, object? value)
+    {
+        if (pso is null) return null;
+        pso.Properties.Add(new PSNoteProperty(name, value));
         return pso;
     }
 

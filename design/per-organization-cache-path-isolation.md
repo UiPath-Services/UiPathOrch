@@ -186,29 +186,38 @@ phases:
   `OrchDriveInfo drive` parameter so PM entity completers can supply the
   drive path. Cmdlets wrap their `WriteObject` output via
   `entity.WithPath(drive.NameColonSeparator)`.
-- **Phase 3 — `PmGroupMember` sub-entity**. Pending. `PmGroup.members` is
-  the only org-cached entity with a *nested* drive-local payload
-  (`PmGroupMember.Path` / `PathGroupName` — `groupName` is a parent-copy
-  and stays). The `Get-PmGroupMember` cmdlet surfaces members
-  independently, so the same Path-isolation work is required.
-  Initializer logic in `OrchDriveInfo.cs:1404-1413` (`PmGroups = new(...)
-  → foreach (var m in e.members) { m.Path = …; m.PathGroupName = …; }`)
-  needs to be split: `groupName` stays in the initializer; the two
-  Path-shaped fields move onto a `PSObject` wrapper in
-  `Get-PmGroupMember`. **Tracked here so it isn't forgotten when Phase 2
-  ships.**
+- **Phase 3 — `PmGroupMember` + `PmDirectoryEntityInfo` sub-entities**.
+  Done. `PmGroupMember.Path` / `PathGroupName` dropped (`groupName` stays
+  — parent-derived, drive-agnostic). `PmDirectoryEntityInfo.Path`
+  dropped. The PmGroup initializer now only sets `m.groupName`;
+  `SearchPmDirectoryCache` lost its initializer entirely. The five
+  affected `GetPSPath` overloads (`PmGroupMember`,
+  `PmDirectoryEntityInfo`, `DirectoryUser` / `DirectoryRobotUser` /
+  `DirectoryApplication` — all PmGroupMember subclasses) take a
+  `drivePath` parameter. `Get-PmGroupMember` attaches both `Path` and
+  `PathGroupName` as PSObject NoteProperties so the format.ps1xml
+  `GroupBy PathGroupName` renders the correct drive-local
+  `Group: <Drive>:\<GroupName>` per emit. Resolves the
+  `Get-PmGroupMember -Path Orch2:` showing `Group: Orch1:\…` regression
+  reported during 1.4.0 dogfooding.
 
 ## Status
 
 - Acknowledged: 2026-05-13
-- Phase 1 shipped: commit `bf579c3` (1.4.0 / 1.3.1 — TBD)
-- Phase 2: complete (this release, commit TBD)
-- Phase 3: pending — `PmGroupMember`, `PmDirectoryEntityInfo`,
-  potentially `UpdateLicensedGroupResponse`. The remaining
-  single-arg `GetPSPath(this PmGroupMember)` /
-  `GetPSPath(this PmDirectoryEntityInfo)` extensions in
-  `OrchExtensions.cs` and the `m.Path = NameColonSeparator;` loop
-  inside `OrchDriveInfo.cs` PmGroups initializer mark the spots.
-- Until Phase 3 ships: rely on the `OrchDriveInfo.cs:1261` "no
-  multi-threaded fetch" contract; document the sequential-overwrite
-  caveat in `Get-PmGroupMember` help if it surfaces in support.
+- Phase 1 shipped: commit `bf579c3`
+- Phase 2 shipped: commit `061002e` + null-safety follow-up `9d1c02d`
+- Phase 3: complete (this release, commit TBD)
+- Remaining loose ends for future cleanup:
+  - `UpdateLicensedGroupResponse` still carries a `Path` field
+    (`PmLicenseCmdlet` returns a small handful of entry points). It's
+    a Response wrapper rather than a cache singleton, so the existing
+    Path-on-entity flow isn't a race risk — but it would be tidier to
+    align it with the rest of the org family eventually.
+  - `NuLicensedGroupMember.PathGroupName` was left as a field for the
+    same Response-wrapper reason; it's only set via
+    `OrchDriveInfo.GetPmLicensedGroupAllocations`, which takes an
+    explicit `NuLicensedGroup group` argument from the caller, so the
+    drive context is already caller-supplied. Not a race risk; just
+    cosmetic alignment work.
+  - `AvailableUserBundles.GroupName` / `PathGroupName` similarly set
+    inside `OrchDriveInfo.GetPmUserLicenseGroupsAvailableLicenses`.
