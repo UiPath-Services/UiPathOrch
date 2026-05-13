@@ -21,6 +21,16 @@ the cap on 2-phase fetchers, and near-instant Ctrl+C across more cmdlets.
   `Get-OrchSetting`). Useful for scripts that need to gate behaviour on
   Orchestrator version rather than API contract.
 
+- **`Get-OrchUserDetail`, `Get-OrchTriggerDetail`, `Get-OrchProcessDetail`** —
+  dedicated cmdlets for the per-id detail API calls that were previously
+  reachable only through the `-ExpandDetails` switch on `Get-OrchUser`,
+  `Get-OrchTrigger`, and `Get-OrchProcess`. The new cmdlets make the
+  intent explicit at the call site (the parent `Get-*` cmdlet's
+  one-fetch shape stays cheap by default) and the corresponding
+  `-ExpandDetails` switches now emit a deprecation warning naming the
+  canonical detail cmdlet. The old switches still work for backwards
+  compatibility and will be removed in a future major release.
+
 ### Fixed
 
 - **Azure AD B2B guest users can now be addressed by their canonical

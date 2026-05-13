@@ -5,6 +5,7 @@ Minor release. Two themes: **Azure AD B2B guest support** across the user / fold
 ## Added
 
 - **`Get-OrchProductVersion`** — hits `/api/Status/Version` to surface the Orchestrator product version (distinct from the API version surfaced by `Get-OrchSetting`). Useful for scripts that need to gate behaviour on Orchestrator version rather than API contract.
+- **`Get-OrchUserDetail`, `Get-OrchTriggerDetail`, `Get-OrchProcessDetail`** — dedicated cmdlets for the per-id detail API calls that were previously reachable only through the `-ExpandDetails` switch on `Get-OrchUser`, `Get-OrchTrigger`, and `Get-OrchProcess`. The new cmdlets make the intent explicit at the call site; the corresponding `-ExpandDetails` switches now emit a deprecation warning naming the canonical detail cmdlet. The old switches still work for backwards compatibility and will be removed in a future major release.
 
 ## Bug Fixes
 
