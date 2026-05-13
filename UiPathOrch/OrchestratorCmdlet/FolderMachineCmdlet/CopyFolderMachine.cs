@@ -6,7 +6,7 @@ using UiPath.PowerShell.Completer;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchFolderMachine", SupportsShouldProcess = true)]
-public class CopyFolderMachineCommand : OrchestratorPSCmdlet
+public class CopyFolderMachineCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(FolderMachineNameCompleter))]

@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsLifecycle.Start, "OrchJob", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.Job))]
-public class StartJobCommand : OrchestratorPSCmdlet
+public class StartJobCmdlet : OrchestratorPSCmdlet
 {
     private static readonly string[] validRuntimeType = [
         "NonProduction",

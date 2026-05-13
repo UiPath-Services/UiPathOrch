@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "PmExternalApplication")]
 [OutputType(typeof(Entities.ExternalClient))]
-public class GetPmExternalApplicationCommand : OrchestratorPSCmdlet
+public class GetPmExternalApplicationCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ExternalApplicationNameCompleter))]

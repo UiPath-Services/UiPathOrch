@@ -1,4 +1,4 @@
-﻿using System.Management.Automation;
+using System.Management.Automation;
 using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsDiagnostic.Test, "OrchShortenScope")]
 [OutputType(typeof(TestShortenScopeOutput))]
-class TestShortenScopeCommand : OrchestratorPSCmdlet
+class TestShortenScopeCmdlet : OrchestratorPSCmdlet
 {
     public class TestShortenScopeOutput
     {

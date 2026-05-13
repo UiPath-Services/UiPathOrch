@@ -10,7 +10,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Update, "OrchUser", SupportsShouldProcess = true)]
-public class UpdateUserCommand : OrchestratorPSCmdlet
+public class UpdateUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TenantUserUserNameCompleter))]

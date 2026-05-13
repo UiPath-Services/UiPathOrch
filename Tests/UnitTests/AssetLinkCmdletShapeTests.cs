@@ -19,7 +19,7 @@ public class AssetLinkCmdletShapeTests
     [Fact]
     public void AddAssetLink_DeclaresShouldProcess()
     {
-        var cmdletAttr = typeof(AddAssetLinkCommand).GetCustomAttribute<CmdletAttribute>();
+        var cmdletAttr = typeof(AddAssetLinkCmdlet).GetCustomAttribute<CmdletAttribute>();
         Assert.NotNull(cmdletAttr);
         Assert.Equal("Add", cmdletAttr.VerbName);
         Assert.Equal("OrchAssetLink", cmdletAttr.NounName);
@@ -30,7 +30,7 @@ public class AssetLinkCmdletShapeTests
     [Fact]
     public void RemoveAssetLink_DeclaresShouldProcess()
     {
-        var cmdletAttr = typeof(RemoveAssetLinkCommand).GetCustomAttribute<CmdletAttribute>();
+        var cmdletAttr = typeof(RemoveAssetLinkCmdlet).GetCustomAttribute<CmdletAttribute>();
         Assert.NotNull(cmdletAttr);
         Assert.Equal("Remove", cmdletAttr.VerbName);
         Assert.Equal("OrchAssetLink", cmdletAttr.NounName);
@@ -42,16 +42,16 @@ public class AssetLinkCmdletShapeTests
     public void GetAssetLink_DoesNotDeclareShouldProcess()
     {
         // Get is read-only; declaring SupportsShouldProcess would imply otherwise.
-        var cmdletAttr = typeof(GetAssetLinkCommand).GetCustomAttribute<CmdletAttribute>();
+        var cmdletAttr = typeof(GetAssetLinkCmdlet).GetCustomAttribute<CmdletAttribute>();
         Assert.NotNull(cmdletAttr);
         Assert.False(cmdletAttr.SupportsShouldProcess);
     }
 
     [Theory]
-    [InlineData(typeof(AddAssetLinkCommand), "Name")]
-    [InlineData(typeof(AddAssetLinkCommand), "Link")]
-    [InlineData(typeof(RemoveAssetLinkCommand), "Name")]
-    [InlineData(typeof(RemoveAssetLinkCommand), "Link")]
+    [InlineData(typeof(AddAssetLinkCmdlet), "Name")]
+    [InlineData(typeof(AddAssetLinkCmdlet), "Link")]
+    [InlineData(typeof(RemoveAssetLinkCmdlet), "Name")]
+    [InlineData(typeof(RemoveAssetLinkCmdlet), "Link")]
     public void MutatingCmdlet_HasMandatoryNameAndLink(System.Type cmdletType, string paramName)
     {
         // Without Mandatory on both, Remove-OrchAssetLink without -Link would not
@@ -66,14 +66,14 @@ public class AssetLinkCmdletShapeTests
     }
 
     [Theory]
-    [InlineData(typeof(GetAssetLinkCommand), "Name")]
-    [InlineData(typeof(GetAssetLinkCommand), "Path")]
-    [InlineData(typeof(AddAssetLinkCommand), "Name")]
-    [InlineData(typeof(AddAssetLinkCommand), "Link")]
-    [InlineData(typeof(AddAssetLinkCommand), "Path")]
-    [InlineData(typeof(RemoveAssetLinkCommand), "Name")]
-    [InlineData(typeof(RemoveAssetLinkCommand), "Link")]
-    [InlineData(typeof(RemoveAssetLinkCommand), "Path")]
+    [InlineData(typeof(GetAssetLinkCmdlet), "Name")]
+    [InlineData(typeof(GetAssetLinkCmdlet), "Path")]
+    [InlineData(typeof(AddAssetLinkCmdlet), "Name")]
+    [InlineData(typeof(AddAssetLinkCmdlet), "Link")]
+    [InlineData(typeof(AddAssetLinkCmdlet), "Path")]
+    [InlineData(typeof(RemoveAssetLinkCmdlet), "Name")]
+    [InlineData(typeof(RemoveAssetLinkCmdlet), "Link")]
+    [InlineData(typeof(RemoveAssetLinkCmdlet), "Path")]
     public void PipelineProperties_AcceptValueFromPipelineByPropertyName(System.Type cmdletType, string paramName)
     {
         // The trio is designed so `Get-OrchAssetLink | Remove-OrchAssetLink` and
@@ -107,7 +107,7 @@ public class AssetLinkCmdletShapeTests
     {
         // Get-OrchAssetLink advertises AssetLink as its output for Get-Help
         // -OutputType integration and for tooling that introspects pipelines.
-        var outputAttr = typeof(GetAssetLinkCommand).GetCustomAttribute<OutputTypeAttribute>();
+        var outputAttr = typeof(GetAssetLinkCmdlet).GetCustomAttribute<OutputTypeAttribute>();
         Assert.NotNull(outputAttr);
         Assert.Contains(outputAttr.Type, t => t.Type == typeof(AssetLink));
     }

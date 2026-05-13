@@ -5,7 +5,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "PmGroup", SupportsShouldProcess = true)]
-public class RemovePmGroupCommand : OrchestratorPSCmdlet
+public class RemovePmGroupCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmGroupNameCompleter))]

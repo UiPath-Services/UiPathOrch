@@ -7,7 +7,7 @@ using UiPath.PowerShell.Completer;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Clear, "OrchCache", SupportsShouldProcess = true)]
-public class ClearCacheCommand : PSCmdlet
+public class ClearCacheCmdlet : PSCmdlet
 {
     [Parameter(Position = 0)]
     [ArgumentCompleter(typeof(Position0AllDriveCompleter))]

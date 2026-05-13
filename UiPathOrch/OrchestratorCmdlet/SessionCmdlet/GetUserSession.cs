@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchUserSession")]
 [OutputType(typeof(Entities.Session))]
-public class GetUserSessionCommand : OrchestratorPSCmdlet
+public class GetUserSessionCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<UserSessionStateItems, int>))]

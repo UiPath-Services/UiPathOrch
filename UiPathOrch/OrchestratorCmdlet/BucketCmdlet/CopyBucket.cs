@@ -7,7 +7,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchBucket", SupportsShouldProcess = true)]
-public class CopyBucketCommand : OrchestratorPSCmdlet
+public class CopyBucketCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]

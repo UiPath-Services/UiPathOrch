@@ -9,7 +9,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchCalendarDate", SupportsShouldProcess = true)]
-public class RemoveCalendarDateCommand : OrchestratorPSCmdlet
+public class RemoveCalendarDateCmdlet : OrchestratorPSCmdlet
 {
     private Dictionary<(OrchDriveInfo drive, string calendarName), (ExtendedCalendar calendar, List<DateTime> excludedDates)> _parameters = [];
 

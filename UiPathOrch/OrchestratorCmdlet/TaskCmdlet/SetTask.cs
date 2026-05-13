@@ -14,7 +14,7 @@ namespace UiPath.PowerShell.Commands;
 // Catalog handling: -TaskCatalog accepts a catalog name and resolves it to TaskCatalogId
 // via ActionCatalogs cache. Pass -UnsetTaskCatalog to disassociate any existing catalog.
 [Cmdlet(VerbsCommon.Set, "OrchTask", SupportsShouldProcess = true)]
-public class SetTaskCommand : OrchestratorPSCmdlet
+public class SetTaskCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TaskIdCompleter))]

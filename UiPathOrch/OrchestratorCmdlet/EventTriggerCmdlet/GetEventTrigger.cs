@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchEventTrigger")]
 [OutputType(typeof(Entities.ApiTrigger))]
-public class GetEventTriggerCommand : OrchestratorPSCmdlet
+public class GetEventTriggerCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(EventTriggerNameCompleter))]

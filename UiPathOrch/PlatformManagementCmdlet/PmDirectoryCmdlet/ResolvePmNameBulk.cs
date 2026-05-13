@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(DirectoryUser))]
 [OutputType(typeof(DirectoryGroup))]
 [OutputType(typeof(DirectoryApplication))]
-public class SearchPmDirectoryBulkCommand : OrchestratorPSCmdlet
+public class SearchPmDirectoryBulkCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<User_Group_Application>))]

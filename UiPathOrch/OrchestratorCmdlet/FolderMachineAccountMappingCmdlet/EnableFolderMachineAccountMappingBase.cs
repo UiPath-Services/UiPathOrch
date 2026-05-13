@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
@@ -8,7 +8,7 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
-public class EnableFolderMachineAccountMappingCommandBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
+public class EnableFolderMachineAccountMappingCmdletBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
 {
     virtual public string[]? Name { get; set; }
 

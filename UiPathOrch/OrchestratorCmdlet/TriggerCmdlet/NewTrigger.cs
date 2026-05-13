@@ -14,7 +14,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.New, "OrchTrigger", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.ProcessSchedule))]
-public class NewTriggerCommand : OrchestratorPSCmdlet
+public class NewTriggerCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NewTriggerNameCompleter))]

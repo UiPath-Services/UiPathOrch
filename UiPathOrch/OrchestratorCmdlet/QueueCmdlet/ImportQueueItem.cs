@@ -20,7 +20,7 @@ public class CSVParseError(int csvRow, string errorType, string csvField, string
 
 [Cmdlet(VerbsData.Import, "OrchQueueItem", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.FailedQueueItem))]
-public class ImportQueueItemCommand : OrchestratorPSCmdlet
+public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(QueueNameCompleter))]

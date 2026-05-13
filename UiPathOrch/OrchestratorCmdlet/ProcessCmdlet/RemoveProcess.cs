@@ -5,7 +5,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchProcess", SupportsShouldProcess = true)]
-public class RemoveProcessCommand : OrchestratorPSCmdlet
+public class RemoveProcessCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ProcessNameCompleter))]

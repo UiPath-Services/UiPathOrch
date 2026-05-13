@@ -50,7 +50,7 @@ internal class DriveGroupIdsComparer : IEqualityComparer<(OrchDriveInfo drive, s
 
 [Cmdlet(VerbsCommon.New, "PmUser", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.PmUser))]
-public class NewPmUserCommand : OrchestratorPSCmdlet
+public class NewPmUserCmdlet : OrchestratorPSCmdlet
 {
     // Key: (drive, groupIds) Value: Dictionary<email, csvLine>
     Dictionary<(OrchDriveInfo drive, string[] groupNames), Dictionary<string, CsvLine>> _params = new(new DriveGroupIdsComparer());

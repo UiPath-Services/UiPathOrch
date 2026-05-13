@@ -12,7 +12,7 @@ class InputParameter
 
 [Cmdlet(VerbsCommon.Get, "OrchFolderUsage")]
 [OutputType(typeof(Entities.EntitySummary))]
-public class GetFolderUsageCommand : OrchestratorPSCmdlet
+public class GetFolderUsageCmdlet : OrchestratorPSCmdlet
 {
     private List<InputParameter>? _inputParameters;
 

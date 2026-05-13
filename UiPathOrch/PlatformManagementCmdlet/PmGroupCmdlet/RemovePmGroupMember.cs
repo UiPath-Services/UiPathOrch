@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "PmGroupMember", SupportsShouldProcess = true)]
 //[OutputType(typeof(Entities.IdGroup))]
-public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
+public class RemovePmGroupMemberCmdlet : OrchestratorPSCmdlet
 {
     // Key: (drive, group), Value: Members
     private Dictionary<(OrchDriveInfo drive, PmGroup group), HashSet<PmGroupMember>>? _parameterSets = null;

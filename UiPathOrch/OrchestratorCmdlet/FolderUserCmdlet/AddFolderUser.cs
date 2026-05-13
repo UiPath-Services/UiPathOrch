@@ -9,7 +9,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "OrchFolderUser", SupportsShouldProcess = true)]
-public class AddFolderUserCommand : OrchestratorPSCmdlet
+public class AddFolderUserCmdlet : OrchestratorPSCmdlet
 {
     List<(string type, string userName, string[] roles, OrchDriveInfo drive, Folder folder)>? parameters = null;
 

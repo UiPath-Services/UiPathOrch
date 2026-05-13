@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "TmTestCase", SupportsShouldProcess = true)]
 [OutputType(typeof(void))]
-public class RemoveTmTestCaseCommand : OrchestratorPSCmdlet
+public class RemoveTmTestCaseCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TmTestCaseNameCompleter))]

@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // `public class` and adding `Get-OrchDfRecord` to UiPathOrch.psd1 CmdletsToExport.
 [Cmdlet(VerbsCommon.Get, "OrchDfRecord", DefaultParameterSetName = "All")]
 [OutputType(typeof(PSObject))]
-class GetDfRecordCommand : OrchestratorPSCmdlet
+class GetDfRecordCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DfEntityNameCompleter))]

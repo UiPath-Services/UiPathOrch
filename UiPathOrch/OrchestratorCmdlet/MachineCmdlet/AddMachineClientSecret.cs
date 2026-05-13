@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "OrchMachineClientSecret", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.MachineSecretKey))]
-public class AddMachineClientSecretCommand : OrchestratorPSCmdlet
+public class AddMachineClientSecretCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(MachineNameCompleter))]

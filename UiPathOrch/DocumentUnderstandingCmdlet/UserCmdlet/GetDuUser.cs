@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "DuUser")]
 [OutputType(typeof(Entities.DuUser))]
-public class GetDuUserCommand : OrchestratorPSCmdlet
+public class GetDuUserCmdlet : OrchestratorPSCmdlet
 {
     //private const string UserNameSet = "UserNameSet";
     //private const string UserSet = "UserSet";

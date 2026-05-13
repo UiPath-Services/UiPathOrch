@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "PmAuditLog")]
 [OutputType(typeof(Entities.PmAuditLog))]
-public class GetPmAuditLogCommand : OrchestratorPSCmdlet
+public class GetPmAuditLogCmdlet : OrchestratorPSCmdlet
 {
     // Tried it, but this API doesn't seem to work even when specifying filters.
     //[Parameter(ValueFromPipelineByPropertyName = true)]

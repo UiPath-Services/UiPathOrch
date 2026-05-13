@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchQueueItem", SupportsShouldProcess = true)]
 [OutputType(typeof(QueueItem))]
-public class CopyQueueItemCommand : OrchestratorPSCmdlet
+public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(QueueNameCompleter))]

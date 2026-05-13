@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsLifecycle.Resume, "OrchJob", DefaultParameterSetName = "FromCommandLine", SupportsShouldProcess = true)]
 [OutputType(typeof(Job))]
-public class ResumeJobCommand : OrchestratorPSCmdlet
+public class ResumeJobCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true, ParameterSetName = "FromCommandLine")]
     [ArgumentCompleter(typeof(KeyCompleter))]

@@ -4,7 +4,7 @@ using UiPath.PowerShell.Positional;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsLifecycle.Enable, "OrchMaintenanceMode", SupportsShouldProcess = true)]
-public class EnableMaintenanceModeCommand : EnableMaintenanceModeCommandBase<True>
+public class EnableMaintenanceModeCmdlet : EnableMaintenanceModeCmdletBase<True>
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(MachineNameCompleter))]

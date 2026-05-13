@@ -8,7 +8,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Move, "OrchFolderUser", SupportsShouldProcess = true)]
-public class MoveFolderUserCommand : OrchestratorPSCmdlet
+public class MoveFolderUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(UserNameCompleter))]

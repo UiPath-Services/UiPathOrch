@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Update, "OrchTrigger", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.ProcessSchedule))]
-public class UpdateTriggerCommand : OrchestratorPSCmdlet
+public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TriggerNameCompleter))]

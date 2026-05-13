@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Update, "OrchCurrentUserURPassword", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.User))]
-public class UpdateUserURCommand : OrchestratorPSCmdlet
+public class UpdateUserURCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Mandatory = true, DontShow = true)]
     public SecureString? Password { get; set; }

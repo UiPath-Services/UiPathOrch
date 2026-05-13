@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchTestSetSchedule", SupportsShouldProcess = true)]
-public class RemoveTestSetScheduleCommand : RemoveFolderEntityCmdletBase<TestSetSchedule>
+public class RemoveTestSetScheduleCmdlet : RemoveFolderEntityCmdletBase<TestSetSchedule>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TestScheduleNameCompleter))]

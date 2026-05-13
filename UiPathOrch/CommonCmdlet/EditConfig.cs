@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Diagnostics;
 using System.Management.Automation;
 using System.Management.Automation.Language;
@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // On Linux, we cannot reliably launch an editor.
 // Instead, just change the current location and display a message prompting the user to edit manually.
 [Cmdlet(VerbsData.Edit, "OrchConfig")]
-public class EditConfigCommand : PSCmdlet
+public class EditConfigCmdlet : PSCmdlet
 {
     [Parameter]
     public SwitchParameter UseDefaultEditor { get; set; }

@@ -7,7 +7,7 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
-public class EnableTriggerCommandBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
+public class EnableTriggerCmdletBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
 {
     public virtual string[]? Name { get; set; }
 

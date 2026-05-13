@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchTestSetSchedule")]
 [OutputType(typeof(Entities.TestSetSchedule))]
-public class GetTestSetScheduleCommand : OrchestratorPSCmdlet
+public class GetTestSetScheduleCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TestScheduleNameCompleter))]

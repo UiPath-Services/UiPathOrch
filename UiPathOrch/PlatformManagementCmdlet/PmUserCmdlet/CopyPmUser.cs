@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "PmUser", SupportsShouldProcess = true)]
-public class CopyPmUserCommand : OrchestratorPSCmdlet
+public class CopyPmUserCmdlet : OrchestratorPSCmdlet
 {
     // Key: (drive, groupIds) Value: Dictionary<email, csvLine>
     Dictionary<(OrchDriveInfo drive, string[] groupIds), Dictionary<string, CsvLine>> _params = new(new DriveGroupIdsComparer());

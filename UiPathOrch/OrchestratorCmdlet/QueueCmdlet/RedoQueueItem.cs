@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Redo, "OrchQueueItem", SupportsShouldProcess = true)]
 [OutputType(typeof(BulkOperationResponse))]
-public class RedoQueueItemCommand : OrchestratorPSCmdlet
+public class RedoQueueItemCmdlet : OrchestratorPSCmdlet
 {
     private Dictionary<(OrchDriveInfo Drive, Folder Folder, QueueDefinition Queue), HashSet<Int64>>? _csvLines = null;
 

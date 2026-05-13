@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 // WIP
 [Cmdlet(VerbsLifecycle.Enable, "OrchClassicRobot")]
 [OutputType(typeof(Entities.Session))]
-class EnableClassicRobotCommand : OrchestratorPSCmdlet
+class EnableClassicRobotCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public ulong? Skip { get; set; }

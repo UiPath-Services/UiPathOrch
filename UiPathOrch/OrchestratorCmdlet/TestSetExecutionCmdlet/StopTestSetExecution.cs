@@ -7,7 +7,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsLifecycle.Stop, "OrchTestSetExecution", SupportsShouldProcess = true)]
-public class StopTestExecutionCommand : OrchestratorPSCmdlet
+public class StopTestExecutionCmdlet : OrchestratorPSCmdlet
 {
     private static readonly string[] stoppableStatus = ["Pending", "Running"];
 

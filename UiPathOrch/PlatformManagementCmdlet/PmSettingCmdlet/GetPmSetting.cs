@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 //[Cmdlet(VerbsCommon.Get, "PmSetting")]
 //[OutputType(typeof(Entities.PmUser))]
-class GetPmSettingCommand : OrchestratorPSCmdlet
+class GetPmSettingCmdlet : OrchestratorPSCmdlet
 {
     //[Parameter(Position = 0)]
     //[ArgumentCompleter(typeof(UserNameCompleter))]

@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Get, "OrchRole")]
 [OutputType(typeof(Entities.Role))]
 [OutputType(typeof(Entities.OrchRolePermissionExpanded))]
-public class GetRoleCommand : OrchestratorPSCmdlet
+public class GetRoleCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

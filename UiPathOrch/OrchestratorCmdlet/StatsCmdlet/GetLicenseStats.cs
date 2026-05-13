@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchLicenseStats")]
 [OutputType(typeof(Entities.LicenseStatsModel))]
-public class GetLicenseStatsCommand : OrchestratorPSCmdlet
+public class GetLicenseStatsCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Day_Week_Month_3Month_6Month_Year_3Year>))]

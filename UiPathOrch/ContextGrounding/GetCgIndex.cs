@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 // Unfortunately, this does not work
 //[Cmdlet(VerbsCommon.Get, "OrchCgIndex")]
 //[OutputType(typeof(Bucket))]
-class GetCgIndexCommand : OrchestratorPSCmdlet
+class GetCgIndexCmdlet : OrchestratorPSCmdlet
 {
     //[Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     //[ArgumentCompleter(typeof(BucketNameCompleter))]

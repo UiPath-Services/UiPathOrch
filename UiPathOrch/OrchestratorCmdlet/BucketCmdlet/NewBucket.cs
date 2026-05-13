@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.New, "OrchBucket", SupportsShouldProcess = true)]
 [OutputType(typeof(Bucket))]
-public class NewBucketCommand : OrchestratorPSCmdlet
+public class NewBucketCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NewBucketNameCompleter))]

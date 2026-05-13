@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchBucketItem")]
 [OutputType(typeof(BlobFile))]
-public class GetBucketItemCommand : OrchestratorPSCmdlet
+public class GetBucketItemCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]

@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Get, "OrchCalendar")]
 [OutputType(typeof(ExtendedCalendar))]
 [OutputType(typeof(ExcludedDateNamed))]
-public class GetCalendarCommand : OrchestratorPSCmdlet
+public class GetCalendarCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(CalendarNameCompleter))]
@@ -63,9 +63,9 @@ public class GetCalendarCommand : OrchestratorPSCmdlet
                 $"major release. {suggestion}");
 
             var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetCalendarDateCommand.CsvHeaders);
+            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetCalendarDateCmdlet.CsvHeaders);
 
-            GetCalendarDateCommand.EmitCalendarDates(this, drives, wpName, IncludePastDate.IsPresent, writer);
+            GetCalendarDateCmdlet.EmitCalendarDates(this, drives, wpName, IncludePastDate.IsPresent, writer);
 
             if (!string.IsNullOrEmpty(ExportCsv))
             {

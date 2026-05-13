@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "TmRequirement", SupportsShouldProcess = true)]
 [OutputType(typeof(void))]
-public class RemoveTmRequirementCommand : OrchestratorPSCmdlet
+public class RemoveTmRequirementCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TmRequirementNameCompleter))]

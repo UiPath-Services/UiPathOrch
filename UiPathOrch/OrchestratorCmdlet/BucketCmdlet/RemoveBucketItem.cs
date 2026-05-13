@@ -6,7 +6,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchBucketItem", SupportsShouldProcess = true)]
-public class RemoveBucketItemCommand : OrchestratorPSCmdlet
+public class RemoveBucketItemCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]

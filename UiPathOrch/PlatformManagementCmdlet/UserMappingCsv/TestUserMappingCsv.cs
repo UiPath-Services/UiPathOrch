@@ -5,7 +5,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsDiagnostic.Test, "OrchUserMappingCsv")]
-public class TestUserMappingCsvCommand : OrchestratorPSCmdlet
+public class TestUserMappingCsvCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true)]
     public string? CsvFile { get; set; }

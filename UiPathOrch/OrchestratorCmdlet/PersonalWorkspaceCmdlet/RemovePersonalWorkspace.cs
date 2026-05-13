@@ -7,7 +7,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchPersonalWorkspace", SupportsShouldProcess = true)]
-public class RemovePersonalWorkspaceCommand : OrchestratorPSCmdlet
+public class RemovePersonalWorkspaceCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]

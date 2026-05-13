@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchQueue")]
 [OutputType(typeof(QueueDefinition))]
-public class GetQueueCommand : OrchestratorPSCmdlet
+public class GetQueueCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(QueueNameCompleter))]

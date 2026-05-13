@@ -5,7 +5,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Reset, "OrchTestDataQueueItem", SupportsShouldProcess = true)]
-public class ResetTestDataQueueItemCommand : OrchestratorPSCmdlet
+public class ResetTestDataQueueItemCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TestDataQueueNameCompleter))]

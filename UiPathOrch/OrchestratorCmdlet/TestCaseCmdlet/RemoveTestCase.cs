@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchTestCase", SupportsShouldProcess = true)]
-public class RemoveTestCaseCommand : RemoveFolderEntityCmdletBase<TestCaseDefinition>
+public class RemoveTestCaseCmdlet : RemoveFolderEntityCmdletBase<TestCaseDefinition>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TestCaseNameCompleter))]

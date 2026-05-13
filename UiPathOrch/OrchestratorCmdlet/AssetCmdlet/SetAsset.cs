@@ -21,7 +21,7 @@ class SetAssetCommandParameter
 
 [Cmdlet(VerbsCommon.Set, "OrchAsset", DefaultParameterSetName = Default, SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.Asset))]
-public class SetAssetCommand : OrchestratorPSCmdlet
+public class SetAssetCmdlet : OrchestratorPSCmdlet
 {
     private readonly List<SetAssetCommandParameter> parameters = [];
 

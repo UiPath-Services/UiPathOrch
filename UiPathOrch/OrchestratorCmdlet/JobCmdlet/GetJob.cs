@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchJob", DefaultParameterSetName = "JobId")] //, SupportsPaging = true)]
 [OutputType(typeof(Entities.Job))]
-public class GetJobCommand : OrchestratorPSCmdlet
+public class GetJobCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ParameterSetName = "JobId", ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(JobIdCompleter))]

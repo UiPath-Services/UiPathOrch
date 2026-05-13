@@ -10,7 +10,7 @@ using UiPath.PowerShell.Completer;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchRoleFromFolderUser", SupportsShouldProcess = true)]
-public class RemoveRoleFromFolderUserCommand : OrchestratorPSCmdlet
+public class RemoveRoleFromFolderUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(FolderUserUserNameCompleter))]

@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 // Shelved for now because the API returns Forbidden.
 [Cmdlet(VerbsCommon.Get, "TmRole")]
 [OutputType(typeof(Entities.TmRole))]
-class GetTmRoleCommand : OrchestratorPSCmdlet
+class GetTmRoleCmdlet : OrchestratorPSCmdlet
 {
     //[Parameter(Position = 0)]
     //[ArgumentCompleter(typeof(TmProjectNameCompleter))]

@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Get, "OrchAuditLog", DefaultParameterSetName = "Filter")] //, SupportsPaging = true)]
 [OutputType(typeof(AuditLog))]
 [OutputType(typeof(AuditLogEntity))]
-public class GetAuditLogCommand : OrchestratorPSCmdlet
+public class GetAuditLogCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ParameterSetName = "Filter", ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]

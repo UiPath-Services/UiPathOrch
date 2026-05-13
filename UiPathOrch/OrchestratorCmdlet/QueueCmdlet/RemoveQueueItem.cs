@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchQueueItem", SupportsShouldProcess = true)]
 [OutputType(typeof(QueueItem))]
-public class RemoveQueueItemCommand : OrchestratorPSCmdlet
+public class RemoveQueueItemCmdlet : OrchestratorPSCmdlet
 {
     class CsvLine(OrchDriveInfo drive, Folder folder, QueueDefinition queue, long id, string? rowVersion)
     {

@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Set, "PmRobotAccount", DefaultParameterSetName = psDefault, SupportsShouldProcess = true)]
 [OutputType(typeof(PmRobotAccount))]
-public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
+public class SetPmRobotAccountCmdlet : OrchestratorPSCmdlet
 {
     private const string psDefault = "ConsoleInput";
     private const string psByCsv = "CsvInput";

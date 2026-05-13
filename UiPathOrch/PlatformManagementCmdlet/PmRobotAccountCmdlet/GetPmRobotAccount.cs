@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Get, "PmRobotAccount", DefaultParameterSetName = psDefault)]
 [OutputType(typeof(Entities.PmRobotAccount))]
 [OutputType(typeof(Entities.PmRobotAccountExpanded))]
-public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
+public class GetPmRobotAccountCmdlet : OrchestratorPSCmdlet
 {
     private const string psDefault = "Default";
     private const string psExportCsv = "ExportCsv";

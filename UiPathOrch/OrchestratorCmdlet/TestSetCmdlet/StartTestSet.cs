@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsLifecycle.Start, "OrchTestSet", SupportsShouldProcess = true)]
 [OutputType(typeof(Int64))]
-public class StartTestSetCommand : OrchestratorPSCmdlet
+public class StartTestSetCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TestSetNameCompleter))]

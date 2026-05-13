@@ -7,7 +7,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Update, "OrchProcessVersion", SupportsShouldProcess = true, DefaultParameterSetName = "ReleaseName")]
-public class UpdateProcessVersionCommand : OrchestratorPSCmdlet
+public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(ParameterSetName = "ReleaseName", Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]

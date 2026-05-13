@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchExecutionSetting")]
 [OutputType(typeof(ExecutionSettingDefinition))]
-public class GetExecutionSettingCommand : OrchestratorPSCmdlet
+public class GetExecutionSettingCmdlet : OrchestratorPSCmdlet
 {
     private static readonly Dictionary<int, string> scopeList = new()
     {

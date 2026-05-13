@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchFolderMachine")]
 [OutputType(typeof(Entities.MachineFolder))]
-public class GetFolderMachineCommand : OrchestratorPSCmdlet
+public class GetFolderMachineCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

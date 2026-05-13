@@ -3288,42 +3288,42 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         {
             if (ShouldCopyTenantEntities("Library", srcDrive, srcDrive.LibrariesInTenant.Get(), dstDrive))
             {
-                CopyLibraryCommand.CopyLibraries(this, [srcDrive], null, null, [dstDrive], true, cancelHandler.Token);
+                CopyLibraryCmdlet.CopyLibraries(this, [srcDrive], null, null, [dstDrive], true, cancelHandler.Token);
             }
 
             if (ShouldCopyTenantEntities("Package", srcDrive, srcDrive.GetPackages(srcDrive.RootFolder), dstDrive))
             {
-                CopyPackageCommand.CopyPackages(this, [(srcDrive, srcDrive.RootFolder)], srcDrive.RootFolder, null, null, [(dstDrive, dstDrive.RootFolder)], true, cancelHandler.Token);
+                CopyPackageCmdlet.CopyPackages(this, [(srcDrive, srcDrive.RootFolder)], srcDrive.RootFolder, null, null, [(dstDrive, dstDrive.RootFolder)], true, cancelHandler.Token);
             }
 
             if (ShouldCopyTenantEntities("CredentialStore", srcDrive, srcDrive.CredentialStores.Get(), dstDrive))
             {
-                CopyCredentialStoreCommand.CopyCredentialStores(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
+                CopyCredentialStoreCmdlet.CopyCredentialStores(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
             }
 
             if (ShouldCopyTenantEntities("Role", srcDrive, srcDrive.Roles.Get(), dstDrive))
             {
-                CopyRoleCommand.CopyRoles(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
+                CopyRoleCmdlet.CopyRoles(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
             }
 
             if (ShouldCopyTenantEntities("User", srcDrive, srcDrive.Users.Get(), dstDrive))
             {
-                CopyUserCommand.CopyUsers(this, srcDrive, null, null, null, [dstDrive], true, cancelHandler.Token, userMapping);
+                CopyUserCmdlet.CopyUsers(this, srcDrive, null, null, null, [dstDrive], true, cancelHandler.Token, userMapping);
             }
 
             if (ShouldCopyTenantEntities("Machine", srcDrive, srcDrive.Machines.Get(), dstDrive))
             {
-                CopyMachineCommand.CopyMachines(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
+                CopyMachineCmdlet.CopyMachines(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
             }
 
             if (ShouldCopyTenantEntities("Calendar", srcDrive, srcDrive.GetCalendars(), dstDrive))
             {
-                CopyCalendarCommand.CopyCalendars(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
+                CopyCalendarCmdlet.CopyCalendars(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
             }
 
             if (ShouldCopyTenantEntities("Webhook", srcDrive, srcDrive.Webhooks.Get(), dstDrive))
             {
-                CopyWebhookCommand.CopyWebhooks(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
+                CopyWebhookCmdlet.CopyWebhooks(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
             }
         }
 

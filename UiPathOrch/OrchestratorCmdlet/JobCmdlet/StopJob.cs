@@ -18,7 +18,7 @@ class StopJobCommandParameter
 }
 
 [Cmdlet(VerbsLifecycle.Stop, "OrchJob", DefaultParameterSetName = "FromCommandLine", SupportsShouldProcess = true)]
-public class StopJobCommand : OrchestratorPSCmdlet
+public class StopJobCmdlet : OrchestratorPSCmdlet
 {
     private List<StopJobCommandParameter> parameters = new();
 

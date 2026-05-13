@@ -14,7 +14,7 @@ namespace UiPath.PowerShell.Commands;
 // preview without enabling/firing it.
 [Cmdlet(VerbsDiagnostic.Test, "OrchTrigger")]
 [OutputType(typeof(ValidationResult))]
-public class TestTriggerCommand : OrchestratorPSCmdlet
+public class TestTriggerCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TriggerNameCompleter))]

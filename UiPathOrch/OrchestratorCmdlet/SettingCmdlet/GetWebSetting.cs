@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchWebSetting")]
 [OutputType(typeof(ResponseDictionaryItem))]
-public class GetWebSettingCommand : OrchestratorPSCmdlet
+public class GetWebSettingCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(KeyCompleter))]

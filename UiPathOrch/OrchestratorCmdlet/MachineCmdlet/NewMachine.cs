@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.New, "OrchMachine", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.CreatedMachine))]
-public class NewMachineCommand : OrchestratorPSCmdlet
+public class NewMachineCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NewMachineNameCompleter))]

@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "OrchUser", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.User))]
-public class AddUserCommand : OrchestratorPSCmdlet
+public class AddUserCmdlet : OrchestratorPSCmdlet
 {
     // Needed for case-insensitive comparison of UserName
     // Should this be moved to OrchComparer.cs?
@@ -66,7 +66,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
 
         public HashSet<string>? Roles { get; set; }
 
-        public CsvLine(AddUserCommand cmdlet)
+        public CsvLine(AddUserCmdlet cmdlet)
         {
             IsExternalLicensed = cmdlet.IsExternalLicensed.ToNullableBool() ?? false;
             MayHaveRobotSession = cmdlet.MayHaveRobotSession.ToNullableBool() ?? false;
@@ -97,7 +97,7 @@ public class AddUserCommand : OrchestratorPSCmdlet
             Roles = new HashSet<string>(cmdlet.Roles?.Where(r => !string.IsNullOrEmpty(r)) ?? []);
         }
 
-        public void Update(AddUserCommand cmdl, OrchDriveInfo drive, string identityName)
+        public void Update(AddUserCmdlet cmdl, OrchDriveInfo drive, string identityName)
         {
             AssignBoolValue(cmdl, drive.Name, identityName,
                 this.IsExternalLicensed,

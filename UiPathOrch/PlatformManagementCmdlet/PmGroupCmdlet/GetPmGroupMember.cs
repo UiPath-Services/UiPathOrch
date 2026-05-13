@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.DirectoryGroup))]
 [OutputType(typeof(Entities.DirectoryRobotUser))]
 [OutputType(typeof(Entities.DirectoryApplication))]
-public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
+public class GetPmGroupMemberCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmGroupNameCompleter))]

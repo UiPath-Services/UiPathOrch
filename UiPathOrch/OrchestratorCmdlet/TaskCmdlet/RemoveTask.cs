@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchTask", SupportsShouldProcess = true, DefaultParameterSetName = "FromCommandLine")]
-public class RemoveTaskCommand : OrchestratorPSCmdlet
+public class RemoveTaskCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true, ParameterSetName = "FromCommandLine")]
     [ArgumentCompleter(typeof(TaskIdCompleter))]

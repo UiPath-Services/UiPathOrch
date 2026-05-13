@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 // appear to require updates via a different endpoint.
 // https://cloud.uipath.com/yotsuda/svc1/orchestrator_/odata/CloudTemplates({machineId})
 [Cmdlet(VerbsData.Update, "OrchMachine", SupportsShouldProcess = true)]
-public class UpdateMachineCommand : OrchestratorPSCmdlet
+public class UpdateMachineCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(MachineNameCompleter))]

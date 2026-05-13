@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 // Keeping it as private for now.
 
 [Cmdlet(VerbsCommon.Copy, "OrchCredentialStore", SupportsShouldProcess = true)]
-public class CopyCredentialStoreCommand : OrchestratorPSCmdlet
+public class CopyCredentialStoreCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(CredentialStoreNameCompleter))]

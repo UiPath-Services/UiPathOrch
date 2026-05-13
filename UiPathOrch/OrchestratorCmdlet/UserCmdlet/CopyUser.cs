@@ -9,7 +9,7 @@ using User = UiPath.PowerShell.Entities.User;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchUser", SupportsShouldProcess = true)]
-public class CopyUserCommand : OrchestratorPSCmdlet
+public class CopyUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

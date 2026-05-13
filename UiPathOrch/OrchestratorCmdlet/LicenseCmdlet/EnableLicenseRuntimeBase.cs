@@ -9,7 +9,7 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
-public class EnableLicenseRuntimeCommandBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
+public class EnableLicenseRuntimeCmdletBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
 {
     public virtual string[]? RobotType { get; set; }
 

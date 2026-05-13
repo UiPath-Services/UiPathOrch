@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchLogLocation")]
 [OutputType(typeof(string))]
-public class GetOrchLogLocationCommand : OrchestratorPSCmdlet
+public class GetOrchLogLocationCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0)]
     [ArgumentCompleter(typeof(DriveCompleter))]

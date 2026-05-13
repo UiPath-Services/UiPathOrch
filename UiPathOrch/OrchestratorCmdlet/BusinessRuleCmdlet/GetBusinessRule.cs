@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 // Re-enable by switching to `public` and adding the name to UiPathOrch.psd1 once the scope ships.
 [Cmdlet(VerbsCommon.Get, "OrchBusinessRule")]
 [OutputType(typeof(Entities.BusinessRule))]
-class GetBusinessRuleCommand : OrchestratorPSCmdlet
+class GetBusinessRuleCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

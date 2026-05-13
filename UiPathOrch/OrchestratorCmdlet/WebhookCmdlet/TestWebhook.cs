@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsDiagnostic.Test, "OrchWebhook", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.WebhookPingResult))]
-public class TestWebhookCommand : OrchestratorPSCmdlet
+public class TestWebhookCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(WebhookNameCompleter))]

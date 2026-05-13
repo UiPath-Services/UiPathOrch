@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchTask")]
 [OutputType(typeof(OrchTask))]
-public class GetTaskCommand : OrchestratorPSCmdlet
+public class GetTaskCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TaskTitleCompleter))]

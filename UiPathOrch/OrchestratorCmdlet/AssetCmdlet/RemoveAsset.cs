@@ -8,7 +8,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchAsset", SupportsShouldProcess = true)]
-public class RemoveAssetCommand : RemoveFolderEntityCmdletBase<Asset>
+public class RemoveAssetCmdlet : RemoveFolderEntityCmdletBase<Asset>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(AssetNameCompleter))]

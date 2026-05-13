@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchAsset")]
 [OutputType(typeof(Entities.Asset))]
-public class GetAssetCommand : OrchestratorPSCmdlet
+public class GetAssetCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(AssetNameCompleter))]

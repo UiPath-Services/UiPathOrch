@@ -23,7 +23,7 @@ class SetCredentialAssetCommandParameter
 
 [Cmdlet(VerbsCommon.Set, "OrchCredentialAsset", DefaultParameterSetName = Default, SupportsShouldProcess = true)]
 [OutputType(typeof(UiPath.PowerShell.Entities.Asset))]
-public class SetCredentialAssetCommand : OrchestratorPSCmdlet
+public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
 {
     private readonly List<SetCredentialAssetCommandParameter> parameters = [];
     private readonly Dictionary<(string name, string path), Asset> pendingAssets = [];

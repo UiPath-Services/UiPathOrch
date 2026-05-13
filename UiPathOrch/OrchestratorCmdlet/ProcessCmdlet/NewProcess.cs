@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.New, "OrchProcess", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.Release))]
-public class NewProcessCommand : OrchestratorPSCmdlet
+public class NewProcessCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PackageIdCompleter))]

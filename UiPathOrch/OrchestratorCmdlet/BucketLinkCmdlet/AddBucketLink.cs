@@ -8,7 +8,7 @@ using UiPath.PowerShell.Positional;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "OrchBucketLink", SupportsShouldProcess = true)]
-public class AddBucketLinkCommand : AddOrchLinkCmdletBase<Bucket>
+public class AddBucketLinkCmdlet : AddOrchLinkCmdletBase<Bucket>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]

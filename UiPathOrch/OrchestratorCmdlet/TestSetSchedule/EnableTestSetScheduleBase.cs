@@ -7,7 +7,7 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
-public class EnableTestSetScheduleCommandBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
+public class EnableTestSetScheduleCmdletBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
 {
     public virtual string[]? Name { get; set; }
 

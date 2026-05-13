@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchActionCatalog")]
 [OutputType(typeof(TaskCatalog))]
-public class GetActionCatalogCommand : OrchestratorPSCmdlet
+public class GetActionCatalogCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]

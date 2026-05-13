@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "PmExternalApiResource")]
 [OutputType(typeof(Entities.ExternalResource))]
-public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
+public class GetPmExternalApiResourceCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]

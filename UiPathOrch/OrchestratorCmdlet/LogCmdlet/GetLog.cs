@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchLog")]
 [OutputType(typeof(Log))]
-public class GetLogCommand : OrchestratorPSCmdlet
+public class GetLogCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]

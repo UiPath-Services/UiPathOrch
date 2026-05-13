@@ -16,7 +16,7 @@ public class QueueLinkCmdletShapeTests
     [Fact]
     public void AddQueueLink_DeclaresShouldProcess()
     {
-        var cmdletAttr = typeof(AddQueueLinkCommand).GetCustomAttribute<CmdletAttribute>();
+        var cmdletAttr = typeof(AddQueueLinkCmdlet).GetCustomAttribute<CmdletAttribute>();
         Assert.NotNull(cmdletAttr);
         Assert.Equal("Add", cmdletAttr.VerbName);
         Assert.Equal("OrchQueueLink", cmdletAttr.NounName);
@@ -27,7 +27,7 @@ public class QueueLinkCmdletShapeTests
     [Fact]
     public void RemoveQueueLink_DeclaresShouldProcess()
     {
-        var cmdletAttr = typeof(RemoveQueueLinkCommand).GetCustomAttribute<CmdletAttribute>();
+        var cmdletAttr = typeof(RemoveQueueLinkCmdlet).GetCustomAttribute<CmdletAttribute>();
         Assert.NotNull(cmdletAttr);
         Assert.Equal("Remove", cmdletAttr.VerbName);
         Assert.Equal("OrchQueueLink", cmdletAttr.NounName);
@@ -38,16 +38,16 @@ public class QueueLinkCmdletShapeTests
     [Fact]
     public void GetQueueLink_DoesNotDeclareShouldProcess()
     {
-        var cmdletAttr = typeof(GetQueueLinkCommand).GetCustomAttribute<CmdletAttribute>();
+        var cmdletAttr = typeof(GetQueueLinkCmdlet).GetCustomAttribute<CmdletAttribute>();
         Assert.NotNull(cmdletAttr);
         Assert.False(cmdletAttr.SupportsShouldProcess);
     }
 
     [Theory]
-    [InlineData(typeof(AddQueueLinkCommand), "Name")]
-    [InlineData(typeof(AddQueueLinkCommand), "Link")]
-    [InlineData(typeof(RemoveQueueLinkCommand), "Name")]
-    [InlineData(typeof(RemoveQueueLinkCommand), "Link")]
+    [InlineData(typeof(AddQueueLinkCmdlet), "Name")]
+    [InlineData(typeof(AddQueueLinkCmdlet), "Link")]
+    [InlineData(typeof(RemoveQueueLinkCmdlet), "Name")]
+    [InlineData(typeof(RemoveQueueLinkCmdlet), "Link")]
     public void MutatingCmdlet_HasMandatoryNameAndLink(System.Type cmdletType, string paramName)
     {
         var prop = cmdletType.GetProperty(paramName);
@@ -59,14 +59,14 @@ public class QueueLinkCmdletShapeTests
     }
 
     [Theory]
-    [InlineData(typeof(GetQueueLinkCommand), "Name")]
-    [InlineData(typeof(GetQueueLinkCommand), "Path")]
-    [InlineData(typeof(AddQueueLinkCommand), "Name")]
-    [InlineData(typeof(AddQueueLinkCommand), "Link")]
-    [InlineData(typeof(AddQueueLinkCommand), "Path")]
-    [InlineData(typeof(RemoveQueueLinkCommand), "Name")]
-    [InlineData(typeof(RemoveQueueLinkCommand), "Link")]
-    [InlineData(typeof(RemoveQueueLinkCommand), "Path")]
+    [InlineData(typeof(GetQueueLinkCmdlet), "Name")]
+    [InlineData(typeof(GetQueueLinkCmdlet), "Path")]
+    [InlineData(typeof(AddQueueLinkCmdlet), "Name")]
+    [InlineData(typeof(AddQueueLinkCmdlet), "Link")]
+    [InlineData(typeof(AddQueueLinkCmdlet), "Path")]
+    [InlineData(typeof(RemoveQueueLinkCmdlet), "Name")]
+    [InlineData(typeof(RemoveQueueLinkCmdlet), "Link")]
+    [InlineData(typeof(RemoveQueueLinkCmdlet), "Path")]
     public void PipelineProperties_AcceptValueFromPipelineByPropertyName(System.Type cmdletType, string paramName)
     {
         var prop = cmdletType.GetProperty(paramName);
@@ -90,7 +90,7 @@ public class QueueLinkCmdletShapeTests
     [Fact]
     public void GetQueueLink_DeclaresOutputType()
     {
-        var outputAttr = typeof(GetQueueLinkCommand).GetCustomAttribute<OutputTypeAttribute>();
+        var outputAttr = typeof(GetQueueLinkCmdlet).GetCustomAttribute<OutputTypeAttribute>();
         Assert.NotNull(outputAttr);
         Assert.Contains(outputAttr.Type, t => t.Type == typeof(QueueLink));
     }

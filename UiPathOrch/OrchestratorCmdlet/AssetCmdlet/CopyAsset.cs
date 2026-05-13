@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchAsset", SupportsShouldProcess = true)]
-public class CopyAssetCommand : OrchestratorPSCmdlet
+public class CopyAssetCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(AssetNameCompleter))]

@@ -8,7 +8,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Export, "OrchJobMedia", SupportsShouldProcess = true)]
-public class SaveJobMediaCommand : OrchestratorPSCmdlet
+public class SaveJobMediaCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(JobIdCompleter))]

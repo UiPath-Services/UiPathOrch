@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchTrigger", SupportsShouldProcess = true)]
-public class CopyTriggerCommand : OrchestratorPSCmdlet
+public class CopyTriggerCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TriggerNameCompleter))]

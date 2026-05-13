@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 // This API is disabled and cannot be used
 //[Cmdlet(VerbsCommon.Get, "PmUserLoginAttempt")]
 //[OutputType(typeof(Entities.IdUser))]
-class GetPmUserLoginAttemptCommand : OrchestratorPSCmdlet
+class GetPmUserLoginAttemptCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmUserEmailCompleter))]

@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Import, "OrchLibrary", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.BulkItemDtoOfString))]
-public class ImportLibraryCommand : OrchestratorPSCmdlet
+public class ImportLibraryCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     public string[]? Source { get; set; }

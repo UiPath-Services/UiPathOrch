@@ -7,7 +7,7 @@ using OrchCollectionExtensions = UiPath.PowerShell.Core.OrchCollectionExtensions
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchCalendar", SupportsShouldProcess = true)]
-public class CopyCalendarCommand : OrchestratorPSCmdlet
+public class CopyCalendarCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(CalendarNameCompleter))]

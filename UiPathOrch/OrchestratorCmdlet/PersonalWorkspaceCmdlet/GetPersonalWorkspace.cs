@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchPersonalWorkspace")]
 [OutputType(typeof(Entities.PersonalWorkspace))]
-public class GetPersonalWorkspaceCommand : OrchestratorPSCmdlet
+public class GetPersonalWorkspaceCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]

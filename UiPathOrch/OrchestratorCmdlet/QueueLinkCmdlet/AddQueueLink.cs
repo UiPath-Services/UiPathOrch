@@ -7,7 +7,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "OrchQueueLink", SupportsShouldProcess = true)]
-public class AddQueueLinkCommand : AddOrchLinkCmdletBase<QueueDefinition>
+public class AddQueueLinkCmdlet : AddOrchLinkCmdletBase<QueueDefinition>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(QueueNameCompleter))]

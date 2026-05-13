@@ -5,7 +5,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "PmRobotAccount", SupportsShouldProcess = true)]
-public class RemovePmRobotAccountCommand : OrchestratorPSCmdlet
+public class RemovePmRobotAccountCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmRobotAccountNameCompleter))]

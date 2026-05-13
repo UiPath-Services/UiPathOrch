@@ -5,7 +5,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Update, "PmUser", SupportsShouldProcess = true)]
-public class UpdatePmUserCommand : OrchestratorPSCmdlet
+public class UpdatePmUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmUserEmailCompleter))]

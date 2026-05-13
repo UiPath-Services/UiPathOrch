@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +24,7 @@ namespace UiPath.PowerShell.Commands;
 
 // Command for Connect-OrchMachine
 [Cmdlet(VerbsCommunications.Connect, "OrchJob")]
-public class ConnectMachineCommand : OrchestratorPSCmdlet
+public class ConnectMachineCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(JobIdCompleter))]

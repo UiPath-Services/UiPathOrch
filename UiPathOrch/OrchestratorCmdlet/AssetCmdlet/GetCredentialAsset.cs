@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchCredentialAsset")]
 [OutputType(typeof(Asset))]
-public class GetCredentialAssetCommand : OrchestratorPSCmdlet
+public class GetCredentialAssetCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]

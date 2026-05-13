@@ -8,7 +8,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchFolderUser", SupportsShouldProcess = true)]
-public class RemoveFolderUserCommand : OrchestratorPSCmdlet
+public class RemoveFolderUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(UserNameCompleter))]

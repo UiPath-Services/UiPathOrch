@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "PmExternalApplication", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.ExternalClientCreated))]
-public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
+public class CopyPmExternalApplicationCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ExternalApplicationNameCompleter))]

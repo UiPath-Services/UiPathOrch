@@ -7,7 +7,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchPackage", SupportsShouldProcess = true)]
-public class RemovePackageCommand : OrchestratorPSCmdlet
+public class RemovePackageCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(IdCompleter))]

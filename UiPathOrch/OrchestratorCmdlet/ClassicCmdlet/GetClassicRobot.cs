@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchClassicRobot")]
 [OutputType(typeof(Entities.Session))]
-public class GetClassicRobotCommand : OrchestratorPSCmdlet
+public class GetClassicRobotCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]

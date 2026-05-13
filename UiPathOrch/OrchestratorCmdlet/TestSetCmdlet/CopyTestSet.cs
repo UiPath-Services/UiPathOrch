@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchTestSet", SupportsShouldProcess = true)]
-public class CopyTestSetCommand : OrchestratorPSCmdlet
+public class CopyTestSetCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TestSetNameCompleter))]

@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchCredentialStore", SupportsShouldProcess = true)]
-public class RemoveCredentialStoreCommand : RemoveDriveEntityCmdletBase<CredentialStore>
+public class RemoveCredentialStoreCmdlet : RemoveDriveEntityCmdletBase<CredentialStore>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(CredentialStoreNameCompleter))]

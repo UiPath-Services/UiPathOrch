@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchAssetLink")]
 [OutputType(typeof(AssetLink))]
-public class GetAssetLinkCommand : GetOrchLinkCmdletBase<Asset, AssetLink>
+public class GetAssetLinkCmdlet : GetOrchLinkCmdletBase<Asset, AssetLink>
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(LinkedAssetNameCompleter))]

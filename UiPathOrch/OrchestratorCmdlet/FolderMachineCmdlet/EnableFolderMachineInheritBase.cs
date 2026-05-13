@@ -7,7 +7,7 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
-public class EnableFolderMachineInheritCommandBase<EnableInherit> : OrchestratorPSCmdlet where EnableInherit : IBoolParameter
+public class EnableFolderMachineInheritCmdletBase<EnableInherit> : OrchestratorPSCmdlet where EnableInherit : IBoolParameter
 {
     public virtual string[]? Name { get; set; }
 

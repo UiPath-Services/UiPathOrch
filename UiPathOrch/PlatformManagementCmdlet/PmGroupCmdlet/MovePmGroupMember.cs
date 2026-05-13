@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 // -Type is not yet implemented, but is this okay for now...
 [Cmdlet(VerbsCommon.Move, "PmGroupMember", SupportsShouldProcess = true)]
-public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
+public class MoveOrchPmGroupMemberCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmGroupNameCompleter))]

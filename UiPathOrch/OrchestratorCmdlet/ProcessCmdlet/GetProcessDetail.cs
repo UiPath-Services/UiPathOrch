@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchProcessDetail")]
 [OutputType(typeof(Release))]
-public class GetProcessDetailCommand : OrchestratorPSCmdlet
+public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
 {
     // -Name is Mandatory by design — the detail path makes one API call per
     // matched release, so accidental fan-out from a default "all releases"
@@ -89,8 +89,8 @@ public class GetProcessDetailCommand : OrchestratorPSCmdlet
     /// Canonical implementation for "fetch each matched release's detail
     /// (plus EntryPointPath and retention enrichment) and emit either to
     /// caller.WriteObject or to the supplied CSV writer". Called by this
-    /// cmdlet's ProcessRecord, by GetProcessCommand's deprecated
-    /// -ExpandDetails path, and by GetProcessCommand's -ExportCsv path.
+    /// cmdlet's ProcessRecord, by GetProcessCmdlet's deprecated
+    /// -ExpandDetails path, and by GetProcessCmdlet's -ExportCsv path.
     /// </summary>
     internal static void EmitDetailedReleases(
         OrchestratorPSCmdlet caller,

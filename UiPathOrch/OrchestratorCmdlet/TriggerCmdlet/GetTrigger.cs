@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchTrigger")]
 [OutputType(typeof(Entities.ProcessSchedule))]
-public class GetTriggerCommand : OrchestratorPSCmdlet
+public class GetTriggerCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TriggerNameCompleter))]
@@ -62,10 +62,10 @@ public class GetTriggerCommand : OrchestratorPSCmdlet
             }
 
             var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetTriggerDetailCommand.CsvHeaders);
+            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetTriggerDetailCmdlet.CsvHeaders);
 
             var driveFolderList = drivesFolders.ToList();
-            GetTriggerDetailCommand.EmitDetailedTriggers(this, driveFolderList, wpName, writer);
+            GetTriggerDetailCmdlet.EmitDetailedTriggers(this, driveFolderList, wpName, writer);
 
             if (!string.IsNullOrEmpty(ExportCsv))
             {

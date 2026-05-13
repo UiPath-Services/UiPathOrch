@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "DuClassifier")]
 [OutputType(typeof(Entities.DuClassifier))]
-public class GetDuClassifierCommand : OrchestratorPSCmdlet
+public class GetDuClassifierCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ClassifierNameCompleter))]

@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchQueueLink")]
 [OutputType(typeof(QueueLink))]
-public class GetQueueLinkCommand : GetOrchLinkCmdletBase<QueueDefinition, QueueLink>
+public class GetQueueLinkCmdlet : GetOrchLinkCmdletBase<QueueDefinition, QueueLink>
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(LinkedQueueNameCompleter))]

@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "TmConfiguration")]
 [OutputType(typeof(Entities.TmConfig))]
-public class GetTmConfigurationCommand : OrchestratorPSCmdlet
+public class GetTmConfigurationCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TmDriveCompleter))]

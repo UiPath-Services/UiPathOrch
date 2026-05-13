@@ -16,7 +16,7 @@ public class BucketLinkCmdletShapeTests
     [Fact]
     public void AddBucketLink_DeclaresShouldProcess()
     {
-        var cmdletAttr = typeof(AddBucketLinkCommand).GetCustomAttribute<CmdletAttribute>();
+        var cmdletAttr = typeof(AddBucketLinkCmdlet).GetCustomAttribute<CmdletAttribute>();
         Assert.NotNull(cmdletAttr);
         Assert.Equal("Add", cmdletAttr.VerbName);
         Assert.Equal("OrchBucketLink", cmdletAttr.NounName);
@@ -27,7 +27,7 @@ public class BucketLinkCmdletShapeTests
     [Fact]
     public void RemoveBucketLink_DeclaresShouldProcess()
     {
-        var cmdletAttr = typeof(RemoveBucketLinkCommand).GetCustomAttribute<CmdletAttribute>();
+        var cmdletAttr = typeof(RemoveBucketLinkCmdlet).GetCustomAttribute<CmdletAttribute>();
         Assert.NotNull(cmdletAttr);
         Assert.Equal("Remove", cmdletAttr.VerbName);
         Assert.Equal("OrchBucketLink", cmdletAttr.NounName);
@@ -38,16 +38,16 @@ public class BucketLinkCmdletShapeTests
     [Fact]
     public void GetBucketLink_DoesNotDeclareShouldProcess()
     {
-        var cmdletAttr = typeof(GetBucketLinkCommand).GetCustomAttribute<CmdletAttribute>();
+        var cmdletAttr = typeof(GetBucketLinkCmdlet).GetCustomAttribute<CmdletAttribute>();
         Assert.NotNull(cmdletAttr);
         Assert.False(cmdletAttr.SupportsShouldProcess);
     }
 
     [Theory]
-    [InlineData(typeof(AddBucketLinkCommand), "Name")]
-    [InlineData(typeof(AddBucketLinkCommand), "Link")]
-    [InlineData(typeof(RemoveBucketLinkCommand), "Name")]
-    [InlineData(typeof(RemoveBucketLinkCommand), "Link")]
+    [InlineData(typeof(AddBucketLinkCmdlet), "Name")]
+    [InlineData(typeof(AddBucketLinkCmdlet), "Link")]
+    [InlineData(typeof(RemoveBucketLinkCmdlet), "Name")]
+    [InlineData(typeof(RemoveBucketLinkCmdlet), "Link")]
     public void MutatingCmdlet_HasMandatoryNameAndLink(System.Type cmdletType, string paramName)
     {
         var prop = cmdletType.GetProperty(paramName);
@@ -59,14 +59,14 @@ public class BucketLinkCmdletShapeTests
     }
 
     [Theory]
-    [InlineData(typeof(GetBucketLinkCommand), "Name")]
-    [InlineData(typeof(GetBucketLinkCommand), "Path")]
-    [InlineData(typeof(AddBucketLinkCommand), "Name")]
-    [InlineData(typeof(AddBucketLinkCommand), "Link")]
-    [InlineData(typeof(AddBucketLinkCommand), "Path")]
-    [InlineData(typeof(RemoveBucketLinkCommand), "Name")]
-    [InlineData(typeof(RemoveBucketLinkCommand), "Link")]
-    [InlineData(typeof(RemoveBucketLinkCommand), "Path")]
+    [InlineData(typeof(GetBucketLinkCmdlet), "Name")]
+    [InlineData(typeof(GetBucketLinkCmdlet), "Path")]
+    [InlineData(typeof(AddBucketLinkCmdlet), "Name")]
+    [InlineData(typeof(AddBucketLinkCmdlet), "Link")]
+    [InlineData(typeof(AddBucketLinkCmdlet), "Path")]
+    [InlineData(typeof(RemoveBucketLinkCmdlet), "Name")]
+    [InlineData(typeof(RemoveBucketLinkCmdlet), "Link")]
+    [InlineData(typeof(RemoveBucketLinkCmdlet), "Path")]
     public void PipelineProperties_AcceptValueFromPipelineByPropertyName(System.Type cmdletType, string paramName)
     {
         var prop = cmdletType.GetProperty(paramName);
@@ -90,7 +90,7 @@ public class BucketLinkCmdletShapeTests
     [Fact]
     public void GetBucketLink_DeclaresOutputType()
     {
-        var outputAttr = typeof(GetBucketLinkCommand).GetCustomAttribute<OutputTypeAttribute>();
+        var outputAttr = typeof(GetBucketLinkCmdlet).GetCustomAttribute<OutputTypeAttribute>();
         Assert.NotNull(outputAttr);
         Assert.Contains(outputAttr.Type, t => t.Type == typeof(BucketLink));
     }

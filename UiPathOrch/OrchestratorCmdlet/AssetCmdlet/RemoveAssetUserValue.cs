@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 // empty-delete convention used on Set-OrchAsset / Set-OrchCredentialAsset is not round-trip
 // safe. This cmdlet provides the explicit, type-agnostic path for any asset.
 [Cmdlet(VerbsCommon.Remove, "OrchAssetUserValue", SupportsShouldProcess = true)]
-public class RemoveAssetUserValueCommand : OrchestratorPSCmdlet
+public class RemoveAssetUserValueCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(AssetNameCompleter))]

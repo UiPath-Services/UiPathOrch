@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchLibrary")]
 [OutputType(typeof(Entities.Library))]
-public class GetLibraryCommand : OrchestratorPSCmdlet
+public class GetLibraryCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(LibraryIdCompleter))]

@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchTestSetExecution")]
 [OutputType(typeof(Entities.TestSetExecution))]
-public class GetTestSetExecutionCommand : OrchestratorPSCmdlet
+public class GetTestSetExecutionCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]

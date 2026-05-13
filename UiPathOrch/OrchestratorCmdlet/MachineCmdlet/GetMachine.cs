@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Get, "OrchMachine")]
 [OutputType(typeof(Entities.ExtendedMachine))]
 [OutputType(typeof(Entities.RobotUser))]
-public class GetMachineCommand : OrchestratorPSCmdlet
+public class GetMachineCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(MachineNameCompleter))]

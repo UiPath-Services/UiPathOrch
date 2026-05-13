@@ -23,7 +23,7 @@ namespace UiPath.PowerShell.Commands;
 /// </summary>
 [Cmdlet(VerbsLifecycle.Invoke, "OrchApi", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium)]
 [OutputType(typeof(PSObject), typeof(string))]
-public class InvokeOrchApiCommand : OrchestratorPSCmdlet
+public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
 {
     // PSTypeName attached to every JSON record we emit. Used by Format.ps1xml to
     // group results by Path. See UiPathOrch.Format.ps1xml.

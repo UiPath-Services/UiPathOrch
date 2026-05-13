@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 // All filter-building parameters have been removed; changed to fetch and cache everything per folder.
 [Cmdlet(VerbsCommon.Get, "OrchMachineSession")]
 [OutputType(typeof(Entities.MachineSessionRuntime))]
-public class GetMachineSessionCommand : OrchestratorPSCmdlet
+public class GetMachineSessionCmdlet : OrchestratorPSCmdlet
 {
     //[Parameter(Position = 0)]
     //[ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]

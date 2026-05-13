@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Reflection;
@@ -8,7 +8,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Set, "OrchLocation")]
-public class SetOrchLocationCommand : OrchestratorPSCmdlet
+public class SetOrchLocationCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0)]
     [ArgumentCompleter(typeof(ModuleNameCompleter))]
@@ -26,7 +26,7 @@ public class SetOrchLocationCommand : OrchestratorPSCmdlet
         {
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            IEnumerable<Assembly> assemblies = SetOrchLocationCommand.EnumAssemblies();
+            IEnumerable<Assembly> assemblies = SetOrchLocationCmdlet.EnumAssemblies();
 
             foreach (var module in assemblies
                 .Where(m => wp.IsMatch(m.GetName().Name)))

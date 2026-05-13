@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchActionCatalog", SupportsShouldProcess = true)]
-public class CopyActionCatalogCommand : OrchestratorPSCmdlet
+public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]

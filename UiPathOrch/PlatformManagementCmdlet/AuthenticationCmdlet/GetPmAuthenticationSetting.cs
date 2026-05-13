@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "PmAuthenticationSetting")]
 [OutputType(typeof(Entities.PmAuthenticationRoot))]
-public class GetPmAuthenticationSettingCommand : OrchestratorPSCmdlet
+public class GetPmAuthenticationSettingCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]

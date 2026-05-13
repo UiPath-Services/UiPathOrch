@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "PmRobotAccount", SupportsShouldProcess = true)]
-public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
+public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmRobotAccountNameCompleter))]

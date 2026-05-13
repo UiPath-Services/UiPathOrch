@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchPSDrive")]
 [OutputType(typeof(Entities.OrchPSDrive))]
-public class GetOrchPSDriveCommand : OrchestratorPSCmdlet
+public class GetOrchPSDriveCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0)]
     [ArgumentCompleter(typeof(DriveCompleter))]

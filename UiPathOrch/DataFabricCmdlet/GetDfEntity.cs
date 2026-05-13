@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // and adding `Get-OrchDfEntity` to UiPathOrch.psd1 CmdletsToExport.
 [Cmdlet(VerbsCommon.Get, "OrchDfEntity")]
 [OutputType(typeof(DfEntity))]
-class GetDfEntityCommand : OrchestratorPSCmdlet
+class GetDfEntityCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DfEntityNameCompleter))]

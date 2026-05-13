@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 // to External Applications or Personal Access Tokens).
 [Cmdlet(VerbsData.Update, "OrchBusinessRule", SupportsShouldProcess = true)]
 [OutputType(typeof(BusinessRule))]
-class UpdateBusinessRuleCommand : OrchestratorPSCmdlet
+class UpdateBusinessRuleCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchLicenseNamedUser")]
 [OutputType(typeof(LicenseNamedUser))]
-public class GetLicenseNamedUserCommand : OrchestratorPSCmdlet
+public class GetLicenseNamedUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<LicenseRobotTypeItems>))]

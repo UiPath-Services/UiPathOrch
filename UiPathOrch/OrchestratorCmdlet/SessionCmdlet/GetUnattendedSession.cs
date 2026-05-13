@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchUnattendedSession")]
 [OutputType(typeof(Entities.MachineSessionRuntime))]
-public class GetUnattendedSessionCommand : OrchestratorPSCmdlet
+public class GetUnattendedSessionCmdlet : OrchestratorPSCmdlet
 {
     //[Parameter(Position = 0)]
     //[ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]

@@ -17,7 +17,7 @@ namespace UiPath.PowerShell.Commands;
 // migration completes.
 [Cmdlet(VerbsCommon.Get, "OrchConnection")]
 [OutputType(typeof(Connection))]
-class GetConnectionCommand : OrchestratorPSCmdlet
+class GetConnectionCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

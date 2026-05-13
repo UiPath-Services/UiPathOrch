@@ -8,7 +8,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Set, "OrchSetting", SupportsShouldProcess = true)]
-public class SetSettingCommand : OrchestratorPSCmdlet
+public class SetSettingCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]

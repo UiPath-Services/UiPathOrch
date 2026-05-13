@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchBucketLink")]
 [OutputType(typeof(BucketLink))]
-public class GetBucketLinkCommand : GetOrchLinkCmdletBase<Bucket, BucketLink>
+public class GetBucketLinkCmdlet : GetOrchLinkCmdletBase<Bucket, BucketLink>
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(LinkedBucketNameCompleter))]

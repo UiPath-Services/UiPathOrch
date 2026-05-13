@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 // For some reason the API returns forbidden. Keeping this as private (internal) for now.
 [Cmdlet(VerbsCommon.Get, "TmDefect")]
 [OutputType(typeof(Entities.TmDefect))]
-class GetTmDefectCommand : OrchestratorPSCmdlet
+class GetTmDefectCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

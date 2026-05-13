@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchAuthenticationSetting")]
 [OutputType(typeof(ResponseDictionaryItem))]
-public class GetAuthenticationSettingCommand : OrchestratorPSCmdlet
+public class GetAuthenticationSettingCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(KeyCompleter))]

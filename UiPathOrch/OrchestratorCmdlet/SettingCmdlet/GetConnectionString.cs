@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchConnectionString")]
 [OutputType(typeof(ODataValueOfString))]
-public class GetConnectionStringCommand : OrchestratorPSCmdlet
+public class GetConnectionStringCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]

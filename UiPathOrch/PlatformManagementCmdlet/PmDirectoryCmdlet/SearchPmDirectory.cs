@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Search, "PmDirectory")]
 [OutputType(typeof(PmDirectoryEntityInfo))]
-public class SearchPmDirectoryCommand : OrchestratorPSCmdlet
+public class SearchPmDirectoryCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]

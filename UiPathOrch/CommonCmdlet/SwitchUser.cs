@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Switch, "OrchCurrentUser", SupportsShouldProcess = true)]
 [OutputType(typeof(User))]
-public class SwitchOrchCurrentUserCommand : OrchestratorPSCmdlet
+public class SwitchOrchCurrentUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0)]
     [ArgumentCompleter(typeof(DriveCompleter))]

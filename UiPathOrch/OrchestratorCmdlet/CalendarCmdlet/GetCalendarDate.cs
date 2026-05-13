@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchCalendarDate")]
 [OutputType(typeof(ExcludedDateNamed))]
-public class GetCalendarDateCommand : OrchestratorPSCmdlet
+public class GetCalendarDateCmdlet : OrchestratorPSCmdlet
 {
     // -Name is Mandatory by design — the detail path makes one API call per
     // matched calendar, so accidental fan-out from a default "all calendars"
@@ -57,8 +57,8 @@ public class GetCalendarDateCommand : OrchestratorPSCmdlet
     /// <summary>
     /// Canonical implementation for "fetch each matched calendar's detail
     /// and emit one ExcludedDateNamed per excluded date". Called by this
-    /// cmdlet's ProcessRecord, by GetCalendarCommand's deprecated
-    /// -ExpandExcludedDate path, and by GetCalendarCommand's -ExportCsv
+    /// cmdlet's ProcessRecord, by GetCalendarCmdlet's deprecated
+    /// -ExpandExcludedDate path, and by GetCalendarCmdlet's -ExportCsv
     /// path (the existing CSV format must round-trip with
     /// Add-OrchCalendarDate, so it stays supported as-is).
     /// </summary>

@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchRoleFromUser", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.User))]
-public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
+public class RemoveRoleFromUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -108,7 +108,7 @@ public class RemoveRoleFromUserCommand : OrchestratorPSCmdlet
             try
             {
                 users = drive.Users.Get()
-                    // Match both UserName and EmailAddress; see GetUserCommand.
+                    // Match both UserName and EmailAddress; see GetUserCmdlet.
                     .FilterByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], wpUserName)
                     .FilterByWildcards(u => u?.FullName, wpFullName)
                     .FilterByWildcards(u => u?.Type, wpType)

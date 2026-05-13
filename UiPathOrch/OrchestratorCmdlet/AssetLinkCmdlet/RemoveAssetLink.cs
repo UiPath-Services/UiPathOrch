@@ -7,7 +7,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchAssetLink", SupportsShouldProcess = true, ConfirmImpact = ConfirmImpact.Medium)]
-public class RemoveAssetLinkCommand : RemoveOrchLinkCmdletBase<Asset>
+public class RemoveAssetLinkCmdlet : RemoveOrchLinkCmdletBase<Asset>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(LinkedAssetNameCompleter))]

@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchActivitySetting")]
 [OutputType(typeof(ActivitySettings))]
-public class GetActivitySettingCommand : OrchestratorPSCmdlet
+public class GetActivitySettingCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]

@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "DuRole")]
 [OutputType(typeof(Entities.DuRole))]
-public class GetDuRoleCommand : OrchestratorPSCmdlet
+public class GetDuRoleCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(RoleCompleter))]

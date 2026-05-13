@@ -7,7 +7,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchBucket", SupportsShouldProcess = true)]
-public class RemoveBucketCommand : RemoveFolderEntityCmdletBase<Bucket>
+public class RemoveBucketCmdlet : RemoveFolderEntityCmdletBase<Bucket>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]

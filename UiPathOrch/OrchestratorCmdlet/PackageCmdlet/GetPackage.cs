@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchPackage")]
 [OutputType(typeof(Entities.Package))]
-public class GetPackageCommand : OrchestratorPSCmdlet
+public class GetPackageCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PackageIdCompleter))]

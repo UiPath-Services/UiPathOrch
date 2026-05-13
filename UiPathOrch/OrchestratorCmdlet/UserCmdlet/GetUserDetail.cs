@@ -95,8 +95,8 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
     /// <summary>
     /// Canonical implementation for "fetch each matched user's detail and emit
     /// either to caller.WriteObject or to the supplied CSV writer". Called by
-    /// this cmdlet's ProcessRecord, by GetUserCommand's deprecated
-    /// -ExpandDetails path, and by GetUserCommand's -ExportCsv path.
+    /// this cmdlet's ProcessRecord, by GetUserCmdlet's deprecated
+    /// -ExpandDetails path, and by GetUserCmdlet's -ExportCsv path.
     ///
     /// Any of the three wildcard-pattern lists may be null (= no filter on
     /// that field). Phase 1 (drive.GetUsers + filter) and Phase 2
@@ -122,7 +122,7 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
             drive => drive.Users.Get()
                 .FilterByWildcards(u => u?.FullName, fullNameWildcards)
                 // Match both UserName (tenant form) and EmailAddress (canonical);
-                // see GetUserCommand for the rationale.
+                // see GetUserCmdlet for the rationale.
                 .FilterByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], userNameWildcards)
                 .FilterByWildcards(u => u?.Type, typeWildcards)
                 .OrderBy(u => u.UserName)

@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchCredentialStore")]
 [OutputType(typeof(Entities.CredentialStore))]
-public class GetCredentialStoreCommand : OrchestratorPSCmdlet
+public class GetCredentialStoreCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(CredentialStoreNameCompleter))]

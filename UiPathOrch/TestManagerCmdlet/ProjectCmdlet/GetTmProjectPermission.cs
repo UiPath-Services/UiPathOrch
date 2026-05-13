@@ -1,11 +1,11 @@
-﻿using System.Management.Automation;
+using System.Management.Automation;
 using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "TmProjectPermission")]
 [OutputType(typeof(Entities.TmProjectPermission))]
-public class GetTmProjectPermissionCommand : OrchestratorPSCmdlet
+public class GetTmProjectPermissionCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

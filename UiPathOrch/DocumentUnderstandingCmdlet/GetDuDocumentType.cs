@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "DuDocumentType")]
 [OutputType(typeof(Entities.DuDocumentType))]
-public class GetDuDocumentTypeCommand : OrchestratorPSCmdlet
+public class GetDuDocumentTypeCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DocumentTypeNameCompleter))]

@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Set, "OrchRole", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.Role))]
-public class SetRoleCommand : OrchestratorPSCmdlet
+public class SetRoleCmdlet : OrchestratorPSCmdlet
 {
     private class PermissionParams(string? scope, string? view, string? edit, string? create, string? delete)
     {

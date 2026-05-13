@@ -1,4 +1,4 @@
-﻿using System.Management.Automation;
+using System.Management.Automation;
 using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
@@ -8,7 +8,7 @@ using User = UiPath.PowerShell.Entities.User;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.New, "OrchUserMappingCsv")]
-public class NewUserMappingCsvCommand : OrchestratorPSCmdlet
+public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]

@@ -5,7 +5,7 @@ using UiPath.PowerShell.Completer;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsLifecycle.Disable, "OrchLicenseRuntime", SupportsShouldProcess = true)]
-public class DisableLicenseRuntimeCommand : EnableLicenseRuntimeCommandBase<False>
+public class DisableLicenseRuntimeCmdlet : EnableLicenseRuntimeCmdletBase<False>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<LicenseRobotTypeItems>))]

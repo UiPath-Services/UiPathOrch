@@ -9,7 +9,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "PmGroupMember", SupportsShouldProcess = true)]
-public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
+public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
 {
     // Expand and hold parameters for Path and PmGroup only
     //private List<(OrchDriveInfo Drive, PmGroup Group, string Type, string UserName)>? _csvLines;

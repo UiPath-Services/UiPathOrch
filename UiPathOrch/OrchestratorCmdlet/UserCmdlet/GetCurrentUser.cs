@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchCurrentUser")]
 [OutputType(typeof(Entities.User))]
-public class GetCurrentUserCommand : OrchestratorPSCmdlet
+public class GetCurrentUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]

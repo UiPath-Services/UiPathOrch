@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // `public class` and adding `Invoke-OrchDfQuery` to UiPathOrch.psd1 CmdletsToExport.
 [Cmdlet(VerbsLifecycle.Invoke, "OrchDfQuery")]
 [OutputType(typeof(PSObject))]
-class InvokeDfQueryCommand : OrchestratorPSCmdlet
+class InvokeDfQueryCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DfEntityNameCompleter))]

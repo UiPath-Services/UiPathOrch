@@ -7,7 +7,7 @@ using Job = UiPath.PowerShell.Entities.Job;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Open, "OrchJob")]
-public class OpenJobCommand : OrchestratorPSCmdlet
+public class OpenJobCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(JobIdCompleter))]

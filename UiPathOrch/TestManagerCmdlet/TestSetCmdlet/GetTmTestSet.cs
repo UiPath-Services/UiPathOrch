@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "TmTestSet")]
 [OutputType(typeof(Entities.TmTestSet))]
-public class GetTmTestSetCommand : OrchestratorPSCmdlet
+public class GetTmTestSetCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TmTestSetNameCompleter))]

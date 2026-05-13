@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchClassicEnvironment")]
 [OutputType(typeof(Entities.Environment))]
-public class GetClassicEnvironmentCommand : OrchestratorPSCmdlet
+public class GetClassicEnvironmentCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]

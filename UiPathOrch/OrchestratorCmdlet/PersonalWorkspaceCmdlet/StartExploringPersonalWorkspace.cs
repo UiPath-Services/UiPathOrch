@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 // does not support OAuth authentication, so this cmdlet does not work. Kept as unpublished for now.
 //[Cmdlet(VerbsLifecycle.Start, "OrchExploringPersonalWorkspace", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.QueueDefinition))]
-class StartExploringPersonalWorkspaceCommand : OrchestratorPSCmdlet
+class StartExploringPersonalWorkspaceCmdlet : OrchestratorPSCmdlet
 {
     //[Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     //[ArgumentCompleter(typeof(NameCompleter))]

@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 /// </summary>
 [Cmdlet(VerbsCommon.New, "OrchPSDrive", SupportsShouldProcess = true)]
 [OutputType(typeof(OrchDriveInfo))]
-public class NewPSDriveCommand : PSCmdlet
+public class NewPSDriveCmdlet : PSCmdlet
 {
     [Parameter(Mandatory = true, Position = 0)]
     public string Name { get; set; } = null!;

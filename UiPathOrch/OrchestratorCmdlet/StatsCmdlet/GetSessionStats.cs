@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 // Returns not found?
 //[Cmdlet(VerbsCommon.Get, "OrchSessionStats")]
 [OutputType(typeof(Entities.CountStats))]
-class GetSessionStatsCommand : OrchestratorPSCmdlet
+class GetSessionStatsCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Day_Week_Month_3Month_6Month_Year_3Year>))]

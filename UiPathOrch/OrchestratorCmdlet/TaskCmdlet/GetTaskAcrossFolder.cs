@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // hits the dedicated server-side aggregation endpoint.
 [Cmdlet(VerbsCommon.Get, "OrchTaskAcrossFolder")]
 [OutputType(typeof(OrchTask))]
-public class GetTaskAcrossFolderCommand : OrchestratorPSCmdlet
+public class GetTaskAcrossFolderCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

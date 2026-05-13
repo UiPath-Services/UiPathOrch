@@ -9,7 +9,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "OrchRoleToFolderUser", SupportsShouldProcess = true)]
-public class AddRoleToFolderUserCommand : OrchestratorPSCmdlet
+public class AddRoleToFolderUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(UserNameCompleter))]

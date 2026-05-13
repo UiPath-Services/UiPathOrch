@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 /// All existing OrchDriveInfo instances and their caches are destroyed and re-created.
 /// </summary>
 [Cmdlet(VerbsData.Import, "OrchConfig", SupportsShouldProcess = true)]
-public class ImportOrchConfigCommand : PSCmdlet
+public class ImportOrchConfigCmdlet : PSCmdlet
 {
     [Parameter]
     public SwitchParameter Force { get; set; }

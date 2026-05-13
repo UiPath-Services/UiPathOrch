@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Search, "OrchDirectory")]
 [OutputType(typeof(DirectoryObject))]
-public class SearchDirectoryCommand : OrchestratorPSCmdlet
+public class SearchDirectoryCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]

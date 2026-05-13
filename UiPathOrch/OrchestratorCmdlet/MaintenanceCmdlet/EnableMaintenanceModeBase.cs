@@ -7,7 +7,7 @@ using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
-public class EnableMaintenanceModeCommandBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
+public class EnableMaintenanceModeCmdletBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
 {
     public virtual string[]? MachineName { get; set; }
     public virtual string[]? HostMachineName { get; set; }

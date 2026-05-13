@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchActionCatalog", SupportsShouldProcess = true)]
-public class RemoveActionCatalogCommand : RemoveFolderEntityCmdletBase<TaskCatalog>
+public class RemoveActionCatalogCmdlet : RemoveFolderEntityCmdletBase<TaskCatalog>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]

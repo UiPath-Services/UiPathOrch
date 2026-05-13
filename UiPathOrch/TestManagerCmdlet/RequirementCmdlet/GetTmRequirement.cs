@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "TmRequirement")]
 [OutputType(typeof(Entities.TmRequirement))]
-public class GetTmRequirementCommand : OrchestratorPSCmdlet
+public class GetTmRequirementCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TmRequirementNameCompleter))]

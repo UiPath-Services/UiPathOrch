@@ -8,7 +8,7 @@ using OrchCollectionExtensions = UiPath.PowerShell.Core.OrchCollectionExtensions
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Update, "OrchBucket", SupportsShouldProcess = true)]
-public class UpdateBucketCommand : OrchestratorPSCmdlet
+public class UpdateBucketCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]

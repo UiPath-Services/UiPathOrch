@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchApiTrigger", SupportsShouldProcess = true)]
-public class RemoveApiTriggerCommand : RemoveFolderEntityCmdletBase<HttpTrigger>
+public class RemoveApiTriggerCmdlet : RemoveFolderEntityCmdletBase<HttpTrigger>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ApiTriggerNameCompleter))]

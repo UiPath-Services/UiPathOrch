@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "PmGroup")]
 [OutputType(typeof(Entities.PmGroup))]
-public class GetPmGroupCommand : OrchestratorPSCmdlet
+public class GetPmGroupCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmGroupNameCompleter))]

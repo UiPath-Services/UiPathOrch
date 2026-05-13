@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchTrigger", SupportsShouldProcess = true)]
-public class RemoveTriggerCommand : RemoveFolderEntityCmdletBase<ProcessSchedule>
+public class RemoveTriggerCmdlet : RemoveFolderEntityCmdletBase<ProcessSchedule>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TriggerNameCompleter))]

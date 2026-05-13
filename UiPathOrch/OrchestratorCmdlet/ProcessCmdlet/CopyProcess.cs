@@ -6,7 +6,7 @@ using UiPath.PowerShell.Completer;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchProcess", SupportsShouldProcess = true)]
-public class CopyProcessCommand : OrchestratorPSCmdlet
+public class CopyProcessCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ProcessNameCompleter))]

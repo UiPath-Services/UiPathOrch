@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchJobStats")]
 [OutputType(typeof(Entities.CountStats))]
-public class GetJobStatsCommand : OrchestratorPSCmdlet
+public class GetJobStatsCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]

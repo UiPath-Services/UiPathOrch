@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchJobMedia")]
 [OutputType(typeof(Entities.ExecutionMedia))]
-public class GetJobMediaCommand : OrchestratorPSCmdlet
+public class GetJobMediaCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public ulong? Skip { get; set; }

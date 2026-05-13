@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchProcess")]
 [OutputType(typeof(Entities.Release))]
-public class GetProcessCommand : OrchestratorPSCmdlet
+public class GetProcessCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ProcessNameCompleter))]
@@ -62,11 +62,11 @@ public class GetProcessCommand : OrchestratorPSCmdlet
             }
 
             var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
-            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetProcessDetailCommand.CsvHeaders);
+            using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetProcessDetailCmdlet.CsvHeaders);
 
             // EnumFolders returns the same shape used by Get-OrchProcessDetail's helper.
             var driveFolderList = drivesFolders.ToList();
-            GetProcessDetailCommand.EmitDetailedReleases(this, driveFolderList, wpName, writer);
+            GetProcessDetailCmdlet.EmitDetailedReleases(this, driveFolderList, wpName, writer);
 
             if (!string.IsNullOrEmpty(ExportCsv))
             {

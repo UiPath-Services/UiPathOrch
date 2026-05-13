@@ -7,7 +7,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchUpdateSetting")]
 [OutputType(typeof(UpdateSettings))]
-public class GetUpdateSettingCommand : OrchestratorPSCmdlet
+public class GetUpdateSettingCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]

@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchRobot")]
 [OutputType(typeof(Entities.Robot))]
-public class GetRobotCommand : OrchestratorPSCmdlet
+public class GetRobotCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

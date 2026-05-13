@@ -7,7 +7,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsData.Export, "OrchPackage", SupportsShouldProcess = true)]
-public class ExportPackageCommand : OrchestratorPSCmdlet
+public class ExportPackageCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

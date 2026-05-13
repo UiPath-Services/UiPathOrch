@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "OrchWebhook", SupportsShouldProcess = true)]
-public class RemoveWebhookCommand : RemoveDriveEntityCmdletBase<Webhook>
+public class RemoveWebhookCmdlet : RemoveDriveEntityCmdletBase<Webhook>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(WebhookNameCompleter))]

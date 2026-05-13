@@ -8,7 +8,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "OrchFolderMachine", SupportsShouldProcess = true)]
-public class AddFolderMachineCommand : OrchestratorPSCmdlet
+public class AddFolderMachineCmdlet : OrchestratorPSCmdlet
 {
     private Dictionary<(OrchDriveInfo Drive, Folder Folder), Dictionary<MachineFolder, bool?>>? _csvLines = null;
 

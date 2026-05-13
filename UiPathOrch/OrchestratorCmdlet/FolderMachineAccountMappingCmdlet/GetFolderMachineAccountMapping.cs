@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchFolderMachineAccountMapping")]
 [OutputType(typeof(Entities.ExtendedRobot))]
-public class GetFolderMachineAccountMappingCommand : OrchestratorPSCmdlet
+public class GetFolderMachineAccountMappingCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

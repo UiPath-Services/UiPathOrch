@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchUserPrivilege")]
 [OutputType(typeof(Entities.UserPrivilege))]
-public class GetUserPrivilegeCommand : OrchestratorPSCmdlet
+public class GetUserPrivilegeCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

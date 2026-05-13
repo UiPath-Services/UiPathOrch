@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchWebhookEventType")]
 [OutputType(typeof(Entities.WebhookEventType))]
-public class GetWebhookEventTypeCommand : OrchestratorPSCmdlet
+public class GetWebhookEventTypeCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(WebhookEventTypeNameCompleter))]

@@ -23,7 +23,7 @@ class SetSecretAssetCommandParameter
 
 [Cmdlet(VerbsCommon.Set, "OrchSecretAsset", DefaultParameterSetName = Default, SupportsShouldProcess = true)]
 [OutputType(typeof(Asset))]
-public class SetSecretAssetCommand : OrchestratorPSCmdlet
+public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
 {
     private readonly List<SetSecretAssetCommandParameter> parameters = [];
     private readonly Dictionary<(string name, string path), Asset> pendingAssets = [];

@@ -5,12 +5,12 @@ namespace UiPath.PowerShell.OrchProvider
 {
     [Cmdlet(VerbsCommon.Get, "OrchHelp")]
     [OutputType(typeof(string))]
-    public class GetOrchDocumentationCommand : PSCmdlet
+    public class GetOrchDocumentationCmdlet : PSCmdlet
     {
         protected override void ProcessRecord()
         {
             var modulePath = MyInvocation.MyCommand.Module?.ModuleBase
-                ?? Path.GetDirectoryName(typeof(GetOrchDocumentationCommand).Assembly.Location);
+                ?? Path.GetDirectoryName(typeof(GetOrchDocumentationCmdlet).Assembly.Location);
 
             var docsPath = GetTrueCasePath(Path.Combine(modulePath!, "Docs"));
 

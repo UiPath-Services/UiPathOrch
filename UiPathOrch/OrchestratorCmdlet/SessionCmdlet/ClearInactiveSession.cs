@@ -16,7 +16,7 @@ namespace UiPath.PowerShell.Commands;
 // are written to the pipeline so the caller can log or pipe further.
 [Cmdlet(VerbsCommon.Clear, "OrchInactiveSession", SupportsShouldProcess = true)]
 [OutputType(typeof(MachineSessionRuntime))]
-public class ClearInactiveSessionCommand : OrchestratorPSCmdlet
+public class ClearInactiveSessionCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]

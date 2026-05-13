@@ -4,7 +4,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchConfigPath")]
 [OutputType(typeof(string))]
-public class GetConfigPathCommand : PSCmdlet
+public class GetConfigPathCmdlet : PSCmdlet
 {
     protected override void ProcessRecord()
     {

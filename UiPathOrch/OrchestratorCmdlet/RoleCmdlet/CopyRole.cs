@@ -5,7 +5,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchRole", SupportsShouldProcess = true)]
-public class CopyRoleCommand : OrchestratorPSCmdlet
+public class CopyRoleCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

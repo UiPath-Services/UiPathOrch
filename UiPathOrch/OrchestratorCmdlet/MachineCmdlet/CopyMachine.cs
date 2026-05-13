@@ -7,7 +7,7 @@ using OrchCollectionExtensions = UiPath.PowerShell.Core.OrchCollectionExtensions
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "OrchMachine", SupportsShouldProcess = true)]
-public class CopyMachineCommand : OrchestratorPSCmdlet
+public class CopyMachineCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(MachineNameCompleter))]

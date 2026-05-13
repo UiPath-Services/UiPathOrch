@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchTestDataQueueItem")]
 [OutputType(typeof(Entities.TestDataQueueItem))]
-public class GetTestDataQueueItemCommand : OrchestratorPSCmdlet
+public class GetTestDataQueueItemCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TestDataQueueNameCompleter))]

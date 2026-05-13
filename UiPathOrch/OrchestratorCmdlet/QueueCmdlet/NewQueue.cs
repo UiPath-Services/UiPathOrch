@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.New, "OrchQueue", SupportsShouldProcess = true)]
 [OutputType(typeof(QueueDefinition))]
-public class NewQueueCommand : OrchestratorPSCmdlet
+public class NewQueueCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NewQueueNameCompleter))]

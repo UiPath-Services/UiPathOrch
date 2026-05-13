@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "DuExtractor")]
 [OutputType(typeof(Entities.DuExtractor))]
-public class GetDuExtractorCommand : OrchestratorPSCmdlet
+public class GetDuExtractorCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ExtractorNameCompleter))]

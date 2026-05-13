@@ -1,11 +1,11 @@
-﻿using System.Management.Automation;
+using System.Management.Automation;
 using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "TmProjectSetting")]
 [OutputType(typeof(Entities.TmProjectSettings))]
-public class GetTmProjectSettingCommand : OrchestratorPSCmdlet
+public class GetTmProjectSettingCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

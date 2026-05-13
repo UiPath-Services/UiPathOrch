@@ -9,7 +9,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "DuRoleFromDuUser", SupportsShouldProcess = true)]
 [OutputType(typeof(void))]
-public class RemoveDuRoleFromDuUserCommand : OrchestratorPSCmdlet
+public class RemoveDuRoleFromDuUserCmdlet : OrchestratorPSCmdlet
 {
     //private const string UserNameSet = "UserNameSet";
     //private const string UserSet = "UserSet";

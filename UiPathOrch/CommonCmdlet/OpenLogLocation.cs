@@ -7,7 +7,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Open, "OrchLogLocation")]
-public class OpenOrchLogLocationCommand : OrchestratorPSCmdlet
+public class OpenOrchLogLocationCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0)]
     [ArgumentCompleter(typeof(DriveCompleter))]

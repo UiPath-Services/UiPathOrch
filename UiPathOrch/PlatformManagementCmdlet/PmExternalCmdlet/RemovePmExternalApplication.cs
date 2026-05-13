@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "PmExternalApplication", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.ExternalClient))]
-public class RemovePmExternalApplicationCommand : OrchestratorPSCmdlet
+public class RemovePmExternalApplicationCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ExternalApplicationNameCompleter))]

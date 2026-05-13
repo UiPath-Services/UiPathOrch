@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchTriggerDetail")]
 [OutputType(typeof(ProcessSchedule))]
-public class GetTriggerDetailCommand : OrchestratorPSCmdlet
+public class GetTriggerDetailCmdlet : OrchestratorPSCmdlet
 {
     // -Name is Mandatory by design — the detail path makes one API call per
     // matched trigger (plus a side fetch for ExecutorRobots), so accidental
@@ -91,8 +91,8 @@ public class GetTriggerDetailCommand : OrchestratorPSCmdlet
     /// <summary>
     /// Canonical implementation for "fetch each matched trigger's detail and
     /// emit either to caller.WriteObject or to the supplied CSV writer".
-    /// Called by this cmdlet's ProcessRecord, by GetTriggerCommand's
-    /// deprecated -ExpandDetails path, and by GetTriggerCommand's
+    /// Called by this cmdlet's ProcessRecord, by GetTriggerCmdlet's
+    /// deprecated -ExpandDetails path, and by GetTriggerCmdlet's
     /// -ExportCsv path.
     /// </summary>
     internal static void EmitDetailedTriggers(

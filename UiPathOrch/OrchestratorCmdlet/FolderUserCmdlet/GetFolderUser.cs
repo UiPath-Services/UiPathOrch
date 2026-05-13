@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchFolderUser")]
 [OutputType(typeof(Entities.UserRoles))]
-public class GetFolderUserCommand : OrchestratorPSCmdlet
+public class GetFolderUserCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(FolderUserUserNameCompleter))]

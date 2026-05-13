@@ -8,7 +8,7 @@ using UiPath.PowerShell.Completer;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "OrchCalendarDate", SupportsShouldProcess = true)]
-public class AddCalendarDateCommand : OrchestratorPSCmdlet
+public class AddCalendarDateCmdlet : OrchestratorPSCmdlet
 {
     private Dictionary<(OrchDriveInfo drive, string calendarName), (ExtendedCalendar calendar, List<DateTime> excludedDates)> _parameters = [];
 

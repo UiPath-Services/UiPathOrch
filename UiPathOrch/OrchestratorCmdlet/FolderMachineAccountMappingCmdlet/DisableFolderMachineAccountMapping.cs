@@ -4,7 +4,7 @@ using UiPath.PowerShell.Positional;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsLifecycle.Disable, "OrchFolderMachineAccountMapping", SupportsShouldProcess = true)]
-public class DisableFolderMachineAccountMappingCommand : EnableFolderMachineAccountMappingCommandBase<False>
+public class DisableFolderMachineAccountMappingCmdlet : EnableFolderMachineAccountMappingCmdletBase<False>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]

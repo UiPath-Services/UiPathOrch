@@ -11,15 +11,15 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "DuUser", SupportsShouldProcess = true)]
 [OutputType(typeof(void))]
-public class AddDuRoleToDuUserCommand : OrchestratorPSCmdlet
+public class AddDuRoleToDuUserCmdlet : OrchestratorPSCmdlet
 {
     Dictionary<((OrchDuDriveInfo drive, DuProject), string type, string name), CsvLine>? _csvLines = null;
 
-    private class CsvLine(AddDuRoleToDuUserCommand cmdlet) : CsvLineBase
+    private class CsvLine(AddDuRoleToDuUserCmdlet cmdlet) : CsvLineBase
     {
         public HashSet<string> Roles { get; set; } = new(cmdlet.Roles ?? []);
 
-        public void Update(AddDuRoleToDuUserCommand cmdl)
+        public void Update(AddDuRoleToDuUserCmdlet cmdl)
         {
             this.Roles.UnionWith(cmdl.Roles?.Where(r => !string.IsNullOrEmpty(r)) ?? []);
         }

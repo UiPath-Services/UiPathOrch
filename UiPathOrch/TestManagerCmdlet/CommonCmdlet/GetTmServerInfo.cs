@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "TmServerInfo")]
 [OutputType(typeof(Entities.TmServerInfo))]
-public class GetTmServerInfoCommand : OrchestratorPSCmdlet
+public class GetTmServerInfoCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TmDriveCompleter))]
