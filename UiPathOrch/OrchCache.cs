@@ -1575,14 +1575,24 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
             _initializer?.Invoke(entity, folderPath);
 
             var key = _getKeyFunc(entity);
-            if (key is not null)
+            if (key is null) continue;
+
+            // Atomic merge+publish. The earlier non-atomic
+            //   TryGetValue → mergeFunc → folderCache[key] = entity
+            // could lose a concurrent writer's value when a paging Fetch and a
+            // sibling AddToCache target the same (folder, key). updateValueFactory
+            // may be invoked more than once under contention — current mergeFunc
+            // callers carry cached fields onto entity and are idempotent.
+            if (_mergeFunc is null)
             {
-                // Merge processing (e.g., carrying over values from existing cache to new entities)
-                if (_mergeFunc is not null && folderCache.TryGetValue(key, out var cached))
-                {
-                    _mergeFunc(entity, cached);
-                }
                 folderCache[key] = entity;
+            }
+            else
+            {
+                folderCache.AddOrUpdate(
+                    key,
+                    addValueFactory: _ => entity,
+                    updateValueFactory: (_, cached) => { _mergeFunc(entity, cached); return entity; });
             }
         }
 
@@ -1623,13 +1633,19 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
         }
 
         var key = _getKeyFunc(entity);
-        if (key is not null)
+        if (key is null) return;
+
+        // See Fetch for the atomicity rationale.
+        if (_mergeFunc is null)
         {
-            if (_mergeFunc is not null && folderCache.TryGetValue(key, out var cached))
-            {
-                _mergeFunc(entity, cached);
-            }
             folderCache[key] = entity;
+        }
+        else
+        {
+            folderCache.AddOrUpdate(
+                key,
+                addValueFactory: _ => entity,
+                updateValueFactory: (_, cached) => { _mergeFunc(entity, cached); return entity; });
         }
     }
 
@@ -1722,14 +1738,19 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
             _initializer?.Invoke(entity, drivePath);
 
             var key = _getKeyFunc(entity);
-            if (key is not null)
+            if (key is null) continue;
+
+            // See IncrementalCachePerFolder.Fetch for the atomicity rationale.
+            if (_mergeFunc is null)
             {
-                // Merge processing (e.g., carrying over values from existing cache to new entities)
-                if (_mergeFunc is not null && _cache.TryGetValue(key, out var cached))
-                {
-                    _mergeFunc(entity, cached);
-                }
                 _cache[key] = entity;
+            }
+            else
+            {
+                _cache.AddOrUpdate(
+                    key,
+                    addValueFactory: _ => entity,
+                    updateValueFactory: (_, cached) => { _mergeFunc(entity, cached); return entity; });
             }
         }
 
@@ -1751,13 +1772,19 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
         }
 
         var key = _getKeyFunc(entity);
-        if (key is not null)
+        if (key is null) return;
+
+        // See IncrementalCachePerFolder.Fetch for the atomicity rationale.
+        if (_mergeFunc is null)
         {
-            if (_mergeFunc is not null && _cache.TryGetValue(key, out var cached))
-            {
-                _mergeFunc(entity, cached);
-            }
             _cache[key] = entity;
+        }
+        else
+        {
+            _cache.AddOrUpdate(
+                key,
+                addValueFactory: _ => entity,
+                updateValueFactory: (_, cached) => { _mergeFunc(entity, cached); return entity; });
         }
     }
 
@@ -1866,14 +1893,19 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
             _initializer?.Invoke(entity, project);
 
             var key = _getKeyFunc(entity);
-            if (key is not null)
+            if (key is null) continue;
+
+            // See IncrementalCachePerFolder.Fetch for the atomicity rationale.
+            if (_mergeFunc is null)
             {
-                // Merge processing (e.g., carrying over values from existing cache to new entities)
-                if (_mergeFunc is not null && projectCache.TryGetValue(key, out var cached))
-                {
-                    _mergeFunc(entity, cached);
-                }
                 projectCache[key] = entity;
+            }
+            else
+            {
+                projectCache.AddOrUpdate(
+                    key,
+                    addValueFactory: _ => entity,
+                    updateValueFactory: (_, cached) => { _mergeFunc(entity, cached); return entity; });
             }
         }
 
@@ -1914,13 +1946,19 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
         }
 
         var key = _getKeyFunc(entity);
-        if (key is not null)
+        if (key is null) return;
+
+        // See IncrementalCachePerFolder.Fetch for the atomicity rationale.
+        if (_mergeFunc is null)
         {
-            if (_mergeFunc is not null && projectCache.TryGetValue(key, out var cached))
-            {
-                _mergeFunc(entity, cached);
-            }
             projectCache[key] = entity;
+        }
+        else
+        {
+            projectCache.AddOrUpdate(
+                key,
+                addValueFactory: _ => entity,
+                updateValueFactory: (_, cached) => { _mergeFunc(entity, cached); return entity; });
         }
     }
 
