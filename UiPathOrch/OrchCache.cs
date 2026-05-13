@@ -459,23 +459,32 @@ public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearabl
 
         if (!_cache.TryGetValue(index, out var entity))
         {
-            try
+            // Double-check inside the lock so concurrent first-touch on the
+            // same index doesn't issue duplicate API calls — symmetric with
+            // SingleCachePerTenant / ListCachePerTenant.
+            lock (_lock)
             {
-                entity = _fetchFunc(index);
-
-                if (entity is not null && _initializer is not null)
+                if (!_cache.TryGetValue(index, out entity))
                 {
-                    string indexName = _getNameFunc(indexEntity);
-                    _initializer(entity, indexName);
+                    try
+                    {
+                        entity = _fetchFunc(index);
+
+                        if (entity is not null && _initializer is not null)
+                        {
+                            string indexName = _getNameFunc(indexEntity);
+                            _initializer(entity, indexName);
+                        }
+                        // Publish to the cache only after initialization, so concurrent readers
+                        // never observe a partially-initialized entity.
+                        _cache[index] = entity;
+                    }
+                    catch (HttpResponseException ex)
+                    {
+                        _exceptions.CacheException(index, ex);
+                        throw;
+                    }
                 }
-                // Publish to the cache only after initialization, so concurrent readers
-                // never observe a partially-initialized entity.
-                _cache[index] = entity;
-            }
-            catch (HttpResponseException ex)
-            {
-                _exceptions.CacheException(index, ex);
-                throw;
             }
         }
 
@@ -546,24 +555,32 @@ public class KeyedListCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 
         if (!_cache.TryGetValue(key, out var list))
         {
-            try
+            // Double-check inside the lock — see IndexedCachePerTenant.Get for
+            // the symmetry rationale.
+            lock (_lock)
             {
-                list = _fetchFunc(key).ToList();
-                if (_initializer is not null)
+                if (!_cache.TryGetValue(key, out list))
                 {
-                    foreach (var entity in list)
+                    try
                     {
-                        _initializer(entity, key);
+                        list = _fetchFunc(key).ToList();
+                        if (_initializer is not null)
+                        {
+                            foreach (var entity in list)
+                            {
+                                _initializer(entity, key);
+                            }
+                        }
+                        // Publish to the cache only after init, so concurrent readers never
+                        // observe a partially-initialized list.
+                        _cache[key] = list;
+                    }
+                    catch (HttpResponseException ex)
+                    {
+                        _exceptions.CacheException(key, ex);
+                        throw;
                     }
                 }
-                // Publish to the cache only after init, so concurrent readers never
-                // observe a partially-initialized list.
-                _cache[key] = list;
-            }
-            catch (HttpResponseException ex)
-            {
-                _exceptions.CacheException(key, ex);
-                throw;
             }
         }
 
@@ -660,21 +677,29 @@ public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 
         if (!_cache.TryGetValue(key, out var entity))
         {
-            try
+            // Double-check inside the lock — see IndexedCachePerTenant.Get for
+            // the symmetry rationale.
+            lock (_lock)
             {
-                entity = _fetchFunc(key);
-                if (entity is not null)
+                if (!_cache.TryGetValue(key, out entity))
                 {
-                    _initializer?.Invoke(entity, key);
+                    try
+                    {
+                        entity = _fetchFunc(key);
+                        if (entity is not null)
+                        {
+                            _initializer?.Invoke(entity, key);
+                        }
+                        // Publish only after init so concurrent readers never observe
+                        // a partially-initialized entity.
+                        _cache[key] = entity;
+                    }
+                    catch (HttpResponseException ex)
+                    {
+                        _exceptions.CacheException(key, ex);
+                        throw;
+                    }
                 }
-                // Publish only after init so concurrent readers never observe
-                // a partially-initialized entity.
-                _cache[key] = entity;
-            }
-            catch (HttpResponseException ex)
-            {
-                _exceptions.CacheException(key, ex);
-                throw;
             }
         }
 
@@ -2022,25 +2047,33 @@ public class TmListCachePerTenant1<T> : ITenantCacheClearable
 
         if (!_cache.TryGetValue(project.id!, out var cachePerFolder))
         {
-            try
+            // Double-check inside the lock — see IndexedCachePerTenant.Get for
+            // the symmetry rationale.
+            lock (_lock)
             {
-                cachePerFolder = _fetchFunc(project).ToList();
-
-                if (_initializer is not null)
+                if (!_cache.TryGetValue(project.id!, out cachePerFolder))
                 {
-                    string projectPath = project.GetPSPath();
-                    foreach (var entity in cachePerFolder)
+                    try
                     {
-                        _initializer(entity, project);
+                        cachePerFolder = _fetchFunc(project).ToList();
+
+                        if (_initializer is not null)
+                        {
+                            string projectPath = project.GetPSPath();
+                            foreach (var entity in cachePerFolder)
+                            {
+                                _initializer(entity, project);
+                            }
+                        }
+                        // Publish after init.
+                        _cache[project.id!] = cachePerFolder;
+                    }
+                    catch (HttpResponseException ex)
+                    {
+                        _exceptions.CacheException(project.id ?? "", ex);
+                        throw;
                     }
                 }
-                // Publish after init.
-                _cache[project.id!] = cachePerFolder;
-            }
-            catch (HttpResponseException ex)
-            {
-                _exceptions.CacheException(project.id ?? "", ex);
-                throw;
             }
         }
         return cachePerFolder;
@@ -2063,6 +2096,7 @@ public class TmListCachePerTenant1<T> : ITenantCacheClearable
 // getFunc: Func with no arguments that returns T
 public class TmSingleCachePerTenant0<T> : ITenantCacheClearable where T : class
 {
+    private readonly object _lock = new();
     private readonly OrchTmDriveInfo _drive;
     private volatile T? _cache = null;
     private readonly ExceptionCachePerTenant _exception = new();
@@ -2096,16 +2130,21 @@ public class TmSingleCachePerTenant0<T> : ITenantCacheClearable where T : class
         {
             try
             {
-                var temp = _getFunc();
-
-                if (_initializer is not null && temp is not null)
+                lock (_lock)
                 {
-                    _initializer(temp);
+                    if (_cache is null)
+                    {
+                        var temp = _getFunc();
+
+                        if (_initializer is not null && temp is not null)
+                        {
+                            _initializer(temp);
+                        }
+                        // Publish after init so concurrent readers never observe
+                        // a partially-initialized object.
+                        _cache = temp;
+                    }
                 }
-                // Publish after init. Note: this class has no lock so two concurrent first
-                // callers could each fetch and overwrite, but neither will publish a partially
-                // initialized object. The duplicate fetch is a separate concern.
-                _cache = temp;
             }
             catch (HttpResponseException ex)
             {
@@ -2166,22 +2205,30 @@ public class TmSingleCachePerTenant1<T> : ITenantCacheClearable
 
         if (!_cache.TryGetValue(project.id!, out var cachePerProject))
         {
-            try
+            // Double-check inside the lock — see IndexedCachePerTenant.Get for
+            // the symmetry rationale.
+            lock (_lock)
             {
-                cachePerProject = _getFunc(project);
-
-                if (_initializer is not null && cachePerProject is not null)
+                if (!_cache.TryGetValue(project.id!, out cachePerProject))
                 {
-                    string projectPath = project.GetPSPath();
-                    _initializer(cachePerProject, project);
+                    try
+                    {
+                        cachePerProject = _getFunc(project);
+
+                        if (_initializer is not null && cachePerProject is not null)
+                        {
+                            string projectPath = project.GetPSPath();
+                            _initializer(cachePerProject, project);
+                        }
+                        // Publish after init.
+                        _cache[project.id!] = cachePerProject;
+                    }
+                    catch (HttpResponseException ex)
+                    {
+                        _exceptions.CacheException(project.id ?? "", ex);
+                        throw;
+                    }
                 }
-                // Publish after init.
-                _cache[project.id!] = cachePerProject;
-            }
-            catch (HttpResponseException ex)
-            {
-                _exceptions.CacheException(project.id ?? "", ex);
-                throw;
             }
         }
         return cachePerProject;
