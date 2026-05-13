@@ -145,6 +145,10 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
     private readonly Func<T, string?>? _getterId;
     // Detailed cache of organization entities keyed by (partitionGlobalId, id)
     private static volatile ConcurrentDictionary<(string partitionGlobalId, string id), T?>? _cacheDetailed = null;
+    // Static lock for the static _cacheDetailed field. Using the instance _lock
+    // here would let different drives racing the same partition each enter
+    // their own critical section, defeating the singleton intent.
+    private static readonly object _detailedLock = new();
     private readonly Func<string, string, T?>? _getterDetailed;
     // Exception cache for detailed organization entity retrieval keyed by (partitionGlobalId, id)
     private static readonly ExceptionsCachePer<(string partitionGlobalId, string id)> _exceptionDetailed = new(); // Holds per (org, id) exceptions
@@ -226,7 +230,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
         if (_cacheDetailed is null)
         {
-            lock (_lock)
+            lock (_detailedLock)
             {
                 _cacheDetailed ??= [];
             }
@@ -234,7 +238,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
         if (!_cacheDetailed.TryGetValue((partitionGlobalId, id), out var cachePerOrgDetailed))
         {
-            lock (_lock)
+            lock (_detailedLock)
             {
                 if (!_cacheDetailed.TryGetValue((partitionGlobalId, id), out cachePerOrgDetailed))
                 {
@@ -245,7 +249,12 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
                     }
                     catch (HttpResponseException ex)
                     {
-                        _exception.CacheException(partitionGlobalId, ex);
+                        // Detailed-fetch exceptions belong in the per-(org, id)
+                        // detailed cache; the earlier _exception.CacheException
+                        // call wrote to the org-level cache, where the matching
+                        // ThrowCachedExceptionIfAny at the top of this method
+                        // would never find them.
+                        _exceptionDetailed.CacheException((partitionGlobalId, id), ex);
                         throw;
                     }
                 }
