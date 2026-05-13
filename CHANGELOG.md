@@ -6,6 +6,131 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-05-13
+
+Two themes: **Azure AD B2B guest support** across the user/folder-user
+cmdlets, and **cache-class hardening** — race conditions and thread-safety
+issues uncovered by a methodical review of the cache classes. Plus a new
+`Get-OrchProductVersion` cmdlet, an internal `ChainedThreadPool` to bound
+the cap on 2-phase fetchers, and near-instant Ctrl+C across more cmdlets.
+
+### Added
+
+- **`Get-OrchProductVersion`** — hits `/api/Status/Version` to surface the
+  Orchestrator product version (distinct from the API version surfaced by
+  `Get-OrchSetting`). Useful for scripts that need to gate behaviour on
+  Orchestrator version rather than API contract.
+
+### Fixed
+
+- **Azure AD B2B guest users can now be addressed by their canonical
+  EmailAddress.** B2B guests have a mangled tenant-form `UserName`
+  (`foo_bar.com#ext#@tenant.onmicrosoft.com`) that differs from their
+  EmailAddress (`foo@bar.com`). Previously many cmdlets only matched
+  `-UserName` against the mangled tenant form, so a caller who passed the
+  EmailAddress they actually remember got "no match" — even though
+  `Add-OrchFolderUser` had always accepted EmailAddress via its Identity
+  Server lookup, breaking the add/remove symmetry. Now `-UserName`
+  matches against UserName OR EmailAddress on:
+  `Get-OrchUser`, `Get-OrchUserDetail`, `Remove-OrchUser`,
+  `Set-OrchAsset`, `Set-OrchSecretAsset`, `Set-OrchCredentialAsset`,
+  `Get-OrchFolderUser`, `Add-OrchRoleToFolderUser`,
+  `Remove-OrchRoleFromFolderUser`, `Remove-OrchFolderUser`,
+  `Move-OrchFolderUser`, `Copy-OrchFolderUser`, `Remove-OrchRoleFromUser`,
+  `Remove-OrchAssetUserValue`. `Copy-Item -Recurse` (folder-user copy
+  path) covered too.
+
+- **`Get-OrchQueueItem` no longer fails on strict-OData Orchestrators.**
+  Three related issues: the default `-OrderBy DeferDate` was rejected
+  ("The property 'DeferDate' cannot be used in the `$orderby`"), filter
+  values had unencoded spaces, and a non-`$`-prefixed legacy
+  `&orderby=Id desc` was always appended alongside the canonical
+  `$orderby`. Default is now `Id`, filter values are percent-encoded,
+  and the duplicate clause is dropped.
+
+- **`Remove-OrchAssetUserValue` matches by UserId instead of by
+  user-value `UserName`.** UserValue entries store the tenant-form
+  UserName for B2B guests, which doesn't match the EmailAddress form a
+  caller would naturally type. The cmdlet now resolves the caller's
+  `-UserName` patterns to a set of tenant User IDs (matching either
+  field) and filters UserValues by the stable UserId. Wildcard
+  semantics preserved.
+
+- **`ListCachePerOrganization.Get(id)` cached the detailed-fetch
+  exception in the wrong slot.** The `try` block called
+  `_exception.CacheException(partitionGlobalId, ex)` (the org-level
+  cache) but the matching `ThrowCachedExceptionIfAny` at the top of the
+  method read `_exceptionDetailed` (the per-`(org, id)` cache). Cached
+  failures were never re-thrown — every retry re-issued the failing API
+  call. Now routed to `_exceptionDetailed` with the composite
+  `(partitionGlobalId, id)` key.
+
+### Changed
+
+- **Near-instant Ctrl+C across more cmdlets.** `Get-OrchUserDetail`,
+  `Get-OrchLibraryVersion`, `Get-OrchTestDataQueueItem`,
+  `Get-Orch{Asset,Bucket,Queue}Link`, and `Get-OrchPackageVersion` were
+  migrated to a new internal `ChainedThreadPool` plumbing that bounds
+  the concurrency cap on 2-phase fetchers (previously each phase opened
+  its own `OrchThreadPool` and stacked to cap=4×4=16 against a single
+  Orchestrator). The consumer also now bails immediately on Ctrl+C
+  instead of waiting for the next iteration boundary.
+
+- **`Tests/SelfContained.Tests.ps1` is tenant-state independent.** The
+  suite no longer assumes specific user accounts or folders on the
+  tenant, picks an alternate `DirectoryUser` dynamically, and creates
+  its own smoke folder. Added the `B2BRegression` Describe (`BF1`-`BF7`)
+  covering the EmailAddress-form matching on the FolderUser / User
+  cmdlets.
+
+### Internal
+
+- **Cache classes — race-condition fixes.**
+  - `IndexedListCachePerFolder`: the inner per-folder dict was plain
+    `Dictionary<,>` while the outer was `ConcurrentDictionary`. Cmdlets
+    like `Get-OrchTestDataQueueItem` (`ChainedThreadPool` Phase2 over
+    queues in one folder) and `Get-OrchProcessRequirement`
+    (`OrchThreadPool` over releases in one folder) hit the inner from
+    multiple threads sharing the same folderId, risking
+    `InvalidOperationException` on rehash and silent stale lookups. Inner
+    switched to `ConcurrentDictionary`; first-touch uses `GetOrAdd`.
+  - `IncrementalCachePerFolder` / `PerTenant` / `PerProject`: the
+    `Fetch` / `AddToCache` "TryGetValue → mergeFunc → indexer-assign"
+    sequence was not atomic. Switched all 6 callsites to
+    `AddOrUpdate`, so merge + publish can't lose a concurrent writer.
+  - Per-Tenant `IndexedCachePerTenant`, `KeyedSingleCachePerTenant`,
+    `KeyedListCachePerTenant`, and the three `Tm*` siblings now use
+    the same TryGet → lock → TryGet → fetch → publish pattern as
+    `SingleCachePerTenant` / `ListCachePerTenant`. Concurrent Get on
+    the same key no longer issues duplicate API calls.
+    `TmSingleCachePerTenant0` gained its missing `_lock` field.
+  - Per-Organization cache classes (`Single`, `List`, `KeyedSingle`,
+    `KeyedList`) now serialize fetches per-partition rather than
+    per-instance (`Single`/`List`, which allowed duplicate fetches
+    across drives in the same org) or per-global (`KeyedSingle`/
+    `KeyedList`, which serialized fetches across unrelated orgs).
+    A static `ConcurrentDictionary<string, object>` of partition-keyed
+    lock objects gives same-org → same-lock → serialized, different-org
+    → different-locks → parallel.
+  - `IndexedListCachePerFolder.ClearCache(folderId)` /
+    `ClearCache(folder, id)` no longer wipe every cached exception in
+    the class — they scope the clear to the folder / `(folder, id)`
+    actually being invalidated.
+- **OrchThreadPool**: dispose race tamed, `Impl` class hidden from
+  callers, factory functions no longer marshal through `SyncContext.Post`.
+- 5 raw dictionaries on `OrchDriveInfo` migrated to typed cache classes:
+  `_dicQueueItems`, `_dicTestCaseExecutions`, `_dicTestSetExecutions`,
+  `_dicJobsHavingExecutionMedia` → `IncrementalCachePerFolder`;
+  `_dicTestCaseAssertions` → `KeyedListCachePerFolder`.
+- `OrchDriveInfo` drops the `GetUsers()` / `GetUser(user)`
+  backwards-compat shims; callers now use `drive.Users.Get()` /
+  `drive.UsersDetailed.Get(id)` directly.
+- README / `psd1` clarify UiPathOrch is open-source and not part of the
+  product. (No functional change.)
+- `design/per-organization-cache-path-isolation.md` captures the planned
+  PSObject-NoteProperty refactor for moving the drive-local `Path` field
+  off shared org-scoped entities — deferred to the next release.
+
 ## [1.2.2] - 2026-05-10
 
 Patch release: two fixes for `Add-OrchUser` and `Copy-Item`, plus
