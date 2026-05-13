@@ -396,9 +396,15 @@ internal static class OrchCollectionExtensions
     /// can carry its own drive context without mutating the shared cached
     /// instance. <c>$x[0].BaseObject</c> stays the singleton; <c>$x[0].Path</c>
     /// resolves through the note property and is independent per emit.
+    ///
+    /// Returns <c>null</c> when the entity is null — convenient for collection
+    /// callers like <c>seq.Select(e =&gt; e.WithPath(...))</c> where the filter
+    /// chain may leave nulls in place (PowerShell's <c>WriteObject(null, true)</c>
+    /// silently drops them).
     /// </summary>
-    public static PSObject WithPath<T>(this T entity, string path) where T : notnull
+    public static PSObject? WithPath<T>(this T? entity, string path) where T : class
     {
+        if (entity is null) return null;
         var pso = new PSObject(entity);
         pso.Properties.Add(new PSNoteProperty("Path", path));
         return pso;

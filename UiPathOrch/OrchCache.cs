@@ -214,17 +214,22 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
         }
         foreach (var t in cachePerOrg.Where(t => t is not null))
         {
-            // No cache-hit re-init; the initializer ran once at publish time.
-            // Return the detailed cache entry when present (initializer was
-            // also run inside Get(id)'s fetch path).
-            if (_cacheDetailed is not null && _cacheDetailed.TryGetValue((partitionGlobalId, _getterId!(t)!), out var detailedEntity))
+            // Prefer the detailed cache entry when one exists (initializer was
+            // also run inside Get(id)'s fetch path). Detail lookup requires a
+            // getterId — entities like PmLicenses that don't support detail
+            // fetch leave it null and just yield the list entry directly.
+            if (_getterId is not null && !_cacheDetailed.IsEmpty)
             {
-                if (detailedEntity is not null) yield return detailedEntity;
+                var id = _getterId(t);
+                if (id is not null
+                    && _cacheDetailed.TryGetValue((partitionGlobalId, id), out var detailedEntity)
+                    && detailedEntity is not null)
+                {
+                    yield return detailedEntity;
+                    continue;
+                }
             }
-            else
-            {
-                yield return t;
-            }
+            yield return t;
         }
     }
 
