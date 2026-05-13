@@ -44,7 +44,7 @@ public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
                     .ExcludeByWildcards(r => r?.name!, wpName)
                     .OrderBy(r => r?.name))
                 {
-                    string tiphelp = resource.GetPSPath();
+                    string tiphelp = resource.GetPSPath(result.Source.NameColonSeparator);
                     yield return new CompletionResult(PathTools.EscapePSText(resource?.name), resource?.name, CompletionResultType.Text, tiphelp);
                 }
             }
@@ -63,7 +63,8 @@ public class GetPmExternalApiResourceCommand : OrchestratorPSCmdlet
                 var resources = drive.PmExternalApiResources.Get();
                 WriteObject(resources
                     .FilterByWildcards(a => a!.name!, wpName)
-                    .OrderBy(a => a!.name),
+                    .OrderBy(a => a!.name)
+                    .Select(a => a!.WithPath(drive.NameColonSeparator)),
                     true);
             }
             catch (Exception ex)

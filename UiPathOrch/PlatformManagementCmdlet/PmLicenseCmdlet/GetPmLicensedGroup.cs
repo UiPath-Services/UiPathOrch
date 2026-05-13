@@ -54,12 +54,12 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
 
     // This CSV is intended to be imported by Remove-OrchPmAllocationFromPmUserLicenseGroup,
     // so this format is fine.
-    private static void WriteCsvContent(StreamWriter writer, IEnumerable<NuLicensedGroupMember> output)
+    private static void WriteCsvContent(StreamWriter writer, string drivePath, IEnumerable<NuLicensedGroupMember> output)
     {
         foreach (var member in output)
         {
             string[] line = [
-                EscapeCsvValue(member.Path, true),
+                EscapeCsvValue(drivePath, true),
                 EscapeCsvValue(member.GroupName, true),
                 EscapeCsvValue(member.name),
                 EscapeCsvValue(member.displayName),
@@ -102,7 +102,7 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
                         .ExcludeByWildcards(u => u?.name!, wpUserName)
                         .OrderBy(u => u?.name))
                     {
-                        string tiphelp = TipHelp(user);
+                        string tiphelp = TipHelp(drive, user);
                         yield return new CompletionResult(PathTools.EscapePSText(user?.name), user?.name, CompletionResultType.Text, tiphelp);
                     }
                 }
@@ -151,11 +151,11 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
 
                         if (writer is null)
                         {
-                            WriteObject(targetEntities, true);
+                            WriteObject(targetEntities.Select(m => m.WithPath(drive.NameColonSeparator)), true);
                         }
                         else
                         {
-                            WriteCsvContent(writer, targetEntities);
+                            WriteCsvContent(writer, drive.NameColonSeparator, targetEntities);
                         }
                     }
                     catch (OperationCanceledException)
@@ -164,7 +164,7 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(group.GetPSPath(), ex), "GetPmLicensedGroupError", ErrorCategory.InvalidOperation, group));
+                        WriteError(new ErrorRecord(new OrchException(group.GetPSPath(drive.NameColonSeparator), ex), "GetPmLicensedGroupError", ErrorCategory.InvalidOperation, group));
                     }
                 }
             }
@@ -174,7 +174,7 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
             //}
             else
             {
-                WriteObject(groups, true);
+                WriteObject(groups.Select(g => g.WithPath(drive.NameColonSeparator)), true);
             }
         }
 

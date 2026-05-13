@@ -59,7 +59,7 @@ public class RemoveAllocationFromUserLicenseGroup : OrchestratorPSCmdlet
                         .ExcludeByWildcards(u => u?.name!, wpUserName)
                         .OrderBy(u => u?.name))
                     {
-                        string tiphelp = TipHelp(user);
+                        string tiphelp = TipHelp(drive, user);
                         yield return new CompletionResult(PathTools.EscapePSText(user?.name), user?.name, CompletionResultType.Text, tiphelp);
                     }
                 }
@@ -110,7 +110,7 @@ public class RemoveAllocationFromUserLicenseGroup : OrchestratorPSCmdlet
                     {
                         target += $" ({user.displayName})";
                     }
-                    target += $" from {group.GetPSPath()}";
+                    target += $" from {group.GetPSPath(drive.NameColonSeparator)}";
                     if (ShouldProcess(target, "Remove Allocation from NamedUserLicenseGroup"))
                     {
                         try

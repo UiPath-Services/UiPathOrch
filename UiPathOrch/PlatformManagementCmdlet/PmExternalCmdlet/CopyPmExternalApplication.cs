@@ -37,7 +37,7 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
             .FilterByWildcards(app => app?.name, wpName)
             .OrderBy(app => app.name).WithCancellation(cancelHandler.Token))
         {
-            string target = srcApp.GetPSPath();
+            string target = srcApp.GetPSPath(srcDrive.NameColonSeparator);
             foreach (var dstDrive in dstDrives.WithCancellation(cancelHandler.Token))
             {
                 var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
@@ -54,7 +54,7 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                         var dstApp = dstApps.FirstOrDefault(src => string.Compare(src.name, srcApp.name, StringComparison.OrdinalIgnoreCase) == 0);
                         if (dstApp is not null)
                         {
-                            WriteWarning($"\"{srcApp.GetPSPath()}\": An external application named '{srcApp.name}' already exists in \"{dstDrive.NameColonSeparator}\".");
+                            WriteWarning($"\"{srcApp.GetPSPath(srcDrive.NameColonSeparator)}\": An external application named '{srcApp.name}' already exists in \"{dstDrive.NameColonSeparator}\".");
                             continue;
                         }
                         #endregion
@@ -82,8 +82,7 @@ public class CopyPmExternalApplicationCommand : OrchestratorPSCmdlet
                             continue;
                         }
 
-                        newApp.Path = dstDrive.NameColonSeparator;
-                        WriteObject(newApp);
+                        WriteObject(newApp.WithPath(dstDrive.NameColonSeparator));
                         dstDrive.PmExternalClients.ClearCache();
 
                         // Non-confidential apps cannot belong to groups, so no further processing is needed

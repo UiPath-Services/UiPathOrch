@@ -98,7 +98,7 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
                         src.bypassBasicAuthRestriction != dst.bypassBasicAuthRestriction ||
                         !string.IsNullOrEmpty(Password))
                     {
-                        if (ShouldProcess(user.GetPSPath(), "Update PmUser"))
+                        if (ShouldProcess(user.GetPSPath(drive.NameColonSeparator), "Update PmUser"))
                         {
                             try
                             {
@@ -108,7 +108,7 @@ public class UpdatePmUserCommand : OrchestratorPSCmdlet
                             }
                             catch (Exception ex)
                             {
-                                WriteError(new ErrorRecord(new OrchException(user.GetPSPath(), ex), "UpdatePmUserError", ErrorCategory.InvalidOperation, user));
+                                WriteError(new ErrorRecord(new OrchException(user.GetPSPath(drive.NameColonSeparator), ex), "UpdatePmUserError", ErrorCategory.InvalidOperation, user));
                             }
                         }
                     }

@@ -138,7 +138,7 @@ public class GetUserLicenseUser : OrchestratorPSCmdlet
                     .FilterByWildcards(u => u?.email, wpEmail)
                     .OrderBy(u => u?.name);
 
-                WriteObject(targetEntities, true);
+                WriteObject(targetEntities.Select(e => e.WithPath(drive.NameColonSeparator)), true);
             }
             catch (Exception ex)
             {

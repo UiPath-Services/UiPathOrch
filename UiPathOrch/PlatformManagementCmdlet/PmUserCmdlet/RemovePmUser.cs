@@ -57,7 +57,7 @@ public class RemovePmUserCommand : OrchestratorPSCmdlet
                 {
                     if (user.id == currentUser?.Key) continue;
 
-                    string target = user.GetPSPath();
+                    string target = user.GetPSPath(drive.NameColonSeparator);
                     if (ShouldProcess(target, "Remove PmUser"))
                     {
                         try

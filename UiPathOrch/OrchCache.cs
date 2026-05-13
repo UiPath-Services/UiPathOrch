@@ -161,9 +161,8 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
     public ListCachePerOrganization(
         OrchDriveInfo drive,
-        //ConcurrentDictionary<string, List<T>> cache,
         Func<string, IEnumerable<T>> getter,
-        Action<T>? initializer,
+        Action<T>? initializer = null,
         Func<T, string?>? getterId = null,
         Func<string, string, T?>? getterDetailed = null)
     {
@@ -193,6 +192,16 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
                     try
                     {
                         cachePerOrg = _getter(partitionGlobalId).ToList();
+                        // Run the initializer once, before publishing — it now
+                        // only handles entity-only derived state (drive-local
+                        // Path is added by the cmdlet's PSObject wrapper).
+                        if (_initializer is not null)
+                        {
+                            foreach (var t in cachePerOrg)
+                            {
+                                if (t is not null) _initializer(t);
+                            }
+                        }
                         _cache[partitionGlobalId] = cachePerOrg;
                     }
                     catch (HttpResponseException ex)
@@ -205,21 +214,15 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
         }
         foreach (var t in cachePerOrg.Where(t => t is not null))
         {
-            // Return the detailed cache if it exists
+            // No cache-hit re-init; the initializer ran once at publish time.
+            // Return the detailed cache entry when present (initializer was
+            // also run inside Get(id)'s fetch path).
             if (_cacheDetailed is not null && _cacheDetailed.TryGetValue((partitionGlobalId, _getterId!(t)!), out var detailedEntity))
             {
-                if (_initializer is not null && detailedEntity is not null)
-                {
-                    _initializer(detailedEntity);
-                    yield return detailedEntity;
-                }
+                if (detailedEntity is not null) yield return detailedEntity;
             }
             else
             {
-                if (_initializer is not null)
-                {
-                    _initializer(t);
-                }
                 yield return t;
             }
         }
@@ -245,6 +248,13 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
                     try
                     {
                         cachePerOrgDetailed = _getterDetailed(partitionGlobalId, id);
+                        // Run initializer once before publishing — entity-only
+                        // derived state. Drive-local Path is added by the
+                        // cmdlet's PSObject wrapper.
+                        if (_initializer is not null && cachePerOrgDetailed is not null)
+                        {
+                            _initializer(cachePerOrgDetailed);
+                        }
                         _cacheDetailed[(partitionGlobalId, id)] = cachePerOrgDetailed;
                     }
                     catch (HttpResponseException ex)
@@ -255,10 +265,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
                 }
             }
         }
-        if (_initializer is not null && cachePerOrgDetailed is not null)
-        {
-            _initializer(cachePerOrgDetailed);
-        }
+        // No cache-hit re-init.
 
         return cachePerOrgDetailed;
     }

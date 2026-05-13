@@ -33,7 +33,7 @@ public class RemovePmRobotAccountCommand : OrchestratorPSCmdlet
                     .FilterByWildcards(r => r!.name!, wpName)
                     .OrderBy(r => r!.name).WithCancellation(cancelHandler.Token))
                 {
-                    string target = robot.GetPSPath();
+                    string target = robot.GetPSPath(drive.NameColonSeparator);
                     if (ShouldProcess(target, "Remove PmRobotAccount"))
                     {
                         try

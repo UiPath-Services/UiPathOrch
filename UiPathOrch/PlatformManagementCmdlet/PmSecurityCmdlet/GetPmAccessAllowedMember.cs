@@ -45,7 +45,7 @@ public class GetPmAccessAllowedMemberCmdlet : OrchestratorPSCmdlet
                     .ExcludeByWildcards(m => m?.name!, wpName)
                     .OrderBy(m => m?.name))
                 {
-                    string tooltip = member.GetPSPath();
+                    string tooltip = member.GetPSPath(result.Source.NameColonSeparator);
                     if (!string.IsNullOrEmpty(member.displayName))
                         tooltip += $" ({member.displayName})";
                     yield return new CompletionResult(PathTools.EscapePSText(member?.name), member?.name, CompletionResultType.Text, tooltip);
@@ -70,7 +70,7 @@ public class GetPmAccessAllowedMemberCmdlet : OrchestratorPSCmdlet
                     .FilterByWildcards(u => u?.name, wpName)
                     .OrderBy(u => u.name);
 
-                WriteObject(targetUsers, true);
+                WriteObject(targetUsers.Select(u => u.WithPath(drive.NameColonSeparator)), true);
             }
             catch (Exception ex)
             {

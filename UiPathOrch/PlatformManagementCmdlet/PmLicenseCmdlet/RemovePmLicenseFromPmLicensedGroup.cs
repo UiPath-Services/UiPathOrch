@@ -125,7 +125,7 @@ public class RemoveLicenseFromLicenseGroup : OrchestratorPSCmdlet
             // Skip processing if there are no licenses to remove
             if (existingSet.Count == initialCount) continue;
 
-            string target = group.GetPSPath();
+            string target = group.GetPSPath(drive.NameColonSeparator);
             if (ShouldProcess(target, "Remove License from PmLicenseGroup"))
             {
                 try

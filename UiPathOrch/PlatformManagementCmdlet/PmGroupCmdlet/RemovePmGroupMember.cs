@@ -108,7 +108,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
                     if (!_visitedUserPatterns.Add((drive, group!, Type![0], UserName![0])))
                         continue;
 
-                    WriteWarning($"No match found for UserName '{UserName![0]}' ({Type![0]}) in GroupName '{group?.GetPSPath()}'.");
+                    WriteWarning($"No match found for UserName '{UserName![0]}' ({Type![0]}) in GroupName '{group?.GetPSPath(drive.NameColonSeparator)}'.");
 
                     continue;
                 }
@@ -129,7 +129,7 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
                         continue;
                     }
 
-                    string target = $"{member.TipHelp()} from {group?.GetPSPath()}";
+                    string target = $"{member.TipHelp()} from {group?.GetPSPath(drive.NameColonSeparator)}";
                     if (ShouldProcess(target, $"Remove Member From Group"))
                     {
                         _parameterSets ??= [];
@@ -166,12 +166,12 @@ public class RemovePmGroupMemberCommand : OrchestratorPSCmdlet
                 var updatedGroup = drive.RemoveMemberFromPmGroup(group.id, group.name, toBeRemoved?.Select(m => m.identifier));
                 if (updatedGroup is not null)
                 {
-                    WriteObject(updatedGroup);
+                    WriteObject(updatedGroup.WithPath(drive.NameColonSeparator));
                 }
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(new OrchException(group!.GetPSPath(), ex), "PutPmGroupError", ErrorCategory.InvalidOperation, group));
+                WriteError(new ErrorRecord(new OrchException(group!.GetPSPath(drive.NameColonSeparator), ex), "PutPmGroupError", ErrorCategory.InvalidOperation, group));
             }
         }
     }

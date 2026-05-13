@@ -3489,8 +3489,9 @@ public class UserProfile
 // RobotAccountDto
 public class PmRobotAccount
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
+    // Path was removed; see LicenseInventory for the rationale (shared
+    // org-cache singleton; drive-local Path comes through a PSObject
+    // NoteProperty at WriteObject time).
     public string? id { get; set; }
     public string? name { get; set; }
     public string? displayName { get; set; }
@@ -3577,8 +3578,7 @@ public class BulkCreateResponse
 // UserDto
 public class PmUser
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
+    // Path removed; see LicenseInventory.
     public string? id { get; set; }
     public string? userName { get; set; }
     public string? email { get; set; }
@@ -3652,8 +3652,7 @@ public class UpdatePmUserSettingPayload // added by UiPathOrch
 // added by UiPathOrch
 public class NuLicensedGroup // The proper class name is unknown.
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
+    // Path removed; see LicenseInventory.
     public string? id { get; set; } // Guid
     public string? name { get; set; }
     public string[]? userBundleLicenses { get; set; }
@@ -3666,9 +3665,7 @@ public class NuLicensedGroup // The proper class name is unknown.
 // added by UiPathOrch
 public class NuLicensedUser // The proper class name is unknown.
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
-
+    // Path removed; see LicenseInventory.
     public string? id { get; set; }
     public string? email { get; set; }
     public string? name { get; set; }
@@ -3695,8 +3692,7 @@ public class NuLicensedGroupMember : NuLicensedUser
 // added by UiPathOrch
 public class AvailableUserBundle // The proper class name is unknown.
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
+    // Path removed; see LicenseInventory.
     public string? code { get; set; }
     public string? name { get; set; } // added by UiPathOrch
     public int? allocated { get; set; }
@@ -3752,9 +3748,7 @@ public class UpdateLicensedGroupResponse // The proper class name is unknown.
 // Endpoint: GET /api/licensing/tenantAllocations?accountGlobalId={org}
 public class TenantAllocation
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
-
+    // Path removed; see LicenseInventory.
     public TenantAllocationTenant? tenant { get; set; }
     public string[]? services { get; set; }
     public int? unattendedRobot { get; set; }
@@ -3966,8 +3960,7 @@ public class MlKey
 // GroupDto
 public class PmGroup
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
+    // Path removed; see LicenseInventory.
     public string? id { get; set; } // Guid
     public string? name { get; set; }
     public string? displayName { get; set; }
@@ -4073,8 +4066,7 @@ public class ExternalScope
 // ExternalResourceDto
 public class ExternalResource
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
+    // Path removed; see LicenseInventory.
     public string? name { get; set; }
     public string? displayName { get; set; }
     public string? description { get; set; }
@@ -4096,8 +4088,7 @@ public class Secret
 // ExternalClientDto
 public class ExternalClient
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
+    // Path removed; see LicenseInventory.
     public string? name { get; set; }
     public string? id { get; set; }
     public string? secret { get; set; }
@@ -4225,9 +4216,7 @@ public class DirectoryScope
 // private: return value from PartitionAccessPolicy
 public class AccessAllowedMember
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
-
+    // Path removed; see LicenseInventory.
     public string? objectType { get; set; }
     public string? externalId { get; set; } // string?
     public string? source { get; set; }

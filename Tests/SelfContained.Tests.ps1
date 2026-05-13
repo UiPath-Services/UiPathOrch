@@ -3179,4 +3179,27 @@ Describe 'H1 Phase 1: SingleCachePerOrganization Path via NoteProperty' -Tag 'H1
         $inv.PSObject.BaseObject.GetType().GetProperty('Path') | Should -BeNullOrEmpty `
             -Because 'The entity type itself no longer carries a Path property'
     }
+
+    It 'BF9: Get-PmUser list output carries Path as a PSObject NoteProperty (ListCachePerOrganization)' {
+        # Phase 2: ListCachePerOrganization-backed entities (PmUser et al.)
+        # follow the same model as Phase 1. Verify on PmUser; the other 9
+        # entities share the cache class and the WithPath wrap pattern.
+        $users = $null
+        try {
+            $users = Get-PmUser -Path "${script:Drive}:" -ErrorAction Stop | Select-Object -First 1
+        } catch {
+            Set-ItResult -Skipped -Because "Get-PmUser unavailable on this drive: $($_.Exception.Message)"
+            return
+        }
+        if (-not $users) {
+            Set-ItResult -Skipped -Because 'Get-PmUser returned no users on this drive.'
+            return
+        }
+        $users.Path | Should -Be "${script:Drive}:\" `
+            -Because 'PmUser NoteProperty should carry the drive-local Path'
+        $users.PSObject.Properties['Path'].MemberType | Should -Be 'NoteProperty' `
+            -Because 'Path should be a NoteProperty on the wrapper, not a field on PmUser'
+        $users.PSObject.BaseObject.GetType().GetProperty('Path') | Should -BeNullOrEmpty `
+            -Because 'PmUser itself must no longer carry a Path property'
+    }
 }

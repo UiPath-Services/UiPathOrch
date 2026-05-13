@@ -50,7 +50,7 @@ public class CopyPmUserCommand : OrchestratorPSCmdlet
 
             foreach (var srcUser in srcUsers)
             {
-                if (ShouldProcess(srcUser.GetPSPath(), "Copy PmUser"))
+                if (ShouldProcess(srcUser.GetPSPath(srcDrive.NameColonSeparator), "Copy PmUser"))
                 {
                     List<string> groupIds = srcUser.groupIDs?.Order().ToList() ?? [];
                     if (!targetUsers.TryGetValue(groupIds, out var users))

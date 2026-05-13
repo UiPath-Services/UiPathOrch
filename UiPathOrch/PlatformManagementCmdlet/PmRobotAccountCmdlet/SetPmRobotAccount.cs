@@ -101,7 +101,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
                     .ExcludeByWildcards(r => r!.name!, wpName)
                     .OrderBy(r => r!.name))
                 {
-                    string tiphelp = robotAccount.GetPSPath();
+                    string tiphelp = robotAccount.GetPSPath(result.Source.NameColonSeparator);
                     yield return new CompletionResult(PathTools.EscapePSText(robotAccount.name), robotAccount.name, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
@@ -138,7 +138,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
                     .ExcludeByWildcards(e => e?.name!, wpGroupName)
                     .OrderBy(e => e?.name))
                 {
-                    string tiphelp = group!.GetPSPath();
+                    string tiphelp = group!.GetPSPath(result.Source.NameColonSeparator);
                     yield return new CompletionResult(PathTools.EscapePSText(group!.name), group.name, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
@@ -250,7 +250,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
                             var newRobot = drive.CreatePmRobot(cmd);
                             if (newRobot is not null)
                             {
-                                WriteObject(newRobot);
+                                WriteObject(newRobot.WithPath(drive.NameColonSeparator));
                             }
                         }
                         catch (Exception ex)
@@ -300,8 +300,7 @@ public class SetPmRobotAccountCommand : OrchestratorPSCmdlet
 
                                 if (updatedRobot is not null)
                                 {
-                                    updatedRobot.Path = drive.NameColonSeparator;
-                                    WriteObject(updatedRobot);
+                                    WriteObject(updatedRobot.WithPath(drive.NameColonSeparator));
                                 }
                             }
                             catch (Exception ex)

@@ -36,7 +36,7 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
                     .FilterByWildcards(g => g?.name!, wpGroupName)
                     .OrderBy(g => g?.name).WithCancellation(cancelHandler.Token))
                 {
-                    if (ShouldProcess(group!.GetPSPath(), "Remove PmGroup"))
+                    if (ShouldProcess(group!.GetPSPath(drive.NameColonSeparator), "Remove PmGroup"))
                     {
                         try
                         {
@@ -47,7 +47,7 @@ public class RemovePmGroupCommand : OrchestratorPSCmdlet
                         }
                         catch (Exception ex)
                         {
-                            WriteError(new ErrorRecord(new OrchException(group!.GetPSPath(), ex), "RemovePmGroupError", ErrorCategory.InvalidOperation, group));
+                            WriteError(new ErrorRecord(new OrchException(group!.GetPSPath(drive.NameColonSeparator), ex), "RemovePmGroupError", ErrorCategory.InvalidOperation, group));
                         }
                     }
                 }

@@ -108,7 +108,7 @@ public class NewUserMappingCsvCommand : OrchestratorPSCmdlet
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(new OrchException(group.GetPSPath(), ex), "GetPmGroupError", ErrorCategory.InvalidOperation, group));
+                WriteError(new ErrorRecord(new OrchException(group.GetPSPath(srcDrive.NameColonSeparator), ex), "GetPmGroupError", ErrorCategory.InvalidOperation, group));
             }
         }
     }

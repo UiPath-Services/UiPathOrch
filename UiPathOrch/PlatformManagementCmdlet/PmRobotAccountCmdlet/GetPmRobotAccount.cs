@@ -38,14 +38,14 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
         ["Path", "UserName", "GroupName0", "GroupName1", "GroupName2", "GroupName3", "GroupName4", "GroupName5", "GroupName6", "GroupName7", "GroupName8", "GroupName9"];
 
     //private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmRobotAccount> robotAccounts, ConcurrentDictionary<string, PmGroup> groups)
-    private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmRobotAccount> robotAccounts, Dictionary<string, PmGroup> groups)
+    private static void WriteCsvContent(StreamWriter writer, string drivePath, IEnumerable<PmRobotAccount> robotAccounts, Dictionary<string, PmGroup> groups)
     {
         // Write data rows
         foreach (var robotAccount in robotAccounts
             .OrderBy(ra => ra.name))
         {
             var line = new StringBuilder();
-            line.Append($"{EscapeCsvValue(robotAccount.Path, true)},");
+            line.Append($"{EscapeCsvValue(drivePath, true)},");
             line.Append($"{EscapeCsvValue(robotAccount.name, true)}");
 
             foreach (var groupId in robotAccount.groupIds ?? [])
@@ -84,7 +84,7 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
 
                 if (writer is not null)
                 {
-                    WriteCsvContent(writer, robotAccounts, dicGroups);
+                    WriteCsvContent(writer, drive.NameColonSeparator, robotAccounts, dicGroups);
                 }
                 else if (ExpandGroup.IsPresent)
                 {
@@ -103,9 +103,9 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
                                 {
                                     var r = new PmRobotAccountExpanded()
                                     {
-                                        Path = robot.Path,
+                                        Path = drive.NameColonSeparator,
                                         RobotAccount = robot!.name,
-                                        PathRobotAccount = robot.GetPSPath(),
+                                        PathRobotAccount = robot.GetPSPath(drive.NameColonSeparator),
                                         groupId = groupId,
                                         groupName = groupName
                                     };
@@ -117,7 +117,7 @@ public class GetPmRobotAccountCommand : OrchestratorPSCmdlet
                 }
                 else
                 {
-                    WriteObject(robotAccounts, true);
+                    WriteObject(robotAccounts.Select(r => r!.WithPath(drive.NameColonSeparator)), true);
                 }
             }
             catch (Exception ex)

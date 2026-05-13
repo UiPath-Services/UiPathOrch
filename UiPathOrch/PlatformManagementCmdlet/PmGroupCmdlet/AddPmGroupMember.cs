@@ -233,10 +233,10 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                             {
                                 if (group.members?.Any(m => m.identifier == robotEntry.identifier) ?? false)
                                 {
-                                    WriteWarning($"\"{group.GetPSPath()}\" already includes {type} \"{robotEntry.identityName}\".");
+                                    WriteWarning($"\"{group.GetPSPath(drive.NameColonSeparator)}\" already includes {type} \"{robotEntry.identityName}\".");
                                     continue;
                                 }
-                                if (ShouldProcess($"Item: {name} Destination: {group.GetPSPath()}", $"Add {type} to PmGroup"))
+                                if (ShouldProcess($"Item: {name} Destination: {group.GetPSPath(drive.NameColonSeparator)}", $"Add {type} to PmGroup"))
                                 {
                                     identifiers.Add(robotEntry.identifier!);
                                 }
@@ -258,10 +258,10 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                     {
                         if (group.members?.Any(m => m.identifier == entry.identifier) ?? false)
                         {
-                            WriteWarning($"\"{group.GetPSPath()}\" already includes {type} \"{entry.name}\".");
+                            WriteWarning($"\"{group.GetPSPath(drive.NameColonSeparator)}\" already includes {type} \"{entry.name}\".");
                             continue;
                         }
-                        if (ShouldProcess($"Item: {name} Destination: {group.GetPSPath()}", $"Add {type} to PmGroup"))
+                        if (ShouldProcess($"Item: {name} Destination: {group.GetPSPath(drive.NameColonSeparator)}", $"Add {type} to PmGroup"))
                         {
                             identifiers.Add(entry.identifier!);
                             continue;
@@ -275,13 +275,13 @@ public class AddPmGroupMemberCommand : OrchestratorPSCmdlet
                     var updatedGroup = drive.AddMemberToPmGroup(group.id, group.name, identifiers);
                     if (updatedGroup is not null)
                     {
-                        WriteObject(updatedGroup);
+                        WriteObject(updatedGroup.WithPath(drive.NameColonSeparator));
                     }
                 }
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(new OrchException(group.GetPSPath(), ex), "UpdatePmGroupError", ErrorCategory.InvalidOperation, group));
+                WriteError(new ErrorRecord(new OrchException(group.GetPSPath(drive.NameColonSeparator), ex), "UpdatePmGroupError", ErrorCategory.InvalidOperation, group));
             }
         }
     }

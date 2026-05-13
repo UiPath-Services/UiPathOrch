@@ -37,7 +37,7 @@ public class RemovePmExternalApplicationCommand : OrchestratorPSCmdlet
                     .FilterByWildcards(e => e?.name, wpName)
                     .OrderBy(e => e.name).WithCancellation(cancelHandler.Token))
                 {
-                    string target = app.GetPSPath();
+                    string target = app.GetPSPath(drive.NameColonSeparator);
 
                     if (!Force)
                     {

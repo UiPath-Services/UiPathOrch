@@ -1109,7 +1109,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         var newGroup = OrchAPISession.CreatePmGroup(createGroupCommand);
         if (newGroup is not null)
         {
-            newGroup.Path = NameColonSeparator; // Not needed for the cache, but necessary to set on the PmGroup returned by this method.
+            // Drive-local Path is attached by the caller cmdlet via PSObject NoteProperty.
             SearchDirectoryCache.ClearCache();
             SearchPmDirectoryCache.ClearCache();
 
@@ -1126,10 +1126,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     internal PmRobotAccount? CreatePmRobot(CreateRobotAccountCommand cmd)
     {
         var ret = OrchAPISession.CreatePmRobot(cmd);
-        if (ret is not null)
-        {
-            ret.Path = NameColonSeparator;
-        }
+        // Drive-local Path is attached by the caller via PSObject NoteProperty.
         PmRobotAccounts.ClearCache();
         foreach (var groupId in cmd.groupIDsToAdd ?? [])
         {
@@ -1155,10 +1152,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             directoryUserIDsToRemove = []
         };
         var ret = OrchAPISession.PutPmGroup(groupId, updateGroupCommand);
-        if (ret is not null)
-        {
-            ret.Path = NameColonSeparator;
-        }
+        // Drive-local Path is attached by the caller via PSObject NoteProperty.
         PmGroups.ClearCache(groupId);
 
         PmUsers.ClearCache(); // Contains group IDs internally
@@ -1182,10 +1176,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 .ToList() ?? []
         };
         var ret = OrchAPISession.PutPmGroup(groupId, updateGroupCommand);
-        if (ret is not null)
-        {
-            ret.Path = NameColonSeparator;
-        }
+        // Drive-local Path is attached by the caller via PSObject NoteProperty.
         PmGroups.ClearCache(ret?.id);
 
         PmUsers.ClearCache(); // Contains group IDs internally
@@ -1220,10 +1211,12 @@ public partial class OrchDriveInfo : PSDriveInfo
     public ReadOnlyCollection<NuLicensedGroupMember> GetPmLicensedGroupAllocations(NuLicensedGroup group)
     {
         var members = PmUserLicenseGroupAllocations.Get(group.id!);
+        // GroupName / PathGroupName are entity-internal labels carried for
+        // PowerShell formatting. Drive-local Path is attached by the caller via
+        // PSObject NoteProperty.
         string pathGroupName = System.IO.Path.Combine(NameColonSeparator, group?.name ?? "");
         foreach (var user in members)
         {
-            user.Path = NameColonSeparator;
             user.GroupName = group?.name;
             user.PathGroupName = pathGroupName;
         }
@@ -1400,10 +1393,16 @@ public partial class OrchDriveInfo : PSDriveInfo
         // Initialize caches
 
         // Organization list entities
-        PmUsers = new(this, OrchAPISession.GetPmUsers, e => e.Path = NameColonSeparator);
+        // Drive-local Path moved to a PSObject NoteProperty applied by the
+        // cmdlet at WriteObject time; see WithPath<T>.
+        PmUsers = new(this, OrchAPISession.GetPmUsers);
         PmGroups = new(this, OrchAPISession.GetPmGroups, e =>
             {
-                e.Path = NameColonSeparator;
+                // PmGroupMember.Path / PathGroupName are still set in place
+                // here pending Phase 3 of the per-org Path-isolation refactor
+                // (see design/per-organization-cache-path-isolation.md).
+                // groupName is a parent-derived value (no drive context) and
+                // stays in the initializer.
                 foreach (var m in e.members ?? [])
                 {
                     m.Path = NameColonSeparator;
@@ -1413,30 +1412,27 @@ public partial class OrchDriveInfo : PSDriveInfo
             },
                                 e => e.id, OrchAPISession.GetPmGroup);
 
-        PmRobotAccounts = new(this, OrchAPISession.GetPmRobotAccounts, e => e.Path = NameColonSeparator);
-        PmExternalClients = new(this, OrchAPISession.GetPmExternalClients, e => e.Path = NameColonSeparator);
-        PmExternalApiResources = new(this, OrchAPISession.GetPmExternalApiResource, e => e.Path = NameColonSeparator);
+        // No initializer needed — Path moves to PSObject NoteProperty.
+        PmRobotAccounts = new(this, OrchAPISession.GetPmRobotAccounts);
+        PmExternalClients = new(this, OrchAPISession.GetPmExternalClients);
+        PmExternalApiResources = new(this, OrchAPISession.GetPmExternalApiResource);
 
         PmLicenses = new(this,
             OrchAPISession.GetPmLicenses,
+            // Only entity-only derived state — display name lookup.
             e =>
             {
-                e.Path = NameColonSeparator;
                 if (e.code is not null && AvailableUserBundlesItems.Items.TryGetValue(e.code, out var name))
                     e.name = name;
             }
         );
 
-        PmLicenseAllocations = new(this,
-            OrchAPISession.GetPmLicenseAllocations,
-            e => e.Path = NameColonSeparator
-        );
+        PmLicenseAllocations = new(this, OrchAPISession.GetPmLicenseAllocations);
 
         PmLicensedGroups = new(this,
             OrchAPISession.GetPmLicensedGroups,
             e =>
             {
-                e.Path = NameColonSeparator;
                 e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
             }
         );
@@ -1445,18 +1441,11 @@ public partial class OrchDriveInfo : PSDriveInfo
             OrchAPISession.GetPmLicensedUsers,
             e =>
             {
-                e.Path = NameColonSeparator;
                 e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
             }
         );
 
-        PmAccessAllowedMember = new(this,
-            OrchAPISession.GetPmPartitionAccessPolicy,
-            e =>
-            {
-                e.Path = NameColonSeparator;
-            }
-        );
+        PmAccessAllowedMember = new(this, OrchAPISession.GetPmPartitionAccessPolicy);
 
         // Non-indexed organization entities
         PmAuthenticationSetting = new(this,

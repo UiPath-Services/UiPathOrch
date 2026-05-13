@@ -58,7 +58,7 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
 
                     try
                     {
-                        reporter.WriteProgress(++index, $"{srcRobotAccount.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                        reporter.WriteProgress(++index, $"{srcRobotAccount.GetPSPath(srcDrive.NameColonSeparator)} to {dstDrive.NameColonSeparator}");
 
                         string target = $"Item: {System.IO.Path.Combine(srcDrive!.NameColon, srcRobotAccount!.displayName!)} Destination: {dstDrive.NameColonSeparator}";
 
@@ -80,7 +80,7 @@ public class CopyPmRobotAccountCommand : OrchestratorPSCmdlet
                                 var newRobot = dstDrive.CreatePmRobot(cmd);
                                 if (newRobot is not null)
                                 {
-                                    WriteObject(newRobot);
+                                    WriteObject(newRobot.WithPath(dstDrive.NameColonSeparator));
                                 }
                             }
                             catch (Exception ex)

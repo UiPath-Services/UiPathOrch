@@ -162,10 +162,53 @@ would see their own copies until they reclear. The PSObject wrap keeps the
 contract intact while still letting each output carry its own per-drive
 metadata.
 
+## Phase breakdown
+
+To keep individual commits reviewable the refactor is split into three
+phases:
+
+- **Phase 1 — `SingleCachePerOrganization`** (3 entities, 3 cmdlets).
+  Done in commit `bf579c3`. `LicenseInventory`, `AccountLicense`,
+  `PmAuthenticationRoot` lost their `Path` field; `Get-PmLicenseInventory`,
+  `Get-PmLicenseContract`, `Get-PmAuthenticationSetting` wrap their output
+  in `PSObject` + `Path` `NoteProperty` via the new
+  `OrchExtensions.WithPath<T>`.
+- **Phase 2 — `ListCachePerOrganization`** (10 entities, ~25 cmdlets).
+  Done. All 10 entities (PmUser, PmGroup, PmRobotAccount, ExternalClient,
+  ExternalResource, AvailableUserBundle, TenantAllocation, NuLicensedGroup,
+  NuLicensedUser, AccessAllowedMember) lost their `Path` field. Sub-entity
+  `NuLicensedGroupMember` was pulled in too because it inherits from
+  `NuLicensedUser`. `ListCachePerOrganization.Get` / `Get(id)` now run the
+  initializer once at publish time (no cache-hit re-init). The 8
+  `GetPSPath(this T)` extensions for the org-scoped types changed signature
+  to `GetPSPath(this T, string drivePath)`; ~50 callers updated.
+  `DriveScopedCompleter<TEntity>.GetTipHelp` also picked up an
+  `OrchDriveInfo drive` parameter so PM entity completers can supply the
+  drive path. Cmdlets wrap their `WriteObject` output via
+  `entity.WithPath(drive.NameColonSeparator)`.
+- **Phase 3 — `PmGroupMember` sub-entity**. Pending. `PmGroup.members` is
+  the only org-cached entity with a *nested* drive-local payload
+  (`PmGroupMember.Path` / `PathGroupName` — `groupName` is a parent-copy
+  and stays). The `Get-PmGroupMember` cmdlet surfaces members
+  independently, so the same Path-isolation work is required.
+  Initializer logic in `OrchDriveInfo.cs:1404-1413` (`PmGroups = new(...)
+  → foreach (var m in e.members) { m.Path = …; m.PathGroupName = …; }`)
+  needs to be split: `groupName` stays in the initializer; the two
+  Path-shaped fields move onto a `PSObject` wrapper in
+  `Get-PmGroupMember`. **Tracked here so it isn't forgotten when Phase 2
+  ships.**
+
 ## Status
 
 - Acknowledged: 2026-05-13
-- Target: release after the current B2B / cache-class release
-- Until then: rely on the `OrchDriveInfo.cs:1261` "no multi-threaded fetch"
-  contract; document the sequential-overwrite caveat in the cmdlet help if
-  it surfaces in support.
+- Phase 1 shipped: commit `bf579c3` (1.4.0 / 1.3.1 — TBD)
+- Phase 2: complete (this release, commit TBD)
+- Phase 3: pending — `PmGroupMember`, `PmDirectoryEntityInfo`,
+  potentially `UpdateLicensedGroupResponse`. The remaining
+  single-arg `GetPSPath(this PmGroupMember)` /
+  `GetPSPath(this PmDirectoryEntityInfo)` extensions in
+  `OrchExtensions.cs` and the `m.Path = NameColonSeparator;` loop
+  inside `OrchDriveInfo.cs` PmGroups initializer mark the spots.
+- Until Phase 3 ships: rely on the `OrchDriveInfo.cs:1261` "no
+  multi-threaded fetch" contract; document the sequential-overwrite
+  caveat in `Get-PmGroupMember` help if it surfaces in support.

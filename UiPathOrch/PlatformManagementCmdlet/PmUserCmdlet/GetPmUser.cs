@@ -69,7 +69,7 @@ public class GetPmUserCommand : OrchestratorPSCmdlet
             if (string.IsNullOrEmpty(user.email))
             {
                 line = [
-                    EscapeCsvValue(user.Path, true),
+                    EscapeCsvValue(drive.NameColonSeparator, true),
                     "",
                     EscapeCsvValue(user.userName),
                     EscapeCsvValue(user.surname),
@@ -83,7 +83,7 @@ public class GetPmUserCommand : OrchestratorPSCmdlet
             else
             {
                 line = [
-                    EscapeCsvValue(user.Path, true),
+                    EscapeCsvValue(drive.NameColonSeparator, true),
                     EscapeCsvValue(user.email),
                     EscapeCsvValue(string.Compare(user.email, user.userName, StringComparison.OrdinalIgnoreCase) == 0 ? user.name : user.userName),
                     EscapeCsvValue(user.surname),
@@ -123,7 +123,7 @@ public class GetPmUserCommand : OrchestratorPSCmdlet
                 }
                 else
                 {
-                    WriteObject(targetUsers, true);
+                    WriteObject(targetUsers.Select(u => u.WithPath(drive.NameColonSeparator)), true);
                 }
             }
             catch (Exception ex)

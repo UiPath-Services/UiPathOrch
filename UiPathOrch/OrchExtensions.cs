@@ -92,16 +92,22 @@ internal static class FolderExtensions
         return tiphelp;
     }
 
-    public static string GetPSPath(this PmUser entity) => Path.Combine(entity?.Path ?? "", entity?.userName ?? "");
-    public static string GetPSPath(this PmRobotAccount entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this PmGroup entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    // Org-shared entities (ListCachePerOrganization) take an explicit drivePath
+    // because the entity instance is a singleton across all drives in the org
+    // and can't carry a drive-local Path field. PmGroupMember /
+    // PmDirectoryEntityInfo / NuLicensedGroupMember keep the entity.Path-based
+    // signature for now; their Path-isolation work is queued as Phase 3 (see
+    // design/per-organization-cache-path-isolation.md).
+    public static string GetPSPath(this PmUser entity, string drivePath) => Path.Combine(drivePath, entity?.userName ?? "");
+    public static string GetPSPath(this PmRobotAccount entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
+    public static string GetPSPath(this PmGroup entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
     public static string GetPSPath(this PmGroupMember entity) => Path.Combine(entity?.Path ?? "", entity?.groupName ?? "", entity?.name ?? "");
     public static string GetPSPath(this PmDirectoryEntityInfo entity) => Path.Combine(entity?.Path ?? "", entity?.identityName ?? "");
-    public static string GetPSPath(this ExternalResource entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this ExternalClient entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this NuLicensedGroup entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this NuLicensedGroupMember entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
-    public static string GetPSPath(this AccessAllowedMember entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    public static string GetPSPath(this ExternalResource entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
+    public static string GetPSPath(this ExternalClient entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
+    public static string GetPSPath(this NuLicensedGroup entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
+    public static string GetPSPath(this NuLicensedGroupMember entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
+    public static string GetPSPath(this AccessAllowedMember entity, string drivePath) => Path.Combine(drivePath, entity?.name ?? "");
 
     public static string GetPSPath(this DirectoryUser entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
     public static string GetPSPath(this DirectoryRobotUser entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");

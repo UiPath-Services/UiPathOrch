@@ -108,7 +108,7 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
             {
                 if (srcDrive.GetPartitionGlobalId() == dstDrive.GetPartitionGlobalId()) continue;
 
-                string target = $"Item: {srcGroup.GetPSPath()} Destination: {dstDrive.NameColonSeparator}";
+                string target = $"Item: {srcGroup.GetPSPath(srcDrive.NameColonSeparator)} Destination: {dstDrive.NameColonSeparator}";
                 if (ShouldProcess(target, "Copy PmGroup"))
                 {
                     try
@@ -126,21 +126,21 @@ public class CopyPmGroupCommand : OrchestratorPSCmdlet
                                 case "DirectoryUser":
                                     directoryUserMemberIDs.AddRange(FindIdentifiers(
                                         dstDrive,
-                                        srcGroup.GetPSPath(),
+                                        srcGroup.GetPSPath(srcDrive.NameColonSeparator),
                                         "user",
                                         groupedMembers));
                                     break;
                                 case "DirectoryGroup":
                                     directoryUserMemberIDs.AddRange(FindIdentifiers(
                                         dstDrive,
-                                        srcGroup.GetPSPath(),
+                                        srcGroup.GetPSPath(srcDrive.NameColonSeparator),
                                         "group",
                                         groupedMembers));
                                     break;
                                 case "DirectoryApplication":
                                     directoryUserMemberIDs.AddRange(FindIdentifiers(
                                         dstDrive,
-                                        srcGroup.GetPSPath(),
+                                        srcGroup.GetPSPath(srcDrive.NameColonSeparator),
                                         "application",
                                         groupedMembers));
                                     break;

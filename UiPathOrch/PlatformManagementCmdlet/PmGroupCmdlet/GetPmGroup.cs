@@ -31,12 +31,12 @@ public class GetPmGroupCommand : OrchestratorPSCmdlet
     private static readonly string DefaultCsvName = "ExportedPmGroups.csv";
     private static readonly string[] CsvHeaders = ["Path", "GroupName"];
 
-    private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmGroup> groups)
+    private static void WriteCsvContent(StreamWriter writer, string drivePath, IEnumerable<PmGroup> groups)
     {
         foreach (var group in groups.OrderBy(g => g.name))
         {
             string[] line = [
-                EscapeCsvValue(group.Path, true),
+                EscapeCsvValue(drivePath, true),
                 EscapeCsvValue(group.name, true)
             ];
             writer.WriteCsvLine(line);
@@ -60,11 +60,11 @@ public class GetPmGroupCommand : OrchestratorPSCmdlet
 
             if (writer is null)
             {
-                WriteObject(groups, true);
+                WriteObject(groups.Select(g => g.WithPath(drive.NameColonSeparator)), true);
             }
             else
             {
-                WriteCsvContent(writer, groups);
+                WriteCsvContent(writer, drive.NameColonSeparator, groups);
                 WriteCSVExportedMessage(this, providerCsvPath);
             }
         }

@@ -209,11 +209,7 @@ public class NewPmUserCommand : OrchestratorPSCmdlet
 
                 if (response?.result?.succeeded ?? false)
                 {
-                    foreach (var user in response?.users ?? [])
-                    {
-                        user.Path = drive.NameColonSeparator;
-                    }
-                    WriteObject(response?.users?.OrderBy(u => u.name), true);
+                    WriteObject(response?.users?.OrderBy(u => u.name).Select(u => u.WithPath(drive.NameColonSeparator)), true);
                 }
             }
             catch (Exception ex)

@@ -92,7 +92,7 @@ public class GetPmGroupMemberCommand : OrchestratorPSCmdlet
                 }
                 catch (Exception ex)
                 {
-                    WriteError(new ErrorRecord(new OrchException(group.GetPSPath(), ex), "GetPmGroupMemberError", ErrorCategory.InvalidOperation, group));
+                    WriteError(new ErrorRecord(new OrchException(group.GetPSPath(drive.NameColonSeparator), ex), "GetPmGroupMemberError", ErrorCategory.InvalidOperation, group));
                 }
             }
 

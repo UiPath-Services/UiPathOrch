@@ -119,7 +119,7 @@ public class GetPmLicense : OrchestratorPSCmdlet
                         .OrderBy(b => b?.name);
                 }
 
-                WriteObject(targetEntities, true);
+                WriteObject(targetEntities.Select(e => e.WithPath(drive.NameColonSeparator)), true);
             }
             catch (Exception ex)
             {

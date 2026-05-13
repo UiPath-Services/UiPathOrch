@@ -185,7 +185,7 @@ public class MoveOrchPmGroupMemberCommand : OrchestratorPSCmdlet
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(new OrchException(group.GetPSPath(), ex), "UpdatePmGroupError", ErrorCategory.InvalidOperation, group));
+                WriteError(new ErrorRecord(new OrchException(group.GetPSPath(drive.NameColonSeparator), ex), "UpdatePmGroupError", ErrorCategory.InvalidOperation, group));
             }
         }
     }

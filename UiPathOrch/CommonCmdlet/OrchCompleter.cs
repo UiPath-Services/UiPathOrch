@@ -440,9 +440,9 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return tiphelp;
     }
 
-    protected static string TipHelp(NuLicensedGroupMember member)
+    protected static string TipHelp(OrchDriveInfo drive, NuLicensedGroupMember member)
     {
-        string tiphelp = member.GetPSPath();
+        string tiphelp = member.GetPSPath(drive.NameColonSeparator);
         if (!string.IsNullOrEmpty(member.displayName))
             tiphelp += $" ({member.displayName})";
         return tiphelp;
@@ -707,18 +707,18 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return tiphelp;
     }
 
-    protected static string TipHelp(PmUser entity)
+    protected static string TipHelp(OrchDriveInfo drive, PmUser entity)
     {
-        string tiphelp = entity.GetPSPath();
+        string tiphelp = entity.GetPSPath(drive.NameColonSeparator);
         string username = (string.Join(" ", [entity.name, entity.surname])).Trim();
         if (!string.IsNullOrEmpty(username))
             tiphelp += $" ({username})";
         return tiphelp;
     }
 
-    protected static string TipHelp(PmRobotAccount entity)
+    protected static string TipHelp(OrchDriveInfo drive, PmRobotAccount entity)
     {
-        string tiphelp = entity.GetPSPath();
+        string tiphelp = entity.GetPSPath(drive.NameColonSeparator);
         return tiphelp;
     }
 
@@ -781,7 +781,7 @@ public abstract class DriveScopedCompleter<TEntity> : OrchArgumentCompleter
 {
     protected abstract IEnumerable<TEntity> GetEntities(OrchDriveInfo drive);
     protected abstract string GetName(TEntity entity);
-    protected virtual string GetTipHelp(TEntity entity) => GetName(entity);
+    protected virtual string GetTipHelp(OrchDriveInfo drive, TEntity entity) => GetName(entity);
     protected virtual CompletionResultType ResultType => CompletionResultType.ParameterValue;
     protected virtual string? NotFoundMessage => null;
     protected virtual List<OrchDriveInfo> ResolveDrives(IDictionary fakeBoundParameters)
@@ -807,7 +807,7 @@ public abstract class DriveScopedCompleter<TEntity> : OrchArgumentCompleter
             {
                 bFound = true;
                 string name = GetName(entity);
-                yield return new CompletionResult(PathTools.EscapePSText(name), name, ResultType, GetTipHelp(entity));
+                yield return new CompletionResult(PathTools.EscapePSText(name), name, ResultType, GetTipHelp(result.Source, entity));
             }
         }
 
@@ -1158,7 +1158,7 @@ internal class CalendarNameCompleter : DriveScopedCompleter<ExtendedCalendar>
     protected override IEnumerable<ExtendedCalendar> GetEntities(OrchDriveInfo drive)
         => drive.GetCalendars();
     protected override string GetName(ExtendedCalendar e) => e.Name!;
-    protected override string GetTipHelp(ExtendedCalendar e) => e.GetPSPath();
+    protected override string GetTipHelp(OrchDriveInfo drive, ExtendedCalendar e) => e.GetPSPath();
     protected override CompletionResultType ResultType => CompletionResultType.Text;
     protected override string? NotFoundMessage => "No calendars found for";
 }
@@ -1168,7 +1168,7 @@ internal class CredentialStoreNameCompleter : DriveScopedCompleter<CredentialSto
     protected override IEnumerable<CredentialStore> GetEntities(OrchDriveInfo drive)
         => drive.CredentialStores.Get();
     protected override string GetName(CredentialStore e) => e.Name!;
-    protected override string GetTipHelp(CredentialStore e) => TipHelp(e);
+    protected override string GetTipHelp(OrchDriveInfo drive, CredentialStore e) => TipHelp(e);
     protected override string? NotFoundMessage => "No credential stores found for";
 }
 
@@ -1185,7 +1185,7 @@ internal class MachineNameCompleter : DriveScopedCompleter<ExtendedMachine>
     protected override IEnumerable<ExtendedMachine> GetEntities(OrchDriveInfo drive)
         => drive.Machines.Get();
     protected override string GetName(ExtendedMachine e) => e.Name!;
-    protected override string GetTipHelp(ExtendedMachine e) => TipHelp(e);
+    protected override string GetTipHelp(OrchDriveInfo drive, ExtendedMachine e) => TipHelp(e);
     protected override string? NotFoundMessage => "No machines found for";
 }
 
@@ -1450,7 +1450,7 @@ internal class RoleNameCompleter : DriveScopedCompleter<Role>
     protected override IEnumerable<Role> GetEntities(OrchDriveInfo drive)
         => drive.Roles.Get();
     protected override string GetName(Role e) => e.Name!;
-    protected override string GetTipHelp(Role e) => TipHelp(e);
+    protected override string GetTipHelp(OrchDriveInfo drive, Role e) => TipHelp(e);
 }
 
 // Common base for the symmetric pair of completers that suggest values from the
@@ -1579,7 +1579,7 @@ internal class WebhookNameCompleter : DriveScopedCompleter<Webhook>
     protected override IEnumerable<Webhook> GetEntities(OrchDriveInfo drive)
         => drive.Webhooks.Get();
     protected override string GetName(Webhook e) => e.Name!;
-    protected override string GetTipHelp(Webhook e) => TipHelp(e);
+    protected override string GetTipHelp(OrchDriveInfo drive, Webhook e) => TipHelp(e);
 }
 
 internal class WebhookEventTypeNameCompleter : DriveScopedCompleter<WebhookEventType>
@@ -1587,7 +1587,7 @@ internal class WebhookEventTypeNameCompleter : DriveScopedCompleter<WebhookEvent
     protected override IEnumerable<WebhookEventType> GetEntities(OrchDriveInfo drive)
         => drive.WebhookEventTypes.Get();
     protected override string GetName(WebhookEventType e) => e.Name!;
-    protected override string GetTipHelp(WebhookEventType e) => $"{e.Group}: {e.Name}";
+    protected override string GetTipHelp(OrchDriveInfo drive, WebhookEventType e) => $"{e.Group}: {e.Name}";
 }
 
 internal class TaskIdCompleter : FolderScopedCompleter<OrchTask>
@@ -1813,7 +1813,7 @@ internal class ExternalApplicationNameCompleter : OrchArgumentCompleter
                 .ExcludeByWildcards(a => a?.name!, wpName)
                 .OrderBy(a => a?.name))
             {
-                string tooltip = client?.GetPSPath();
+                string tooltip = client?.GetPSPath(result.Source.NameColonSeparator);
                 yield return new CompletionResult(PathTools.EscapePSText(client?.name), client?.name, CompletionResultType.Text, tooltip);
             }
         }
@@ -2022,7 +2022,7 @@ public class PmGroupNameCompleter : DriveScopedCompleter<PmGroup>
     protected override List<OrchDriveInfo> ResolveDrives(IDictionary fbp) => ResolvePmDrives(fbp);
     protected override IEnumerable<PmGroup> GetEntities(OrchDriveInfo drive) => drive.PmGroups.Get();
     protected override string GetName(PmGroup e) => e.name!;
-    protected override string GetTipHelp(PmGroup e) => e.GetPSPath();
+    protected override string GetTipHelp(OrchDriveInfo drive, PmGroup e) => e.GetPSPath(drive.NameColonSeparator);
     protected override CompletionResultType ResultType => CompletionResultType.Text;
     protected override string? NotFoundMessage => "No groups found for";
 }
@@ -2033,7 +2033,7 @@ internal class PmRobotAccountNameCompleter : DriveScopedCompleter<PmRobotAccount
     protected override IEnumerable<PmRobotAccount> GetEntities(OrchDriveInfo drive)
         => drive.PmRobotAccounts.Get().Where(r => r is not null)!;
     protected override string GetName(PmRobotAccount e) => e.name!;
-    protected override string GetTipHelp(PmRobotAccount e) => e.GetPSPath();
+    protected override string GetTipHelp(OrchDriveInfo drive, PmRobotAccount e) => e.GetPSPath(drive.NameColonSeparator);
     protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
 
@@ -2043,9 +2043,9 @@ internal class PmUserEmailCompleter : DriveScopedCompleter<PmUser>
     protected override IEnumerable<PmUser> GetEntities(OrchDriveInfo drive)
         => drive.PmUsers.Get().Where(u => !string.IsNullOrEmpty(u.email));
     protected override string GetName(PmUser e) => e.email!;
-    protected override string GetTipHelp(PmUser e)
+    protected override string GetTipHelp(OrchDriveInfo drive, PmUser e)
     {
-        var tip = e.GetPSPath();
+        var tip = e.GetPSPath(drive.NameColonSeparator);
         if (!string.IsNullOrEmpty(e.displayName))
             tip += $" ({e.displayName})";
         return tip;
@@ -2059,7 +2059,7 @@ internal class PmLicensedGroupNameCompleter : DriveScopedCompleter<NuLicensedGro
     protected override IEnumerable<NuLicensedGroup> GetEntities(OrchDriveInfo drive)
         => drive.PmLicensedGroups.Get().Where(g => g is not null)!;
     protected override string GetName(NuLicensedGroup e) => e.name!;
-    protected override string GetTipHelp(NuLicensedGroup e) => e.GetPSPath();
+    protected override string GetTipHelp(OrchDriveInfo drive, NuLicensedGroup e) => e.GetPSPath(drive.NameColonSeparator);
     protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
 

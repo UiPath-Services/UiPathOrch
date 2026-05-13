@@ -66,7 +66,7 @@ public class GetPmLicenseAllocation : OrchestratorPSCmdlet
                     .FilterByWildcards(a => a?.tenant?.name, wpTenant)
                     .OrderBy(a => a?.tenant?.name);
 
-                WriteObject(targetEntities, true);
+                WriteObject(targetEntities.Select(e => e.WithPath(drive.NameColonSeparator)), true);
             }
             catch (Exception ex)
             {

@@ -44,7 +44,7 @@ public class RemoveUserLicenseGroup : OrchestratorPSCmdlet
 
             foreach (var group in groups.WithCancellation(cancelHandler.Token))
             {
-                if (ShouldProcess(group.GetPSPath(), "Remove PmLicensedGroup"))
+                if (ShouldProcess(group.GetPSPath(drive.NameColonSeparator), "Remove PmLicensedGroup"))
                 {
                     try
                     {
@@ -57,7 +57,7 @@ public class RemoveUserLicenseGroup : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(group.GetPSPath(), ex), "RemovePmLicenseGroupError", ErrorCategory.InvalidOperation, group));
+                        WriteError(new ErrorRecord(new OrchException(group.GetPSPath(drive.NameColonSeparator), ex), "RemovePmLicenseGroupError", ErrorCategory.InvalidOperation, group));
                     }
                 }
             }

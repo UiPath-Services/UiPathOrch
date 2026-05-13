@@ -33,7 +33,8 @@ public class GetPmExternalApplicationCommand : OrchestratorPSCmdlet
 
                 WriteObject(entities
                     .FilterByWildcards(a => a?.name, wpName)
-                    .OrderBy(a => a!.name),
+                    .OrderBy(a => a!.name)
+                    .Select(a => a.WithPath(drive.NameColonSeparator)),
                     true);
             }
             catch (Exception ex)
