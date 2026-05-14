@@ -141,16 +141,7 @@ public class GetAlertCmdlet : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
-            drive =>
-            {
-                // ToList() has already been called inside GetAlerts() (to avoid deferred evaluation and properly handle deprecated API exceptions)
-                var alerts = drive.OrchAPISession.GetAlerts(query, skip, first);
-                foreach (var alert in alerts)
-                {
-                    alert.Path = drive.NameColonSeparator;
-                }
-                return alerts;
-            }
+            drive => drive.Alerts.Fetch(query, skip, first)
         );
 
         using var cancelHandler = new ConsoleCancelHandler();

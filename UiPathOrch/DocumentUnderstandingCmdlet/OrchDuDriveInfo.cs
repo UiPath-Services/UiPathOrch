@@ -101,7 +101,7 @@ public class OrchDuDriveInfo : PSDriveInfo
                             }
                         }
                     }
-                    catch (HttpResponseException ex)
+                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
                         _dicDuRoles_Exception.CacheException(ex);
                         throw;
@@ -141,7 +141,7 @@ public class OrchDuDriveInfo : PSDriveInfo
                         }
                         _dicDuProjects = _dicDuProjects.OrderBy(p => p.name).ToArray();
                     }
-                    catch (HttpResponseException ex)
+                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
                         _dicDuProjects_Exception.CacheException(ex);
                         throw;
@@ -215,7 +215,7 @@ public class OrchDuDriveInfo : PSDriveInfo
                     //#endregion
                 }
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _dicDuUsers_Exceptions.CacheException((partitionGlobalId, tenantKey, project.id), ex);
                 throw;
@@ -259,7 +259,7 @@ public class OrchDuDriveInfo : PSDriveInfo
                     _dicDuDocumentTypes[project.id!] = documentTypes;
                 }
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _dicDuDocumentTypes_Exceptions.CacheException(project.id!, ex);
                 throw;
@@ -303,7 +303,7 @@ public class OrchDuDriveInfo : PSDriveInfo
                     _dicDuClassifier[project.id!] = classifiers;
                 }
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _dicDuClassifier_Exceptions.CacheException(project.id!, ex);
                 throw;
@@ -347,7 +347,7 @@ public class OrchDuDriveInfo : PSDriveInfo
                     _dicDuExtractors[project.id!] = extractors;
                 }
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _dicDuExtractorsExceptions.CacheException(project.id!, ex);
                 throw;

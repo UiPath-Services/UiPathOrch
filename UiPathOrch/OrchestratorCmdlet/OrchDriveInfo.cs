@@ -410,7 +410,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 {
                     _dicCurrentUser = OrchAPISession.GetCurrentUser();
                 }
-                catch (HttpResponseException ex)
+                catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                 {
                     _dicCurrentUser_Exception.CacheException(ex);
                     throw;
@@ -1006,7 +1006,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                     }
                 }
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _dicPmBulkResolveByName_Exception.CacheException(ex);
                 throw;
@@ -1303,6 +1303,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<long, User> UsersDetailed;
     public readonly ListCachePerTenant<User> Users;
     public readonly IncrementalCachePerTenant<long, AuditLog> AuditLogs;
+    public readonly IncrementalCachePerTenant<string, Alert> Alerts;
     public readonly ListCachePerTenant<ExtendedCalendar> Calendars;
     public readonly KeyedSingleCachePerTenant<long, ExtendedCalendar> CalendarsDetailed;
     public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 assetId), AccessibleFoldersDto?> AssetLinks;
@@ -1695,6 +1696,11 @@ public partial class OrchDriveInfo : PSDriveInfo
         Users = new(this,
             () => OrchAPISession.GetUsers() ?? [],
             user => user.Path = NameColonSeparator);
+
+        Alerts = new(this,
+            (query, skip, first) => OrchAPISession.GetAlerts(query, skip, first),
+            alert => alert.Id,
+            (alert, drivePath) => alert.Path = drivePath);
 
         AuditLogs = new(this,
             (query, skip, first) => OrchAPISession.GetAuditLogs(query, skip, first),

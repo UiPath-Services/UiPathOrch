@@ -56,7 +56,7 @@ public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
                     }
                 }
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _exception.CacheException(ex);
                 throw;
@@ -113,7 +113,7 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
                     }
                 }
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _exception.CacheException(ex);
                 throw;
@@ -204,7 +204,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
                         }
                         _cache[partitionGlobalId] = cachePerOrg;
                     }
-                    catch (HttpResponseException ex)
+                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
                         _exception.CacheException(partitionGlobalId, ex);
                         throw;
@@ -262,7 +262,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
                         }
                         _cacheDetailed[(partitionGlobalId, id)] = cachePerOrgDetailed;
                     }
-                    catch (HttpResponseException ex)
+                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
                         _exceptionDetailed.CacheException((partitionGlobalId, id), ex);
                         throw;
@@ -395,7 +395,7 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
                             _cache[partitionGlobalId] = entity;
                         }
                     }
-                    catch (HttpResponseException ex)
+                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
                         _exception.CacheException(partitionGlobalId, ex);
                         throw;
@@ -498,7 +498,7 @@ public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearabl
                         // never observe a partially-initialized entity.
                         _cache[index] = entity;
                     }
-                    catch (HttpResponseException ex)
+                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
                         _exceptions.CacheException(index, ex);
                         throw;
@@ -594,7 +594,7 @@ public class KeyedListCachePerTenant<TKey, TEntity> : ITenantCacheClearable
                         // observe a partially-initialized list.
                         _cache[key] = list;
                     }
-                    catch (HttpResponseException ex)
+                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
                         _exceptions.CacheException(key, ex);
                         throw;
@@ -713,7 +713,7 @@ public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
                         // a partially-initialized entity.
                         _cache[key] = entity;
                     }
-                    catch (HttpResponseException ex)
+                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
                         _exceptions.CacheException(key, ex);
                         throw;
@@ -839,7 +839,7 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
                 _cache[compositeKey] = entity;
                 return entity;
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _exceptions.CacheException(compositeKey, ex);
                 throw;
@@ -946,7 +946,7 @@ public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearabl
                 _cache[compositeKey] = list;
                 return list.AsReadOnly();
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _exceptions.CacheException(compositeKey, ex);
                 throw;
@@ -1061,7 +1061,7 @@ public class KeyedSingleCachePerFolder<TKey, TEntity> : IFolderCacheClearable
                 // partially-initialized entity.
                 inner[key] = entity;
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _exceptions.CacheException((folderId, key), ex);
                 throw;
@@ -1178,7 +1178,7 @@ public class KeyedListCachePerFolder<TKey, TEntity> : IFolderCacheClearable
                 // partially-initialized list.
                 inner[key] = list;
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _exceptions.CacheException((folderId, key), ex);
                 throw;
@@ -1277,7 +1277,7 @@ public class SingleCachePerFolder<T> : IFolderCacheClearable
                 // Publish after init.
                 _cache[folder.Id.Value] = cachePerFolder;
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _exceptions.CacheException(folder.Id ?? 0, ex);
                 throw;
@@ -1365,7 +1365,7 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
                 // Publish after init.
                 _cache[folderId] = cachePerFolder;
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _exceptions.CacheException(folderId, ex);
                 throw;
@@ -1487,7 +1487,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
                 // Publish after init.
                 cachePerFolder[index] = entities;
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _exceptions.CacheException((folder.Id ?? 0, index), ex);
                 throw;
@@ -1613,7 +1613,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
         {
             fetched = _fetchFunc(folderId, query, skip, first, orderBy, orderAscending).ToList();
         }
-        catch (HttpResponseException ex)
+        catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
         {
             _exceptions.CacheException(folderId, ex);
             throw;
@@ -1776,7 +1776,7 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
         {
             fetched = _fetchFunc(query, skip, first).ToList();
         }
-        catch (HttpResponseException ex)
+        catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
         {
             _exception.CacheException(ex);
             throw;
@@ -1932,7 +1932,7 @@ public class IncrementalCachePerProject<TKey, TEntity> : ITenantCacheClearable
         {
             fetched = _fetchFunc(projectId, subKey).ToList();
         }
-        catch (HttpResponseException ex)
+        catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
         {
             _exceptions.CacheException(projectId, ex);
             throw;
@@ -2093,7 +2093,7 @@ public class TmListCachePerTenant1<T> : ITenantCacheClearable
                         // Publish after init.
                         _cache[project.id!] = cachePerFolder;
                     }
-                    catch (HttpResponseException ex)
+                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
                         _exceptions.CacheException(project.id ?? "", ex);
                         throw;
@@ -2171,7 +2171,7 @@ public class TmSingleCachePerTenant0<T> : ITenantCacheClearable where T : class
                     }
                 }
             }
-            catch (HttpResponseException ex)
+            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
                 _exception.CacheException(ex);
                 throw;
@@ -2248,7 +2248,7 @@ public class TmSingleCachePerTenant1<T> : ITenantCacheClearable
                         // Publish after init.
                         _cache[project.id!] = cachePerProject;
                     }
-                    catch (HttpResponseException ex)
+                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
                         _exceptions.CacheException(project.id ?? "", ex);
                         throw;

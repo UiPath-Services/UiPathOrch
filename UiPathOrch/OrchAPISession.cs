@@ -827,17 +827,15 @@ public partial class OrchAPISession : IDisposable
     #region Alert
     public IEnumerable<Alert> GetAlerts(string? query, ulong skip, ulong first)
     {
-        try
+        // /odata/Alerts was removed in Orchestrator API v18+. Throw a
+        // DeterministicApiException so the cache layer remembers the failure
+        // and skips the API call on subsequent invocations.
+        if (ApiVersion >= 18)
         {
-            // Because GetEnumerable uses lazy evaluation via yield return,
-            // ToList() must be called here for immediate execution, otherwise try/catch will not work.
-            return GetEnumerable<Alert>("/odata/Alerts", null, query, skip, first).ToList();
+            throw new DeterministicApiException(
+                "The Alerts API has been deprecated since Orchestrator API version 18.0.");
         }
-        catch (Exception ex) when (ApiVersion >= 18)
-        {
-            throw new InvalidOperationException(
-                $"The Alerts API has been deprecated since Orchestrator API version 18.0.", ex);
-        }
+        return GetEnumerable<Alert>("/odata/Alerts", null, query, skip, first);
     }
     #endregion
 

@@ -10,21 +10,56 @@ public class HttpResponseException(string message, HttpResponseMessage response)
     public HttpStatusCode StatusCode => Response.StatusCode;
 }
 
+/// <summary>
+/// Failures that will deterministically recur for the same input without an
+/// HTTP round trip — e.g., a guard that says "this API version removed the
+/// endpoint" or "this configuration cannot service this request". The
+/// exception cache layer treats these as cacheable, equivalent in spirit to
+/// an HTTP status code in the deterministic whitelist (404 / 410 / 501 etc.).
+/// Do NOT use this for transient or environment-dependent failures.
+/// </summary>
+public class DeterministicApiException(string message, Exception? inner = null)
+    : InvalidOperationException(message, inner);
+
+internal static class ExceptionCachePolicy
+{
+    /// <summary>
+    /// True iff <paramref name="ex"/> will recur for the same inputs and is
+    /// therefore safe to cache and re-throw without re-attempting the API
+    /// call. Transient failures (network errors, timeouts, 5xx-transient,
+    /// 429 throttling, cancellation) return false.
+    /// </summary>
+    public static bool IsDeterministic(Exception ex) => ex switch
+    {
+        HttpResponseException http => IsDeterministicStatus(http.StatusCode),
+        DeterministicApiException => true,
+        _ => false,
+    };
+
+    private static bool IsDeterministicStatus(HttpStatusCode code) => code switch
+    {
+        HttpStatusCode.BadRequest => true,           // 400 — query is malformed; same query, same error
+        HttpStatusCode.Unauthorized => true,         // 401 — token won't auto-recover
+        HttpStatusCode.Forbidden => true,            // 403 — permission won't auto-grant
+        HttpStatusCode.NotFound => true,             // 404 — resource isn't coming back
+        HttpStatusCode.Gone => true,                 // 410 — explicit permanent removal
+        HttpStatusCode.InternalServerError => true,  // 500 — kept for back-compat (could be transient)
+        HttpStatusCode.NotImplemented => true,       // 501 — feature absent on this server
+        HttpStatusCode.BadGateway => true,           // 502 — kept for back-compat (could be transient)
+        _ => false,                                  // 408/429/503/504/etc. — transient, do not cache
+    };
+}
+
 public class ExceptionCachePerTenant
 {
     private Exception? _exceptionCache;
 
-    // Cache exceptions that will always fail for the same reason on subsequent API calls,
-    // to prevent making the same failing API call again.
-    public void CacheException(HttpResponseException ex)
+    // Cache exceptions that will always fail for the same reason on subsequent
+    // API calls, to prevent making the same failing API call again. Non-
+    // deterministic exceptions are silently ignored (no cache write).
+    public void CacheException(Exception ex)
     {
-        // TODO: Are there other conditions under which we should cache exceptions?
-        if (ex.StatusCode == HttpStatusCode.Forbidden ||
-            ex.StatusCode == HttpStatusCode.BadGateway ||
-            ex.StatusCode == HttpStatusCode.BadRequest ||
-            ex.StatusCode == HttpStatusCode.Unauthorized ||
-            ex.StatusCode == HttpStatusCode.InternalServerError ||
-            ex.StatusCode == HttpStatusCode.NotFound)
+        if (ExceptionCachePolicy.IsDeterministic(ex))
         {
             _exceptionCache = ex;
         }
@@ -51,17 +86,12 @@ public class ExceptionsCachePer<T> where T : IEquatable<T>
     private readonly Lazy<ConcurrentDictionary<T, Exception>> _exceptionsCache =
         new(() => new ConcurrentDictionary<T, Exception>());
 
-    // Cache exceptions that will always fail for the same reason on subsequent API calls,
-    // to prevent making the same failing API call again.
-    public void CacheException(T key, HttpResponseException ex)
+    // Cache exceptions that will always fail for the same reason on subsequent
+    // API calls, to prevent making the same failing API call again. Non-
+    // deterministic exceptions are silently ignored (no cache write).
+    public void CacheException(T key, Exception ex)
     {
-        // TODO: Are there other conditions under which we should cache exceptions?
-        if (ex.StatusCode == HttpStatusCode.Forbidden ||
-            ex.StatusCode == HttpStatusCode.BadGateway ||
-            ex.StatusCode == HttpStatusCode.BadRequest ||
-            ex.StatusCode == HttpStatusCode.Unauthorized ||
-            ex.StatusCode == HttpStatusCode.InternalServerError ||
-            ex.StatusCode == HttpStatusCode.NotFound)
+        if (ExceptionCachePolicy.IsDeterministic(ex))
         {
             _exceptionsCache.Value[key] = ex;
         }

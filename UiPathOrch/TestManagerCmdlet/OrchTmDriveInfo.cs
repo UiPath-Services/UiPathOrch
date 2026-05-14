@@ -149,7 +149,7 @@ public class OrchTmDriveInfo : PSDriveInfo
                             }
                         }
                     }
-                    catch (HttpResponseException ex)
+                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
                         _dicTmProjectsException.CacheException(ex);
                         throw;
