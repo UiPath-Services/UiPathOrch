@@ -109,7 +109,7 @@ jobs:
           New-Item -ItemType Directory -Path $enUS -Force | Out-Null
 
           Copy-Item 'UiPathOrch/bin/Release/net8.0/UiPathOrch.dll' $stage
-          foreach ($f in 'UiPathOrch.psd1','UiPathOrch.psm1','UiPathOrch.Format.ps1xml','ReleaseNotes.md') {
+          foreach ($f in 'UiPathOrch.psd1','UiPathOrch.psm1','UiPathOrch.Format.ps1xml') {
             Copy-Item (Join-Path 'Staging' $f) $stage
           }
           Get-ChildItem 'Staging/Functions/*.ps1' | Copy-Item -Destination (Join-Path $stage 'Functions')
@@ -180,11 +180,11 @@ jobs:
         shell: pwsh
         run: |
           $version = '${{ steps.ver.outputs.version }}'
-          $lines = Get-Content Staging/ReleaseNotes.md
+          $lines = Get-Content CHANGELOG.md
           $inSection = $false
           $section = New-Object System.Collections.Generic.List[string]
           foreach ($line in $lines) {
-            if ($line -match '^# Version:\s*(\S+)') {
+            if ($line -match '^##\s+\[(\S+?)\]') {
               if ($matches[1] -eq $version) { $inSection = $true; continue }
               elseif ($inSection)            { break }
             }
@@ -192,7 +192,7 @@ jobs:
           }
           $body = ($section -join "`n").Trim()
           if ([string]::IsNullOrWhiteSpace($body)) {
-            throw "No release notes section found for version $version in Staging/ReleaseNotes.md"
+            throw "No release notes section found for version $version in CHANGELOG.md"
           }
           $notesPath = Join-Path $env:RUNNER_TEMP 'release-notes.md'
           Set-Content -Path $notesPath -Value $body -Encoding UTF8

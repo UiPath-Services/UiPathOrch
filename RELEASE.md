@@ -11,7 +11,7 @@ This document describes how to cut a release of **UiPathOrch** and publish it to
 
 A release consists of:
 
-1. Version bump in the module manifest + `.csproj` + `CHANGELOG.md` + `ReleaseNotes.md`
+1. Version bump in the module manifest + `.csproj` + `CHANGELOG.md`
 2. Build and run all [release acceptance gates](#4-release-acceptance-gates)
 3. (Optional) Sign the module — see [Code signing](#code-signing-optional)
 4. Tag the commit and push
@@ -69,8 +69,7 @@ Edit the following files (the two version fields must match):
 
 - `UiPathOrch/UiPathOrch.csproj` — update `<Version>`
 - `Staging/UiPathOrch.psd1` — update `ModuleVersion`
-- `CHANGELOG.md` — move items from `Unreleased` to a new `## [X.Y.Z] - YYYY-MM-DD` section
-- `Staging/ReleaseNotes.md` — user-facing summary of what changed
+- `CHANGELOG.md` — move items from `Unreleased` to a new `## [X.Y.Z] - YYYY-MM-DD` section. This block doubles as the GitHub Release body (the release workflow extracts the matching `## [X.Y.Z]` section) and as the `ReleaseNotes` text in `Staging/UiPathOrch.psd1` (kept in sync by hand at version-bump time)
 
 ### 3. Build and deploy locally
 
@@ -148,7 +147,7 @@ Get-AuthenticodeSignature $files | Format-Table Status, Path
 ### 6. Open a pull request and merge
 
 ```powershell
-git add Staging/UiPathOrch.psd1 CHANGELOG.md Staging/ReleaseNotes.md
+git add Staging/UiPathOrch.psd1 CHANGELOG.md
 git commit -m "Release vX.Y.Z"
 git push -u origin release/vX.Y.Z
 gh pr create --fill
@@ -192,7 +191,7 @@ Pushing a `vX.Y.Z` tag triggers the `release.yml` workflow, which:
 1. Builds and tests the module
 2. (Optional) Signs it using the certificate stored in repo secrets (`CODE_SIGNING_PFX_BASE64`, `CODE_SIGNING_PFX_PASSWORD`) — skipped if the secrets are not configured
 3. Publishes to PSGallery using `PSGALLERY_API_KEY`
-4. Creates a GitHub Release containing **only the section of `Staging/ReleaseNotes.md` that matches the tag's version** (the workflow extracts the `# Version: X.Y.Z` block up to the next version heading; if the section is missing the workflow fails before publishing)
+4. Creates a GitHub Release containing **only the section of `CHANGELOG.md` that matches the tag's version** (the workflow extracts the `## [X.Y.Z]` block up to the next version heading; if the section is missing the workflow fails before publishing)
 
 Maintainers only need to push the tag — the workflow handles the rest.
 
@@ -223,7 +222,21 @@ Publish-Module -Path $modulePath -NuGetApiKey <your-api-key>
 If publishing manually (the automated workflow does this for you):
 
 ```powershell
-gh release create vX.Y.Z --title "vX.Y.Z" --notes-file Staging/ReleaseNotes.md
+# Extract the matching `## [X.Y.Z]` section from CHANGELOG.md (same logic the
+# release workflow runs automatically).
+$version = 'X.Y.Z'
+$lines = Get-Content CHANGELOG.md
+$section = New-Object System.Collections.Generic.List[string]
+$inSection = $false
+foreach ($line in $lines) {
+    if ($line -match '^##\s+\[(\S+?)\]') {
+        if ($matches[1] -eq $version) { $inSection = $true; continue }
+        elseif ($inSection)            { break }
+    }
+    if ($inSection) { $section.Add($line) }
+}
+Set-Content release-notes.md (($section -join "`n").Trim())
+gh release create "v$version" --title "v$version" --notes-file release-notes.md
 ```
 
 ### 10. Post-release verification
@@ -246,7 +259,7 @@ PSGallery **does not allow deleting or overwriting** a published version. If a r
 1. Publish a new patch version (`X.Y.Z+1`) with the fix
 2. In the PSGallery UI, **unlist** the broken version (Manage Package → Unlist)
    - Unlisted versions remain installable by exact version but are hidden from `Find-Module`
-3. Update `CHANGELOG.md` and `ReleaseNotes.md` to note the pulled version
+3. Update `CHANGELOG.md` to note the pulled version
 
 Never try to force-push over a release tag — create a new tag instead.
 
@@ -295,8 +308,7 @@ To request co-owner access, open an issue or contact an existing maintainer dire
 ## Checklist (quick reference)
 
 - [ ] Version bumped in `UiPathOrch/UiPathOrch.csproj` and `Staging/UiPathOrch.psd1` (values match)
-- [ ] `CHANGELOG.md` updated
-- [ ] `Staging/ReleaseNotes.md` updated
+- [ ] `CHANGELOG.md` updated (and the matching `ReleaseNotes` block in `Staging/UiPathOrch.psd1` copied from it)
 - [ ] `.\Build-Deploy.ps1` clean
 - [ ] All [release acceptance gates](#4-release-acceptance-gates) pass
 - [ ] (If signing) Module files signed, all signatures `Valid`

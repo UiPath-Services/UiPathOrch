@@ -55,9 +55,9 @@ $dstDll = Join-Path $modulePath $dllName
 Write-Host "  DLL: $srcDll -> $dstDll"
 Copy-Item $srcDll $dstDll -Force
 
-# Deploy module files (psd1, psm1, ps1xml, releasenotes.txt)
+# Deploy module files (psd1, psm1, ps1xml)
 $stagingDir = Join-Path $projectRoot 'Staging'
-$moduleFiles = @('UiPathOrch.psd1', 'UiPathOrch.psm1', 'UiPathOrch.Format.ps1xml', 'ReleaseNotes.md')
+$moduleFiles = @('UiPathOrch.psd1', 'UiPathOrch.psm1', 'UiPathOrch.Format.ps1xml')
 foreach ($fileName in $moduleFiles) {
     $src = Join-Path $stagingDir $fileName
     if (Test-Path $src) {
