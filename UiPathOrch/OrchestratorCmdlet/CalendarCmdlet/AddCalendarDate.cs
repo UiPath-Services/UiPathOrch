@@ -69,7 +69,7 @@ public class AddCalendarDateCmdlet : OrchestratorPSCmdlet
             ICollection<ExtendedCalendar> calendars = null;
             try
             {
-                calendars = drive.GetCalendars();
+                calendars = drive.Calendars.Get();
             }
             catch (Exception ex)
             {
@@ -164,7 +164,7 @@ public class AddCalendarDateCmdlet : OrchestratorPSCmdlet
             {
                 string target = calendar.GetPSPath();
 
-                var extendedCalendar = drive.GetCalendar(calendar); // Get ExcludedDates from the existing calendar
+                var extendedCalendar = drive.CalendarsDetailed.Get(calendar.Id!.Value); // Get ExcludedDates from the existing calendar
                 if (extendedCalendar!.ExcludedDates is not null)
                 {
                     //excludedDates?.AddRange(extendedCalendar.ExcludedDates.Select(d => d.ToUniversalTime()));

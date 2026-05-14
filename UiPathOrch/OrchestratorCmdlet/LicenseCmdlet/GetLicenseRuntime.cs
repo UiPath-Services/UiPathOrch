@@ -36,7 +36,7 @@ public class GetLicenseRuntimeCmdlet : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesRobottypes,
             dr => dr.drive.NameColonSeparator,
             dr => dr.drive,
-            dr => dr.drive.GetLicenseRuntime(dr.robotType));
+            dr => dr.drive.LicenseRuntimes.Get(dr.robotType));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

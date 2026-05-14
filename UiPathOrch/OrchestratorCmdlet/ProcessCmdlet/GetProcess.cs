@@ -81,7 +81,7 @@ public class GetProcessCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var releases = drive.GetReleases(folder);
+                var releases = drive.Releases.Get(folder);
                 var targetReleases = releases
                     .FilterByWildcards(r => r?.Name, wpName)
                     .OrderBy(r => r.Name);

@@ -40,7 +40,7 @@ public class ResetProcessVersionCmdlet : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.Releases.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -68,7 +68,7 @@ public class ResetProcessVersionCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var releases = drive.GetReleases(folder);
+                var releases = drive.Releases.Get(folder);
 
                 foreach (var release in releases
                     .Where(e => e.ProcessType != "TestAutomationProcess")

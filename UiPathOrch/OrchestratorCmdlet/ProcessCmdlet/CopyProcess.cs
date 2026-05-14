@@ -48,7 +48,7 @@ public class CopyProcessCmdlet : OrchestratorPSCmdlet
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicReleases?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.GetReleases(srcFolder).FilterByWildcards(b => b?.Name, wpName);
+                var srcEntities = srcDrive.Releases.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName);
                 if (!srcEntities.Any()) continue;
             }
             catch (Exception ex)

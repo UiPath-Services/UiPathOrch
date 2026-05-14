@@ -36,7 +36,7 @@ public class GetProcessRequirementCmdlet : OrchestratorPSCmdlet
             IEnumerable<Release> targetReleases;
             try
             {
-                var releases = drive.GetReleases(folder);
+                var releases = drive.Releases.Get(folder);
                 targetReleases = releases
                     .FilterByWildcards(r => r?.Name, wpName)
                     .OrderBy(r => r.Name);

@@ -214,7 +214,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
         #region ProcessName
         if (!string.IsNullOrEmpty(ProcessName))
         {
-            var releases = drive.GetReleases(folder);
+            var releases = drive.Releases.Get(folder);
             var targetReleases = releases.Where(r => string.Compare(r?.Name, ProcessName, StringComparison.OrdinalIgnoreCase) == 0);
             if (!targetReleases.Any()) return "null";
             filter.AddIfNotNull(targetReleases

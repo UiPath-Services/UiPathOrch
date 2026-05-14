@@ -99,7 +99,7 @@ public class GetMachineClientSecretIdCmdlet : OrchestratorPSCmdlet
                 {
                     if (machine.LicenseKey is null) continue;
 
-                    var secrets = drive.GetMachineClientSecret(machine.LicenseKey);
+                    var secrets = drive.MachineClientSecrets.Get(machine.LicenseKey);
                     if (secrets is null) continue;
 
                     foreach (var secret in secrets
@@ -148,7 +148,7 @@ public class GetMachineClientSecretIdCmdlet : OrchestratorPSCmdlet
             using var results = OrchThreadPool.RunForEach(targetMachines,
                 machine => machine.GetPSPath(),
                 machine => machine,
-                machine => drive.GetMachineClientSecret(machine.LicenseKey!));
+                machine => drive.MachineClientSecrets.Get(machine.LicenseKey!));
 
             foreach (var result in results)
             {

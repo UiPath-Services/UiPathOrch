@@ -53,7 +53,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
             var results = ParallelResults.GroupBy(drivesFolders, df =>
             {
                 var (drive, folder) = df;
-                var releases = drive.GetReleases(folder)
+                var releases = drive.Releases.Get(folder)
                     .Where(r => wp.IsMatch(r.Name))
                     .Where(r => r.ProcessType != "TestAutomationProcess")
                     .ExcludeByWildcards(r => r?.Name, wpName)
@@ -99,7 +99,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
             var results = ParallelResults.GroupBy(drivesFolders, df =>
             {
                 var (drive, folder) = df;
-                var releases = drive.GetReleases(folder)
+                var releases = drive.Releases.Get(folder)
                     .Where(r => wp.IsMatch(r.Name))
                     .Where(r => r.ProcessType != "TestAutomationProcess")
                     .ExcludeByWildcards(r => r?.Id.ToString(), wpId)
@@ -148,7 +148,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
             var results = ParallelResults.GroupBy(drivesFolders, df =>
             {
                 var (drive, folder) = df;
-                var releases = drive.GetReleases(folder)
+                var releases = drive.Releases.Get(folder)
                     .Where(r => wp.IsMatch(r.Name))
                     .Where(r => r.ProcessType != "TestAutomationProcess")
                     .FilterByWildcards(r => r?.Name, wpName)
@@ -239,7 +239,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
 
                 if (Name is not null && Name.Length != 0)
                 {
-                    var releases = drive.GetReleases(folder);
+                    var releases = drive.Releases.Get(folder);
 
                     foreach (var release in releases
                         .Where(r => r.ProcessType != "TestAutomationProcess")

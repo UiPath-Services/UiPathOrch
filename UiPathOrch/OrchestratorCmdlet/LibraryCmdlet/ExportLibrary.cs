@@ -70,8 +70,8 @@ public class ExportLibraryCmdlet : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        //var versions = (HostFeed ? drive.GetLibraryVersionsInHostFeed(library.Id!) : drive.GetLibraryVersions(library.Id!))
-                        var versions = drive.GetLibraryVersions(library.Id!)
+                        //var versions = (HostFeed ? drive.LibraryVersionsInHostFeed.Get(library.Id!) : drive.LibraryVersions.Get(library.Id!))
+                        var versions = drive.LibraryVersions.Get(library.Id!)
                             .FilterByWildcards(l => l?.Version, wpVersion)
                             //.OrderBy(l => l.Version!, VersionComparer.Instance)
                             .ToList();

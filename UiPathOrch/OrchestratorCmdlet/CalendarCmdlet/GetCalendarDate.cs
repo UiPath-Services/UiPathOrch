@@ -74,7 +74,7 @@ public class GetCalendarDateCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var calendars = drive.GetCalendars();
+                var calendars = drive.Calendars.Get();
                 var targetCalendars = calendars?
                     .FilterByWildcards(c => c?.Name, calendarWildcards)
                     .OrderBy(c => c.Name)
@@ -85,7 +85,7 @@ public class GetCalendarDateCmdlet : OrchestratorPSCmdlet
                 using var results = OrchThreadPool.RunForEach(targetCalendars,
                     calendar => calendar.GetPSPath(),
                     calendar => calendar,
-                    calendar => drive.GetCalendar(calendar));
+                    calendar => drive.CalendarsDetailed.Get(calendar.Id!.Value));
 
                 foreach (var result in results)
                 {

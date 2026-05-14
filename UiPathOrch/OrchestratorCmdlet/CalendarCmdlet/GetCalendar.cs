@@ -80,7 +80,7 @@ public class GetCalendarCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var calendars = drive.GetCalendars();
+                var calendars = drive.Calendars.Get();
                 var targetCalendars = calendars?
                     .FilterByWildcards(c => c?.Name, wpName)
                     .OrderBy(c => c.Name)

@@ -22,7 +22,7 @@ public class ImportLibraryCmdlet : OrchestratorPSCmdlet
             var (id, version) = ExtractPackageIdVersionFromFilePath(fullPath);
             if (!string.IsNullOrEmpty(id) && !string.IsNullOrEmpty(version))
             {
-                var dstExistingVersions = drive.GetLibraryVersions(id);
+                var dstExistingVersions = drive.LibraryVersions.Get(id);
                 if (dstExistingVersions is not null)
                 {
                     return dstExistingVersions.Any(v => v.Version == version);

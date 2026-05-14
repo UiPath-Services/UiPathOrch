@@ -42,7 +42,7 @@ public class RemoveLibraryCmdlet : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        var matchingVersions = drive.GetLibraryVersions(library.Id!)
+                        var matchingVersions = drive.LibraryVersions.Get(library.Id!)
                             .FilterByWildcards(v => v?.Version, wpVersion);
                         //.OrderBy(v => v.Version!, VersionComparer.Instance);
 

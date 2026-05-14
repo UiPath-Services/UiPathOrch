@@ -470,13 +470,6 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #endregion
 
-    #region OrchRuntimeLicense cache
-    // key: RobotType
-    // Backwards-compat shim: delegates to LicenseRuntimes (KeyedListCachePerTenant).
-    public ReadOnlyCollection<LicenseRuntime> GetLicenseRuntime(string robotType) =>
-        LicenseRuntimes.Get(robotType);
-    #endregion
-
     #region OrchTrigger cache
     // Backwards-compat shim: delegates to Triggers (ListCachePerFolder).
     // Pre-v12 Personal workspaces have no triggers — short-circuit so we don't
@@ -540,34 +533,6 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #endregion
 
-    #region OrchProcess cache
-    // Backwards-compat shim: delegates to Releases (ListCachePerFolder).
-    public ICollection<Release> GetReleases(Folder folder) => Releases.Get(folder);
-
-    // Backwards-compat shim: delegates to ReleasesDetailed
-    // (KeyedSingleCachePerFolder). Behavior change vs the old GetReleaseById:
-    // the old method always re-fetched (the cache write was a side-effect for
-    // the now-removed mirror to _dicReleases); the new path returns the cached
-    // entry on subsequent calls. Mutating cmdlets (UpdateProcess, RemoveProcess,
-    // CopyItem etc.) already invalidate the per-folder cache, so the staleness
-    // window is bounded by user-driven mutations.
-    public Release? GetReleaseById(Folder folder, Int64 releaseId) =>
-        ReleasesDetailed.Get(folder, releaseId);
-    #endregion
-
-    #region OrchLibraryVersion cache
-    // Backwards-compat shim: delegates to LibraryVersions (KeyedListCachePerTenant).
-    public ReadOnlyCollection<LibraryVersion> GetLibraryVersions(string libraryId)
-        => LibraryVersions.Get(libraryId);
-    #endregion
-
-    #region OrchLibraryVersion cache
-    // key: Id
-    // Backwards-compat shim: delegates to LibraryVersionsInHostFeed (KeyedListCachePerTenant).
-    public ReadOnlyCollection<LibraryVersion> GetLibraryVersionsInHostFeed(string libraryId)
-        => LibraryVersionsInHostFeed.Get(libraryId);
-    #endregion
-
     #region OrchPackage cache
     // Backwards-compat shim: delegates to Packages (KeyedListCachePerTenant).
     // Path is set per-call in the wrapper rather than in the cache initializer
@@ -607,19 +572,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         }
         return versions;
     }
-    #endregion
-
-    #region PackageEntryPoint cache
-    // Backwards-compat shim: delegates to PackageEntryPoints (KeyedListCachePerTenant)
-    // keyed by (feedId, packageId, version).
-    public ReadOnlyCollection<PackageEntryPoint> GetPackageEntryPoints(string? feedId, string packageId, string version) =>
-        PackageEntryPoints.Get((feedId ?? "", packageId, version));
-    #endregion
-
-    #region OrchMachineClientSecret cache
-    // Backwards-compat shim: delegates to MachineClientSecrets (KeyedSingleCachePerTenant).
-    public MachineClientSecretResponse[]? GetMachineClientSecret(string licenseKey) =>
-        MachineClientSecrets.Get(licenseKey);
     #endregion
 
     // Backwards-compat wrapper: QueueLinks (KeyedSingleCachePerTenant) keyed by
@@ -685,10 +637,6 @@ public partial class OrchDriveInfo : PSDriveInfo
     #endregion
 
     #region OrchTestSetExecution cache
-    // Backwards-compat shim: delegates to TestSetExecutions (IncrementalCachePerFolder).
-    public ReadOnlyCollection<TestSetExecution> GetTestSetExecutions(Folder folder, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue) =>
-        TestSetExecutions.Fetch(folder, query, skip, first);
-
     /// <summary>
     /// Searches for a TestSetExecution by name from cache or API and returns its Id.
     /// Returns null if not found.
@@ -709,7 +657,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         // If not in cache, search by name via API
         var filter = $"&$filter=(Name%20eq%20%27{Uri.EscapeDataString(name)}%27)";
-        var results = GetTestSetExecutions(folder, filter, 0, 1);
+        var results = TestSetExecutions.Fetch(folder, filter, 0, 1);
         var execution = results.FirstOrDefault();
         return execution?.Id;
     }
@@ -764,7 +712,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 if (orFilter is not null)
                 {
                     var query = $"&$filter={orFilter}";
-                    GetTestSetExecutions(folder, query, 0, ulong.MaxValue);
+                    TestSetExecutions.Fetch(folder, query, 0, ulong.MaxValue);
                 }
             }
             folderTestSetExecutions = TestSetExecutions.GetCache(folder);
@@ -819,21 +767,6 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #endregion
 
-    #region OrchCalendar cache
-
-    // Backwards-compat shims. The list endpoint (/odata/Calendars) and the
-    // per-id detail endpoint (/odata/Calendars(id)) return different shapes —
-    // the list omits TimeZoneId / ExcludedDates while the detail returns them
-    // — and there's no server-side field that reliably distinguishes shallow
-    // from detailed across Orchestrator versions. So they live in two
-    // separate caches: callers iterate the list via Calendars.Get() and
-    // resolve a single calendar's detail via CalendarsDetailed.Get(id).
-    public ICollection<ExtendedCalendar> GetCalendars() => Calendars.Get();
-    public ExtendedCalendar? GetCalendar(ExtendedCalendar calendar) =>
-        CalendarsDetailed.Get(calendar.Id!.Value);
-
-    #endregion
-
     #region OrchExecutionSettings Cache
     // Backwards-compat wrapper: ExecutionSettings (KeyedSingleCachePerTenant) is keyed
     // by `scope` only; PathScope / Scope depend on `strScope` and are set per-call so
@@ -879,11 +812,6 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         return logs.AsReadOnly();
     }
-
-    // Backwards-compat shim: SearchPmDirectoryCache (KeyedSingleCachePerTenant)
-    // is keyed by the lowercased search text. Caller passes any case.
-    public PmDirectoryEntityInfo[]? SearchPmDirectory(string key) =>
-        SearchPmDirectoryCache.Get(key.ToLower());
 
     // key: (name, kind)
     // kind: "user", "group", or "application" - robots cannot be searched apparently.

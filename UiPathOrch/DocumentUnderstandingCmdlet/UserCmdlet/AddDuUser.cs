@@ -230,7 +230,7 @@ public class AddDuRoleToDuUserCmdlet : OrchestratorPSCmdlet
                 case "DirectoryRobotUser":
                     foreach (var line in lines)
                     {
-                        var addingMember = drive.ParentDrive.SearchPmDirectory(line.Key.name)?
+                        var addingMember = drive.ParentDrive.SearchPmDirectoryCache.Get(line.Key.name.ToLower())?
                             .Where(t => t.objectType == type)
                             .FirstOrDefault(t => string.Compare(t.identityName, line.Key.name, StringComparison.OrdinalIgnoreCase) == 0);
 
@@ -281,7 +281,7 @@ public class AddDuRoleToDuUserCmdlet : OrchestratorPSCmdlet
                 switch (type)
                 {
                     case "DirectoryRobotUser":
-                        var robotEntry = drive.ParentDrive.SearchPmDirectory(name)?
+                        var robotEntry = drive.ParentDrive.SearchPmDirectoryCache.Get(name.ToLower())?
                             .Where(t => string.Compare(t.objectType, "DirectoryRobotUser", StringComparison.OrdinalIgnoreCase) == 0)
                             .FirstOrDefault(t => string.Compare(t.identityName, name, StringComparison.OrdinalIgnoreCase) == 0);
                         if (robotEntry is null) continue;

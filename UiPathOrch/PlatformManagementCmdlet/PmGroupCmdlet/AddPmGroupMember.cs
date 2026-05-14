@@ -89,7 +89,7 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
                 var existingGroups = drive.PmGroups.Get();
                 var updatingGroups = existingGroups.FilterByWildcards(u => u!.name!, wpGroupName);
 
-                var users = drive.SearchPmDirectory(wordToComplete);
+                var users = drive.SearchPmDirectoryCache.Get(wordToComplete.ToLower());
                 if (users is null) continue;
 
                 foreach (var user in users
@@ -103,7 +103,7 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
                     // Skip if it is a local group
                     if (user.objectType == "DirectoryGroup" && user.source == "local") continue;
 
-                    // Note: SearchPmDirectory() does not return non-confidential apps, so this is fine
+                    // Note: SearchPmDirectoryCache.Get() does not return non-confidential apps, so this is fine
 
                     bFound = true;
                     string tiphelp = user.TipHelp(drive.NameColonSeparator);
@@ -180,7 +180,7 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
                 case "DirectoryRobotUser":
                     foreach (var name in lines)
                     {
-                        var addingMember = drive.SearchPmDirectory(name.userName)?
+                        var addingMember = drive.SearchPmDirectoryCache.Get(name.userName.ToLower())?
                             .Where(t => t.objectType == type)
                             .FirstOrDefault(t => string.Compare(t.identityName, name.userName, StringComparison.OrdinalIgnoreCase) == 0);
 
@@ -226,7 +226,7 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
                     switch (type)
                     {
                         case "DirectoryRobotUser":
-                            robotEntry = drive.SearchPmDirectory(name)?
+                            robotEntry = drive.SearchPmDirectoryCache.Get(name.ToLower())?
                                 .Where(t => string.Compare(t.objectType, "DirectoryRobotUser", StringComparison.OrdinalIgnoreCase) == 0)
                                 .FirstOrDefault(t => string.Compare(t.identityName, name, StringComparison.OrdinalIgnoreCase) == 0);
                             if (robotEntry is not null)

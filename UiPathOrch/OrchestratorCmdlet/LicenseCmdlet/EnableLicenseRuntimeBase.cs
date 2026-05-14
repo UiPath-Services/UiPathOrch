@@ -51,7 +51,7 @@ public class EnableLicenseRuntimeCmdletBase<Enable> : OrchestratorPSCmdlet where
                 {
                     try
                     {
-                        drive.GetLicenseRuntime(robotType);
+                        drive.LicenseRuntimes.Get(robotType);
                     }
                     catch (Exception ex)
                     {
@@ -65,7 +65,7 @@ public class EnableLicenseRuntimeCmdletBase<Enable> : OrchestratorPSCmdlet where
                 foreach (var license in specifiedRobotTypes
                     .SelectMany(rt =>
                     {
-                        try { return (IEnumerable<LicenseRuntime>)drive.GetLicenseRuntime(rt); }
+                        try { return (IEnumerable<LicenseRuntime>)drive.LicenseRuntimes.Get(rt); }
                         catch { return Enumerable.Empty<LicenseRuntime>(); }
                     })
                     .Where(l => wp.IsMatch(l.Key))
@@ -98,7 +98,7 @@ public class EnableLicenseRuntimeCmdletBase<Enable> : OrchestratorPSCmdlet where
         {
             foreach (var robotType in specifiedRobotType.WithCancellation(cancelHandler.Token))
             {
-                var licenses = drive.GetLicenseRuntime(robotType);
+                var licenses = drive.LicenseRuntimes.Get(robotType);
 
                 foreach (var license in licenses
                     .Where(t => Enable.Value

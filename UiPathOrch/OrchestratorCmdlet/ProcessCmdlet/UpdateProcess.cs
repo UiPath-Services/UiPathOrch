@@ -174,7 +174,7 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder).FilterByWildcards(p => p?.Name, wpName));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.Releases.Get(df.folder).FilterByWildcards(p => p?.Name, wpName));
 
             foreach (var result in results)
             {
@@ -213,13 +213,13 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                var processes = drive.GetReleases(folder);
+                var processes = drive.Releases.Get(folder);
                 var targetProcesses = processes.SelectByWildcards(p => p?.Name, wpName);
                 var feedId = drive.FolderFeedId.Get(folder);
                 foreach (var p in targetProcesses)
                 {
                     var searchVersion = (!string.IsNullOrEmpty(paramVersion)) ? paramVersion : p.ProcessVersion;
-                    var entryPoints = drive.GetPackageEntryPoints(feedId, p.ProcessKey!, searchVersion!);
+                    var entryPoints = drive.PackageEntryPoints.Get((feedId ?? "", p.ProcessKey!, searchVersion!));
 
                     string tiphelp = $"{p?.GetPSPath()}:{searchVersion}";
                     foreach (var e in entryPoints.Where(e => wp.IsMatch(e.Path)))
@@ -245,7 +245,7 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
             // Exclude IDs already selected by other parameters from candidates
             var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
-            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.Releases.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -292,7 +292,7 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
             // Exclude IDs already selected by other parameters from candidates
             var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
 
-            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.Releases.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -325,7 +325,7 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
             IEnumerable<Release> processes = null;
             try
             {
-                processes = drive.GetReleases(folder);
+                processes = drive.Releases.Get(folder);
             }
             catch (Exception ex)
             {
@@ -336,13 +336,13 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
 
             var targetProcesses = processes.SelectByWildcards(p => p?.Name, wpName).OrderBy(p => p.Name);
 
-            // GetReleaseById() must be called before entering the iteration loop.
+            // ReleasesDetailed.Get() must be called before entering the iteration loop.
             // (Calling it inside the loop would break the iteration.)
             // Since it needs to be done anyway, it's better to run it on a separate thread.
             using var results = OrchThreadPool.RunForEach(targetProcesses,
                 proc => proc.GetPSPath(),
                 proc => proc,
-                proc => drive.GetReleaseById(folder, proc.Id!.Value));
+                proc => drive.ReleasesDetailed.Get(folder, proc.Id!.Value));
 
             foreach (var result in results.WithCancellation(cancelHandler.Token))
             {
@@ -470,13 +470,13 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
                         if (bVersionChanged && string.IsNullOrEmpty(resolvedEntryPoint))
                         {
                             // Check the current EntryPath
-                            var entryPoint = drive.GetPackageEntryPoints(feedId, process.ProcessKey ?? "", process.ProcessVersion!)
+                            var entryPoint = drive.PackageEntryPoints.Get((feedId ?? "", process.ProcessKey ?? "", process.ProcessVersion!))
                                 .FirstOrDefault(e => e.Id == process.EntryPointId);
                             resolvedEntryPoint = entryPoint?.Path;
                         }
                         if (!newRelease.AssignIdFromName(
                                 resolvedEntryPoint,
-                                () => drive.GetPackageEntryPoints(feedId, process.ProcessKey ?? "", newRelease.ProcessVersion ?? process.ProcessVersion ?? ""),
+                                () => drive.PackageEntryPoints.Get((feedId ?? "", process.ProcessKey ?? "", newRelease.ProcessVersion ?? process.ProcessVersion ?? "")),
                                 e => e.Path!,
                                 e => e.Id!,
                                 (s, v) => { if (process.EntryPointId != v) { s!.EntryPointId = v; releaseDirty = true; } },

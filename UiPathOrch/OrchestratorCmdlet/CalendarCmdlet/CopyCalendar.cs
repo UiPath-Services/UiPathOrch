@@ -38,7 +38,7 @@ public class CopyCalendarCmdlet : OrchestratorPSCmdlet
         ICollection<ExtendedCalendar>? srcCalendars;
         try
         {
-            srcCalendars = srcDrive.GetCalendars();
+            srcCalendars = srcDrive.Calendars.Get();
         }
         catch (Exception ex)
         {
@@ -69,7 +69,7 @@ public class CopyCalendarCmdlet : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        var srcDetailedCalendar = srcDrive.GetCalendar(srcCalendar);
+                        var srcDetailedCalendar = srcDrive.CalendarsDetailed.Get(srcCalendar.Id!.Value);
                         if (srcDetailedCalendar is null)
                         {
                             continue;

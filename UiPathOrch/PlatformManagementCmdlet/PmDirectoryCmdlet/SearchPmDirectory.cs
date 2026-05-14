@@ -39,7 +39,7 @@ public class SearchPmDirectoryCmdlet : OrchestratorPSCmdlet
             var drives = ResolvePmDrives(fakeBoundParameters);
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drives, drive => drive.SearchPmDirectory(name));
+            var results = ParallelResults.GroupBy(drives, drive => drive.SearchPmDirectoryCache.Get(name.ToLower()));
 
             foreach (var result in results)
             {
@@ -64,7 +64,7 @@ public class SearchPmDirectoryCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var entityInfo = drive.SearchPmDirectory(Name!);
+                var entityInfo = drive.SearchPmDirectoryCache.Get(Name!.ToLower());
                 if (entityInfo is null) continue;
 
                 // PmDirectoryEntityInfo is org-shared (KeyedSingleCachePerOrganization);

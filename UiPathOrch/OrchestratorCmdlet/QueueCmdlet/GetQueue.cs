@@ -83,7 +83,7 @@ public class GetQueueCmdlet : OrchestratorPSCmdlet
             {
                 try
                 {
-                    var releases = drive.GetReleases(folder);
+                    var releases = drive.Releases.Get(folder);
                     release = releases.FirstOrDefault(r => r.Id == q.ReleaseId)?.Name;
                 }
                 catch (Exception ex)

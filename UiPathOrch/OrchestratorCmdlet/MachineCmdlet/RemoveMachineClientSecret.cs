@@ -98,7 +98,7 @@ public class RemoveMachineClientSecretCmdlet : OrchestratorPSCmdlet
                 {
                     if (machine.LicenseKey is null) continue;
 
-                    var secrets = drive.GetMachineClientSecret(machine.LicenseKey);
+                    var secrets = drive.MachineClientSecrets.Get(machine.LicenseKey);
                     if (secrets is null) continue;
 
                     foreach (var secret in secrets
@@ -154,7 +154,7 @@ public class RemoveMachineClientSecretCmdlet : OrchestratorPSCmdlet
                 MachineClientSecretResponse[] secrets = null;
                 try
                 {
-                    secrets = drive.GetMachineClientSecret(m.LicenseKey);
+                    secrets = drive.MachineClientSecrets.Get(m.LicenseKey);
                 }
                 catch (OperationCanceledException)
                 {

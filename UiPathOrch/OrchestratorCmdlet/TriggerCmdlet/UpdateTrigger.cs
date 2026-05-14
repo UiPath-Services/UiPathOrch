@@ -295,7 +295,7 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
                 #region // Convert CalendarName to CalendarId
                 postTrigger.AssignIdFromName(
                     CalendarName,
-                    drive.GetCalendars!,
+                    () => drive.Calendars.Get(),
                     e => e.Name!,
                     e => e.Id!,
                     (s, v) => { if (trigger.CalendarId != v) { s.CalendarId = v; dirty = true; } },
@@ -305,7 +305,7 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
                 #region Convert ReleaseName to ReleaseId
                 postTrigger.AssignIdFromName(
                     ReleaseName,
-                    () => drive.GetReleases(folder),
+                    () => drive.Releases.Get(folder),
                     e => e.Name!,
                     e => e.Id!,
                     (s, v) => { if (trigger.ReleaseId != v) { s.ReleaseId = v; dirty = true; } },

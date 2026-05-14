@@ -49,14 +49,14 @@ public class RemoveCalendarDateCmdlet : OrchestratorPSCmdlet
                 .Select(date => date!.Value)
                 .ToList();
 
-            var calendarsResults = ParallelResults.GroupBy(drives, drive => drive.GetCalendars());
+            var calendarsResults = ParallelResults.GroupBy(drives, drive => drive.Calendars.Get());
 
             foreach (var calendarsResult in calendarsResults)
             {
                 var drive = calendarsResult.Source;
 
                 var detailedCalendarResults = ParallelResults.ForEach(calendarsResult
-                    .FilterByWildcards(c => c?.Name, wpCalendarName), calendar => drive.GetCalendar(calendar));
+                    .FilterByWildcards(c => c?.Name, wpCalendarName), calendar => drive.CalendarsDetailed.Get(calendar.Id!.Value));
 
                 foreach (var (calendar, calendarDetailed) in detailedCalendarResults)
                 {
@@ -93,7 +93,7 @@ public class RemoveCalendarDateCmdlet : OrchestratorPSCmdlet
             ICollection<ExtendedCalendar> calendars = null;
             try
             {
-                calendars = drive.GetCalendars();
+                calendars = drive.Calendars.Get();
             }
             catch (Exception ex)
             {
@@ -113,7 +113,7 @@ public class RemoveCalendarDateCmdlet : OrchestratorPSCmdlet
                 }
                 else
                 {
-                    var detailedCalendar = drive.GetCalendar(targetCalendar);
+                    var detailedCalendar = drive.CalendarsDetailed.Get(targetCalendar.Id!.Value);
                     _parameters[(drive, targetCalendar.Name!)] = (detailedCalendar!, ExcludedDate?.ToList() ?? []);
                 }
             }

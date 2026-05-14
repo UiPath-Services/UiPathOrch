@@ -55,8 +55,8 @@ public class GetLibraryVersionCmdlet : OrchestratorPSCmdlet
             t => t.lib.GetPSPath(),
             t => (object)t.lib,
             t => (HostFeed
-                ? t.drive.GetLibraryVersionsInHostFeed(t.lib.Id!)
-                : t.drive.GetLibraryVersions(t.lib.Id!))
+                ? t.drive.LibraryVersionsInHostFeed.Get(t.lib.Id!)
+                : t.drive.LibraryVersions.Get(t.lib.Id!))
                 .FilterByWildcards(l => l?.Version, wpVersion),
             cancelHandler.Token);
 

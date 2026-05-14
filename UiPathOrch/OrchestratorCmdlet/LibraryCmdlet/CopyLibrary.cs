@@ -39,7 +39,7 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
         try
         {
             // We could also search by Key, but that would corrupt the cache.
-            var dstExistingVersions = drive.GetLibraryVersions(version.Id!);
+            var dstExistingVersions = drive.LibraryVersions.Get(version.Id!);
             if (dstExistingVersions is not null)
             {
                 return dstExistingVersions.Any(v => v.Version == version.Version);
@@ -110,7 +110,7 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
                 try
                 {
                     srcDrive.LibraryVersions.ClearCache();
-                    var versions = srcDrive.GetLibraryVersions(library.Id!)
+                    var versions = srcDrive.LibraryVersions.Get(library.Id!)
                         .FilterByWildcards(l => l?.Version, wpVersion)
                         //.OrderBy(version => version.Version!, VersionComparer.Instance)
                         .ToList();

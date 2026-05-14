@@ -163,7 +163,7 @@ public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
 
 
 
-                //var groups = drive.SearchPmDirectory(groupName);
+                //var groups = drive.SearchPmDirectoryCache.Get(groupName.ToLower());
                 //if (groups is null) continue;
 
                 //foreach (var group in groups

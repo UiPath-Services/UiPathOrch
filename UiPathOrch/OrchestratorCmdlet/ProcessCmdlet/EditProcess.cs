@@ -25,7 +25,7 @@ public class EditProcessCmdlet : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
             df => df.folder,
-            df => df.drive.GetReleases(df.folder));
+            df => df.drive.Releases.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

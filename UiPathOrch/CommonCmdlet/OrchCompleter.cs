@@ -1148,7 +1148,7 @@ internal class BucketFullPathCompleter : OrchArgumentCompleter
 internal class CalendarNameCompleter : DriveScopedCompleter<ExtendedCalendar>
 {
     protected override IEnumerable<ExtendedCalendar> GetEntities(OrchDriveInfo drive)
-        => drive.GetCalendars();
+        => drive.Calendars.Get();
     protected override string GetName(ExtendedCalendar e) => e.Name!;
     protected override string GetTipHelp(OrchDriveInfo drive, ExtendedCalendar e) => e.GetPSPath();
     protected override CompletionResultType ResultType => CompletionResultType.Text;
@@ -1275,8 +1275,8 @@ internal class LibraryVersionCompleter : OrchArgumentCompleter
                 drive.LibrariesInTenant.Get().FilterByWildcards(l => l?.Id, wpId);
 
             return ParallelResults.GroupBy(libraries, library => hostFeed ?
-                drive.GetLibraryVersionsInHostFeed(library.Id!) :
-                drive.GetLibraryVersions(library.Id!));
+                drive.LibraryVersionsInHostFeed.Get(library.Id!) :
+                drive.LibraryVersions.Get(library.Id!));
         });
 
         foreach (var libraries in results)
@@ -1380,7 +1380,7 @@ internal class PackageVersionCompleter : OrchArgumentCompleter
 internal class ProcessNameCompleter : FolderScopedCompleter<Release>
 {
     protected override IEnumerable<Release> GetEntities(OrchDriveInfo drive, Folder folder)
-        => drive.GetReleases(folder);
+        => drive.Releases.Get(folder);
     protected override string GetName(Release e) => e.Name!;
     protected override string GetTipHelp(Release e) => TipHelp(e);
 }
@@ -1431,7 +1431,7 @@ internal class JobIdCompleter : OrchArgumentCompleter
 internal class ListReleasesCompleter : FolderScopedCompleter<Release>
 {
     protected override IEnumerable<Release> GetEntities(OrchDriveInfo drive, Folder folder)
-        => drive.GetReleases(folder);
+        => drive.Releases.Get(folder);
     protected override string GetName(Release e) => e.Name!;
     protected override string GetTipHelp(Release e) => TipHelp(e);
     protected override CompletionResultType ResultType => CompletionResultType.Text;
@@ -1631,7 +1631,7 @@ internal class PmDirectoryNameCompleter : OrchArgumentCompleter
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
         wordToComplete = RemoveEnclosingQuotes(wordToComplete);
-        var results = ParallelResults.GroupBy(drives, drive => drive.SearchPmDirectory(RemoveEnclosingQuotes(wordToComplete)));
+        var results = ParallelResults.GroupBy(drives, drive => drive.SearchPmDirectoryCache.Get(RemoveEnclosingQuotes(wordToComplete).ToLower()));
 
         foreach (var result in results)
         {
@@ -1673,7 +1673,7 @@ internal class PmDirectoryNameCompleter4Du : OrchArgumentCompleter
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
         wordToComplete = RemoveEnclosingQuotes(wordToComplete);
-        var results = ParallelResults.GroupBy(drives, drive => drive.ParentDrive.SearchPmDirectory(wordToComplete));
+        var results = ParallelResults.GroupBy(drives, drive => drive.ParentDrive.SearchPmDirectoryCache.Get(wordToComplete.ToLower()));
 
         foreach (var result in results)
         {

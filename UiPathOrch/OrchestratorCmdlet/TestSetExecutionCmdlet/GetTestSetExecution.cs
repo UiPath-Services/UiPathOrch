@@ -78,11 +78,11 @@ public class GetTestSetExecutionCmdlet : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            // GetTestSetExecutions() fetches from the API every time even if a cache exists.
+            // TestSetExecutions.Fetch() fetches from the API every time even if a cache exists.
             // Therefore, it is not suitable to call this from a completer.
-            // var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.GetTestSetExecutions(df.folder));
+            // var results = ParallelResults3.GroupBy(drivesFolders, df => df.drive.TestSetExecutions.Fetch(df.folder));
 
-            // Only call GetTestSetExecutions() when there is no cache.
+            // Only call TestSetExecutions.Fetch() when there is no cache.
             // If a cache exists, use it.
             foreach (var (drive, folder) in drivesFolders)
             {
@@ -94,7 +94,7 @@ public class GetTestSetExecutionCmdlet : OrchestratorPSCmdlet
                 }
                 else
                 {
-                    testSetExecutions = drive.GetTestSetExecutions(folder);
+                    testSetExecutions = drive.TestSetExecutions.Fetch(folder);
                 }
 
                 foreach (var e in testSetExecutions!
@@ -255,7 +255,7 @@ public class GetTestSetExecutionCmdlet : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
             df => df.folder,
-            df => df.drive.GetTestSetExecutions(df.folder, filter, skip, first)
+            df => df.drive.TestSetExecutions.Fetch(df.folder, filter, skip, first)
         );
 
         using var cancelHandler = new ConsoleCancelHandler();

@@ -58,7 +58,7 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
                 //var existingGroups = drive.GetPmGroups().Values;
                 //var updatingGroups = existingGroups.FilterByWildcards(u => u!.name!, wpGroupName);
 
-                var groups = drive.SearchPmDirectory(wordToComplete);
+                var groups = drive.SearchPmDirectoryCache.Get(wordToComplete.ToLower());
                 if (groups is null) continue;
 
                 foreach (var group in groups
@@ -98,7 +98,7 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
             {
                 foreach (var groupName in groupNames)
                 {
-                    var groups = drive.SearchPmDirectory(groupName);
+                    var groups = drive.SearchPmDirectoryCache.Get(groupName.ToLower());
                     if (groups is null) continue;
 
                     foreach (var group in groups
@@ -138,7 +138,7 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
         {
             foreach (var groupName in (GroupName ?? []).WithCancellation(cancelHandler.Token))
             {
-                var groups = drive.SearchPmDirectory(groupName);
+                var groups = drive.SearchPmDirectoryCache.Get(groupName.ToLower());
                 if (groups is null) continue;
 
                 foreach (var group in groups

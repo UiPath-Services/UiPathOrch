@@ -104,7 +104,7 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
             IEnumerable<Release> targetReleases;
             try
             {
-                var releases = drive.GetReleases(folder);
+                var releases = drive.Releases.Get(folder);
                 targetReleases = releases
                     .FilterByWildcards(r => r?.Name, nameWildcards)
                     .OrderBy(r => r.Name);
@@ -118,7 +118,7 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
             using var results = OrchThreadPool.RunForEach(targetReleases,
                 release => release.GetPSPath(),
                 release => release,
-                release => drive.GetReleaseById(folder, release.Id!.Value));
+                release => drive.ReleasesDetailed.Get(folder, release.Id!.Value));
 
             foreach (var result in results.WithCancellation(cancelHandler.Token))
             {
@@ -130,7 +130,7 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
                     if (releaseDetailed.EntryPointId is not null)
                     {
                         var feedId = drive.FolderFeedId.Get(folder);
-                        var entryPoints = drive.GetPackageEntryPoints(feedId, releaseDetailed.ProcessKey ?? "", releaseDetailed.ProcessVersion!);
+                        var entryPoints = drive.PackageEntryPoints.Get((feedId ?? "", releaseDetailed.ProcessKey ?? "", releaseDetailed.ProcessVersion!));
                         var entryPath = entryPoints.FirstOrDefault(e => e.Id == releaseDetailed.EntryPointId)?.Path;
                         releaseDetailed.EntryPointPath = entryPath;
                     }

@@ -339,7 +339,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
                 #region // Convert CalendarName to CalendarId
                 schedule.AssignIdFromName(
                     CalendarName,
-                    drive.GetCalendars!,
+                    () => drive.Calendars.Get(),
                     e => e.Name!,
                     e => e.Id!,
                     (s, v) => s.CalendarId = v,
@@ -362,7 +362,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
                 #region Convert ReleaseName to ReleaseId
                 schedule.AssignIdFromName(
                     ReleaseName,
-                    () => drive.GetReleases(folder),
+                    () => drive.Releases.Get(folder),
                     e => e.Name!,
                     e => e.Id!,
                     (s, v) => s.ReleaseId = v,

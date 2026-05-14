@@ -146,7 +146,7 @@ public class NewQueueCmdlet : OrchestratorPSCmdlet
                 #region Convert Release to ReleaseId
                 newQueue.AssignIdFromName(
                     Release,
-                    () => drive.GetReleases(folder),
+                    () => drive.Releases.Get(folder),
                     e => e.Name!,
                     e => e.Id!,
                     (s, v) => s.ReleaseId = v,

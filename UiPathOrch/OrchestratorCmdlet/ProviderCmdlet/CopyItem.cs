@@ -342,7 +342,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         //if (string.IsNullOrEmpty(srcUserEmail))
                         //{
                         //    // If not found among tenant users, search the directory.
-                        //    var srcDirectoryUser = srcDrive.SearchPmDirectory(userName)?
+                        //    var srcDirectoryUser = srcDrive.SearchPmDirectoryCache.Get(userName.ToLower())?
                         //        .Where(u => u.type == type)
                         //        .Where(u => string.Compare(u.identityName, userName, StringComparison.OrdinalIgnoreCase) == 0)
                         //        .FirstOrDefault();
@@ -689,7 +689,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         try
         {
             // call ToList() to create shallow copy
-            processes = srcDrive.GetReleases(srcFolder)
+            processes = srcDrive.Releases.Get(srcFolder)
                 .FilterByWildcards(r => r?.Name, wpName)
                 .ToList();
         }
@@ -723,7 +723,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 Release srcRelease = null;
                 try
                 {
-                    srcRelease = srcDrive.GetReleaseById(srcFolder, process.Id ?? 0);
+                    srcRelease = srcDrive.ReleasesDetailed.Get(srcFolder, process.Id ?? 0);
                 }
                 catch (Exception ex)
                 {
@@ -755,8 +755,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     if (srcRelease.EntryPointId.HasValue)
                     {
                         string srcFeedId = srcDrive.FolderFeedId.Get(srcFolder);
-                        var srcEntryPoints = srcDrive.GetPackageEntryPoints(srcFeedId, srcRelease.ProcessKey!, srcRelease.ProcessVersion!).ToList();
-                        var dstEntryPoints = dstDrive.GetPackageEntryPoints(dstFeedId, srcRelease.ProcessKey!, srcRelease.ProcessVersion!).ToList();
+                        var srcEntryPoints = srcDrive.PackageEntryPoints.Get((srcFeedId ?? "", srcRelease.ProcessKey!, srcRelease.ProcessVersion!)).ToList();
+                        var dstEntryPoints = dstDrive.PackageEntryPoints.Get((dstFeedId ?? "", srcRelease.ProcessKey!, srcRelease.ProcessVersion!)).ToList();
 
                         var srcEntryPoint = srcEntryPoints.FirstOrDefault(e => e.Id == srcRelease.EntryPointId);
                         var dstEntryPoint = dstEntryPoints.FirstOrDefault(e => e.Path == srcEntryPoint!.Path);
@@ -782,7 +782,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     Release existingRelease = null;
                     try
                     {
-                        var dstReleases = dstDrive.GetReleases(newFolder);
+                        var dstReleases = dstDrive.Releases.Get(newFolder);
                         existingRelease = dstReleases.FirstOrDefault(r => r.Name == srcRelease.Name);
                         if (existingRelease is not null)
                         {
@@ -1396,7 +1396,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         Release srcRelease = null;
         try
         {
-            srcRelease = srcDrive.GetReleases(srcFolder)?.FirstOrDefault(r => r.Id == srcReleaseId);
+            srcRelease = srcDrive.Releases.Get(srcFolder)?.FirstOrDefault(r => r.Id == srcReleaseId);
         }
         catch (Exception ex)
         {
@@ -1415,7 +1415,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         target = dstFolder.GetPSPath();
         try
         {
-            dstRelease = dstDrive.GetReleases(dstFolder)?.FirstOrDefault(q => string.Compare(q.Name, srcRelease.Name, StringComparison.OrdinalIgnoreCase) == 0);
+            dstRelease = dstDrive.Releases.Get(dstFolder)?.FirstOrDefault(q => string.Compare(q.Name, srcRelease.Name, StringComparison.OrdinalIgnoreCase) == 0);
         }
         catch (Exception ex)
         {
@@ -1437,7 +1437,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     {
         if (srcCalendarId is null || srcCalendarId == 0) return null;
 
-        var srcCalendars = srcDrive.GetCalendars();
+        var srcCalendars = srcDrive.Calendars.Get();
         var srcCalendar = srcCalendars?.FirstOrDefault(c => c.Id == srcCalendarId);
         if (srcCalendar is null)
         {
@@ -3316,7 +3316,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 CopyMachineCmdlet.CopyMachines(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
             }
 
-            if (ShouldCopyTenantEntities("Calendar", srcDrive, srcDrive.GetCalendars(), dstDrive))
+            if (ShouldCopyTenantEntities("Calendar", srcDrive, srcDrive.Calendars.Get(), dstDrive))
             {
                 CopyCalendarCmdlet.CopyCalendars(this, srcDrive, null, [dstDrive], true, cancelHandler.Token);
             }

@@ -18,7 +18,7 @@ public class RemoveCalendarCmdlet : RemoveDriveEntityCmdletBase<ExtendedCalendar
     protected override Func<ExtendedCalendar, string> GetPSPath => c => c.GetPSPath();
 
     protected override IEnumerable<ExtendedCalendar> GetEntities(OrchDriveInfo drive)
-        => drive.GetCalendars() ?? [];
+        => drive.Calendars.Get() ?? [];
 
     protected override void Remove(OrchDriveInfo drive, ExtendedCalendar calendar)
     {

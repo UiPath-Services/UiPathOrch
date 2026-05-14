@@ -116,7 +116,7 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetReleases(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.Releases.Get(df.folder));
 
             foreach (var result in results)
             {
@@ -167,7 +167,7 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var processes = drive.GetReleases(folder);
+                var processes = drive.Releases.Get(folder);
                 foreach (var process in processes.FilterByWildcards(p => p?.Name, wpName).WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(process.GetPSPath(), "Start Job"))

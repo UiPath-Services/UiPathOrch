@@ -189,7 +189,7 @@ public class NewProcessCmdlet : OrchestratorPSCmdlet
 
                     foreach (var version in versions.FilterByWildcards(v => v?.Version, wpVersion))
                     {
-                        var entryPoints = drive.GetPackageEntryPoints(feedId, version.Id!, version.Version!);
+                        var entryPoints = drive.PackageEntryPoints.Get((feedId ?? "", version.Id!, version.Version!));
                         foreach (var entryPoint in entryPoints
                             .Where(e => wp.IsMatch(e.Path))
                             .OrderBy(e => e.Path))
@@ -230,7 +230,7 @@ public class NewProcessCmdlet : OrchestratorPSCmdlet
 
                 var r2 = ParallelResults.GroupBy(packages, package =>
                 {
-                    return df.drive.GetPackageEntryPoints(feedId, package.Id!, package.Version!);
+                    return df.drive.PackageEntryPoints.Get((feedId ?? "", package.Id!, package.Version!));
                 });
 
                 List<(Package, IEnumerable<PackageEntryPoint>)> r = [];
@@ -356,7 +356,7 @@ public class NewProcessCmdlet : OrchestratorPSCmdlet
                 {
                     if (!release.AssignIdFromName(
                         EntryPoint,
-                        () => drive.GetPackageEntryPoints(feedId, targetPackage.Id!, version!.Version!),
+                        () => drive.PackageEntryPoints.Get((feedId ?? "", targetPackage.Id!, version!.Version!)),
                         e => e.Path!,
                         e => e.Id!,
                         (s, v) => s.EntryPointId = v,
