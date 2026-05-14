@@ -33,7 +33,7 @@ public class RemovePmUserCmdlet : OrchestratorPSCmdlet
             try
             {
                 // Ideally we should check if OR.User.Read scope is available before calling, but...
-                currentUser = drive.GetCurrentUser();
+                currentUser = drive.CurrentUser.Get();
             }
             catch { }
 

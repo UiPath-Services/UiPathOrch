@@ -396,7 +396,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         else
         {
             // For non-confidential apps, assign the current user
-            var currentUser = drive.GetCurrentUser();
+            var currentUser = drive.CurrentUser.Get();
             if (currentUser is null) return false;
             DomainUserAssignment duser = new()
             {
@@ -2898,7 +2898,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder)
     {
-        var dstCurrentUser = dstDrive.GetCurrentUser();
+        var dstCurrentUser = dstDrive.CurrentUser.Get();
         if (dstCurrentUser is null) return;
 
         var srcFolderUsers = srcDrive.FolderUsersWithNoInherited.Get(srcFolder);

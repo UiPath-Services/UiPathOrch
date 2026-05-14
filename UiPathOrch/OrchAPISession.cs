@@ -2611,11 +2611,11 @@ public partial class OrchAPISession : IDisposable
 
     public User? GetCurrentUser()
     {
-        if (!_authManager.IsConfidentialApp)
-        {
-            return HttpRequest<User>(HttpMethod.Get, "/odata/Users/UiPath.Server.Configuration.OData.GetCurrentUser");
-        }
-        throw new InvalidOperationException("Cannot retrieve the current user in a Confidential app. Use a Non-Confidential app or specify an AccessToken.");
+        // No client-side IsConfidentialApp guard: let the server be the source
+        // of truth. On a Confidential app the server returns an authentication
+        // error (typically 401), which the caller's exception cache catches
+        // via the standard HttpResponseException whitelist.
+        return HttpRequest<User>(HttpMethod.Get, "/odata/Users/UiPath.Server.Configuration.OData.GetCurrentUser");
     }
 
     public ExtendedUser? GetCurrentUserExtended()

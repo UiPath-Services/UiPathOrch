@@ -116,13 +116,15 @@ public class OrchPSDrive
         AccessToken = drive.OrchAPISession.AuthManager.AccessToken;
         Claims = ParseJwtClaims(AccessToken);
         // Derive CurrentUser from JWT (free) so it populates immediately after auth for both
-        // Conf and Non-Conf apps. Falls back to _dicCurrentUser?.UserName for Non-Conf tenants
+        // Conf and Non-Conf apps. Falls back to the cached User's UserName for Non-Conf tenants
         // whose Identity Server doesn't emit preferred_username/name claims (older deployments).
+        // CachedValue is a passive read — it won't trigger an API call and won't throw even if
+        // a previous fetch failed (e.g. transient auth issue cached on the drive).
         CurrentUser = drive.OrchAPISession.AuthManager.IsConfidentialApp
             ? "N/A"
             : (Claims?.Properties["preferred_username"]?.Value as string)
                 ?? (Claims?.Properties["name"]?.Value as string)
-                ?? drive._dicCurrentUser?.UserName;
+                ?? drive.CurrentUser.CachedValue?.UserName;
         if (drive._psDrive.Proxy is not null)
         {
             ProxySettings = new()

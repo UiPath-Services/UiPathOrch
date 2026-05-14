@@ -159,8 +159,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         // _dicCalendars auto-cleared via _allTenantCache (Calendars + CalendarsDetailed: ListCachePerTenant + KeyedSingleCachePerTenant).
 
-        _dicCurrentUser = null;
-        _dicCurrentUser_Exception?.ClearCache();
+        // _dicCurrentUser auto-cleared via _allTenantCache (CurrentUser: SingleCachePerTenant).
 
         // _dicJobsHavingExecutionMedia auto-cleared via _allFolderCache (JobsHavingExecutionMedia: IncrementalCachePerFolder).
 
@@ -373,56 +372,6 @@ public partial class OrchDriveInfo : PSDriveInfo
     //    }
     //    return releases.AsReadOnly();
     //}
-    #endregion
-
-    #region OrchCurrentUser cache
-    internal User? _dicCurrentUser = null;
-    internal readonly ExceptionCachePerTenant _dicCurrentUser_Exception = new();
-    public User? GetCurrentUser()
-    {
-        if (OrchAPISession.AuthManager.IsConfidentialApp)
-        {
-            throw new InvalidOperationException("This operation is not supported in a Confidential app. Please switch to a Non-Confidential setting to connect your tenant with `Edit-OrchConfig` cmdlet.");
-        }
-
-        _dicCurrentUser_Exception.ThrowCachedExceptionIfAny();
-
-        if (_dicCurrentUser is null)
-        {
-            try
-            {
-                ExtendedUser exUser = OrchAPISession.GetCurrentUserExtended();
-                if (!string.IsNullOrEmpty(exUser?.AccountId))
-                    _dicPartitionGlobalId = exUser?.AccountId; // Probably this one for Automation Cloud.
-                else
-                    _dicPartitionGlobalId = exUser?.TenantKey; // Probably this one for on-premises.
-                _dicTenantId = exUser?.TenantId;
-                _dicTenantKey = exUser?.TenantKey;
-                if (exUser is not null && exUser.PersonalWorkspace is not null)
-                {
-                    exUser.PersonalWorkspace.Path = NameColon;
-                }
-                _dicCurrentUser = exUser;
-            }
-            catch (Exception)
-            {
-                try
-                {
-                    _dicCurrentUser = OrchAPISession.GetCurrentUser();
-                }
-                catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
-                {
-                    _dicCurrentUser_Exception.CacheException(ex);
-                    throw;
-                }
-            }
-            if (_dicCurrentUser is not null)
-            {
-                _dicCurrentUser.Path = NameColonSeparator;
-            }
-        }
-        return _dicCurrentUser;
-    }
     #endregion
 
     internal string? _dicPartitionGlobalId = null;
@@ -1304,6 +1253,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerTenant<User> Users;
     public readonly IncrementalCachePerTenant<long, AuditLog> AuditLogs;
     public readonly IncrementalCachePerTenant<string, Alert> Alerts;
+    public readonly SingleCachePerTenant<User> CurrentUser;
     public readonly ListCachePerTenant<ExtendedCalendar> Calendars;
     public readonly KeyedSingleCachePerTenant<long, ExtendedCalendar> CalendarsDetailed;
     public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 assetId), AccessibleFoldersDto?> AssetLinks;
@@ -1702,6 +1652,39 @@ public partial class OrchDriveInfo : PSDriveInfo
             alert => alert.Id,
             (alert, drivePath) => alert.Path = drivePath);
 
+        CurrentUser = new(this,
+            getter: () =>
+            {
+                try
+                {
+                    ExtendedUser? exUser = OrchAPISession.GetCurrentUserExtended();
+                    if (exUser is not null)
+                    {
+                        _dicPartitionGlobalId = string.IsNullOrEmpty(exUser.AccountId)
+                            ? exUser.TenantKey   // on-premises
+                            : exUser.AccountId;  // Automation Cloud
+                        _dicTenantId = exUser.TenantId;
+                        _dicTenantKey = exUser.TenantKey;
+                        if (exUser.PersonalWorkspace is not null)
+                        {
+                            exUser.PersonalWorkspace.Path = NameColon;
+                        }
+                    }
+                    return (User?)exUser;
+                }
+                catch (Exception)
+                {
+                    // Fallback for older Orchestrators where the Extended
+                    // endpoint isn't available. Side-effect setup of
+                    // partition/tenant ids is skipped on this path (matches
+                    // pre-migration behavior). If this also throws, the cache
+                    // class catches HttpResponseException /
+                    // DeterministicApiException and stores it for reuse.
+                    return OrchAPISession.GetCurrentUser();
+                }
+            },
+            initializer: user => user.Path = NameColonSeparator);
+
         AuditLogs = new(this,
             (query, skip, first) => OrchAPISession.GetAuditLogs(query, skip, first),
             log => log.Id ?? 0,
@@ -2005,7 +1988,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                     // Auxiliary fetch — the result only enriches folder enumeration with the
                     // current user's personal workspace. Failures here (typically missing optional
                     // scopes) are non-fatal; folders are fetched independently below.
-                    try { user = GetCurrentUser() as ExtendedUser; }
+                    try { user = CurrentUser.Get() as ExtendedUser; }
                     catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"GetCurrentUser failed: {ex.Message}"); }
                 }));
 

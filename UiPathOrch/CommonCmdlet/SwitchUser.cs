@@ -29,7 +29,7 @@ public class SwitchOrchCurrentUserCmdlet : OrchestratorPSCmdlet
                     drive.OrchAPISession.EnsureAuthenticated();
                     drive.GetPartitionGlobalId();
 
-                    var currentUser = drive.GetCurrentUser();
+                    var currentUser = drive.CurrentUser.Get();
                     if (currentUser is not null)
                     {
                         WriteObject(currentUser);

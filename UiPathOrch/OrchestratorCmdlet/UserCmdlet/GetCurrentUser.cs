@@ -19,7 +19,7 @@ public class GetCurrentUserCmdlet : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
-            drive => drive.GetCurrentUser());
+            drive => drive.CurrentUser.Get());
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

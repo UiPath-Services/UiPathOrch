@@ -29,7 +29,7 @@ public class UpdateUserURCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var user = drive.GetCurrentUser();
+                var user = drive.CurrentUser.Get();
                 string target = System.IO.Path.Combine(drive.NameColonSeparator, user!.UserName!);
 
                 User postData = new();

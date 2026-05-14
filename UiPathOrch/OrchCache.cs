@@ -65,6 +65,15 @@ public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
         return _cache;
     }
 
+    /// <summary>
+    /// Passive read: returns the cached value if a Get() call has previously
+    /// succeeded, otherwise null. Does NOT trigger a fetch and does NOT throw
+    /// even if an exception is cached. Use for best-effort reads (e.g. "show
+    /// the username if we happen to know it") where surfacing an error is
+    /// undesirable.
+    /// </summary>
+    public T? CachedValue => _cache;
+
     public void ClearCache()
     {
         _cache = null;
