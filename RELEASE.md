@@ -100,7 +100,7 @@ All of the following must pass before tagging. See `CONTRIBUTING.md` for setup (
 Notes on these gates:
 
 - **`Test-ModuleManifest` needs the DLL adjacent to the psd1.** It tries to open `RootModule` to confirm the module loads, so running it against `Staging\UiPathOrch.psd1` fails (DLL lives under `UiPathOrch\bin\Release\net8.0\`). Run it against the deployed module path (above) or `Import-PowerShellDataFile` the psd1 if you only need to peek at the version. The CI release workflow does the latter for exactly this reason.
-- **Completer + Fixture round-trip tests reset the target tenant.** Both `Tests\Completer.Tests.ps1` and `Tests\Fixture.RoundTrip.Tests.ps1` run `Reset-Tenant.ps1 -TargetDrive OrchTest` in `BeforeAll`, then `Import-Fixture.ps1` to land at a deterministic state. The target drive is destroyed and re-seeded each run — make sure `OrchTest:` points at a disposable tenant before running.
+- **Completer + Fixture round-trip tests reset the target tenant.** Both `Tests\Completer.Tests.ps1` and `Tests\Fixture.RoundTrip.Tests.ps1` run `Reset-Tenant.ps1 -TargetDrive Orch2` in `BeforeAll`, then `Import-Fixture.ps1` to land at a deterministic state. The target drive is destroyed and re-seeded each run — make sure `Orch2:` points at a disposable tenant before running. Organization-scoped entities (PmUser / PmGroup / PmLicense* / etc.) are not touched by `Reset-Tenant.ps1` — only tenant + folder entities.
 - **Known-issue Pester tests** are tagged `KnownIssue` and can be excluded with `-ExcludeTagFilter KnownIssue` when the OData Queue-items intermittent is flaky on the tenant.
 
 Quick one-liner for the Pester gates (requires connected `OrchTest:` and `Orch1:` drives):

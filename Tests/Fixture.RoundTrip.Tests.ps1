@@ -30,7 +30,7 @@
 #>
 
 BeforeAll {
-    $script:TargetDrive = 'OrchTest'
+    $script:TargetDrive = 'Orch2'
     $script:FixtureRoot = "${script:TargetDrive}:\TestFixture_Base"
     $script:FixturePath = Join-Path $PSScriptRoot '..\TestData\Fixture' | Resolve-Path
     $script:ExportDir = Join-Path $env:TEMP "FixtureRoundTrip_$(Get-Random -Maximum 9999)"

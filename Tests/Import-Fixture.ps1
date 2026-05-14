@@ -76,6 +76,15 @@ Import-Csv "$FixturePath\roles.csv" |
     ForEach-Object { $_.Path = "${TargetDrive}:\"; $_ } |
     Set-OrchRole | Out-Null
 
+# 4b. Tenant directory users (the directory identity must already exist in
+# the org — Reset-Tenant only removes the tenant assignment, not the org
+# directory entry). SelfContained.Tests.ps1 requires at least one
+# DirectoryUser other than the current user; we re-add them here.
+Write-Host "[ 3b/11] Users (re-add to tenant)"
+Import-Csv "$FixturePath\users.csv" |
+    ForEach-Object { $_.Path = "${TargetDrive}:\"; $_ } |
+    Add-OrchUser -ErrorAction SilentlyContinue | Out-Null
+
 # 5. Package to tenant feed. Tolerate "already exists" — some OC builds (e.g.
 # 20.10/ApiVer 11) won't let Remove-OrchPackage during Reset clean the
 # previous upload, but the package is otherwise the right one.

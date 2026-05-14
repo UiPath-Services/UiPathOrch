@@ -31,7 +31,7 @@
 #>
 
 BeforeAll {
-    $script:TargetDrive = 'OrchTest'
+    $script:TargetDrive = 'Orch2'
     $script:FixtureRoot = "${script:TargetDrive}:\TestFixture_Base"
 
     Get-PSDrive $script:TargetDrive -ErrorAction Stop | Out-Null

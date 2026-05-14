@@ -20,7 +20,10 @@
 #>
 
 BeforeAll {
-    $script:Drive = 'OrchTest'
+    # Orch2 is the destructive test target (same tenant as OrchTest but a
+    # separate drive instance so cache state lines up with Import-Fixture).
+    # Orch1 stays read-only — used only to discover a reference package.
+    $script:Drive = 'Orch2'
     $script:RefDrive = 'Orch1'
     $script:Prefix = "PesterTest_$(Get-Random -Maximum 9999)_"
     $script:RootFolder = "${script:Drive}:\${script:Prefix}Root"
