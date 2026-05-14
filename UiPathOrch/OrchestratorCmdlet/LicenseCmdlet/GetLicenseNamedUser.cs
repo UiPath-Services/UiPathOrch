@@ -36,7 +36,7 @@ public class GetLicenseNamedUserCmdlet : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesRobottypes,
             dr => dr.drive.NameColonSeparator,
             dr => dr.drive,
-            dr => dr.drive.GetLicenseNamedUser(dr.robotType));
+            dr => dr.drive.LicenseNamedUsers.Get(dr.robotType));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

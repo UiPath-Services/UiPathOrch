@@ -56,7 +56,7 @@ public class RemoveJobMediaCmdlet : OrchestratorPSCmdlet
                 }
                 else // If not cached, fetch from the server
                 {
-                    foreach (var media in drive.GetExecutionMedia(folder))
+                    foreach (var media in drive.JobsHavingExecutionMedia.Fetch(folder))
                     {
                         results.Add((folder.Id ?? 0, media));
                     }

@@ -255,10 +255,6 @@ public partial class OrchDriveInfo : PSDriveInfo
     //    ClearFolderCache(folder);
     //}
 
-    // Backwards-compat shim: delegates to AuditLogs (IncrementalCachePerTenant).
-    public ReadOnlyCollection<AuditLog> GetAuditLogs(string? query, ulong skip, ulong first)
-        => AuditLogs.Fetch(query, skip, first);
-
     // Returns true if an API call was made
     public bool GetAuditLogDetails(AuditLog log)
     {
@@ -326,14 +322,6 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         return logs.AsReadOnly();
     }
-
-    // Backwards-compat shim: delegates to JobsHavingExecutionMedia
-    // (IncrementalCachePerFolder<long, ExecutionMedia>). The cross-cache write
-    // to Jobs (originally added synthetic Job entries with HasMediaRecorded=true)
-    // is dropped here, matching the trade-off accepted in the Calendar / User /
-    // Process / Trigger migrations.
-    public ReadOnlyCollection<ExecutionMedia> GetExecutionMedia(Folder folder, ulong skip = 0, ulong first = ulong.MaxValue) =>
-        JobsHavingExecutionMedia.Fetch(folder, query: null, skip, first);
 
     #region OrchReleaseList cache
     // This API is undocumented, and it seems it may not work on older versions of Orchestrator.
@@ -480,14 +468,6 @@ public partial class OrchDriveInfo : PSDriveInfo
     #region OrchEntitiesSummary cache
     // key: foldlerId
 
-    #endregion
-
-    #region OrchNamedUserLicense cache
-    // Backwards-compat shim: delegates to LicenseNamedUsers (KeyedListCachePerTenant).
-    // The cache itself lives as a public field initialised in the OrchDriveInfo
-    // constructor; ClearAllCache flushes it via the _allTenantCache iteration.
-    public ReadOnlyCollection<LicenseNamedUser> GetLicenseNamedUser(string robotType)
-        => LicenseNamedUsers.Get(robotType);
     #endregion
 
     #region OrchRuntimeLicense cache

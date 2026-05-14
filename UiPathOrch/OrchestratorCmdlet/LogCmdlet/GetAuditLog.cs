@@ -344,7 +344,7 @@ public class GetAuditLogCmdlet : OrchestratorPSCmdlet
                 {
                     // Cmdlets that support Skip and First must not sort here;
                     // the order returned by the server must be respected.
-                    WriteLog(drive, drive.GetAuditLogs(filter, skip, first));
+                    WriteLog(drive, drive.AuditLogs.Fetch(filter, skip, first));
                 }
                 catch (OperationCanceledException)
                 {

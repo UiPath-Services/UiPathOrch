@@ -36,7 +36,7 @@ public class GetJobMediaCmdlet : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
             df => df.folder,
-            df => df.drive.GetExecutionMedia(df.folder, skip, first));
+            df => df.drive.JobsHavingExecutionMedia.Fetch(df.folder, skip: skip, first: first));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

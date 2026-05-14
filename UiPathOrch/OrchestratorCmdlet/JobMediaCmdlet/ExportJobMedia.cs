@@ -59,7 +59,7 @@ public class SaveJobMediaCmdlet : OrchestratorPSCmdlet
                 }
                 else // If not cached, fetch from the server
                 {
-                    foreach (var media in drive.GetExecutionMedia(folder))
+                    foreach (var media in drive.JobsHavingExecutionMedia.Fetch(folder))
                     {
                         results.Add((folder.Id ?? 0, media));
                     }
@@ -104,7 +104,7 @@ public class SaveJobMediaCmdlet : OrchestratorPSCmdlet
                     var (drive, folder) = driveFolder;
                     try
                     {
-                        drive.GetExecutionMedia(folder);
+                        drive.JobsHavingExecutionMedia.Fetch(folder);
                     }
                     catch (Exception ex)
                     {
