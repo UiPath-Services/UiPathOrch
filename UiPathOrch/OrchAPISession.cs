@@ -440,8 +440,10 @@ public partial class OrchAPISession : IDisposable
     {
         if (ApiVersion < requiredVersion)
         {
-            //throw new InvalidOperationException($"Orchestrator API Version {ApiVersion:F1} does not support this operation. Required version: {requiredVersion:F1}.");
-            throw new InvalidOperationException($"Orchestrator API Version {ApiVersion:F1} does not support this operation.");
+            // DeterministicApiException so the cache layer remembers the
+            // failure (ApiVersion is fixed for the connection's lifetime).
+            //throw new DeterministicApiException($"Orchestrator API Version {ApiVersion:F1} does not support this operation. Required version: {requiredVersion:F1}.");
+            throw new DeterministicApiException($"Orchestrator API Version {ApiVersion:F1} does not support this operation.");
         }
     }
 
