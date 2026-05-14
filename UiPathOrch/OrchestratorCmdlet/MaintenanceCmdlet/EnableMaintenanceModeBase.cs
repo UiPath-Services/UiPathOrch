@@ -41,7 +41,7 @@ public class EnableMaintenanceModeCmdletBase<Enable> : OrchestratorPSCmdlet wher
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drives, drive => drive.MachineSessionRuntimes.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.MachineSessionRuntimes.Fetch());
             //"&$filter=((Runtimes%20ne%200)%20and%20(((RuntimeType%20eq%20%273%27)%20or%20(RuntimeType%20eq%20%270%27)%20or%20(RuntimeType%20eq%20%277%27)%20or%20(RuntimeType%20eq%20%272%27)%20or%20(RuntimeType%20eq%20%278%27)%20or%20(RuntimeType%20eq%20%2712%27))))"););
 
             foreach (var result in results)
@@ -84,7 +84,7 @@ public class EnableMaintenanceModeCmdletBase<Enable> : OrchestratorPSCmdlet wher
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drives, drive => drive.MachineSessionRuntimes.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.MachineSessionRuntimes.Fetch());
             //"&$filter=((Runtimes%20ne%200)%20and%20(((RuntimeType%20eq%20%273%27)%20or%20(RuntimeType%20eq%20%270%27)%20or%20(RuntimeType%20eq%20%277%27)%20or%20(RuntimeType%20eq%20%272%27)%20or%20(RuntimeType%20eq%20%278%27)%20or%20(RuntimeType%20eq%20%2712%27))))"););
 
             foreach (var result in results)
@@ -127,7 +127,7 @@ public class EnableMaintenanceModeCmdletBase<Enable> : OrchestratorPSCmdlet wher
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drives, drive => drive.MachineSessionRuntimes.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.MachineSessionRuntimes.Fetch());
             //"&$filter=((Runtimes%20ne%200)%20and%20(((RuntimeType%20eq%20%273%27)%20or%20(RuntimeType%20eq%20%270%27)%20or%20(RuntimeType%20eq%20%277%27)%20or%20(RuntimeType%20eq%20%272%27)%20or%20(RuntimeType%20eq%20%278%27)%20or%20(RuntimeType%20eq%20%2712%27))))"););
 
             foreach (var result in results)
@@ -170,7 +170,7 @@ public class EnableMaintenanceModeCmdletBase<Enable> : OrchestratorPSCmdlet wher
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drives, drive => drive.MachineSessionRuntimes.Get());
+            var results = ParallelResults.GroupBy(drives, drive => drive.MachineSessionRuntimes.Fetch());
             //"&$filter=((Runtimes%20ne%200)%20and%20(((RuntimeType%20eq%20%273%27)%20or%20(RuntimeType%20eq%20%270%27)%20or%20(RuntimeType%20eq%20%277%27)%20or%20(RuntimeType%20eq%20%272%27)%20or%20(RuntimeType%20eq%20%278%27)%20or%20(RuntimeType%20eq%20%2712%27))))"););
 
             foreach (var result in results)
@@ -208,7 +208,7 @@ public class EnableMaintenanceModeCmdletBase<Enable> : OrchestratorPSCmdlet wher
         {
             try
             {
-                var sessions = drive.MachineSessionRuntimes.Get();
+                var sessions = drive.MachineSessionRuntimes.Fetch();
 
                 foreach (var session in sessions
                     .Where(session => session.SessionId is not null)

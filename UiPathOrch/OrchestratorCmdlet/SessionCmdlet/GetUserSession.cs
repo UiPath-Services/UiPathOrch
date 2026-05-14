@@ -85,15 +85,7 @@ public class GetUserSessionCmdlet : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
-            drive =>
-            {
-                var sessions = drive.OrchAPISession.GetGlobalSessions(query, skip, first).ToList();
-                foreach (var session in sessions)
-                {
-                    session.Path = drive.NameColonSeparator;
-                }
-                return sessions;
-            });
+            drive => drive.UserSessions.Fetch(query, skip, first));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

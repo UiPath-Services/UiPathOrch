@@ -123,7 +123,7 @@ public class GetMachineSessionCmdlet : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
             df => df.folder,
-            df => df.drive.MachineSessionRuntimesByFolder.Get(df.folder));
+            df => df.drive.MachineSessionRuntimesByFolder.Fetch(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)

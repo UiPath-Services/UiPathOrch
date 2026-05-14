@@ -1237,7 +1237,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             //string query = $"&robotId={dstRobot.Id.Value}&MachineId%20eq%20{dstMachineFolder.Id}";
 
             // TODO: Changed this to use cache. Is it working correctly?
-            var srcSessions = srcDrive.MachineSessionRuntimesByFolder.Get(srcFolder).ToList();
+            var srcSessions = srcDrive.MachineSessionRuntimesByFolder.Fetch(srcFolder).ToList();
             srcSession = srcSessions.FirstOrDefault(s => s.SessionId == srcSessionId);
             if (srcSession is null)
             {
@@ -1257,7 +1257,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         try
         {
-            var dstSessions = dstDrive.MachineSessionRuntimesByFolder.Get(dstFolder);
+            var dstSessions = dstDrive.MachineSessionRuntimesByFolder.Fetch(dstFolder);
             var dstSession = dstSessions.FirstOrDefault(s =>
                 string.Compare(s.MachineName ?? "", srcMachineName, StringComparison.OrdinalIgnoreCase) == 0 &&
                 string.Compare(s.HostMachineName ?? "", srcHostMachineName, StringComparison.OrdinalIgnoreCase) == 0 &&

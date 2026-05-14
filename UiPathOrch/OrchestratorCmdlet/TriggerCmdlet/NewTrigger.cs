@@ -239,7 +239,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
 
             var usersPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
             var robotsPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
-            var sessionsPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.MachineSessionRuntimesByFolder.Get(df.folder));
+            var sessionsPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.MachineSessionRuntimesByFolder.Fetch(df.folder));
 
             List<UserRoles?> users = [null];
             users.AddRange(usersPerFolders.SelectMany(g => g));

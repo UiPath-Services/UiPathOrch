@@ -1,4 +1,4 @@
-﻿using System.Data;
+using System.Data;
 using System.Diagnostics;
 using System.Management.Automation;
 using System.Runtime.InteropServices;
@@ -325,7 +325,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
             string sessionName = mr.SessionName;
             if (string.IsNullOrEmpty(sessionName) && (mr.SessionId.GetValueOrDefault() != 0))
             {
-                var session = drive.MachineSessionRuntimesByFolder.Get(folder)
+                var session = drive.MachineSessionRuntimesByFolder.Fetch(folder)
                     //.Where(s => s.RuntimeType == "Unattended") // Not needed. SessionId is the same regardless of RuntimeType.
                     .Where(s => s.SessionId == mr.SessionId)
                     .FirstOrDefault();
@@ -453,7 +453,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                 if (!string.IsNullOrEmpty(mrs?.SessionName))
                 {
                     var wpSessionName = new WildcardPattern(mrs.SessionName, WildcardOptions.IgnoreCase);
-                    sessions = drive.MachineSessionRuntimesByFolder.Get(folder)
+                    sessions = drive.MachineSessionRuntimesByFolder.Fetch(folder)
                         //.Where(s => s.RuntimeType == "Unattended") // Not needed. SessionId is the same regardless of RuntimeType.
                         //.Where(s => wpMachineName.IsMatch(s.MachineName)) // This condition is evaluated later
                         .Where(s =>

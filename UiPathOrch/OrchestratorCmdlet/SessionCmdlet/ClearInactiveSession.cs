@@ -31,7 +31,7 @@ public class ClearInactiveSessionCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var sessions = drive.MachineSessionRuntimes.Get();
+                var sessions = drive.MachineSessionRuntimes.Fetch();
                 var inactive = sessions
                     .Where(s => s.SessionId is not null
                         && (string.Equals(s.Status, "Disconnected", StringComparison.OrdinalIgnoreCase)

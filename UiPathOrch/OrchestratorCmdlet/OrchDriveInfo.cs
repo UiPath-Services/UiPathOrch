@@ -1083,7 +1083,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerTenant<Library> LibrariesInHost;
     public readonly ListCachePerTenant<ExtendedMachine> Machines;
     public readonly ListCachePerTenant<ExtendedRobot> AllRobotsAcrossFolders;
-    public readonly ListCachePerTenant<MachineSessionRuntime> MachineSessionRuntimes;
+    public readonly IncrementalCachePerTenant<long, MachineSessionRuntime> MachineSessionRuntimes;
+    public readonly IncrementalCachePerTenant<long, Session> UserSessions;
     public readonly ListCachePerTenant<PersonalWorkspace> PersonalWorkspaces;
     public readonly ListCachePerTenant<Settings> Settings;
     public readonly ListCachePerTenant<Webhook> Webhooks;
@@ -1140,7 +1141,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerFolder<MachineFolder> FolderMachinesAssignable;
     public readonly ListCachePerFolder<UserRoles> FolderUsersWithNoInherited;
     public readonly ListCachePerFolder<UserRoles> FolderUsersWithInherited;
-    public readonly ListCachePerFolder<MachineSessionRuntime> MachineSessionRuntimesByFolder;
+    public readonly IncrementalCachePerFolder<long, MachineSessionRuntime> MachineSessionRuntimesByFolder;
     public readonly ListCachePerFolder<SimpleUser> Reviewers;
     public readonly ListCachePerFolder<QueueDefinition> Queues;
     public readonly ListCachePerFolder<RobotsFromFolderModel> RobotsFromFolder;
@@ -1280,7 +1281,17 @@ public partial class OrchDriveInfo : PSDriveInfo
         ProductVersion = new(this, OrchAPISession.GetProductVersion, e => e.Path = NameColonSeparator);
         ConnectionString = new(this, OrchAPISession.GetConnectionString, e => e.Path = NameColonSeparator);
         LicenseSettings = new(this, OrchAPISession.GetLicenseSettings, e => e.Path = NameColonSeparator);
-        MachineSessionRuntimes = new(this, OrchAPISession.GetMachineSessionRuntimes, e => e.Path = NameColonSeparator);
+        // GetMachineSessionRuntimes() takes no params today; the IncrementalCachePerTenant
+        // fetcher discards query/skip/first so cmdlet semantics stay "fetch all" while
+        // still benefiting from the always-fetch-and-accumulate exception cache.
+        MachineSessionRuntimes = new(this,
+            (_, _, _) => OrchAPISession.GetMachineSessionRuntimes(),
+            e => e.SessionId ?? 0,
+            (e, drivePath) => e.Path = drivePath);
+        UserSessions = new(this,
+            (query, skip, first) => OrchAPISession.GetGlobalSessions(query, skip, first),
+            session => session.Id ?? 0,
+            (session, drivePath) => session.Path = drivePath);
 
         RuntimesForFolder = new(this, OrchAPISession.GetRuntimesForFolder);
         AllRobotsAcrossFolders = new(this, OrchAPISession.FindAllRobotsAcrossFolders, e => e.Path = NameColonSeparator);
@@ -1663,7 +1674,10 @@ public partial class OrchDriveInfo : PSDriveInfo
         Environments = new(this, OrchAPISession.GetEnvironments, (e, folderPath) => e.Path = folderPath);
         FolderUsersWithNoInherited = new(this, fid => OrchAPISession.GetUsersForFolder(fid, false), (e, folderPath) => e.Path = folderPath);
         FolderUsersWithInherited = new(this, fid => OrchAPISession.GetUsersForFolder(fid, true), (e, folderPath) => e.Path = folderPath);
-        MachineSessionRuntimesByFolder = new(this, fid => OrchAPISession.GetMachineSessionRuntimesByFolderId(fid), (e, folderPath) => e.Path = folderPath);
+        MachineSessionRuntimesByFolder = new(this,
+            (folderId, query, skip, first, _, _) => OrchAPISession.GetMachineSessionRuntimesByFolderId(folderId, query, skip, first),
+            e => e.SessionId ?? 0,
+            (e, folderPath) => e.Path = folderPath);
         Queues = new(this, OrchAPISession.GetQueues, (e, folderPath) => e.Path = folderPath);
         Reviewers = new(this, OrchAPISession.GetReviewers);
         RobotsFromFolder = new(this, OrchAPISession.GetRobotsFromFolder, (e, folderPath) => e.Path = folderPath);

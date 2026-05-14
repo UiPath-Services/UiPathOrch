@@ -46,7 +46,7 @@ public class GetUnattendedSessionCmdlet : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
-            drive => drive.MachineSessionRuntimes.Get());
+            drive => drive.MachineSessionRuntimes.Fetch());
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)
