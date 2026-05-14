@@ -1829,10 +1829,19 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     internal List<Folder>? _dicFolders; // sorted by OrchDirectory and DisplayName
     internal List<Folder>? _dicFoldersForEnumFolders;
+    // Why: prior code mutated _dicFolders incrementally (assign → AddRange → AddRange…); a
+    // concurrent reader could pass the null-check and return a partially-built list, causing
+    // ItemExists() → false for folders that actually exist. Build into locals, publish once.
+    private readonly object _foldersInitLock = new();
     public ReadOnlyCollection<Folder> GetFolders()
     {
-        if (_dicFolders is null)
+        var snapshot = Volatile.Read(ref _dicFolders);
+        if (snapshot is not null) return snapshot.AsReadOnly();
+
+        lock (_foldersInitLock)
         {
+            if (_dicFolders is not null) return _dicFolders.AsReadOnly();
+
             OrchAPISession.EnsureAuthenticated();
 
             var tasks = new List<Task>();
@@ -1870,6 +1879,11 @@ public partial class OrchDriveInfo : PSDriveInfo
 
             Task.WaitAll([.. tasks]);
 
+            // Build into local lists; publish atomically below so concurrent readers
+            // never see a partially populated cache.
+            var newDicFolders = new List<Folder>();
+            var newDicFoldersForEnumFolders = new List<Folder>();
+
             // Process the current user result
             string personalWorkspaceName = "";
             if (user is not null && user.PersonalWorkspace is not null)
@@ -1881,8 +1895,8 @@ public partial class OrchDriveInfo : PSDriveInfo
                 user.PersonalWorkspace.FeedType = "FolderHierarchy"; // Fix: this contains "Processes" for some reason
                 //user.PersonalWorkspace.FullName = NameColonSeparator + WildcardPattern.Escape(user.PersonalWorkspace.DisplayName);
                 user.PersonalWorkspace.FullName = NameColonSeparator + user.PersonalWorkspace.DisplayName;
-                _dicFolders = [user.PersonalWorkspace];
-                _dicFoldersForEnumFolders = [user.PersonalWorkspace];
+                newDicFolders.Add(user.PersonalWorkspace);
+                newDicFoldersForEnumFolders.Add(user.PersonalWorkspace);
             }
 
             // Process the personal workspaces being explored result
@@ -1913,10 +1927,8 @@ public partial class OrchDriveInfo : PSDriveInfo
                             Path = NameColonSeparator,
                             FullName = NameColonSeparator + WildcardPattern.Escape(ws.Name)
                         };
-                        _dicFolders ??= [];
-                        _dicFolders.Add(pwFolder);
-                        _dicFoldersForEnumFolders ??= [];
-                        _dicFoldersForEnumFolders.Add(pwFolder);
+                        newDicFolders.Add(pwFolder);
+                        newDicFoldersForEnumFolders.Add(pwFolder);
                     }
                 }
             }
@@ -1945,51 +1957,53 @@ public partial class OrchDriveInfo : PSDriveInfo
                     //folder.FullName = NameColon + WildcardPattern.Escape(orchPath);
                 }
             }
-            // _dicFolders is used by GetChildItems.
-            _dicFolders ??= [];
-            _dicFoldersForEnumFolders ??= [];
             if (folders is not null)
             {
-                #region Build _dicFolders
+                #region Build newDicFolders
                 // 1. First, add all folders directly under the root
                 // 1-1. Add all personal workspace folders (already done above)
                 // 1-2. Add the remaining folders directly under the root
-                _dicFolders.AddRange(folders
+                newDicFolders.AddRange(folders
                     .Where(f => !f.FullyQualifiedName!.Contains('/'))
                     .OrderBy(f => f.FullyQualifiedNameOrderable));
 
                 // 2. Add all folders under personal workspace folders
-                _dicFolders.AddRange(folders
+                newDicFolders.AddRange(folders
                     .Where(f => f.FeedType == "PersonalWorkspace")
                     .Where(f => f.FullyQualifiedName!.Contains('/')) // This filter may not be necessary, but keeping it
                     .OrderBy(f => f.FullyQualifiedNameOrderable));
 
                 // 3. Add all remaining folders
-                _dicFolders.AddRange(folders
+                newDicFolders.AddRange(folders
                     .Where(f => f.FeedType != "PersonalWorkspace")
                     .Where(f => f.FullyQualifiedName!.Contains('/'))
                     .OrderBy(f => f.FullyQualifiedNameOrderable));
                 #endregion
 
-                #region Build _dicFoldersForEnumFolders
-                // _dicFoldersForEnumFolders is used by OrchDriveInfo.EnumFolders(). The sort order differs slightly.
+                #region Build newDicFoldersForEnumFolders
+                // newDicFoldersForEnumFolders is used by OrchDriveInfo.EnumFolders(). The sort order differs slightly.
                 // 1. First, add all personal workspace folders (only root-level ones are done so far)
                 // Add folders under personal workspace folders, then re-sort by FullyQualifiedName
-                _dicFoldersForEnumFolders.AddRange(folders
+                newDicFoldersForEnumFolders.AddRange(folders
                     .Where(f => f.FeedType == "PersonalWorkspace"));
-                _dicFoldersForEnumFolders = _dicFoldersForEnumFolders
+                newDicFoldersForEnumFolders = newDicFoldersForEnumFolders
                     .OrderBy(f => f.FullyQualifiedNameOrderable)
                     .ToList();
 
                 // 2. Add all remaining folders
-                _dicFoldersForEnumFolders.AddRange(folders
+                newDicFoldersForEnumFolders.AddRange(folders
                     .Where(f => f.FeedType != "PersonalWorkspace")
                     .OrderBy(f => f.FullyQualifiedNameOrderable));
                 #endregion
             }
-        }
 
-        return _dicFolders.AsReadOnly();
+            // Publish — EnumFolders reads _dicFoldersForEnumFolders directly, so publish it
+            // first; that way any reader that has just observed a non-null _dicFolders will
+            // also see the matching _dicFoldersForEnumFolders.
+            Volatile.Write(ref _dicFoldersForEnumFolders, newDicFoldersForEnumFolders);
+            Volatile.Write(ref _dicFolders, newDicFolders);
+            return newDicFolders.AsReadOnly();
+        }
     }
 
     public Folder? GetFolder(string? orchPath)
