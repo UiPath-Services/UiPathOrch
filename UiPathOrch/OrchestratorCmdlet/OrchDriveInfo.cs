@@ -2006,6 +2006,20 @@ public partial class OrchDriveInfo : PSDriveInfo
         }
     }
 
+    // Append a newly-created folder to both caches under the same lock GetFolders uses.
+    // No-op when a cache slot is null (a concurrent Clear-OrchCache happened; the next
+    // GetFolders rebuilds from the API and the new folder is picked up). Sort order is
+    // not restored — call sites that need it null the caches afterwards so GetFolders
+    // rebuilds.
+    internal void AppendFolderToCache(Folder folder)
+    {
+        lock (_foldersInitLock)
+        {
+            _dicFolders?.Add(folder);
+            _dicFoldersForEnumFolders?.Add(folder);
+        }
+    }
+
     public Folder? GetFolder(string? orchPath)
     {
         if (string.IsNullOrEmpty(orchPath))

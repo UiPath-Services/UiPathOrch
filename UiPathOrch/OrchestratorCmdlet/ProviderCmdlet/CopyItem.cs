@@ -179,7 +179,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         {
             newFolder.Path = dstFolder.GetPSPath();
             WriteItemObject(newFolder, newFolder.GetPSPath(), true);
-            dstDrive._dicFolders!.Add(newFolder); // Add for now without worrying about sort order
+            dstDrive.AppendFolderToCache(newFolder);
         }
         return newFolder;
     }
