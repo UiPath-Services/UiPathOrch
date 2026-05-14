@@ -204,10 +204,10 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
                     var ret = drive.OrchAPISession.PutPmLicenseGroup(cmd);
                     if (ret is not null)
                     {
-                        ret.Path = drive.NameColonSeparator;
-                        ret.GroupName = group.identityName;
                         ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
-                        WriteObject(ret);
+                        WriteObject(ret
+                            .WithPath(drive.NameColonSeparator)
+                            .WithNoteProperty("GroupName", group.identityName));
                     }
                     drive.PmLicensedGroups.ClearCache();
                     drive.PmUserLicenseGroupAllocations.ClearCache();

@@ -3684,10 +3684,10 @@ public class NuLicensedUser // The proper class name is unknown.
 // added by UiPathOrch
 public class NuLicensedGroupMember : NuLicensedUser
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? GroupName { get; set; } // added by UiPathOrch
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? PathGroupName { get; set; } // added by UiPathOrch
+    // GroupName / PathGroupName removed; attached as PSObject NoteProperty at
+    // WriteObject time by cmdlets that emit this entity (the cache singleton
+    // is org-shared, so per-call mutation was racy for multi-drive callers).
+    // See OrchExtensions.WithNoteProperty.
 }
 
 // added by UiPathOrch
@@ -3704,17 +3704,12 @@ public class AvailableUserBundle // The proper class name is unknown.
 // added by UiPathOrch
 public class AvailableUserBundles // The proper class name is unknown.
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? GroupName { get; set; } // added by UiPathOrch
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? PathGroupName { get; set; } // added by UiPathOrch
-
+    // Path / GroupName / PathGroupName removed; the cache singleton is
+    // org-shared. Current callers only access .availableUserBundles[], so no
+    // PSObject NoteProperty wrap is needed -- if a future caller wants to
+    // WriteObject this entity, attach drive context via WithPath / WithNoteProperty
+    // at emit time (see NuLicensedGroupMember for the pattern).
     public AvailableUserBundle[]? availableUserBundles { get; set; }
-
     public string[]? allocatedUserBundles { get; set; }
     public bool? useExternalLicense { get; set; }
 }
@@ -3730,19 +3725,17 @@ public class UpdateLicensedGroupCommand // The proper class name is unknown.
 // added by UiPathOrch
 public class UpdateLicensedGroupResponse // The proper class name is unknown.
 {
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? GroupName { get; set; }// added by UiPathOrch
-
+    // Path / GroupName removed; attached as PSObject NoteProperty at
+    // WriteObject time by the emitting cmdlets (Add/Remove-OrchPmLicenseTo*).
+    // Not strictly a race risk here (Response wrapper, not a cache singleton)
+    // but kept aligned with the rest of the org-family entities for consistency.
     public string? groupId { get; set; } // Guid
     public string? organizationId { get; set; } // Guid
     public bool? useExternalLicense { get; set; }
     public string[]? userBundleCodes { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string[]? userBundleLicenseNames { get; set; } // added by UiPathOrch
+    public string[]? userBundleLicenseNames { get; set; } // added by UiPathOrch; derived from userBundleCodes
 }
 
 // added by UiPathOrch — TenantAllocation response (per-tenant license allocation).

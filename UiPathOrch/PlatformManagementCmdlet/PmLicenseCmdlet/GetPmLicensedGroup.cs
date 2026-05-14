@@ -54,13 +54,13 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
 
     // This CSV is intended to be imported by Remove-OrchPmAllocationFromPmUserLicenseGroup,
     // so this format is fine.
-    private static void WriteCsvContent(StreamWriter writer, string drivePath, IEnumerable<NuLicensedGroupMember> output)
+    private static void WriteCsvContent(StreamWriter writer, string drivePath, string? groupName, IEnumerable<NuLicensedGroupMember> output)
     {
         foreach (var member in output)
         {
             string[] line = [
                 EscapeCsvValue(drivePath, true),
-                EscapeCsvValue(member.GroupName, true),
+                EscapeCsvValue(groupName, true),
                 EscapeCsvValue(member.name),
                 EscapeCsvValue(member.displayName),
                 EscapeCsvValue(member.email),
@@ -149,13 +149,17 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
                             .FilterByWildcards(u => u?.name, wpUserName)
                             .OrderBy(u => u?.name);
 
+                        string pathGroupName = System.IO.Path.Combine(drive.NameColonSeparator, group?.name ?? "");
                         if (writer is null)
                         {
-                            WriteObject(targetEntities.Select(m => m.WithPath(drive.NameColonSeparator)), true);
+                            WriteObject(targetEntities.Select(m => m
+                                .WithPath(drive.NameColonSeparator)
+                                .WithNoteProperty("GroupName", group?.name)
+                                .WithNoteProperty("PathGroupName", pathGroupName)), true);
                         }
                         else
                         {
-                            WriteCsvContent(writer, drive.NameColonSeparator, targetEntities);
+                            WriteCsvContent(writer, drive.NameColonSeparator, group?.name, targetEntities);
                         }
                     }
                     catch (OperationCanceledException)

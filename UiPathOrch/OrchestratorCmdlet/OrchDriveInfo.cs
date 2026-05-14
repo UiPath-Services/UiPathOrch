@@ -990,40 +990,27 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     #endregion
 
-    // Backwards-compat wrapper: PmAvailableUserBundles (KeyedSingleCachePerTenant) is
-    // keyed by groupId. GroupName / PathGroupName depend on the caller's groupName arg
-    // and are set per-call so the same cache entry stays correct across callers.
+    // Backwards-compat wrapper: PmAvailableUserBundles (KeyedSingleCachePerOrganization,
+    // keyed by groupId). The groupName parameter used to drive a per-call mutation of
+    // GroupName / PathGroupName on the shared cache entry — those fields have been
+    // dropped (the singleton is org-shared, so the mutation was racy across drives).
+    // Current callers don't read those fields anyway; if a future caller wants to
+    // WriteObject this entity, attach drive context via PSObject NoteProperty at the
+    // call site (see NuLicensedGroupMember for the pattern). The groupName parameter
+    // is kept for backward compatibility but unused.
     public AvailableUserBundles? GetPmUserLicenseGroupsAvailableLicenses(string? groupId, string groupName)
     {
         if (groupId is null) return null;
-
-        var ret = PmAvailableUserBundles.Get(groupId);
-        if (ret is not null)
-        {
-            ret.GroupName = groupName;
-            ret.PathGroupName = System.IO.Path.Combine(NameColonSeparator, groupName);
-        }
-        return ret;
+        return PmAvailableUserBundles.Get(groupId);
     }
 
     #region GetPmUserLicenseGroupAllocations Cache
     // Backwards-compat shim: delegates to PmUserLicenseGroupAllocations
-    // (KeyedListCachePerTenant). Path / GroupName / PathGroupName are set per-call
-    // in the wrapper because they depend on group.name (the cache key is group.id).
-    public ReadOnlyCollection<NuLicensedGroupMember> GetPmLicensedGroupAllocations(NuLicensedGroup group)
-    {
-        var members = PmUserLicenseGroupAllocations.Get(group.id!);
-        // GroupName / PathGroupName are entity-internal labels carried for
-        // PowerShell formatting. Drive-local Path is attached by the caller via
-        // PSObject NoteProperty.
-        string pathGroupName = System.IO.Path.Combine(NameColonSeparator, group?.name ?? "");
-        foreach (var user in members)
-        {
-            user.GroupName = group?.name;
-            user.PathGroupName = pathGroupName;
-        }
-        return members;
-    }
+    // (KeyedListCachePerOrganization, keyed by group.id). Drive-local Path,
+    // GroupName, and PathGroupName are attached by the caller via PSObject
+    // NoteProperty so the shared cache entries are not mutated per-call.
+    public ReadOnlyCollection<NuLicensedGroupMember> GetPmLicensedGroupAllocations(NuLicensedGroup group) =>
+        PmUserLicenseGroupAllocations.Get(group.id!);
     #endregion
 
 
@@ -1495,7 +1482,10 @@ public partial class OrchDriveInfo : PSDriveInfo
             (_, groupId) => OrchAPISession.GetPmLicensedGroupsAvailableLicenses(groupId),
             (bundles, _) =>
             {
-                bundles.Path = NameColonSeparator;
+                // Path is no longer attached to the shared singleton (the cache is
+                // org-scoped). The nested AvailableUserBundle[] entries get their
+                // human-readable .name resolved once at fetch time — that mapping
+                // is intrinsic to the entity, not drive-local.
                 foreach (var bundle in bundles.availableUserBundles ?? [])
                 {
                     if (AvailableUserBundlesItems.Items.TryGetValue(bundle.code ?? "", out var name))
