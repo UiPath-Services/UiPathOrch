@@ -206,18 +206,34 @@ phases:
 - Acknowledged: 2026-05-13
 - Phase 1 shipped: commit `bf579c3`
 - Phase 2 shipped: commit `061002e` + null-safety follow-up `9d1c02d`
-- Phase 3: complete (this release, commit TBD)
-- Remaining loose ends for future cleanup:
-  - `UpdateLicensedGroupResponse` still carries a `Path` field
-    (`PmLicenseCmdlet` returns a small handful of entry points). It's
-    a Response wrapper rather than a cache singleton, so the existing
-    Path-on-entity flow isn't a race risk — but it would be tidier to
-    align it with the rest of the org family eventually.
-  - `NuLicensedGroupMember.PathGroupName` was left as a field for the
-    same Response-wrapper reason; it's only set via
-    `OrchDriveInfo.GetPmLicensedGroupAllocations`, which takes an
-    explicit `NuLicensedGroup group` argument from the caller, so the
-    drive context is already caller-supplied. Not a race risk; just
-    cosmetic alignment work.
-  - `AvailableUserBundles.GroupName` / `PathGroupName` similarly set
-    inside `OrchDriveInfo.GetPmUserLicenseGroupsAvailableLicenses`.
+- Phase 3 shipped: commit `162edca`
+- Phase 4 (loose-ends cleanup) shipped: commit `cbacf2c`
+  - `UpdateLicensedGroupResponse.Path` / `GroupName` dropped;
+    `AddPmLicenseToPmLicensedGroup` and `RemovePmLicenseFromPmLicensedGroup`
+    attach them as PSObject NoteProperty at WriteObject time. Not a race
+    fix (Response wrapper, not a cache singleton); pure alignment with
+    the rest of the org family.
+  - `NuLicensedGroupMember.GroupName` / `PathGroupName` dropped.
+    `GetPmLicensedGroupAllocations` is now a one-line passthrough;
+    `Get-OrchPmLicensedGroup` attaches the labels via
+    `.WithPath(...).WithNoteProperty("GroupName", ...).WithNoteProperty("PathGroupName", ...)`
+    on the `-ExpandAllocation` and CSV paths.
+  - `AvailableUserBundles.Path` / `GroupName` / `PathGroupName` dropped.
+    The cache class initializer no longer attaches `Path`; the wrapper
+    `GetPmUserLicenseGroupsAvailableLicenses` no longer mutates
+    `GroupName` / `PathGroupName`. Existing callers only reach into
+    `.availableUserBundles[]` and never read the wrapper-level fields,
+    so no per-caller NoteProperty wrapping is needed.
+
+## Design principle
+
+Per-call `Path` mutation is racy only for **organization-scoped** caches
+— the static storage is shared across every `OrchDriveInfo` mapped to
+the same org, so concurrent (or sequential, into-variable) emits from
+different drives clobber each other. Per-tenant and per-folder caches
+don't have this shape: a tenant cache lives on exactly one
+`OrchDriveInfo`, a folder cache slice belongs to one folder on one
+drive. For those, `entity.Path = drive.NameColonSeparator` (or
+`folder.GetPSPath()`) inside the wrapper is fine and stays in place —
+this refactor's PSObject NoteProperty wrap is **not** applied below the
+organization level.
