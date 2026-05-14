@@ -110,9 +110,9 @@ public class OrchPSDrive
         HttpListener = drive._psDrive.HttpListener;
         ApiVersion = drive.OrchAPISession.ApiVersion;
         CurrentLocation = drive.CurrentLocation;
-        PartitionGlobalId = drive._dicPartitionGlobalId;
-        TenantId = drive._dicTenantId;
-        TenantKey = drive._dicTenantKey;
+        PartitionGlobalId = drive._partitionGlobalId;
+        TenantId = drive._tenantId;
+        TenantKey = drive._tenantKey;
         AccessToken = drive.OrchAPISession.AuthManager.AccessToken;
         Claims = ParseJwtClaims(AccessToken);
         // Derive CurrentUser from JWT (free) so it populates immediately after auth for both

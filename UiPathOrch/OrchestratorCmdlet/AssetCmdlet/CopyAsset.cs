@@ -51,7 +51,6 @@ public class CopyAssetCmdlet : OrchestratorPSCmdlet
 
         // It may be better not to clear the cache implicitly..
         //srcDrive._dicExtendedMachines = null;
-        //srcDrive._dicAssetLinks = null;
         //srcDrive._dicCredentialStores = null;
         //dstDrive._dicCredentialStores = null;
         //srcDrive._dicUsers = null; // TODO: Do we need to handle AD users?

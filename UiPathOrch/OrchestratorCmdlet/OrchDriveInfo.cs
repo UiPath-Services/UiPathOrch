@@ -149,74 +149,22 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicFolders = null;
         _dicFoldersForEnumFolders = null;
 
-        // _dicAssetLinks auto-cleared via _allTenantCache (AssetLinks: KeyedSingleCachePerTenant).
-
-        // _dicQueueLinks auto-cleared via _allTenantCache (QueueLinks: KeyedSingleCachePerTenant).
-
-        // _dicAuditLogs auto-cleared via _allTenantCache (AuditLogs: IncrementalCachePerTenant).
-
-        // _dicBucketLinks auto-cleared via _allTenantCache (BucketLinks: KeyedSingleCachePerTenant).
-
-        // _dicCalendars auto-cleared via _allTenantCache (Calendars + CalendarsDetailed: ListCachePerTenant + KeyedSingleCachePerTenant).
-
-        // _dicCurrentUser auto-cleared via _allTenantCache (CurrentUser: SingleCachePerTenant).
-
-        // _dicJobsHavingExecutionMedia auto-cleared via _allFolderCache (JobsHavingExecutionMedia: IncrementalCachePerFolder).
-
-        // _dicLicenseRuntime auto-cleared via _allTenantCache (LicenseRuntimes: KeyedListCachePerTenant).
-
-        // _dicMachineClientSecrets auto-cleared via _allTenantCache (MachineClientSecrets: KeyedSingleCachePerTenant).
-
-        // _dicPackages auto-cleared via _allTenantCache (Packages: KeyedListCachePerTenant).
-        // _dicPackageVersions auto-cleared via _allTenantCache (PackageVersions: KeyedListCachePerTenant).
-
-        // _dicPackageEntryPoint auto-cleared via _allTenantCache (PackageEntryPoints: KeyedListCachePerTenant).
-
-        //_dicPartitionGlobalId = null; // This doesn't change, so no need to clear it..
-
-        // _dicTestSetExecutions auto-cleared via _allFolderCache (TestSetExecutions: IncrementalCachePerFolder).
-        // _dicTestCaseExecutions auto-cleared via _allFolderCache (TestCaseExecutions: IncrementalCachePerFolder).
-        // _dicTestCaseAssertions auto-cleared via _allFolderCache (TestCaseAssertions: KeyedListCachePerFolder).
-
-        // _dicTriggers / _dicTriggersDetailed auto-cleared via _allFolderCache
-        // (Triggers: ListCachePerFolder, TriggersDetailed: KeyedSingleCachePerFolder).
-
-        // _dicQueueItems auto-cleared via _allFolderCache (QueueItems: IncrementalCachePerFolder).
-
-        //_dicReleaseList = null;
-        //_dicReleaseList_Exceptions?.ClearCache();
-
-        // _dicReleases / _dicReleasesDetailed auto-cleared via _allFolderCache
-        // (Releases: ListCachePerFolder, ReleasesDetailed: KeyedSingleCachePerFolder).
-
         _dicRobotLogs = null;
 
-        // _dicSearchDirectory auto-cleared via _allTenantCache (SearchDirectoryCache: KeyedSingleCachePerTenant).
+        _tenantId = null;
+        _tenantKey = null;
 
-        _dicTenantId = null;
-        _dicTenantKey = null;
-
-
-        // _dicUsers auto-cleared via _allTenantCache (Users: ListCachePerTenant).
-        // _dicUsersDetailed auto-cleared via _allTenantCache (UsersDetailed: KeyedSingleCachePerTenant).
         #endregion
 
         #region Platform Management cache
+
         _dicPmAuditLogs = null;
         _dicPmAuditLogs_Exception.ClearCache();
-
-        // _dicPmAvailableUserBundles auto-cleared via _allTenantCache (PmAvailableUserBundles: KeyedSingleCachePerTenant).
 
         _dicPmBulkResolveByName = null;
         _dicPmBulkResolveByName_Exception.ClearCache();
 
         SearchPmDirectoryCache.ClearCache();
-
-        //_dicPmGroups = null;
-        //_dicPmGroups_Exception?.ClearCache();
-
-        // _dicPmUserLicenseGroupAllocations auto-cleared via _allTenantCache (PmUserLicenseGroupAllocations: KeyedListCachePerTenant).
-
 
         #endregion
     }
@@ -362,40 +310,39 @@ public partial class OrchDriveInfo : PSDriveInfo
     //}
     #endregion
 
-    internal string? _dicPartitionGlobalId = null;
-    internal object _dicPartitionGlobalIdLock = new();
+    internal string? _partitionGlobalId = null;
+    internal object _partitionGlobalIdLock = new();
     internal string? GetPartitionGlobalId()
     {
-        if (_dicPartitionGlobalId is not null) return _dicPartitionGlobalId;
+        if (_partitionGlobalId is not null) return _partitionGlobalId;
 
         // Try to get from JWT first (fast path)
-        _dicPartitionGlobalId = OrchAPISession.AuthManager.GetPartitionGlobalIdFromJwt();
-        if (_dicPartitionGlobalId is not null) return _dicPartitionGlobalId;
+        _partitionGlobalId = OrchAPISession.AuthManager.GetPartitionGlobalIdFromJwt();
+        if (_partitionGlobalId is not null) return _partitionGlobalId;
 
-        lock (_dicPartitionGlobalIdLock)
+        lock (_partitionGlobalIdLock)
         {
             // Fallback: query via API (confidential app, or JWT without prt_id)
             var users = Users.Get();
             foreach (var user in users)
             {
                 var detailedUser = OrchAPISession.GetUser(user.Id ?? 0);
-                _dicPartitionGlobalId = detailedUser?.AccountId ?? detailedUser?.TenantKey;
-                _dicTenantId = detailedUser?.TenantId;
-                _dicTenantKey = detailedUser?.TenantKey;
-                if (_dicPartitionGlobalId is not null) break;
+                _partitionGlobalId = detailedUser?.AccountId ?? detailedUser?.TenantKey;
+                _tenantId = detailedUser?.TenantId;
+                _tenantKey = detailedUser?.TenantKey;
+                if (_partitionGlobalId is not null) break;
             }
         }
-        return _dicPartitionGlobalId;
+        return _partitionGlobalId;
     }
 
-    internal int? _dicTenantId = null;
-    internal string? _dicTenantKey = null; // Is this a Guid? Does it differ between on-premises and AC?
-    internal object _dicTenantIdLock = new();
+    internal int? _tenantId = null;
+    internal string? _tenantKey = null; // Is this a Guid? Does it differ between on-premises and AC?
     internal (int? id, string? key) GetTenantId()
     {
-        if (_dicTenantId is not null) return (_dicTenantId, _dicTenantKey);
+        if (_tenantId is not null) return (_tenantId, _tenantKey);
 
-        lock (_dicPartitionGlobalIdLock)
+        lock (_partitionGlobalIdLock)
         {
             // When reaching this code, it should always be a confidential app
             // For non-confidential apps, GetCurrentUser() should have been called during login.
@@ -405,9 +352,9 @@ public partial class OrchDriveInfo : PSDriveInfo
                 foreach (var user in users)
                 {
                     var detailedUser = OrchAPISession.GetUser(user.Id ?? 0);
-                    _dicPartitionGlobalId = detailedUser?.AccountId ?? "";
-                    _dicTenantId = detailedUser?.TenantId;
-                    _dicTenantKey = detailedUser?.TenantKey;
+                    _partitionGlobalId = detailedUser?.AccountId ?? "";
+                    _tenantId = detailedUser?.TenantId;
+                    _tenantKey = detailedUser?.TenantKey;
                     if (detailedUser?.TenantId is not null) break;
                 }
             }
@@ -416,7 +363,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 throw new OrchException(NameColonSeparator, ex);
             }
         }
-        return (_dicTenantId, _dicTenantKey);
+        return (_tenantId, _tenantKey);
     }
 
     #region PersonalWorkspace cache
@@ -1568,11 +1515,11 @@ public partial class OrchDriveInfo : PSDriveInfo
                     ExtendedUser? exUser = OrchAPISession.GetCurrentUserExtended();
                     if (exUser is not null)
                     {
-                        _dicPartitionGlobalId = string.IsNullOrEmpty(exUser.AccountId)
+                        _partitionGlobalId = string.IsNullOrEmpty(exUser.AccountId)
                             ? exUser.TenantKey   // on-premises
                             : exUser.AccountId;  // Automation Cloud
-                        _dicTenantId = exUser.TenantId;
-                        _dicTenantKey = exUser.TenantKey;
+                        _tenantId = exUser.TenantId;
+                        _tenantKey = exUser.TenantKey;
                         if (exUser.PersonalWorkspace is not null)
                         {
                             exUser.PersonalWorkspace.Path = NameColon;

@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Management.Automation;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
@@ -44,8 +44,8 @@ public class OrchDuDriveInfo : PSDriveInfo
 
     public void ClearAllCache()
     {
-        //ParentDrive._dicTenantId = null;
-        //ParentDrive._dicTenantKey = null;
+        //ParentDrive._tenantId = null;
+        //ParentDrive._tenantKey = null;
 
         #region DU cache
         _dicDuClassifier = null;

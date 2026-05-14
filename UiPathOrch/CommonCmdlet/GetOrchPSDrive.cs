@@ -39,7 +39,7 @@ public class GetOrchPSDriveCmdlet : OrchestratorPSCmdlet
             {
                 drive.OrchAPISession.EnsureAuthenticated();
                 drive.GetPartitionGlobalId();
-                // Confidential apps skip GetCurrentUser(), so _dicTenantId / _dicTenantKey
+                // Confidential apps skip GetCurrentUser(), so _tenantId / _tenantKey
                 // are not populated as a side effect of authentication. Trigger the
                 // /odata/Users + /odata/Users(id) fallback explicitly so -Force returns
                 // a fully populated OrchPSDrive for both Conf and Non-Conf apps.
