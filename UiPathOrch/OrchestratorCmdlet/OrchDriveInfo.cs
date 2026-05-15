@@ -158,9 +158,6 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         #region Platform Management cache
 
-        _dicPmAuditLogs = null;
-        _dicPmAuditLogs_Exception.ClearCache();
-
         _dicPmBulkResolveByName = null;
         _dicPmBulkResolveByName_Exception.ClearCache();
 
@@ -734,32 +731,6 @@ public partial class OrchDriveInfo : PSDriveInfo
     }
     #endregion
 
-    internal HashSet<PmAuditLog>? _dicPmAuditLogs = null;
-    internal readonly ExceptionCachePerTenant _dicPmAuditLogs_Exception = new();
-    public ReadOnlyCollection<PmAuditLog> GetPmAuditLog(string? query, ulong skip, ulong first)
-    {
-        // This shouldn't need to be thread-safe, but just to be safe..
-        if (_dicPmAuditLogs is null)
-        {
-            lock (_dicPmAuditLogs_Exception)
-            {
-                _dicPmAuditLogs = [];
-            }
-        }
-
-        // Always query the API
-        var partitionGlobalId = GetPartitionGlobalId();
-        var logs = OrchAPISession.GetPmAuditLog(partitionGlobalId, query, skip, first).ToList();
-        foreach (var log in logs)
-        {
-            log.Path = NameColonSeparator;
-            log.auditLogDetailsExpanded = JsonTools.JsonToDictionary(log.auditLogDetails);
-            _dicPmAuditLogs.Add(log);
-        }
-
-        return logs.AsReadOnly();
-    }
-
     // key: (name, kind)
     // kind: "user", "group", or "application" - robots cannot be searched apparently.
     // unresolvedList is an output parameter. Returns unresolved names as the original T list.
@@ -1095,6 +1066,10 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<long, User> UsersDetailed;
     public readonly ListCachePerTenant<User> Users;
     public readonly IncrementalCachePerTenant<long, AuditLog> AuditLogs;
+    // PmAuditLog has no scalar id; identity is structural (9 fields via PmAuditLog.Equals).
+    // Key = entity itself — ConcurrentDictionary<PmAuditLog, PmAuditLog> uses the same
+    // GetHashCode/Equals contract HashSet<PmAuditLog> used to, so dedup semantics are preserved.
+    public readonly IncrementalCachePerTenant<PmAuditLog, PmAuditLog> PmAuditLogs;
     public readonly IncrementalCachePerTenant<string, Alert> Alerts;
     public readonly SingleCachePerTenant<User> CurrentUser;
     public readonly ListCachePerTenant<ExtendedCalendar> Calendars;
@@ -1564,6 +1539,15 @@ public partial class OrchDriveInfo : PSDriveInfo
             (newLog, cached) =>
             {
                 if (cached?.Details is not null) newLog.Details = cached.Details;
+            });
+
+        PmAuditLogs = new(this,
+            (query, skip, first) => OrchAPISession.GetPmAuditLog(GetPartitionGlobalId(), query, skip, first),
+            log => log, // identity key — relies on PmAuditLog.GetHashCode/Equals
+            (log, drivePath) =>
+            {
+                log.Path = drivePath;
+                log.auditLogDetailsExpanded = JsonTools.JsonToDictionary(log.auditLogDetails);
             });
 
         Calendars = new(this,

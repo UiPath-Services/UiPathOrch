@@ -81,13 +81,15 @@ public class GetPmAuditLogCmdlet : OrchestratorPSCmdlet
             WriteWarning($"[{MyInvocation.MyCommand.Name}] Since no filter parameters were specified, the contents of the cache will be output. To query the Orchestrator, please specify at least one filter parameter.");
             foreach (var drive in drives)
             {
+                var cached = drive.PmAuditLogs.GetCache()?.Values;
+                if (cached is null) continue;
                 if (OrderAscending)
                 {
-                    WriteObject(drive._dicPmAuditLogs?.OrderBy(l => l.createdOn), true);
+                    WriteObject(cached.OrderBy(l => l.createdOn), true);
                 }
                 else
                 {
-                    WriteObject(drive._dicPmAuditLogs?.OrderByDescending(l => l.createdOn), true);
+                    WriteObject(cached.OrderByDescending(l => l.createdOn), true);
                 }
             }
             return;
@@ -99,7 +101,7 @@ public class GetPmAuditLogCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var entities = drive.GetPmAuditLog(filter, skip, first);
+                var entities = drive.PmAuditLogs.Fetch(filter, skip, first);
                 if (entities is null) continue;
 
                 // Do not sort here

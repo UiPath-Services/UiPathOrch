@@ -277,22 +277,28 @@ writes to the same dict. After migration, the wrapper calls
 `QueueItems.AddToCache(folder, item)` (per-folder `AddToCache(Folder,
 TEntity)` exists at OrchCache.cs:1239).
 
-### Group F — Genuinely bespoke (2)
+### Group F — Genuinely bespoke (1, was 2)
 
 | Field                       | Pattern                                             | Scope         | External raw-field | Why bespoke                                                                                                                                |
 | --------------------------- | --------------------------------------------------- | ------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `_dicRobotLogs`             | Per-folder `ConcurrentBag<Log>`, accumulate-only.   | Tenant        | 1                  | `Log.Id` always returns 0 from the API (server bug), so per-id dedup isn't possible — entries pile up in a bag. `IncrementalCachePerFolder` is dict-keyed and won't fit. |
-| `_dicPmAuditLogs`           | Per-tenant `HashSet<PmAuditLog>`, accumulate-only.  | **Organization** (currently miscategorized as tenant) | 2                  | HashSet relies on `PmAuditLog.Equals` (structural equality), not on a Func-extracted key. `IncrementalCachePerTenant` requires `getKeyFunc`. Note: this is also an org-scope mistake similar to P3.0. |
 
-**Decision:** leave both as raw caches for now. Two consumers don't
-justify a new generic class. **Deliberately documented** in inline
-comments. If a third bespoke case appears, revisit and consider
+**Decision:** leave `_dicRobotLogs` as a raw cache for now. One
+consumer doesn't justify a new generic class. **Deliberately
+documented** in inline comments. If a second bespoke case appears,
+revisit and consider
 `IncrementalAccumulatingCache(PerTenant|PerOrganization|PerFolder)<T>`.
 
-Note for future correction: `_dicPmAuditLogs` is also an org-scope
-mistake (PM prefix → org-scoped). If we add an accumulating org
-class, this and `_dicRobotLogs`-equivalent would migrate at that time.
-For P3, status quo.
+`_dicPmAuditLogs` was initially in this group with the same "no
+extractable key" reasoning. It migrated to
+`IncrementalCachePerTenant<PmAuditLog, PmAuditLog>` post-1.4.1 by
+using the entity itself as the key (`log => log`). The
+`ConcurrentDictionary<PmAuditLog, PmAuditLog>` honors
+`PmAuditLog.GetHashCode/Equals`, preserving the structural-dedup
+semantic of the previous `HashSet<PmAuditLog>`. The org-scope
+correction noted previously (PM endpoint → should be org-scoped) is
+still pending — when an accumulating org class lands, this would
+migrate again.
 
 ## Phasing
 
