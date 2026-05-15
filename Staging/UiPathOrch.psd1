@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.4.0'
+ModuleVersion = '1.4.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -457,24 +457,24 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-Minor release. Headline is the **per-organization cache `Path`-isolation refactor** queued by 1.3.0's plan doc and shipped here in three phases. Org-scoped entities (PM users, groups, robot accounts, external apps, licenses, allocations, directory search results) used to carry a drive-local `Path` field on what was actually a singleton instance shared across all drives in the same org, which raced under multi-drive cmdlets. Their `Path` now lands on a `PSObject` `NoteProperty` per `WriteObject`. Plus: per-drive auth logging with secret masking (PKCE diagnostics), PKCE serialization across drives, and stable multi-drive output ordering.
-
-## Added
-- **Per-drive auth diagnostics + auth HTTP traffic logging** in the existing drive log file (`Get-OrchLogLocation`). Triggers once per drive per session on first auth flow (PKCE / Confidential App / Refresh / Username-Password) or on first API call (PAT mode). The block includes UiPathOrch / PowerShell / .NET / OS versions and the drive's auth-relevant PSDrive settings (Root, Edition, IdentityUrl, AppId, RedirectUrl, HttpListener, Scope, Username, UseInPrivate, IgnoreSslErrors, ProxyEnabled — AppSecret / AccessToken / Password / proxy credentials are intentionally excluded). Auth call traffic (`/connect/token`, `/api/Account/Authenticate`) is recorded at the same `LoggingLevel` granularity as API calls, with `access_token`, `refresh_token`, `id_token`, `client_secret`, `code`, `code_verifier`, `assertion`, `password` redacted to `***REDACTED***`.
+Patch release. Headline is a **`GetFolders` concurrent-reader race fix** that was eliminating intermittent `Cannot find path '<folder>'` errors when multi-row `Set-OrchAsset` / `Set-OrchCredentialAsset` / `Set-OrchSecretAsset` pipelines ran after a folder-cache invalidation. The cache was previously published in pieces (`= [pw]` → `??= []` → `AddRange` → `AddRange` …); a parallel reader could observe the field as non-null while the build was still in progress and return a partial list, missing the target folder. The cache is now built into local variables and published atomically under a lock. Reproduced with a sleep-amplified race window (5% pre-fix, 0% post-fix on the same DLL via a diagnostic toggle). Plus: a `DeterministicApiException` pattern that lets `ExceptionCache` remember non-HTTP deterministic failures, `CurrentUser` moves to `SingleCachePerTenant`, and the four session cmdlets switch to the `IncrementalCache` pattern.
 
 ## Bug Fixes
-- **Multi-drive cmdlets no longer crash with "port 8085 in use" when more than one drive needs PKCE auth.** PKCE flow's `HttpListener` is serialized across drives via a static lock — already-authenticated drives still fetch in parallel; only drives that need to open the browser queue up.
+- **`GetFolders` thread-safety fix.** Build into local lists under `_foldersInitLock` and publish atomically via `Volatile.Write`. Concurrent readers either see `null` (and wait on the lock) or a fully populated cache, never a partial one. Eliminates intermittent `Cannot find path` errors under the multi-row `Set-Orch*Asset` parallel pipeline. Same lock is now reused by a new `OrchDriveInfo.AppendFolderToCache(folder)` helper that `Copy-Item` calls when it creates a destination folder mid-copy — previously a raw `_dicFolders.Add(...)` that updated only one of the two caches without synchronization.
 
 ## Changed
-- **Per-organization cache entities no longer carry their drive-local `Path` field.** Affected: `LicenseInventory`, `AccountLicense`, `PmAuthenticationRoot` (Phase 1); `PmUser`, `PmGroup`, `PmRobotAccount`, `ExternalClient`, `ExternalResource`, `AvailableUserBundle`, `TenantAllocation`, `NuLicensedGroup`, `NuLicensedUser`, `AccessAllowedMember`, `NuLicensedGroupMember` (Phase 2); `PmGroupMember`, `PmDirectoryEntityInfo` (Phase 3). Drive context is attached as a `PSObject` `NoteProperty` at `WriteObject` time. PowerShell-level property access (`$x.Path`) is unchanged.
-- **Multi-drive output sorted by drive name** in `EnumOrchDrives` (already true for `EnumPmDrives`). `Get-OrchProductVersion -Path B:,A:` emits in `A:` then `B:` order. Fetches still run in parallel; only the consumer-side yield order is fixed.
-- **`Get-OrchProductVersion` has a typed five-column format view** (Path / Version / Deployment / ConfigsVersion / Timestamp).
+- **`ExceptionCache` broadened to cover deterministic non-HTTP failures.** A new `DeterministicApiException` marker (subclass of `InvalidOperationException`) flags failures that are deterministic for the current tenant configuration (API version gates, etc.). The cache layer treats them the same as the existing whitelisted HTTP statuses, so repeated calls don't re-pay the failure cost. `Get-OrchAlert`'s API-version guard and `EnsureVersionSupport` now route through this. The HTTP whitelist also gains 410 and 501.
+- **`CurrentUser` is now a `SingleCachePerTenant<User>`.** Previously a raw `Dictionary` field on `OrchDriveInfo`. The migration also drops two client-side `IsConfidentialApp` pre-checks (the server is now the source of truth on whether the lookup is allowed). Diagnostic Conf-app pre-checks remain available via `Get-OrchPSDrive` and Verbose-mode auth-header dumps — see `feedback_uipathorch_accesstoken_diagnostic`.
+- **Session cmdlets switch to the `IncrementalCache` pattern.** `Get-OrchUserSession`, `Get-OrchMachineSession`, `Get-OrchUnattendedSession`, `Get-OrchAlert` now use `IncrementalCachePerTenant` / `IncrementalCachePerFolder`. Same observable behavior, less code, and consistent with the rest of the cache hierarchy.
+- **`OrchProvider.RemoveItem` folder-cache invalidation comment updated.** The old "want to fix this eventually" comment dated to the pre-fix incremental-mutation pattern. Null-then-rebuild is the canonical pattern now that `GetFolders` rebuilds atomically.
 
 ## Internal
-- `GetPSPath` extension methods for the org-shared entity types take an explicit `drivePath` argument; ~50 call sites updated. `DriveScopedCompleter<TEntity>.GetTipHelp` also gained an `OrchDriveInfo drive` parameter.
-- `ListCachePerOrganization.Get` / `Get(id)` run their initializer exactly once at publish time (inside the partition lock) rather than on every cache hit. Detail-lookup path short-circuits when `_getterId` is null.
-- `OrchLog`'s `BuildCombinedLogBlock` and `WriteLogBlockAsync` are now `internal` so `AuthManager.SendWithLogging` can reuse the existing block format and writer. A shared call-id counter (`OrchAPISession.NextCallId`) puts auth calls in the same chronological sequence as API calls.
-- `design/per-organization-cache-path-isolation.md` updated with Phase 1-3 completion notes and remaining cosmetic alignment work.
+- **Cmdlet class rename: `*Command` → `*Cmdlet`.** Internal class names only; cmdlet noun-verb names and call sites are unchanged. Resolves naming collisions with REST DTO classes.
+- **`_dic` prefix removed from single-value `OrchDriveInfo` fields** (`_dicTenantId`, `_dicTenantKey`, `_dicCurrentUser`, etc.). These were historical mis-labels — the fields are scalars, not dictionaries. Dead lock field `_tenantIdLock` removed.
+- **14 pure backward-compat shim methods retired** from `OrchDriveInfo`. Direct cache-class access (`drive.Assets.Get(...)`, `drive.LibrariesInTenant.Get()`, etc.) is now the canonical pattern.
+- **`ReleaseNotes.md` retired**, `CHANGELOG.md` is now the single source.
+- **Per-organization Path isolation Phase 4 cleanup.** Final loose ends on `NuLicensedGroupMember`, `AvailableUserBundles`, and `UpdateLicensedGroupResponse`. The codified scope rule lives in `design/per-organization-cache-path-isolation.md`: Path mutation applies to org-shared entities only; tenant and folder entities embed Path directly in the DTO.
+- **Test infrastructure modernization.** Tenant-state-dependent assertions retired in favor of fixture-based round-trips. `Tests/Reset-Tenant.ps1` + `Tests/Import-Fixture.ps1` set up a deterministic tenant state; `Tests/Fixture.RoundTrip.Tests.ps1` exports each entity type via `-ExportCsv` and compares against the source CSV. The destructive test drive is now `Orch2:` (org entities preserved; tenant + folder entities reset).
 '@
 
         # Prerelease string of this module

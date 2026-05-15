@@ -6,6 +6,105 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.4.1] - 2026-05-15
+
+Patch release. Headline is a **`GetFolders` concurrent-reader race fix**
+that was producing intermittent `Cannot find path '<folder>'` errors
+when multi-row `Set-OrchAsset` / `Set-OrchCredentialAsset` /
+`Set-OrchSecretAsset` pipelines ran after a folder-cache invalidation.
+The cache was previously published in pieces (`= [pw]` → `??= []` →
+`AddRange` → `AddRange` …); a parallel reader could observe the field
+as non-null while the build was still in progress and return a partial
+list, missing the target folder. The cache is now built into local
+variables and published atomically under a lock. Reproduced with a
+sleep-amplified race window (5% pre-fix, 0% post-fix on the same DLL
+via a diagnostic toggle).
+
+Plus: a `DeterministicApiException` pattern that lets `ExceptionCache`
+remember non-HTTP deterministic failures (API version gates, etc.) so
+repeated calls don't re-pay the failure cost; `CurrentUser` migrates to
+`SingleCachePerTenant`; and the four session cmdlets switch to the
+`IncrementalCache` pattern.
+
+### Fixed
+
+- **`GetFolders` thread-safety fix.** Build into local lists under
+  `_foldersInitLock` and publish atomically via `Volatile.Write`.
+  Concurrent readers either see `null` (and wait on the lock) or a
+  fully populated cache, never a partial one. Eliminates intermittent
+  `Cannot find path` errors under the multi-row `Set-Orch*Asset`
+  parallel pipeline (`ParallelResults.GroupBy(parameters, ...)` with
+  per-parameter `EnumFolders` calls). Same lock is now reused by a
+  new `OrchDriveInfo.AppendFolderToCache(folder)` helper that
+  `Copy-Item` calls when it creates a destination folder mid-copy —
+  previously a raw `_dicFolders.Add(...)` that updated only one of
+  the two caches without synchronization.
+
+### Changed
+
+- **`ExceptionCache` broadened to cover deterministic non-HTTP
+  failures.** A new `DeterministicApiException` marker (subclass of
+  `InvalidOperationException`) flags failures that are deterministic
+  for the current tenant configuration (API version gates, missing
+  optional capabilities, etc.). The cache layer treats them the same
+  as the existing whitelisted HTTP statuses (400, 403, 404, …), so
+  repeated calls don't re-pay the failure cost. `Get-OrchAlert`'s
+  API-version guard and `EnsureVersionSupport` now route through this.
+  The HTTP whitelist also gains 410 (Gone) and 501 (Not Implemented).
+
+- **`CurrentUser` lookup is now a `SingleCachePerTenant<User>`.**
+  Previously a raw `Dictionary` field on `OrchDriveInfo`. The
+  migration also drops two client-side `IsConfidentialApp` pre-checks
+  (the server is now the source of truth on whether the lookup is
+  allowed). Diagnostic Conf-app pre-checks remain available via
+  `Get-OrchPSDrive` and Verbose-mode auth-header dumps.
+
+- **Session cmdlets switch to the `IncrementalCache` pattern.**
+  `Get-OrchUserSession`, `Get-OrchMachineSession`,
+  `Get-OrchUnattendedSession`, `Get-OrchAlert` now use
+  `IncrementalCachePerTenant` / `IncrementalCachePerFolder`. Same
+  observable behavior, less code, consistent with the rest of the
+  cache hierarchy.
+
+- **`OrchProvider.RemoveItem` folder-cache invalidation comment
+  updated.** The old "want to fix this eventually" comment dated to
+  the pre-fix incremental-mutation pattern. Null-then-rebuild is the
+  canonical pattern now that `GetFolders` rebuilds atomically.
+
+### Internal
+
+- **Cmdlet class rename: `*Command` → `*Cmdlet`.** Internal class
+  names only; cmdlet noun-verb names and call sites are unchanged.
+  Resolves naming collisions with REST DTO classes that used the
+  `*Command` suffix.
+
+- **`_dic` prefix removed from single-value `OrchDriveInfo` fields**
+  (`_dicTenantId`, `_dicTenantKey`, `_dicCurrentUser`, etc.). These
+  were historical mis-labels — the fields are scalars, not
+  dictionaries. Dead lock field `_tenantIdLock` removed.
+
+- **14 pure backward-compat shim methods retired** from
+  `OrchDriveInfo`. Direct cache-class access
+  (`drive.Assets.Get(...)`, `drive.LibrariesInTenant.Get()`, etc.) is
+  now the canonical pattern.
+
+- **`ReleaseNotes.md` retired** — `CHANGELOG.md` is the single source.
+
+- **Per-organization Path isolation Phase 4 cleanup.** Final loose
+  ends on `NuLicensedGroupMember`, `AvailableUserBundles`,
+  `UpdateLicensedGroupResponse`. The codified scope rule lives in
+  `design/per-organization-cache-path-isolation.md`: Path mutation
+  applies to org-shared entities only; tenant and folder entities
+  embed Path directly in the DTO.
+
+- **Test infrastructure modernization.** Tenant-state-dependent
+  assertions retired in favor of fixture-based round-trips.
+  `Tests/Reset-Tenant.ps1` + `Tests/Import-Fixture.ps1` set up a
+  deterministic tenant state; `Tests/Fixture.RoundTrip.Tests.ps1`
+  exports each entity type via `-ExportCsv` and compares against the
+  source CSV. The destructive test drive is now `Orch2:` (org
+  entities preserved; tenant + folder entities reset on each run).
+
 ## [1.4.0] - 2026-05-13
 
 The headline is the **per-organization cache `Path`-isolation refactor**
