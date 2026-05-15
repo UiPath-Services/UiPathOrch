@@ -149,7 +149,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         _dicFolders = null;
         _dicFoldersForEnumFolders = null;
 
-        _dicRobotLogs = null;
 
         _tenantId = null;
         _tenantKey = null;
@@ -238,33 +237,6 @@ public partial class OrchDriveInfo : PSDriveInfo
         return job;
     }
 
-    // key: folderId.
-    // Log.Id always returns zero from the API, so per-Id dedup isn't possible; we accumulate
-    // logs across calls in a ConcurrentBag so concurrent Get-OrchLog invocations on the same
-    // folder don't corrupt the collection (HashSet<Log>.Add is not thread-safe).
-    internal ConcurrentDictionary<Int64, ConcurrentBag<Log>>? _dicRobotLogs = null;
-    public ReadOnlyCollection<Log> GetRobotLogs(Folder folder, string? query, ulong skip, ulong first, string? orderBy = null, bool orderAscending = false)
-    {
-        if (_dicRobotLogs is null)
-        {
-            lock (this)
-            {
-                _dicRobotLogs ??= new();
-            }
-        }
-        var folderLogs = _dicRobotLogs.GetOrAdd(folder.Id ?? 0, _ => new ConcurrentBag<Log>());
-
-        // Always query the API
-        var logs = OrchAPISession.GetRobotLogs(folder.Id ?? 0, query, skip, first, orderBy, orderAscending).ToList();
-        string folderPath = folder.GetPSPath();
-        foreach (var log in logs)
-        {
-            log.Path = folderPath;
-            folderLogs.Add(log);
-        }
-
-        return logs.AsReadOnly();
-    }
 
     #region OrchReleaseList cache
     // This API is undocumented, and it seems it may not work on older versions of Orchestrator.
@@ -1010,6 +982,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerTenant<string, DirectoryObject[]?> SearchDirectoryCache;
     public readonly KeyedSingleCachePerOrganization<string, AvailableUserBundles> PmAvailableUserBundles;
     public readonly PmGroupMembersCache PmGroupMembers;
+    public readonly RobotLogsCache RobotLogs;
     public readonly KeyedSingleCachePerTenant<long, User> UsersDetailed;
     public readonly ListCachePerTenant<User> Users;
     public readonly IncrementalCachePerTenant<long, AuditLog> AuditLogs;
@@ -1398,6 +1371,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             });
 
         PmGroupMembers = new(this);
+        RobotLogs = new(this);
 
         PmAvailableUserBundles = new(this,
             // The API doesn't take partitionGlobalId (just groupId), but the

@@ -330,23 +330,22 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
 
             foreach (var (drive, folder) in drivesFolders)
             {
-                if (drive._dicRobotLogs?.TryGetValue(folder.Id!.Value, out var logs) ?? false)
+                var logs = drive.RobotLogs.GetCache(folder);
+                if (logs is null) continue;
+                switch (orderBy)
                 {
-                    switch (orderBy)
-                    {
-                        case "TimeStamp":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(logs.OrderBy(l => l.TimeStamp), true);
-                            else
-                                WriteObject(logs.OrderByDescending(l => l.TimeStamp), true);
-                            break;
-                        case "Level":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(logs.OrderBy(l => l.Level), true);
-                            else
-                                WriteObject(logs.OrderByDescending(l => l.Level), true);
-                            break;
-                    }
+                    case "TimeStamp":
+                        if (OrderAscending.IsPresent)
+                            WriteObject(logs.OrderBy(l => l.TimeStamp), true);
+                        else
+                            WriteObject(logs.OrderByDescending(l => l.TimeStamp), true);
+                        break;
+                    case "Level":
+                        if (OrderAscending.IsPresent)
+                            WriteObject(logs.OrderBy(l => l.Level), true);
+                        else
+                            WriteObject(logs.OrderByDescending(l => l.Level), true);
+                        break;
                 }
             }
             return;
@@ -364,7 +363,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
 
             try
             {
-                var logs = drive.GetRobotLogs(folder, query, skip, first, orderBy, OrderAscending.IsPresent);
+                var logs = drive.RobotLogs.Fetch(folder, query, skip, first, orderBy, OrderAscending.IsPresent);
                 WriteObject(logs, true);
             }
             catch (Exception ex)

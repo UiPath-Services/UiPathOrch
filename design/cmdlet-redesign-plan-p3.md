@@ -277,28 +277,31 @@ writes to the same dict. After migration, the wrapper calls
 `QueueItems.AddToCache(folder, item)` (per-folder `AddToCache(Folder,
 TEntity)` exists at OrchCache.cs:1239).
 
-### Group F — Genuinely bespoke (1, was 2)
+### Group F — Genuinely bespoke (0, was 2)
 
-| Field                       | Pattern                                             | Scope         | External raw-field | Why bespoke                                                                                                                                |
-| --------------------------- | --------------------------------------------------- | ------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `_dicRobotLogs`             | Per-folder `ConcurrentBag<Log>`, accumulate-only.   | Tenant        | 1                  | `Log.Id` always returns 0 from the API (server bug), so per-id dedup isn't possible — entries pile up in a bag. `IncrementalCachePerFolder` is dict-keyed and won't fit. |
+Both former Group F entries migrated post-1.4.1.
 
-**Decision:** leave `_dicRobotLogs` as a raw cache for now. One
-consumer doesn't justify a new generic class. **Deliberately
-documented** in inline comments. If a second bespoke case appears,
-revisit and consider
-`IncrementalAccumulatingCache(PerTenant|PerOrganization|PerFolder)<T>`.
-
-`_dicPmAuditLogs` was initially in this group with the same "no
-extractable key" reasoning. It migrated to
-`IncrementalCachePerTenant<PmAuditLog, PmAuditLog>` post-1.4.1 by
-using the entity itself as the key (`log => log`). The
+`_dicPmAuditLogs` → `IncrementalCachePerTenant<PmAuditLog, PmAuditLog>`
+by using the entity itself as the key (`log => log`). The
 `ConcurrentDictionary<PmAuditLog, PmAuditLog>` honors
 `PmAuditLog.GetHashCode/Equals`, preserving the structural-dedup
 semantic of the previous `HashSet<PmAuditLog>`. The org-scope
 correction noted previously (PM endpoint → should be org-scoped) is
 still pending — when an accumulating org class lands, this would
 migrate again.
+
+`_dicRobotLogs` → concrete `RobotLogsCache` class (concrete because
+the `Log.Id == 0` server bug forces the accumulate-into-bag pattern
+that fits no existing generic class). Per-folder
+`ConcurrentBag<Log>` accumulator, `IFolderCacheClearable`-registered
+so `Clear-OrchCache -Path <folder>` flushes per folder. The
+cmdlet's "no filter = display cache" path reads from
+`RobotLogs.GetCache(folder)`.
+
+The decision to keep the new classes concrete (vs generic) matches
+the `PmGroupMembersCache` rationale: each is one-of-a-kind today, and
+a generic class would expose unused flexibility for no real consumer.
+Revisit when a second consumer of either shape appears.
 
 ## Phasing
 

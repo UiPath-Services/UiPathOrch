@@ -2401,3 +2401,73 @@ public class PmGroupMembersCache : ITenantCacheClearable
         _exceptions.ClearCache(partitionGlobalId);
     }
 }
+
+/// <summary>
+/// Per-folder cache backing <c>Get-OrchLog</c>. Bespoke shape — the
+/// Orchestrator API returns <c>Log.Id == 0</c> for every entry (server bug),
+/// so per-id deduplication isn't possible. Entries accumulate into a
+/// <see cref="ConcurrentBag{T}"/> per folder so concurrent <c>Get-OrchLog</c>
+/// invocations on the same folder don't corrupt the collection.
+///
+/// This is concrete rather than generic because the only reason this pattern
+/// exists at all is the <c>Log.Id == 0</c> server bug. Other "log" endpoints
+/// (e.g., AuditLog) have proper ids and use <c>IncrementalCachePerTenant</c>.
+/// </summary>
+public class RobotLogsCache : IFolderCacheClearable
+{
+    private readonly OrchDriveInfo _drive;
+    private readonly object _lock = new();
+    private volatile ConcurrentDictionary<long, ConcurrentBag<Log>>? _cache = null;
+
+    public RobotLogsCache(OrchDriveInfo drive)
+    {
+        _drive = drive;
+        _drive._allFolderCache.Add(this);
+    }
+
+    /// <summary>
+    /// Always hits the API; appends the freshly-fetched logs into this folder's
+    /// bag (after stamping each <c>Log.Path</c>) and returns the new batch.
+    /// </summary>
+    public ReadOnlyCollection<Log> Fetch(Folder folder, string? query, ulong skip, ulong first,
+                                          string? orderBy = null, bool orderAscending = false)
+    {
+        if (_cache is null)
+        {
+            lock (_lock)
+            {
+                _cache ??= new();
+            }
+        }
+        var folderLogs = _cache.GetOrAdd(folder.Id ?? 0, _ => new ConcurrentBag<Log>());
+
+        var logs = _drive.OrchAPISession.GetRobotLogs(folder.Id ?? 0, query, skip, first, orderBy, orderAscending).ToList();
+        string folderPath = folder.GetPSPath();
+        foreach (var log in logs)
+        {
+            log.Path = folderPath;
+            folderLogs.Add(log);
+        }
+        return logs.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Returns the accumulated bag for this folder, or <c>null</c> if nothing
+    /// has been fetched yet. Used by <c>Get-OrchLog</c>'s "no filter = display
+    /// cache" path.
+    /// </summary>
+    public ConcurrentBag<Log>? GetCache(Folder folder)
+    {
+        return _cache is not null && _cache.TryGetValue(folder.Id ?? 0, out var bag) ? bag : null;
+    }
+
+    public void ClearCache()
+    {
+        _cache = null;
+    }
+
+    public void ClearCache(Folder folder)
+    {
+        _cache?.TryRemove(folder.Id ?? 0, out _);
+    }
+}
