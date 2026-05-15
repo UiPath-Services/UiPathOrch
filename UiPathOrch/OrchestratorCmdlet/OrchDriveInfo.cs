@@ -158,8 +158,6 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         #region Platform Management cache
 
-        _dicPmBulkResolveByName = null;
-        _dicPmBulkResolveByName_Exception.ClearCache();
 
         SearchPmDirectoryCache.ClearCache();
 
@@ -733,104 +731,52 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     // key: (name, kind)
     // kind: "user", "group", or "application" - robots cannot be searched apparently.
-    // unresolvedList is an output parameter. Returns unresolved names as the original T list.
-    internal ConcurrentDictionary<(string, string), PmGroupMember?>? _dicPmBulkResolveByName = null;
-    internal readonly ExceptionCachePerTenant _dicPmBulkResolveByName_Exception = new();
+    // unresolvedList is an output parameter. Receives back the original T entries
+    // whose search key was empty OR whose name the API confirmed unresolved.
+    // Cache + bulk-fetch are owned by PmGroupMembers; this wrapper only adapts the
+    // generic T input/output ergonomics that PowerShell cmdlets expect.
     public Dictionary<string, PmGroupMember?> PmBulkResolveByName<T>(
         string kind, IEnumerable<T> users,
         Func<T, string> getSearchKeyFunc,
         List<T>? unresolvedList = null)
     {
-        if (!users.Any())
+        // Materialize once — caller may pass a deferred enumerable.
+        List<T> userList = users as List<T> ?? users.ToList();
+        if (userList.Count == 0) return [];
+
+        // OrdinalIgnoreCase: defensive, in case the caller's getSearchKeyFunc returns
+        // case-variant strings for the same user (the API itself is case-sensitive, so
+        // the cache key is case-sensitive — this dictionary is only for mapping a
+        // resolved name back to the caller's T instance for unresolvedList).
+        var searchKeyToUser = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
+        var nonEmptyKeys = new List<string>();
+        foreach (var user in userList)
         {
-            return [];
-        }
-
-        _dicPmBulkResolveByName_Exception.ThrowCachedExceptionIfAny();
-
-        if (_dicPmBulkResolveByName is null)
-        {
-            lock (_dicPmBulkResolveByName_Exception)
-            {
-                _dicPmBulkResolveByName ??= [];
-            }
-        }
-
-        // Build a list of names or emails that haven't been queried yet
-        List<T> needQueryUsers = users
-            .Where(user => !string.IsNullOrEmpty(getSearchKeyFunc(user)))
-            .Where(user => !_dicPmBulkResolveByName.ContainsKey((kind, getSearchKeyFunc(user))))
-            .DistinctBy(user => getSearchKeyFunc(user))
-            .ToList();
-
-        if (needQueryUsers.Count != 0)
-        {
-            try
-            {
-                var partitionGlobalId = GetPartitionGlobalId();
-                foreach (var chunk in needQueryUsers.Chunk(20))
-                {
-                    var result = OrchAPISession.PmBulkResolveByName(partitionGlobalId!, kind,
-                        chunk.Select(u => getSearchKeyFunc(u)));
-
-                    foreach (var kvp in result ?? [])
-                    {
-                        // Drive-local Path is attached by the caller cmdlet via
-                        // PSObject NoteProperty (Phase 3).
-                        _dicPmBulkResolveByName.AddOrUpdate((kind, kvp.Key), kvp.Value, (key, oldValue) => kvp.Value);
-                    }
-                }
-            }
-            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
-            {
-                _dicPmBulkResolveByName_Exception.CacheException(ex);
-                throw;
-            }
-        }
-
-        // Rather than returning the entire cache, return only the results for the queried users
-        Dictionary<string, T> dicList = [];
-
-        // If unresolvedList is provided, build this list.
-        // Use a dictionary for fast user lookup.
-        if (unresolvedList is not null)
-        {
-            dicList = users.ToDictionary(u => getSearchKeyFunc(u), u => u, StringComparer.OrdinalIgnoreCase);
-
-            // Add entries with null search keys to the unresolved list
-            foreach (var user in users)
-            {
-                if (string.IsNullOrEmpty(getSearchKeyFunc(user)))
-                {
-                    unresolvedList.Add(user);
-                }
-            }
-        }
-
-        Dictionary<string, PmGroupMember?> ret = [];
-        foreach (var user in users)
-        {
-            string key = getSearchKeyFunc(user);
+            var key = getSearchKeyFunc(user);
             if (string.IsNullOrEmpty(key))
             {
+                unresolvedList?.Add(user);
                 continue;
             }
-            // Everything should be in the dictionary.. Names not found will have null values.
-            if (_dicPmBulkResolveByName.TryGetValue((kind, key), out PmGroupMember value))
+            // First-writer-wins on case collision — matches the previous behavior.
+            if (!searchKeyToUser.ContainsKey(key)) searchKeyToUser[key] = user;
+            nonEmptyKeys.Add(key);
+        }
+
+        var resolved = PmGroupMembers.GetMany(kind, nonEmptyKeys);
+
+        if (unresolvedList is not null)
+        {
+            foreach (var (name, value) in resolved)
             {
-                ret[key] = value;
-                if (value is null && dicList is not null)
+                if (value is null && searchKeyToUser.TryGetValue(name, out var unresolvedEntry))
                 {
-                    // This should also always be in the dictionary..
-                    if (dicList.TryGetValue(key, out var unresolvedEntry))
-                    {
-                        unresolvedList!.Add(unresolvedEntry);
-                    }
+                    unresolvedList.Add(unresolvedEntry);
                 }
             }
         }
 
-        return ret;
+        return new Dictionary<string, PmGroupMember?>(resolved);
     }
 
     // Backwards-compat shim: SearchDirectoryCache (KeyedSingleCachePerTenant) is keyed
@@ -1063,6 +1009,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly KeyedSingleCachePerOrganization<string, PmDirectoryEntityInfo[]?> SearchPmDirectoryCache;
     public readonly KeyedSingleCachePerTenant<string, DirectoryObject[]?> SearchDirectoryCache;
     public readonly KeyedSingleCachePerOrganization<string, AvailableUserBundles> PmAvailableUserBundles;
+    public readonly PmGroupMembersCache PmGroupMembers;
     public readonly KeyedSingleCachePerTenant<long, User> UsersDetailed;
     public readonly ListCachePerTenant<User> Users;
     public readonly IncrementalCachePerTenant<long, AuditLog> AuditLogs;
@@ -1449,6 +1396,8 @@ public partial class OrchDriveInfo : PSDriveInfo
                     v.Path = NameColonSeparator;
                 }
             });
+
+        PmGroupMembers = new(this);
 
         PmAvailableUserBundles = new(this,
             // The API doesn't take partitionGlobalId (just groupId), but the

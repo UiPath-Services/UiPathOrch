@@ -336,23 +336,20 @@ Surfaced during P3 review but not addressed by P3 itself:
    variants.** If more PM entities surface that need keyed
    per-organization caching (single or list), the classes added in
    P3.0a become reusable infrastructure.
-3. **`_dicPmBulkResolveByName` migration.** Originally planned as
-   part of P3.1 Group A. Two issues prevent a mechanical migration:
-   - **Shape**: the cache backs `PmBulkResolveByName<T>(...)` which
-     does batched bulk lookup (chunks of 20 names per API call),
-     not single-key Get. The standard `KeyedSingleCachePerOrganization.Get(key)`
-     API doesn't fit; either the wrapper would have to bypass the
-     cache class for bulk fetch (defeating the abstraction) or the
-     class would need a `GetMany / FetchMany` API just for one
-     consumer.
-   - **Scope**: the existing field is per-drive (`internal
-     ConcurrentDictionary<(string kind, string name), PmGroupMember?>`
-     in OrchDriveInfo) but the data is org-scoped — the same
-     mistake category as the P3.0 corrections.
-   Address both together when an org-scoped batched-bulk cache shape
-   is needed elsewhere (or design a one-off org-scoped raw-cache
-   layout that includes partitionGlobalId in the key, similar to
-   what the static-org-cache classes do internally).
+3. **`_dicPmBulkResolveByName` migration.** Done post-1.4.1 via a
+   concrete (non-generic) `PmGroupMembersCache` class. The chunked
+   bulk fetch (20 names per API call), the composite key shape
+   `(partitionGlobalId, kind, name)`, the `PmGroupMember?` value
+   type with explicit null entries for unresolved names (negative
+   caching, confirmed against the API), and the chunk size are all
+   fixed by this one endpoint; a generic class would expose unused
+   flexibility for no real consumer. Storage is `static` so all
+   drive instances in the same org share one cache (the org-scope
+   correction the P3.0 work applied to `KeyedSingleCachePerOrganization`).
+   The `PmBulkResolveByName<T>` wrapper on `OrchDriveInfo` remains
+   for the generic `T` input + `unresolvedList` output ergonomics
+   that PowerShell cmdlets expect; the cache class handles only the
+   string-name → `PmGroupMember?` resolution + storage.
 
 ## Process / risk notes
 
