@@ -11,9 +11,10 @@ function Enable-OrchUserAttended {
         [string[]]$Path
     )
 
-    # .EXTERNALHELP UiPathOrch-Help.xml
-
-    foreach ($user in $UserName) {
-        Update-OrchUser -Path $Path -UserName $user -MayHaveRobotSession True
+    process {
+        # .EXTERNALHELP UiPathOrch-Help.xml
+        foreach ($user in $UserName) {
+            Update-OrchUser -Path $Path -UserName $user -MayHaveRobotSession True
+        }
     }
 }

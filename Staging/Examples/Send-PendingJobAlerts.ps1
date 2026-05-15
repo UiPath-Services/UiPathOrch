@@ -1,4 +1,4 @@
-# Monitor jobs across the specified Orch drives every 15 minutes and
+﻿# Monitor jobs across the specified Orch drives every 15 minutes and
 # notify via Outlook if any job has been Pending for more than 15 minutes.
 #
 # Notifications are sent every cycle for as long as a job remains stuck.

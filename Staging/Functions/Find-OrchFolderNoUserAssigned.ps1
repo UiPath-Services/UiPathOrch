@@ -1,4 +1,4 @@
-<#
+﻿<#
 .EXTERNALHELP UiPathOrch-Help.xml
 
 .SYNOPSIS
@@ -40,12 +40,15 @@ function Find-OrchFolderNoUserAssigned {
     Get-ChildItem $Path -Recurse |
         Where-Object { $_.FolderType -ne 'Personal' -and $_.FeedType -ne 'PersonalWorkspace' } |
         ForEach-Object {
+            $folder = $_
             try {
-                $users = Get-OrchFolderUser -Path $_.FullName -IncludeInherited:$IncludeInherited.IsPresent -ErrorAction Stop
-                if (-not $users) { $_ }
+                $users = Get-OrchFolderUser -Path $folder.FullName -IncludeInherited:$IncludeInherited.IsPresent -ErrorAction Stop
+                if (-not $users) { $folder }
             }
             catch {
                 # Folder couldn't be resolved (e.g. exotic FeedType); skip silently.
+                # Surface the reason under -Verbose so callers can diagnose unexpected skips.
+                Write-Verbose "Find-OrchFolderNoUserAssigned: skipping '$($folder.FullName)' — $($_.Exception.Message)"
             }
         }
 }

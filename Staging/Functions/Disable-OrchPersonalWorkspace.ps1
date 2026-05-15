@@ -11,15 +11,18 @@ function Disable-OrchPersonalWorkspace {
         [string[]]$Path
     )
 
-    # .EXTERNALHELP UiPathOrch-Help.xml
-
-    foreach ($user in $UserName) {
-        Update-OrchUser @PSBoundParameters -Path $Path -UserName $user -MayHavePersonalWorkspace False
+    process {
+        # .EXTERNALHELP UiPathOrch-Help.xml
+        foreach ($user in $UserName) {
+            Update-OrchUser @PSBoundParameters -Path $Path -UserName $user -MayHavePersonalWorkspace False
+        }
     }
 
-    if ($PSBoundParameters.ContainsKey('Path')) {
-        Clear-OrchCache -Path $Path
-    } else {
-        Clear-OrchCache
+    end {
+        if ($PSBoundParameters.ContainsKey('Path')) {
+            Clear-OrchCache -Path $Path
+        } else {
+            Clear-OrchCache
+        }
     }
 }

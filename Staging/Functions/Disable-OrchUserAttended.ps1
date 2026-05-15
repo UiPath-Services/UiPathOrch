@@ -12,9 +12,10 @@ function Disable-OrchUserAttended {
         [string[]]$Path
     )
 
-    # .EXTERNALHELP UiPathOrch-Help.xml
-
-    foreach ($user in $UserName) {
-        Update-OrchUser @PSBoundParameters -Path $Path -UserName $user -MayHaveRobotSession False
+    process {
+        # .EXTERNALHELP UiPathOrch-Help.xml
+        foreach ($user in $UserName) {
+            Update-OrchUser @PSBoundParameters -Path $Path -UserName $user -MayHaveRobotSession False
+        }
     }
 }

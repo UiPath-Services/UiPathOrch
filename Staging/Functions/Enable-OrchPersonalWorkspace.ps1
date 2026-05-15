@@ -12,15 +12,18 @@ function Enable-OrchPersonalWorkspace {
         [string[]]$Path
     )
 
-    # .EXTERNALHELP UiPathOrch-Help.xml
-
-    foreach ($user in $UserName) {
-        Update-OrchUser @PSBoundParameters -Path $Path -UserName $user -MayHavePersonalWorkspace True -MayHaveRobotSession True
+    process {
+        # .EXTERNALHELP UiPathOrch-Help.xml
+        foreach ($user in $UserName) {
+            Update-OrchUser @PSBoundParameters -Path $Path -UserName $user -MayHavePersonalWorkspace True -MayHaveRobotSession True
+        }
     }
 
-    if ($PSBoundParameters.ContainsKey('Path')) {
-        Clear-OrchCache -Path $Path
-    } else {
-        Clear-OrchCache
+    end {
+        if ($PSBoundParameters.ContainsKey('Path')) {
+            Clear-OrchCache -Path $Path
+        } else {
+            Clear-OrchCache
+        }
     }
 }
