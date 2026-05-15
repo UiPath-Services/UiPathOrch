@@ -6,6 +6,65 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.4.2] - 2026-05-15
+
+Patch release. Two pipeline-input bug fixes in helper functions, three
+raw `_dic*` caches retired in favor of small focused cache classes,
+and the cmdlet-redesign-plan-p3 doc closes out (raw `_dic*`
+accumulator pattern eliminated except for `_dicFolders` itself).
+
+### Fixed
+
+- **`Enable-/Disable-OrchPersonalWorkspace` and
+  `Enable-/Disable-OrchUserAttended` lost all but the last input
+  when piped to.** These functions declared
+  `[Parameter(ValueFromPipelineByPropertyName)]` but had no explicit
+  `process` block, so `Get-OrchUser | Disable-OrchUserAttended`
+  silently disabled only the last user. Direct invocation
+  (`-UserName a,b,c`) was unaffected and remains unchanged.
+
+### Changed
+
+- **PM audit log cache (`_dicPmAuditLogs`) migrated to
+  `IncrementalCachePerTenant`.** Uses the entity as its own key, so
+  the previous `HashSet<PmAuditLog>` structural-dedup semantic is
+  preserved while the cache joins the standard
+  `Get-OrchAuditLog`-style lifecycle (`Fetch` / `GetCache` /
+  `ClearCache` / per-tenant exception cache).
+
+- **PM bulk-resolve cache (`_dicPmBulkResolveByName`) migrated to a
+  concrete `PmGroupMembersCache`.** Static storage keyed by
+  `(partitionGlobalId, kind, name)`, so all drive instances pointing
+  at the same org share one cache — bulk resolution (e.g. during
+  `Add-OrchFolderUser`) of the same name across multiple drives no
+  longer re-pays the API call. Negative caching preserved: the API
+  returns `null` for unresolved names and that null is kept so the
+  next lookup is a cache hit. The class is concrete (not generic)
+  because the chunk size (20), key shape, and value type are all
+  fixed by this one endpoint; a generic class would expose unused
+  flexibility for no real consumer.
+
+- **Robot log cache (`_dicRobotLogs`) migrated to a concrete
+  `RobotLogsCache`.** Per-folder `ConcurrentBag<Log>` accumulator
+  (the API returns `Log.Id == 0` so per-id dedup isn't possible),
+  `IFolderCacheClearable`-registered, so `Clear-OrchCache -Path
+  <folder>` now flushes the right slice without manual null-out.
+
+### Internal
+
+- `Find-OrchFolderNoUserAssigned` now emits a `Write-Verbose` line
+  for the folders it silently skips, so `-Verbose` reveals which
+  folders failed to resolve.
+- ScriptAnalyzer Warnings reduced from 23 → 11 in `Staging/`; the
+  remaining 11 are all intentional `Write-Host` in
+  `Staging/Examples/*.ps1` sample scripts. UTF-8 BOM added to the
+  four files that needed it for PSScriptAnalyzer's PS 5.1
+  compatibility rule.
+- `design/cmdlet-redesign-plan-p3.md` Group F closes out (0 bespoke
+  raw caches remaining outside of `_dicFolders` itself, which
+  carries its own multi-phase fetch + lock-and-publish design from
+  1.4.1).
+
 ## [1.4.1] - 2026-05-15
 
 Patch release. Headline is a thread-safety fix that eliminates

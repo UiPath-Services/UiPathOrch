@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.4.1'
+ModuleVersion = '1.4.2'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -457,22 +457,20 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-Patch release. Headline is a thread-safety fix that eliminates intermittent `Cannot find path '<folder>'` errors under multi-row `Set-OrchAsset` / `Set-OrchCredentialAsset` / `Set-OrchSecretAsset` pipelines. Plus deterministic-failure caching and a cache-class consolidation pass.
+Patch release. Two pipeline-input bug fixes in helper functions, three raw `_dic*` caches retired in favor of small focused cache classes, and the cmdlet-redesign-plan-p3 doc closes out (raw `_dic*` accumulator pattern eliminated except for `_dicFolders` itself).
 
 ## Bug Fixes
-- **`Cannot find path '<folder>'` under multi-row `Set-Orch*Asset` pipelines.** The folder cache was published incrementally, so a parallel worker thread could observe a partial list and miss a folder that actually existed. Build and publish are now atomic. The same fix protects `Copy-Item`'s mid-copy folder addition.
+- **`Enable-/Disable-OrchPersonalWorkspace` and `Enable-/Disable-OrchUserAttended` lost all but the last input when piped to.** These functions declared `[Parameter(ValueFromPipelineByPropertyName)]` but had no explicit `process` block, so `Get-OrchUser | Disable-OrchUserAttended` silently disabled only the last user. Direct invocation (`-UserName a,b,c`) was unaffected and remains unchanged.
 
 ## Changed
-- **`ExceptionCache` now caches deterministic non-HTTP failures.** Repeated calls that hit a deterministic gate (e.g., API-version checks) no longer re-pay the failure cost. Adds 410 (Gone) and 501 (Not Implemented) to the HTTP whitelist. `Get-OrchAlert`'s API-version guard benefits directly.
-- **`CurrentUser` and the four session cmdlets join the standard cache hierarchy.** `Get-OrchCurrentUser` now uses `SingleCachePerTenant`; `Get-OrchUserSession`, `Get-OrchMachineSession`, `Get-OrchUnattendedSession`, `Get-OrchAlert` use `IncrementalCachePerTenant` / `IncrementalCachePerFolder`. Observable behavior unchanged.
+- **PM audit log cache (`_dicPmAuditLogs`) migrated to `IncrementalCachePerTenant`.** Uses the entity as its own key, so the previous `HashSet<PmAuditLog>` structural-dedup semantic is preserved while the cache joins the standard `Get-OrchAuditLog`-style lifecycle (`Fetch` / `GetCache` / `ClearCache` / per-tenant exception cache).
+- **PM bulk-resolve cache (`_dicPmBulkResolveByName`) migrated to a concrete `PmGroupMembersCache`.** Static storage keyed by `(partitionGlobalId, kind, name)`, so all drive instances pointing at the same org share one cache — bulk resolution (e.g. during `Add-OrchFolderUser`) of the same name across multiple drives no longer re-pays the API call. Negative caching preserved: the API returns `null` for unresolved names and that null is kept so the next lookup is a cache hit.
+- **Robot log cache (`_dicRobotLogs`) migrated to a concrete `RobotLogsCache`.** Per-folder `ConcurrentBag<Log>` accumulator (the API returns `Log.Id == 0` so per-id dedup isn't possible), `IFolderCacheClearable`-registered, so `Clear-OrchCache -Path <folder>` now flushes the right slice without manual null-out.
 
 ## Internal
-- Cmdlet class rename `*Command` → `*Cmdlet` (resolves DTO name collisions; cmdlet noun-verb names unchanged).
-- `_dic` prefix removed from `OrchDriveInfo` scalar fields that were never dictionaries.
-- 14 backward-compat shim methods on `OrchDriveInfo` retired; direct cache-class access is canonical.
-- `ReleaseNotes.md` removed — `CHANGELOG.md` is the single source.
-- Per-organization Path isolation Phase 4 cleanup (final loose ends on `NuLicensedGroupMember`, `AvailableUserBundles`, `UpdateLicensedGroupResponse`).
-- Test infrastructure modernized to fixture-based round-trips, eliminating tenant-state-dependent assertions.
+- `Find-OrchFolderNoUserAssigned` now emits a `Write-Verbose` line for the folders it silently skips, so `-Verbose` reveals which folders failed to resolve.
+- ScriptAnalyzer Warnings reduced from 23 → 11 in `Staging/`; the remaining 11 are all intentional `Write-Host` in `Staging/Examples/*.ps1` sample scripts.
+- `design/cmdlet-redesign-plan-p3.md` Group F closes out (0 bespoke caches remaining outside of `_dicFolders` itself, which carries its own multi-phase fetch + lock-and-publish design from 1.4.1).
 '@
 
         # Prerelease string of this module
