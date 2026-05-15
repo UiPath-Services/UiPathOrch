@@ -1050,8 +1050,9 @@ public partial class OrchProvider : NavigationCmdletProvider
                     drive.PersonalWorkspaces.ClearCache();
                 }
 
-                // Not ideal, but to match the GetFolders() implementation, clear _dicFolders when a personal workspace is deleted too..
-                // This ensures GetFolders() works correctly. Want to fix this eventually
+                // Folder structure changed — invalidate both caches; the next GetFolders
+                // rebuilds atomically (lock + Volatile.Write) so concurrent readers cannot
+                // observe a partial state.
                 drive._dicFolders = null;
                 drive._dicFoldersForEnumFolders = null;
 

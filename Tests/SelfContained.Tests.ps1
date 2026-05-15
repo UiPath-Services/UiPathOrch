@@ -786,39 +786,7 @@ Describe 'Get-OrchCredentialAsset' {
         Get-OrchCredentialAsset -Name "${script:GcaName}_A" -ExportCsv $csv
         Set-OrchCredentialAsset -Name "${script:GcaName}_A" -Description 'perturbed' -CredentialUsername 'userA' -CredentialPassword 'passA'
         Clear-OrchCache
-        # DIAGNOSTIC: on Set-OrchCredentialAsset failure, dump state immediately so we
-        # can tell cache-lie vs genuine folder removal. The pre-clear Test-Path captures
-        # cached state; the second one after Clear-OrchCache forces an API re-fetch.
-        try {
-            Import-Csv $csv | Set-OrchCredentialAsset -ErrorAction Stop
-        } catch {
-            $diagPath = Join-Path $env:TEMP "T5_8_diag_$($script:Prefix).txt"
-            $testPathBefore = Test-Path $script:RootFolder
-            $folderListBefore = (Get-ChildItem "${script:Drive}:\" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name) -join ', '
-            Clear-OrchCache
-            $testPathAfterClear = Test-Path $script:RootFolder
-            $folderListAfterClear = (Get-ChildItem "${script:Drive}:\" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name) -join ', '
-            @"
-=== T5.8 ON-EXCEPTION diagnostic ===
-RootFolder:        $script:RootFolder
-Drive:             $script:Drive
-CSV path:          $csv
-CSV content:
-$(Get-Content $csv -Raw)
---- Cache state at exception time ---
-Test-Path:         $testPathBefore
-Folders under \:   $folderListBefore
---- After Clear-OrchCache (forces API re-fetch) ---
-Test-Path:         $testPathAfterClear
-Folders under \:   $folderListAfterClear
---- Current Location ---
-$(Get-Location)
---- Exception ---
-$($_.Exception | Format-List * -Force | Out-String)
-"@ | Set-Content -Path $diagPath -Encoding UTF8
-            Write-Host "T5.8 ON-EXCEPTION DIAG: $diagPath" -ForegroundColor Red
-            throw
-        }
+        Import-Csv $csv | Set-OrchCredentialAsset
         Clear-OrchCache
         $after = Get-OrchAsset -Name "${script:GcaName}_A"
         $after.Description | Should -Be 'A'
@@ -2811,30 +2779,6 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
 
             # Sanity: $assetUserOnly was created without a Global default value.
             $srcUserOnly = Get-OrchAsset -Name $assetUserOnly -Path $script:RootFolder
-            if (-not $srcUserOnly -or $null -eq $srcUserOnly.HasDefaultValue) {
-                # DIAGNOSTIC: dump state to a file for bisection. Remove once root cause is known.
-                $diagPath = Join-Path $env:TEMP "R16_diag_$($script:Prefix).txt"
-                @"
-=== R16 precondition diagnostic ===
-Asset name:        $assetUserOnly
-Path:              $script:RootFolder
-TestUserA:         $script:TestUserA  (Id=$script:TestUserAId)
-srcUserOnly null?: $(-not $srcUserOnly)
-srcUserOnly raw:
-$($srcUserOnly | Format-List * | Out-String)
-Folder users:
-$(Get-OrchFolderUser -Path $script:RootFolder -ErrorAction SilentlyContinue |
-    Select-Object @{N='UserName';E={$_.UserEntity.UserName}}, Roles |
-    Format-Table -AutoSize | Out-String)
-All assets in folder:
-$(Get-OrchAsset -Path $script:RootFolder -ErrorAction SilentlyContinue |
-    Select-Object Name, ValueScope, HasDefaultValue |
-    Format-Table -AutoSize | Out-String)
-"@ | Set-Content -Path $diagPath -Encoding UTF8
-                Write-Host "R16 DIAG: $diagPath" -ForegroundColor Yellow
-                Set-ItResult -Skipped -Because "R16 precondition broken (asset or HasDefaultValue is null); diag at $diagPath"
-                return
-            }
             $srcUserOnly.HasDefaultValue | Should -Be $false -Because 'fixture: per-User-only asset must have no Global default to exercise the "no applicable values" Warning path'
 
             # === (c) batched copy under $ErrorActionPreference=Stop ===
