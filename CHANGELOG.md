@@ -23,6 +23,16 @@ accumulator pattern eliminated except for `_dicFolders` itself).
   silently disabled only the last user. Direct invocation
   (`-UserName a,b,c`) was unaffected and remains unchanged.
 
+- **`Logging.Enabled` now defaults to `true` when the `Logging`
+  section is present but `Enabled` is unspecified.** Previously a
+  config with only `Logging.Level` set (and `Enabled` omitted)
+  produced no log output at all — the log folder was created (by
+  `Get-OrchLogLocation`) but stayed empty, with no signal why. This
+  matched the drive-level `Enabled` convention (null → on) nowhere,
+  and was a frequent support trap when diagnosing auth issues. An
+  explicit `Logging.Enabled: false` is still respected; absent
+  `Logging` section still means no logging.
+
 ### Changed
 
 - **PM audit log cache (`_dicPmAuditLogs`) migrated to

@@ -284,6 +284,15 @@ public class PSDrive
             Logging.Enabled ??= globalSettings?.Logging?.Enabled;
             Logging.Level ??= globalSettings?.Logging?.Level;
         }
+
+        // A present-but-unspecified Logging.Enabled means "on" — same null→true
+        // convention as the drive-level Enabled. Before this, a user who set only
+        // Logging.Level (and left Enabled out) got no logs at all, with no signal
+        // why. Explicit Enabled: false is still respected (it's non-null here).
+        if (Logging is not null)
+        {
+            Logging.Enabled ??= true;
+        }
     }
 }
 
