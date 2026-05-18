@@ -126,11 +126,19 @@ public class GetUserLicenseUser : OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
         var wpEmail = Email.ConvertToWildcardPatternList();
 
-        foreach (var drive in drives)
+        // Fetch in parallel; per-org caches serialize same-partition fetches
+        // internally. Filtering / WriteObject stay on the pipeline thread.
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.PmLicensedUsers.Get());
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
             try
             {
-                var entities = drive.PmLicensedUsers.Get();
+                var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
                 var targetEntities = entities
@@ -138,11 +146,11 @@ public class GetUserLicenseUser : OrchestratorPSCmdlet
                     .FilterByWildcards(u => u?.email, wpEmail)
                     .OrderBy(u => u?.name);
 
-                WriteObject(targetEntities.Select(e => e.WithPath(drive.NameColonSeparator)), true);
+                WriteObject(targetEntities.Select(e => { var c = e.ShallowClone(); c.Path = result.Source.NameColonSeparator; return c; }), true);
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmLicensedUserError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(ex, "GetPmLicensedUserError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

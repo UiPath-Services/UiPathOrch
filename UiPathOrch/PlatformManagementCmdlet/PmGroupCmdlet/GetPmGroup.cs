@@ -51,16 +51,29 @@ public class GetPmGroupCmdlet : OrchestratorPSCmdlet
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        foreach (var drive in drives)
+        // Fetch in parallel; per-org caches serialize same-partition fetches
+        // internally. Filtering / WriteObject / CSV stay on the pipeline
+        // thread. No try/catch here — as in the original, a fetch failure
+        // propagates and terminates the cmdlet (surfaced by GetResult).
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.PmGroups.Get());
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
-            var groups = drive.PmGroups.Get()
+            var entities = result.GetResult(cancelHandler.Token);
+            if (entities is null) continue;
+            var drive = result.Source;
+            var groups = entities
                 .Where(g => g is not null)
                 .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g.name);
 
             if (writer is null)
             {
-                WriteObject(groups.Select(g => g.WithPath(drive.NameColonSeparator)), true);
+                WriteObject(groups.Select(g => { var c = g.ShallowClone(); c.Path = drive.NameColonSeparator; return c; }), true);
             }
             else
             {

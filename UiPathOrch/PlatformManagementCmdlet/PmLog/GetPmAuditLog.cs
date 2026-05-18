@@ -97,19 +97,29 @@ public class GetPmAuditLogCmdlet : OrchestratorPSCmdlet
 
         string filter = MakeFilter();
 
-        foreach (var drive in drives)
+        // Parallelize the per-drive fetch. PmAuditLogs is a per-tenant cache
+        // (one instance per drive), so concurrent drives touch independent
+        // caches. WriteObject stays on the pipeline thread. The cache-dump
+        // branch above is pure in-memory and stays sequential.
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.PmAuditLogs.Fetch(filter, skip, first));
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
             try
             {
-                var entities = drive.PmAuditLogs.Fetch(filter, skip, first);
+                var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
                 // Do not sort here
                 WriteObject(entities, true);
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmAuditLogError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(ex, "GetPmAuditLogError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

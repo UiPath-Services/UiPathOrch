@@ -275,7 +275,7 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
                     var updatedGroup = drive.AddMemberToPmGroup(group.id, group.name, identifiers);
                     if (updatedGroup is not null)
                     {
-                        WriteObject(updatedGroup.WithPath(drive.NameColonSeparator));
+                        { var c = updatedGroup.ShallowClone(); c.Path = drive.NameColonSeparator; WriteObject(c); }
                     }
                 }
             }

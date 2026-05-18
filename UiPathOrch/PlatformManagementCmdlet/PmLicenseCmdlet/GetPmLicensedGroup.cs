@@ -120,65 +120,92 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
+        if (ExpandAllocation.IsPresent || writer is not null)
         {
-            IEnumerable<NuLicensedGroup> groups = null;
-            try
-            {
-                groups = drive.PmLicensedGroups.Get()
+            // Two-phase parallel fetch (see Get-OrchUserDetail). Phase 1:
+            // per-drive licensed-group list + name filter. Phase 2: the
+            // per-group allocation fetch (GetPmLicensedGroupAllocations).
+            // Shared cap=4 semaphore; per-org caches serialize same-partition
+            // fetches internally. Emission stays on the pipeline thread.
+            using var cancelHandler = new ConsoleCancelHandler();
+
+            using var pool = OrchThreadPool.RunForEachChained(
+                drives,
+                drive => drive.NameColonSeparator,
+                drive => (object)drive,
+                drive => drive.PmLicensedGroups.Get()
                     .FilterByWildcards(g => g?.name, wpGroupName)
-                    .OrderBy(g => g?.name);
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmNamedUserLicenseGroupError", ErrorCategory.InvalidOperation, drive));
-                continue;
-            }
+                    .OrderBy(g => g?.name)
+                    .Select(group => (drive, group)),
+                t => t.group.GetPSPath(t.drive.NameColonSeparator),
+                t => (object)t.group,
+                t => t.drive.GetPmLicensedGroupAllocations(t.group),
+                cancelHandler.Token);
 
-            if (ExpandAllocation.IsPresent || writer is not null)
+            foreach (var task in pool)
             {
-                foreach (var group in groups.WithCancellation(cancelHandler.Token))
+                try
                 {
-                    try
-                    {
-                        var entities = drive.GetPmLicensedGroupAllocations(group);
-                        if (entities is null) continue;
+                    var entities = task.GetResult(cancelHandler.Token);
+                    if (entities is null) continue;
 
-                        var targetEntities = entities
-                            .FilterByWildcards(u => u?.name, wpUserName)
-                            .OrderBy(u => u?.name);
+                    var (drive, group) = task.Source;
+                    var targetEntities = entities
+                        .FilterByWildcards(u => u?.name, wpUserName)
+                        .OrderBy(u => u?.name);
 
-                        string pathGroupName = System.IO.Path.Combine(drive.NameColonSeparator, group?.name ?? "");
-                        if (writer is null)
-                        {
-                            WriteObject(targetEntities.Select(m => m
-                                .WithPath(drive.NameColonSeparator)
-                                .WithNoteProperty("GroupName", group?.name)
-                                .WithNoteProperty("PathGroupName", pathGroupName)), true);
-                        }
-                        else
-                        {
-                            WriteCsvContent(writer, drive.NameColonSeparator, group?.name, targetEntities);
-                        }
-                    }
-                    catch (OperationCanceledException)
+                    string pathGroupName = System.IO.Path.Combine(drive.NameColonSeparator, group?.name ?? "");
+                    if (writer is null)
                     {
-                        throw;
+                        WriteObject(targetEntities.Select(m => { var c = m.ShallowClone(); c.Path = drive.NameColonSeparator; c.GroupName = group?.name; c.PathGroupName = pathGroupName; return c; }), true);
                     }
-                    catch (Exception ex)
+                    else
                     {
-                        WriteError(new ErrorRecord(new OrchException(group.GetPSPath(drive.NameColonSeparator), ex), "GetPmLicensedGroupError", ErrorCategory.InvalidOperation, group));
+                        WriteCsvContent(writer, drive.NameColonSeparator, group?.name, targetEntities);
                     }
                 }
+                catch (OrchException ex)
+                {
+                    WriteError(new ErrorRecord(ex, "GetPmLicensedGroupError", ErrorCategory.InvalidOperation, ex.Target));
+                }
             }
-            //else if (ExpandUserBundleLicenses.IsPresent)
-            //{
 
-            //}
-            else
+            // Phase 1 (per-drive list) failures keep the legacy ErrorId.
+            foreach (var (_, ex) in pool.Phase1Errors)
             {
-                WriteObject(groups.Select(g => g.WithPath(drive.NameColonSeparator)), true);
+                WriteError(new ErrorRecord(ex, "GetPmNamedUserLicenseGroupError", ErrorCategory.InvalidOperation, ex.Target));
+            }
+        }
+        //else if (ExpandUserBundleLicenses.IsPresent)
+        //{
+
+        //}
+        else
+        {
+            // List-only mode: no per-item fan-out, single-phase parallel
+            // fetch (per-org caches serialize same-partition internally).
+            using var poolResults = OrchThreadPool.RunForEach(drives,
+                drive => drive.NameColonSeparator,
+                drive => drive,
+                drive => drive.PmLicensedGroups.Get());
+
+            using var cancelHandler = new ConsoleCancelHandler();
+            foreach (var poolResult in poolResults)
+            {
+                try
+                {
+                    var fetched = poolResult.GetResult(cancelHandler.Token);
+                    if (fetched is null) continue;
+                    var drive = poolResult.Source;
+                    WriteObject(fetched
+                        .FilterByWildcards(g => g?.name, wpGroupName)
+                        .OrderBy(g => g?.name)
+                        .Select(g => { var c = g.ShallowClone(); c.Path = drive.NameColonSeparator; return c; }), true);
+                }
+                catch (OrchException ex)
+                {
+                    WriteError(new ErrorRecord(ex, "GetPmNamedUserLicenseGroupError", ErrorCategory.InvalidOperation, ex.Target));
+                }
             }
         }
 

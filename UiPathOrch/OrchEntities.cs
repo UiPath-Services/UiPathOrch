@@ -1013,7 +1013,12 @@ public class DirectoryObject
 // DirectoryEntityInfo
 public class PmDirectoryEntityInfo
 {
-    // Path removed; see PmGroupMember / LicenseInventory for rationale.
+    // Path: drive-local; see LicenseInventory. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public PmDirectoryEntityInfo ShallowClone() => (PmDirectoryEntityInfo)MemberwiseClone();
     public string? source { get; set; }
     public string? identifier { get; set; } // Guid
     public string? identityName { get; set; }
@@ -3490,9 +3495,12 @@ public class UserProfile
 // RobotAccountDto
 public class PmRobotAccount
 {
-    // Path was removed; see LicenseInventory for the rationale (shared
-    // org-cache singleton; drive-local Path comes through a PSObject
-    // NoteProperty at WriteObject time).
+    // Path: drive-local; see LicenseInventory. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public PmRobotAccount ShallowClone() => (PmRobotAccount)MemberwiseClone();
     public string? id { get; set; }
     public string? name { get; set; }
     public string? displayName { get; set; }
@@ -3579,7 +3587,12 @@ public class BulkCreateResponse
 // UserDto
 public class PmUser
 {
-    // Path removed; see LicenseInventory.
+    // Path: drive-local; see LicenseInventory. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public PmUser ShallowClone() => (PmUser)MemberwiseClone();
     public string? id { get; set; }
     public string? userName { get; set; }
     public string? email { get; set; }
@@ -3653,7 +3666,12 @@ public class UpdatePmUserSettingPayload // added by UiPathOrch
 // added by UiPathOrch
 public class NuLicensedGroup // The proper class name is unknown.
 {
-    // Path removed; see LicenseInventory.
+    // Path: drive-local; see LicenseInventory. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public NuLicensedGroup ShallowClone() => (NuLicensedGroup)MemberwiseClone();
     public string? id { get; set; } // Guid
     public string? name { get; set; }
     public string[]? userBundleLicenses { get; set; }
@@ -3666,7 +3684,12 @@ public class NuLicensedGroup // The proper class name is unknown.
 // added by UiPathOrch
 public class NuLicensedUser // The proper class name is unknown.
 {
-    // Path removed; see LicenseInventory.
+    // Path: drive-local; see LicenseInventory. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public NuLicensedUser ShallowClone() => (NuLicensedUser)MemberwiseClone();
     public string? id { get; set; }
     public string? email { get; set; }
     public string? name { get; set; }
@@ -3684,16 +3707,28 @@ public class NuLicensedUser // The proper class name is unknown.
 // added by UiPathOrch
 public class NuLicensedGroupMember : NuLicensedUser
 {
-    // GroupName / PathGroupName removed; attached as PSObject NoteProperty at
-    // WriteObject time by cmdlets that emit this entity (the cache singleton
-    // is org-shared, so per-call mutation was racy for multi-drive callers).
-    // See OrchExtensions.WithNoteProperty.
+    // GroupName / PathGroupName are drive-local; see LicenseInventory. Set on
+    // the per-emit ShallowClone() copy (Path is inherited from NuLicensedUser).
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? GroupName { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? PathGroupName { get; set; } // added by UiPathOrch
+
+    // Hides NuLicensedUser.ShallowClone so a caller holding a
+    // NuLicensedGroupMember gets the precise type back; MemberwiseClone
+    // copies the runtime type regardless.
+    public new NuLicensedGroupMember ShallowClone() => (NuLicensedGroupMember)MemberwiseClone();
 }
 
 // added by UiPathOrch
 public class AvailableUserBundle // The proper class name is unknown.
 {
-    // Path removed; see LicenseInventory.
+    // Path: drive-local; see LicenseInventory. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public AvailableUserBundle ShallowClone() => (AvailableUserBundle)MemberwiseClone();
     public string? code { get; set; }
     public string? name { get; set; } // added by UiPathOrch
     public int? allocated { get; set; }
@@ -3704,11 +3739,11 @@ public class AvailableUserBundle // The proper class name is unknown.
 // added by UiPathOrch
 public class AvailableUserBundles // The proper class name is unknown.
 {
-    // Path / GroupName / PathGroupName removed; the cache singleton is
-    // org-shared. Current callers only access .availableUserBundles[], so no
-    // PSObject NoteProperty wrap is needed -- if a future caller wants to
-    // WriteObject this entity, attach drive context via WithPath / WithNoteProperty
-    // at emit time (see NuLicensedGroupMember for the pattern).
+    // No Path/GroupName: the cache singleton is org-shared and current
+    // callers only access .availableUserBundles[]. If a future caller needs
+    // to WriteObject this entity per drive, give it [JsonIgnore] labels +
+    // ShallowClone() and set them on the per-emit copy (see LicenseInventory
+    // / NuLicensedGroupMember for the pattern).
     public AvailableUserBundle[]? availableUserBundles { get; set; }
     public string[]? allocatedUserBundles { get; set; }
     public bool? useExternalLicense { get; set; }
@@ -3725,10 +3760,15 @@ public class UpdateLicensedGroupCommand // The proper class name is unknown.
 // added by UiPathOrch
 public class UpdateLicensedGroupResponse // The proper class name is unknown.
 {
-    // Path / GroupName removed; attached as PSObject NoteProperty at
-    // WriteObject time by the emitting cmdlets (Add/Remove-OrchPmLicenseTo*).
-    // Not strictly a race risk here (Response wrapper, not a cache singleton)
-    // but kept aligned with the rest of the org-family entities for consistency.
+    // Path / GroupName are drive-local labels. This is a Response wrapper
+    // (the direct return of PutPmLicenseGroup), NOT a shared cache singleton,
+    // so the emitting cmdlet sets these directly on the fresh instance — no
+    // ShallowClone needed (kept plain for alignment with the org family).
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? GroupName { get; set; } // added by UiPathOrch
+
     public string? groupId { get; set; } // Guid
     public string? organizationId { get; set; } // Guid
     public bool? useExternalLicense { get; set; }
@@ -3742,7 +3782,12 @@ public class UpdateLicensedGroupResponse // The proper class name is unknown.
 // Endpoint: GET /api/licensing/tenantAllocations?accountGlobalId={org}
 public class TenantAllocation
 {
-    // Path removed; see LicenseInventory.
+    // Path: drive-local; see LicenseInventory. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public TenantAllocation ShallowClone() => (TenantAllocation)MemberwiseClone();
     public TenantAllocationTenant? tenant { get; set; }
     public string[]? services { get; set; }
     public int? unattendedRobot { get; set; }
@@ -3804,10 +3849,18 @@ public class ProductAllocation
 // (the Robots & Services tab dashboard: product totals + entitlement usage + service catalog).
 public class LicenseInventory
 {
-    // Path was removed: this entity is shared across all drives in the same
-    // organization (SingleCachePerOrganization), so a drive-local Path field
-    // can't live on the singleton. Cmdlets attach Path via PSObject
-    // NoteProperty at WriteObject time instead.
+    // Path is drive-local. The cache holds ONE shared instance per org
+    // (Single/ListCachePerOrganization), so Path is NEVER set on the cached
+    // singleton. Each cmdlet emit takes a ShallowClone() copy and sets Path
+    // on that copy: distinct CLR instances keep Path independent per drive
+    // while the cache keeps serving the shared singleton. This replaces the
+    // PSObject-NoteProperty approach, which leaked for same-org multi-drive
+    // because PowerShell keys PSObject instance members to base-object
+    // identity (shared singleton => one shared note property, last wins).
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public LicenseInventory ShallowClone() => (LicenseInventory)MemberwiseClone();
     public ProductAllocation[]? productAllocations { get; set; }
     public AvailableUserBundle[]? userLicensingBundles { get; set; }
     public EntitlementUsage[]? entitlementUsages { get; set; }
@@ -3855,7 +3908,12 @@ public class AvailableService
 // a single object carries the complete response.
 public class AccountLicense
 {
-    // Path was removed; see LicenseInventory for the rationale.
+    // Path: drive-local; see LicenseInventory. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public AccountLicense ShallowClone() => (AccountLicense)MemberwiseClone();
     public MlKey[]? mlKeys { get; set; } // promoted from wrapper response root
 
     public string? accountId { get; set; } // Guid
@@ -3954,7 +4012,12 @@ public class MlKey
 // GroupDto
 public class PmGroup
 {
-    // Path removed; see LicenseInventory.
+    // Path: drive-local; see LicenseInventory. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public PmGroup ShallowClone() => (PmGroup)MemberwiseClone();
     public string? id { get; set; } // Guid
     public string? name { get; set; }
     public string? displayName { get; set; }
@@ -4004,11 +4067,17 @@ public class BulkResolveByNameCommand
 
 public abstract class PmGroupMember
 {
-    // Path and PathGroupName removed — both are drive-local but the entity is
-    // shared across drives in the same org via the PmGroups cache. They are
-    // attached as PSObject NoteProperties by Get-PmGroupMember at WriteObject
-    // time. `groupName` (parent group's name) is org-scoped — same value for
-    // every drive in the same org — and stays as a field.
+    // Path / PathGroupName are drive-local; see LicenseInventory. Never set
+    // on the shared org singleton — set on the per-emit ShallowClone() copy.
+    // `groupName` (parent group's name) is org-scoped (same value for every
+    // drive in the same org) and stays a plain field.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? PathGroupName { get; set; } // added by UiPathOrch
+
+    public PmGroupMember ShallowClone() => (PmGroupMember)MemberwiseClone();
+
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? groupName { get; set; } // added by UiPathOrch
 
@@ -4061,7 +4130,12 @@ public class ExternalScope
 // ExternalResourceDto
 public class ExternalResource
 {
-    // Path removed; see LicenseInventory.
+    // Path: drive-local; see LicenseInventory. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public ExternalResource ShallowClone() => (ExternalResource)MemberwiseClone();
     public string? name { get; set; }
     public string? displayName { get; set; }
     public string? description { get; set; }
@@ -4083,7 +4157,12 @@ public class Secret
 // ExternalClientDto
 public class ExternalClient
 {
-    // Path removed; see LicenseInventory.
+    // Path: drive-local; see LicenseInventory. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public ExternalClient ShallowClone() => (ExternalClient)MemberwiseClone();
     public string? name { get; set; }
     public string? id { get; set; }
     public string? secret { get; set; }
@@ -4142,7 +4221,18 @@ public class PmAuthenticationSetting
 // AuthenticationSettingRoot // added by UiPathOrch
 public class PmAuthenticationRoot
 {
-    // Path was removed; see LicenseInventory for the rationale.
+    // Path is drive-local. The cache holds ONE shared instance per org
+    // (SingleCachePerOrganization), so Path is NEVER set on the cached
+    // singleton. Each cmdlet emit takes a shallow copy (ShallowClone) and
+    // sets Path on that copy: distinct CLR instances keep Path independent
+    // per drive while the cache keeps serving the shared singleton.
+    // This replaces the PSObject-NoteProperty approach, which leaked for
+    // same-org multi-drive because PowerShell keys PSObject instance
+    // members to base-object identity — a shared singleton meant one
+    // shared note property, last-writer-wins.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
     public PmExternalIdentityProvider? externalIdentityProviderDto { get; set; }
 
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
@@ -4151,6 +4241,12 @@ public class PmAuthenticationRoot
     public PmAuthenticationSetting? directoryConnectionDto { get; set; }
     public string? authenticationSettingType { get; set; }
     public string? hostConnectionType { get; set; }
+
+    // Per-emit shallow copy so a drive-local Path can be attached without
+    // mutating the shared org singleton. Reference-type members are shared
+    // with the singleton by design (cmdlet output is read-only for
+    // consumers); only the scalar Path is written on the copy.
+    public PmAuthenticationRoot ShallowClone() => (PmAuthenticationRoot)MemberwiseClone();
 }
 
 // IEquatable is needed because this is managed with HashSet<T>.
@@ -4211,7 +4307,12 @@ public class DirectoryScope
 // private: return value from PartitionAccessPolicy
 public class AccessAllowedMember
 {
-    // Path removed; see LicenseInventory.
+    // Path: drive-local; see LicenseInventory. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public AccessAllowedMember ShallowClone() => (AccessAllowedMember)MemberwiseClone();
     public string? objectType { get; set; }
     public string? externalId { get; set; } // string?
     public string? source { get; set; }

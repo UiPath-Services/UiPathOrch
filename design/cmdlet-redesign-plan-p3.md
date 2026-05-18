@@ -1,6 +1,10 @@
 # P3 plan — class-ify the remaining raw caches (with scope corrections)
 
-Status: Draft (revised — includes scope correction for past PM migrations).
+Status: Shipped in 1.4.2 (master `69fd5fd`). All phases below
+(P3.0a–P3.5 + Group F) landed; the P4-candidate "`-First` cmdlet
+cache consistency" was also closed post-1.4.1 (commit `9009917`).
+Remaining open items live in the parent plan (Type B/C re-evaluation,
+`-Expand*` removal) and the AuditLog sibling-cmdlet decision in P2.
 Reference implementations: User (`d9e8795` / `d9f550a`), Process
 (`7ec1ec3` / `d5977c7`), Trigger (`60facb4` / `670545f`),
 AuditLog cache-only (`7015ea5`).
@@ -324,17 +328,30 @@ common caches + the `-First` consistency fix).
 
 Surfaced during P3 review but not addressed by P3 itself:
 
-1. **`-First` cmdlet cache consistency.** A cross-check of all 12
-   `-First` cmdlets revealed inconsistent cache backings:
-   - `Get-OrchAlert` and `Get-OrchUserSession` have **no cache
-     backing** (direct API calls in the cmdlet body). Should
-     probably gain `IncrementalCachePerTenant<long, Alert>` /
-     `IncrementalCachePerTenant<?, Session>`.
-   - `Get-OrchMachineSession` / `Get-OrchUnattendedSession` accept
-     `-First` but back to `ListCachePerFolder` / `ListCachePerTenant`
-     (not incremental). Need to verify behavior; potentially migrate.
-   These are independent issues from class-ifying the existing raw
-   caches and warrant a separate P4 plan.
+1. **`-First` cmdlet cache consistency.** Done post-1.4.1 in commit
+   `9009917`. A cross-check of all 12 `-First` cmdlets had revealed
+   inconsistent cache backings; the three session cmdlets are now
+   aligned with the `IncrementalCache` (always-fetch + exception
+   cache) shape:
+   - `Get-OrchUserSession` had **no cache backing** (direct
+     `OrchAPISession.GetGlobalSessions` call in the cmdlet body) →
+     now `IncrementalCachePerTenant<long, Session>`; `Path` setup
+     moved into the cache class initializer.
+   - `Get-OrchUnattendedSession` was `ListCachePerTenant`
+     (fetch-once-then-cache-forever, unsuitable for session status)
+     → now `IncrementalCachePerTenant<long, MachineSessionRuntime>`.
+     External behavior identical ("fetch all") but each call now
+     hits the wire instead of returning stale cache.
+   - `Get-OrchMachineSession` was `ListCachePerFolder`, same issue →
+     now `IncrementalCachePerFolder<long, MachineSessionRuntime>`.
+   - `Get-OrchAlert` needed **no change**: it was already on the
+     reference `IncrementalCachePerTenant` shape that the others were
+     migrated to match.
+   10 non-cmdlet callsites switched `.Get(...)` → `.Fetch(...)` for
+   the two `MachineSessionRuntime` caches; `.ClearCache()` callsites
+   unchanged. Verified: 298/298 `dotnet test` pass + live Orch1
+   smoke (200 sessions across 77 machines). The separate P4 plan
+   originally anticipated here is no longer needed.
 2. **`KeyedSingleCachePerOrganization` for non-keyed Org cache
    variants.** If more PM entities surface that need keyed
    per-organization caching (single or list), the classes added in

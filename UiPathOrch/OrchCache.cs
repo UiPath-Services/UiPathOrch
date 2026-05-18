@@ -203,7 +203,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
                         cachePerOrg = _getter(partitionGlobalId).ToList();
                         // Run the initializer once, before publishing — it now
                         // only handles entity-only derived state (drive-local
-                        // Path is added by the cmdlet's PSObject wrapper).
+                        // Path is set by the cmdlet on a per-emit ShallowClone copy).
                         if (_initializer is not null)
                         {
                             foreach (var t in cachePerOrg)
@@ -263,8 +263,8 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
                     {
                         cachePerOrgDetailed = _getterDetailed(partitionGlobalId, id);
                         // Run initializer once before publishing — entity-only
-                        // derived state. Drive-local Path is added by the
-                        // cmdlet's PSObject wrapper.
+                        // derived state. Drive-local Path is set by the cmdlet
+                        // on a per-emit ShallowClone copy.
                         if (_initializer is not null && cachePerOrgDetailed is not null)
                         {
                             _initializer(cachePerOrgDetailed);
@@ -415,8 +415,8 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
         // No cached-hit re-initializer call here. The previous code re-ran
         // _initializer on every cache hit so each drive could write its own
         // Path into the shared static entity — a race-prone hack now obsolete:
-        // entity types in this cache have lost their Path field, and cmdlets
-        // attach drive context via PSObject NoteProperty at WriteObject time.
+        // Path is never set on this shared singleton; the cmdlet sets it on a
+        // per-emit ShallowClone copy at WriteObject time.
 
         return entity;
     }

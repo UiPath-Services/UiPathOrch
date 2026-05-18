@@ -68,8 +68,8 @@ public class SearchPmDirectoryCmdlet : OrchestratorPSCmdlet
                 if (entityInfo is null) continue;
 
                 // PmDirectoryEntityInfo is org-shared (KeyedSingleCachePerOrganization);
-                // attach the drive-local Path as a PSObject note property per emit.
-                WriteObject(entityInfo.Select(e => e.WithPath(drive.NameColonSeparator)), true);
+                // emit a per-emit shallow copy carrying the drive-local Path.
+                WriteObject(entityInfo.Select(e => { var c = e.ShallowClone(); c.Path = drive.NameColonSeparator; return c; }), true);
             }
             catch (Exception ex)
             {

@@ -16,16 +16,27 @@ public class GetPmLicenseInventory : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumPmDrives(Path);
 
-        foreach (var drive in drives)
+        // Fetch in parallel. Per-org caches serialize same-partition fetches
+        // internally (KeyedSingle/Single/List CachePerOrganization lock per
+        // partitionGlobalId), so concurrent drives in the same org don't
+        // double-fetch; different orgs run truly parallel. WriteObject stays
+        // on the pipeline thread.
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.PmLicenseInventory.Get());
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
             try
             {
-                var inventory = drive.PmLicenseInventory.Get();
-                if (inventory is not null) WriteObject(inventory.WithPath(drive.NameColonSeparator));
+                var inventory = result.GetResult(cancelHandler.Token);
+                if (inventory is not null) { var c = inventory.ShallowClone(); c.Path = result.Source.NameColonSeparator; WriteObject(c); }
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmLicenseInventoryError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(ex, "GetPmLicenseInventoryError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

@@ -16,16 +16,24 @@ public class GetPmLicenseContract : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumPmDrives(Path);
 
-        foreach (var drive in drives)
+        // Fetch in parallel; per-org caches serialize same-partition fetches
+        // internally. WriteObject stays on the pipeline thread.
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.PmLicenseContract.Get());
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
             try
             {
-                var contract = drive.PmLicenseContract.Get();
-                if (contract is not null) WriteObject(contract.WithPath(drive.NameColonSeparator));
+                var contract = result.GetResult(cancelHandler.Token);
+                if (contract is not null) { var c = contract.ShallowClone(); c.Path = result.Source.NameColonSeparator; WriteObject(c); }
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmLicenseContractError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(ex, "GetPmLicenseContractError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

@@ -55,22 +55,30 @@ public class GetPmLicenseAllocation : OrchestratorPSCmdlet
 
         var wpTenant = Tenant.ConvertToWildcardPatternList();
 
-        foreach (var drive in drives)
+        // Fetch in parallel; per-org caches serialize same-partition fetches
+        // internally. Filtering / WriteObject stay on the pipeline thread.
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.PmLicenseAllocations.Get());
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
             try
             {
-                var entities = drive.PmLicenseAllocations.Get();
+                var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
                 var targetEntities = entities
                     .FilterByWildcards(a => a?.tenant?.name, wpTenant)
                     .OrderBy(a => a?.tenant?.name);
 
-                WriteObject(targetEntities.Select(e => e.WithPath(drive.NameColonSeparator)), true);
+                WriteObject(targetEntities.Select(e => { var c = e.ShallowClone(); c.Path = result.Source.NameColonSeparator; return c; }), true);
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmLicenseAllocationError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(ex, "GetPmLicenseAllocationError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

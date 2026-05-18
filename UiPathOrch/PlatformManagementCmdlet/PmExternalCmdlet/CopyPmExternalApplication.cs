@@ -82,7 +82,7 @@ public class CopyPmExternalApplicationCmdlet : OrchestratorPSCmdlet
                             continue;
                         }
 
-                        WriteObject(newApp.WithPath(dstDrive.NameColonSeparator));
+                        { var c = newApp.ShallowClone(); c.Path = dstDrive.NameColonSeparator; WriteObject(c); }
                         dstDrive.PmExternalClients.ClearCache();
 
                         // Non-confidential apps cannot belong to groups, so no further processing is needed

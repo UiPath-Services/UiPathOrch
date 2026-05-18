@@ -61,7 +61,7 @@ public class AddPmGroupCmdlet : OrchestratorPSCmdlet
                         var newGroup = drive.CreatePmGroup(WildcardPattern.Unescape(groupName));
                         if (newGroup is not null)
                         {
-                            WriteObject(newGroup.WithPath(drive.NameColonSeparator));
+                            { var c = newGroup.ShallowClone(); c.Path = drive.NameColonSeparator; WriteObject(c); }
                         }
                     }
                     catch (Exception ex)

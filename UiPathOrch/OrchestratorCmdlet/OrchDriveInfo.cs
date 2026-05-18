@@ -800,7 +800,7 @@ public partial class OrchDriveInfo : PSDriveInfo
         var newGroup = OrchAPISession.CreatePmGroup(createGroupCommand);
         if (newGroup is not null)
         {
-            // Drive-local Path is attached by the caller cmdlet via PSObject NoteProperty.
+            // Drive-local Path is set by the caller cmdlet on a per-emit ShallowClone copy.
             SearchDirectoryCache.ClearCache();
             SearchPmDirectoryCache.ClearCache();
 
@@ -817,7 +817,7 @@ public partial class OrchDriveInfo : PSDriveInfo
     internal PmRobotAccount? CreatePmRobot(CreateRobotAccountCommand cmd)
     {
         var ret = OrchAPISession.CreatePmRobot(cmd);
-        // Drive-local Path is attached by the caller via PSObject NoteProperty.
+        // Drive-local Path is set by the caller cmdlet on a per-emit ShallowClone copy.
         PmRobotAccounts.ClearCache();
         foreach (var groupId in cmd.groupIDsToAdd ?? [])
         {
@@ -843,7 +843,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             directoryUserIDsToRemove = []
         };
         var ret = OrchAPISession.PutPmGroup(groupId, updateGroupCommand);
-        // Drive-local Path is attached by the caller via PSObject NoteProperty.
+        // Drive-local Path is set by the caller cmdlet on a per-emit ShallowClone copy.
         PmGroups.ClearCache(groupId);
 
         PmUsers.ClearCache(); // Contains group IDs internally
@@ -867,7 +867,7 @@ public partial class OrchDriveInfo : PSDriveInfo
                 .ToList() ?? []
         };
         var ret = OrchAPISession.PutPmGroup(groupId, updateGroupCommand);
-        // Drive-local Path is attached by the caller via PSObject NoteProperty.
+        // Drive-local Path is set by the caller cmdlet on a per-emit ShallowClone copy.
         PmGroups.ClearCache(ret?.id);
 
         PmUsers.ClearCache(); // Contains group IDs internally
@@ -884,8 +884,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     // GroupName / PathGroupName on the shared cache entry — those fields have been
     // dropped (the singleton is org-shared, so the mutation was racy across drives).
     // Current callers don't read those fields anyway; if a future caller wants to
-    // WriteObject this entity, attach drive context via PSObject NoteProperty at the
-    // call site (see NuLicensedGroupMember for the pattern). The groupName parameter
+    // WriteObject this entity, give it [JsonIgnore] labels + ShallowClone and set
+    // them on the per-emit copy (see NuLicensedGroupMember). The groupName parameter
     // is kept for backward compatibility but unused.
     public AvailableUserBundles? GetPmUserLicenseGroupsAvailableLicenses(string? groupId, string groupName)
     {
@@ -896,8 +896,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     #region GetPmUserLicenseGroupAllocations Cache
     // Backwards-compat shim: delegates to PmUserLicenseGroupAllocations
     // (KeyedListCachePerOrganization, keyed by group.id). Drive-local Path,
-    // GroupName, and PathGroupName are attached by the caller via PSObject
-    // NoteProperty so the shared cache entries are not mutated per-call.
+    // GroupName, and PathGroupName are set by the caller cmdlet on a per-emit
+    // ShallowClone copy so the shared cache entries are not mutated per-call.
     public ReadOnlyCollection<NuLicensedGroupMember> GetPmLicensedGroupAllocations(NuLicensedGroup group) =>
         PmUserLicenseGroupAllocations.Get(group.id!);
     #endregion
@@ -928,8 +928,13 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly ListCachePerOrganization<NuLicensedUser> PmLicensedUsers;
     public readonly ListCachePerOrganization<AccessAllowedMember> PmAccessAllowedMember;
 
-    // Non-indexed organization entities
-    // These should not be fetched in multi-threaded contexts. Path assignment will break.
+    // Non-indexed organization entities.
+    // Multi-threaded fetch is safe: SingleCachePerOrganization serializes
+    // same-partition fetches via a per-partitionGlobalId lock, runs the
+    // initializer once before publishing, and no longer mutates a shared
+    // Path on cache hit (drive-local Path is set by the cmdlet on a per-emit
+    // ShallowClone copy). Get-Pm* cmdlets fetch these via
+    // OrchThreadPool.RunForEach.
     public readonly SingleCachePerOrganization<PmAuthenticationRoot> PmAuthenticationSetting;
     public readonly SingleCachePerOrganization<LicenseInventory> PmLicenseInventory;
     public readonly SingleCachePerOrganization<AccountLicense> PmLicenseContract;
@@ -1080,14 +1085,15 @@ public partial class OrchDriveInfo : PSDriveInfo
         // Initialize caches
 
         // Organization list entities
-        // Drive-local Path moved to a PSObject NoteProperty applied by the
-        // cmdlet at WriteObject time; see WithPath<T>.
+        // Drive-local Path is a plain [JsonIgnore] property set by the cmdlet
+        // on a per-emit ShallowClone() copy (never on the shared singleton);
+        // see LicenseInventory / PmAuthenticationRoot.
         PmUsers = new(this, OrchAPISession.GetPmUsers);
         PmGroups = new(this, OrchAPISession.GetPmGroups, e =>
             {
-                // PmGroupMember.Path / PathGroupName were drive-local and moved
-                // to PSObject NoteProperties in Phase 3 (Get-PmGroupMember wraps
-                // its output). groupName is parent-derived and stays.
+                // PmGroupMember.Path / PathGroupName are drive-local; the cmdlet
+                // sets them on a per-emit ShallowClone copy. groupName is
+                // parent-derived (org-scoped) and stays.
                 foreach (var m in e.members ?? [])
                 {
                     m.groupName = e.name;
@@ -1095,7 +1101,7 @@ public partial class OrchDriveInfo : PSDriveInfo
             },
                                 e => e.id, OrchAPISession.GetPmGroup);
 
-        // No initializer needed — Path moves to PSObject NoteProperty.
+        // No initializer needed — Path is set on a per-emit ShallowClone copy.
         PmRobotAccounts = new(this, OrchAPISession.GetPmRobotAccounts);
         PmExternalClients = new(this, OrchAPISession.GetPmExternalClients);
         PmExternalApiResources = new(this, OrchAPISession.GetPmExternalApiResource);
@@ -1133,9 +1139,9 @@ public partial class OrchDriveInfo : PSDriveInfo
         // Non-indexed organization entities
         PmAuthenticationSetting = new(this,
             OrchAPISession.GetPmAuthenticationSetting,
-            // Drive-local Path is no longer set here — cmdlets wrap output in a
-            // PSObject with a Path NoteProperty. Only the entity's own derived
-            // state (parsed JSON settings) is computed here.
+            // Drive-local Path is no longer set here — the cmdlet sets it on a
+            // per-emit ShallowClone copy. Only the entity's own derived state
+            // (parsed JSON settings) is computed here.
             e =>
             {
                 if (e.settingsExpanded is null && !string.IsNullOrEmpty(e.externalIdentityProviderDto?.settings))
@@ -1152,8 +1158,8 @@ public partial class OrchDriveInfo : PSDriveInfo
             }
         );
 
-        // No initializer: Path is attached by the cmdlet via PSObject
-        // NoteProperty; no other derived state to compute on this entity.
+        // No initializer: Path is set by the cmdlet on a per-emit ShallowClone
+        // copy; no other derived state to compute on this entity.
         PmLicenseInventory = new(this, OrchAPISession.GetPmLicenseInventory);
 
         PmLicenseContract = new(this, OrchAPISession.GetPmLicenseContract);
@@ -1356,8 +1362,8 @@ public partial class OrchDriveInfo : PSDriveInfo
 
         SearchPmDirectoryCache = new(this,
             (partitionGlobalId, key) => OrchAPISession.SearchPmDirectory(partitionGlobalId, key));
-        // No initializer: PmDirectoryEntityInfo's drive-local Path is attached
-        // by the caller cmdlet via PSObject NoteProperty (Phase 3).
+        // No initializer: PmDirectoryEntityInfo's drive-local Path is set by
+        // the caller cmdlet on a per-emit ShallowClone copy.
 
         SearchDirectoryCache = new(this,
             searchWord => OrchAPISession.SearchDirectory(searchWord),

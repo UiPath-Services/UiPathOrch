@@ -18,16 +18,34 @@ public class GetPmAuthenticationSettingCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumPmDrives(Path);
 
-        foreach (var drive in drives)
+        // Fetch in parallel; per-org caches serialize same-partition fetches
+        // internally. WriteObject stays on the pipeline thread.
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.PmAuthenticationSetting.Get());
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
             try
             {
-                var entity = drive.PmAuthenticationSetting.Get();
-                if (entity is not null) WriteObject(entity.WithPath(drive.NameColonSeparator));
+                var entity = result.GetResult(cancelHandler.Token);
+                if (entity is not null)
+                {
+                    // Per-emit shallow copy carries the drive-local Path
+                    // without mutating the shared org singleton (see
+                    // PmAuthenticationRoot). No PSObject: a real Path
+                    // property on a distinct instance stays isolated per
+                    // drive even when collected into a variable.
+                    var emit = entity.ShallowClone();
+                    emit.Path = result.Source.NameColonSeparator;
+                    WriteObject(emit);
+                }
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetAuthenticationSettingError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(ex, "GetAuthenticationSettingError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

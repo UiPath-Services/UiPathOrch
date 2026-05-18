@@ -205,9 +205,12 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
                     if (ret is not null)
                     {
                         ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
-                        WriteObject(ret
-                            .WithPath(drive.NameColonSeparator)
-                            .WithNoteProperty("GroupName", group.identityName));
+                        // UpdateLicensedGroupResponse is a fresh per-call
+                        // response (not a shared cache singleton), so set the
+                        // drive-local labels directly — no ShallowClone needed.
+                        ret.Path = drive.NameColonSeparator;
+                        ret.GroupName = group.identityName;
+                        WriteObject(ret);
                     }
                     drive.PmLicensedGroups.ClearCache();
                     drive.PmUserLicenseGroupAllocations.ClearCache();

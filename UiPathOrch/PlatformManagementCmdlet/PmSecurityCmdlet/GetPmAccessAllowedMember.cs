@@ -59,22 +59,30 @@ public class GetPmAccessAllowedMemberCmdlet : OrchestratorPSCmdlet
         var drives = SessionState.EnumPmDrives(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        foreach (var drive in drives)
+        // Fetch in parallel; per-org caches serialize same-partition fetches
+        // internally. Filtering / WriteObject stay on the pipeline thread.
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.PmAccessAllowedMember.Get());
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
             try
             {
-                var entities = drive.PmAccessAllowedMember.Get();
+                var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
                 var targetUsers = entities
                     .FilterByWildcards(u => u?.name, wpName)
                     .OrderBy(u => u.name);
 
-                WriteObject(targetUsers.Select(u => u.WithPath(drive.NameColonSeparator)), true);
+                WriteObject(targetUsers.Select(u => { var c = u.ShallowClone(); c.Path = result.Source.NameColonSeparator; return c; }), true);
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "PmAccessAllowedMember", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(ex, "PmAccessAllowedMember", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

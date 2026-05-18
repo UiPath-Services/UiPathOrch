@@ -45,12 +45,20 @@ public class SearchPmDirectoryBulkCmdlet : OrchestratorPSCmdlet
 
                 foreach (var directoryObject in directoryObjects.Values.Where(v => v is not null).OrderBy(v => v!.name))
                 {
-                    var psObject = new PSObject(directoryObject);
+                    // PmGroupMember (DirectoryUser/Group/Application) is
+                    // org-shared (PmBulkResolveByName cache). Take a per-emit
+                    // ShallowClone and set the drive-local Path on it — NOT a
+                    // PSObject NoteProperty, which keys to base-object identity
+                    // and would collapse to the last drive for same-org
+                    // multi-drive (see LicenseInventory / PmAuthenticationRoot).
+                    var copy = directoryObject!.ShallowClone();
+                    copy.Path = drive.NameColonSeparator;
+                    // PSObject retained ONLY to force the format view by the
+                    // requested EntityType; it now wraps the distinct clone,
+                    // so no instance-member leak.
+                    var psObject = new PSObject(copy);
                     psObject.TypeNames.Clear();
                     psObject.TypeNames.Add(viewName);
-                    // PmGroupMember (DirectoryUser/Group/Application) is org-shared after
-                    // Phase 3; carry the drive-local Path on the PSObject wrapper.
-                    psObject.Properties.Add(new PSNoteProperty("Path", drive.NameColonSeparator));
                     WriteObject(psObject);
                 }
             }

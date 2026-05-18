@@ -68,12 +68,24 @@ public class GetPmRobotAccountCmdlet : OrchestratorPSCmdlet
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
+        // Fetch the robot-account list in parallel; per-org caches serialize
+        // same-partition fetches internally. Filtering, the secondary
+        // PmGroups lookup, expansion and WriteObject stay on the pipeline
+        // thread (same split as Get-OrchBucket's CredentialStores lookup).
+        using var poolResults = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.PmRobotAccounts.Get());
+
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var drive in drives.WithCancellation(cancelHandler.Token))
+        foreach (var poolResult in poolResults)
         {
             try
             {
-                var robotAccounts = drive.PmRobotAccounts.Get()?
+                var fetched = poolResult.GetResult(cancelHandler.Token);
+                var drive = poolResult.Source;
+
+                var robotAccounts = fetched?
                     .Where(r => r is not null)
                     .FilterByWildcards(r => r?.name!, wpName)
                     .OrderBy(r => r?.name);
@@ -117,13 +129,20 @@ public class GetPmRobotAccountCmdlet : OrchestratorPSCmdlet
                 }
                 else
                 {
-                    WriteObject(robotAccounts.Select(r => r!.WithPath(drive.NameColonSeparator)), true);
+                    WriteObject(robotAccounts.Select(r => { var c = r!.ShallowClone(); c.Path = drive.NameColonSeparator; return c; }), true);
                 }
+            }
+            catch (OrchException ex)
+            {
+                // Parallel fetch failure — already wrapped with Path + Target.
+                WriteError(new ErrorRecord(ex, "GetPmRobotAccountError", ErrorCategory.InvalidOperation, ex.Target));
             }
             catch (Exception ex)
             {
-                var errorRecord = new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmRobotAccountError", ErrorCategory.InvalidOperation, drive);
-                WriteError(errorRecord);
+                // Failure in the main-thread post-processing (secondary
+                // PmGroups lookup / expansion). Wrap per-drive as before.
+                var drive = poolResult.Source;
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmRobotAccountError", ErrorCategory.InvalidOperation, drive));
             }
         }
 

@@ -106,13 +106,25 @@ public class GetPmUserCmdlet : OrchestratorPSCmdlet
         var drives = SessionState.EnumPmDrives(Path);
         var wpEmail = Email.ConvertToWildcardPatternList();
 
-        foreach (var drive in drives)
+        // Fetch the user list in parallel; per-org caches serialize
+        // same-partition fetches internally. Filtering, the secondary
+        // PmGroups lookup inside WriteCsvContent, and WriteObject stay on
+        // the pipeline thread (same split as Get-OrchBucket's
+        // CredentialStores lookup).
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.PmUsers.Get());
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
             try
             {
-                var entities = drive.PmUsers.Get();
+                var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
+                var drive = result.Source;
                 var targetUsers = entities
                     .FilterByWildcards(u => u?.email, wpEmail)
                     .OrderBy(u => u.email);
@@ -123,12 +135,12 @@ public class GetPmUserCmdlet : OrchestratorPSCmdlet
                 }
                 else
                 {
-                    WriteObject(targetUsers.Select(u => u.WithPath(drive.NameColonSeparator)), true);
+                    WriteObject(targetUsers.Select(u => { var c = u.ShallowClone(); c.Path = drive.NameColonSeparator; return c; }), true);
                 }
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmUserError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(ex, "GetPmUserError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
 

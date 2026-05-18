@@ -1,6 +1,30 @@
-# Per-Organization Cache: Path Isolation via PSObject NoteProperty
+# Per-Organization Cache: Path Isolation (PSObject NoteProperty) — SUPERSEDED
 
-Deferred to a future release. Captures the design intent so we don't lose context.
+> **SUPERSEDED / DO NOT IMPLEMENT.** The PSObject `WithPath` NoteProperty
+> mechanism described below does NOT achieve per-drive Path isolation and
+> was empirically disproven (2026-05-18). PowerShell keys PSObject
+> *instance members* to **base-object identity**, not to the wrapper;
+> org-scoped caches return the SAME singleton to every same-org drive, so
+> N `WithPath` wrappers over that singleton share ONE `Path` note property
+> (last-writer-wins). This doc's own acceptance test
+> (`$x = Get-PmAuthenticationSetting -Path A:,B:` same org →
+> `$x[0].Path -ne $x[1].Path`) FAILS. Minimal repro (no threads, no
+> UiPathOrch): two `[psobject]::new($shared)` + `PSNoteProperty` → both
+> report the last value; distinct base → OK.
+>
+> **Correct design (implemented, validated live):** no PSObject.
+> `Path` / `PathGroupName` / `GroupName` are plain
+> `[JsonIgnore(Always)]` properties on the DTO; the cache keeps serving
+> the shared singleton and NEVER sets them; each cmdlet emit does
+> `var c = e.ShallowClone(); c.Path = drive.NameColonSeparator; WriteObject(c);`
+> (`ShallowClone()` = `(T)MemberwiseClone()` — a distinct CLR instance
+> per emit makes `Path` independent; nested reference members stay shared
+> with the singleton, preserving the shared-state intent; output is
+> read-only). `OrchExtensions.WithPath` / `WithNoteProperty` were
+> removed. `UpdateLicensedGroupResponse` is a non-shared per-call
+> response → direct assignment, no clone.
+>
+> The historical design below is kept for context only.
 
 ## Problem
 
@@ -225,6 +249,18 @@ phases:
     `.availableUserBundles[]` and never read the wrapper-level fields,
     so no per-caller NoteProperty wrapping is needed.
 
+- **2026-05-18 — Phases 1-4 SUPERSEDED.** Live testing on same-org
+  multi-drive (`Orch1:`/`OrchTest:`/`Orch2:`, identical
+  `partitionGlobalId`) showed every emitted object carrying the last
+  drive's `Path` — the PSObject NoteProperty mechanism never delivered
+  per-drive isolation (root cause in the SUPERSEDED banner at the top).
+  Replaced by plain `[JsonIgnore]` DTO properties + per-emit
+  `ShallowClone()` across all org-scoped Pm entities (~17 types) and
+  their cmdlets (~24 sites); `WithPath` / `WithNoteProperty` deleted.
+  Validated live (Path/PathGroupName/GroupName correct per drive) +
+  298/298 unit + `dotnet format` clean. Pending review/commit at time
+  of writing.
+
 ## Design principle
 
 Per-call `Path` mutation is racy only for **organization-scoped** caches
@@ -234,6 +270,6 @@ different drives clobber each other. Per-tenant and per-folder caches
 don't have this shape: a tenant cache lives on exactly one
 `OrchDriveInfo`, a folder cache slice belongs to one folder on one
 drive. For those, `entity.Path = drive.NameColonSeparator` (or
-`folder.GetPSPath()`) inside the wrapper is fine and stays in place —
-this refactor's PSObject NoteProperty wrap is **not** applied below the
-organization level.
+`folder.GetPSPath()`) directly on the entity is fine and stays in place
+— the org-only treatment (originally the PSObject wrap; now the per-emit
+`ShallowClone()` copy) is **not** applied below the organization level.

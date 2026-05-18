@@ -250,7 +250,7 @@ public class SetPmRobotAccountCmdlet : OrchestratorPSCmdlet
                             var newRobot = drive.CreatePmRobot(cmd);
                             if (newRobot is not null)
                             {
-                                WriteObject(newRobot.WithPath(drive.NameColonSeparator));
+                                { var c = newRobot.ShallowClone(); c.Path = drive.NameColonSeparator; WriteObject(c); }
                             }
                         }
                         catch (Exception ex)
@@ -300,7 +300,7 @@ public class SetPmRobotAccountCmdlet : OrchestratorPSCmdlet
 
                                 if (updatedRobot is not null)
                                 {
-                                    WriteObject(updatedRobot.WithPath(drive.NameColonSeparator));
+                                    { var c = updatedRobot.ShallowClone(); c.Path = drive.NameColonSeparator; WriteObject(c); }
                                 }
                             }
                             catch (Exception ex)

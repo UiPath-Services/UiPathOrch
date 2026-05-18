@@ -209,7 +209,7 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
 
                 if (response?.result?.succeeded ?? false)
                 {
-                    WriteObject(response?.users?.OrderBy(u => u.name).Select(u => u.WithPath(drive.NameColonSeparator)), true);
+                    WriteObject(response?.users?.OrderBy(u => u.name).Select(u => { var c = u.ShallowClone(); c.Path = drive.NameColonSeparator; return c; }), true);
                 }
             }
             catch (Exception ex)

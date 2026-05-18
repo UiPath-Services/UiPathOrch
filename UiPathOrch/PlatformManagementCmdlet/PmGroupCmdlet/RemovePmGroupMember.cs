@@ -166,7 +166,7 @@ public class RemovePmGroupMemberCmdlet : OrchestratorPSCmdlet
                 var updatedGroup = drive.RemoveMemberFromPmGroup(group.id, group.name, toBeRemoved?.Select(m => m.identifier));
                 if (updatedGroup is not null)
                 {
-                    WriteObject(updatedGroup.WithPath(drive.NameColonSeparator));
+                    { var c = updatedGroup.ShallowClone(); c.Path = drive.NameColonSeparator; WriteObject(c); }
                 }
             }
             catch (Exception ex)

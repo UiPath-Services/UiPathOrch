@@ -24,22 +24,30 @@ public class GetPmExternalApplicationCmdlet : OrchestratorPSCmdlet
         var drives = SessionState.EnumPmDrives(Path);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        foreach (var drive in drives)
+        // Fetch in parallel; per-org caches serialize same-partition fetches
+        // internally. Filtering / WriteObject stay on the pipeline thread.
+        using var results = OrchThreadPool.RunForEach(drives,
+            drive => drive.NameColonSeparator,
+            drive => drive,
+            drive => drive.PmExternalClients.Get());
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var result in results)
         {
             try
             {
-                var entities = drive.PmExternalClients.Get();
+                var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
                 WriteObject(entities
                     .FilterByWildcards(a => a?.name, wpName)
                     .OrderBy(a => a!.name)
-                    .Select(a => a.WithPath(drive.NameColonSeparator)),
+                    .Select(a => { var c = a!.ShallowClone(); c.Path = result.Source.NameColonSeparator; return c; }),
                     true);
             }
-            catch (Exception ex)
+            catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmExternalApplicationError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(ex, "GetPmExternalApplicationError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }

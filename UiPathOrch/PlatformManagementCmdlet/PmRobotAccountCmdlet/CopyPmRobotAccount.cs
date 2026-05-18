@@ -80,7 +80,7 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
                                 var newRobot = dstDrive.CreatePmRobot(cmd);
                                 if (newRobot is not null)
                                 {
-                                    WriteObject(newRobot.WithPath(dstDrive.NameColonSeparator));
+                                    { var c = newRobot.ShallowClone(); c.Path = dstDrive.NameColonSeparator; WriteObject(c); }
                                 }
                             }
                             catch (Exception ex)

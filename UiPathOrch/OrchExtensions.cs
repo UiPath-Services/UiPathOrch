@@ -389,40 +389,13 @@ internal static class OrchCollectionExtensions
     }
     #endregion
 
-    /// <summary>
-    /// Wrap <paramref name="entity"/> in a <see cref="PSObject"/> with a
-    /// per-output <c>Path</c> note property. Used by cmdlets that emit
-    /// org-shared entities (<see cref="SingleCachePerOrganization{T}"/>,
-    /// <see cref="ListCachePerOrganization{T}"/>) so each <c>WriteObject</c>
-    /// can carry its own drive context without mutating the shared cached
-    /// instance. <c>$x[0].BaseObject</c> stays the singleton; <c>$x[0].Path</c>
-    /// resolves through the note property and is independent per emit.
-    ///
-    /// Returns <c>null</c> when the entity is null — convenient for collection
-    /// callers like <c>seq.Select(e =&gt; e.WithPath(...))</c> where the filter
-    /// chain may leave nulls in place (PowerShell's <c>WriteObject(null, true)</c>
-    /// silently drops them).
-    /// </summary>
-    public static PSObject? WithPath<T>(this T? entity, string path) where T : class
-    {
-        if (entity is null) return null;
-        var pso = new PSObject(entity);
-        pso.Properties.Add(new PSNoteProperty("Path", path));
-        return pso;
-    }
-
-    /// <summary>
-    /// Attach an additional note property to a wrapped PSObject. Designed to
-    /// chain after <see cref="WithPath{T}"/> when an entity needs more than
-    /// one drive-local property (e.g. <c>PathGroupName</c> on
-    /// <c>PmGroupMember</c>). Null-safe to match WithPath.
-    /// </summary>
-    public static PSObject? WithNoteProperty(this PSObject? pso, string name, object? value)
-    {
-        if (pso is null) return null;
-        pso.Properties.Add(new PSNoteProperty(name, value));
-        return pso;
-    }
+    // WithPath / WithNoteProperty (PSObject NoteProperty wrappers) were
+    // removed: PowerShell keys PSObject instance members to base-object
+    // identity, so wrapping a shared org-cache singleton in multiple
+    // PSObjects produced ONE shared note property (last-writer-wins) for
+    // same-org multi-drive callers. Drive-local labels are now plain
+    // [JsonIgnore] properties set on a per-emit ShallowClone() copy by the
+    // emitting cmdlet (see LicenseInventory / PmAuthenticationRoot).
 
     public static T DeepCopy<T>(T obj)
     {
