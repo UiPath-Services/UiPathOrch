@@ -106,14 +106,55 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
 
         try
         {
-            await foreach (var entry in _logQueue.Reader.ReadAllAsync(cancellationToken))
+            var reader = _logQueue.Reader;
+            var completed = false;
+
+            while (!completed)
             {
-                buffer.Add(entry);
+                if (buffer.Count == 0)
+                {
+                    // Nothing buffered: wait indefinitely for the next entry
+                    // (no idle wake-ups when there is nothing to flush).
+                    completed = !await reader.WaitToReadAsync(cancellationToken);
+                }
+                else
+                {
+                    // Entries are buffered: never wait past the flush interval, so a
+                    // time-based flush still fires when no further entries arrive.
+                    // Previously the interval was only re-evaluated when the *next*
+                    // entry was dequeued, so a lone buffered entry — e.g. the pre-auth
+                    // diagnostics block written right before a hanging PKCE listener —
+                    // was never persisted (folder created, log file empty).
+                    using var waitCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    waitCts.CancelAfter(_flushIntervalMs);
+                    try
+                    {
+                        completed = !await reader.WaitToReadAsync(waitCts.Token);
+                    }
+                    catch (OperationCanceledException) when (waitCts.IsCancellationRequested
+                                                            && !cancellationToken.IsCancellationRequested)
+                    {
+                        // Flush interval elapsed with no new entry — fall through
+                        // to the time-based flush below.
+                    }
+                }
 
-                var shouldFlush = buffer.Count >= _batchSize ||
-                                 (DateTime.UtcNow - lastFlushTime).TotalMilliseconds >= _flushIntervalMs;
+                // Drain everything currently available without blocking.
+                while (reader.TryRead(out var entry))
+                {
+                    buffer.Add(entry);
+                    if (buffer.Count >= _batchSize)
+                    {
+                        await FlushBufferAsync(buffer, cancellationToken);
+                        buffer.Clear();
+                        lastFlushTime = DateTime.UtcNow;
+                    }
+                }
 
-                if (shouldFlush)
+                // Time-based flush: persist whatever remains once the interval has
+                // elapsed, even when no new entries are arriving.
+                if (buffer.Count > 0 &&
+                    (DateTime.UtcNow - lastFlushTime).TotalMilliseconds >= _flushIntervalMs)
                 {
                     await FlushBufferAsync(buffer, cancellationToken);
                     buffer.Clear();
