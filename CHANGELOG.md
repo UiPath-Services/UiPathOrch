@@ -33,6 +33,35 @@ accumulator pattern eliminated except for `_dicFolders` itself).
   explicit `Logging.Enabled: false` is still respected; absent
   `Logging` section still means no logging.
 
+- **Auth-diagnostics / HTTP log was lost when a sign-in hung or
+  failed (e.g. PKCE `#219`).** Even with logging correctly enabled,
+  `AsyncLogWriter`'s time-based flush was only re-evaluated when the
+  *next* entry was dequeued — so a lone buffered entry with no
+  follow-up (exactly the pre-auth diagnostics block written just
+  before a PKCE listener that then blocks on a browser callback that
+  never comes) was never written: the log folder was created but the
+  file stayed empty. Together with the `Logging.Enabled` fix above,
+  this is the second half of the "log folder exists but is empty when
+  diagnosing an auth failure" support trap. The interval flush is now
+  a real deadline (capped at the time remaining until the next flush
+  is due), so a single buffered entry is persisted within
+  `flushIntervalMs` even while the producer is idle or blocked; batch
+  flush and graceful-dispose drain are unchanged. Regression tests
+  added — the existing `AsyncLogWriter` suite all disposed before
+  asserting (dispose drains), so none covered the idle-flush path.
+  Note: this restores log *capture* during a failed sign-in; it does
+  not change authentication behaviour itself.
+
+- **PM records could carry another drive's per-drive `Path`** — when
+  results were retained (a variable, or queried across same-org
+  drives) every element showed the *last* drive's `Path`. The 1.4.0
+  fix had attached `Path` via a per-`WriteObject` PSObject
+  `NoteProperty`, which didn't hold (PowerShell binds PSObject members
+  to the shared cached base object). `Path` is a plain DTO property
+  again, Shallow-cloned per emit before it's stamped — independent per
+  drive, the rest still shared with the singleton, and safe under the
+  now-parallel `Get-Pm*`.
+
 ### Changed
 
 - **PM audit log cache (`_dicPmAuditLogs`) migrated to
@@ -67,9 +96,7 @@ accumulator pattern eliminated except for `_dicFolders` itself).
   folders failed to resolve.
 - ScriptAnalyzer Warnings reduced from 23 → 11 in `Staging/`; the
   remaining 11 are all intentional `Write-Host` in
-  `Staging/Examples/*.ps1` sample scripts. UTF-8 BOM added to the
-  four files that needed it for PSScriptAnalyzer's PS 5.1
-  compatibility rule.
+  `Staging/Examples/*.ps1` sample scripts.
 - `design/cmdlet-redesign-plan-p3.md` Group F closes out (0 bespoke
   raw caches remaining outside of `_dicFolders` itself, which
   carries its own multi-phase fetch + lock-and-publish design from
