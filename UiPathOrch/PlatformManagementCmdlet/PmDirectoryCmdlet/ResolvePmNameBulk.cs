@@ -28,14 +28,6 @@ public class SearchPmDirectoryBulkCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumPmDrives(Path);
 
-        string viewName = EntityType!.ToLower() switch
-        {
-            "user" => "UiPath.PowerShell.Entities.DirectoryUser",
-            "group" => "UiPath.PowerShell.Entities.DirectoryGroup",
-            "application" => "UiPath.PowerShell.Entities.DirectoryApplication",
-            _ => null
-        };
-
         foreach (var drive in drives)
         {
             try
@@ -46,20 +38,18 @@ public class SearchPmDirectoryBulkCmdlet : OrchestratorPSCmdlet
                 foreach (var directoryObject in directoryObjects.Values.Where(v => v is not null).OrderBy(v => v!.name))
                 {
                     // PmGroupMember (DirectoryUser/Group/Application) is
-                    // org-shared (PmBulkResolveByName cache). Take a per-emit
-                    // ShallowClone and set the drive-local Path on it — NOT a
+                    // org-shared (PmBulkResolveByName cache). Emit a per-emit
+                    // ShallowClone with the drive-local Path set on it — NOT a
                     // PSObject NoteProperty, which keys to base-object identity
                     // and would collapse to the last drive for same-org
                     // multi-drive (see LicenseInventory / PmAuthenticationRoot).
+                    // The clone keeps its concrete runtime type
+                    // (DirectoryUser/Group/Application via the polymorphic
+                    // PmGroupMember converter), which drives the format view
+                    // directly — no PSObject/TypeNames wrapper needed.
                     var copy = directoryObject!.ShallowClone();
                     copy.Path = drive.NameColonSeparator;
-                    // PSObject retained ONLY to force the format view by the
-                    // requested EntityType; it now wraps the distinct clone,
-                    // so no instance-member leak.
-                    var psObject = new PSObject(copy);
-                    psObject.TypeNames.Clear();
-                    psObject.TypeNames.Add(viewName);
-                    WriteObject(psObject);
+                    WriteObject(copy);
                 }
             }
             catch (Exception ex)

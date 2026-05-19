@@ -4739,6 +4739,10 @@ public class TmTestExecutionResult
 // UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.DefectDto
 public class TmDefect
 {
+    // Drive-local; consistent with sibling Tm* entities. Get-TmDefect is
+    // currently shelved (API Forbidden); stamp this when it is un-shelved.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
     public string? priority { get; set; }
     public string? status { get; set; }
     public string? link { get; set; }
@@ -4758,6 +4762,10 @@ public class TmDefect
 // UiPath.Platform.Rbac.Common.Dtos.RoleDto
 public class TmRole
 {
+    // Drive-local; consistent with sibling Tm* entities. Get-TmRole is
+    // currently shelved (API Forbidden); stamp this when it is un-shelved.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
     public string? name { get; set; }
     public string? description { get; set; }
     public string[]? permissions { get; set; }
