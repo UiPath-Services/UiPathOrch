@@ -237,7 +237,15 @@ public class PSDrive
         }
 
         // Auto-generate IdentityUrl from Root if not explicitly set
-        // Cloud:   "https://cloud.uipath.com/{org}/{tenant}" → strip tenant → /{org}/identity_
+        // Cloud:   "https://cloud.uipath.com/{org}/{tenant}" → host root   → /identity_
+        //          DO NOT change this back to /{org}/identity_. Identity is a
+        //          host-level service. Org-scoping the authorize URL regressed
+        //          Entra-federated Cloud orgs with errorCode=219 "user has not
+        //          accepted the invitation" — customer bisection pinned it to
+        //          v0.9.15.4 OK → v0.9.15.5 NG (commit d57c287, whose comment
+        //          wrongly assumed "Identity now requires /{org}/identity_/").
+        //          Host-level /identity_ verified working e2e on current Cloud
+        //          Identity; non-default Identity Servers must pin IdentityUrl.
         // AS:      "https://{host}/{org}/{tenant}"           → host root   → /identity_
         //          (Automation Suite deploys identity as a host-level service shared across all
         //          orgs on the cluster. Confirmed against BMW's 2023.4 deployment, where the
@@ -254,7 +262,9 @@ public class PSDrive
                 : "";
             IdentityUrl = ResolvedEdition switch
             {
-                OrchEdition.Cloud => $"{uri.Scheme}://{uri.Authority}{basePath}/identity_",
+                // Cloud and AS: identity is host-level (no /{org}). See the
+                // DO NOT change note above — /{org}/identity_ is the d57c287 regression.
+                OrchEdition.Cloud => $"{uri.Scheme}://{uri.Authority}/identity_",
                 OrchEdition.AutomationSuite => $"{uri.Scheme}://{uri.Authority}/identity_",
                 _ => $"{uri.Scheme}://{uri.Authority}{basePath}/identity",
             };

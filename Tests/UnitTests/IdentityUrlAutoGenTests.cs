@@ -6,13 +6,17 @@ namespace UnitTests;
 // IdentityUrl auto-generation in CascadePSDriveFromGlobalSettings derives the
 // Identity Server URL from Root when the user hasn't pinned it explicitly.
 // The rules are documented in UiPathOrchConfig.cs alongside the implementation;
-// this suite locks them in so a future refactor can't silently regress AS.
+// this suite locks them in so a future refactor can't silently regress Cloud
+// or AS (a silent Cloud regression is exactly what commit d57c287 did).
 public class IdentityUrlAutoGenTests
 {
     [Theory]
-    // Cloud: tenant stripped, /{org}/identity_
+    // Cloud: tenant AND org stripped → /identity_ at host root. Identity is a
+    // host-level service. DO NOT change this back to /{org}/identity_ — that is
+    // the d57c287 regression (v0.9.15.5) that broke Entra-federated Cloud orgs
+    // with errorCode=219; customer bisection: v0.9.15.4 OK → v0.9.15.5 NG.
     [InlineData("https://cloud.uipath.com/myorg/mytenant",
-                "https://cloud.uipath.com/myorg/identity_")]
+                "https://cloud.uipath.com/identity_")]
     // Automation Suite: identity is a host-level service (confirmed against
     // BMW's 2023.4 deployment). NO org segment in the auto-derived URL.
     [InlineData("https://rpa-emea-int.eu-central-1.aws.cloud.bmw/Default/Default",
