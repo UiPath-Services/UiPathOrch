@@ -146,4 +146,62 @@ public class AsyncLogWriterTests : IDisposable
         Assert.Single(lines);
         Assert.Equal("real", lines[0]);
     }
+
+    [Fact]
+    public async Task IdleFlush_LoneEntry_PersistedWithoutSecondWriteOrDispose()
+    {
+        // Regression guard for the time-based flush. A single buffered entry,
+        // with NO further writes and NO Dispose, must still reach disk within a
+        // bounded time. Before the fix the flush interval was only re-evaluated
+        // when the *next* entry was dequeued, so a lone entry was never written
+        // until a 2nd entry arrived or the writer was disposed -- exactly the
+        // empty log seen on a hanging PKCE auth. Every other test here disposes
+        // before asserting, so none of them would catch this regression.
+        var w = new AsyncLogWriter(_tempPath, batchSize: 100, flushIntervalMs: 150);
+        try
+        {
+            await w.WriteAsync("lone-idle-entry\n");
+
+            // Poll WITHOUT disposing and WITHOUT writing anything else.
+            var deadline = DateTime.UtcNow.AddSeconds(5);
+            while (DateTime.UtcNow < deadline &&
+                   !(File.Exists(_tempPath) && new FileInfo(_tempPath).Length > 0))
+            {
+                await Task.Delay(25);
+            }
+
+            Assert.True(File.Exists(_tempPath),
+                "log file was never created while the producer stayed idle (interval flush regressed)");
+            var lines = await File.ReadAllLinesAsync(_tempPath);
+            Assert.Single(lines);
+            Assert.Equal("lone-idle-entry", lines[0]);
+        }
+        finally
+        {
+            await w.DisposeAsync();
+        }
+    }
+
+    [Fact]
+    public async Task IdleFlush_ThenDispose_DoesNotDuplicateEntry()
+    {
+        // After a time-based flush the buffer must be cleared, so a later
+        // shutdown drain does not re-emit the already-written entry.
+        var w = new AsyncLogWriter(_tempPath, batchSize: 100, flushIntervalMs: 150);
+        await w.WriteAsync("once\n");
+
+        var deadline = DateTime.UtcNow.AddSeconds(5);
+        while (DateTime.UtcNow < deadline &&
+               !(File.Exists(_tempPath) && new FileInfo(_tempPath).Length > 0))
+        {
+            await Task.Delay(25);
+        }
+        Assert.True(File.Exists(_tempPath), "idle flush did not occur");
+
+        await w.DisposeAsync(); // shutdown drain must not write "once" a second time
+
+        var lines = await File.ReadAllLinesAsync(_tempPath);
+        Assert.Single(lines);
+        Assert.Equal("once", lines[0]);
+    }
 }

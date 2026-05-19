@@ -119,14 +119,19 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
                 }
                 else
                 {
-                    // Entries are buffered: never wait past the flush interval, so a
+                    // Entries are buffered: never wait past the flush deadline, so a
                     // time-based flush still fires when no further entries arrive.
                     // Previously the interval was only re-evaluated when the *next*
-                    // entry was dequeued, so a lone buffered entry — e.g. the pre-auth
-                    // diagnostics block written right before a hanging PKCE listener —
+                    // entry was dequeued, so a lone buffered entry -- e.g. the pre-auth
+                    // diagnostics block written right before a hanging PKCE listener --
                     // was never persisted (folder created, log file empty).
+                    // Cap the wait at the time remaining until the next flush is due
+                    // (not a full interval each time) so flush latency stays within
+                    // _flushIntervalMs even under sustained sub-batch traffic.
+                    var elapsedMs = (DateTime.UtcNow - lastFlushTime).TotalMilliseconds;
+                    var remainingMs = (int)Math.Clamp(_flushIntervalMs - elapsedMs, 0d, (double)_flushIntervalMs);
                     using var waitCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    waitCts.CancelAfter(_flushIntervalMs);
+                    waitCts.CancelAfter(remainingMs);
                     try
                     {
                         completed = !await reader.WaitToReadAsync(waitCts.Token);
@@ -134,7 +139,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
                     catch (OperationCanceledException) when (waitCts.IsCancellationRequested
                                                             && !cancellationToken.IsCancellationRequested)
                     {
-                        // Flush interval elapsed with no new entry — fall through
+                        // Flush deadline reached with no new entry -- fall through
                         // to the time-based flush below.
                     }
                 }
