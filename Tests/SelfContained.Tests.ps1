@@ -3152,18 +3152,21 @@ Describe 'B2B EmailAddress matching - FolderUser/User cmdlets' -Tag 'B2BRegressi
 }
 
 # ---------------------------------------------------------------------------
-# H1 Phase 1: SingleCachePerOrganization Path moved to PSObject NoteProperty
+# H1 Phase 1: SingleCachePerOrganization per-drive Path via per-emit ShallowClone
 # ---------------------------------------------------------------------------
-# Org-scoped entities (LicenseInventory, AccountLicense, PmAuthenticationRoot)
-# are static singletons shared across drives in the same organization. Their
-# Path field used to be written by the cache class's initializer on every
-# Get (race-prone when multiple drives hit the same cached entity). The field
-# is now removed from the entity, and cmdlets emit a PSObject wrapper with a
-# Path NoteProperty so each WriteObject carries its own drive context without
-# mutating the shared instance.
-Describe 'H1 Phase 1: SingleCachePerOrganization Path via NoteProperty' -Tag 'H1Phase1' {
+# Org-scoped entities (LicenseInventory, AccountLicense, PmAuthenticationRoot,
+# PmUser et al.) are static singletons shared across drives in the same
+# organization. The earlier PSObject-NoteProperty wrap was dropped (PowerShell
+# keys PSObject instance members to base-object identity, so wrappers over the
+# shared singleton collapsed to the last-written Path). Path/GroupName are now
+# plain [JsonIgnore] properties on the DTO again; the cache keeps serving the
+# shared singleton and never sets them, while each cmdlet emit takes a
+# ShallowClone (distinct CLR instance) before stamping Path — so per-drive Path
+# is independent without mutating the shared instance, and is a real property
+# on the entity, NOT a PSObject NoteProperty.
+Describe 'H1 Phase 1: SingleCachePerOrganization per-drive Path via ShallowClone' -Tag 'H1Phase1' {
 
-    It 'BF8: Get-PmLicenseInventory output carries Path as a PSObject NoteProperty (not on entity)' {
+    It 'BF8: Get-PmLicenseInventory output carries Path as a plain DTO property (per-emit ShallowClone)' {
         $inv = $null
         try {
             $inv = Get-PmLicenseInventory -Path "${script:Drive}:" -ErrorAction Stop
@@ -3176,17 +3179,17 @@ Describe 'H1 Phase 1: SingleCachePerOrganization Path via NoteProperty' -Tag 'H1
             return
         }
         $inv.Path | Should -Be "${script:Drive}:\" `
-            -Because 'NoteProperty should carry the drive-local Path (drive.NameColonSeparator)'
-        $inv.PSObject.Properties['Path'].MemberType | Should -Be 'NoteProperty' `
-            -Because 'Path should be attached via PSObject, not via the underlying entity'
-        $inv.PSObject.BaseObject.GetType().GetProperty('Path') | Should -BeNullOrEmpty `
-            -Because 'The entity type itself no longer carries a Path property'
+            -Because 'the per-emit ShallowClone carries the drive-local Path (drive.NameColonSeparator)'
+        $inv.PSObject.Properties['Path'].MemberType | Should -Be 'Property' `
+            -Because 'Path is a plain DTO property again (per-emit ShallowClone), not a PSObject NoteProperty'
+        $inv.GetType().GetProperty('Path') | Should -Not -BeNullOrEmpty `
+            -Because 'the entity type carries a real Path property ([JsonIgnore] on the DTO)'
     }
 
-    It 'BF9: Get-PmUser list output carries Path as a PSObject NoteProperty (ListCachePerOrganization)' {
+    It 'BF9: Get-PmUser list output carries Path as a plain DTO property (ListCachePerOrganization)' {
         # Phase 2: ListCachePerOrganization-backed entities (PmUser et al.)
         # follow the same model as Phase 1. Verify on PmUser; the other 9
-        # entities share the cache class and the WithPath wrap pattern.
+        # entities share the cache class and the per-emit ShallowClone pattern.
         $users = $null
         try {
             $users = Get-PmUser -Path "${script:Drive}:" -ErrorAction Stop | Select-Object -First 1
@@ -3199,10 +3202,10 @@ Describe 'H1 Phase 1: SingleCachePerOrganization Path via NoteProperty' -Tag 'H1
             return
         }
         $users.Path | Should -Be "${script:Drive}:\" `
-            -Because 'PmUser NoteProperty should carry the drive-local Path'
-        $users.PSObject.Properties['Path'].MemberType | Should -Be 'NoteProperty' `
-            -Because 'Path should be a NoteProperty on the wrapper, not a field on PmUser'
-        $users.PSObject.BaseObject.GetType().GetProperty('Path') | Should -BeNullOrEmpty `
-            -Because 'PmUser itself must no longer carry a Path property'
+            -Because 'the per-emit ShallowClone carries the drive-local Path'
+        $users.PSObject.Properties['Path'].MemberType | Should -Be 'Property' `
+            -Because 'Path is a plain property on the cloned PmUser, not a PSObject NoteProperty'
+        $users.GetType().GetProperty('Path') | Should -Not -BeNullOrEmpty `
+            -Because 'PmUser carries a real Path property ([JsonIgnore] on the DTO)'
     }
 }
