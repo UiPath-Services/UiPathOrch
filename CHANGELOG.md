@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-## [1.4.2] - 2026-05-15
+## [1.4.2] - 2026-05-19
 
 Patch release. Two pipeline-input bug fixes in helper functions, three
 raw `_dic*` caches retired in favor of small focused cache classes,
@@ -61,6 +61,21 @@ accumulator pattern eliminated except for `_dicFolders` itself).
   again, Shallow-cloned per emit before it's stamped — independent per
   drive, the rest still shared with the singleton, and safe under the
   now-parallel `Get-Pm*`.
+
+- **Cloud sign-in failed with `#219` "user has not accepted the
+  invitation" for Entra-ID-federated organizations.** The Cloud
+  Identity URL was auto-derived org-scoped
+  (`https://cloud.uipath.com/{org}/identity_`); that authorize
+  endpoint resolves a federated user into an org membership /
+  invitation check that returns errorCode 219. Local UiPath accounts
+  were unaffected (which is why it shipped unnoticed). Introduced in
+  v0.9.15.5 (commit d57c287, whose comment wrongly assumed "Identity
+  now requires /{org}/identity_/"); pinned by a customer release
+  bisection (v0.9.15.4 OK → v0.9.15.5 NG). Cloud now auto-derives
+  host-level `https://cloud.uipath.com/identity_` (same form as
+  Automation Suite), verified end-to-end on current Cloud Identity.
+  An explicit `IdentityUrl` still overrides for non-default Identity
+  Servers.
 
 ### Changed
 
