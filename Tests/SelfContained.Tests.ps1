@@ -2329,14 +2329,20 @@ Describe 'IdentityUrl Derivation' {
         $script:allDrives = Get-OrchPSDrive
     }
 
-    It 'Cloud drive IdentityUrl is {org}/identity_' {
+    # Cloud (incl. Cloud-staging) Identity is a HOST-LEVEL service:
+    # IdentityUrl is {scheme}://{authority}/identity_ — NOT {org}/identity_.
+    # DO NOT reintroduce the org segment here: org-scoping the authorize
+    # URL is the d57c287 regression (v0.9.15.5) that broke Entra-federated
+    # Cloud orgs with errorCode=219 "user has not accepted the invitation";
+    # customer bisection pinned it v0.9.15.4 OK -> v0.9.15.5 NG. This
+    # mirrors the xUnit guard in Tests/UnitTests/IdentityUrlAutoGenTests.cs.
+    It 'Cloud drive IdentityUrl is host-level {authority}/identity_' {
         $cloudDrives = $script:allDrives | Where-Object { $_.Root -match 'uipath\.com' }
         $cloudDrives | Should -Not -BeNullOrEmpty -Because 'at least one cloud drive should be connected'
 
         foreach ($d in $cloudDrives) {
-            $rootTrimmed = $d.Root.TrimEnd('/')
-            $orgBase = $rootTrimmed.Substring(0, $rootTrimmed.LastIndexOf('/'))
-            $expected = "$orgBase/identity_"
+            $uri = [Uri]$d.Root.TrimEnd('/')
+            $expected = "$($uri.Scheme)://$($uri.Authority)/identity_"
             $d.IdentityUrl | Should -Be $expected -Because "drive '$($d.Name)' Root=$($d.Root)"
         }
     }
