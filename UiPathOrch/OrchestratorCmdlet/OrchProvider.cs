@@ -429,7 +429,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                 // var duProvider = SessionState.Provider.GetOne("UiPathOrchDu");
                 // If no exception is thrown, tmProvider is not null
                 var duDrive = SessionState.Drive.Get(drive.Name + "Du") as OrchDuDriveInfo;
-                duDrive!._parentDrive = (OrchDriveInfo)drive;
+                duDrive!.ParentDrive = (OrchDriveInfo)drive;
             }
             catch { } // If this fails, OrchDuDriveInfo.NewDrive should handle it
             #endregion

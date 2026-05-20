@@ -5466,7 +5466,7 @@
       </ViewSelectedBy>
       <GroupBy>
         <Label>Project</Label>
-        <PropertyName>PathProject</PropertyName>
+        <PropertyName>Path</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>

@@ -91,12 +91,18 @@ public class GetDuUserCmdlet : OrchestratorPSCmdlet
                 var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
-                var (drive, _) = result.Source;
+                var (drive, project) = result.Source;
 
+                // DuUsers cache is org-scoped (shared across drives in same
+                // org). Emit per-drive ShallowClone() copies with drive-local
+                // Path / Project stamped, never mutate the cached singleton.
+                var pathProject = project.GetPSPath();
+                var projectName = project.name;
                 var targetEntities = entities
                         //.FilterByWildcards(u => u?.UserName, wpUserName)
                         .FilterByWildcards(u => u?.Name, wpName)
-                        .OrderBy(e => e.Name);
+                        .OrderBy(e => e.Name)
+                        .Select(u => { var c = u.ShallowClone(); c.Path = pathProject; c.Project = projectName; return c; });
 
                 if (writer is not null)
                 {

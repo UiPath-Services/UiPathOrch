@@ -79,9 +79,16 @@ public class GetDuExtractorCmdlet : OrchestratorPSCmdlet
                 var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
+                // Per-drive ShallowClone() copies with drive-local Path /
+                // Project stamped (uniform DU path-isolation pattern; never
+                // mutate the cached entity).
+                var (_, project) = result.Source;
+                var pathProject = project.GetPSPath();
+                var projectName = project.name;
                 WriteObject(entities!
                     .FilterByWildcards(u => u?.name, wpName)
-                    .OrderBy(e => e.name),
+                    .OrderBy(e => e.name)
+                    .Select(e => { var c = e.ShallowClone(); c.Path = pathProject; c.Project = projectName; return c; }),
                     true);
             }
             catch (OrchException ex)

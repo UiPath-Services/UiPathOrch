@@ -4341,8 +4341,14 @@ public class ActionDetail // added by UiPathOrch Not in the swagger doc.
 
 public class DuRole // added by UiPathOrch Not in the swagger doc.
 {
+    // Path: drive-local; the entity is shared across drives of the same org
+    // via DuListCachePerOrganization. Never set on the shared singleton —
+    // set on the per-emit ShallowClone() copy.
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
+
+    public DuRole ShallowClone() => (DuRole)MemberwiseClone();
+
     public string? id { get; set; }
     public string? name { get; set; }
     public string? description { get; set; }
@@ -4373,10 +4379,15 @@ public class RoleAssignmentDto // added by UiPathOrch Not in the swagger doc.
 
 public class DuUser // added by UiPathOrch Not in the swagger doc.
 {
+    // Path / Project: drive-local; the entity is shared across drives of the
+    // same org via DuKeyedListCachePerOrganization. Never set on the shared
+    // singleton — set on the per-emit ShallowClone() copy.
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Project { get; set; } // added by UiPathOrch
+
+    public DuUser ShallowClone() => (DuUser)MemberwiseClone();
 
     public string? securityPrincipalId { get; set; }
     public RoleAssignmentDto[]? roleAssignmentDtos { get; set; }
@@ -4425,11 +4436,16 @@ public class UserRoleAssignmentsCmd // added by UiPathOrch
 // UiPath.DocumentUnderstanding.Framework.Api.Controllers.Model.Discovery.Project
 public class DuProject
 {
+    // Path / FullName: drive-local. Cache stores the bare entity; cmdlets
+    // ShallowClone() per emit and stamp these — matches the PM* pattern,
+    // applied uniformly across DU caches even where the scope is per-tenant.
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
 
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? FullName { get; set; } // added by UiPathOrch
+
+    public DuProject ShallowClone() => (DuProject)MemberwiseClone();
 
     public string? id { get; set; }
     public string? name { get; set; }
@@ -4462,10 +4478,17 @@ public class CreateDuProjectCmd // added by UiPathOrch
 // UiPath.DocumentUnderstanding.Framework.Api.Controllers.Model.Discovery.DocumentType
 public class DuDocumentType
 {
+    // Path / Project: drive-local; cache stores the bare entity, cmdlets
+    // ShallowClone() per emit and stamp these (uniform DU pattern). Path
+    // is set to the project's GetPSPath() ("Orch1Du:\Foo"), so the view
+    // can group by PropertyName=Path without an extra field.
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Project { get; set; } // added by UiPathOrch
+
+    public DuDocumentType ShallowClone() => (DuDocumentType)MemberwiseClone();
+
     public string? id { get; set; }
     public string? name { get; set; }
     public string? detailsUrl { get; set; }
@@ -4480,10 +4503,17 @@ public class DuGetDocumentTypesResponse
 // UiPath.DocumentUnderstanding.Framework.Api.Controllers.Model.Discovery.Classifier
 public class DuClassifier
 {
+    // Path / Project: drive-local; cache stores the bare entity, cmdlets
+    // ShallowClone() per emit and stamp these (uniform DU pattern). Path
+    // is the project-qualified path, used directly by the view as the
+    // group key.
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Project { get; set; } // added by UiPathOrch
+
+    public DuClassifier ShallowClone() => (DuClassifier)MemberwiseClone();
+
     public string? id { get; set; }
     public string? name { get; set; }
     public string? status { get; set; }
@@ -4501,10 +4531,18 @@ public class DuGetClassifiersResponse
 // UiPath.DocumentUnderstanding.Framework.Api.Controllers.Model.Discovery.Extractor
 public class DuExtractor
 {
+    // Path / Project: drive-local; cache stores the bare entity, cmdlets
+    // ShallowClone() per emit and stamp these (uniform DU pattern). Path
+    // is the project-qualified path, used directly by the view as the
+    // group key (the pre-1.4.3 view referenced a non-existent PathProject
+    // field which made the grouping render null; switched to Path here).
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Project { get; set; } // added by UiPathOrch
+
+    public DuExtractor ShallowClone() => (DuExtractor)MemberwiseClone();
+
     public string? id { get; set; }
     public string? name { get; set; }
     public string? documentTypeId { get; set; }

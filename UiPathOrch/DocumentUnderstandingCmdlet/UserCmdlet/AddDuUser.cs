@@ -337,7 +337,7 @@ public class AddDuRoleToDuUserCmdlet : OrchestratorPSCmdlet
 
                 foreach (var project in updatedProjects)
                 {
-                    drive._dicDuUsers?.TryRemove((partitionGlobalId, tenantKey, project.id)!, out _);
+                    drive.DuUsers.ClearCache((tenantKey!, project.id!));
                 }
             }
             catch (Exception ex)

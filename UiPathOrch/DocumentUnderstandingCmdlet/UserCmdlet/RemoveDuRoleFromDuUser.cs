@@ -141,7 +141,7 @@ public class RemoveDuRoleFromDuUserCmdlet : OrchestratorPSCmdlet
                             };
 
                             drive.OrchAPISession.SetDuRoleToDuUser(partitionGlobalId, payload);
-                            drive._dicDuUsers?.TryRemove((partitionGlobalId, tenantKey, project.id)!, out _);
+                            drive.DuUsers.ClearCache((tenantKey!, project.id!));
                         }
                         catch (Exception ex)
                         {

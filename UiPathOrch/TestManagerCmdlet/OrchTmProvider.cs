@@ -214,7 +214,7 @@ public class OrchTmProvider : NavigationCmdletProvider
 
                     drive.OrchAPISession.PutTmProject(postingProject);
                     //drive.TmProjects.ClearCache();
-                    drive._dicTmProjects = null;
+                    drive.TmProjects.ClearCache();
                     //drive.ClearFolderCache(folder);
                 }
                 catch (Exception ex)
@@ -222,7 +222,7 @@ public class OrchTmProvider : NavigationCmdletProvider
                     var errorRecord = new ErrorRecord(new OrchException(path, ex), "RenameTmProjectError", ErrorCategory.InvalidOperation, project);
                     WriteError(errorRecord);
                     //drive.TmProjects.ClearCache();
-                    drive._dicTmProjects = null;
+                    drive.TmProjects.ClearCache();
                 }
             }
         }
@@ -246,7 +246,7 @@ public class OrchTmProvider : NavigationCmdletProvider
                 try
                 {
                     drive.OrchAPISession.RemoveTmProject(project.id!);
-                    drive._dicTmProjects = null;
+                    drive.TmProjects.ClearCache();
                     //drive.TmProjects.ClearCache();
                     //drive.ClearFolderCache(folder);
                 }
@@ -254,7 +254,7 @@ public class OrchTmProvider : NavigationCmdletProvider
                 {
                     var errorRecord = new ErrorRecord(new OrchException(path, ex), "RemoveTmProjectError", ErrorCategory.InvalidOperation, project);
                     WriteError(errorRecord);
-                    drive._dicTmProjects = null;
+                    drive.TmProjects.ClearCache();
                     //drive.TmProjects.ClearCache();
                 }
             }
@@ -278,7 +278,7 @@ public class OrchTmProvider : NavigationCmdletProvider
             result = result[1..];
 
         // Canonicalize project name casing from cache.
-        var projects = PSDriveInfo is OrchTmDriveInfo drive ? drive._dicTmProjects : null;
+        var projects = PSDriveInfo is OrchTmDriveInfo drive ? drive.TmProjects.CachedValue : null;
         if (projects != null && !string.IsNullOrEmpty(result))
         {
             var project = projects.FirstOrDefault(p =>

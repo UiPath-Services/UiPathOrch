@@ -95,7 +95,7 @@ public class OrchDuProvider : NavigationCmdletProvider
             // var orchProvider = SessionState.Provider.GetOne("UiPathOrch");
             // If no exception is thrown, orchProvider is guaranteed to be not null
             var orchDrive = SessionState.Drive.Get(drive.Name.Substring(0, drive.Name.Length - 2)) as OrchDriveInfo;
-            duDrive._parentDrive = orchDrive;
+            duDrive.ParentDrive = orchDrive!;
         }
         catch (Exception ex)
         {
@@ -169,12 +169,18 @@ public class OrchDuProvider : NavigationCmdletProvider
             return;
         }
         var projects = OrchDuDriveInfo.GetDuProjects();
+        var pathPrefix = OrchDuDriveInfo.NameColonSeparator;
         foreach (var project in projects!)
         {
             if (Stopping) return;
-            string psPathEscaped = OrchDuDriveInfo.NameColonSeparator + project.name;
+            string psPathEscaped = pathPrefix + project.name;
             //string psPathEscaped = PathTools.EscapePSText2(psPath);
-            WriteItemObject(project, psPathEscaped, true);
+            // Per-drive ShallowClone() with drive-local Path / FullName
+            // stamped — uniform DU cache path-isolation pattern.
+            var clone = project.ShallowClone();
+            clone.Path = pathPrefix;
+            clone.FullName = psPathEscaped;
+            WriteItemObject(clone, psPathEscaped, true);
         }
     }
 
@@ -257,7 +263,7 @@ public class OrchDuProvider : NavigationCmdletProvider
                 payload.ocrUrl ??= ""; // TODO
 
                 drive.OrchAPISession.CreateDuProjects(payload);
-                drive._dicDuProjects = null;
+                drive.DuProjects.ClearCache();
 
                 // Re-fetch to get the created project and output it
                 var projects = drive.GetDuProjects();
@@ -265,7 +271,13 @@ public class OrchDuProvider : NavigationCmdletProvider
                     string.Equals(p.name, projectName, StringComparison.OrdinalIgnoreCase));
                 if (created is not null)
                 {
-                    WriteItemObject(created, path, true);
+                    // Per-drive ShallowClone() with drive-local Path /
+                    // FullName stamped (uniform DU pattern).
+                    var pathPrefix = drive.NameColonSeparator;
+                    var clone = created.ShallowClone();
+                    clone.Path = pathPrefix;
+                    clone.FullName = pathPrefix + created.name;
+                    WriteItemObject(clone, path, true);
                 }
             }
             catch (Exception ex)
@@ -296,8 +308,10 @@ public class OrchDuProvider : NavigationCmdletProvider
         if (result.StartsWith(System.IO.Path.DirectorySeparatorChar) && result.Length > 1)
             result = result[1..];
 
-        // Canonicalize project name casing from cache.
-        var projects = PSDriveInfo is OrchDuDriveInfo drive ? drive._dicDuProjects : null;
+        // Canonicalize project name casing from cache. Passive read — must
+        // NOT trigger a fetch (NormalizeRelativePath runs on every path
+        // operation, including tab completion).
+        var projects = PSDriveInfo is OrchDuDriveInfo drive ? drive.DuProjects.CachedValue : null;
         if (projects != null && !string.IsNullOrEmpty(result))
         {
             var project = projects.FirstOrDefault(p =>

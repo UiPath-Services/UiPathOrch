@@ -15,7 +15,7 @@ public class OrchTmDriveInfo : PSDriveInfo
     public TmSingleCachePerTenant1<TmProjectSettings> TmProjectSetting = null!;
 
     // Test list entities
-    //public TmListCachePerTenant0<TmProject>           TmProjects           = null!;
+    public TmListCachePerTenant0<TmProject> TmProjects = null!;
     public TmListCachePerTenant1<TmTestCase> TmTestCases = null!;
     public TmListCachePerTenant1<TmTestSet> TmTestSets = null!;
     public TmListCachePerTenant1<TmTestExecution> TmTestExecutions = null!;
@@ -39,12 +39,14 @@ public class OrchTmDriveInfo : PSDriveInfo
 
             #region initialize test entity caches
 
-            // Caches need to be initialized after ParentDrive is set
-            //TmProjects = new(this, OrchAPISession.GetTmProjects, e =>
-            //{
-            //    e.Path = NameColonSeparator;
-            //    e.FullName = NameColonSeparator + e.projectPrefix;
-            //});
+            // Caches need to be initialized after ParentDrive is set.
+            // TmProjects is per-tenant — Path/FullName stamping in the
+            // initializer is safe (no cross-drive sharing).
+            TmProjects = new(this, OrchAPISession.GetTmProjects, e =>
+            {
+                e.Path = NameColonSeparator;
+                e.FullName = NameColonSeparator + e.projectPrefix;
+            });
 
             TmServerInformation = new(this, OrchAPISession.GetTmServerInfo, e => e.Path = NameColonSeparator);
             TmConfiguration = new(this, OrchAPISession.GetTmConfiguration, e => e.Path = NameColonSeparator);
@@ -121,42 +123,8 @@ public class OrchTmDriveInfo : PSDriveInfo
         }
     }
 
-    internal List<TmProject>? _dicTmProjects = null;
-    internal readonly ExceptionCachePerTenant _dicTmProjectsException = new();
-    public ReadOnlyCollection<TmProject>? GetTmProjects()
-    {
-        _dicTmProjectsException.ThrowCachedExceptionIfAny();
-
-        if (_dicTmProjects is null)
-        {
-            lock (this)
-            {
-                if (_dicTmProjects is null)
-                {
-                    try
-                    {
-                        _dicTmProjects = OrchAPISession.GetTmProjects()?.ToList();
-                        if (_dicTmProjects is null)
-                        {
-                            _dicTmProjects = [];
-                        }
-                        else
-                        {
-                            foreach (var project in _dicTmProjects)
-                            {
-                                project.Path = NameColonSeparator;
-                                project.FullName = NameColonSeparator + project.projectPrefix;
-                            }
-                        }
-                    }
-                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
-                    {
-                        _dicTmProjectsException.CacheException(ex);
-                        throw;
-                    }
-                }
-            }
-        }
-        return _dicTmProjects?.AsReadOnly();
-    }
+    // Backward-compat thin wrapper for callers that still spell the legacy
+    // method. The cache class handles locking, exception caching, and the
+    // ReadOnlyCollection wrapping internally.
+    public ReadOnlyCollection<TmProject>? GetTmProjects() => TmProjects.Get();
 }

@@ -69,9 +69,14 @@ public class GetDuRoleCmdlet : OrchestratorPSCmdlet
                 var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
+                // DuRoles cache is org-scoped (shared across drives in same
+                // org). Emit per-drive ShallowClone() copies with drive-local
+                // Path stamped, never mutate the cached singleton.
+                var pathPrefix = result.Source.NameColonSeparator;
                 WriteObject(entities
                     .FilterByWildcards(u => u?.name, wpName)
-                    .OrderBy(e => e.name),
+                    .OrderBy(e => e.name)
+                    .Select(r => { var c = r.ShallowClone(); c.Path = pathPrefix; return c; }),
                     true);
             }
             catch (OrchException ex)

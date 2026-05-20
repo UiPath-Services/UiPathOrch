@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+using System.Collections.ObjectModel;
 using System.Management.Automation;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
@@ -8,8 +8,75 @@ namespace UiPath.PowerShell.Core;
 
 public class OrchDuDriveInfo : PSDriveInfo
 {
-    internal OrchDriveInfo? _parentDrive;
-    internal OrchDriveInfo ParentDrive => _parentDrive!;
+    // Cache instances live on the drive so they can be cleared uniformly by
+    // iterating these registries from ClearAllCache. Each cache class registers
+    // itself in its constructor via _drive._allTenantCache.Add(this), which is
+    // the structural fix for the pre-1.4.3 bug where _dicDuExtractors was
+    // missed from the manual clear loop in ClearAllCache.
+    internal readonly List<ITenantCacheClearable> _allTenantCache = [];
+    internal readonly List<IFolderCacheClearable> _allFolderCache = [];
+
+    // Org-scoped: shared across all drives in the same org (partitionGlobalId
+    // keyed in the cache). Entities are stored bare; cmdlets ShallowClone()
+    // per emit and stamp drive-local Path / Project — same pattern as PM*
+    // (post-1.4.2 per-org cache path isolation).
+    public DuListCachePerOrganization<DuRole> DuRoles = null!;
+    public DuKeyedListCachePerOrganization<(string TenantKey, string ProjectId), DuUser> DuUsers = null!;
+
+    // Per-tenant: scoped to this single drive. For uniformity with the
+    // org-scoped DU caches above, cmdlets ShallowClone() per emit and stamp
+    // here too — same call-site code for every Du entity.
+    public DuListCachePerTenant<DuProject> DuProjects = null!;
+    public DuListCachePerProject<DuDocumentType> DuDocumentTypes = null!;
+    public DuListCachePerProject<DuClassifier> DuClassifiers = null!;
+    public DuListCachePerProject<DuExtractor> DuExtractors = null!;
+
+    private OrchDriveInfo? _parentDrive;
+    internal OrchDriveInfo ParentDrive
+    {
+        get => _parentDrive!;
+        set
+        {
+            _parentDrive = value ?? throw new ArgumentNullException(nameof(value));
+
+            // Caches need ParentDrive (for OrchAPISession and partitionGlobalId).
+            // Initialize after the field is set; pass `this` so the cache classes
+            // register into _allTenantCache for uniform ClearAllCache.
+
+            // Org-scoped: no initializer — Path is set by the cmdlet on the
+            // per-emit ShallowClone() copy (per-org caches are shared across
+            // drives, so drive-local Path on the cached singleton would be
+            // raced/wrong, matching the PM* 1.4.2 fix rationale).
+            DuRoles = new(this, partitionGlobalId =>
+                OrchAPISession.GetDuRoles(partitionGlobalId) ?? []);
+
+            DuUsers = new(this, (partitionGlobalId, key) =>
+                OrchAPISession.GetDuUsers(partitionGlobalId, key.TenantKey, key.ProjectId) ?? []);
+
+            // Per-tenant: Path/FullName stamped in the initializer, because
+            // DuProject is consumed AS INPUT by other cmdlets (e.g.,
+            // GetDuDocumentType receives the project via EnumDuFolders and
+            // calls project.GetPSPath() on it). If we left Path unstamped
+            // here and relied on clone+stamp at the OrchDuProvider emit
+            // site only, the project handed to downstream cmdlets would
+            // have Path = null and PathProject would degrade to just the
+            // project name. Per-tenant scope means there's no cross-drive
+            // sharing, so init-time stamping is safe (unlike DuRoles /
+            // DuUsers which are per-org and must clone+stamp on emit).
+            DuProjects = new(this,
+                () => (OrchAPISession.GetDuProjects() ?? []).OrderBy(p => p.name),
+                p => { p.Path = NameColonSeparator; p.FullName = NameColonSeparator + p.name; });
+
+            DuDocumentTypes = new(this, project =>
+                OrchAPISession.GetDuDocumentTypes(project.id!) ?? []);
+
+            DuClassifiers = new(this, project =>
+                OrchAPISession.GetDuClassifiers(project.id!) ?? []);
+
+            DuExtractors = new(this, project =>
+                OrchAPISession.GetDuExtractors(project.id!) ?? []);
+        }
+    }
 
     internal OrchAPISession OrchAPISession => ParentDrive.OrchAPISession;
 
@@ -42,320 +109,49 @@ public class OrchDuDriveInfo : PSDriveInfo
     {
     }
 
+    // Registry-driven clear. Pre-1.4.3 this was a hand-maintained list of
+    // `_dicXxx = null` assignments and one entry (DuExtractors) was missing,
+    // so Clear-OrchCache silently left stale extractor data behind. Iterating
+    // the registry makes that class of bug structurally impossible: any new
+    // cache class registers itself in its constructor and is cleared here.
     public void ClearAllCache()
     {
-        //ParentDrive._tenantId = null;
-        //ParentDrive._tenantKey = null;
-
-        #region DU cache
-        _dicDuClassifier = null;
-        _dicDuClassifier_Exceptions.ClearCache();
-
-        _dicDuDocumentTypes = null;
-        _dicDuDocumentTypes_Exceptions.ClearCache();
-
-        _dicDuProjects = null;
-        _dicDuProjects_Exception.ClearCache();
-
-        _dicDuRoles = null;
-        _dicDuRoles_Exception.ClearCache();
-
-        _dicDuUsers = null;
-        _dicDuUsers_Exceptions.ClearCache();
-
-        #endregion
-    }
-
-    #region Document Understanding cache
-
-    // This entity belongs to the organization, not the tenant.
-    // Ideally, it should be stored in a static member of the drive keyed by partitionGlobalId.
-    // Having a cache per drive is inefficient, but it's fine for now..
-    // TODO: Rewrite to use a static member keyed by partitionGlobalId.
-    // However, rewriting it that way would make the Path format look unnatural..
-    internal DuRole[]? _dicDuRoles = null;
-    internal readonly ExceptionCachePerTenant _dicDuRoles_Exception = new();
-    public DuRole[]? GetDuRoles()
-    {
-        _dicDuRoles_Exception.ThrowCachedExceptionIfAny();
-
-        if (_dicDuRoles is null)
+        foreach (var cache in _allTenantCache)
         {
-            lock (_dicDuRoles_Exception)
-            {
-                if (_dicDuRoles is null)
-                {
-                    try
-                    {
-                        var partitionGlobalId = ParentDrive.GetPartitionGlobalId();
-                        _dicDuRoles = OrchAPISession.GetDuRoles(partitionGlobalId);
-                        if (_dicDuRoles is null)
-                        {
-                            _dicDuRoles = [];
-                        }
-                        else
-                        {
-                            foreach (var role in _dicDuRoles)
-                            {
-                                role.Path = NameColonSeparator;
-                            }
-                        }
-                    }
-                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
-                    {
-                        _dicDuRoles_Exception.CacheException(ex);
-                        throw;
-                    }
-                }
-            }
+            cache.ClearCache();
         }
-        return _dicDuRoles;
-    }
 
-    internal DuProject[]? _dicDuProjects = null;
-    internal readonly ExceptionCachePerTenant _dicDuProjects_Exception = new();
-    public DuProject[]? GetDuProjects()
-    {
-        _dicDuProjects_Exception.ThrowCachedExceptionIfAny();
-
-        if (_dicDuProjects is null)
+        foreach (var cache in _allFolderCache)
         {
-            lock (this)
-            {
-                if (_dicDuProjects is null)
-                {
-                    try
-                    {
-                        _dicDuProjects = OrchAPISession.GetDuProjects();
-                        if (_dicDuProjects is null)
-                        {
-                            _dicDuProjects = [];
-                        }
-                        else
-                        {
-                            foreach (var project in _dicDuProjects)
-                            {
-                                project.Path = NameColonSeparator;
-                                project.FullName = NameColonSeparator + project.name;
-                            }
-                        }
-                        _dicDuProjects = _dicDuProjects.OrderBy(p => p.name).ToArray();
-                    }
-                    catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
-                    {
-                        _dicDuProjects_Exception.CacheException(ex);
-                        throw;
-                    }
-                }
-            }
+            cache.ClearCache();
         }
-        return _dicDuProjects;
     }
 
-    internal ConcurrentDictionary<(string partitionGlobalId, string tenantKey, string projectId), DuUser[]>? _dicDuUsers = null;
-    internal readonly ExceptionsCachePer<(string partitionGlobalId, string tenantKey, string projectId)> _dicDuUsers_Exceptions = new();
+    // Wrappers preserve the legacy array return type so existing call sites
+    // (completers, internal Add-DuUser / Remove-DuRoleFromDuUser logic) keep
+    // working without changes. The returned entities are RAW (no drive-local
+    // Path / Project stamped) — emitting cmdlets must ShallowClone() and stamp
+    // per-emit. Internal callers that only read name/id don't need to clone.
+
+    public DuRole[] GetDuRoles()
+        => DuRoles.Get().ToArray();
+
+    public DuProject[] GetDuProjects()
+        => DuProjects.Get().ToArray();
+
     public DuUser[] GetDuUsers(DuProject? project)
     {
-        var partitionGlobalId = ParentDrive.GetPartitionGlobalId();
         var tenantKey = ParentDrive.GetTenantId().key;
-        if (partitionGlobalId is null || tenantKey is null || project is null || project.id is null) return [];
-
-        _dicDuUsers_Exceptions.ThrowCachedExceptionIfAny((partitionGlobalId, tenantKey, project.id));
-
-        if (_dicDuUsers is null)
-        {
-            lock (_dicDuUsers_Exceptions)
-            {
-                _dicDuUsers ??= [];
-            }
-        }
-
-        if (!_dicDuUsers.TryGetValue((partitionGlobalId, tenantKey, project.id), out var users))
-        {
-            try
-            {
-                users = OrchAPISession.GetDuUsers(partitionGlobalId, tenantKey, project.id);
-                if (users is null)
-                {
-                    return [];
-                }
-                else
-                {
-                    string pathProject = project.GetPSPath();
-                    foreach (var user in users)
-                    {
-                        user.Path = pathProject;
-                        user.Project = project.name;
-                    }
-                    _dicDuUsers[(partitionGlobalId, tenantKey, project.id)] = users;
-
-                    // Feature request from Mishima-san (KDDI): allow specifying User Principal Name in Add-DuUser.
-                    // The code below would be needed for that, but I can't think of a good implementation.
-                    // Either sacrifice performance, or add complex parameters..
-                    // Personally, neither option is acceptable..
-                    //#region Bulk-query UserName
-                    //foreach (var groupedUsers in users.GroupBy(u => u.type))
-                    //{
-                    //    var entityType = groupedUsers.Key switch
-                    //    {
-                    //        "DirectoryGroup" => "group",
-                    //        "DirectoryApplication" => "application",
-                    //        _ => "user"
-                    //    };
-
-                    //    var dic = ParentDrive.PmBulkResolveByName(entityType, groupedUsers, user => user.Name ?? user.email ?? "");
-                    //    foreach (var user in groupedUsers)
-                    //    {
-                    //        if (!string.IsNullOrEmpty(user.Name) && dic.TryGetValue(user.Name, out var pmUser))
-                    //        {
-                    //            user.UserName = pmUser?.name;
-                    //        }
-                    //    }
-                    //}
-                    //#endregion
-                }
-            }
-            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
-            {
-                _dicDuUsers_Exceptions.CacheException((partitionGlobalId, tenantKey, project.id), ex);
-                throw;
-            }
-        }
-        return users;
+        if (project?.id is null || tenantKey is null) return [];
+        return DuUsers.Get((tenantKey, project.id)).ToArray();
     }
 
-    // key: projectId
-    internal ConcurrentDictionary<string, DuDocumentType[]>? _dicDuDocumentTypes = null;
-    internal readonly ExceptionsCachePer<string> _dicDuDocumentTypes_Exceptions = new();
-    public DuDocumentType[]? GetDuDocumentTypes(DuProject project)
-    {
-        _dicDuDocumentTypes_Exceptions.ThrowCachedExceptionIfAny(project.id!);
+    public DuDocumentType[] GetDuDocumentTypes(DuProject project)
+        => DuDocumentTypes.Get(project).ToArray();
 
-        if (_dicDuDocumentTypes is null)
-        {
-            lock (this)
-            {
-                _dicDuDocumentTypes ??= [];
-            }
-        }
+    public DuClassifier[] GetDuClassifiers(DuProject project)
+        => DuClassifiers.Get(project).ToArray();
 
-        if (!_dicDuDocumentTypes.TryGetValue(project.id!, out var documentTypes))
-        {
-            try
-            {
-                documentTypes = OrchAPISession.GetDuDocumentTypes(project.id);
-                if (documentTypes is null)
-                {
-                    documentTypes = [];
-                }
-                else
-                {
-                    string pathProject = project.GetPSPath();
-                    foreach (var documentType in documentTypes)
-                    {
-                        documentType.Path = pathProject;
-                        documentType.Project = project.name;
-                    }
-                    _dicDuDocumentTypes[project.id!] = documentTypes;
-                }
-            }
-            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
-            {
-                _dicDuDocumentTypes_Exceptions.CacheException(project.id!, ex);
-                throw;
-            }
-        }
-        return documentTypes;
-    }
-
-    // key: projectId
-    internal ConcurrentDictionary<string, DuClassifier[]>? _dicDuClassifier = null;
-    internal readonly ExceptionsCachePer<string> _dicDuClassifier_Exceptions = new();
-    public DuClassifier[]? GetDuClassifiers(DuProject project)
-    {
-        _dicDuClassifier_Exceptions.ThrowCachedExceptionIfAny(project.id!);
-
-        if (_dicDuClassifier is null)
-        {
-            lock (this)
-            {
-                _dicDuClassifier ??= [];
-            }
-        }
-
-        if (!_dicDuClassifier.TryGetValue(project.id!, out var classifiers))
-        {
-            try
-            {
-                classifiers = OrchAPISession.GetDuClassifiers(project.id);
-                if (classifiers is null)
-                {
-                    classifiers = [];
-                }
-                else
-                {
-                    string pathProject = project.GetPSPath();
-                    foreach (var classifier in classifiers)
-                    {
-                        classifier.Path = pathProject;
-                        classifier.Project = project.name;
-                    }
-                    _dicDuClassifier[project.id!] = classifiers;
-                }
-            }
-            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
-            {
-                _dicDuClassifier_Exceptions.CacheException(project.id!, ex);
-                throw;
-            }
-        }
-        return classifiers;
-    }
-
-    // key: projectId
-    internal ConcurrentDictionary<string, DuExtractor[]>? _dicDuExtractors = null;
-    internal readonly ExceptionsCachePer<string> _dicDuExtractorsExceptions = new();
-    public DuExtractor[]? GetDuExtractors(DuProject project)
-    {
-        _dicDuExtractorsExceptions.ThrowCachedExceptionIfAny(project.id!);
-
-        if (_dicDuExtractors is null)
-        {
-            lock (this)
-            {
-                _dicDuExtractors ??= [];
-            }
-        }
-
-        if (!_dicDuExtractors.TryGetValue(project.id!, out var extractors))
-        {
-            try
-            {
-                extractors = OrchAPISession.GetDuExtractors(project.id);
-                if (extractors is null)
-                {
-                    extractors = [];
-                }
-                else
-                {
-                    string pathProject = project.GetPSPath();
-                    foreach (var extractor in extractors)
-                    {
-                        extractor.Path = pathProject;
-                        extractor.Project = project.name;
-                    }
-                    _dicDuExtractors[project.id!] = extractors;
-                }
-            }
-            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
-            {
-                _dicDuExtractorsExceptions.CacheException(project.id!, ex);
-                throw;
-            }
-        }
-        return extractors;
-    }
-
-    #endregion
-
+    public DuExtractor[] GetDuExtractors(DuProject project)
+        => DuExtractors.Get(project).ToArray();
 }
