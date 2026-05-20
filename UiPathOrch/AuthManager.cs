@@ -502,11 +502,43 @@ internal class OrchestratorAuthManager
                 // Block the main thread until the task completes or is canceled
                 listeningTask.Wait(cts);
             }
+            catch (OperationCanceledException oce)
+            {
+                // This is the path PKCE-failure users actually hit: the
+                // browser was left on an Identity error page and never
+                // called back to the local listener, so listeningTask.Wait
+                // blocked until they Ctrl+C. Task.Wait(CancellationToken)
+                // throws *bare* OperationCanceledException on token-fired
+                // cancellation (NOT wrapped in AggregateException), so the
+                // AggregateException catch below would not see it; the OCE
+                // would propagate with its default ctor message ("The
+                // operation was canceled.") and PowerShell would print that,
+                // swallowing any hint we tried to attach. Re-throwing as
+                // InvalidOperationException is what reliably surfaces the
+                // hint message verbatim — Resolve-OrchAuthError exists
+                // exactly for this, but the user has to be told.
+                throw new InvalidOperationException(
+                        "PKCE sign-in was canceled (Ctrl+C). If the browser "
+                        + "was left on a sign-in error page (e.g. "
+                        + "An unknown error has occurred. (#200)), "
+                        + "copy that page's full URL from the address bar, "
+                        + "run `cd $HOME`, then "
+                        + "`Resolve-OrchAuthError '<url>'`.", oce);
+            }
             catch (AggregateException ae)
             {
                 if (ae.InnerExceptions.Any(e => e is OperationCanceledException))
                 {
-                    throw new OperationCanceledException("The operation was canceled by the user.", ae);
+                    // Rare path: listeningTask faulted with OCE before the
+                    // outer Wait observed cancellation. Same hint applies;
+                    // same exception-type swap reason as above.
+                    throw new InvalidOperationException(
+                        "PKCE sign-in was canceled (Ctrl+C). If the browser "
+                        + "was left on a sign-in error page (e.g. "
+                        + "An unknown error has occurred. (#200)), "
+                        + "copy that page's full URL from the address bar, "
+                        + "run `cd $HOME`, then "
+                        + "`Resolve-OrchAuthError '<url>'`.", ae);
                 }
                 else
                 {
@@ -531,7 +563,13 @@ internal class OrchestratorAuthManager
 
             if (authorizationCode is null)
             {
-                throw new InvalidOperationException("Authorization code was not received.");
+                throw new InvalidOperationException(
+                    "Authorization code was not received. If the browser "
+                    + "showed an error page (e.g. "
+                    + "An unknown error has occurred. (#200)), "
+                    + "copy that page's full URL from the address bar, "
+                    + "run `cd $HOME`, then "
+                    + "`Resolve-OrchAuthError '<url>'`.");
             }
 
             return authorizationCode;
