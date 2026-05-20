@@ -88,6 +88,7 @@ CmdletsToExport = @(
 'Switch-OrchCurrentUser',
 'Get-OrchPSDrive',
 'Get-OrchProductVersion',
+'Resolve-OrchAuthError',
 
 'Get-OrchLibrary',
 'Get-OrchLibraryVersion',
