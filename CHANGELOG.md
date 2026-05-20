@@ -6,6 +6,70 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.4.3] - 2026-05-20
+
+Patch release. Adds `Resolve-OrchAuthError` for diagnosing failed
+PKCE sign-ins, wires PKCE error messages to point at it, fixes a
+`Clear-OrchCache` miss for `DuExtractor` data, and finishes the
+DU/TM cache migration started in 1.4.2.
+
+### Added
+
+- **`Resolve-OrchAuthError` — local diagnostic for failed PKCE /
+  browser sign-ins.** Takes the URL the browser was left on,
+  decodes it entirely locally (no network), and returns
+  `ErrorCode`, `TraceId`, `ClientId`, `RedirectUri`, `Scopes`,
+  and an actionable `RecommendedAction`. Handles both URL shapes
+  seen in the wild (login-error with `returnUrl`, and web-error
+  with base64 `errorId`). Tailored diagnoses for `#219`,
+  `invalid_request` / Invalid redirect_uri, `invalid_scope`; for
+  unrecognised codes asks the user to forward the `traceId` to
+  UiPath Identity. xUnit fixtures are verbatim customer payloads.
+
+### Fixed
+
+- **`Clear-OrchCache` silently left stale `DuExtractor` data
+  behind on DU drives.** `OrchDuDriveInfo.ClearAllCache` was a
+  hand-maintained list and `_dicDuExtractors` was missing from it.
+  DU caches now register themselves with the drive's registry and
+  `ClearAllCache` iterates uniformly — the class of bug is
+  structurally impossible. xUnit regression test added.
+
+- **`DuExtractor` `Format.ps1xml` group header rendered as null.**
+  The view referenced a `PathProject` field the entity didn't
+  have. Switched to `Path`, which the cmdlet now correctly stamps.
+
+### Changed
+
+- **PKCE / sign-in failure messages now point at
+  `Resolve-OrchAuthError`.** When the browser is left on an
+  Identity error page and the user Ctrl+Cs the cmdlet, the
+  terminating error instructs them to copy the URL, run
+  `cd $HOME`, then `Resolve-OrchAuthError '<url>'`. The `cd`
+  step is needed because PSReadLine tab-completion of the cmdlet
+  name on an Orch drive would re-trigger PKCE before Enter. The
+  thrown exception type was swapped from `OperationCanceledException`
+  to `InvalidOperationException` so the custom message is printed
+  verbatim (PS canonicalises OCE messages on cancellation paths).
+
+- **DU cache architecture: 12 raw `_dic*` fields on
+  `OrchDuDriveInfo` migrated to 6 typed cache classes.** `DuRoles`
+  and `DuUsers` are now **org-scoped** (singleton across drives in
+  the same org) with the PM* 1.4.2 path-isolation pattern — cuts
+  API calls when multiple DU drives in the same org are used
+  together. The other 4 caches remain per-tenant. 6 DU entities
+  gain `ShallowClone()` for the emit-path clone.
+
+- **TM `_dicTmProjects` migrated to a new
+  `TmListCachePerTenant0<T>`.** Finishes the cache migration
+  started in 1.4.2 — no `_dic*` accumulators remain on
+  `OrchTmDriveInfo`.
+
+### Internal
+
+- xUnit suite 300 → 320 (+11 `AuthErrorUrlParserTests`,
+  +7 `OrchDuDriveInfoCacheRegistrationTests`, +2 others).
+
 ## [1.4.2] - 2026-05-19
 
 Patch release. Two pipeline-input bug fixes in helper functions, three

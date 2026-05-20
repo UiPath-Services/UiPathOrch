@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.4.2'
+ModuleVersion = '1.4.3'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -458,24 +458,22 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-Patch release. Two pipeline-input bug fixes in helper functions, three raw `_dic*` caches retired in favor of small focused cache classes, and the cmdlet-redesign-plan-p3 doc closes out (raw `_dic*` accumulator pattern eliminated except for `_dicFolders` itself).
+Patch release. Adds `Resolve-OrchAuthError` for diagnosing failed PKCE sign-ins, wires PKCE error messages to point at it, fixes a `Clear-OrchCache` miss for `DuExtractor` data, and finishes the DU/TM cache migration started in 1.4.2.
+
+## Added
+- **`Resolve-OrchAuthError` — local diagnostic for failed PKCE / browser sign-ins.** Takes the URL the browser was left on, decodes it entirely locally (no network), and returns `ErrorCode`, `TraceId`, `ClientId`, `RedirectUri`, `Scopes`, and an actionable `RecommendedAction`. Handles both URL shapes seen in the wild (login-error with `returnUrl`, and web-error with base64 `errorId`). Tailored diagnoses for `#219`, `invalid_request` / Invalid redirect_uri, `invalid_scope`; for unrecognised codes asks the user to forward the `traceId` to UiPath Identity. xUnit fixtures are verbatim customer payloads.
 
 ## Bug Fixes
-- **`Enable-/Disable-OrchPersonalWorkspace` and `Enable-/Disable-OrchUserAttended` lost all but the last input when piped to.** These functions declared `[Parameter(ValueFromPipelineByPropertyName)]` but had no explicit `process` block, so `Get-OrchUser | Disable-OrchUserAttended` silently disabled only the last user. Direct invocation (`-UserName a,b,c`) was unaffected and remains unchanged.
-- **`Logging.Enabled` now defaults to `true` when the `Logging` section is present but `Enabled` is unspecified.** Previously a config with only `Logging.Level` set produced no log output at all — the log folder was created but stayed empty, with no signal why; a frequent support trap when diagnosing auth issues. An explicit `Logging.Enabled: false` is still respected; absent `Logging` section still means no logging.
-- **Auth-diagnostics / HTTP log was lost when a sign-in hung or failed (e.g. PKCE `#219`).** `AsyncLogWriter`'s time-based flush was only re-evaluated when the next entry was dequeued, so a lone buffered entry with no follow-up (the pre-auth diagnostics block written just before a PKCE listener that then blocks on a callback that never comes) was never written — log folder created, file empty. Together with the `Logging.Enabled` fix this closes the "log folder exists but is empty when diagnosing an auth failure" trap. The interval flush is now a real deadline, so a single buffered entry is persisted within `flushIntervalMs` even while the producer is idle or blocked; batch flush and graceful-dispose drain are unchanged. Restores log capture during a failed sign-in; does not change authentication behaviour itself.
-- **PM records could carry another drive's per-drive `Path`** — when results were retained (a variable, or queried across same-org drives) every element showed the *last* drive's `Path`. The 1.4.0 fix had attached `Path` via a per-`WriteObject` PSObject `NoteProperty`, which didn't hold (PowerShell binds PSObject members to the shared cached base object). `Path` is a plain DTO property again, Shallow-cloned per emit before it's stamped — independent per drive, the rest still shared with the singleton, and safe under the now-parallel `Get-Pm*`.
-- **Cloud sign-in failed with `#219` "user has not accepted the invitation" for Entra-ID-federated organizations.** The Cloud Identity URL was auto-derived org-scoped (`https://cloud.uipath.com/{org}/identity_`); that authorize endpoint resolves a federated user into an org membership/invitation check that returns errorCode 219 (local UiPath accounts unaffected, which is why it shipped unnoticed). Introduced in v0.9.15.5 (commit d57c287); pinned by a customer release bisection (v0.9.15.4 OK → v0.9.15.5 NG). Cloud now auto-derives host-level `https://cloud.uipath.com/identity_` (same form as Automation Suite), verified end-to-end. An explicit `IdentityUrl` still overrides for non-default Identity Servers.
+- **`Clear-OrchCache` silently left stale `DuExtractor` data behind on DU drives.** `OrchDuDriveInfo.ClearAllCache` was a hand-maintained list and `_dicDuExtractors` was missing from it. DU caches now register themselves with the drive's registry and `ClearAllCache` iterates uniformly — the class of bug is structurally impossible. xUnit regression test added.
+- **`DuExtractor` `Format.ps1xml` group header rendered as null.** The view referenced a `PathProject` field the entity didn't have. Switched to `Path`, which the cmdlet now correctly stamps.
 
 ## Changed
-- **PM audit log cache (`_dicPmAuditLogs`) migrated to `IncrementalCachePerTenant`.** Uses the entity as its own key, so the previous `HashSet<PmAuditLog>` structural-dedup semantic is preserved while the cache joins the standard `Get-OrchAuditLog`-style lifecycle (`Fetch` / `GetCache` / `ClearCache` / per-tenant exception cache).
-- **PM bulk-resolve cache (`_dicPmBulkResolveByName`) migrated to a concrete `PmGroupMembersCache`.** Static storage keyed by `(partitionGlobalId, kind, name)`, so all drive instances pointing at the same org share one cache — bulk resolution (e.g. during `Add-OrchFolderUser`) of the same name across multiple drives no longer re-pays the API call. Negative caching preserved: the API returns `null` for unresolved names and that null is kept so the next lookup is a cache hit.
-- **Robot log cache (`_dicRobotLogs`) migrated to a concrete `RobotLogsCache`.** Per-folder `ConcurrentBag<Log>` accumulator (the API returns `Log.Id == 0` so per-id dedup isn't possible), `IFolderCacheClearable`-registered, so `Clear-OrchCache -Path <folder>` now flushes the right slice without manual null-out.
+- **PKCE / sign-in failure messages now point at `Resolve-OrchAuthError`.** When the browser is left on an Identity error page and the user Ctrl+Cs the cmdlet, the terminating error instructs them to copy the URL, run `cd $HOME`, then `Resolve-OrchAuthError '<url>'`. The `cd` step is needed because PSReadLine tab-completion of the cmdlet name on an Orch drive would re-trigger PKCE before Enter. The thrown exception type was swapped from `OperationCanceledException` to `InvalidOperationException` so the custom message is printed verbatim (PS canonicalises OCE messages on cancellation paths).
+- **DU cache architecture: 12 raw `_dic*` fields on `OrchDuDriveInfo` migrated to 6 typed cache classes.** `DuRoles` and `DuUsers` are now **org-scoped** (singleton across drives in the same org) with the PM* 1.4.2 path-isolation pattern — cuts API calls when multiple DU drives in the same org are used together. The other 4 caches remain per-tenant. 6 DU entities gain `ShallowClone()` for the emit-path clone.
+- **TM `_dicTmProjects` migrated to a new `TmListCachePerTenant0<T>`.** Finishes the cache migration started in 1.4.2 — no `_dic*` accumulators remain on `OrchTmDriveInfo`.
 
 ## Internal
-- `Find-OrchFolderNoUserAssigned` now emits a `Write-Verbose` line for the folders it silently skips, so `-Verbose` reveals which folders failed to resolve.
-- ScriptAnalyzer Warnings reduced from 23 → 11 in `Staging/`; the remaining 11 are all intentional `Write-Host` in `Staging/Examples/*.ps1` sample scripts.
-- `design/cmdlet-redesign-plan-p3.md` Group F closes out (0 bespoke caches remaining outside of `_dicFolders` itself, which carries its own multi-phase fetch + lock-and-publish design from 1.4.1).
+- xUnit suite 300 → 320 (+11 `AuthErrorUrlParserTests`, +7 `OrchDuDriveInfoCacheRegistrationTests`, +2 others).
 '@
 
         # Prerelease string of this module
