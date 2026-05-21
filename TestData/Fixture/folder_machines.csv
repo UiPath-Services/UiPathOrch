@@ -1,0 +1,5 @@
+Path,Name,PropagateToSubFolders
+Orch1:\TestFixture_Base\Development,TestFixture-Standard,True
+Orch1:\TestFixture_Base\Production,TestFixture-Standard,False
+Orch1:\TestFixture_Base\Production,TestFixture-Template,False
+Orch1:\TestFixture_Base\QA,TestFixture-Template,True

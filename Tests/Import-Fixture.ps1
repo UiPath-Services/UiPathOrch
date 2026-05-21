@@ -85,6 +85,18 @@ Import-Csv "$FixturePath\users.csv" |
     ForEach-Object { $_.Path = "${TargetDrive}:\"; $_ } |
     Add-OrchUser -ErrorAction SilentlyContinue | Out-Null
 
+# 4c. Folder-scoped machine assignments. Requires both folders (from step 1)
+# and tenant machines (from step 2) to be in place; doesn't depend on packages
+# or any folder-content entity. Done here so subsequent steps can reference
+# folder-machine relationships if needed.
+Write-Host "[ 3c/12] Folder machine assignments"
+Import-Csv "$FixturePath\folder_machines.csv" |
+    ForEach-Object {
+        $_.Path = $_.Path -replace '^Orch1:', "${TargetDrive}:"
+        $_
+    } |
+    Add-OrchFolderMachine -Confirm:$false | Out-Null
+
 # 5. Package to tenant feed. Tolerate "already exists" — some OC builds (e.g.
 # 20.10/ApiVer 11) won't let Remove-OrchPackage during Reset clean the
 # previous upload, but the package is otherwise the right one.

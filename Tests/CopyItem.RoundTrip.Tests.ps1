@@ -255,4 +255,14 @@ Describe 'Copy-Item -Recurse round-trip preserves per-folder entities' {
             -Name 'triggers' `
             -ColumnsToCheck @('ReleaseName')
     }
+
+    It 'folder machine assignments round-trip' {
+        # Activated alongside the fixture extension that adds
+        # folder_machines.csv. Verifies CopyFolderMachines correctly
+        # reassigns the source folder's machine list onto the dst folder.
+        Export-AndDiff `
+            -Getter { param($path, $csv) Get-OrchFolderMachine -Path $path -Recurse -ExportCsv $csv | Out-Null } `
+            -Name 'folder_machines' `
+            -ColumnsToCheck @('Type')
+    }
 }
