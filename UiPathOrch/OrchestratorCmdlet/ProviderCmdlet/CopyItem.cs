@@ -312,6 +312,66 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         return newFolder;
     }
 
+    // Per-src-role resolution outcome from ResolveDstRolesPure.
+    internal enum FindDstRoleResult
+    {
+        Resolved,                       // matched a dst folder-scope role; Id appended to result list
+        SkippedAsInherited,             // src role marked Origin = "Inherited" -> caller skips silently
+        SkippedAsTenantRole,            // matched but dst role's Type == "Tenant" -> excluded from folder roles
+        NotFoundInDstTenant,            // no dst role with matching Id (same-drive) or Name (cross-drive)
+    }
+
+    internal sealed record FindDstRoleEntry(SimpleRole SrcRole, Role? DstRole, FindDstRoleResult Result);
+
+    // Pure version of FindDstRoles. Caller supplies the dst tenant role list
+    // (fetched and possibly null-checked outside) so the matching policy is
+    // exercisable without standing up a real OrchDriveInfo.
+    //
+    // Policy (preserved verbatim):
+    //   - srcRoles with Origin == "Inherited" are silently skipped.
+    //   - When isSameDrive, match by Id (safer for renamed roles).
+    //   - When cross-drive, match by Name (case-insensitive).
+    //   - A matched dst role with Type == "Tenant" is intentionally NOT
+    //     added to the returned folder-role-id list -- tenant roles are
+    //     surfaced in classic-folder user payloads but cannot legally be
+    //     assigned as folder-scope roles.
+    internal static List<FindDstRoleEntry> ResolveDstRolesPure(
+        IEnumerable<SimpleRole> srcRoles,
+        IEnumerable<Role> dstTenantRoles,
+        bool isSameDrive)
+    {
+        var entries = new List<FindDstRoleEntry>();
+        var dstList = dstTenantRoles.ToList();
+
+        foreach (var sr in srcRoles)
+        {
+            if (sr.Origin == "Inherited")
+            {
+                entries.Add(new FindDstRoleEntry(sr, null, FindDstRoleResult.SkippedAsInherited));
+                continue;
+            }
+
+            Role? matched = isSameDrive
+                ? dstList.FirstOrDefault(r => r.Id == sr.Id)
+                : dstList.FirstOrDefault(r => string.Equals(r.Name, sr.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (matched is null)
+            {
+                entries.Add(new FindDstRoleEntry(sr, null, FindDstRoleResult.NotFoundInDstTenant));
+                continue;
+            }
+
+            if (matched.Type == "Tenant")
+            {
+                entries.Add(new FindDstRoleEntry(sr, matched, FindDstRoleResult.SkippedAsTenantRole));
+                continue;
+            }
+
+            entries.Add(new FindDstRoleEntry(sr, matched, FindDstRoleResult.Resolved));
+        }
+        return entries;
+    }
+
     internal static List<Int64>? FindDstRoles(IWritableHost _this,
         OrchDriveInfo srcDrive, IEnumerable<SimpleRole> srcRoleIds,
         OrchDriveInfo dstDrive, string msg)
@@ -329,33 +389,20 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             return null;
         }
 
-        List<Int64> retRoles = [];
-        foreach (var ur in srcRoleIds.Where(r => r.Origin != "Inherited"))
+        var entries = ResolveDstRolesPure(srcRoleIds, dstTenantRoles, isSameDrive: srcDrive == dstDrive);
+
+        var retRoles = new List<Int64>();
+        foreach (var entry in entries)
         {
-            Role roleToAdded;
-            if (srcDrive == dstDrive)
+            switch (entry.Result)
             {
-                // Searching by name should work, but searching by Id is probably safer..
-                roleToAdded = dstTenantRoles.FirstOrDefault(r => r.Id == ur.Id);
-            }
-            else
-            {
-                roleToAdded = dstTenantRoles.FirstOrDefault(r => string.Compare(r.Name, ur.Name, StringComparison.OrdinalIgnoreCase) == 0);
-            }
-
-            // When copying folders between different tenants, a role with the same name may not exist,
-            // so display an error and continue processing
-            if (roleToAdded is null)
-            {
-                _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have role with Name = '{ur.Name}'.");
-                continue;
-            }
-
-            // Folder users retrieved from classic folders include tenant roles,
-            // so those must be excluded
-            if (roleToAdded.Type != "Tenant")
-            {
-                retRoles.Add(roleToAdded.Id ?? 0);
+                case FindDstRoleResult.NotFoundInDstTenant:
+                    _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have role with Name = '{entry.SrcRole.Name}'.");
+                    break;
+                case FindDstRoleResult.Resolved:
+                    retRoles.Add(entry.DstRole!.Id ?? 0);
+                    break;
+                    // SkippedAsInherited / SkippedAsTenantRole: silent (preserved from original).
             }
         }
         return retRoles;
@@ -2802,7 +2849,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
 
         var dstTestCases = dstDrive.TestCases.Get(newFolder);
-        var dstTestCase = dstTestCases.FirstOrDefault(tc => (tc.PackageIdentifier == srcTestCase.PackageIdentifier && tc.Name == srcTestCase.Name));
+        // Case-SENSITIVE compound match (PackageIdentifier + Name). Preserved
+        // from original '==' comparisons. Same family of asymmetry as
+        // FindDstBucket / FindDstTestSet -- every other FindDst* in this file
+        // uses OrdinalIgnoreCase. Awaiting deliberate review (see
+        // BugDiscovery_FindDstBucketIsCaseSensitiveWhileOthersAreNot test).
+        var dstTestCase = dstTestCases.FirstOrDefault(tc =>
+            string.Equals(tc.PackageIdentifier, srcTestCase.PackageIdentifier, StringComparison.Ordinal) &&
+            string.Equals(tc.Name, srcTestCase.Name, StringComparison.Ordinal));
         if (dstTestCase is null)
         {
             _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have test case with PackageIdentifier = '{srcTestCase.PackageIdentifier}' and Name = '{srcTestCase.Name}'.");
@@ -2951,7 +3005,10 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
 
         var dstTestSets = dstDrive.TestSets.Get(newFolder);
-        var dstTestSet = dstTestSets.FirstOrDefault(ts => (ts.Name == srcTestSet.Name));
+        // Case-SENSITIVE match preserved from original '==' comparison. Same
+        // asymmetry as FindDstBucket / FindDstTestCase -- the rest of the
+        // FindDst* family uses OrdinalIgnoreCase. Awaiting deliberate review.
+        var dstTestSet = ResolveDstByName(dstTestSets, srcTestSet.Name, ts => ts.Name, StringComparison.Ordinal);
         if (dstTestSet is null)
         {
             _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have test set with Name = '{srcTestSet.Name}'.");
