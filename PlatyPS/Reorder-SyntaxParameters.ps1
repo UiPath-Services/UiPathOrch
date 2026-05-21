@@ -50,8 +50,6 @@ foreach ($path in $XmlPath) {
 
         # Find priority parameters that exist in this syntaxItem
         $priorityParams = [System.Collections.Generic.List[System.Xml.XmlElement]]::new()
-        $otherParams    = [System.Collections.Generic.List[System.Xml.XmlElement]]::new()
-
         foreach ($name in $PriorityNames) {
             $found = $params | Where-Object {
                 $_.SelectSingleNode('maml:name', $ns).'#text' -eq $name
@@ -62,34 +60,52 @@ foreach ($path in $XmlPath) {
         # Skip if no priority parameters found
         if ($priorityParams.Count -eq 0) { continue }
 
-        # Check if already in desired order
-        $priorityIndices = @(foreach ($pp in $priorityParams) {
-            [Array]::IndexOf($params, $pp)
-        })
-        $alreadyOrdered = $true
-        for ($i = 0; $i -lt $priorityIndices.Length; $i++) {
-            if ($priorityIndices[$i] -ne $i) {
-                $alreadyOrdered = $false
-                break
+        # Partition non-priority parameters into positional vs named.
+        # MAML stores per-set position in the 'position' attribute
+        # ("0", "1", ..., or "named").
+        $prioritySet = [System.Collections.Generic.HashSet[System.Xml.XmlElement]]::new()
+        foreach ($pp in $priorityParams) { [void]$prioritySet.Add($pp) }
+
+        $positionalEntries = [System.Collections.Generic.List[psobject]]::new()
+        $namedEntries      = [System.Collections.Generic.List[psobject]]::new()
+        $intHolder = 0
+        foreach ($p in $params) {
+            if ($prioritySet.Contains($p)) { continue }
+            $paramName = $p.SelectSingleNode('maml:name', $ns).'#text'
+            $posAttr   = $p.GetAttribute('position')
+            if ([int]::TryParse($posAttr, [ref]$intHolder)) {
+                $positionalEntries.Add([pscustomobject]@{
+                    Node = $p; Name = $paramName; Position = $intHolder
+                })
+            } else {
+                $namedEntries.Add([pscustomobject]@{
+                    Node = $p; Name = $paramName
+                })
+            }
+        }
+        $sortedPositional = @($positionalEntries | Sort-Object Position, Name)
+        $sortedNamed      = @($namedEntries      | Sort-Object Name)
+
+        # Build canonical desired order: priority + positional + named
+        $newOrder = [System.Collections.Generic.List[System.Xml.XmlElement]]::new()
+        $newOrder.AddRange($priorityParams)
+        foreach ($e in $sortedPositional) { $newOrder.Add($e.Node) }
+        foreach ($e in $sortedNamed)      { $newOrder.Add($e.Node) }
+
+        # Idempotent: skip if current order already matches desired.
+        $alreadyOrdered = ($params.Length -eq $newOrder.Count)
+        if ($alreadyOrdered) {
+            for ($i = 0; $i -lt $params.Length; $i++) {
+                if (-not [object]::ReferenceEquals($params[$i], $newOrder[$i])) {
+                    $alreadyOrdered = $false; break
+                }
             }
         }
         if ($alreadyOrdered) { continue }
 
-        # Collect non-priority parameters in original order
-        $prioritySet = [System.Collections.Generic.HashSet[System.Xml.XmlElement]]::new()
-        foreach ($pp in $priorityParams) { [void]$prioritySet.Add($pp) }
-        foreach ($p in $params) {
-            if (-not $prioritySet.Contains($p)) { $otherParams.Add($p) }
-        }
-
-        # Build new order: priority first, then others
-        $newOrder = [System.Collections.Generic.List[System.Xml.XmlElement]]::new()
-        $newOrder.AddRange($priorityParams)
-        $newOrder.AddRange($otherParams)
-
         $nameList = ($priorityParams | ForEach-Object { $_.SelectSingleNode('maml:name', $ns).'#text' }) -join ', '
 
-        if ($PSCmdlet.ShouldProcess($cmdName, "Move [$nameList] to front of syntax")) {
+        if ($PSCmdlet.ShouldProcess($cmdName, "Reorder syntax (priority [$nameList] + positional + named)")) {
             # Remove all parameter nodes
             foreach ($p in $params) {
                 [void]$syntaxItem.RemoveChild($p)
