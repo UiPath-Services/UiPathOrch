@@ -39,7 +39,7 @@ The -Name and -Path parameters support tab completion. -Name completion is dynam
 Primary Endpoint: GET /odata/ProcessSchedules({processScheduleId})
 Secondary endpoint: GET /odata/ProcessSchedules({id})/UiPath.Server.Configuration.OData.GetRobotIdsForSchedule for ExecutorRobots.
 
-OAuth required scopes: OR.Execution or OR.Execution.Read
+OAuth required scopes: OR.Jobs or OR.Jobs.Read
 
 Required permissions: ProcessSchedules.View
 

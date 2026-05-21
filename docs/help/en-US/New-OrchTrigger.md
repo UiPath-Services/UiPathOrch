@@ -49,7 +49,7 @@ This cmdlet supports ShouldProcess. Use -WhatIf to preview what would be created
 
 Primary Endpoint: POST /odata/ProcessSchedules
 
-OAuth required scopes: OR.Execution
+OAuth required scopes: OR.Jobs or OR.Jobs.Write
 
 Required permissions: Schedules.Create
 

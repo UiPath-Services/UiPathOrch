@@ -38,7 +38,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/ProcessSchedules
 
-OAuth required scopes: OR.Execution
+OAuth required scopes: OR.Jobs or OR.Jobs.Write
 
 Required permissions: Schedules.Create (at destination)
 

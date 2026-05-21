@@ -36,7 +36,7 @@ The -Name and -Path parameters support tab completion. The -Name completion dyna
 
 Primary Endpoint: POST /odata/Assets/UiPath.Server.Configuration.OData.ShareToFolders
 
-OAuth required scopes: OR.Assets
+OAuth required scopes: OR.Assets or OR.Assets.Write
 
 Required permissions: Assets.Edit
 

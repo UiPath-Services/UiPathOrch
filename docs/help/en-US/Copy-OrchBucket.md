@@ -42,7 +42,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/Buckets
 
-OAuth required scopes: OR.Administration
+OAuth required scopes: OR.Administration or OR.Administration.Write
 
 Required permissions: Buckets.View (source), Buckets.Create (destination)
 

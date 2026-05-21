@@ -38,7 +38,7 @@ The -Path parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see 
 
 Primary Endpoint: POST /odata/Users({userId})/UiPath.Server.Configuration.OData.UpdateCurrentUserURPassword
 
-OAuth required scopes: OR.Users
+OAuth required scopes: OR.Users or OR.Users.Write
 
 Required permissions: None (the user can update their own unattended robot password)
 

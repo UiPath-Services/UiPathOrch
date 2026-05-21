@@ -42,7 +42,7 @@ The -Name, -ExcludedDate, and -Path parameters support tab completion. Press [Ct
 
 Primary Endpoint: GET /odata/Calendars, GET /odata/Calendars({calendarId}), POST /odata/Calendar, PUT /odata/Calendars({calendarId})
 
-OAuth required scopes: OR.Settings
+OAuth required scopes: OR.Settings or OR.Settings.Read
 
 Required permissions: Settings.Create Settings.Edit
 

@@ -39,7 +39,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/Folders({folderId})/UiPath.Server.Configuration.OData.RemoveUserFromFolder
 
-OAuth required scopes: OR.Folders
+OAuth required scopes: OR.Folders or OR.Folders.Write
 
 Required permissions: (Units.Edit or SubFolders.Edit - Remove user from any folder or only if caller has SubFolders.Edit permission on provided folder)
 

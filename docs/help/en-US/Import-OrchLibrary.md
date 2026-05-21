@@ -34,7 +34,7 @@ Progress is displayed during multi-file imports. The cmdlet supports -WhatIf and
 
 Primary Endpoint: POST /odata/Libraries/UiPath.Server.Configuration.OData.UploadPackage
 
-OAuth required scopes: OR.Execution
+OAuth required scopes: OR.Execution or OR.Execution.Write
 
 Required permissions: Libraries.Create
 

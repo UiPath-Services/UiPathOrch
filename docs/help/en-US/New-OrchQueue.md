@@ -44,7 +44,7 @@ When specifying the -Path parameter, place it immediately after the cmdlet name.
 
 Primary Endpoint: POST /odata/QueueDefinitions
 
-OAuth required scopes: OR.Queues
+OAuth required scopes: OR.Queues or OR.Queues.Write
 
 Required permissions: Queues.Create
 

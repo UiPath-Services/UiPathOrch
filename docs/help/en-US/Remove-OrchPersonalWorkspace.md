@@ -36,7 +36,7 @@ After removal, the folder cache and personal workspace cache are cleared automat
 
 Primary Endpoint: GET /odata/PersonalWorkspaces, DELETE /odata/Folders({folderId})
 
-OAuth required scopes: OR.Folders
+OAuth required scopes: OR.Folders or OR.Folders.Read
 
 Required permissions: Units.View, (Units.Delete or SubFolders.Delete - Deletes any folder or only if user has SubFolders.Delete permission on the provided folder)
 

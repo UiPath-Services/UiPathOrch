@@ -38,7 +38,7 @@ The -UserName and -Path parameters support tab completion. Press [Ctrl+Space] or
 
 Primary Endpoint: GET /odata/Users, PUT /odata/Users({userId})
 
-OAuth required scopes: OR.Users
+OAuth required scopes: OR.Users or OR.Users.Read
 
 Required permissions: Users.View, Users.Edit
 

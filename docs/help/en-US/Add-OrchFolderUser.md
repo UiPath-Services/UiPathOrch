@@ -40,7 +40,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/Folders/UiPath.Server.Configuration.OData.AssignDomainUser
 
-OAuth required scopes: OR.Folders
+OAuth required scopes: OR.Folders or OR.Folders.Write
 
 Required permissions: (Units.Edit or SubFolders.Edit - Assigns domain user to any folder or only if user has SubFolders.Edit permission on all folders provided)
 

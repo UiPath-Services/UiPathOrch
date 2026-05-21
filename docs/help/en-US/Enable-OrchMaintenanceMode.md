@@ -37,7 +37,7 @@ The -MachineName, -HostMachineName, -ServiceUserName, and -SessionId parameters 
 
 Primary Endpoint: POST /odata/Sessions/UiPath.Server.Configuration.OData.SetMaintenanceMode
 
-OAuth required scopes: OR.Robots
+OAuth required scopes: OR.Robots or OR.Robots.Write
 
 Required permissions: Machines.Edit
 

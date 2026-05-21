@@ -40,7 +40,7 @@ This cmdlet supports ShouldProcess. Use -WhatIf to preview which files would be 
 
 Primary Endpoint: POST /odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetWriteUri
 
-OAuth required scopes: OR.Administration
+OAuth required scopes: OR.Administration or OR.Administration.Write
 
 Required permissions: Buckets.View and BlobFiles.Create
 

@@ -49,7 +49,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/Releases
 
-OAuth required scopes: OR.Execution
+OAuth required scopes: OR.Execution or OR.Execution.Write
 
 Required permissions: Processes.Create
 

@@ -41,7 +41,7 @@ Roles are tenant-scoped entities. Use the -Path parameter to specify different O
 
 Primary Endpoint: POST /odata/Roles (new) or PUT /odata/Roles({roleId}) (update)
 
-OAuth required scopes: OR.Users
+OAuth required scopes: OR.Users or OR.Users.Write
 
 Required permissions: Roles.View, Roles.Create (new) or Roles.Edit (update)
 

@@ -40,7 +40,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/TestSets
 
-OAuth required scopes: OR.TestSets
+OAuth required scopes: OR.TestSets or OR.TestSets.Write
 
 Required permissions: TestSets.Create (destination), TestSets.View (source)
 

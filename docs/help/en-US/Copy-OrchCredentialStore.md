@@ -38,7 +38,7 @@ Credential stores are tenant-scoped entities. Use the -Path parameter to specify
 
 Primary Endpoint: POST /odata/CredentialStores
 
-OAuth required scopes: OR.Settings
+OAuth required scopes: OR.Settings or OR.Settings.Write
 
 Required permissions: Settings.View (source) and Settings.Create (destination)
 

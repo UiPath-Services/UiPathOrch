@@ -36,7 +36,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: GET /odata/ExecutionMedia
 
-OAuth required scopes: OR.Execution or OR.Execution.Read
+OAuth required scopes: OR.Monitoring or OR.Monitoring.Read
 
 Required permissions: ExecutionMedia.View
 

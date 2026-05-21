@@ -36,7 +36,7 @@ If a package with the same Id and version already exists in the destination fold
 
 Primary Endpoint: POST /odata/Processes/UiPath.Server.Configuration.OData.UploadPackage
 
-OAuth required scopes: OR.Execution
+OAuth required scopes: OR.Execution or OR.Execution.Write
 
 Required permissions: (Packages.Create - Uploads a package to a Tenant Feed) and (FolderPackages.Create - Uploads a package to a Folder Feed)
 

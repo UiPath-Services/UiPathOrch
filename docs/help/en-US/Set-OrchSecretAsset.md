@@ -60,7 +60,7 @@ The -Name, -UserName, -MachineName, -CredentialStore, and -Path parameters suppo
 
 Primary Endpoint: POST /odata/Assets, PUT /odata/Assets({asset.Id})
 
-OAuth required scopes: OR.Assets
+OAuth required scopes: OR.Assets or OR.Assets.Write
 
 Required permissions: Assets.Create, Assets.Edit
 

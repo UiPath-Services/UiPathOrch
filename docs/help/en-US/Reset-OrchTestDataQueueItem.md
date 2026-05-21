@@ -36,7 +36,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /api/TestDataQueueActions/SetAllItemsConsumed
 
-OAuth required scopes: OR.TestDataQueues
+OAuth required scopes: OR.TestDataQueues or OR.TestDataQueues.Write
 
 Required permissions: TestDataQueueItems.Edit
 

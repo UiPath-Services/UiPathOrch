@@ -41,7 +41,7 @@ The -Name, -Type, -Scope, -AutomationType, -TargetFramework, -RobotUsers, and -P
 
 Primary Endpoint: POST /odata/Machines
 
-OAuth required scopes: OR.Machines
+OAuth required scopes: OR.Machines or OR.Machines.Write
 
 Required permissions: Machines.Create
 

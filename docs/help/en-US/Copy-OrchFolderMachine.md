@@ -38,7 +38,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/Folders/UiPath.Server.Configuration.OData.UpdateMachinesToFolderAssociations
 
-OAuth required scopes: OR.Folders
+OAuth required scopes: OR.Folders or OR.Folders.Write
 
 Required permissions: Units.Edit or SubFolders.Edit (on both source and destination folders)
 

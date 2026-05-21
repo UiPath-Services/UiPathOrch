@@ -39,7 +39,7 @@ This cmdlet supports ShouldProcess. Use -WhatIf to preview which buckets would b
 
 Primary Endpoint: POST /odata/Buckets
 
-OAuth required scopes: OR.Administration
+OAuth required scopes: OR.Administration or OR.Administration.Write
 
 Required permissions: Buckets.Create
 

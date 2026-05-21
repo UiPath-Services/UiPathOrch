@@ -38,7 +38,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/TestDataQueues
 
-OAuth required scopes: OR.TestDataQueues
+OAuth required scopes: OR.TestDataQueues or OR.TestDataQueues.Write
 
 Required permissions: TestDataQueues.View (source) and TestDataQueues.Create (destination)
 

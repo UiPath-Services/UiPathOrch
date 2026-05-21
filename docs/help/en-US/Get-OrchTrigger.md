@@ -40,7 +40,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: GET /odata/ProcessSchedules, GET /odata/ProcessSchedules({processScheduleId})
 
-OAuth required scopes: OR.Execution or OR.Execution.Read
+OAuth required scopes: OR.Jobs or OR.Jobs.Read
 
 Required permissions: Schedules.View
 

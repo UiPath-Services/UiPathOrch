@@ -42,7 +42,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/QueueDefinitions
 
-OAuth required scopes: OR.Queues
+OAuth required scopes: OR.Queues or OR.Queues.Write
 
 Required permissions: Queues.View (source), Queues.Create (destination)
 

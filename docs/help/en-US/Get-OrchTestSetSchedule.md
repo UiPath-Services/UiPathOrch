@@ -38,7 +38,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: GET /odata/TestSetSchedules
 
-OAuth required scopes: OR.TestSetExecutions or OR.TestSetExecutions.Read
+OAuth required scopes: OR.TestSetSchedules or OR.TestSetSchedules.Read
 
 Required permissions: TestSetExecutions.View
 
