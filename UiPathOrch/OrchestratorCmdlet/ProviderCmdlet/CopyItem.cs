@@ -1147,6 +1147,64 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
     }
 
+    // Result of FindDstUser's pure-logic resolver (see ResolveDstUserPure).
+    // Lets the IO wrapper emit the right warning per case without re-checking.
+    internal enum FindDstUserResult
+    {
+        Found,                  // dstUser is non-null AND assigned to the target folder
+        NotFound,               // no matching user in dstUsers (by name or email)
+        NotAssignedToFolder,    // matched a user but they're not on newFolder's assigned-users list
+    }
+
+    // Pure name-resolution + folder-assignment check. Extracted from FindDstUser
+    // so the matching policy is unit-testable without standing up a real
+    // OrchDriveInfo / OrchAPISession / AuthManager. The IO wrapper below does
+    // the cache fetch / cache-clear retry / warning emission.
+    //
+    // Matching order (preserved from the original implementation):
+    //   1. UserMappingCsv lookup -- if userMapping[srcUser.UserName] exists
+    //      and is non-empty, use the mapped name as searchName; otherwise
+    //      searchName = srcUser.UserName.
+    //   2. Case-insensitive UserName match against dstUsers.
+    //   3. Case-insensitive UserName-equals-srcUser.EmailAddress match
+    //      against dstUsers (only when allowEmailFallback is true).
+    //   4. If a user is found, verify their Id is in assignedFolderUserIds;
+    //      if not, return (user, NotAssignedToFolder) -- the caller should
+    //      treat the user as unusable on this folder.
+    internal static (Entities.User? user, FindDstUserResult result) ResolveDstUserPure(
+        Entities.User srcUser,
+        IEnumerable<Entities.User> dstUsers,
+        Dictionary<string, string>? userMapping,
+        HashSet<long> assignedFolderUserIds,
+        bool allowEmailFallback = true)
+    {
+        string searchName = srcUser.UserName ?? "";
+        if (userMapping is not null
+            && userMapping.TryGetValue(searchName, out var mapped)
+            && !string.IsNullOrEmpty(mapped))
+        {
+            searchName = mapped;
+        }
+
+        var dstUser = dstUsers.FirstOrDefault(u =>
+            string.Equals(u.UserName, searchName, StringComparison.OrdinalIgnoreCase));
+
+        if (dstUser is null && allowEmailFallback && !string.IsNullOrEmpty(srcUser.EmailAddress))
+        {
+            dstUser = dstUsers.FirstOrDefault(u =>
+                string.Equals(u.UserName, srcUser.EmailAddress, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (dstUser is null) return (null, FindDstUserResult.NotFound);
+
+        if (dstUser.Id is null || !assignedFolderUserIds.Contains(dstUser.Id.Value))
+        {
+            return (dstUser, FindDstUserResult.NotAssignedToFolder);
+        }
+
+        return (dstUser, FindDstUserResult.Found);
+    }
+
     // TODO: Is this implementation incomplete? Need to search the directory for users.
     // The current implementation only searches local users.
     internal static Entities.User? FindDstUser(IWritableHost _this,
@@ -1155,7 +1213,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         Dictionary<string, string>? userMapping = null)
     {
         if (srcUserId is null || srcUserId == 0) return null;
-        //string msg = $"Migrating the user id {Path.Combine(srcDrive.NameColon, srcUserId?.ToString() ?? "")}";
         try
         {
             var srcUser = srcDrive.Users.Get().FirstOrDefault(u => u.Id == srcUserId);
@@ -1165,54 +1222,59 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 return null;
             }
 
-            // Name resolution via UserMappingCsv
-            string searchName = srcUser.UserName!;
-            if (userMapping is not null && userMapping.TryGetValue(srcUser.UserName!, out var mappedName)
+            // Folder assignment fetch is auth-protected and the same on both
+            // attempts, so fetch once outside the retry loop.
+            var assignedFolderUserIds = dstDrive.FolderUsersWithInherited.Get(newFolder)
+                .Where(ur => ur?.UserEntity?.Id is not null)
+                .Select(ur => ur.UserEntity!.Id!.Value)
+                .ToHashSet();
+
+            // First attempt: try name match, then email fallback against the
+            // currently-cached dstUsers list.
+            var (dstUser, result) = ResolveDstUserPure(
+                srcUser, dstDrive.Users.Get(), userMapping, assignedFolderUserIds,
+                allowEmailFallback: true);
+
+            // Retry once after clearing the tenant user cache. This handles the
+            // case where AssignDirectoryUser was just called in CopyFolderUsers
+            // and the cached user list is stale. Email fallback is intentionally
+            // NOT repeated on this pass -- preserves the original asymmetric
+            // behaviour (questionable but we don't want to change semantics
+            // silently during the extract-pure-logic refactor).
+            if (result == FindDstUserResult.NotFound)
+            {
+                dstDrive.Users.ClearCache();
+                (dstUser, result) = ResolveDstUserPure(
+                    srcUser, dstDrive.Users.Get(), userMapping, assignedFolderUserIds,
+                    allowEmailFallback: false);
+            }
+
+            // Re-compute the search name (cheap) for the warning messages.
+            string searchName = srcUser.UserName ?? "";
+            if (userMapping is not null
+                && userMapping.TryGetValue(searchName, out var mappedName)
                 && !string.IsNullOrEmpty(mappedName))
             {
                 searchName = mappedName;
             }
 
-            var dstUsers = dstDrive.Users.Get();
-            var dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, searchName, StringComparison.OrdinalIgnoreCase) == 0);
-            if (dstUser is null)
+            switch (result)
             {
-                // User not found! Try searching by email as well.
-                dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, srcUser.EmailAddress, StringComparison.OrdinalIgnoreCase) == 0);
-            }
+                case FindDstUserResult.NotFound:
+                    _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have user with Name = '{searchName}'.");
+                    return null;
 
-            if (dstUser is null)
-            {
-                // If AssignDirectoryUser was already executed in CopyFolderUsers,
-                // the tenant user cache may be stale, so clear it and retry
-                dstDrive.Users.ClearCache();
-                dstUsers = dstDrive.Users.Get();
-                dstUser = dstUsers.FirstOrDefault(u => string.Compare(u.UserName, searchName, StringComparison.OrdinalIgnoreCase) == 0);
-            }
+                case FindDstUserResult.NotAssignedToFolder:
+                    // Without this check, the cmdlet would PUT a per-Robot UserValue
+                    // with a UserId that the destination folder doesn't own; the
+                    // server returns 200 but silently drops the UserValue (and can
+                    // wipe the asset's Global Value as a side effect).
+                    _this.WriteWarning($"{msg}: A user with the name '{searchName}' is not assigned in '{newFolder.GetPSPath()}'.");
+                    return null;
 
-            if (dstUser is null)
-            {
-                _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have user with Name = '{searchName}'.");
-                return null;
+                default:
+                    return dstUser;
             }
-
-            // Verify the resolved user is actually assigned to the destination folder.
-            // Without this check, the cmdlet would PUT a per-Robot UserValue with a UserId
-            // that the destination folder doesn't own; the server returns 200 but silently
-            // drops the UserValue (and can wipe the asset's Global Value as a side effect).
-            // Mirrors FindDstMachine's FolderMachinesAssigned-scoped lookup; emits a
-            // WriteWarning rather than WriteError so the surrounding caller can continue
-            // with the remaining UserValues (the per-User one is dropped, not the whole asset).
-            var assignedUserIds = dstDrive.FolderUsersWithInherited.Get(newFolder)
-                .Where(ur => ur?.UserEntity?.Id is not null)
-                .Select(ur => ur.UserEntity!.Id!.Value)
-                .ToHashSet();
-            if (dstUser.Id is null || !assignedUserIds.Contains(dstUser.Id!.Value))
-            {
-                _this.WriteWarning($"{msg}: A user with the name '{searchName}' is not assigned in '{newFolder.GetPSPath()}'.");
-                return null;
-            }
-            return dstUser;
         }
         catch (Exception ex)
         {
