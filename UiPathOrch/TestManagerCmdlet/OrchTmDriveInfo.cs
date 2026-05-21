@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core;
 
-public class OrchTmDriveInfo : OrchPSDriveInfoBase
+public class OrchTmDriveInfo : OrchDriveInfoBase
 {
     // Test tenant entities
     // The number indicates the parameter count of the getter method (in OrchAPISession.cs)
@@ -25,7 +25,7 @@ public class OrchTmDriveInfo : OrchPSDriveInfoBase
     public IncrementalCachePerProject<string, TmTestExecutionResult> TmTestExecutionResults = null!;
 
 
-    // _allTenantCache / _allFolderCache live on OrchPSDriveInfoBase; cache
+    // _allTenantCache / _allFolderCache live on OrchDriveInfoBase; cache
     // instances declared above register themselves via the inherited members.
 
     private OrchDriveInfo? _parentDrive;
@@ -82,7 +82,7 @@ public class OrchTmDriveInfo : OrchPSDriveInfoBase
     internal override string? PartitionGlobalId => ParentDrive.PartitionGlobalId;
 
     // NameColon / NameColonSeparator / RootFolder / ClearAllCache live on
-    // OrchPSDriveInfoBase. The base implementation of ClearAllCache iterates
+    // OrchDriveInfoBase. The base implementation of ClearAllCache iterates
     // _allTenantCache and _allFolderCache, which is all Tm needs.
 
     // At the time this constructor runs, NameColonSeparator is not yet available

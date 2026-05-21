@@ -15,7 +15,7 @@ using User = UiPath.PowerShell.Entities.User;
 
 namespace UiPath.PowerShell.Core;
 
-public partial class OrchDriveInfo : OrchPSDriveInfoBase
+public partial class OrchDriveInfo : OrchDriveInfoBase
 {
     internal readonly PSDrive _psDrive;
 
@@ -102,7 +102,7 @@ public partial class OrchDriveInfo : OrchPSDriveInfoBase
     public override void ClearTenantCache()
     {
         // Registry-driven part (cache instances iterate themselves) lives on
-        // OrchPSDriveInfoBase. The block below is the Orchestrator-specific
+        // OrchDriveInfoBase. The block below is the Orchestrator-specific
         // tenant-level extras that the shadow drives (Du / Tm) do not need.
         // These are all tenant-scoped (tenant identity, folder catalog,
         // PmApiDeprecated, org-shared SearchPmDirectoryCache) so they fire on
@@ -914,7 +914,7 @@ public partial class OrchDriveInfo : OrchPSDriveInfoBase
     public readonly SingleCachePerOrganization<LicenseInventory> PmLicenseInventory;
     public readonly SingleCachePerOrganization<AccountLicense> PmLicenseContract;
 
-    // _allTenantCache / _allFolderCache live on OrchPSDriveInfoBase; cache
+    // _allTenantCache / _allFolderCache live on OrchDriveInfoBase; cache
     // instances declared below register themselves via the inherited members.
 
     // Non-indexed tenant entities

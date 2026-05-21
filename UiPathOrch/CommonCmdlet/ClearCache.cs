@@ -105,7 +105,7 @@ public class ClearCacheCmdlet : PSCmdlet
         // No -Path: dispatch by current location
         if (Path is null || Path.Length == 0)
         {
-            if (SessionState.Path.CurrentLocation.Drive is OrchPSDriveInfoBase currentDrive)
+            if (SessionState.Path.CurrentLocation.Drive is OrchDriveInfoBase currentDrive)
             {
                 if (currentDrive.IsAuthenticated) ClearDriveAll(currentDrive);
             }
@@ -221,20 +221,20 @@ public class ClearCacheCmdlet : PSCmdlet
     // the drive prefix + SessionState.Drive.Get for the lookup. Used as the
     // gate that lets us run IsAuthenticated before doing any work that
     // would otherwise round-trip through the provider stack.
-    private OrchPSDriveInfoBase? TryGetDriveForPath(string pathSpec)
+    private OrchDriveInfoBase? TryGetDriveForPath(string pathSpec)
     {
         if (string.IsNullOrEmpty(pathSpec)) return null;
         var colonIdx = pathSpec.IndexOf(':');
         if (colonIdx <= 0)
         {
             // No colon: relative path -- belongs to the current drive.
-            return SessionState.Path.CurrentLocation.Drive as OrchPSDriveInfoBase;
+            return SessionState.Path.CurrentLocation.Drive as OrchDriveInfoBase;
         }
 
         var driveName = pathSpec.Substring(0, colonIdx);
         try
         {
-            return SessionState.Drive.Get(driveName) as OrchPSDriveInfoBase;
+            return SessionState.Drive.Get(driveName) as OrchDriveInfoBase;
         }
         catch
         {
@@ -258,7 +258,7 @@ public class ClearCacheCmdlet : PSCmdlet
         }
     }
 
-    private void ClearDriveAll(OrchPSDriveInfoBase drive)
+    private void ClearDriveAll(OrchDriveInfoBase drive)
     {
         // NameColon ("Orch1:") matches the drive-only -Path form the user
         // typed. Using NameColonSeparator ("Orch1:\") here would print the
@@ -282,7 +282,7 @@ public class ClearCacheCmdlet : PSCmdlet
         }
     }
 
-    private void ClearDriveTenant(OrchPSDriveInfoBase drive)
+    private void ClearDriveTenant(OrchDriveInfoBase drive)
     {
         if (ShouldProcess(drive.NameColonSeparator, "Clear Tenant Cache"))
         {

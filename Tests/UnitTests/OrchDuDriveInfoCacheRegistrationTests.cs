@@ -25,7 +25,7 @@ public class OrchDuDriveInfoCacheRegistrationTests
 {
     [Theory]
     // The Du* duplicates were retired in the 1.5.0 cache refactor — DU entities
-    // now use the universal cache classes (which take OrchPSDriveInfoBase).
+    // now use the universal cache classes (which take OrchDriveInfoBase).
     // The DuListCachePerProject<T> form survives because there is no universal
     // PerProject scope yet; Phase 5 of the refactor will fold it into a
     // generalized PerFolder<string,...> shape.

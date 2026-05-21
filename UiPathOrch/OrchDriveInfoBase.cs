@@ -16,11 +16,11 @@ namespace UiPath.PowerShell.Core;
 // Orchestrator-specific extra cleanup (tenant identity reset etc.).
 //
 // Adding this base also unlocks cache-class consolidation: ctors that took a
-// family-specific drive type can now take OrchPSDriveInfoBase, removing the
+// family-specific drive type can now take OrchDriveInfoBase, removing the
 // Du* / Tm* duplicates of the universal cache classes (see Phase 2+).
-public abstract class OrchPSDriveInfoBase : PSDriveInfo
+public abstract class OrchDriveInfoBase : PSDriveInfo
 {
-    protected OrchPSDriveInfoBase(
+    protected OrchDriveInfoBase(
         string name,
         ProviderInfo provider,
         string root,

@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Core;
 // Until the 1.5.0 cache refactor, this file also mirrored ListCachePerTenant /
 // ListCachePerOrganization / KeyedListCachePerOrganization as Du*-prefixed
 // classes; those were retired when the universal classes were generalized to
-// accept OrchPSDriveInfoBase. Only DuListCachePerProject remains, because there
+// accept OrchDriveInfoBase. Only DuListCachePerProject remains, because there
 // is no universal "PerProject" scope yet -- Phase 5 of the refactor will fold
 // it into a generalized PerFolder<string, ...> shape.
 

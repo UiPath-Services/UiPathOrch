@@ -19,7 +19,7 @@ public interface IFolderCacheClearable
 public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
 {
     private readonly object _lock = new();
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
     // volatile + publish-after-init: ensures readers on weakly-ordered CPUs (e.g. ARM/Apple Silicon)
     // never observe a non-null _cache that points at a partially-initialized object.
     private volatile T? _cache = null;
@@ -27,7 +27,7 @@ public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
     private readonly Func<T?> getter;
     private readonly Action<T>? initializer;
 
-    public SingleCachePerTenant(OrchPSDriveInfoBase drive, Func<T?> getter, Action<T>? initializer = null)
+    public SingleCachePerTenant(OrchDriveInfoBase drive, Func<T?> getter, Action<T>? initializer = null)
     {
         _drive = drive;
         _drive._allTenantCache.Add(this);
@@ -84,13 +84,13 @@ public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
 public class ListCachePerTenant<T> : ITenantCacheClearable
 {
     private readonly object _lock = new();
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
     private volatile List<T>? _cache = null;
     private readonly ExceptionCachePerTenant _exception = new();
     private readonly Func<IEnumerable<T>> getter;
     private readonly Action<T>? initializer;
 
-    public ListCachePerTenant(OrchPSDriveInfoBase drive, Func<IEnumerable<T>> getter, Action<T>? initializer = null)
+    public ListCachePerTenant(OrchDriveInfoBase drive, Func<IEnumerable<T>> getter, Action<T>? initializer = null)
     {
         _drive = drive;
         _drive._allTenantCache.Add(this);
@@ -148,7 +148,7 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
 // This represents the cache of unique entities across all organizations.
 public class ListCachePerOrganization<T> : ITenantCacheClearable
 {
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
     private static readonly ConcurrentDictionary<string, List<T>> _cache = [];
     private static readonly ExceptionsCachePer<string> _exception = new(); // Holds per-org exceptions
     // Per-partition lock for the list fetch path. Same partition → same lock
@@ -175,7 +175,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
     private static readonly ExceptionsCachePer<(string partitionGlobalId, string id)> _exceptionDetailed = new(); // Holds per (org, id) exceptions
 
     public ListCachePerOrganization(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<string, IEnumerable<T>> getter,
         Action<T>? initializer = null,
         Func<T, string?>? getterId = null,
@@ -361,7 +361,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 // This represents the cache of a single entity shared across the entire organization.
 public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : class
 {
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
 
     // Cache per organization (static = shared across all drive instances)
     private static readonly ConcurrentDictionary<string, T> _cache = [];
@@ -375,7 +375,7 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
     private readonly Action<T>? _initializer;
 
     public SingleCachePerOrganization(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<string, T?> getter,
         Action<T>? initializer = null)
     {
@@ -444,7 +444,7 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
 public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearable where TIndexEntity : notnull
 {
     private readonly object _lock = new();
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
 
     // key: TIndexEntity.Id
     private volatile ConcurrentDictionary<Int64, TEntity?>? _cache = null;
@@ -456,7 +456,7 @@ public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearabl
     private readonly int? _supportedApiVersionFrom;
 
     public IndexedCachePerTenant(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<Int64, TEntity?> fetchFunc,
         Func<TIndexEntity, Int64> getIdFunc,
         Func<TIndexEntity, string> getNameFunc,
@@ -544,7 +544,7 @@ public class KeyedListCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     where TKey : notnull, IEquatable<TKey>
 {
     private readonly object _lock = new();
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
 
     private volatile ConcurrentDictionary<TKey, List<TEntity>>? _cache = null;
     private readonly ExceptionsCachePer<TKey> _exceptions = new();
@@ -554,7 +554,7 @@ public class KeyedListCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     private readonly int? _supportedApiVersionFrom;
 
     public KeyedListCachePerTenant(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<TKey, IEnumerable<TEntity>> fetchFunc,
         Action<TEntity, TKey>? initializer = null,
         IEqualityComparer<TKey>? keyComparer = null,
@@ -666,7 +666,7 @@ public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     where TKey : notnull, IEquatable<TKey>
 {
     private readonly object _lock = new();
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
 
     private volatile ConcurrentDictionary<TKey, TEntity?>? _cache = null;
     private readonly ExceptionsCachePer<TKey> _exceptions = new();
@@ -676,7 +676,7 @@ public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     private readonly int? _supportedApiVersionFrom;
 
     public KeyedSingleCachePerTenant(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<TKey, TEntity?> fetchFunc,
         Action<TEntity, TKey>? initializer = null,
         IEqualityComparer<TKey>? keyComparer = null,
@@ -804,13 +804,13 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
     // every fetch across all orgs, which was correct but unnecessarily coarse.
     private static readonly ConcurrentDictionary<string, object> _partitionLocks = new();
 
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
     private readonly Func<string, TKey, TEntity?> _fetchFunc;
     private readonly Action<TEntity, TKey>? _initializer;
     private readonly int? _supportedApiVersionFrom;
 
     public KeyedSingleCachePerOrganization(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<string, TKey, TEntity?> fetchFunc,
         Action<TEntity, TKey>? initializer = null,
         IEqualityComparer<TKey>? keyComparer = null,
@@ -908,13 +908,13 @@ public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearabl
     // Per-partition lock — see KeyedSingleCachePerOrganization.
     private static readonly ConcurrentDictionary<string, object> _partitionLocks = new();
 
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
     private readonly Func<string, TKey, IEnumerable<TEntity>> _fetchFunc;
     private readonly Action<TEntity, TKey>? _initializer;
     private readonly int? _supportedApiVersionFrom;
 
     public KeyedListCachePerOrganization(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<string, TKey, IEnumerable<TEntity>> fetchFunc,
         Action<TEntity, TKey>? initializer = null,
         IEqualityComparer<TKey>? keyComparer = null,
@@ -1011,7 +1011,7 @@ public class KeyedSingleCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     where TKey : notnull, IEquatable<TKey>
 {
     private readonly object _lock = new();
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
 
     // Outer dict: folderId -> inner dict (key -> entity).
     private volatile ConcurrentDictionary<Int64, ConcurrentDictionary<TKey, TEntity?>>? _cache = null;
@@ -1022,7 +1022,7 @@ public class KeyedSingleCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     private readonly int? _supportedApiVersionFrom;
 
     public KeyedSingleCachePerFolder(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<Int64, TKey, TEntity?> fetchFunc,
         Action<TEntity, string, TKey>? initializer = null,
         IEqualityComparer<TKey>? keyComparer = null,
@@ -1125,7 +1125,7 @@ public class KeyedListCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     where TKey : notnull, IEquatable<TKey>
 {
     private readonly object _lock = new();
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
 
     // Outer dict: folderId -> inner dict (key -> list of entities).
     private volatile ConcurrentDictionary<Int64, ConcurrentDictionary<TKey, List<TEntity>>>? _cache = null;
@@ -1136,7 +1136,7 @@ public class KeyedListCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     private readonly int? _supportedApiVersionFrom;
 
     public KeyedListCachePerFolder(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<Int64, TKey, IEnumerable<TEntity>> fetchFunc,
         Action<TEntity, string, TKey>? initializer = null,
         IEqualityComparer<TKey>? keyComparer = null,
@@ -1242,7 +1242,7 @@ public class KeyedListCachePerFolder<TKey, TEntity> : IFolderCacheClearable
 public class SingleCachePerFolder<T> : IFolderCacheClearable
 {
     private readonly object _lock = new();
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
     private volatile ConcurrentDictionary<Int64, T?>? _cache = null;
     private readonly ExceptionsCachePer<Int64> _exceptions = new();
     private readonly Func<Int64?, T?> _getter;
@@ -1250,7 +1250,7 @@ public class SingleCachePerFolder<T> : IFolderCacheClearable
     private readonly int? _supportedApiVersionFrom;
 
     public SingleCachePerFolder(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<Int64?, T?> getter,
         Action<T, string>? initializer = null,
         int? supportedApiVersionFrom = null)
@@ -1323,7 +1323,7 @@ public class SingleCachePerFolder<T> : IFolderCacheClearable
 public class ListCachePerFolder<T> : IFolderCacheClearable
 {
     private readonly object _lock = new();
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
     private volatile ConcurrentDictionary<Int64, List<T>>? _cache = null;
     private readonly ExceptionsCachePer<Int64> _exceptions = new();
     private readonly Func<Int64, IEnumerable<T>> _getter;
@@ -1331,7 +1331,7 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
     private readonly int? _supportedApiVersionFrom;
 
     public ListCachePerFolder(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<Int64, IEnumerable<T>> getter,
         Action<T, string>? initializer = null,
         int? supportedApiVersionFrom = null)
@@ -1416,7 +1416,7 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
 public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClearable where TIndexEntity : notnull
 {
     private readonly object _lock = new();
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
 
     // 1st key: folderId
     // 2nd key: TIndexEntity.Id
@@ -1437,7 +1437,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
     private readonly int? _supportedApiVersionFrom;
 
     public IndexedListCachePerFolder(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<Int64, TIndexEntity, IEnumerable<TEntity>> fetchFunc,
         Func<TIndexEntity, Int64> getIdFunc,
         Func<TIndexEntity, string> getNameFunc,
@@ -1551,7 +1551,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     where TKey : notnull
 {
     private readonly object _lock = new();
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
 
     // 1st key: folderId, 2nd key: entityKey
     private volatile ConcurrentDictionary<Int64, ConcurrentDictionary<TKey, TEntity>>? _cache = null;
@@ -1570,7 +1570,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     private readonly Action<TEntity, TEntity?>? _mergeFunc;
 
     public IncrementalCachePerFolder(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<Int64, string?, ulong, ulong, string?, bool, IEnumerable<TEntity>> fetchFunc,
         Func<TEntity, TKey?> getKeyFunc,
         Action<TEntity, string>? initializer = null,
@@ -1731,7 +1731,7 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     where TKey : notnull
 {
     private readonly object _lock = new();
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
 
     private volatile ConcurrentDictionary<TKey, TEntity>? _cache = null;
     private readonly ExceptionCachePerTenant _exception = new();
@@ -1749,7 +1749,7 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     private readonly Action<TEntity, TEntity?>? _mergeFunc;
 
     public IncrementalCachePerTenant(
-        OrchPSDriveInfoBase drive,
+        OrchDriveInfoBase drive,
         Func<string?, ulong, ulong, IEnumerable<TEntity>> fetchFunc,
         Func<TEntity, TKey?> getKeyFunc,
         Action<TEntity, string>? initializer = null,
@@ -1875,11 +1875,11 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 /// </summary>
 public class RobotLogsCache : IFolderCacheClearable
 {
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
     private readonly object _lock = new();
     private volatile ConcurrentDictionary<long, ConcurrentBag<Log>>? _cache = null;
 
-    public RobotLogsCache(OrchPSDriveInfoBase drive)
+    public RobotLogsCache(OrchDriveInfoBase drive)
     {
         _drive = drive;
         _drive._allFolderCache.Add(this);

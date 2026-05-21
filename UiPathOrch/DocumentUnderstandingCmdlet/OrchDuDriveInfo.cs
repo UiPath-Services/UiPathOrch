@@ -6,9 +6,9 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core;
 
-public class OrchDuDriveInfo : OrchPSDriveInfoBase
+public class OrchDuDriveInfo : OrchDriveInfoBase
 {
-    // _allTenantCache / _allFolderCache live on OrchPSDriveInfoBase; cache
+    // _allTenantCache / _allFolderCache live on OrchDriveInfoBase; cache
     // instances declared below register themselves via the inherited members.
 
     // Org-scoped: shared across all drives in the same org (partitionGlobalId
@@ -77,7 +77,7 @@ public class OrchDuDriveInfo : OrchPSDriveInfoBase
     internal override string? PartitionGlobalId => ParentDrive.PartitionGlobalId;
 
     // NameColon / NameColonSeparator / RootFolder / ClearAllCache live on
-    // OrchPSDriveInfoBase. The base implementation of ClearAllCache iterates
+    // OrchDriveInfoBase. The base implementation of ClearAllCache iterates
     // _allTenantCache and _allFolderCache, which is all DU needs.
 
     // At the time this constructor runs, NameColonSeparator is not yet available

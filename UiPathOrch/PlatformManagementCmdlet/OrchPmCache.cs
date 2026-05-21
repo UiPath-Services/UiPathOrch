@@ -29,7 +29,7 @@ public class PmGroupMembersCache : ITenantCacheClearable
 {
     private const int ChunkSize = 20;
 
-    private readonly OrchPSDriveInfoBase _drive;
+    private readonly OrchDriveInfoBase _drive;
 
     // Shared static storage keyed by (partitionGlobalId, kind, name). null value
     // = "API confirmed this name has no member" (negative caching).
@@ -37,7 +37,7 @@ public class PmGroupMembersCache : ITenantCacheClearable
     private static readonly ExceptionsCachePer<string> _exceptions = new();
     private static readonly object _lock = new();
 
-    public PmGroupMembersCache(OrchPSDriveInfoBase drive)
+    public PmGroupMembersCache(OrchDriveInfoBase drive)
     {
         _drive = drive;
         _drive._allTenantCache.Add(this);
