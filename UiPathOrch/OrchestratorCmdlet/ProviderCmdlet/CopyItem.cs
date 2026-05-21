@@ -7,6 +7,134 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core;
 
+// =============================================================================
+// CopyItem.cs -- Copy-Item provider implementation for UiPathOrch drives
+// =============================================================================
+//
+// The Copy-Item cmdlet on an Orch drive (or DU / Tm shadow drive) delegates
+// here when both source and destination resolve to folders or sub-paths of
+// folders. The implementation walks the folder tree and, for each folder,
+// copies every kind of entity it can find: folder users / machines, buckets,
+// packages, processes, assets, queues, triggers, API triggers, test sets,
+// test schedules, test data queues, action catalogs. Within a folder the
+// stages are sequential because they have dependencies (buckets before
+// processes, packages before triggers, etc.); subfolders are recursed when
+// -Recurse is passed.
+//
+// Per-entity-kind Copy methods are intentionally long. Each one has its own
+// destination-lookup rules (by name / by id / per-folder vs per-tenant), its
+// own "if a matching entity already exists at the destination, link instead
+// of duplicating" path (Link* methods), and its own field-massaging
+// (zero out server-managed ids and timestamps, replace masked secret values
+// with "!!!PLEASE UPDATE!!!" placeholders, remap role / user / machine ids
+// via the FindDst* lookup family).
+//
+// Errors are funnelled through IWritableHost.WriteError; the cmdlet does
+// NOT throw to the pipeline, so a single bad entity doesn't abort the whole
+// Copy-Item operation. The wide `catch (Exception ex)` pattern is therefore
+// intentional throughout this file -- each catch logs and continues.
+//
+// -----------------------------------------------------------------------------
+// Method directory (search by name to navigate -- line numbers shift)
+// -----------------------------------------------------------------------------
+//
+// Cross-cutting helpers
+//   GetRelativeDstFolder       resolve dst folder mirroring src-relative path
+//   CreatePmGroup              thin wrapper that catches + reports group-create errors
+//   GetDirectChildFolders      filter direct children into a materialised List<>
+//                              (safe to mutate during enumeration)
+//
+// FindDst* (destination-entity lookup; return null with WriteWarning if not found)
+//   FindDstBucket, FindDstPmGroups, FindDstCredentialStore, FindDstUser,
+//   FindDstRobot, FindDstRobotByUnattendedAccount, FindDstMachine,
+//   FindDstSession, FindDstQueue, FindDstRelease, FindDstCalendar,
+//   FindDstFolders, FindDstTestCase, FindDstTestSet
+//
+// Folder copy
+//   CopyFolder                 create or reuse dst folder (appends
+//                              " - Copy" / " - Copy (N)" on same-parent copy)
+//
+// Folder-scoped role / user / machine
+//   FindDstRoles               name-lookup roles in dst tenant; filters out
+//                              "Inherited" / "Tenant" types
+//   CopyFolderUsers            per-folder user assignment + role migration
+//                              + optional UserMappingCsv name resolution
+//   AssignMyselfToFolder       ensure operator has Folder Administrator role on dst
+//   UnassignMyselfAtNewFolder  inverse (currently disabled at call site -- see
+//                              comment in CopyItemRecurse)
+//   CopyFolderMachines         per-folder machine assignment (Unattended / Robot)
+//
+// Package / Process
+//   CopyPackages               per-folder + tenant packages, version-aware upload
+//   CopyProcesses              Releases, with argument values rewritten through
+//                              Bucket / Queue / CredentialStore / Asset link
+//                              redirection
+//
+// Asset
+//   LinkAsset                  short-circuit: link to an existing dst asset
+//                              if a matching one is reachable via shared folders
+//   CopyAssets                 create the asset; handle Credential / Secret
+//                              value placeholders ("!!!PLEASE UPDATE!!!");
+//                              migrate UserValues with FindDstUser / FindDstMachine
+//
+// Queue
+//   LinkQueue                  short-circuit (counterpart of LinkAsset)
+//   CopyQueueItem              (currently unused stub)
+//   CopyQueues                 queue defs with retention settings
+//
+// Robot id migration helpers
+//   MigrateExecutorRobots      remap RobotIds in a process's RobotExecutor[]
+//   MigrateMachineRobots       remap RobotIds in a machine's MachineRobotSession[]
+//
+// Trigger
+//   CopyTriggers               ProcessSchedule (cron / Queue trigger),
+//                              retargeted to dst Release
+//   CopyApiTriggers            ApiTrigger (HTTP-invoked process)
+//
+// Bucket
+//   LinkBucket                 short-circuit (counterpart of LinkAsset / LinkQueue)
+//   CopyBuckets                bucket defs only; bucket contents are managed
+//                              by the underlying storage account and are NOT copied
+//
+// Test Manager
+//   CopyTestSets               test sets, retargeted to dst Releases / TestCases
+//   CopyTestDataQueueItems     per-queue items
+//   CopyTestSetSchedules
+//   CopyTestDataQueues
+//
+// Actions
+//   CopyActionCatalogs         action catalog definitions
+//
+// Link-path FQN math (LinkAsset / Queue / Bucket support)
+//   ComputeDstFqn              map src link target FQN to dst, anchored on
+//                              src / dst root mismatch
+//   WalkUp                     string surgery: ascend N path levels by
+//                              trimming "/x" suffixes
+//
+// Cmdlet entry / orchestration
+//   CopyItemRecurse            main recursive driver (13 stages per folder)
+//   CopyItemDynamicParameters  attaches -ExcludeEntities / -UserMappingCsv
+//   ShouldCopyTenantEntities   ShouldProcess gate for the root -> root
+//                              tenant-entity copy at the start of CopyItem
+//   CopyItem                   PSDriveProvider CopyItem entry point
+//
+// -----------------------------------------------------------------------------
+// Audit notes
+// -----------------------------------------------------------------------------
+//
+// * `catch (Exception ex)` blocks (~66 in this file) are intentional --
+//   they convert exceptions into WriteError + continue so the broader copy
+//   doesn't abort on one bad entity. Add a more specific catch only when
+//   you have a behavioural reason; widening / removing one of these will
+//   change failure semantics for the user.
+//
+// * TODOs in this file (grep "TODO:") flag spots where the author was
+//   unsure -- mostly version-gating (`// TODO: Is this version number
+//   correct?`) and resolver completeness (`// TODO: Is this implementation
+//   incomplete?`). They are diligence flags, not known defects.
+//
+// =============================================================================
+
 // Interface to handle Cmdlet class instances and CmdletProvider class instances uniformly.
 // Convenient to implement in subclasses of Cmdlet and CmdletProvider.
 public interface IWritableHost
