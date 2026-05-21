@@ -116,7 +116,7 @@ public class ResolveDstByNameTests
 
         var candidates = new[] { new Item("MyBucket") };
         var caseInsensitive = ResolveDstByName(candidates, "mybucket", c => c.Name);
-        var caseSensitive   = ResolveDstByName(candidates, "mybucket", c => c.Name, StringComparison.Ordinal);
+        var caseSensitive = ResolveDstByName(candidates, "mybucket", c => c.Name, StringComparison.Ordinal);
         Assert.NotNull(caseInsensitive);  // FindDstQueue / FindDstRelease / etc. mode
         Assert.Null(caseSensitive);       // FindDstBucket mode
     }
