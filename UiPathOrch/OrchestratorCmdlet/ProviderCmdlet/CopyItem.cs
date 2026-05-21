@@ -1438,19 +1438,68 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
     }
 
+    // Pure 3-tier session matching extracted from FindDstSession so the
+    // fallback chain is unit-testable. Original behaviour preserved verbatim,
+    // including the questionable bits (see asymmetries below).
+    //
+    // Match tiers, applied in order:
+    //   Tier 1 (primary): MachineName + HostMachineName + ServiceUserName
+    //     all match case-insensitively. Null fields are coerced to "".
+    //   Tier 2 (fallback A): MachineName + HostMachineName match
+    //     case-insensitively AND the dst's ServiceUserName is null/empty.
+    //     Useful when the dst session hasn't been assigned a service user yet.
+    //   Tier 3 (fallback B): MachineName + HostMachineName match only.
+    //     Loosest -- ignores ServiceUserName entirely.
+    //
+    // Preserved asymmetries (candidates for BugDiscovery):
+    //   * Tier 1 coerces null fields to "" before comparing
+    //     (string.Compare(s.X ?? "", srcX, ...)). Tiers 2 and 3 do NOT
+    //     coerce on the dst side (string.Compare(s.X, srcX, ...)). When a
+    //     dst session has a null field, Tier 1 sees it as ""-equals-srcX
+    //     but Tiers 2/3 see null-vs-srcX which Compare treats with null
+    //     ordering rules (null is less than any string). Different match
+    //     outcomes are possible across tiers for the same row.
+    //   * The wrapper (FindDstSession below) writes the "not found"
+    //     warning BEFORE attempting Tier 2/3 fallbacks. A successful
+    //     fallback resolution still leaves a misleading warning in the
+    //     user's output stream.
+    internal static MachineSessionRuntime? ResolveDstSessionPure(
+        IEnumerable<MachineSessionRuntime> dstSessions,
+        string srcMachineName,
+        string srcHostMachineName,
+        string srcServiceUserName)
+    {
+        // Tier 1: full triple match, null-coerced.
+        var dstSession = dstSessions.FirstOrDefault(s =>
+            string.Equals(s.MachineName ?? "", srcMachineName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(s.HostMachineName ?? "", srcHostMachineName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(s.ServiceUserName ?? "", srcServiceUserName, StringComparison.OrdinalIgnoreCase));
+        if (dstSession is not null) return dstSession;
+
+        // Tier 2: machine + host match, dst service user is empty.
+        // Intentionally NOT null-coercing dst-side fields here to preserve
+        // the original behaviour; see asymmetry note above.
+        dstSession = dstSessions.FirstOrDefault(s =>
+            string.Equals(s.MachineName, srcMachineName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(s.HostMachineName, srcHostMachineName, StringComparison.OrdinalIgnoreCase) &&
+            string.IsNullOrEmpty(s.ServiceUserName));
+        if (dstSession is not null) return dstSession;
+
+        // Tier 3: machine + host match only. Loosest.
+        return dstSessions.FirstOrDefault(s =>
+            string.Equals(s.MachineName, srcMachineName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(s.HostMachineName, srcHostMachineName, StringComparison.OrdinalIgnoreCase));
+    }
+
     internal static MachineSessionRuntime? FindDstSession(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcSessionId, string msg)
     {
         if (srcSessionId is null || srcSessionId.Value == 0) return null;
 
-        //string msg = $"Finding the session id with robot id {dstRobotId} and machine id {dstMachineId}";
         MachineSessionRuntime srcSession = null;
         try
         {
-            //string query = $"&$filter=((MachineType%20ne%20%27Template%27)%20or%20(MachineScope%20ne%20%27Cloud%27))%20and%20MachineId%20eq%20{dstMachineId}&runtimeType=Unattended&robotId={dstRobotId}";
-            //string query = $"&robotId={dstRobot.Id.Value}&MachineId%20eq%20{dstMachineFolder.Id}";
-
             // TODO: Changed this to use cache. Is it working correctly?
             var srcSessions = srcDrive.MachineSessionRuntimesByFolder.Fetch(srcFolder).ToList();
             srcSession = srcSessions.FirstOrDefault(s => s.SessionId == srcSessionId);
@@ -1473,27 +1522,24 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         try
         {
             var dstSessions = dstDrive.MachineSessionRuntimesByFolder.Fetch(dstFolder);
-            var dstSession = dstSessions.FirstOrDefault(s =>
-                string.Compare(s.MachineName ?? "", srcMachineName, StringComparison.OrdinalIgnoreCase) == 0 &&
-                string.Compare(s.HostMachineName ?? "", srcHostMachineName, StringComparison.OrdinalIgnoreCase) == 0 &&
-                string.Compare(s.ServiceUserName ?? "", srcServiceUserName, StringComparison.OrdinalIgnoreCase) == 0);
 
-            if (dstSession is null)
+            // Pre-flight check: if Tier 1 misses, emit a warning to surface
+            // the original (full-triple) match miss to the user, even if a
+            // looser fallback subsequently resolves. Preserved verbatim from
+            // the original implementation -- the warning timing is
+            // questionable (a Tier 2/3 success still leaves this warning in
+            // the user's output stream) but changing it would alter user-
+            // visible diagnostics during this extract-pure-logic refactor.
+            var tier1Hit = dstSessions.FirstOrDefault(s =>
+                string.Equals(s.MachineName ?? "", srcMachineName, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(s.HostMachineName ?? "", srcHostMachineName, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(s.ServiceUserName ?? "", srcServiceUserName, StringComparison.OrdinalIgnoreCase));
+            if (tier1Hit is null)
             {
-                //_this.WriteError(new ErrorRecord(new OrchException(dstFolder.GetPSPath(),
-                //    $"{msg}: The session not found with MachineName ='{srcMachineName}', HostMachineName = '{srcHostMachineName}' and ServiceUserName = '{srcServiceUserName}'."), "MigrateSessionIdError", ErrorCategory.InvalidOperation, dstFolder));
                 _this.WriteWarning($"\"{dstFolder.GetPSPath()}\": {msg}: The session not found with MachineName ='{srcMachineName}', HostMachineName = '{srcHostMachineName}' and ServiceUserName = '{srcServiceUserName}'.");
-
-                dstSession = dstSessions.FirstOrDefault(s =>
-                    string.Compare(s.MachineName, srcMachineName, StringComparison.OrdinalIgnoreCase) == 0 &&
-                    string.Compare(s.HostMachineName, srcHostMachineName, StringComparison.OrdinalIgnoreCase) == 0 &&
-                    string.IsNullOrEmpty(s.ServiceUserName));
-
-                dstSession ??= dstSessions.FirstOrDefault(s =>
-                        (string.Compare(s.MachineName, srcMachineName, StringComparison.OrdinalIgnoreCase) == 0 &&
-                        (string.Compare(s.HostMachineName, srcHostMachineName, StringComparison.OrdinalIgnoreCase) == 0)));
             }
-            return dstSession;
+
+            return ResolveDstSessionPure(dstSessions, srcMachineName, srcHostMachineName, srcServiceUserName);
         }
         catch (Exception ex)
         {
