@@ -20,8 +20,8 @@ Removes folder links from queues.
 ### __AllParameterSets
 
 ```
-Remove-OrchQueueLink [-Name] <string[]> [-Link] <string[]> [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchQueueLink [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Link] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

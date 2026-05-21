@@ -20,7 +20,7 @@ Gets the folder links of queues.
 ### __AllParameterSets
 
 ```
-Get-OrchQueueLink [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
+Get-OrchQueueLink [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
  [<CommonParameters>]
 ```
 

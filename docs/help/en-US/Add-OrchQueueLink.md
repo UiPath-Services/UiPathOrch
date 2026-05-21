@@ -20,8 +20,8 @@ Links queues to additional folders.
 ### __AllParameterSets
 
 ```
-Add-OrchQueueLink [-Name] <string[]> [-Link] <string[]> [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-OrchQueueLink [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Link] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

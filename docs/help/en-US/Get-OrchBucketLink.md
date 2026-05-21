@@ -20,7 +20,7 @@ Gets the folder links of buckets.
 ### __AllParameterSets
 
 ```
-Get-OrchBucketLink [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
+Get-OrchBucketLink [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
  [<CommonParameters>]
 ```
 

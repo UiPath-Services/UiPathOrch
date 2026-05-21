@@ -20,8 +20,8 @@ Removes folder links from assets.
 ### __AllParameterSets
 
 ```
-Remove-OrchAssetLink [-Name] <string[]> [-Link] <string[]> [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchAssetLink [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Link] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

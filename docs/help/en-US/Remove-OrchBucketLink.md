@@ -20,8 +20,8 @@ Removes folder links from buckets.
 ### __AllParameterSets
 
 ```
-Remove-OrchBucketLink [-Name] <string[]> [-Link] <string[]> [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchBucketLink [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Link] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

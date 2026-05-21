@@ -20,8 +20,8 @@ Links buckets to additional folders.
 ### __AllParameterSets
 
 ```
-Add-OrchBucketLink [-Name] <string[]> [-Link] <string[]> [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-OrchBucketLink [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Link] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
