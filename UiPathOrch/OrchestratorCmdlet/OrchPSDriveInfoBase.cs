@@ -48,7 +48,20 @@ public abstract class OrchPSDriveInfoBase : PSDriveInfo
     // singletons. OrchDriveInfo lazily initializes from JWT or API fallback;
     // OrchDuDriveInfo / OrchTmDriveInfo delegate to ParentDrive so they share
     // the same org identifier as the underlying Orch drive.
+    //
+    // Callers that must not trigger auth (e.g., Clear-OrchCache scanning every
+    // registered drive) should first gate on `IsAuthenticated` -- reading
+    // PartitionGlobalId on an unauthenticated drive would trigger the same
+    // PKCE / API fallback path used by data-fetch cmdlets.
     internal abstract string? PartitionGlobalId { get; }
+
+    // Auth-state probe that never triggers a token request. True iff the
+    // AuthManager already holds an access token from a prior cmdlet (or from
+    // a static AccessToken specified at drive creation that's been promoted
+    // into the AuthManager on first use). Safe for cmdlets like
+    // Clear-OrchCache that must enumerate registered drives without
+    // provoking PKCE on the ones the user hasn't authenticated yet.
+    internal bool IsAuthenticated => OrchAPISession.AuthManager.IsAuthenticated;
 
     private string? _NameColon;
     internal string NameColon
@@ -72,18 +85,40 @@ public abstract class OrchPSDriveInfoBase : PSDriveInfo
 
     protected internal Folder? RootFolder;
 
-    // Default registry-driven clear. OrchDriveInfo overrides to add the
-    // Orchestrator-specific cleanup (tenant identity reset, folder dictionaries,
-    // PmApiDeprecated flag) by calling base.ClearAllCache() first.
-    public virtual void ClearAllCache()
+    // Registry-driven clear for tenant-scoped cache instances (per-tenant +
+    // per-organization). Backs `Clear-OrchCache -Path orch1:\` semantics -- the
+    // root folder presentation surface is tenant entities, so "clear what's
+    // visible at root" is exactly the tenant cache set.
+    //
+    // OrchDriveInfo overrides to add the Orchestrator-specific tenant-level
+    // extras (tenant identity reset, folder dictionaries, PmApiDeprecated flag,
+    // SearchPmDirectoryCache) by calling base.ClearTenantCache() first.
+    public virtual void ClearTenantCache()
     {
         foreach (var cache in _allTenantCache)
         {
             cache.ClearCache();
         }
+    }
+
+    // Registry-driven clear for all folder-scoped cache instances (every
+    // cached folder on this drive). Backs `Clear-OrchCache -Path orch1:` and
+    // the no-args drive-level clear.
+    public virtual void ClearAllFolderCache()
+    {
         foreach (var cache in _allFolderCache)
         {
             cache.ClearCache();
         }
+    }
+
+    // Drive-level full clear: tenant + all folders. Backs `Clear-OrchCache
+    // -Path orch1:` and the no-args drive-level clear. The split into
+    // ClearTenantCache + ClearAllFolderCache lets the new Clear-OrchCache
+    // cmdlet dispatch by scope without re-implementing the iteration logic.
+    public void ClearAllCache()
+    {
+        ClearTenantCache();
+        ClearAllFolderCache();
     }
 }

@@ -99,12 +99,15 @@ public partial class OrchDriveInfo : OrchPSDriveInfoBase
     // public HashSet<Folder> _folderSetCache;
 
 
-    public override void ClearAllCache()
+    public override void ClearTenantCache()
     {
         // Registry-driven part (cache instances iterate themselves) lives on
         // OrchPSDriveInfoBase. The block below is the Orchestrator-specific
-        // extras that the shadow drives (Du / Tm) do not need.
-        base.ClearAllCache();
+        // tenant-level extras that the shadow drives (Du / Tm) do not need.
+        // These are all tenant-scoped (tenant identity, folder catalog,
+        // PmApiDeprecated, org-shared SearchPmDirectoryCache) so they fire on
+        // any clear that touches tenant scope (tenant-only or drive-level).
+        base.ClearTenantCache();
 
         if (_orchAPISession is not null)
         {
