@@ -165,6 +165,36 @@ public class ApiTriggerCmdletShapeTests
     }
 
     // ----- HttpTrigger entity-shape checks.
+    // ----- Server-required defaults: omitting any of Tags / MachineRobots /
+    // Slug from the POST body returns a generic 500 "An error has occurred."
+    // (yotsuda live verification 2026-05-21). Pinning the cmdlet source so
+    // a future refactor that drops the defaults trips here instead of in
+    // production. Tested by reflection on the source file because the
+    // defaults are set inside ProcessRecord — running ProcessRecord needs
+    // a live drive, which the unit-test project deliberately doesn't have.
+    [Fact]
+    public void NewApiTrigger_SourceDefaultsTagsMachineRobotsAndSlug()
+    {
+        var src = LocateSourceFile("OrchestratorCmdlet/ApiTriggerCmdlet/NewApiTrigger.cs");
+        var text = System.IO.File.ReadAllText(src);
+        Assert.Contains("Tags ??=", text);
+        Assert.Contains("MachineRobots", text);
+        Assert.Contains("Slug = newTrigger.Name", text);
+    }
+
+    private static string LocateSourceFile(string relPath)
+    {
+        var dir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = System.IO.Path.Combine(dir.FullName, "UiPathOrch", relPath.Replace('/', System.IO.Path.DirectorySeparatorChar));
+            if (System.IO.File.Exists(candidate)) return candidate;
+            dir = dir.Parent;
+        }
+        throw new System.IO.FileNotFoundException(
+            $"Source file '{relPath}' not found above " + System.AppContext.BaseDirectory);
+    }
+
     [Fact]
     public void HttpTrigger_HasRunAsCallerProperty()
     {

@@ -181,6 +181,24 @@ public class NewApiTriggerCmdlet : OrchestratorPSCmdlet
                 newTrigger.AssignStringIfNotNullOrEmpty(InputArguments, (t, v) => t.InputArguments = v);
 
                 newTrigger.MachineRobots = DeserializeMachineRobotSessions(this, drive, folder, target, MachineRobots);
+                // The server requires Tags, MachineRobots, and Slug to be
+                // present on the body, even when empty. Observed against
+                // POST /odata/HttpTriggers on yotsuda 2026-05-21: omitting
+                // any of the three returns a generic 500 "An error has
+                // occurred." (errorCode 0) with no useful message; the
+                // working UI payload always includes Tags=[],
+                // MachineRobots=[{}], and a non-empty Slug. Default the
+                // Slug to the trigger Name so the cmdlet stays usable
+                // without forcing every caller to invent one.
+                newTrigger.Tags ??= System.Array.Empty<Tag>();
+                if (newTrigger.MachineRobots is null || newTrigger.MachineRobots.Length == 0)
+                {
+                    newTrigger.MachineRobots = new[] { new MachineRobotSession() };
+                }
+                if (string.IsNullOrEmpty(newTrigger.Slug))
+                {
+                    newTrigger.Slug = newTrigger.Name;
+                }
 
                 // Resolve Release name -> ReleaseKey (HttpTrigger uses
                 // ReleaseKey, not ReleaseId).
