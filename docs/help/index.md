@@ -1,6 +1,6 @@
 ---
 title: Cmdlet Reference
-nav_order: 2
+nav_order: 9
 has_children: true
 permalink: /help/
 ---
@@ -18,7 +18,7 @@ UiPathOrch exports cmdlets across four API surfaces:
 
 Use the **search box** at the top of the page to jump straight to a cmdlet, or browse the alphabetical list in the sidebar.
 
-For a categorized walkthrough grouped by topic (User Management, Job Management, Triggers, etc.), see the [topic-organized cmdlet reference on GitHub](https://github.com/UiPath-Services/UiPathOrch/blob/master/Staging/Docs/02-CmdletReference.md).
+For a categorized walkthrough grouped by topic (User Management, Job Management, Triggers, etc.), see [Cmdlets by Topic]({{ '/cmdlets-by-topic/' | relative_url }}).
 
 From a PowerShell session:
 

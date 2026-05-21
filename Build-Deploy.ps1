@@ -17,7 +17,7 @@ $ErrorActionPreference = 'Stop'
 $projectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 $csprojPath  = Join-Path $projectRoot 'UiPathOrch\UiPathOrch.csproj'
 $buildOutput = Join-Path $projectRoot 'UiPathOrch\bin\Release\net8.0'
-$stagingDocs = Join-Path $projectRoot 'Staging\Docs'
+$docsSource  = Join-Path $projectRoot 'docs'
 $modulePath  = Join-Path $env:ProgramFiles 'PowerShell\7\Modules\UiPathOrch'
 
 $dllName = 'UiPathOrch.dll'
@@ -80,13 +80,13 @@ foreach ($func in $funcFiles) {
     Copy-Item $func.FullName $dst -Force
 }
 
-# Deploy Docs (01, 02, 03 .md files)
+# Deploy Docs (NN-*.md files; excludes Jekyll _config.yml/index.md/help/)
 $docsDir = Join-Path $modulePath 'Docs'
 if (-not (Test-Path $docsDir)) {
     New-Item -ItemType Directory -Path $docsDir | Out-Null
 }
 
-$docFiles = Get-ChildItem $stagingDocs -Filter '*.md' | Sort-Object Name
+$docFiles = Get-ChildItem $docsSource -Filter '??-*.md' | Sort-Object Name
 foreach ($doc in $docFiles) {
     $dst = Join-Path $docsDir $doc.Name
     Write-Host "  Doc: $($doc.FullName) -> $dst"

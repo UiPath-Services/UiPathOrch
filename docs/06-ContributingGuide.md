@@ -1,3 +1,9 @@
+---
+title: Contributing
+nav_order: 8
+permalink: /contributing/
+---
+
 # UiPathOrch Module - Contributing Guide
 
 - [Overview](#overview)
@@ -177,7 +183,8 @@ mkdir $devDir -Force
 Copy-Item UiPathOrch\bin\Release\net8.0\UiPathOrch.dll $devDir -Force
 Copy-Item Staging\UiPathOrch.psd1, Staging\UiPathOrch.psm1, Staging\UiPathOrch.Format.ps1xml $devDir -Force
 Copy-Item Staging\Functions $devDir\Functions -Recurse -Force
-Copy-Item Staging\Docs $devDir\Docs -Recurse -Force
+mkdir $devDir\Docs -Force | Out-Null
+Get-ChildItem docs\??-*.md | Copy-Item -Destination $devDir\Docs -Force
 
 # Import the dev build (overrides the released module in this session)
 Import-Module $devDir\UiPathOrch.psd1 -Force

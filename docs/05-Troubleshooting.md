@@ -1,3 +1,9 @@
+---
+title: Troubleshooting
+nav_order: 7
+permalink: /troubleshooting/
+---
+
 # UiPathOrch Module - Troubleshooting Guide
 
 - [Overview](#overview)

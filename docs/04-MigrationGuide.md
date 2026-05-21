@@ -1,3 +1,9 @@
+---
+title: Migration & Copy
+nav_order: 6
+permalink: /migration/
+---
+
 # UiPathOrch Module - Migration & Copy Guide
 
 - [Getting Started](#getting-started)

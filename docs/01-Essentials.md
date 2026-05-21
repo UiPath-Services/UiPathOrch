@@ -1,3 +1,9 @@
+---
+title: Essentials for AI
+nav_order: 3
+permalink: /essentials/
+---
+
 # UiPathOrch Module - Essential Guide for AI
 
 - [Critical AI Execution Rules](#critical-ai-execution-rules)

@@ -1,3 +1,9 @@
+---
+title: Cmdlets by Topic
+nav_order: 4
+permalink: /cmdlets-by-topic/
+---
+
 # UiPathOrch Module - Cmdlet Reference
 
 1. [Utility and Configuration](#1-utility-and-configuration)

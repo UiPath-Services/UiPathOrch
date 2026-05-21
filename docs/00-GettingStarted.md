@@ -1,3 +1,9 @@
+---
+title: Getting Started
+nav_order: 2
+permalink: /getting-started/
+---
+
 # UiPathOrch Module - Getting Started
 
 - [Overview](#overview)

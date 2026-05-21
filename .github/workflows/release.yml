@@ -113,7 +113,7 @@ jobs:
             Copy-Item (Join-Path 'Staging' $f) $stage
           }
           Get-ChildItem 'Staging/Functions/*.ps1' | Copy-Item -Destination (Join-Path $stage 'Functions')
-          Get-ChildItem 'Staging/Docs/*.md'       | Copy-Item -Destination (Join-Path $stage 'Docs')
+          Get-ChildItem 'docs/??-*.md'            | Copy-Item -Destination (Join-Path $stage 'Docs')
           Get-ChildItem 'Staging/Examples/*.ps1'  | Copy-Item -Destination (Join-Path $stage 'Examples')
 
           # Mirror Build-Help.ps1's Step 4 (deploy) verbatim — iterate every XML file
