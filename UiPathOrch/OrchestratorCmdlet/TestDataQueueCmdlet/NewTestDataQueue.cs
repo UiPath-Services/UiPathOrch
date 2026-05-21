@@ -44,6 +44,12 @@ public class NewTestDataQueueCmdlet : OrchestratorPSCmdlet
 
                 newQueue.AssignStringIfNotNullOrEmpty(Description, (q, v) => q.Description = v);
                 newQueue.AssignStringIfNotNullOrEmpty(ContentJsonSchema, (q, v) => q.ContentJsonSchema = v);
+                // Server requires ContentJsonSchema; the empty JSON-schema
+                // "{}" is "any value", the right default for a queue that
+                // shouldn't constrain item shape. Live verification
+                // 2026-05-21: omitting the field returns 400 "The
+                // ContentJsonSchema field is required.".
+                newQueue.ContentJsonSchema ??= "{}";
 
                 if (ShouldProcess(target, "New TestDataQueue"))
                 {

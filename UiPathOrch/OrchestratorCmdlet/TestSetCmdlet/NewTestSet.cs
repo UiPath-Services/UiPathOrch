@@ -9,6 +9,15 @@ namespace UiPath.PowerShell.Commands;
 //
 // Minimum-viable surface: Name + Description + Enabled + Path. The
 // wrapped server endpoint is POST-only; there is no Set-/Update- yet.
+//
+// KNOWN LIMITATION (verified against yotsuda tenant 2026-05-21):
+// Calling this cmdlet barebones returns server 400 "Test Set is empty.
+// It should have at least one package and one test case." (errorCode 3204).
+// Producing a real TestSet requires Packages[] and TestCases[] which aren't
+// yet exposed as parameters here — pipe a complete TestSet from
+// Copy-OrchTestSet (which has the full payload from the source folder)
+// rather than constructing one standalone. Standalone-creation parameter
+// expansion is tracked as follow-up work for a later release.
 [Cmdlet(VerbsCommon.New, "OrchTestSet", SupportsShouldProcess = true)]
 [OutputType(typeof(TestSet))]
 public class NewTestSetCmdlet : OrchestratorPSCmdlet
