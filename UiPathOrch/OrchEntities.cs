@@ -2896,6 +2896,10 @@ public class HttpTrigger : TriggerBase
     public string? Secret { get; set; }
     public string? CallbackMode { get; set; }
     public bool? AllowInsecureSsl { get; set; }
+    // Observed in browser dev-tools POST/PUT /odata/HttpTriggers payloads
+    // (yotsuda tenant 2026-05-21). Boolean; null on legacy v0 captures.
+    public bool? RunAsCaller { get; set; }
+    public string? Key { get; set; }
 }
 
 public class ApiTrigger : TriggerBase

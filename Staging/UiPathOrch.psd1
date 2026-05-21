@@ -268,6 +268,8 @@ CmdletsToExport = @(
 'Test-OrchTrigger',
 
 'Get-OrchApiTrigger',
+'New-OrchApiTrigger',
+'Update-OrchApiTrigger',
 'Remove-OrchApiTrigger',
 'Copy-OrchApiTrigger',
 'Enable-OrchApiTrigger',
@@ -291,6 +293,7 @@ CmdletsToExport = @(
 'Remove-OrchQueueItem',
 
 'Get-OrchTestSet',
+'New-OrchTestSet',
 'Copy-OrchTestSet',
 'Remove-OrchTestSet',
 'Start-OrchTestSet',
@@ -304,12 +307,14 @@ CmdletsToExport = @(
 'Stop-OrchTestSetExecution',
 
 'Get-OrchTestSetSchedule',
+'New-OrchTestSetSchedule',
 'Copy-OrchTestSetSchedule',
 'Remove-OrchTestSetSchedule',
 'Enable-OrchTestSetSchedule',
 'Disable-OrchTestSetSchedule',
 
 'Get-OrchTestDataQueue',
+'New-OrchTestDataQueue',
 'Copy-OrchTestDataQueue',
 'Remove-OrchTestDataQueue',
 
@@ -349,6 +354,7 @@ CmdletsToExport = @(
 'Get-OrchUpdateSetting',
 
 'Get-OrchActionCatalog',
+'New-OrchActionCatalog',
 'Copy-OrchActionCatalog',
 'Remove-OrchActionCatalog',
 

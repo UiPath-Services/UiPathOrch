@@ -157,6 +157,20 @@ internal class AuditLogActionItems : IStaticCandidates
     ];
 }
 
+// Mixed-case values match the wire format observed in browser dev-tools
+// captures (POST /odata/HttpTriggers ... "Method": "Get"). All-caps
+// strings would round-trip through the server but read back as "Get" on
+// fetch, so use the canonical casing throughout.
+internal class HttpMethodItems : IStaticCandidates
+{
+    public static string[] Items { get; } = ["Get", "Post", "Put", "Delete", "Patch"];
+}
+
+internal class HttpCallingModeItems : IStaticCandidates
+{
+    public static string[] Items { get; } = ["AsyncRequestReply", "FireAndForget"];
+}
+
 internal class BucketOptionsItems : IStaticCandidates
 {
     public static string[] Items { get; } = ["ReadOnly", "AuditReadAccess"];

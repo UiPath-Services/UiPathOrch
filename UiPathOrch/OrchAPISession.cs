@@ -2426,6 +2426,19 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<HttpTrigger>(HttpMethod.Post, "/odata/HttpTriggers", folderId, trigger);
     }
 
+    // Confirmed against browser dev-tools capture (yotsuda tenant 2026-05-21):
+    //   PUT /odata/HttpTriggers({id})   id is the string GUID HttpTrigger.Id
+    // The server returns no entity body on PUT, so callers should re-fetch
+    // via GetHttpTrigger if they need the updated state.
+    public void UpdateHttpTrigger(Int64 folderId, HttpTrigger trigger)
+    {
+        if (string.IsNullOrEmpty(trigger.Id))
+        {
+            throw new ArgumentException("HttpTrigger.Id (GUID string) must be set for PUT.", nameof(trigger));
+        }
+        HttpRequest(HttpMethod.Put, $"/odata/HttpTriggers({trigger.Id})", folderId, trigger);
+    }
+
     public void RemoveHttpTrigger(Int64 folderId, string triggerId)
     {
         // nothing returns
@@ -3180,9 +3193,10 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<TestSet>(HttpMethod.Get, $"/odata/TestSets({testSetId})/UiPath.Server.Configuration.OData.GetForEdit()", folderId);
     }
 
-    public void CreateTestSet(Int64 folderId, TestSet testSet)
+    public TestSet? CreateTestSet(Int64 folderId, TestSet testSet)
     {
         string body = HttpRequest(HttpMethod.Post, "/odata/TestSets", folderId, testSet);
+        return JsonSerializer.Deserialize<TestSet>(body);
     }
 
     public void RemoveTestSet(Int64 folderId, Int64 testSetId)
