@@ -20,7 +20,7 @@ Gets the web settings from Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchWebSetting [[-Key] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchWebSetting [-Path <string[]>] [[-Key] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

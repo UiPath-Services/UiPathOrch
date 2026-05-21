@@ -20,7 +20,7 @@ Gets credential stores from Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchCredentialStore [[-Name] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchCredentialStore [-Path <string[]>] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

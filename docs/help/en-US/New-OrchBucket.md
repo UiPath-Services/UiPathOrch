@@ -20,10 +20,11 @@ Creates a new storage bucket in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-New-OrchBucket [[-Name] <string[]>] [-Description <string>] [-StorageProvider <string>]
- [-StorageParameters <string>] [-StorageContainer <string>] [-CredentialStore <string>]
- [-Password <string>] [-Options <string[]>] [-ExternalName <string>] [-Tags <string[]>]
- [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+New-OrchBucket [-Path <string[]>] [[-Name] <string[]>] [-Confirm]
+ [-CredentialStore <string>] [-Description <string>] [-ExternalName <string>]
+ [-Options <string[]>] [-Password <string>] [-StorageContainer <string>]
+ [-StorageParameters <string>] [-StorageProvider <string>] [-Tags <string[]>] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

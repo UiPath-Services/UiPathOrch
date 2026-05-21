@@ -20,8 +20,8 @@ Enables personal workspace for a user on UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Enable-OrchPersonalWorkspace [-UserName] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Enable-OrchPersonalWorkspace [-Path <string[]>] [-UserName] <string[]> [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

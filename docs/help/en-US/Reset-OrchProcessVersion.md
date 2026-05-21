@@ -20,8 +20,8 @@ Rolls back the process to its previous package version.
 ### __AllParameterSets
 
 ```
-Reset-OrchProcessVersion [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Reset-OrchProcessVersion [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

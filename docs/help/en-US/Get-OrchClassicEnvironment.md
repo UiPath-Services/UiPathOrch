@@ -20,8 +20,8 @@ Gets environments from classic folders.
 ### __AllParameterSets
 
 ```
-Get-OrchClassicEnvironment [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [<CommonParameters>]
+Get-OrchClassicEnvironment [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

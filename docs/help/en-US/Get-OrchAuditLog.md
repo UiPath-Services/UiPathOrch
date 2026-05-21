@@ -20,17 +20,17 @@ Gets the audit logs.
 ### Filter (Default)
 
 ```
-Get-OrchAuditLog [[-Last] <string>] [[-Component] <string[]>] [[-UserName] <string[]>]
- [[-Action] <string[]>] [-ExecutionTimeAfter <datetime>] [-ExecutionTimeBefore <datetime>]
- [-ExpandEntity] [-ExpandDetails] [-Skip <ulong>] [-First <ulong>] [-Path <string[]>]
- [<CommonParameters>]
+Get-OrchAuditLog [-Path <string[]>] [[-Last] <string>] [[-Component] <string[]>]
+ [[-UserName] <string[]>] [[-Action] <string[]>] [-ExecutionTimeAfter <datetime>]
+ [-ExecutionTimeBefore <datetime>] [-ExpandDetails] [-ExpandEntity] [-First <ulong>]
+ [-Skip <ulong>] [<CommonParameters>]
 ```
 
 ### Id
 
 ```
-Get-OrchAuditLog [-Id <string[]>] [-ExpandEntity] [-ExpandDetails] [-Skip <ulong>] [-First <ulong>]
- [-Path <string[]>] [<CommonParameters>]
+Get-OrchAuditLog [-Path <string[]>] [-ExpandDetails] [-ExpandEntity] [-First <ulong>]
+ [-Id <string[]>] [-Skip <ulong>] [<CommonParameters>]
 ```
 
 ## ALIASES

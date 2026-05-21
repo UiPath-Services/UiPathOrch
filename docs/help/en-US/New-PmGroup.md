@@ -20,7 +20,8 @@ Creates a new platform management group in a UiPath Automation Cloud organizatio
 ### __AllParameterSets
 
 ```
-New-PmGroup [-GroupName] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+New-PmGroup [-Path <string[]>] [-GroupName] <string[]> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

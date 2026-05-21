@@ -20,8 +20,8 @@ Copies credential stores to another Orchestrator tenant.
 ### __AllParameterSets
 
 ```
-Copy-OrchCredentialStore [-Name] <string[]> [-Destination] <string[]> [-Path <string>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Copy-OrchCredentialStore [-Path <string>] [-Name] <string[]> [-Destination] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

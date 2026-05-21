@@ -20,16 +20,17 @@ Updates process settings in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Update-OrchProcess [-Name] <string[]> [-NewName <string>] [-Description <string>]
- [-Version <string>] [-EntryPoint <string>] [-InputArguments <string>]
- [-SpecificPriorityValue <int>] [-Priority <string>] [-HiddenForAttendedUser <string>]
- [-RemoteControlAccess <string>] [-RetentionAction <string>] [-RetentionPeriod <int>]
- [-RetentionBucket <string>] [-StaleRetentionAction <string>] [-StaleRetentionPeriod <int>]
- [-StaleRetentionBucket <string>] [-ErrorRecordingEnabled <string>] [-Quality <int>]
- [-Frequency <int>] [-Duration <int>] [-AutoStartProcess <string>] [-AlwaysRunning <string>]
- [-A4R_Enabled <string>] [-A4R_HealingEnabled <string>] [-VideoRecordingType <string>]
- [-QueueItemVideoRecordingType <string>] [-MaxDurationSeconds <int>] [-Tags <string[]>]
- [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Update-OrchProcess [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-A4R_Enabled <string>] [-A4R_HealingEnabled <string>] [-AlwaysRunning <string>]
+ [-AutoStartProcess <string>] [-Confirm] [-Description <string>] [-Duration <int>]
+ [-EntryPoint <string>] [-ErrorRecordingEnabled <string>] [-Frequency <int>]
+ [-HiddenForAttendedUser <string>] [-InputArguments <string>] [-MaxDurationSeconds <int>]
+ [-NewName <string>] [-Priority <string>] [-Quality <int>]
+ [-QueueItemVideoRecordingType <string>] [-RemoteControlAccess <string>]
+ [-RetentionAction <string>] [-RetentionBucket <string>] [-RetentionPeriod <int>]
+ [-SpecificPriorityValue <int>] [-StaleRetentionAction <string>]
+ [-StaleRetentionBucket <string>] [-StaleRetentionPeriod <int>] [-Tags <string[]>]
+ [-Version <string>] [-VideoRecordingType <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

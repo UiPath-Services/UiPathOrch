@@ -20,16 +20,17 @@ Gets test case execution results from UiPath Orchestrator.
 ### ByName (Default)
 
 ```
-Get-OrchTestCaseExecution [[-TestSetExecutionName] <string>] [-Name <string[]>] [-Last <string>]
- [-StartTimeAfter <datetime>] [-StartTimeBefore <datetime>] [-Skip <ulong>] [-First <ulong>]
- [-Path <string[]>] [-Recurse] [-Depth <uint>] [<CommonParameters>]
+Get-OrchTestCaseExecution [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [[-TestSetExecutionName] <string>] [-First <ulong>] [-Last <string>] [-Name <string[]>]
+ [-Skip <ulong>] [-StartTimeAfter <datetime>] [-StartTimeBefore <datetime>]
+ [<CommonParameters>]
 ```
 
 ### ById
 
 ```
-Get-OrchTestCaseExecution -TestSetExecutionId <long> [-Name <string[]>] [-Path <string[]>]
- [-Recurse] [-Depth <uint>] [<CommonParameters>]
+Get-OrchTestCaseExecution [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name <string[]>]
+ -TestSetExecutionId <long> [<CommonParameters>]
 ```
 
 ## ALIASES

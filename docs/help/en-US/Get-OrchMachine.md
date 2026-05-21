@@ -20,8 +20,8 @@ Gets machines from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchMachine [[-Name] <string[]>] [-Path <string[]>] [-ExpandRobotUser] [-ExportCsv <string>]
- [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchMachine [-Path <string[]>] [[-Name] <string[]>] [-CsvEncoding <Encoding>]
+ [-ExpandRobotUser] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

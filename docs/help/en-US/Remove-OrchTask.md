@@ -20,13 +20,15 @@ Deletes action-center tasks by Id.
 ### FromCommandLine (Default)
 
 ```
-Remove-OrchTask [-Id] <long[]> [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchTask [-Path <string[]>] [-Id] <long[]> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ### FromPipeline
 
 ```
-Remove-OrchTask [-Task <OrchTask>] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchTask [-Path <string[]>] [-Confirm] [-Task <OrchTask>] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

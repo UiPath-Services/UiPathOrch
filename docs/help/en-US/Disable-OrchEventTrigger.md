@@ -20,8 +20,8 @@ Disables the event triggers.
 ### __AllParameterSets
 
 ```
-Disable-OrchEventTrigger [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Disable-OrchEventTrigger [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

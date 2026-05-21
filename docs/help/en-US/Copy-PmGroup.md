@@ -20,8 +20,8 @@ Copies platform management groups from one UiPath Automation Cloud organization 
 ### __AllParameterSets
 
 ```
-Copy-PmGroup [[-GroupName] <string[]>] [-Destination] <string[]> [-Path <string>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Copy-PmGroup [-Path <string>] [[-GroupName] <string[]>] [-Destination] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

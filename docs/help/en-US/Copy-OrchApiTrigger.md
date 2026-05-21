@@ -20,8 +20,8 @@ Copies the API triggers to a destination folder.
 ### __AllParameterSets
 
 ```
-Copy-OrchApiTrigger [-Name] <string[]> [-Destination] <string> [-Path <string>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchApiTrigger [-Path <string>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Destination] <string> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

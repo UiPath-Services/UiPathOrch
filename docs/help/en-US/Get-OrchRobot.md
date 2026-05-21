@@ -20,7 +20,7 @@ Gets robots auto-provisioned from users.
 ### __AllParameterSets
 
 ```
-Get-OrchRobot [[-FullName] <string[]>] [[-Username] <string[]>] [-Path <string[]>]
+Get-OrchRobot [-Path <string[]>] [[-FullName] <string[]>] [[-Username] <string[]>]
  [<CommonParameters>]
 ```
 

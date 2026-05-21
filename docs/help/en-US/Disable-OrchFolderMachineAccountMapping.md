@@ -20,8 +20,8 @@ Disables account-to-machine mappings in folders.
 ### __AllParameterSets
 
 ```
-Disable-OrchFolderMachineAccountMapping [-Name] <string[]> [[-UserName] <string[]>]
- [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Disable-OrchFolderMachineAccountMapping [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [-Name] <string[]> [[-UserName] <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

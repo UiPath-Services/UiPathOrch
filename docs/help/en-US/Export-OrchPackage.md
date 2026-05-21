@@ -20,8 +20,8 @@ Exports process packages from UiPath Orchestrator to local .nupkg files.
 ### __AllParameterSets
 
 ```
-Export-OrchPackage [-Id] <string[]> [[-Version] <string[]>] [[-Destination] <string>]
- [-Path <string[]>] [-Recurse] [-WhatIf] [-Confirm] [<CommonParameters>]
+Export-OrchPackage [-Path <string[]>] [-Recurse] [-Id] <string[]> [[-Version] <string[]>]
+ [[-Destination] <string>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

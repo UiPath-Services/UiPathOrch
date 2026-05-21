@@ -20,7 +20,7 @@ Gets licensed users from a UiPath Automation Cloud organization.
 ### __AllParameterSets
 
 ```
-Get-PmLicensedUser [[-Name] <string[]>] [[-Email] <string[]>] [-Path <string[]>]
+Get-PmLicensedUser [-Path <string[]>] [[-Name] <string[]>] [[-Email] <string[]>]
  [<CommonParameters>]
 ```
 

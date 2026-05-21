@@ -20,7 +20,7 @@ Gets action catalogs from Orchestrator folders.
 ### __AllParameterSets
 
 ```
-Get-OrchActionCatalog [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
+Get-OrchActionCatalog [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
  [<CommonParameters>]
 ```
 

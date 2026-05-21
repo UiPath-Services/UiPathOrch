@@ -20,12 +20,14 @@ Updates machine definitions in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Update-OrchMachine [-Name] <string[]> [-Description <string>] [-UnattendedSlots <int>]
- [-NonProductionSlots <int>] [-TestAutomationSlots <int>] [-AutomationType <string>]
- [-TargetFramework <string>] [-RobotUsers <string[]>] [-UpdatePolicyType <string>]
- [-UpdatePolicyVersion <string>] [-MaintenanceCron <string>] [-MaintenanceDuration <int>]
- [-MaintenanceEnabled <string>] [-MaintenanceTimeZone <string>] [-MaintenanceTimeZoneId <string>]
- [-Tags <string[]>] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Update-OrchMachine [-Path <string[]>] [-Name] <string[]> [-AutomationType <string>]
+ [-Confirm] [-Description <string>] [-MaintenanceCron <string>]
+ [-MaintenanceDuration <int>] [-MaintenanceEnabled <string>]
+ [-MaintenanceTimeZone <string>] [-MaintenanceTimeZoneId <string>]
+ [-NonProductionSlots <int>] [-RobotUsers <string[]>] [-Tags <string[]>]
+ [-TargetFramework <string>] [-TestAutomationSlots <int>] [-UnattendedSlots <int>]
+ [-UpdatePolicyType <string>] [-UpdatePolicyVersion <string>] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

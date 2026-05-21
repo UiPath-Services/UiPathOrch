@@ -20,8 +20,8 @@ Gets execution media recordings associated with jobs from Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchJobMedia [-Skip <ulong>] [-First <ulong>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [<CommonParameters>]
+Get-OrchJobMedia [-Path <string[]>] [-Recurse] [-Depth <uint>] [-First <ulong>]
+ [-Skip <ulong>] [<CommonParameters>]
 ```
 
 ## ALIASES

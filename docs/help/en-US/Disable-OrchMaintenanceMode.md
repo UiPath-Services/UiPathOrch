@@ -20,9 +20,9 @@ Disables maintenance mode on unattended sessions in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Disable-OrchMaintenanceMode [[-MachineName] <string[]>] [[-HostMachineName] <string[]>]
- [[-ServiceUserName] <string[]>] [[-SessionId] <long[]>] [-Force] [-Path <string[]>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Disable-OrchMaintenanceMode [-Path <string[]>] [[-MachineName] <string[]>]
+ [[-HostMachineName] <string[]>] [[-ServiceUserName] <string[]>] [[-SessionId] <long[]>]
+ [-Confirm] [-Force] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

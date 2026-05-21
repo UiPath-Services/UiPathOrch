@@ -20,8 +20,8 @@ Gets the users assigned to Document Understanding projects.
 ### __AllParameterSets
 
 ```
-Get-DuUser [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-ExportCsv <string>]
- [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-DuUser [-Path <string[]>] [-Recurse] [[-Name] <string[]>] [-CsvEncoding <Encoding>]
+ [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

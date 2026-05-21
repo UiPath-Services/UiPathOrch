@@ -20,8 +20,8 @@ Copies action catalogs to a destination folder.
 ### __AllParameterSets
 
 ```
-Copy-OrchActionCatalog [-Name] <string[]> [-Destination] <string> [-Path <string>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchActionCatalog [-Path <string>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Destination] <string> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

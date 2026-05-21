@@ -20,8 +20,8 @@ Copies triggers to another folder.
 ### __AllParameterSets
 
 ```
-Copy-OrchTrigger [-Name] <string[]> [-Destination] <string> [-Path <string>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchTrigger [-Path <string>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Destination] <string> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

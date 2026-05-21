@@ -20,8 +20,8 @@ Removes triggers from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchTrigger [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchTrigger [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

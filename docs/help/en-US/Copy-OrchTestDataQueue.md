@@ -20,8 +20,8 @@ Copies test data queues to a destination folder.
 ### __AllParameterSets
 
 ```
-Copy-OrchTestDataQueue [-Name] <string[]> [-Destination] <string> [-Path <string>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchTestDataQueue [-Path <string>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Destination] <string> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

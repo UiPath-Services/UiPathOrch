@@ -20,8 +20,8 @@ Moves folder user assignments from one folder to another.
 ### __AllParameterSets
 
 ```
-Move-OrchFolderUser [-UserName] <string[]> [[-Destination] <string[]>] [-KeepSource <string>]
- [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Move-OrchFolderUser [-Path <string[]>] [-UserName] <string[]> [[-Destination] <string[]>]
+ [-Confirm] [-KeepSource <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

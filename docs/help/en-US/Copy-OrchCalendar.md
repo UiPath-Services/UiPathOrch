@@ -20,8 +20,8 @@ Copies non-working days calendars to another Orchestrator instance.
 ### __AllParameterSets
 
 ```
-Copy-OrchCalendar [-Name] <string[]> [-Destination] <string[]> [-Path <string>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Copy-OrchCalendar [-Path <string>] [-Name] <string[]> [-Destination] <string[]> [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

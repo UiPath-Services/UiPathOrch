@@ -20,8 +20,8 @@ Gets platform management users from UiPath Automation Cloud organizations.
 ### __AllParameterSets
 
 ```
-Get-PmUser [[-Email] <string[]>] [-Path <string[]>] [-ExportCsv <string>] [-CsvEncoding <Encoding>]
- [<CommonParameters>]
+Get-PmUser [-Path <string[]>] [[-Email] <string[]>] [-CsvEncoding <Encoding>]
+ [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

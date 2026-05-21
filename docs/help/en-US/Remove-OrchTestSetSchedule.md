@@ -20,8 +20,8 @@ Removes test set schedules from Orchestrator folders.
 ### __AllParameterSets
 
 ```
-Remove-OrchTestSetSchedule [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchTestSetSchedule [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [-Name] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,9 +20,9 @@ Assigns roles to folder users in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Add-OrchRoleToFolderUser [[-UserName] <string[]>] [-Roles] <string[]> [-FullName <string[]>]
- [-Type <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Add-OrchRoleToFolderUser [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [[-UserName] <string[]>] [-Roles] <string[]> [-Confirm] [-FullName <string[]>]
+ [-Type <string[]>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

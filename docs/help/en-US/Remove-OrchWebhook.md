@@ -20,7 +20,8 @@ Removes webhooks from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchWebhook [-Name] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchWebhook [-Path <string[]>] [-Name] <string[]> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,8 +20,8 @@ Removes role assignments from users in a Document Understanding project.
 ### __AllParameterSets
 
 ```
-Remove-DuRoleFromDuUser [-Name] <string[]> [[-Roles] <string[]>] [-Path <string[]>] [-Recurse]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-DuRoleFromDuUser [-Path <string[]>] [-Recurse] [-Name] <string[]>
+ [[-Roles] <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

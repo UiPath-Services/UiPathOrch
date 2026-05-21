@@ -20,7 +20,7 @@ Gets external applications from UiPath Automation Cloud organizations.
 ### __AllParameterSets
 
 ```
-Get-PmExternalApplication [[-Name] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-PmExternalApplication [-Path <string[]>] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

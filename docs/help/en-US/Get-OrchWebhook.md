@@ -20,7 +20,7 @@ Gets webhooks from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchWebhook [[-Name] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchWebhook [-Path <string[]>] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,8 +20,8 @@ Removes processes from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchProcess [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchProcess [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

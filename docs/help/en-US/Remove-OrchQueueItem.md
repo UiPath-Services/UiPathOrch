@@ -20,8 +20,8 @@ Deletes queue items from a queue.
 ### __AllParameterSets
 
 ```
-Remove-OrchQueueItem [-Name] <string> [-Id] <long[]> [[-RowVersion] <string>] [-Path <string>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchQueueItem [-Path <string>] [-Name] <string> [-Id] <long[]>
+ [[-RowVersion] <string>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

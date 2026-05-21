@@ -20,7 +20,7 @@ Gets the process packages.
 ### __AllParameterSets
 
 ```
-Get-OrchPackage [[-Id] <string[]>] [-Path <string[]>] [-Recurse] [<CommonParameters>]
+Get-OrchPackage [-Path <string[]>] [-Recurse] [[-Id] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

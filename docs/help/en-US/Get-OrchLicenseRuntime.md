@@ -20,7 +20,7 @@ Gets runtime licenses.
 ### __AllParameterSets
 
 ```
-Get-OrchLicenseRuntime [[-RobotType] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchLicenseRuntime [-Path <string[]>] [[-RobotType] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

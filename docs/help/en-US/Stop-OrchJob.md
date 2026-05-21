@@ -20,8 +20,8 @@ Stops running jobs in UiPath Orchestrator.
 ### FromCommandLine (Default)
 
 ```
-Stop-OrchJob [-Id] <long[]> [-Job <Job>] [-Force] [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Stop-OrchJob [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Id] <long[]> [-Confirm]
+ [-Force] [-Job <Job>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

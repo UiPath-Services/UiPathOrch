@@ -20,8 +20,8 @@ Copies machine-to-folder assignments to a destination folder.
 ### __AllParameterSets
 
 ```
-Copy-OrchFolderMachine [-Name] <string[]> [-Destination] <string> [-Path <string>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchFolderMachine [-Path <string>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Destination] <string> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

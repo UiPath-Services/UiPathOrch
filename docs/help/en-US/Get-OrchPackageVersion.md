@@ -20,8 +20,8 @@ Gets the versions of process packages.
 ### __AllParameterSets
 
 ```
-Get-OrchPackageVersion [[-Id] <string[]>] [[-Version] <string[]>] [-Path <string[]>] [-Recurse]
- [<CommonParameters>]
+Get-OrchPackageVersion [-Path <string[]>] [-Recurse] [[-Id] <string[]>]
+ [[-Version] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

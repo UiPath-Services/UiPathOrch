@@ -20,8 +20,8 @@ Links assets to additional folders.
 ### __AllParameterSets
 
 ```
-Add-OrchAssetLink [-Name] <string[]> [-Link] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Add-OrchAssetLink [-Path <string[]>] [-Name] <string[]> [-Link] <string[]> [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

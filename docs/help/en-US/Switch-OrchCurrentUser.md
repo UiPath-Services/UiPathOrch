@@ -20,7 +20,7 @@ Switches the authenticated user on an Orch: drive by re-authenticating via an In
 ### __AllParameterSets
 
 ```
-Switch-OrchCurrentUser [[-Path] <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Switch-OrchCurrentUser [[-Path] <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

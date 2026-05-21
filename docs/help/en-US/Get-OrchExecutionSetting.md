@@ -20,8 +20,8 @@ Gets the execution settings configuration from Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchExecutionSetting [[-Scope] <string[]>] [[-DisplayName] <string[]>] [-Path <string[]>]
- [<CommonParameters>]
+Get-OrchExecutionSetting [-Path <string[]>] [[-Scope] <string[]>]
+ [[-DisplayName] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

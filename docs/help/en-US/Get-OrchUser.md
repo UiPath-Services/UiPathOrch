@@ -20,8 +20,9 @@ Gets users from UiPath Orchestrator tenants.
 ### __AllParameterSets
 
 ```
-Get-OrchUser [[-UserName] <string[]>] [[-FullName] <string[]>] [-Type <string[]>] [-ExpandDetails]
- [-Path <string[]>] [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchUser [-Path <string[]>] [[-UserName] <string[]>] [[-FullName] <string[]>]
+ [-CsvEncoding <Encoding>] [-ExpandDetails] [-ExportCsv <string>] [-Type <string[]>]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,8 +20,8 @@ Assigns machines to folders.
 ### __AllParameterSets
 
 ```
-Add-OrchFolderMachine [-Name] <string[]> [[-PropagateToSubFolders] <string>] [-Path <string[]>]
- [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-OrchFolderMachine [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [[-PropagateToSubFolders] <string>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

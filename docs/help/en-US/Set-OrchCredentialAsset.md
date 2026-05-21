@@ -20,18 +20,18 @@ Creates, updates, and removes credential assets.
 ### DefaultParameterSet (Default)
 
 ```
-Set-OrchCredentialAsset [-Name] <string[]> [[-UserName] <string[]>] [[-MachineName] <string[]>]
- -Credential <pscredential> [-Description <string>] [-CredentialStore <string>] [-Path <string[]>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Set-OrchCredentialAsset [-Path <string[]>] [-Name] <string[]> [[-UserName] <string[]>]
+ [[-MachineName] <string[]>] [-Confirm] -Credential <pscredential>
+ [-CredentialStore <string>] [-Description <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ### SpecifyPlainPasswordParameterSet
 
 ```
-Set-OrchCredentialAsset [-Name] <string[]> [[-UserName] <string[]>] [[-MachineName] <string[]>]
- [[-CredentialUsername] <string>] [[-CredentialPassword] <string>] [-ExternalName <string>]
- [-Description <string>] [-CredentialStore <string>] [-Path <string[]>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Set-OrchCredentialAsset [-Path <string[]>] [-Name] <string[]> [[-UserName] <string[]>]
+ [[-MachineName] <string[]>] [[-CredentialUsername] <string>]
+ [[-CredentialPassword] <string>] [-Confirm] [-CredentialStore <string>]
+ [-Description <string>] [-ExternalName <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

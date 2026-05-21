@@ -20,7 +20,8 @@ Sends a Ping event to a webhook to verify connectivity.
 ### __AllParameterSets
 
 ```
-Test-OrchWebhook [-Name] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Test-OrchWebhook [-Path <string[]>] [-Name] <string[]> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

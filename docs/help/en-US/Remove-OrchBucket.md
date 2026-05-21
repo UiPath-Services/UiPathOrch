@@ -20,8 +20,8 @@ Removes storage buckets from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchBucket [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchBucket [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

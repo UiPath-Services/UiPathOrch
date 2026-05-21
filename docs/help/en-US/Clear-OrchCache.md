@@ -20,7 +20,8 @@ Clears the in-memory cache on UiPathOrch drives.
 ### __AllParameterSets
 
 ```
-Clear-OrchCache [[-Path] <string[]>] [-AllDrives] [-WhatIf] [-Confirm] [<CommonParameters>]
+Clear-OrchCache [[-Path] <string[]>] [-AllDrives] [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

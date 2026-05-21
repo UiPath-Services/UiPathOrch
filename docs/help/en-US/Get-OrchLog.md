@@ -20,10 +20,11 @@ Gets the execution logs of the robots.
 ### __AllParameterSets
 
 ```
-Get-OrchLog [-Last <string>] [-TimeStampAfter <datetime>] [-TimeStampBefore <datetime>]
- [-Level <string>] [-Machine <string>] [-ProcessName <string>] [-WindowsIdentity <string[]>]
- [-Skip <ulong>] [-First <ulong>] [-JobKey <string>] [-OrderBy <string>] [-OrderAscending]
- [-Path <string[]>] [-Recurse] [-Depth <uint>] [<CommonParameters>]
+Get-OrchLog [-Path <string[]>] [-Recurse] [-Depth <uint>] [-First <ulong>]
+ [-JobKey <string>] [-Last <string>] [-Level <string>] [-Machine <string>]
+ [-OrderAscending] [-OrderBy <string>] [-ProcessName <string>] [-Skip <ulong>]
+ [-TimeStampAfter <datetime>] [-TimeStampBefore <datetime>] [-WindowsIdentity <string[]>]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

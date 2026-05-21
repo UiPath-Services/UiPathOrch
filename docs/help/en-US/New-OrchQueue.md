@@ -20,14 +20,14 @@ Creates a new queue definition in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-New-OrchQueue [-Name] <string[]> [-Description <string>] [-AcceptAutomaticallyRetry <string>]
- [-RetryAbandonedItems <string>] [-MaxNumberOfRetries <int>] [-EnforceUniqueReference <string>]
- [-Encrypted <string>] [-Release <string>] [-SlaInMinutes <int>] [-RiskSlaInMinutes <int>]
- [-SpecificDataJsonSchema <string>] [-OutputDataJsonSchema <string>]
- [-AnalyticsDataJsonSchema <string>] [-RetentionAction <string>] [-RetentionPeriod <int>]
- [-RetentionBucket <string>] [-StaleRetentionAction <string>] [-StaleRetentionPeriod <int>]
- [-StaleRetentionBucket <string>] [-Tags <string[]>] [-Path <string[]>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+New-OrchQueue [-Path <string[]>] [-Name] <string[]> [-AcceptAutomaticallyRetry <string>]
+ [-AnalyticsDataJsonSchema <string>] [-Confirm] [-Description <string>]
+ [-Encrypted <string>] [-EnforceUniqueReference <string>] [-MaxNumberOfRetries <int>]
+ [-OutputDataJsonSchema <string>] [-Release <string>] [-RetentionAction <string>]
+ [-RetentionBucket <string>] [-RetentionPeriod <int>] [-RetryAbandonedItems <string>]
+ [-RiskSlaInMinutes <int>] [-SlaInMinutes <int>] [-SpecificDataJsonSchema <string>]
+ [-StaleRetentionAction <string>] [-StaleRetentionBucket <string>]
+ [-StaleRetentionPeriod <int>] [-Tags <string[]>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

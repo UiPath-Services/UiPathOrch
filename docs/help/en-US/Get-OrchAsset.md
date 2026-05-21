@@ -20,9 +20,9 @@ Gets assets from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchAsset [[-Name] <string[]>] [-ValueType <string[]>] [-ExpandUserValues] [-Path <string[]>]
- [-Recurse] [-Depth <uint>] [-ExportCsv <string>] [-ExportCredentialCsv <string>]
- [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchAsset [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [-CsvEncoding <Encoding>] [-ExpandUserValues] [-ExportCredentialCsv <string>]
+ [-ExportCsv <string>] [-ValueType <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

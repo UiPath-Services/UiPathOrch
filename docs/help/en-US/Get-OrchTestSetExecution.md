@@ -20,9 +20,10 @@ Gets test set executions from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchTestSetExecution [[-Name] <string[]>] [-Status <string[]>] [-Last <string>]
- [-StartTimeAfter <datetime>] [-StartTimeBefore <datetime>] [-TriggerType <string[]>]
- [-Skip <ulong>] [-First <ulong>] [-Path <string[]>] [-Recurse] [-Depth <uint>] [<CommonParameters>]
+Get-OrchTestSetExecution [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [[-Name] <string[]>] [-First <ulong>] [-Last <string>] [-Skip <ulong>]
+ [-StartTimeAfter <datetime>] [-StartTimeBefore <datetime>] [-Status <string[]>]
+ [-TriggerType <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

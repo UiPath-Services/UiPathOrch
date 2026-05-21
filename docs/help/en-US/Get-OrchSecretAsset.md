@@ -20,8 +20,8 @@ Gets Secret-type assets from UiPath Orchestrator folders.
 ### __AllParameterSets
 
 ```
-Get-OrchSecretAsset [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [-ExpandUserValues] [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchSecretAsset [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [-CsvEncoding <Encoding>] [-ExpandUserValues] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

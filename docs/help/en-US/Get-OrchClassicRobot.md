@@ -20,8 +20,8 @@ Gets robots from classic folders.
 ### __AllParameterSets
 
 ```
-Get-OrchClassicRobot [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchClassicRobot [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [-CsvEncoding <Encoding>] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

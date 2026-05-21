@@ -20,8 +20,8 @@ Removes the API triggers.
 ### __AllParameterSets
 
 ```
-Remove-OrchApiTrigger [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchApiTrigger [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

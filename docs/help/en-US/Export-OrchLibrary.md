@@ -20,8 +20,8 @@ Exports library packages from UiPath Orchestrator to the local filesystem.
 ### __AllParameterSets
 
 ```
-Export-OrchLibrary [[-Id] <string[]>] [[-Version] <string[]>] [[-Destination] <string>]
- [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Export-OrchLibrary [-Path <string[]>] [[-Id] <string[]>] [[-Version] <string[]>]
+ [[-Destination] <string>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

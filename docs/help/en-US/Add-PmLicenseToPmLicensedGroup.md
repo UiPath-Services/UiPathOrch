@@ -20,8 +20,8 @@ Adds a user bundle license to a licensed group in a UiPath Automation Cloud orga
 ### __AllParameterSets
 
 ```
-Add-PmLicenseToPmLicensedGroup [-GroupName] <string[]> [-License] <string[]> [-Path <string[]>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-PmLicenseToPmLicensedGroup [-Path <string[]>] [-GroupName] <string[]>
+ [-License] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

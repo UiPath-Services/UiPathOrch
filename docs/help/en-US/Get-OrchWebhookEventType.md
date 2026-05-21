@@ -20,7 +20,7 @@ Lists the event types that webhooks can subscribe to.
 ### __AllParameterSets
 
 ```
-Get-OrchWebhookEventType [[-Name] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchWebhookEventType [-Path <string[]>] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

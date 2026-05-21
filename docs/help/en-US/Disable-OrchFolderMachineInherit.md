@@ -20,8 +20,8 @@ Disables machine inheritance to subfolders.
 ### __AllParameterSets
 
 ```
-Disable-OrchFolderMachineInherit [-Name] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Disable-OrchFolderMachineInherit [-Path <string[]>] [-Name] <string[]> [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

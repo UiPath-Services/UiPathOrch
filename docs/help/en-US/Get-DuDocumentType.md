@@ -20,7 +20,7 @@ Gets document types of Document Understanding.
 ### __AllParameterSets
 
 ```
-Get-DuDocumentType [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [<CommonParameters>]
+Get-DuDocumentType [-Path <string[]>] [-Recurse] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

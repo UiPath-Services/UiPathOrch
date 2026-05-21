@@ -20,7 +20,7 @@ Imports the UiPathOrch configuration file and creates PSDrives.
 ### __AllParameterSets
 
 ```
-Import-OrchConfig [-Force] [-WhatIf] [-Confirm] [<CommonParameters>]
+Import-OrchConfig [-Confirm] [-Force] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

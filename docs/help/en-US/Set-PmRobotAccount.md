@@ -20,17 +20,18 @@ Creates or updates a robot account in a UiPath Automation Cloud organization.
 ### ConsoleInput (Default)
 
 ```
-Set-PmRobotAccount [-UserName] <string[]> [[-GroupName] <string[]>] [-Path <string[]>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Set-PmRobotAccount [-Path <string[]>] [-UserName] <string[]> [[-GroupName] <string[]>]
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### CsvInput
 
 ```
-Set-PmRobotAccount -UserName <string[]> [-GroupName <string[]>] [-GroupName0 <string>]
- [-GroupName1 <string>] [-GroupName2 <string>] [-GroupName3 <string>] [-GroupName4 <string>]
- [-GroupName5 <string>] [-GroupName6 <string>] [-GroupName7 <string>] [-GroupName8 <string>]
- [-GroupName9 <string>] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Set-PmRobotAccount [-Path <string[]>] -UserName <string[]> [-GroupName <string[]>]
+ [-Confirm] [-GroupName0 <string>] [-GroupName1 <string>] [-GroupName2 <string>]
+ [-GroupName3 <string>] [-GroupName4 <string>] [-GroupName5 <string>]
+ [-GroupName6 <string>] [-GroupName7 <string>] [-GroupName8 <string>]
+ [-GroupName9 <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

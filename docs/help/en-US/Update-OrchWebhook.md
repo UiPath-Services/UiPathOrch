@@ -20,9 +20,9 @@ Updates an existing webhook in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Update-OrchWebhook [-Name] <string[]> [-Description <string>] [-Url <string>] [-Secret <string>]
- [-Enabled <string>] [-AllowInsecureSsl <string>] [-SubscribeToAllEvents <string>]
- [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Update-OrchWebhook [-Path <string[]>] [-Name] <string[]> [-AllowInsecureSsl <string>]
+ [-Confirm] [-Description <string>] [-Enabled <string>] [-Secret <string>]
+ [-SubscribeToAllEvents <string>] [-Url <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

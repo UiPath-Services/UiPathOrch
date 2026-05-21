@@ -20,15 +20,15 @@ Restarts a Faulted job.
 ### FromCommandLine (Default)
 
 ```
-Restart-OrchJob [-Id] <long[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Restart-OrchJob [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Id] <long[]> [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ### FromPipeline
 
 ```
-Restart-OrchJob [-Job <Job>] [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Restart-OrchJob [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Confirm] [-Job <Job>]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

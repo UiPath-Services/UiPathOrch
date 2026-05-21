@@ -20,8 +20,8 @@ Removes test sets from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchTestSet [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchTestSet [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

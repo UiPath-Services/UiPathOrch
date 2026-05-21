@@ -20,8 +20,8 @@ Enables account-to-machine mappings in folders.
 ### __AllParameterSets
 
 ```
-Enable-OrchFolderMachineAccountMapping [-Name] <string[]> [[-UserName] <string[]>]
- [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Enable-OrchFolderMachineAccountMapping [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [-Name] <string[]> [[-UserName] <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

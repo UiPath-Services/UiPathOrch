@@ -20,8 +20,8 @@ Gets credential-type assets from UiPath Orchestrator folders.
 ### __AllParameterSets
 
 ```
-Get-OrchCredentialAsset [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [-ExpandUserValues] [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchCredentialAsset [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [-CsvEncoding <Encoding>] [-ExpandUserValues] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

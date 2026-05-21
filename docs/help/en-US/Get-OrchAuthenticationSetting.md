@@ -20,7 +20,7 @@ Gets authentication settings from Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchAuthenticationSetting [[-Key] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchAuthenticationSetting [-Path <string[]>] [[-Key] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

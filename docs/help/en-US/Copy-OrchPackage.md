@@ -20,8 +20,9 @@ Copies process packages to another folder or Orchestrator instance.
 ### __AllParameterSets
 
 ```
-Copy-OrchPackage [-Id] <string[]> [[-Version] <string[]>] [-Destination] <string[]> [-Path <string>]
- [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchPackage [-Path <string>] [-Recurse] [-Depth <uint>] [-Id] <string[]>
+ [[-Version] <string[]>] [-Destination] <string[]> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

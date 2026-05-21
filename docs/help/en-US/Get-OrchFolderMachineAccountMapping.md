@@ -20,8 +20,8 @@ Gets account-to-machine mappings in folders.
 ### __AllParameterSets
 
 ```
-Get-OrchFolderMachineAccountMapping [[-Name] <string[]>] [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [<CommonParameters>]
+Get-OrchFolderMachineAccountMapping [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

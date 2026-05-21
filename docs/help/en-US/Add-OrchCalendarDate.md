@@ -20,8 +20,8 @@ Adds dates to the Non-Working Days calendars.
 ### __AllParameterSets
 
 ```
-Add-OrchCalendarDate [-Name] <string[]> [[-ExcludedDate] <datetime[]>] [-IncludePastDate]
- [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-OrchCalendarDate [-Path <string[]>] [-Name] <string[]> [[-ExcludedDate] <datetime[]>]
+ [-Confirm] [-IncludePastDate] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

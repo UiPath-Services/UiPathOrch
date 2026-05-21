@@ -20,7 +20,7 @@ Gets the licensing usage statistics.
 ### __AllParameterSets
 
 ```
-Get-OrchLicenseStats [[-Last] <string>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchLicenseStats [-Path <string[]>] [[-Last] <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

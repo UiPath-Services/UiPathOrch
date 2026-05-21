@@ -20,8 +20,8 @@ Retries failed queue items.
 ### __AllParameterSets
 
 ```
-Redo-OrchQueueItem [-Name] <string[]> [-Id] <long[]> [-Path <string[]>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Redo-OrchQueueItem [-Path <string[]>] [-Name] <string[]> [-Id] <long[]> [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

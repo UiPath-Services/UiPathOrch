@@ -20,22 +20,22 @@ Gets test case assertion results from UiPath Orchestrator.
 ### ByTestSetExecutionName (Default)
 
 ```
-Get-OrchTestCaseAssertion [[-TestSetExecutionName] <string>] [-Path <string[]>]
+Get-OrchTestCaseAssertion [-Path <string[]>] [[-TestSetExecutionName] <string>]
  [-ScreenshotPath <string>] [<CommonParameters>]
 ```
 
 ### ById
 
 ```
-Get-OrchTestCaseAssertion [-Id] <long[]> [-Path <string[]>] [-ScreenshotPath <string>]
+Get-OrchTestCaseAssertion [-Path <string[]>] [-Id] <long[]> [-ScreenshotPath <string>]
  [<CommonParameters>]
 ```
 
 ### ByPipeline
 
 ```
-Get-OrchTestCaseAssertion -InputObject <Object> [-Path <string[]>] [-ScreenshotPath <string>]
- [<CommonParameters>]
+Get-OrchTestCaseAssertion [-Path <string[]>] -InputObject <Object>
+ [-ScreenshotPath <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,7 +20,7 @@ Gets access-allowed members from a UiPath Automation Cloud organization.
 ### __AllParameterSets
 
 ```
-Get-PmAccessAllowedMember [[-Name] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-PmAccessAllowedMember [-Path <string[]>] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

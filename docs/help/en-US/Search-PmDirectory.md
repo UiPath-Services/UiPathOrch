@@ -20,7 +20,7 @@ Searches the connected directory for users, groups, or applications by name.
 ### __AllParameterSets
 
 ```
-Search-PmDirectory [-Name] <string> [-Path <string[]>] [<CommonParameters>]
+Search-PmDirectory [-Path <string[]>] [-Name] <string> [<CommonParameters>]
 ```
 
 ## ALIASES

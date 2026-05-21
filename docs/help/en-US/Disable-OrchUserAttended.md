@@ -20,7 +20,7 @@ Disables the attended robot session for users.
 ### __AllParameterSets
 
 ```
-Disable-OrchUserAttended [-UserName] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm]
+Disable-OrchUserAttended [-Path <string[]>] [-UserName] <string[]> [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 

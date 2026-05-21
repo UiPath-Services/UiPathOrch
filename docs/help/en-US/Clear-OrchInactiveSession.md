@@ -20,7 +20,7 @@ Bulk-deletes Disconnected and Unresponsive unattended sessions.
 ### __AllParameterSets
 
 ```
-Clear-OrchInactiveSession [[-Path] <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Clear-OrchInactiveSession [[-Path] <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

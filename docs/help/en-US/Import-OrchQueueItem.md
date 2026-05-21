@@ -20,8 +20,9 @@ Imports queue items from a CSV file into a queue.
 ### __AllParameterSets
 
 ```
-Import-OrchQueueItem [-Name] <string[]> [-ImportCsv] <string[]> [[-CsvEncoding] <Encoding>]
- [[-CommitType] <string>] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Import-OrchQueueItem [-Path <string[]>] [-Name] <string[]> [-ImportCsv] <string[]>
+ [[-CsvEncoding] <Encoding>] [[-CommitType] <string>] [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

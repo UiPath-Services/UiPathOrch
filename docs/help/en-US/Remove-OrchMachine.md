@@ -20,7 +20,8 @@ Removes machines from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchMachine [-Name] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchMachine [-Path <string[]>] [-Name] <string[]> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

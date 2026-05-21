@@ -20,7 +20,7 @@ Gets audit log entries from UiPath Automation Cloud organizations.
 ### __AllParameterSets
 
 ```
-Get-PmAuditLog [-Skip <ulong>] [-First <ulong>] [-OrderAscending] [-Path <string[]>]
+Get-PmAuditLog [-Path <string[]>] [-First <ulong>] [-OrderAscending] [-Skip <ulong>]
  [<CommonParameters>]
 ```
 

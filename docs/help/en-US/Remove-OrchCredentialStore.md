@@ -20,7 +20,7 @@ Removes credential stores from Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchCredentialStore [-Name] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm]
+Remove-OrchCredentialStore [-Path <string[]>] [-Name] <string[]> [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 

@@ -20,7 +20,7 @@ Gets classifiers of Document Understanding.
 ### __AllParameterSets
 
 ```
-Get-DuClassifier [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [<CommonParameters>]
+Get-DuClassifier [-Path <string[]>] [-Recurse] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

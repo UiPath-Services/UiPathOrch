@@ -20,10 +20,11 @@ Invokes an arbitrary Orchestrator, Identity Server, or Portal API endpoint using
 ### __AllParameterSets
 
 ```
-Invoke-OrchApi [[-Path] <string>] [-ApiPath] <string> [-Method <string>] [-Body <Object>]
- [-ContentType <string>] [-Headers <IDictionary>] [-OutFile <string>] [-InFile <string>]
- [-StatusCodeVariable <string>] [-ResponseHeadersVariable <string>] [-SkipHttpErrorCheck]
- [-Identity] [-Portal] [-SkipFolderContext] [-Raw] [-WhatIf] [-Confirm] [<CommonParameters>]
+Invoke-OrchApi [[-Path] <string>] [-ApiPath] <string> [-Body <Object>] [-Confirm]
+ [-ContentType <string>] [-Headers <IDictionary>] [-Identity] [-InFile <string>]
+ [-Method <string>] [-OutFile <string>] [-Portal] [-Raw]
+ [-ResponseHeadersVariable <string>] [-SkipFolderContext] [-SkipHttpErrorCheck]
+ [-StatusCodeVariable <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,7 +20,8 @@ Gets the test executions from projects in Test Manager.
 ### __AllParameterSets
 
 ```
-Get-TmTestExecution [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [<CommonParameters>]
+Get-TmTestExecution [-Path <string[]>] [-Recurse] [[-Name] <string[]>]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

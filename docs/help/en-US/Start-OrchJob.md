@@ -20,9 +20,9 @@ Starts jobs for specified processes in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Start-OrchJob [-Name] <string[]> [[-RuntimeType] <string>] [[-JobsCount] <int>]
- [[-InputArguments] <string>] [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Start-OrchJob [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [[-RuntimeType] <string>] [[-JobsCount] <int>] [[-InputArguments] <string>] [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,7 +20,7 @@ Generates a new client secret for machines.
 ### __AllParameterSets
 
 ```
-Add-OrchMachineClientSecret [-Name] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm]
+Add-OrchMachineClientSecret [-Path <string[]>] [-Name] <string[]> [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 

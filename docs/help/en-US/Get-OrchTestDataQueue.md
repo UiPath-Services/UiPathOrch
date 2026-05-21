@@ -20,7 +20,7 @@ Gets test data queues from Orchestrator folders.
 ### __AllParameterSets
 
 ```
-Get-OrchTestDataQueue [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
+Get-OrchTestDataQueue [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
  [<CommonParameters>]
 ```
 

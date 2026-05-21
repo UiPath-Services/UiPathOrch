@@ -20,15 +20,15 @@ Updates the package version of a process.
 ### ReleaseName (Default)
 
 ```
-Update-OrchProcessVersion [[-Name] <string[]>] [[-Version] <string>] [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Update-OrchProcessVersion [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [[-Name] <string[]>] [[-Version] <string>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### ReleaseId
 
 ```
-Update-OrchProcessVersion [[-Id] <long[]>] [[-Version] <string>] [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Update-OrchProcessVersion [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Id] <long[]>]
+ [[-Version] <string>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

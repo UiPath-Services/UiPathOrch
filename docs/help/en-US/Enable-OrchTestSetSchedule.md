@@ -20,8 +20,8 @@ Enables test set schedules in Orchestrator folders.
 ### __AllParameterSets
 
 ```
-Enable-OrchTestSetSchedule [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Enable-OrchTestSetSchedule [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [-Name] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,8 +20,8 @@ Gets per-release detailed information from UiPath Orchestrator folders.
 ### __AllParameterSets
 
 ```
-Get-OrchProcessDetail [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchProcessDetail [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-CsvEncoding <Encoding>] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

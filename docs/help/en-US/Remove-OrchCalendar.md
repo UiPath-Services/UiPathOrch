@@ -20,7 +20,8 @@ Removes the calendars.
 ### __AllParameterSets
 
 ```
-Remove-OrchCalendar [-Name] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchCalendar [-Path <string[]>] [-Name] <string[]> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

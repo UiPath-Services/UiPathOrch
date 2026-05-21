@@ -20,8 +20,8 @@ Gets queue definitions from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchQueue [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchQueue [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [-CsvEncoding <Encoding>] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

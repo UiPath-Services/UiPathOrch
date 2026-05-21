@@ -20,7 +20,8 @@ Removes roles from Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchRole [-Name] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchRole [-Path <string[]>] [-Name] <string[]> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

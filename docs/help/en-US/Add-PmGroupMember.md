@@ -20,8 +20,8 @@ Adds a member to a platform management group in a UiPath Automation Cloud organi
 ### __AllParameterSets
 
 ```
-Add-PmGroupMember [-GroupName] <string[]> [[-Type] <string[]>] [-UserName] <string[]>
- [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-PmGroupMember [-Path <string[]>] [-GroupName] <string[]> [[-Type] <string[]>]
+ [-UserName] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

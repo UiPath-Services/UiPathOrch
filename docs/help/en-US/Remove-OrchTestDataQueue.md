@@ -20,8 +20,8 @@ Removes test data queues from Orchestrator folders.
 ### __AllParameterSets
 
 ```
-Remove-OrchTestDataQueue [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchTestDataQueue [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,8 +20,8 @@ Removes an external application from a UiPath Automation Cloud organization.
 ### __AllParameterSets
 
 ```
-Remove-PmExternalApplication [-Name] <string[]> [-Force] [-Path <string[]>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Remove-PmExternalApplication [-Path <string[]>] [-Name] <string[]> [-Confirm] [-Force]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

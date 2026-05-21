@@ -20,7 +20,7 @@ Opens the job details page in the default web browser.
 ### __AllParameterSets
 
 ```
-Open-OrchJob [[-Id] <long[]>] [-Path <string[]>] [<CommonParameters>]
+Open-OrchJob [-Path <string[]>] [[-Id] <long[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

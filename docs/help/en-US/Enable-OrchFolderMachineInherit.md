@@ -20,7 +20,7 @@ Enables machine inheritance to subfolders.
 ### __AllParameterSets
 
 ```
-Enable-OrchFolderMachineInherit [-Name] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm]
+Enable-OrchFolderMachineInherit [-Path <string[]>] [-Name] <string[]> [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 

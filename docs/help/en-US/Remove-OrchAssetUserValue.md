@@ -20,8 +20,9 @@ Removes per-robot (UserValue) entries from assets, regardless of asset type.
 ### __AllParameterSets
 
 ```
-Remove-OrchAssetUserValue [-Name] <string[]> [-UserName] <string[]> [[-MachineName] <string[]>]
- [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchAssetUserValue [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-UserName] <string[]> [[-MachineName] <string[]>] [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

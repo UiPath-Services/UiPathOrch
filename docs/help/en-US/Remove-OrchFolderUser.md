@@ -20,8 +20,9 @@ Unassigns users from folders in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchFolderUser [[-UserName] <string[]>] [[-FullName] <string[]>] [-NoMatchWarning]
- [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchFolderUser [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [[-UserName] <string[]>] [[-FullName] <string[]>] [-Confirm] [-NoMatchWarning] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

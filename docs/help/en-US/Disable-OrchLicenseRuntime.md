@@ -20,8 +20,8 @@ Disables the runtime licenses.
 ### __AllParameterSets
 
 ```
-Disable-OrchLicenseRuntime [-RobotType] <string[]> [-Key] <string[]> [-Path <string[]>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Disable-OrchLicenseRuntime [-Path <string[]>] [-RobotType] <string[]> [-Key] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

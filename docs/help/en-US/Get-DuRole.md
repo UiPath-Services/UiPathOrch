@@ -20,7 +20,7 @@ Gets the roles available in Document Understanding.
 ### __AllParameterSets
 
 ```
-Get-DuRole [[-Name] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-DuRole [-Path <string[]>] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

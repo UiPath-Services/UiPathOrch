@@ -20,7 +20,7 @@ Gets external API resources from UiPath Automation Cloud organizations.
 ### __AllParameterSets
 
 ```
-Get-PmExternalApiResource [[-Name] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-PmExternalApiResource [-Path <string[]>] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

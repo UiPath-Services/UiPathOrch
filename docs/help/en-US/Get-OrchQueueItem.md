@@ -20,13 +20,14 @@ Gets queue items (transactions) from UiPath Orchestrator queues.
 ### __AllParameterSets
 
 ```
-Get-OrchQueueItem [[-Name] <string[]>] [-Status <string[]>] [-Revision <string[]>]
- [-Priority <string[]>] [-Exception <string[]>] [-Robot <string[]>] [-Reviewer <string[]>]
- [-DueDateAfter <datetime>] [-DueDateBefore <datetime>] [-DeferDateAfter <datetime>]
- [-DeferDateBefore <datetime>] [-StartProcessingAfter <datetime>]
- [-StartProcessingBefore <datetime>] [-EndProcessingAfter <datetime>]
- [-EndProcessingBefore <datetime>] [-Skip <int>] [-First <int>] [-OrderBy <string>]
- [-OrderAscending] [-Path <string[]>] [-Recurse] [-Depth <uint>] [<CommonParameters>]
+Get-OrchQueueItem [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [-DeferDateAfter <datetime>] [-DeferDateBefore <datetime>] [-DueDateAfter <datetime>]
+ [-DueDateBefore <datetime>] [-EndProcessingAfter <datetime>]
+ [-EndProcessingBefore <datetime>] [-Exception <string[]>] [-First <int>]
+ [-OrderAscending] [-OrderBy <string>] [-Priority <string[]>] [-Reviewer <string[]>]
+ [-Revision <string[]>] [-Robot <string[]>] [-Skip <int>]
+ [-StartProcessingAfter <datetime>] [-StartProcessingBefore <datetime>]
+ [-Status <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,7 +20,7 @@ Gets named user licenses.
 ### __AllParameterSets
 
 ```
-Get-OrchLicenseNamedUser [[-RobotType] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchLicenseNamedUser [-Path <string[]>] [[-RobotType] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

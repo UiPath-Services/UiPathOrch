@@ -20,7 +20,7 @@ Gets test case definitions from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchTestCase [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
+Get-OrchTestCase [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
  [<CommonParameters>]
 ```
 

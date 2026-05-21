@@ -20,8 +20,8 @@ Copies robot accounts from one UiPath Automation Cloud organization to another.
 ### __AllParameterSets
 
 ```
-Copy-PmRobotAccount [-Name] <string[]> [-Destination] <string[]> [-Path <string>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Copy-PmRobotAccount [-Path <string>] [-Name] <string[]> [-Destination] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

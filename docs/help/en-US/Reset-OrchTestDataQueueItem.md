@@ -20,8 +20,8 @@ Resets the consumption state of items in test data queues.
 ### __AllParameterSets
 
 ```
-Reset-OrchTestDataQueueItem [[-Name] <string[]>] [-IsConsumed] [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Reset-OrchTestDataQueueItem [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [[-Name] <string[]>] [-Confirm] [-IsConsumed] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

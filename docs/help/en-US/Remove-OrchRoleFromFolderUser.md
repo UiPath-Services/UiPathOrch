@@ -20,9 +20,9 @@ Removes roles from folder users in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchRoleFromFolderUser [[-UserName] <string[]>] [-Roles] <string[]> [-FullName <string[]>]
- [-Type <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Remove-OrchRoleFromFolderUser [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [[-UserName] <string[]>] [-Roles] <string[]> [-Confirm] [-FullName <string[]>]
+ [-Type <string[]>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

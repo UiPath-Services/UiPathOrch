@@ -20,7 +20,7 @@ Gets user privileges from UiPath Orchestrator tenants.
 ### __AllParameterSets
 
 ```
-Get-OrchUserPrivilege [[-UserName] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchUserPrivilege [-Path <string[]>] [[-UserName] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

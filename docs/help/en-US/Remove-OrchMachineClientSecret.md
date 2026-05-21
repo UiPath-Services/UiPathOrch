@@ -20,8 +20,8 @@ Removes client secrets from machines.
 ### __AllParameterSets
 
 ```
-Remove-OrchMachineClientSecret [-Name] <string[]> [-SecretId] <string[]> [-Path <string[]>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchMachineClientSecret [-Path <string[]>] [-Name] <string[]>
+ [-SecretId] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

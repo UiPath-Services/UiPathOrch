@@ -20,9 +20,9 @@ Creates a new platform management user in a UiPath Automation Cloud organization
 ### __AllParameterSets
 
 ```
-New-PmUser [-Email] <string> [-Name <string>] [-SurName <string>] [-DisplayName <string>]
- [-Type <string>] [-BypassBasicAuthRestriction <string>] [-InvitationAccepted <string>]
- [-GroupName <string[]>] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+New-PmUser [-Path <string[]>] [-Email] <string> [-BypassBasicAuthRestriction <string>]
+ [-Confirm] [-DisplayName <string>] [-GroupName <string[]>] [-InvitationAccepted <string>]
+ [-Name <string>] [-SurName <string>] [-Type <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

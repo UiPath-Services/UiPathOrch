@@ -20,8 +20,8 @@ Gets licensed groups from a UiPath Automation Cloud organization.
 ### ExpandAllocation
 
 ```
-Get-PmLicensedGroup [[-GroupName] <string[]>] [[-UserName] <string[]>] [-ExpandAllocation]
- [-Path <string[]>] [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-PmLicensedGroup [-Path <string[]>] [[-GroupName] <string[]>] [[-UserName] <string[]>]
+ [-CsvEncoding <Encoding>] [-ExpandAllocation] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

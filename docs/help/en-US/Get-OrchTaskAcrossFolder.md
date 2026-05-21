@@ -20,8 +20,8 @@ Gets action-center tasks tenant-wide via the dedicated cross-folder endpoint.
 ### __AllParameterSets
 
 ```
-Get-OrchTaskAcrossFolder [[-Title] <string[]>] [-Status <string[]>] [-Priority <string[]>]
- [-Path <string[]>] [<CommonParameters>]
+Get-OrchTaskAcrossFolder [-Path <string[]>] [[-Title] <string[]>] [-Priority <string[]>]
+ [-Status <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,8 +20,8 @@ Updates the unattended robot password for the currently authenticated user.
 ### __AllParameterSets
 
 ```
-Update-OrchCurrentUserURPassword [[-Path] <string[]>] -Password <securestring>
- -Confirmation <securestring> [-WhatIf] [-Confirm] [<CommonParameters>]
+Update-OrchCurrentUserURPassword [[-Path] <string[]>] [-Confirm]
+ -Confirmation <securestring> -Password <securestring> [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

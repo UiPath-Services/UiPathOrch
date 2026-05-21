@@ -20,8 +20,8 @@ Gets triggers from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchTrigger [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>] [-ExpandDetails]
- [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchTrigger [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [-CsvEncoding <Encoding>] [-ExpandDetails] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

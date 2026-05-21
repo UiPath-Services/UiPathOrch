@@ -20,19 +20,19 @@ Creates a new trigger in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-New-OrchTrigger [-Name] <string[]> [-ReleaseName] <string> [-Enabled <string>]
- [-SpecificPriorityValue <int>] [-Priority <string>] [-StartStrategy <int>] [-StopStrategy <string>]
- [-StopProcessExpression <string>] [-KillProcessExpression <string>]
- [-AlertPendingExpression <string>] [-AlertRunningExpression <string>]
- [-ConsecutiveJobFailuresThreshold <int>] [-JobFailuresGracePeriodInHours <int>]
- [-RuntimeType <string>] [-InputArguments <string>] [-ResumeOnSameContext <string>]
- [-RunAsMe <string>] [-IsConnected <string>] [-CalendarName <string>]
- [-ActivateOnJobComplete <string>] [-ItemsActivationThreshold <int>]
- [-ItemsPerJobActivationTarget <int>] [-MaxJobsForActivation <int>]
- [-StartProcessCronDetails <string>] [-StartProcessCron <string>] [-QueueDefinitionName <string>]
- [-TimeZone <string>] [-TimeZoneId <string>] [-StopProcessDate <datetime>]
- [-ExecutorRobots <string[]>] [-MachineRobots <string[]>] [-Path <string[]>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+New-OrchTrigger [-Path <string[]>] [-Name] <string[]> [-ReleaseName] <string>
+ [-ActivateOnJobComplete <string>] [-AlertPendingExpression <string>]
+ [-AlertRunningExpression <string>] [-CalendarName <string>] [-Confirm]
+ [-ConsecutiveJobFailuresThreshold <int>] [-Enabled <string>] [-ExecutorRobots <string[]>]
+ [-InputArguments <string>] [-IsConnected <string>] [-ItemsActivationThreshold <int>]
+ [-ItemsPerJobActivationTarget <int>] [-JobFailuresGracePeriodInHours <int>]
+ [-KillProcessExpression <string>] [-MachineRobots <string[]>]
+ [-MaxJobsForActivation <int>] [-Priority <string>] [-QueueDefinitionName <string>]
+ [-ResumeOnSameContext <string>] [-RunAsMe <string>] [-RuntimeType <string>]
+ [-SpecificPriorityValue <int>] [-StartProcessCron <string>]
+ [-StartProcessCronDetails <string>] [-StartStrategy <int>] [-StopProcessDate <datetime>]
+ [-StopProcessExpression <string>] [-StopStrategy <string>] [-TimeZone <string>]
+ [-TimeZoneId <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

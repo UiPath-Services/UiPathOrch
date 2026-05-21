@@ -20,8 +20,8 @@ Gets user license bundles (Named User licenses) assigned to a UiPath Automation 
 ### __AllParameterSets
 
 ```
-Get-PmLicense [[-License] <string[]>] [[-Code] <string[]>] [-Path <string[]>] [-HasCapacity]
- [<CommonParameters>]
+Get-PmLicense [-Path <string[]>] [[-License] <string[]>] [[-Code] <string[]>]
+ [-HasCapacity] [<CommonParameters>]
 ```
 
 ## ALIASES

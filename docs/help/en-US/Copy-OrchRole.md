@@ -20,8 +20,8 @@ Copies roles to another Orchestrator tenant.
 ### __AllParameterSets
 
 ```
-Copy-OrchRole [-Name] <string[]> [-Destination] <string[]> [-Path <string>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Copy-OrchRole [-Path <string>] [-Name] <string[]> [-Destination] <string[]> [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

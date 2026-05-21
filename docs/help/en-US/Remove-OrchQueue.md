@@ -20,8 +20,8 @@ Removes queue definitions from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchQueue [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchQueue [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

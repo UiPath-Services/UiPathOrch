@@ -20,8 +20,8 @@ Gets the items (files) stored in storage buckets.
 ### __AllParameterSets
 
 ```
-Get-OrchBucketItem [[-Name] <string[]>] [[-FullPath] <string[]>] [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [<CommonParameters>]
+Get-OrchBucketItem [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [[-FullPath] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

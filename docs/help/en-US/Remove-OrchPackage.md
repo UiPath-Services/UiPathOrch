@@ -20,8 +20,8 @@ Removes the process packages.
 ### __AllParameterSets
 
 ```
-Remove-OrchPackage [-Id] <string[]> [[-Version] <string[]>] [-Path <string[]>] [-Recurse] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchPackage [-Path <string[]>] [-Recurse] [-Id] <string[]> [[-Version] <string[]>]
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

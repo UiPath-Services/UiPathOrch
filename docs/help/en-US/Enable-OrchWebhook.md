@@ -20,7 +20,8 @@ Enables webhooks in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Enable-OrchWebhook [-Name] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Enable-OrchWebhook [-Path <string[]>] [-Name] <string[]> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

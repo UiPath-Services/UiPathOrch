@@ -20,8 +20,8 @@ Removes execution media recordings from Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchJobMedia [-JobId] <long[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchJobMedia [-Path <string[]>] [-Recurse] [-Depth <uint>] [-JobId] <long[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

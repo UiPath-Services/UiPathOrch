@@ -20,17 +20,18 @@ Creates and updates Secret-type assets.
 ### DefaultParameterSet (Default)
 
 ```
-Set-OrchSecretAsset [-Name] <string[]> [[-UserName] <string[]>] [[-MachineName] <string[]>]
- -Secret <securestring> [-Description <string>] [-CredentialStore <string>] [-Path <string[]>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Set-OrchSecretAsset [-Path <string[]>] [-Name] <string[]> [[-UserName] <string[]>]
+ [[-MachineName] <string[]>] [-Confirm] [-CredentialStore <string>]
+ [-Description <string>] -Secret <securestring> [-WhatIf] [<CommonParameters>]
 ```
 
 ### SpecifyPlainSecretParameterSet
 
 ```
-Set-OrchSecretAsset [-Name] <string[]> [[-UserName] <string[]>] [[-MachineName] <string[]>]
- [[-SecretValue] <string>] [-ExternalName <string>] [-Description <string>]
- [-CredentialStore <string>] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Set-OrchSecretAsset [-Path <string[]>] [-Name] <string[]> [[-UserName] <string[]>]
+ [[-MachineName] <string[]>] [[-SecretValue] <string>] [-Confirm]
+ [-CredentialStore <string>] [-Description <string>] [-ExternalName <string>] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

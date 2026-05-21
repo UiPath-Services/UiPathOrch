@@ -20,13 +20,14 @@ Gets robot accounts from UiPath Automation Cloud organizations.
 ### Default (Default)
 
 ```
-Get-PmRobotAccount [[-Name] <string[]>] [-Path <string[]>] [-ExpandGroup] [<CommonParameters>]
+Get-PmRobotAccount [-Path <string[]>] [[-Name] <string[]>] [-ExpandGroup]
+ [<CommonParameters>]
 ```
 
 ### ExportCsv
 
 ```
-Get-PmRobotAccount [[-CsvEncoding] <Encoding>] [-Path <string[]>] [-ExportCsv <string>]
+Get-PmRobotAccount [-Path <string[]>] [[-CsvEncoding] <Encoding>] [-ExportCsv <string>]
  [<CommonParameters>]
 ```
 

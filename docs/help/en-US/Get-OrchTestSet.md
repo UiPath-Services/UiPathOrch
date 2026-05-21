@@ -20,7 +20,7 @@ Gets test sets from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchTestSet [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
+Get-OrchTestSet [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
  [<CommonParameters>]
 ```
 

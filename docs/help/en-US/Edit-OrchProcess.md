@@ -20,7 +20,7 @@ Opens the process edit page in the default web browser.
 ### __AllParameterSets
 
 ```
-Edit-OrchProcess [[-Name] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Edit-OrchProcess [-Path <string[]>] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

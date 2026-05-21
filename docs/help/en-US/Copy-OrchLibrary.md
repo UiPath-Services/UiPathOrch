@@ -20,8 +20,8 @@ Copies library packages from one UiPath Orchestrator tenant to another.
 ### __AllParameterSets
 
 ```
-Copy-OrchLibrary [-Id] <string[]> [[-Version] <string[]>] [-Destination] <string[]> [-Path <string>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchLibrary [-Path <string>] [-Id] <string[]> [[-Version] <string[]>]
+ [-Destination] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

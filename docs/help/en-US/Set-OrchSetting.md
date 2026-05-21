@@ -20,7 +20,7 @@ Sets a general setting value on Orchestrator.
 ### __AllParameterSets
 
 ```
-Set-OrchSetting [-Name] <string> [-Value] <string> [-Path <string[]>] [-WhatIf] [-Confirm]
+Set-OrchSetting [-Path <string[]>] [-Name] <string> [-Value] <string> [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 

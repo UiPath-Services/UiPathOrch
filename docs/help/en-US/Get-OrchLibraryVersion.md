@@ -20,8 +20,8 @@ Gets the versions of library packages from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchLibraryVersion [[-Id] <string[]>] [[-Version] <string[]>] [-HostFeed] [-Path <string[]>]
- [<CommonParameters>]
+Get-OrchLibraryVersion [-Path <string[]>] [[-Id] <string[]>] [[-Version] <string[]>]
+ [-HostFeed] [<CommonParameters>]
 ```
 
 ## ALIASES

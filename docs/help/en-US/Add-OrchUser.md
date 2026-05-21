@@ -20,16 +20,18 @@ Adds users to UiPath Orchestrator tenants.
 ### __AllParameterSets
 
 ```
-Add-OrchUser [[-Type] <string[]>] [-UserName] <string[]> [[-Roles] <string[]>]
- [-IsExternalLicensed <string>] [-MayHaveUserSession <string>] [-MayHaveRobotSession <string>]
- [-MayHaveUnattendedSession <string>] [-MayHavePersonalWorkspace <string>]
- [-RestrictToPersonalWorkspace <string>] [-UpdatePolicyType <string>]
- [-UpdatePolicyVersion <string>] [-UR_UserName <string>] [-UR_CredentialStore <string>]
- [-UR_Password <string>] [-UR_CredentialExternalName <string>] [-UR_CredentialType <string>]
- [-UR_LimitConcurrentExecution <string>] [-ES_TracingLevel <string>]
- [-ES_StudioNotifyServer <string>] [-ES_LoginToConsole <string>] [-ES_ResolutionWidth <int>]
- [-ES_ResolutionHeight <int>] [-ES_ResolutionDepth <int>] [-ES_FontSmoothing <string>]
- [-ES_AutoDownloadProcess <string>] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-OrchUser [-Path <string[]>] [[-Type] <string[]>] [-UserName] <string[]>
+ [[-Roles] <string[]>] [-Confirm] [-ES_AutoDownloadProcess <string>]
+ [-ES_FontSmoothing <string>] [-ES_LoginToConsole <string>] [-ES_ResolutionDepth <int>]
+ [-ES_ResolutionHeight <int>] [-ES_ResolutionWidth <int>]
+ [-ES_StudioNotifyServer <string>] [-ES_TracingLevel <string>]
+ [-IsExternalLicensed <string>] [-MayHavePersonalWorkspace <string>]
+ [-MayHaveRobotSession <string>] [-MayHaveUnattendedSession <string>]
+ [-MayHaveUserSession <string>] [-RestrictToPersonalWorkspace <string>]
+ [-UpdatePolicyType <string>] [-UpdatePolicyVersion <string>]
+ [-UR_CredentialExternalName <string>] [-UR_CredentialStore <string>]
+ [-UR_CredentialType <string>] [-UR_LimitConcurrentExecution <string>]
+ [-UR_Password <string>] [-UR_UserName <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

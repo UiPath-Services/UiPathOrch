@@ -20,8 +20,8 @@ Copies platform management users from one UiPath Automation Cloud organization t
 ### __AllParameterSets
 
 ```
-Copy-PmUser [-Email] <string[]> [-Destination] <string[]> [-Path <string>]
- [-UserMappingCsv <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-PmUser [-Path <string>] [-Email] <string[]> [-Destination] <string[]> [-Confirm]
+ [-UserMappingCsv <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

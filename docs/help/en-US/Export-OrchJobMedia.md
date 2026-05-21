@@ -20,8 +20,8 @@ Exports execution media recordings from Orchestrator to the local file system.
 ### __AllParameterSets
 
 ```
-Export-OrchJobMedia [[-JobId] <long[]>] [[-Destination] <string>] [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Export-OrchJobMedia [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-JobId] <long[]>]
+ [[-Destination] <string>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,10 +20,11 @@ Creates a new machine in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-New-OrchMachine [-Name] <string[]> [-Description <string>] [-Type <string>] [-Scope <string>]
- [-UnattendedSlots <int>] [-NonProductionSlots <int>] [-TestAutomationSlots <int>]
- [-AutomationType <string>] [-TargetFramework <string>] [-RobotUsers <string[]>] [-Tags <string[]>]
- [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+New-OrchMachine [-Path <string[]>] [-Name] <string[]> [-AutomationType <string>]
+ [-Confirm] [-Description <string>] [-NonProductionSlots <int>] [-RobotUsers <string[]>]
+ [-Scope <string>] [-Tags <string[]>] [-TargetFramework <string>]
+ [-TestAutomationSlots <int>] [-Type <string>] [-UnattendedSlots <int>] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

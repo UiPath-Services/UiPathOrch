@@ -20,7 +20,7 @@ Stops running test set executions in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Stop-OrchTestSetExecution [-Id] <long[]> [-Path <string[]>] [-WhatIf] [-Confirm]
+Stop-OrchTestSetExecution [-Path <string[]>] [-Id] <long[]> [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 

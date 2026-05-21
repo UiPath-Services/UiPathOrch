@@ -20,7 +20,7 @@ Removes requirements from projects in Test Manager.
 ### __AllParameterSets
 
 ```
-Remove-TmRequirement [-Name] <string[]> [-Path <string[]>] [-Recurse] [-WhatIf] [-Confirm]
+Remove-TmRequirement [-Path <string[]>] [-Recurse] [-Name] <string[]> [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 

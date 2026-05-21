@@ -20,8 +20,8 @@ Removes a user bundle license from a licensed group in a UiPath Automation Cloud
 ### __AllParameterSets
 
 ```
-Remove-PmLicenseFromPmLicensedGroup [-GroupName] <string[]> [-License] <string[]> [-Path <string[]>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-PmLicenseFromPmLicensedGroup [-Path <string[]>] [-GroupName] <string[]>
+ [-License] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,8 +20,8 @@ Unassigns machines from folders.
 ### __AllParameterSets
 
 ```
-Remove-OrchFolderMachine [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchFolderMachine [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

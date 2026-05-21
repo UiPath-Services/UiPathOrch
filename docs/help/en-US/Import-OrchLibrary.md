@@ -20,7 +20,7 @@ Imports library packages into UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Import-OrchLibrary [-Source] <string[]> [[-Path] <string[]>] [-WhatIf] [-Confirm]
+Import-OrchLibrary [[-Path] <string[]>] [-Source] <string[]> [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 

@@ -20,7 +20,7 @@ Gets the event triggers.
 ### __AllParameterSets
 
 ```
-Get-OrchEventTrigger [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
+Get-OrchEventTrigger [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
  [<CommonParameters>]
 ```
 

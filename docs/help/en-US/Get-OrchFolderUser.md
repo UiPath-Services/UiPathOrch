@@ -20,9 +20,9 @@ Gets the users assigned to folders.
 ### __AllParameterSets
 
 ```
-Get-OrchFolderUser [[-UserName] <string[]>] [[-FullName] <string[]>] [-Type <string[]>]
- [-IncludeInherited] [-Path <string[]>] [-Recurse] [-Depth <uint>] [-ExportCsv <string>]
- [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchFolderUser [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-UserName] <string[]>]
+ [[-FullName] <string[]>] [-CsvEncoding <Encoding>] [-ExportCsv <string>]
+ [-IncludeInherited] [-Type <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

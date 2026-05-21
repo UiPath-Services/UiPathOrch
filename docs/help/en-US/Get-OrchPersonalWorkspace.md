@@ -20,7 +20,7 @@ Gets personal workspaces from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchPersonalWorkspace [[-Name] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchPersonalWorkspace [-Path <string[]>] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

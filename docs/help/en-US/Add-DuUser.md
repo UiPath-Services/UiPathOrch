@@ -20,8 +20,8 @@ Adds a user with role assignments to a Document Understanding project.
 ### __AllParameterSets
 
 ```
-Add-DuUser [-Type] <string[]> [-Name] <string[]> [-Roles] <string[]> [-Path <string[]>] [-Recurse]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-DuUser [-Path <string[]>] [-Recurse] [-Type] <string[]> [-Name] <string[]>
+ [-Roles] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,9 +20,9 @@ Creates or updates a role.
 ### __AllParameterSets
 
 ```
-Set-OrchRole [-Name] <string[]> -PermissionName <string> [-Type <string>] [-Scope <string>]
- [-View <string>] [-Edit <string>] [-Create <string>] [-Delete <string>] [-Path <string[]>]
- [-ExpandPermission] [-WhatIf] [-Confirm] [<CommonParameters>]
+Set-OrchRole [-Path <string[]>] [-Name] <string[]> [-Confirm] [-Create <string>]
+ [-Delete <string>] [-Edit <string>] [-ExpandPermission] -PermissionName <string>
+ [-Scope <string>] [-Type <string>] [-View <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

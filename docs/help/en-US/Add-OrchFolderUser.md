@@ -20,8 +20,8 @@ Assigns users to folders in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Add-OrchFolderUser [-Type] <string> [-UserName] <string[]> [[-Roles] <string[]>] [-Path <string[]>]
- [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Add-OrchFolderUser [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Type] <string>
+ [-UserName] <string[]> [[-Roles] <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

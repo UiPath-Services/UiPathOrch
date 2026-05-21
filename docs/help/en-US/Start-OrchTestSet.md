@@ -20,8 +20,8 @@ Starts the execution of test sets in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Start-OrchTestSet [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Start-OrchTestSet [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

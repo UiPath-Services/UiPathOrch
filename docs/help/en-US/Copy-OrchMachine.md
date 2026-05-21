@@ -20,8 +20,8 @@ Copies machines to another Orchestrator instance.
 ### __AllParameterSets
 
 ```
-Copy-OrchMachine [-Name] <string[]> [-Destination] <string[]> [-Path <string>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Copy-OrchMachine [-Path <string>] [-Name] <string[]> [-Destination] <string[]> [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,7 +20,7 @@ Removes test cases from projects in Test Manager.
 ### __AllParameterSets
 
 ```
-Remove-TmTestCase [-Name] <string[]> [-Path <string[]>] [-Recurse] [-WhatIf] [-Confirm]
+Remove-TmTestCase [-Path <string[]>] [-Recurse] [-Name] <string[]> [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 

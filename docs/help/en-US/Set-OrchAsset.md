@@ -20,9 +20,9 @@ Creates, updates, and removes non-credential assets.
 ### DefaultParameterSet (Default)
 
 ```
-Set-OrchAsset [[-ValueType] <string>] [-Name] <string[]> [[-Value] <string>]
- [[-UserName] <string[]>] [[-MachineName] <string[]>] [-Description <string>] [-Path <string[]>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Set-OrchAsset [-Path <string[]>] [[-ValueType] <string>] [-Name] <string[]>
+ [[-Value] <string>] [[-UserName] <string[]>] [[-MachineName] <string[]>] [-Confirm]
+ [-Description <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

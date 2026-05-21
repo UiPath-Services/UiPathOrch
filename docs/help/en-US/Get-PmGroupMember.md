@@ -20,8 +20,8 @@ Gets the members of platform management groups in a UiPath Automation Cloud orga
 ### __AllParameterSets
 
 ```
-Get-PmGroupMember [[-GroupName] <string[]>] [-Path <string[]>] [-ExportCsv <string>]
- [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-PmGroupMember [-Path <string[]>] [[-GroupName] <string[]>] [-CsvEncoding <Encoding>]
+ [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

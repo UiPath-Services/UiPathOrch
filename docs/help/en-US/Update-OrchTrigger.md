@@ -20,19 +20,19 @@ Updates existing triggers in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Update-OrchTrigger [-Name] <string[]> [-NewName <string>] [-Enabled <string>]
- [-SpecificPriorityValue <int>] [-Priority <string>] [-StartStrategy <int>] [-StopStrategy <string>]
- [-StopProcessExpression <string>] [-KillProcessExpression <string>]
- [-AlertPendingExpression <string>] [-AlertRunningExpression <string>]
- [-ConsecutiveJobFailuresThreshold <int>] [-JobFailuresGracePeriodInHours <int>]
- [-RuntimeType <string>] [-InputArguments <string>] [-ResumeOnSameContext <string>]
- [-RunAsMe <string>] [-IsConnected <string>] [-CalendarName <string>]
- [-ActivateOnJobComplete <string>] [-ItemsActivationThreshold <int>]
- [-ItemsPerJobActivationTarget <int>] [-MaxJobsForActivation <int>]
- [-StartProcessCronDetails <string>] [-StartProcessCron <string>] [-ReleaseName <string>]
- [-QueueDefinitionName <string>] [-TimeZone <string>] [-TimeZoneId <string>]
- [-StopProcessDate <datetime>] [-ExecutorRobots <string[]>] [-MachineRobots <string[]>]
- [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Update-OrchTrigger [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-ActivateOnJobComplete <string>] [-AlertPendingExpression <string>]
+ [-AlertRunningExpression <string>] [-CalendarName <string>] [-Confirm]
+ [-ConsecutiveJobFailuresThreshold <int>] [-Enabled <string>] [-ExecutorRobots <string[]>]
+ [-InputArguments <string>] [-IsConnected <string>] [-ItemsActivationThreshold <int>]
+ [-ItemsPerJobActivationTarget <int>] [-JobFailuresGracePeriodInHours <int>]
+ [-KillProcessExpression <string>] [-MachineRobots <string[]>]
+ [-MaxJobsForActivation <int>] [-NewName <string>] [-Priority <string>]
+ [-QueueDefinitionName <string>] [-ReleaseName <string>] [-ResumeOnSameContext <string>]
+ [-RunAsMe <string>] [-RuntimeType <string>] [-SpecificPriorityValue <int>]
+ [-StartProcessCron <string>] [-StartProcessCronDetails <string>] [-StartStrategy <int>]
+ [-StopProcessDate <datetime>] [-StopProcessExpression <string>] [-StopStrategy <string>]
+ [-TimeZone <string>] [-TimeZoneId <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

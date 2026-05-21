@@ -20,8 +20,8 @@ Gets roles from Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchRole [[-Name] <string[]>] [-Path <string[]>] [-ExpandPermission] [-ExportCsv <string>]
- [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchRole [-Path <string[]>] [[-Name] <string[]>] [-CsvEncoding <Encoding>]
+ [-ExpandPermission] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

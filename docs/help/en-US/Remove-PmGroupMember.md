@@ -20,8 +20,8 @@ Removes a member from a platform management group in a UiPath Automation Cloud o
 ### __AllParameterSets
 
 ```
-Remove-PmGroupMember [-GroupName] <string[]> [-Type] <string[]> [-UserName] <string[]>
- [-NoMatchWarning] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-PmGroupMember [-Path <string[]>] [-GroupName] <string[]> [-Type] <string[]>
+ [-UserName] <string[]> [-Confirm] [-NoMatchWarning] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

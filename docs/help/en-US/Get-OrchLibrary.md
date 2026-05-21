@@ -20,7 +20,7 @@ Gets the library packages from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchLibrary [[-Id] <string[]>] [-HostFeed] [-Path <string[]>] [<CommonParameters>]
+Get-OrchLibrary [-Path <string[]>] [[-Id] <string[]>] [-HostFeed] [<CommonParameters>]
 ```
 
 ## ALIASES

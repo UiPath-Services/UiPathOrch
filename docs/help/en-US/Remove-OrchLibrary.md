@@ -20,8 +20,8 @@ Removes library packages from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchLibrary [-Id] <string[]> [[-Version] <string[]>] [-Path <string[]>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Remove-OrchLibrary [-Path <string[]>] [-Id] <string[]> [[-Version] <string[]>] [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,8 +20,8 @@ Gets resource requirements for processes in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchProcessRequirement [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [<CommonParameters>]
+Get-OrchProcessRequirement [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

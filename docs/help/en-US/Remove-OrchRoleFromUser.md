@@ -20,8 +20,8 @@ Removes tenant-level roles from users in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchRoleFromUser [[-UserName] <string[]>] [-Roles] <string[]> [-FullName <string[]>]
- [-Type <string[]>] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchRoleFromUser [-Path <string[]>] [[-UserName] <string[]>] [-Roles] <string[]>
+ [-Confirm] [-FullName <string[]>] [-Type <string[]>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

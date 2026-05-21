@@ -20,8 +20,8 @@ Removes dates from the Non-Working Days calendars.
 ### __AllParameterSets
 
 ```
-Remove-OrchCalendarDate [-Name] <string[]> [-ExcludedDate] <datetime[]> [-Path <string[]>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchCalendarDate [-Path <string[]>] [-Name] <string[]> [-ExcludedDate] <datetime[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

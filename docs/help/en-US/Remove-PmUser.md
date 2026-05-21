@@ -20,8 +20,8 @@ Removes a platform management user from a UiPath Automation Cloud organization.
 ### __AllParameterSets
 
 ```
-Remove-PmUser [-Email] <string[]> [-NoMatchWarning] [-Path <string[]>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Remove-PmUser [-Path <string[]>] [-Email] <string[]> [-Confirm] [-NoMatchWarning]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,8 +20,8 @@ Copies webhooks to another Orchestrator drive.
 ### __AllParameterSets
 
 ```
-Copy-OrchWebhook [-Name] <string[]> [-Destination] <string[]> [-Path <string>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Copy-OrchWebhook [-Path <string>] [-Name] <string[]> [-Destination] <string[]> [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,8 +20,8 @@ Gets the excluded dates of UiPath Orchestrator non-working days calendars.
 ### __AllParameterSets
 
 ```
-Get-OrchCalendarDate [-Name] <string[]> [-IncludePastDate] [-Path <string[]>]
- [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchCalendarDate [-Path <string[]>] [-Name] <string[]> [-CsvEncoding <Encoding>]
+ [-ExportCsv <string>] [-IncludePastDate] [<CommonParameters>]
 ```
 
 ## ALIASES

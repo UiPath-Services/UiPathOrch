@@ -20,7 +20,7 @@ Gets per-tenant license allocations for a UiPath Automation Cloud organization (
 ### __AllParameterSets
 
 ```
-Get-PmLicenseAllocation [[-Tenant] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-PmLicenseAllocation [-Path <string[]>] [[-Tenant] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

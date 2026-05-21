@@ -20,26 +20,26 @@ Creates a new UiPathOrch PSDrive with the specified parameters.
 ### AppAuth
 
 ```
-New-OrchPSDrive [-Name] <string> [-Root] <string> [-Description <string>] [-Edition <string>]
- [-IdentityUrl <string>] [-AppId <string>] [-AppSecret <string>] [-RedirectUrl <string>]
- [-HttpListener <string>] [-OAuthScope <string>] [-IgnoreSslErrors <bool>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+New-OrchPSDrive [-Name] <string> [-Root] <string> [-AppId <string>] [-AppSecret <string>]
+ [-Confirm] [-Description <string>] [-Edition <string>] [-HttpListener <string>]
+ [-IdentityUrl <string>] [-IgnoreSslErrors <bool>] [-OAuthScope <string>]
+ [-RedirectUrl <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ### TokenAuth
 
 ```
-New-OrchPSDrive [-Name] <string> [-Root] <string> [-Description <string>] [-Edition <string>]
- [-OAuthScope <string>] [-AccessToken <string>] [-IgnoreSslErrors <bool>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+New-OrchPSDrive [-Name] <string> [-Root] <string> [-AccessToken <string>] [-Confirm]
+ [-Description <string>] [-Edition <string>] [-IgnoreSslErrors <bool>]
+ [-OAuthScope <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ### UserAuth
 
 ```
-New-OrchPSDrive [-Name] <string> [-Root] <string> [-Description <string>] [-Edition <string>]
- [-Username <string>] [-Password <string>] [-IgnoreSslErrors <bool>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+New-OrchPSDrive [-Name] <string> [-Root] <string> [-Confirm] [-Description <string>]
+ [-Edition <string>] [-IgnoreSslErrors <bool>] [-Password <string>] [-Username <string>]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

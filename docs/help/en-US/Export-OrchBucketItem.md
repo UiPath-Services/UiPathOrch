@@ -20,8 +20,9 @@ Exports (downloads) files from storage buckets to the local filesystem.
 ### __AllParameterSets
 
 ```
-Export-OrchBucketItem [[-Name] <string[]>] [[-FullPath] <string[]>] [[-Destination] <string>]
- [-Path <string>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Export-OrchBucketItem [-Path <string>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [[-FullPath] <string[]>] [[-Destination] <string>] [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

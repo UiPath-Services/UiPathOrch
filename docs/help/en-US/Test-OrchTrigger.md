@@ -20,7 +20,7 @@ Validates a process schedule (trigger) against the server.
 ### __AllParameterSets
 
 ```
-Test-OrchTrigger [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
+Test-OrchTrigger [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
  [<CommonParameters>]
 ```
 

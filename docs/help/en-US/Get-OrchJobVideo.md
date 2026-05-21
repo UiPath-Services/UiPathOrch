@@ -20,7 +20,7 @@ Gets jobs that have video recordings attached.
 ### __AllParameterSets
 
 ```
-Get-OrchJobVideo [[-Path] <string[]>] [[-Skip] <ulong>] [[-First] <ulong>] [-Recurse]
+Get-OrchJobVideo [[-Path] <string[]>] [-Recurse] [[-Skip] <ulong>] [[-First] <ulong>]
  [<CommonParameters>]
 ```
 

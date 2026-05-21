@@ -20,7 +20,7 @@ Gets the test sets from projects in Test Manager.
 ### __AllParameterSets
 
 ```
-Get-TmTestSet [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [<CommonParameters>]
+Get-TmTestSet [-Path <string[]>] [-Recurse] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

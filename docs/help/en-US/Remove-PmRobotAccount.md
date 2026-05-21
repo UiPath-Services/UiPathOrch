@@ -20,7 +20,7 @@ Removes a robot account from a UiPath Automation Cloud organization.
 ### __AllParameterSets
 
 ```
-Remove-PmRobotAccount [-Name] <string[]> [-Path <string[]>] [-WhatIf] [-Confirm]
+Remove-PmRobotAccount [-Path <string[]>] [-Name] <string[]> [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 

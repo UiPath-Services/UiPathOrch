@@ -20,7 +20,7 @@ Searches for users in the UiPath Orchestrator directory.
 ### __AllParameterSets
 
 ```
-Search-OrchDirectory [-Name] <string> [-Path <string[]>] [<CommonParameters>]
+Search-OrchDirectory [-Path <string[]>] [-Name] <string> [<CommonParameters>]
 ```
 
 ## ALIASES

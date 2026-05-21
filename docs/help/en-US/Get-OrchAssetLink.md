@@ -20,7 +20,7 @@ Gets the folder links of assets.
 ### __AllParameterSets
 
 ```
-Get-OrchAssetLink [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
+Get-OrchAssetLink [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
  [<CommonParameters>]
 ```
 

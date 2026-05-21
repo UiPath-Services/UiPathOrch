@@ -20,8 +20,8 @@ Imports process packages from local .nupkg files into UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Import-OrchPackage [-Source] <string[]> [[-Path] <string[]>] [-Recurse] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Import-OrchPackage [[-Path] <string[]>] [-Recurse] [-Source] <string[]> [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

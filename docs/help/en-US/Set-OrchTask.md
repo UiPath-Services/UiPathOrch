@@ -20,9 +20,9 @@ Updates Title, Priority, Note, or TaskCatalog association on existing tasks.
 ### __AllParameterSets
 
 ```
-Set-OrchTask [-Id] <long[]> [-Task <OrchTask>] [-Title <string>] [-Priority <string>]
- [-NoteText <string>] [-TaskCatalog <string>] [-UnsetTaskCatalog] [-Path <string[]>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Set-OrchTask [-Path <string[]>] [-Id] <long[]> [-Confirm] [-NoteText <string>]
+ [-Priority <string>] [-Task <OrchTask>] [-TaskCatalog <string>] [-Title <string>]
+ [-UnsetTaskCatalog] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,8 +20,8 @@ Gets machines assigned to folders.
 ### __AllParameterSets
 
 ```
-Get-OrchFolderMachine [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchFolderMachine [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [-CsvEncoding <Encoding>] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

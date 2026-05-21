@@ -20,8 +20,8 @@ Gets machine runtime sessions from Orchestrator folders.
 ### __AllParameterSets
 
 ```
-Get-OrchMachineSession [[-Status] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [<CommonParameters>]
+Get-OrchMachineSession [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [[-Status] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

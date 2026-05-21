@@ -20,9 +20,9 @@ Gets the alerts. (DEPRECATED since API version 18.0)
 ### __AllParameterSets
 
 ```
-Get-OrchAlert [[-Last] <string>] [[-Severity] <string>] [[-Component] <string[]>]
- [-CreationTimeAfter <datetime>] [-CreationTimeBefore <datetime>] [-Skip <ulong>] [-First <ulong>]
- [-Path <string[]>] [<CommonParameters>]
+Get-OrchAlert [-Path <string[]>] [[-Last] <string>] [[-Severity] <string>]
+ [[-Component] <string[]>] [-CreationTimeAfter <datetime>]
+ [-CreationTimeBefore <datetime>] [-First <ulong>] [-Skip <ulong>] [<CommonParameters>]
 ```
 
 ## ALIASES

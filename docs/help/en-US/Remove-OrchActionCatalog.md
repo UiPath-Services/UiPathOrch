@@ -20,8 +20,8 @@ Removes action catalogs from Orchestrator folders.
 ### __AllParameterSets
 
 ```
-Remove-OrchActionCatalog [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchActionCatalog [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

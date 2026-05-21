@@ -20,8 +20,8 @@ Removes personal workspace folders from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchPersonalWorkspace [[-Name] <string[]>] [[-OwnerName] <string[]>] [-Path <string[]>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchPersonalWorkspace [-Path <string[]>] [[-Name] <string[]>]
+ [[-OwnerName] <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

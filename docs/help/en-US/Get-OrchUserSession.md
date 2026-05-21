@@ -20,8 +20,8 @@ Gets user sessions from UiPath Orchestrator tenants.
 ### __AllParameterSets
 
 ```
-Get-OrchUserSession [-State <string[]>] [-Type <string[]>] [-OrderBy <string[]>] [-Skip <ulong>]
- [-First <ulong>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchUserSession [-Path <string[]>] [-First <ulong>] [-OrderBy <string[]>]
+ [-Skip <ulong>] [-State <string[]>] [-Type <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

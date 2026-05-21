@@ -20,8 +20,9 @@ Copies assets to another folder or Orchestrator instance.
 ### __AllParameterSets
 
 ```
-Copy-OrchAsset [-Name] <string[]> [-Destination] <string> [-Path <string>] [-Recurse]
- [-Depth <uint>] [-UserMappingCsv <string>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchAsset [-Path <string>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Destination] <string> [-Confirm] [-UserMappingCsv <string>] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

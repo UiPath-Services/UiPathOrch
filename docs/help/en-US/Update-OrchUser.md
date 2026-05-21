@@ -20,16 +20,19 @@ Updates users in UiPath Orchestrator tenants.
 ### __AllParameterSets
 
 ```
-Update-OrchUser [-UserName] <string[]> [-Name <string>] [-Surname <string>] [-Roles <string[]>]
- [-IsExternalLicensed <string>] [-MayHaveUserSession <string>] [-MayHaveRobotSession <string>]
- [-MayHaveUnattendedSession <string>] [-MayHavePersonalWorkspace <string>]
- [-RestrictToPersonalWorkspace <string>] [-UpdatePolicyType <string>]
- [-UpdatePolicyVersion <string>] [-UR_UserName <string>] [-UR_CredentialStore <string>]
- [-UR_Password <string>] [-UR_CredentialExternalName <string>] [-UR_CredentialType <string>]
- [-UR_LimitConcurrentExecution <string>] [-ES_TracingLevel <string>]
- [-ES_StudioNotifyServer <string>] [-ES_LoginToConsole <string>] [-ES_ResolutionWidth <string>]
- [-ES_ResolutionHeight <string>] [-ES_ResolutionDepth <string>] [-ES_FontSmoothing <string>]
- [-ES_AutoDownloadProcess <string>] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Update-OrchUser [-Path <string[]>] [-UserName] <string[]> [-Confirm]
+ [-ES_AutoDownloadProcess <string>] [-ES_FontSmoothing <string>]
+ [-ES_LoginToConsole <string>] [-ES_ResolutionDepth <string>]
+ [-ES_ResolutionHeight <string>] [-ES_ResolutionWidth <string>]
+ [-ES_StudioNotifyServer <string>] [-ES_TracingLevel <string>]
+ [-IsExternalLicensed <string>] [-MayHavePersonalWorkspace <string>]
+ [-MayHaveRobotSession <string>] [-MayHaveUnattendedSession <string>]
+ [-MayHaveUserSession <string>] [-Name <string>] [-RestrictToPersonalWorkspace <string>]
+ [-Roles <string[]>] [-Surname <string>] [-UpdatePolicyType <string>]
+ [-UpdatePolicyVersion <string>] [-UR_CredentialExternalName <string>]
+ [-UR_CredentialStore <string>] [-UR_CredentialType <string>]
+ [-UR_LimitConcurrentExecution <string>] [-UR_Password <string>] [-UR_UserName <string>]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

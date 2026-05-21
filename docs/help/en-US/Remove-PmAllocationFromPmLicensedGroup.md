@@ -20,8 +20,8 @@ Removes a user allocation from a licensed group in a UiPath Automation Cloud org
 ### __AllParameterSets
 
 ```
-Remove-PmAllocationFromPmLicensedGroup [-GroupName] <string[]> [-UserName] <string[]>
- [-NoMatchWarning] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-PmAllocationFromPmLicensedGroup [-Path <string[]>] [-GroupName] <string[]>
+ [-UserName] <string[]> [-Confirm] [-NoMatchWarning] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

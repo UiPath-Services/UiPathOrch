@@ -20,7 +20,7 @@ Gets test set schedules from Orchestrator folders.
 ### __AllParameterSets
 
 ```
-Get-OrchTestSetSchedule [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
+Get-OrchTestSetSchedule [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
  [<CommonParameters>]
 ```
 

@@ -20,7 +20,7 @@ Gets the API triggers.
 ### __AllParameterSets
 
 ```
-Get-OrchApiTrigger [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
+Get-OrchApiTrigger [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
  [<CommonParameters>]
 ```
 

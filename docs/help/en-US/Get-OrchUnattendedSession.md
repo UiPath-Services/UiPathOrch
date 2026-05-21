@@ -20,7 +20,7 @@ Gets unattended sessions from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchUnattendedSession [[-Status] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchUnattendedSession [-Path <string[]>] [[-Status] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

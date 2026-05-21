@@ -20,8 +20,8 @@ Gets action-center tasks from a folder.
 ### __AllParameterSets
 
 ```
-Get-OrchTask [[-Title] <string[]>] [-Status <string[]>] [-Priority <string[]>] [-Path <string[]>]
- [-Recurse] [-Depth <uint>] [<CommonParameters>]
+Get-OrchTask [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Title] <string[]>]
+ [-Priority <string[]>] [-Status <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

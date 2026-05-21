@@ -20,8 +20,8 @@ Copies external applications from one UiPath Automation Cloud organization to an
 ### __AllParameterSets
 
 ```
-Copy-PmExternalApplication [[-Name] <string[]>] [-Destination] <string[]> [-Path <string>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Copy-PmExternalApplication [-Path <string>] [[-Name] <string[]>] [-Destination] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

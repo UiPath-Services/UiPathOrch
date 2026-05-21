@@ -20,8 +20,8 @@ Gets processes from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchProcess [[-Name] <string[]>] [-ExpandDetails] [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchProcess [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [-CsvEncoding <Encoding>] [-ExpandDetails] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

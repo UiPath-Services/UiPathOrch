@@ -20,8 +20,8 @@ Copies test set schedules to a destination folder.
 ### __AllParameterSets
 
 ```
-Copy-OrchTestSetSchedule [-Name] <string[]> [-Destination] <string> [-Path <string>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Copy-OrchTestSetSchedule [-Path <string>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Destination] <string> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

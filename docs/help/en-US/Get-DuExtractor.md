@@ -20,7 +20,7 @@ Gets extractors of Document Understanding.
 ### __AllParameterSets
 
 ```
-Get-DuExtractor [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [<CommonParameters>]
+Get-DuExtractor [-Path <string[]>] [-Recurse] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,7 +20,7 @@ Gets the test cases from projects in Test Manager.
 ### __AllParameterSets
 
 ```
-Get-TmTestCase [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [<CommonParameters>]
+Get-TmTestCase [-Path <string[]>] [-Recurse] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

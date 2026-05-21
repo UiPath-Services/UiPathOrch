@@ -20,8 +20,9 @@ Updates an existing credential store in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Update-OrchCredentialStore [-Name] <string[]> [-NewName <string>] [-HostName <string>]
- [-AdditionalConfiguration <string>] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Update-OrchCredentialStore [-Path <string[]>] [-Name] <string[]>
+ [-AdditionalConfiguration <string>] [-Confirm] [-HostName <string>] [-NewName <string>]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

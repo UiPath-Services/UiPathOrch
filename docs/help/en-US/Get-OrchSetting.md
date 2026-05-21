@@ -20,7 +20,7 @@ Gets general settings from Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchSetting [[-Name] <string[]>] [-Path <string[]>] [<CommonParameters>]
+Get-OrchSetting [-Path <string[]>] [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

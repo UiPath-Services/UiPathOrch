@@ -20,8 +20,8 @@ Imports (uploads) files from the local filesystem into storage buckets.
 ### __AllParameterSets
 
 ```
-Import-OrchBucketItem [-Source] <string[]> [[-Name] <string[]>] [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Import-OrchBucketItem [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Source] <string[]>
+ [[-Name] <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

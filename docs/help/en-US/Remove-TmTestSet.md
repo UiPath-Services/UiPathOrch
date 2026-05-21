@@ -20,7 +20,7 @@ Removes test sets from projects in Test Manager.
 ### __AllParameterSets
 
 ```
-Remove-TmTestSet [-Name] <string[]> [-Path <string[]>] [-Recurse] [-WhatIf] [-Confirm]
+Remove-TmTestSet [-Path <string[]>] [-Recurse] [-Name] <string[]> [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 

@@ -20,15 +20,15 @@ Resumes a Suspended job.
 ### FromCommandLine (Default)
 
 ```
-Resume-OrchJob [-Key] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Resume-OrchJob [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Key] <string[]> [-Confirm]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ### FromPipeline
 
 ```
-Resume-OrchJob [-Job <Job>] [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Resume-OrchJob [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Confirm] [-Job <Job>]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

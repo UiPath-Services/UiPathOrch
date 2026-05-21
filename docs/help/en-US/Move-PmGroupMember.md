@@ -20,8 +20,9 @@ Moves or copies members between platform management groups within the same UiPat
 ### __AllParameterSets
 
 ```
-Move-PmGroupMember [-GroupName] <string> [-UserName] <string[]> [-Destination] <string[]>
- [-KeepSource <string>] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Move-PmGroupMember [-Path <string[]>] [-GroupName] <string> [-UserName] <string[]>
+ [-Destination] <string[]> [-Confirm] [-KeepSource <string>] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

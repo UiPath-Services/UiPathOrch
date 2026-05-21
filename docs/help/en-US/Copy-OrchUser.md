@@ -20,8 +20,8 @@ Copies users to another Orchestrator instance.
 ### __AllParameterSets
 
 ```
-Copy-OrchUser [-UserName] <string[]> [-Destination] <string[]> [-FullName <string[]>]
- [-Type <string[]>] [-Path <string>] [-UserMappingCsv <string>] [-WhatIf] [-Confirm]
+Copy-OrchUser [-Path <string>] [-UserName] <string[]> [-Destination] <string[]> [-Confirm]
+ [-FullName <string[]>] [-Type <string[]>] [-UserMappingCsv <string>] [-WhatIf]
  [<CommonParameters>]
 ```
 

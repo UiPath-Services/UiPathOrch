@@ -20,8 +20,8 @@ Gets the non-working days calendars.
 ### __AllParameterSets
 
 ```
-Get-OrchCalendar [[-Name] <string[]>] [-ExpandExcludedDate] [-IncludePastDate] [-Path <string[]>]
- [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-OrchCalendar [-Path <string[]>] [[-Name] <string[]>] [-CsvEncoding <Encoding>]
+ [-ExpandExcludedDate] [-ExportCsv <string>] [-IncludePastDate] [<CommonParameters>]
 ```
 
 ## ALIASES

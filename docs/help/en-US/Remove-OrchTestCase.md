@@ -20,8 +20,8 @@ Removes test case definitions from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchTestCase [-Name] <string[]> [-Path <string[]>] [-Recurse] [-Depth <uint>] [-WhatIf]
- [-Confirm] [<CommonParameters>]
+Remove-OrchTestCase [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

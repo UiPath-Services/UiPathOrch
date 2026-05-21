@@ -20,8 +20,8 @@ Gets items from test data queues in Orchestrator folders.
 ### __AllParameterSets
 
 ```
-Get-OrchTestDataQueueItem [[-Name] <string[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>]
- [<CommonParameters>]
+Get-OrchTestDataQueueItem [-Path <string[]>] [-Recurse] [-Depth <uint>]
+ [[-Name] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

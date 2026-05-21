@@ -20,7 +20,7 @@ Resolves directory entity names in bulk from UiPath Automation Cloud organizatio
 ### __AllParameterSets
 
 ```
-Resolve-PmDirectoryNameBulk [-EntityType] <string> [-Name] <string[]> [-Path <string[]>]
+Resolve-PmDirectoryNameBulk [-Path <string[]>] [-EntityType] <string> [-Name] <string[]>
  [<CommonParameters>]
 ```
 

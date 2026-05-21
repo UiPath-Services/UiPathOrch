@@ -20,18 +20,20 @@ Gets jobs from UiPath Orchestrator.
 ### JobId (Default)
 
 ```
-Get-OrchJob [[-Id] <long[]>] [-Path <string[]>] [-Recurse] [-Depth <uint>] [<CommonParameters>]
+Get-OrchJob [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Id] <long[]>]
+ [<CommonParameters>]
 ```
 
 ### Filter
 
 ```
-Get-OrchJob [-Last <string>] [-CreationTimeAfter <datetime>] [-CreationTimeBefore <datetime>]
- [-StartTimeAfter <datetime>] [-StartTimeBefore <datetime>] [-EndTimeAfter <datetime>]
- [-EndTimeBefore <datetime>] [-ResumeTimeAfter <datetime>] [-ResumeTimeBefore <datetime>]
- [-Priority <string>] [-ReleaseName <string[]>] [-SourceType <string[]>] [-State <string[]>]
- [-ProcessType <string[]>] [-Robot <string[]>] [-Skip <ulong>] [-OrderBy <string>] [-OrderAscending]
- [-First <ulong>] [-Path <string[]>] [-Recurse] [-Depth <uint>] [<CommonParameters>]
+Get-OrchJob [-Path <string[]>] [-Recurse] [-Depth <uint>] [-CreationTimeAfter <datetime>]
+ [-CreationTimeBefore <datetime>] [-EndTimeAfter <datetime>] [-EndTimeBefore <datetime>]
+ [-First <ulong>] [-Last <string>] [-OrderAscending] [-OrderBy <string>]
+ [-Priority <string>] [-ProcessType <string[]>] [-ReleaseName <string[]>]
+ [-ResumeTimeAfter <datetime>] [-ResumeTimeBefore <datetime>] [-Robot <string[]>]
+ [-Skip <ulong>] [-SourceType <string[]>] [-StartTimeAfter <datetime>]
+ [-StartTimeBefore <datetime>] [-State <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

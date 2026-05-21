@@ -20,7 +20,7 @@ Removes a licensed group from a UiPath Automation Cloud organization.
 ### __AllParameterSets
 
 ```
-Remove-PmLicensedGroup [[-GroupName] <string[]>] [-Path <string[]>] [-WhatIf] [-Confirm]
+Remove-PmLicensedGroup [-Path <string[]>] [[-GroupName] <string[]>] [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 

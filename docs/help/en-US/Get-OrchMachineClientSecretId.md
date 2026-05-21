@@ -20,8 +20,8 @@ Gets client secret IDs and creation times for machines.
 ### __AllParameterSets
 
 ```
-Get-OrchMachineClientSecretId [[-Name] <string[]>] [[-SecretId] <string[]>] [-Path <string[]>]
- [<CommonParameters>]
+Get-OrchMachineClientSecretId [-Path <string[]>] [[-Name] <string[]>]
+ [[-SecretId] <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

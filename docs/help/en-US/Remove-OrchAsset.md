@@ -20,8 +20,8 @@ Removes assets from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchAsset [-Name] <string[]> [[-ValueType] <string[]>] [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchAsset [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
+ [[-ValueType] <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

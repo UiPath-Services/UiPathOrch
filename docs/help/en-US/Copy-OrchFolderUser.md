@@ -20,9 +20,9 @@ Copies folder user assignments to another folder or Orchestrator instance.
 ### __AllParameterSets
 
 ```
-Copy-OrchFolderUser [-UserName] <string[]> [-Destination] <string> [-Type <string[]>]
- [-Path <string>] [-Recurse] [-Depth <uint>] [-UserMappingCsv <string>] [-WhatIf] [-Confirm]
- [<CommonParameters>]
+Copy-OrchFolderUser [-Path <string>] [-Recurse] [-Depth <uint>] [-UserName] <string[]>
+ [-Destination] <string> [-Confirm] [-Type <string[]>] [-UserMappingCsv <string>]
+ [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

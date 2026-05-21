@@ -20,8 +20,8 @@ Removes users from UiPath Orchestrator tenants.
 ### __AllParameterSets
 
 ```
-Remove-OrchUser [[-UserName] <string[]>] [[-FullName] <string[]>] [-Type <string[]>]
- [-NoMatchWarning] [-Path <string[]>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchUser [-Path <string[]>] [[-UserName] <string[]>] [[-FullName] <string[]>]
+ [-Confirm] [-NoMatchWarning] [-Type <string[]>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

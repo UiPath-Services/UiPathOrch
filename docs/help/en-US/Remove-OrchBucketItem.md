@@ -20,8 +20,8 @@ Removes files from storage buckets in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchBucketItem [[-Name] <string[]>] [[-FullPath] <string[]>] [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Remove-OrchBucketItem [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
+ [[-FullPath] <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
