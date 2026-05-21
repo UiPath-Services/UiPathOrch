@@ -192,6 +192,34 @@ Describe 'Fixture CSV round-trip (Orch1: → OrchTest: → CSV) preserves source
         Compare-CsvSubset $expected $actual @('Path', 'Name', 'Type', 'Scope') 'machines'
     }
 
+    It 'api_triggers.csv round-trips Path / Name / Release / Method / Slug / CallingMode' {
+        $exportPath = Join-Path $script:ExportDir 'api_triggers.csv'
+        Get-OrchApiTrigger -Path $script:FixtureRoot -Recurse -ExportCsv $exportPath | Out-Null
+        $expected = Normalize-Rows (Read-FixtureCsv 'api_triggers.csv')
+        $actual   = Normalize-Rows (Import-Csv $exportPath)
+        Compare-CsvSubset $expected $actual @('Path', 'Name', 'Release', 'Method', 'Slug', 'CallingMode') 'api_triggers'
+    }
+
+    It 'test_data_queues.csv round-trips Path / Name / Description' {
+        $exportPath = Join-Path $script:ExportDir 'test_data_queues.csv'
+        Get-OrchTestDataQueue -Path $script:FixtureRoot -Recurse -ExportCsv $exportPath | Out-Null
+        $expected = Normalize-Rows (Read-FixtureCsv 'test_data_queues.csv')
+        $actual   = Normalize-Rows (Import-Csv $exportPath)
+        # ContentJsonSchema is not asserted here — the import path sets it
+        # from the CSV but the server may canonicalise (re-order keys,
+        # strip whitespace) and reading it back drifts from byte-equal.
+        # The Path/Name/Description triad pins identity-and-metadata.
+        Compare-CsvSubset $expected $actual @('Path', 'Name', 'Description') 'test_data_queues'
+    }
+
+    It 'task_catalogs.csv round-trips Path / Name / Description / Encrypted' {
+        $exportPath = Join-Path $script:ExportDir 'task_catalogs.csv'
+        Get-OrchActionCatalog -Path $script:FixtureRoot -Recurse -ExportCsv $exportPath | Out-Null
+        $expected = Normalize-Rows (Read-FixtureCsv 'task_catalogs.csv')
+        $actual   = Normalize-Rows (Import-Csv $exportPath)
+        Compare-CsvSubset $expected $actual @('Path', 'Name', 'Description', 'Encrypted') 'task_catalogs'
+    }
+
     It 'roles.csv round-trips Path / Name (per-permission rows)' {
         # Get-OrchRole emits one row per (Role, Permission) tuple, matching the
         # source CSV shape. Comparison is on the (Path, Name, PermissionName)

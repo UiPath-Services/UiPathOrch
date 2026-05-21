@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.5.2'
+ModuleVersion = '1.5.3'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -293,6 +293,7 @@ CmdletsToExport = @(
 'Remove-OrchQueueItem',
 
 'Get-OrchTestSet',
+'Get-OrchTestSetDetail',
 'New-OrchTestSet',
 'Copy-OrchTestSet',
 'Remove-OrchTestSet',

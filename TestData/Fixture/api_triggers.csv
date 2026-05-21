@@ -1,0 +1,4 @@
+Path,Name,Release,Method,Slug,CallingMode,Enabled,Description,RunAsCaller
+Orch1:\TestFixture_Base\Development,trig-api-1,proc-dev-1,Get,trig-api-1,AsyncRequestReply,false,Fixture API trigger Get,false
+Orch1:\TestFixture_Base\Development,trig-api-2,proc-dev-1,Post,trig-api-2,FireAndForget,false,Fixture API trigger Post fire-and-forget,true
+Orch1:\TestFixture_Base\Production,trig-api-prod,proc-blank-1,Post,trig-api-prod,AsyncRequestReply,false,Fixture API trigger on prod,false

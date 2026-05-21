@@ -265,4 +265,33 @@ Describe 'Copy-Item -Recurse round-trip preserves per-folder entities' {
             -Name 'folder_machines' `
             -ColumnsToCheck @('Type')
     }
+
+    It 'api triggers round-trip' {
+        # Activated alongside v1.5.3's api_triggers.csv fixture. Verifies
+        # Copy-OrchApiTrigger preserves Method, Slug, CallingMode, and
+        # the Release linkage on the dst side.
+        Export-AndDiff `
+            -Getter { param($path, $csv) Get-OrchApiTrigger -Path $path -Recurse -ExportCsv $csv | Out-Null } `
+            -Name 'api_triggers' `
+            -ColumnsToCheck @('Release', 'Method', 'Slug', 'CallingMode')
+    }
+
+    It 'test data queues round-trip' {
+        # Activated alongside v1.5.3's test_data_queues.csv fixture.
+        # Verifies Copy-OrchTestDataQueue preserves Description and
+        # ContentJsonSchema.
+        Export-AndDiff `
+            -Getter { param($path, $csv) Get-OrchTestDataQueue -Path $path -Recurse -ExportCsv $csv | Out-Null } `
+            -Name 'test_data_queues' `
+            -ColumnsToCheck @('Description')
+    }
+
+    It 'action catalogs round-trip' {
+        # Activated alongside v1.5.3's task_catalogs.csv fixture. Verifies
+        # Copy-OrchActionCatalog preserves Description and Encrypted.
+        Export-AndDiff `
+            -Getter { param($path, $csv) Get-OrchActionCatalog -Path $path -Recurse -ExportCsv $csv | Out-Null } `
+            -Name 'task_catalogs' `
+            -ColumnsToCheck @('Description')
+    }
 }

@@ -151,12 +151,26 @@ Get-ChildItem "$FixturePath\BucketItems" -Directory | ForEach-Object {
 }
 
 # 12. Triggers (depend on processes; all are Enabled=false to prevent firing)
-Write-Host "[11/12] Triggers"
+Write-Host "[11/17] Triggers"
 Import-Csv "$FixturePath\triggers.csv" | Remap-Path | New-OrchTrigger | Out-Null
+
+# 12a. API triggers (depend on processes; all Enabled=false to prevent firing).
+# The cmdlet defaults Tags=[], MachineRobots=[{}], Slug=Name when omitted —
+# all server-required, so barebones-ish CSV rows still POST cleanly.
+Write-Host "[11a/17] API triggers"
+Import-Csv "$FixturePath\api_triggers.csv" | Remap-Path | New-OrchApiTrigger | Out-Null
+
+# 12b. Test data queues. ContentJsonSchema defaults to '{}' when omitted.
+Write-Host "[11b/17] Test data queues"
+Import-Csv "$FixturePath\test_data_queues.csv" | Remap-Path | New-OrchTestDataQueue | Out-Null
+
+# 12c. Action catalogs (TaskCatalog wire entity).
+Write-Host "[11c/17] Action catalogs"
+Import-Csv "$FixturePath\task_catalogs.csv" | Remap-Path | New-OrchActionCatalog | Out-Null
 
 # 13. Asset links (depend on assets; share existing assets into additional folders).
 # The CSV's Link column is also a path that needs the source-prefix remap.
-Write-Host "[12/14] Asset links"
+Write-Host "[12/17] Asset links"
 Import-Csv "$FixturePath\asset_links.csv" |
     ForEach-Object {
         $_.Path = $_.Path -replace '^Orch1:', "${TargetDrive}:"
@@ -166,7 +180,7 @@ Import-Csv "$FixturePath\asset_links.csv" |
     Add-OrchAssetLink -Confirm:$false | Out-Null
 
 # 14. Bucket links (depend on buckets; share existing buckets into additional folders).
-Write-Host "[13/14] Bucket links"
+Write-Host "[13/17] Bucket links"
 Import-Csv "$FixturePath\bucket_links.csv" |
     ForEach-Object {
         $_.Path = $_.Path -replace '^Orch1:', "${TargetDrive}:"
@@ -176,7 +190,7 @@ Import-Csv "$FixturePath\bucket_links.csv" |
     Add-OrchBucketLink -Confirm:$false | Out-Null
 
 # 15. Queue links (depend on queues; share existing queues into additional folders).
-Write-Host "[14/14] Queue links"
+Write-Host "[14/17] Queue links"
 Import-Csv "$FixturePath\queue_links.csv" |
     ForEach-Object {
         $_.Path = $_.Path -replace '^Orch1:', "${TargetDrive}:"

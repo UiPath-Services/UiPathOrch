@@ -1,0 +1,4 @@
+Path,Name,Description,Encrypted
+Orch1:\TestFixture_Base\Development,ac-dev,Fixture action catalog dev,false
+Orch1:\TestFixture_Base\Production,ac-prod,Fixture action catalog prod,false
+Orch1:\TestFixture_Base\Production,ac-secure,Fixture action catalog encrypted,true

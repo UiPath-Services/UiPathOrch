@@ -6,6 +6,72 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.5.3] - 2026-05-21
+
+Adds the `Get-OrchTestSetDetail` "single-item GET" cmdlet that the
+`Get | New` clone path needs; extends `Get-Orch* -ExportCsv` to two
+more entity types so the CSV round-trip pattern is now uniform across
+the entities added in 1.5.0 - 1.5.2; extends the fixture and the
+RoundTrip Pester suite to cover those entities so the next refactor
+catches regressions automatically.
+
+### Added
+
+- **`Get-OrchTestSetDetail`** — per-item GetForEdit cmdlet that
+  returns TestSets with `Packages[]` and `TestCases[]` arrays
+  populated (the plain `Get-OrchTestSet` uses the LIST endpoint
+  which returns `TestCaseCount` but empty arrays). The documented
+  clone path
+  `Get-OrchTestSetDetail X | New-OrchTestSet -Path Dst -Name Y`
+  now actually works — live-verified against PAT:\Shared 2026-05-21.
+
+- **`Get-OrchTestDataQueue -ExportCsv` / `-CsvEncoding`** — matches
+  the pattern shared by every other Get-Orch* cmdlet. CSV columns
+  align with `New-OrchTestDataQueue` parameter names so
+  `Import-Csv | New-OrchTestDataQueue` round-trips.
+
+- **`Get-OrchActionCatalog -ExportCsv` / `-CsvEncoding`** — same
+  pattern. Round-trips into `New-OrchActionCatalog`.
+
+- **Fixture extension**: `TestData/Fixture/` gains
+  `api_triggers.csv`, `test_data_queues.csv`, and `task_catalogs.csv`.
+  `Import-Fixture.ps1` learns three new steps (renumbered 11a / 11b /
+  11c) that seed each entity family with three fixture rows per
+  type.
+
+  TestSet and TestSetSchedule fixtures are NOT added in this
+  release — they need a test automation package in the fixture
+  feed and a tenant feature flag respectively. Documented as a
+  follow-up.
+
+- **`CmdletV15Behaviors.Tests.ps1`** — Pester regression suite
+  pinning down the live-verified v1.5.0 - v1.5.2 behaviors so a
+  future refactor doesn't silently re-break them:
+  - `New-OrchApiTrigger` barebones succeeds (server-required
+    defaults `Tags=[]`, `MachineRobots=[{}]`, `Slug=Name` auto-
+    supplied).
+  - `New-OrchApiTrigger -RunAsCaller` round-trips via Get.
+  - `Get-OrchApiTrigger -ExportCsv | Import-Csv |
+    Update-OrchApiTrigger` round-trips Description / Enabled.
+  - `New-OrchTestDataQueue` barebones succeeds (cmdlet defaults
+    `ContentJsonSchema='{}'`).
+  - `New-OrchActionCatalog` barebones succeeds.
+  - `Get-OrchTestSetDetail` populates arrays when LIST reports
+    `TestCaseCount > 0`.
+
+- **RoundTrip Pester tests** for the new entities:
+  - `CopyItem.RoundTrip.Tests.ps1` gets `api triggers`,
+    `test data queues`, `action catalogs` tests.
+  - `Fixture.RoundTrip.Tests.ps1` gets `api_triggers.csv`,
+    `test_data_queues.csv`, `task_catalogs.csv` tests.
+
+### Changed
+
+- The `[11/12]` / `[12/14]` / `[13/14]` / `[14/14]` step numbering
+  in `Import-Fixture.ps1` becomes `/17` to reflect the three new
+  steps. No behavioral change for the step-by-step verbose output;
+  the renumbering is cosmetic.
+
 ## [1.5.2] - 2026-05-21
 
 `New-OrchTestSet` becomes fully usable. v1.5.1 shipped the cmdlet

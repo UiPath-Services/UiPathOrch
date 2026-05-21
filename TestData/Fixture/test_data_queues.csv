@@ -1,0 +1,4 @@
+Path,Name,Description,ContentJsonSchema
+Orch1:\TestFixture_Base\Development,tdq-any,Fixture test-data queue any-shape items,{}
+Orch1:\TestFixture_Base\Development,tdq-orders,Fixture test-data queue typed shape,"{""type"":""object"",""properties"":{""OrderId"":{""type"":""string""},""Amount"":{""type"":""number""}}}"
+Orch1:\TestFixture_Base\QA,tdq-qa,Fixture test-data queue QA folder,{}

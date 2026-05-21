@@ -1,7 +1,8 @@
 using System.Management.Automation;
+using System.Text;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Completer;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -24,10 +25,46 @@ public class GetActionCatalogCmdlet : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
+    [Parameter]
+    public string? ExportCsv { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(EncodingCompleter))]
+    [EncodingArgumentTransformation]
+    public Encoding? CsvEncoding { get; set; }
+
+    private static readonly string DefaultCsvName = "ExportedActionCatalogs.csv";
+
+    // Column names align with New-OrchActionCatalog parameter names so
+    // Get | Export-Csv | Import-Csv | New-OrchActionCatalog round-trips.
+    private static readonly string[] CsvHeaders = [
+        "Path",
+        "Name",
+        "Description",
+        "Encrypted",
+    ];
+
+    private void WriteCsvContent(StreamWriter writer, IEnumerable<TaskCatalog> catalogs)
+    {
+        foreach (var c in catalogs)
+        {
+            string[] line = [
+                EscapeCsvValue(c.Path, true),
+                EscapeCsvValue(c.Name, true),
+                EscapeCsvValue(c.Description),
+                EscapeCsvValue(c.Encrypted),
+            ];
+            writer.WriteCsvLine(line);
+        }
+    }
+
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
+
+        var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+        using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
@@ -42,15 +79,22 @@ public class GetActionCatalogCmdlet : OrchestratorPSCmdlet
                 var entities = result.GetResult(cancelHandler.Token);
                 if (entities is null) continue;
 
-                WriteObject(entities
+                var filtered = entities
                     .FilterByWildcards(s => s?.Name, wpName)
-                    .OrderBy(s => s.Name),
-                    true);
+                    .OrderBy(s => s.Name);
+
+                if (writer is not null) { WriteCsvContent(writer, filtered); }
+                else { WriteObject(filtered, true); }
             }
             catch (OrchException ex)
             {
                 WriteError(new ErrorRecord(ex, "GetActionCatalogError", ErrorCategory.InvalidOperation, ex.Target));
             }
+        }
+
+        if (writer is not null)
+        {
+            WriteCSVExportedMessage(this, providerCsvPath);
         }
     }
 }
