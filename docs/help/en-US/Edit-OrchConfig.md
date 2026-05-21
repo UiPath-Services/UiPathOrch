@@ -4,7 +4,7 @@ external help file: UiPathOrch.dll-Help.xml
 HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Edit-OrchConfig.md'
 Locale: en-US
 Module Name: UiPathOrch
-ms.date: 03/06/2026
+ms.date: 05/21/2026
 PlatyPS schema version: 2024-05-01
 title: Edit-OrchConfig
 ---
@@ -20,7 +20,7 @@ Opens the UiPathOrchConfig.json configuration file in an editor.
 ### __AllParameterSets
 
 ```
-Edit-OrchConfig [[-EditorType] <string>] [<CommonParameters>]
+Edit-OrchConfig [-UseDefaultEditor] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -29,60 +29,48 @@ Edit-OrchConfig [[-EditorType] <string>] [<CommonParameters>]
 
 Opens the UiPathOrchConfig.json configuration file in a text editor for manual editing. This file defines the Orchestrator drives (PSDrives) that are mounted when the UiPathOrch module is imported.
 
-On Windows, the cmdlet launches Notepad by default or the default application associated with .json files when EditorType is set to "Default". If the preferred editor fails, it falls back to the alternate option. On Linux, the cmdlet changes the current location to the directory containing the configuration file and displays a message prompting you to edit the file manually. Use `popd` to return to the previous location.
+On Windows, the cmdlet launches Notepad by default. Specify -UseDefaultEditor to launch the application associated with .json files instead (Notepad is then used as a fallback if the association launch fails).
+
+On Linux and macOS, the cmdlet does not launch an editor. It changes the current location to the directory containing the configuration file and prints a warning prompting you to edit the file manually. The -UseDefaultEditor switch has no effect on these platforms. Use `popd` to return to the previous location after saving.
 
 If the configuration file does not exist, the cmdlet creates a default configuration file before opening it.
 
 After saving changes to the configuration file, run `Import-OrchConfig` to reload the configuration and mount the configured Orchestrator tenants as PSDrives.
 
-The -EditorType parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see available editor types.
-
-Primary Endpoint:
-
-OAuth required scopes:
-
-Required permissions:
-
 ## EXAMPLES
 
-### Example 1: Open the configuration file with the default editor
+### Example 1: Open the configuration file with Notepad (Windows default)
 
 ```powershell
 PS C:\> Edit-OrchConfig
 ```
 
-Opens UiPathOrchConfig.json in Notepad (on Windows) or navigates to the configuration file directory (on Linux).
+Opens UiPathOrchConfig.json in Notepad on Windows. On Linux/macOS, changes the current location to the configuration file's directory and prints an edit-then-Import-OrchConfig prompt.
 
-### Example 2: Open the configuration file with the system default application
-
-```powershell
-PS C:\> Edit-OrchConfig Default
-```
-
-Opens UiPathOrchConfig.json using the default application associated with .json files on Windows.
-
-### Example 3: Open the configuration file with Notepad
+### Example 2: Open with the .json file association
 
 ```powershell
-PS C:\> Edit-OrchConfig Notepad
+PS C:\> Edit-OrchConfig -UseDefaultEditor
 ```
 
-Opens UiPathOrchConfig.json explicitly in Notepad on Windows.
+On Windows, opens UiPathOrchConfig.json using the application associated with .json files (for example, Visual Studio Code if it is registered as the .json handler). Falls back to Notepad if the association launch fails.
+
+On Linux/macOS, this switch is silently ignored; the cmdlet behaves the same as Example 1 on those platforms.
 
 ## PARAMETERS
 
-### -EditorType
+### -UseDefaultEditor
 
-Specifies the type of editor to use for opening the configuration file. On Windows, valid values are "Default" (uses the system's default .json file association) and "Notepad" (uses Notepad). Tab completion dynamically suggests available editor types based on the current platform.
+Windows only. Launches the application associated with .json files instead of Notepad. If the association launch fails, the cmdlet falls back to Notepad. Has no effect on Linux or macOS.
 
 ```yaml
-Type: System.String
-DefaultValue: ''
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 0
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -105,13 +93,13 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### None
 
-On Linux, the cmdlet changes the current location to the configuration file directory. No object output is produced.
+On Linux and macOS, the cmdlet changes the current location to the configuration file directory but does not write any object output.
 
 ## NOTES
 
 The configuration file path can be retrieved using the Get-OrchConfigPath cmdlet.
 
-On Windows, if the preferred editor cannot be launched, the cmdlet automatically falls back to the alternate editor. On Linux, editors cannot be launched directly from the cmdlet; instead, the cmdlet navigates to the configuration file directory and prompts you to edit the file manually.
+The obsolete -EditorType parameter was removed. Its only practical use was `-EditorType Default`, which is now `-UseDefaultEditor`. Any other value (including "Notepad") behaved identically to passing no argument and is replaced by simply omitting the switch.
 
 ## RELATED LINKS
 

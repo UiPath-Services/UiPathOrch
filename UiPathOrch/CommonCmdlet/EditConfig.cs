@@ -1,10 +1,6 @@
-using System.Collections;
 using System.Diagnostics;
 using System.Management.Automation;
-using System.Management.Automation.Language;
 using System.Runtime.InteropServices;
-using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -15,35 +11,6 @@ public class EditConfigCmdlet : PSCmdlet
 {
     [Parameter]
     public SwitchParameter UseDefaultEditor { get; set; }
-
-    [Parameter(Position = 0, DontShow = true)]
-    [Obsolete("Use -UseDefaultEditor instead.")]
-    [ArgumentCompleter(typeof(EditorTypeCompleter))]
-    public string? EditorType { get; set; }
-
-    internal class EditorTypeCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgument(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                yield return new CompletionResult(PathTools.EscapePSText("Default"));
-                yield return new CompletionResult(PathTools.EscapePSText("Notepad"));
-            }
-            else
-            {
-                yield break;
-                //yield return new CompletionResult(PathTools.EscapePSText("XdgOpen"));
-                //yield return new CompletionResult(PathTools.EscapePSText("Vi"));
-                //yield return new CompletionResult(PathTools.EscapePSText("Nano"));
-            }
-        }
-    }
 
     private static Exception? TryLaunchEditors(string?[] editors, string configFilePath)
     {
@@ -111,9 +78,7 @@ public class EditConfigCmdlet : PSCmdlet
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            bool useDefault = UseDefaultEditor.IsPresent
-                || string.Equals(EditorType, "Default", StringComparison.OrdinalIgnoreCase);
-            if (useDefault)
+            if (UseDefaultEditor.IsPresent)
             {
                 candidates = [null, "notepad.exe"];
             }
@@ -144,21 +109,5 @@ public class EditConfigCmdlet : PSCmdlet
         SessionState.Path.SetLocation(folder);
 
         WriteWarning($"Please edit './{fileName}'. After saving your changes, run Import-OrchConfig to reload the configuration. Use `popd` to return to the previous location.");
-
-
-        //string candidate = string.IsNullOrEmpty(EditorType) ? "nano" : EditorType.ToLowerInvariant();
-        //if (candidate == "xdgopen")
-        //{
-        //    candidates = ["xdg-open", "vi", "nano"];
-        //}
-        //else if (candidate == "vi")
-        //{
-        //    candidates = ["vi", "nano", "xdg-open"];
-        //}
-        //else
-        //{
-        //    candidates = ["nano", "vi", "xdg-open"];
-        //}
-        //}
     }
 }
