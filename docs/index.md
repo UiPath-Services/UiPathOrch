@@ -23,18 +23,18 @@ Get-OrchHelp
 
 ## For Users
 
-- [Getting Started]({{ '/getting-started/' | relative_url }}) — install, OAuth setup, first connection
+- [Getting Started](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/00-GettingStarted.md) — install, OAuth setup, first connection
 - [Cmdlet Reference]({{ '/help/' | relative_url }}) — search 262 cmdlets, jump to any cmdlet's page
-- [CSV Export & Import]({{ '/csv-export-import/' | relative_url }}) — bulk import / export patterns
-- [Migration & Copy Guide]({{ '/migration/' | relative_url }}) — lift-and-shift between tenants
+- [CSV Export & Import](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/03-CsvExportImport.md) — bulk import / export patterns
+- [Migration & Copy Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/04-MigrationGuide.md) — lift-and-shift between tenants
 
 ## For AI Agents
 
 UiPathOrch ships with documentation written for AI agents that automate Orchestrator operations on the user's behalf.
 
-- [Essential Guide for AI]({{ '/essentials/' | relative_url }}) — execution rules, decision flow, error protocol
-- [Troubleshooting Guide]({{ '/troubleshooting/' | relative_url }}) — verbose logging, raw API access via Invoke-OrchApi
-- [Contributing Guide]({{ '/contributing/' | relative_url }}) — bug reporting, building from source
+- [Essential Guide for AI](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/01-Essentials.md) — execution rules, decision flow, error protocol
+- [Troubleshooting Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/05-Troubleshooting.md) — verbose logging, raw API access via Invoke-OrchApi
+- [Contributing Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/06-ContributingGuide.md) — bug reporting, building from source
 
 ## Need Help?
 
