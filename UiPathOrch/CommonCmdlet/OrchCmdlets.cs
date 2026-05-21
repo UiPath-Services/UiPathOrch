@@ -332,9 +332,21 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                 sessionName = session?.HostMachineName + " - " + session?.ServiceUserName;
             }
 
+            // Robot.Username is populated only for Classic robots; Modern
+            // (folder-user-bound) robots leave Username null and carry the
+            // actual user name on Robot.User.UserName. The mr.RobotUserName
+            // server field is sometimes also populated on the binding
+            // record itself — use whichever source first yields a non-empty
+            // value so CSV exports retain the binding identity. Without
+            // this fallback, a user-bound HttpTrigger round-trips as
+            // `[{}]` on the CSV side and the Update pass wipes the binding.
+            string? resolvedUserName = robot?.Username;
+            if (string.IsNullOrEmpty(resolvedUserName)) resolvedUserName = robot?.User?.UserName;
+            if (string.IsNullOrEmpty(resolvedUserName)) resolvedUserName = mr.RobotUserName;
+
             mrss.Add(new MachineRobotSessionForSerialize()
             {
-                UserName = robot?.Username,
+                UserName = resolvedUserName,
                 MachineName = machineName,
                 SessionName = sessionName
             });

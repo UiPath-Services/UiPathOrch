@@ -173,6 +173,26 @@ public class ApiTriggerCmdletShapeTests
     // defaults are set inside ProcessRecord — running ProcessRecord needs
     // a live drive, which the unit-test project deliberately doesn't have.
     [Fact]
+    public void SerializeMachineRobotSessions_FallsBackPastRobotUsername()
+    {
+        // Regression guard for a live-tenant CSV round-trip bug observed
+        // 2026-05-21: an HttpTrigger bound to a Modern (folder-user)
+        // robot had its binding wiped on Get-OrchApiTrigger -ExportCsv |
+        // Import-Csv | Update-OrchApiTrigger because Robot.Username is
+        // populated only for Classic robots — Modern robots leave it
+        // null and carry the actual name on Robot.User.UserName.
+        // Serialize used to write only `robot?.Username`, producing an
+        // empty `{}` CSV cell that lost the binding on the next Update.
+        // Fix: fall back through (Robot.Username, Robot.User.UserName,
+        // MachineRobotSession.RobotUserName).
+        var src = LocateSourceFile("../UiPathOrch/CommonCmdlet/OrchCmdlets.cs");
+        var text = System.IO.File.ReadAllText(src);
+        Assert.Contains("robot?.Username", text);
+        Assert.Contains("robot?.User?.UserName", text);
+        Assert.Contains("mr.RobotUserName", text);
+    }
+
+    [Fact]
     public void NewApiTrigger_SourceDefaultsTagsMachineRobotsAndSlug()
     {
         var src = LocateSourceFile("OrchestratorCmdlet/ApiTriggerCmdlet/NewApiTrigger.cs");
@@ -187,7 +207,20 @@ public class ApiTriggerCmdletShapeTests
         var dir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
         while (dir != null)
         {
-            var candidate = System.IO.Path.Combine(dir.FullName, "UiPathOrch", relPath.Replace('/', System.IO.Path.DirectorySeparatorChar));
+            // Caller passes "UiPathOrch/<...>" for code under the cmdlet
+            // project root, or "../UiPathOrch/<...>" — which we collapse
+            // here — for the same project when the search has already
+            // started inside it.
+            var combined = relPath.Replace('/', System.IO.Path.DirectorySeparatorChar);
+            string candidate;
+            if (combined.StartsWith(".." + System.IO.Path.DirectorySeparatorChar))
+            {
+                candidate = System.IO.Path.GetFullPath(System.IO.Path.Combine(dir.FullName, combined));
+            }
+            else
+            {
+                candidate = System.IO.Path.Combine(dir.FullName, "UiPathOrch", combined);
+            }
             if (System.IO.File.Exists(candidate)) return candidate;
             dir = dir.Parent;
         }
