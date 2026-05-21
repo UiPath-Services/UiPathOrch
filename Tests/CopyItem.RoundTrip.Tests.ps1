@@ -195,18 +195,26 @@ Describe 'Copy-Item -Recurse round-trip preserves per-folder entities' {
 
     It 'subfolder tree is replicated' {
         # Folders are not exported via -ExportCsv on a Get-Orch* cmdlet; use
-        # Get-ChildItem -Recurse to enumerate the folder tree on both sides.
-        $srcFolders = Get-ChildItem $script:SrcRoot -Recurse -Force |
-            Where-Object PSIsContainer |
-            Select-Object @{n='Path';e={$_.PSPath -replace [regex]::Escape("UiPath.PowerShell.Core\OrchProvider::$($script:SrcRoot)"), '<ROOT>'}} |
-            Select-Object -ExpandProperty Path |
-            Sort-Object
+        # FullyQualifiedName off the Folder object (already a clean relative
+        # path) and strip the per-tree root prefix to align src vs dst.
+        function Get-RelativeFolders($rootPSPath) {
+            $rootFolder = Get-Item $rootPSPath -ErrorAction Stop
+            $rootFqn = $rootFolder.FullyQualifiedName
+            Get-ChildItem $rootPSPath -Recurse -Force |
+                Where-Object PSIsContainer |
+                ForEach-Object {
+                    if ($rootFqn) {
+                        $_.FullyQualifiedName -replace "^$([regex]::Escape($rootFqn))/", ''
+                    } else {
+                        $_.FullyQualifiedName
+                    }
+                } |
+                Where-Object { $_ -ne '' } |
+                Sort-Object
+        }
 
-        $dstFolders = Get-ChildItem $script:DstCopyRoot -Recurse -Force |
-            Where-Object PSIsContainer |
-            Select-Object @{n='Path';e={$_.PSPath -replace [regex]::Escape("UiPath.PowerShell.Core\OrchProvider::$($script:DstCopyRoot)"), '<ROOT>'}} |
-            Select-Object -ExpandProperty Path |
-            Sort-Object
+        $srcFolders = @(Get-RelativeFolders $script:SrcRoot)
+        $dstFolders = @(Get-RelativeFolders $script:DstCopyRoot)
 
         foreach ($f in $srcFolders) {
             $dstFolders | Should -Contain $f -Because "subfolder '$f' should exist after Copy-Item -Recurse"
