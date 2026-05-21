@@ -15,40 +15,13 @@ using User = UiPath.PowerShell.Entities.User;
 
 namespace UiPath.PowerShell.Core;
 
-// Would like to create a common base class for OrchDriveInfo, OrchDuDriveInfo, and OrchTmDriveInfo,
-// but it's a bit of work.. postponing for now.
-// 
-//public class OrchDriveInfoBase : PSDriveInfo
-//{
-//}
-
-public partial class OrchDriveInfo : PSDriveInfo
+public partial class OrchDriveInfo : OrchPSDriveInfoBase
 {
     internal readonly PSDrive _psDrive;
 
-    private string? _NameColon = null;
-    private string? _NameColonSeparator = null;
-
-    internal string NameColon
-    {
-        get
-        {
-            _NameColon ??= Name + ':';
-            return _NameColon;
-        }
-    }
-    internal string NameColonSeparator
-    {
-        get
-        {
-            _NameColonSeparator ??= Name + ':' + Path.DirectorySeparatorChar;
-            return _NameColonSeparator;
-        }
-    }
-
     private OrchAPISession? _orchAPISession;
     private readonly object _orchAPISessionLock = new();
-    internal OrchAPISession OrchAPISession
+    internal override OrchAPISession OrchAPISession
     {
         get
         {
@@ -122,23 +95,16 @@ public partial class OrchDriveInfo : PSDriveInfo
         //            return WildcardPattern.Escape("\\" + path.Replace('/', '\\'));
     }
 
-    protected internal Folder? RootFolder;
-
     // TODO: created folder cache sorted by FullyQualifiedName for GetFolder()
     // public HashSet<Folder> _folderSetCache;
 
 
-    public void ClearAllCache()
+    public override void ClearAllCache()
     {
-        foreach (var cache in _allTenantCache)
-        {
-            cache.ClearCache();
-        }
-
-        foreach (var cache in _allFolderCache)
-        {
-            cache.ClearCache();
-        }
+        // Registry-driven part (cache instances iterate themselves) lives on
+        // OrchPSDriveInfoBase. The block below is the Orchestrator-specific
+        // extras that the shadow drives (Du / Tm) do not need.
+        base.ClearAllCache();
 
         if (_orchAPISession is not null)
         {
@@ -939,9 +905,8 @@ public partial class OrchDriveInfo : PSDriveInfo
     public readonly SingleCachePerOrganization<LicenseInventory> PmLicenseInventory;
     public readonly SingleCachePerOrganization<AccountLicense> PmLicenseContract;
 
-    // These must be kept per drive, so they cannot be static members of the Cache class
-    internal readonly List<ITenantCacheClearable> _allTenantCache = [];
-    internal readonly List<IFolderCacheClearable> _allFolderCache = [];
+    // _allTenantCache / _allFolderCache live on OrchPSDriveInfoBase; cache
+    // instances declared below register themselves via the inherited members.
 
     // Non-indexed tenant entities
     public readonly SingleCachePerTenant<ActivitySettings> ActivitySettings;
@@ -1076,7 +1041,7 @@ public partial class OrchDriveInfo : PSDriveInfo
 
     // At the time this constructor runs, NameColonSeparator is not yet available
     public OrchDriveInfo(ProviderInfo provider, PSDrive drive) :
-        base(drive.Name, provider, drive.Name + ':' + Path.DirectorySeparatorChar, drive.Description, null, drive.Root)
+        base(drive.Name!, provider, drive.Name + ':' + Path.DirectorySeparatorChar, drive.Description!, null, drive.Root!)
     {
         _psDrive = drive;
         _psDrive.Root = _psDrive.Root?.TrimEnd('/');

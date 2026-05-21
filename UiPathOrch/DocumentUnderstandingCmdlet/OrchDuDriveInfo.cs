@@ -6,15 +6,10 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core;
 
-public class OrchDuDriveInfo : PSDriveInfo
+public class OrchDuDriveInfo : OrchPSDriveInfoBase
 {
-    // Cache instances live on the drive so they can be cleared uniformly by
-    // iterating these registries from ClearAllCache. Each cache class registers
-    // itself in its constructor via _drive._allTenantCache.Add(this), which is
-    // the structural fix for the pre-1.4.3 bug where _dicDuExtractors was
-    // missed from the manual clear loop in ClearAllCache.
-    internal readonly List<ITenantCacheClearable> _allTenantCache = [];
-    internal readonly List<IFolderCacheClearable> _allFolderCache = [];
+    // _allTenantCache / _allFolderCache live on OrchPSDriveInfoBase; cache
+    // instances declared below register themselves via the inherited members.
 
     // Org-scoped: shared across all drives in the same org (partitionGlobalId
     // keyed in the cache). Entities are stored bare; cmdlets ShallowClone()
@@ -78,53 +73,16 @@ public class OrchDuDriveInfo : PSDriveInfo
         }
     }
 
-    internal OrchAPISession OrchAPISession => ParentDrive.OrchAPISession;
+    internal override OrchAPISession OrchAPISession => ParentDrive.OrchAPISession;
 
-    private string? _NameColon = null;
-    private string? _NameColonSeparator = null;
-
-    internal string NameColon
-    {
-        get
-        {
-            _NameColon ??= Name + ':';
-            return _NameColon;
-        }
-    }
-
-    internal string NameColonSeparator
-    {
-        get
-        {
-            _NameColonSeparator ??= Name + ':' + Path.DirectorySeparatorChar;
-            return _NameColonSeparator;
-        }
-    }
-
-    protected internal Folder? RootFolder;
+    // NameColon / NameColonSeparator / RootFolder / ClearAllCache live on
+    // OrchPSDriveInfoBase. The base implementation of ClearAllCache iterates
+    // _allTenantCache and _allFolderCache, which is all DU needs.
 
     // At the time this constructor runs, NameColonSeparator is not yet available
     public OrchDuDriveInfo(ProviderInfo provider, string driveName, string description, string root) :
         base(driveName, provider, driveName + ':' + Path.DirectorySeparatorChar, description, null, root)
     {
-    }
-
-    // Registry-driven clear. Pre-1.4.3 this was a hand-maintained list of
-    // `_dicXxx = null` assignments and one entry (DuExtractors) was missing,
-    // so Clear-OrchCache silently left stale extractor data behind. Iterating
-    // the registry makes that class of bug structurally impossible: any new
-    // cache class registers itself in its constructor and is cleared here.
-    public void ClearAllCache()
-    {
-        foreach (var cache in _allTenantCache)
-        {
-            cache.ClearCache();
-        }
-
-        foreach (var cache in _allFolderCache)
-        {
-            cache.ClearCache();
-        }
     }
 
     // Wrappers preserve the legacy array return type so existing call sites

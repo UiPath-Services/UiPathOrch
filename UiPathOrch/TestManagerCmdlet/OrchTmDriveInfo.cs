@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core;
 
-public class OrchTmDriveInfo : PSDriveInfo
+public class OrchTmDriveInfo : OrchPSDriveInfoBase
 {
     // Test tenant entities
     // The number indicates the parameter count of the getter method (in OrchAPISession.cs)
@@ -25,9 +25,8 @@ public class OrchTmDriveInfo : PSDriveInfo
     public IncrementalCachePerProject<string, TmTestExecutionResult> TmTestExecutionResults = null!;
 
 
-    // These must be held per drive, so they cannot be static members of the Cache class
-    internal readonly List<ITenantCacheClearable> _allTenantCache = [];
-    internal readonly List<IFolderCacheClearable> _allFolderCache = [];
+    // _allTenantCache / _allFolderCache live on OrchPSDriveInfoBase; cache
+    // instances declared above register themselves via the inherited members.
 
     private OrchDriveInfo? _parentDrive;
     internal OrchDriveInfo ParentDrive
@@ -79,48 +78,16 @@ public class OrchTmDriveInfo : PSDriveInfo
         }
     }
 
-    internal OrchAPISession OrchAPISession => ParentDrive.OrchAPISession;
+    internal override OrchAPISession OrchAPISession => ParentDrive.OrchAPISession;
 
-    private string? _NameColon = null;
-    private string? _NameColonSeparator = null;
-
-    internal string NameColon
-    {
-        get
-        {
-            _NameColon ??= Name + ':';
-            return _NameColon;
-        }
-    }
-    internal string NameColonSeparator
-    {
-        get
-        {
-            _NameColonSeparator ??= Name + ':' + Path.DirectorySeparatorChar;
-            return _NameColonSeparator;
-        }
-    }
-
-    protected internal Folder? RootFolder;
+    // NameColon / NameColonSeparator / RootFolder / ClearAllCache live on
+    // OrchPSDriveInfoBase. The base implementation of ClearAllCache iterates
+    // _allTenantCache and _allFolderCache, which is all Tm needs.
 
     // At the time this constructor runs, NameColonSeparator is not yet available
     public OrchTmDriveInfo(ProviderInfo provider, string driveName, string description, string root) :
         base(driveName, provider, driveName + ':' + Path.DirectorySeparatorChar, description, null, root)
     {
-        //            _parentDrive = parent;
-    }
-
-    public void ClearAllCache()
-    {
-        foreach (var cache in _allTenantCache)
-        {
-            cache.ClearCache();
-        }
-
-        foreach (var cache in _allFolderCache)
-        {
-            cache.ClearCache();
-        }
     }
 
     // Backward-compat thin wrapper for callers that still spell the legacy
