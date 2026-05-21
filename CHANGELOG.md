@@ -6,6 +6,97 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.5.0] - 2026-05-21
+
+Architecture cleanup release. The cache layer collapses into a single
+registry-driven hierarchy on a new cross-family base class. `Clear-OrchCache`
+gains folder-level granularity with auth-safe scope dispatch. Every shipped
+help md is aligned against swagger v20.0, and 8 previously-undocumented
+cmdlets join the help corpus.
+
+### Added
+
+- **`Clear-OrchCache` -- scope-aware `-Path` dispatch.** Path shape now selects
+  the clear scope:
+  - `Clear-OrchCache .` (most common) — clear only the current folder's cache;
+    tenant catalog and other folders stay warm.
+  - `Clear-OrchCache Orch1:\Shared` — per-folder clear (named folder).
+  - `Clear-OrchCache Orch1:\` — tenant + organization caches (the
+    root-visible entities).
+  - `Clear-OrchCache Orch1:` — drive-level full clear (preserves
+    backward-compat with existing scripts).
+  - `Clear-OrchCache -Recurse` / `-Depth` — subfolder fan-out for folder paths.
+  Every drive is auth-state-gated: unauthenticated drives are silently
+  skipped, so no PKCE flow is provoked just to confirm an empty cache.
+
+- **8 PlatyPS help md files** for previously undocumented cmdlets:
+  `Add/Get/Remove-OrchBucketLink`, `Add/Get/Remove-OrchQueueLink`,
+  `Remove-OrchAssetLink`, `Get-OrchProductVersion`. Endpoints HTTP-log-verified,
+  OAuth scopes swagger-verified.
+
+### Changed
+
+- **Help mds: OAuth scope lines aligned with swagger v20.0.** Swept every
+  shipped help md and corrected 52 scope drifts. 8 were real corrections
+  (e.g., `OR.Execution` → `OR.Jobs` on Trigger cmdlets, `OR.Execution.Read` →
+  `OR.Monitoring.Read` on `Get-OrchJobMedia`); the other 44 added the
+  `.Write` / `.Read` alternative to scope lines that previously listed only the
+  parent scope. The `Copy-OrchAsset/Calendar/Machine/User/Webhook` mds retain
+  their richer `(source) / (destination)` annotation.
+
+- **Help mds: SYNTAX parameter order standardised** — Path/Recurse/Depth
+  first, positional next (in position order), named last (alphabetical). New
+  `PlatyPS/Reorder-MdSyntaxParameters.ps1` applies the same canonical order to
+  the .md sources that the existing `Reorder-SyntaxParameters.ps1` applies to
+  the built MAML; both layers now produce the same order.
+
+- **Cache layer refactor (4 phases plus cleanup).** Collapses a long-standing
+  duplication shape across the cache classes:
+  - `OrchDriveInfoBase` extracted as the common base for `OrchDriveInfo`,
+    `OrchDuDriveInfo`, `OrchTmDriveInfo`. Hoists `_allTenantCache`,
+    `_allFolderCache`, `_NameColon`, `_NameColonSeparator`, `RootFolder`, the
+    `ClearAllCache` iteration, and abstract accessors for `OrchAPISession` /
+    `PartitionGlobalId`.
+  - Cache class ctors generalised to accept `OrchDriveInfoBase`, so the
+    universal templates serve every family.
+  - Family-specific cache duplicates deleted (`DuListCachePerTenant`,
+    `DuListCachePerOrganization`, `DuKeyedListCachePerOrganization`,
+    `TmListCachePerTenant0`, `TmSingleCachePerTenant0` — pure byte-equivalent
+    forks of the universal classes).
+  - Family-specific cache classes moved to their family folders:
+    `TestManagerCmdlet/OrchTmCache.cs`, `PlatformManagementCmdlet/OrchPmCache.cs`,
+    mirroring the existing `DocumentUnderstandingCmdlet/OrchDuCache.cs`
+    precedent.
+  Net code reduction ≈ 400 lines after the new base file. No behavior change
+  for consumers.
+
+### Removed
+
+- **`Edit-OrchConfig -EditorType` parameter retired.** The parameter had been
+  marked `[Obsolete]` and hidden from completion in favor of the switch-typed
+  `-UseDefaultEditor`. Migration:
+  - `-EditorType Default` → `-UseDefaultEditor`
+  - `-EditorType Notepad` (or any other value) → omit the switch (Notepad-first
+    is the default).
+  `-UseDefaultEditor` is Windows-only; on Linux/macOS the cmdlet has always
+  cd'd to the config directory and printed an edit-then-Import prompt
+  (documented in NOTES on the help md).
+
+- **Du*/Tm0 cache class names** (see *Changed* above). These were internal
+  classes; no cmdlet output or public surface is affected.
+
+### Internal
+
+- New `OrchDriveInfoBase.IsAuthenticated` probe property — never triggers a
+  token request, used by `Clear-OrchCache` to skip unauthenticated drives
+  without invoking PKCE.
+- `OrchPSDriveInfoBase` renamed to `OrchDriveInfoBase` (consistency with the
+  concrete subclasses, which don't carry the "PS" infix) and moved from
+  `OrchestratorCmdlet/` to top-level `UiPathOrch/`, alongside the other
+  cross-family infrastructure files (`AuthManager.cs`, `OrchAPISession.cs`,
+  `OrchCache.cs`, `OrchEntities.cs`, `OrchExtensions.cs`).
+- xUnit suite: 320 passing.
+
 ## [1.4.3] - 2026-05-20
 
 Patch release. Adds `Resolve-OrchAuthError` for diagnosing failed

@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.4.3'
+ModuleVersion = '1.5.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -458,22 +458,24 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-Patch release. Adds `Resolve-OrchAuthError` for diagnosing failed PKCE sign-ins, wires PKCE error messages to point at it, fixes a `Clear-OrchCache` miss for `DuExtractor` data, and finishes the DU/TM cache migration started in 1.4.2.
+Architecture cleanup release. The cache layer collapses into a single registry-driven hierarchy on a new cross-family base class. `Clear-OrchCache` gains folder-level granularity with auth-safe scope dispatch. Every shipped help md is aligned against swagger v20.0, and 8 previously-undocumented cmdlets join the help corpus.
 
 ## Added
-- **`Resolve-OrchAuthError` — local diagnostic for failed PKCE / browser sign-ins.** Takes the URL the browser was left on, decodes it entirely locally (no network), and returns `ErrorCode`, `TraceId`, `ClientId`, `RedirectUri`, `Scopes`, and an actionable `RecommendedAction`. Handles both URL shapes seen in the wild (login-error with `returnUrl`, and web-error with base64 `errorId`). Tailored diagnoses for `#219`, `invalid_request` / Invalid redirect_uri, `invalid_scope`; for unrecognised codes asks the user to forward the `traceId` to UiPath Identity. xUnit fixtures are verbatim customer payloads.
-
-## Bug Fixes
-- **`Clear-OrchCache` silently left stale `DuExtractor` data behind on DU drives.** `OrchDuDriveInfo.ClearAllCache` was a hand-maintained list and `_dicDuExtractors` was missing from it. DU caches now register themselves with the drive's registry and `ClearAllCache` iterates uniformly — the class of bug is structurally impossible. xUnit regression test added.
-- **`DuExtractor` `Format.ps1xml` group header rendered as null.** The view referenced a `PathProject` field the entity didn't have. Switched to `Path`, which the cmdlet now correctly stamps.
+- **`Clear-OrchCache` — scope-aware `-Path` dispatch.** Path shape selects the clear scope: `Clear-OrchCache .` clears only the current folder; `Clear-OrchCache Orch1:\Shared` clears that folder; `Clear-OrchCache Orch1:\` clears tenant + organization caches; `Clear-OrchCache Orch1:` clears the entire drive (backward-compat); `-Recurse` / `-Depth` fan out subfolders. Unauthenticated drives are silently skipped — no PKCE flow is triggered just to confirm an empty cache.
+- **8 PlatyPS help md files** for previously undocumented cmdlets: `Add/Get/Remove-OrchBucketLink`, `Add/Get/Remove-OrchQueueLink`, `Remove-OrchAssetLink`, `Get-OrchProductVersion`.
 
 ## Changed
-- **PKCE / sign-in failure messages now point at `Resolve-OrchAuthError`.** When the browser is left on an Identity error page and the user Ctrl+Cs the cmdlet, the terminating error instructs them to copy the URL, run `cd $HOME`, then `Resolve-OrchAuthError '<url>'`. The `cd` step is needed because PSReadLine tab-completion of the cmdlet name on an Orch drive would re-trigger PKCE before Enter. The thrown exception type was swapped from `OperationCanceledException` to `InvalidOperationException` so the custom message is printed verbatim (PS canonicalises OCE messages on cancellation paths).
-- **DU cache architecture: 12 raw `_dic*` fields on `OrchDuDriveInfo` migrated to 6 typed cache classes.** `DuRoles` and `DuUsers` are now **org-scoped** (singleton across drives in the same org) with the PM* 1.4.2 path-isolation pattern — cuts API calls when multiple DU drives in the same org are used together. The other 4 caches remain per-tenant. 6 DU entities gain `ShallowClone()` for the emit-path clone.
-- **TM `_dicTmProjects` migrated to a new `TmListCachePerTenant0<T>`.** Finishes the cache migration started in 1.4.2 — no `_dic*` accumulators remain on `OrchTmDriveInfo`.
+- **Help mds: OAuth scope lines aligned with swagger v20.0.** Corrected 52 scope drifts across the shipped corpus. 8 were real corrections (e.g., `OR.Execution` → `OR.Jobs` on Trigger cmdlets, `OR.Execution.Read` → `OR.Monitoring.Read` on `Get-OrchJobMedia`); 44 added the `.Write` / `.Read` alternative to scope lines that previously listed only the parent.
+- **Help mds: SYNTAX parameter order standardised** — Path/Recurse/Depth first, then positional (by position), then named (alphabetical). New `PlatyPS/Reorder-MdSyntaxParameters.ps1` applies this to the .md sources to match what `Reorder-SyntaxParameters.ps1` already did for built MAML.
+- **Cache layer refactor (4 phases plus cleanup).** Extracted `OrchDriveInfoBase` as the common base for `OrchDriveInfo` / `OrchDuDriveInfo` / `OrchTmDriveInfo`. Generalised cache ctors to take the base, deleted family-specific duplicates (`DuListCachePerTenant`, `DuListCachePerOrganization`, `DuKeyedListCachePerOrganization`, `TmListCachePerTenant0`, `TmSingleCachePerTenant0`), and relocated remaining family-specific cache classes to their family folders. Net ≈ 400 lines removed. No behavior change.
+
+## Removed
+- **`Edit-OrchConfig -EditorType` parameter retired.** Had been `[Obsolete]` and hidden in favor of the switch-typed `-UseDefaultEditor`. Migration: `-EditorType Default` → `-UseDefaultEditor`; `-EditorType Notepad` (or any other value) → omit the switch. `-UseDefaultEditor` is Windows-only; on Linux/macOS the cmdlet still cd's to the config directory and prints an edit-then-Import prompt.
 
 ## Internal
-- xUnit suite 300 → 320 (+11 `AuthErrorUrlParserTests`, +7 `OrchDuDriveInfoCacheRegistrationTests`, +2 others).
+- New `OrchDriveInfoBase.IsAuthenticated` probe — never triggers a token request; used by `Clear-OrchCache` to skip unauthenticated drives without provoking PKCE.
+- `OrchPSDriveInfoBase` renamed to `OrchDriveInfoBase` (matches the no-"PS" naming of the concrete subclasses) and moved to top-level `UiPathOrch/` (alongside the other cross-family infrastructure files).
+- xUnit suite: 320 passing.
 '@
 
         # Prerelease string of this module
