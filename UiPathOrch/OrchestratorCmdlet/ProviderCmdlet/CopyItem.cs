@@ -788,7 +788,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
 
         var dstBuckets = dstDrive.Buckets.Get(newFolder);
-        var dstBucket = dstBuckets.FirstOrDefault(b => b.Name == srcBucket.Name);
+        // Case-SENSITIVE name match -- preserved from original implementation
+        // (Ordinal, not OrdinalIgnoreCase). All other FindDst* methods use
+        // OrdinalIgnoreCase; the asymmetry is intentionally kept here pending
+        // deliberate review. If the API treats bucket names case-sensitively,
+        // this is correct; if it doesn't, this is a latent bug.
+        var dstBucket = ResolveDstByName(dstBuckets, srcBucket.Name, b => b.Name, StringComparison.Ordinal);
         if (dstBucket is null)
         {
             _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have the bucket with Name = '{srcBucket.Name}'.");
@@ -1132,7 +1137,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 return null;
             }
 
-            var dstCredentialStore = dstDrive.CredentialStores.Get().FirstOrDefault(cs => string.Compare(cs.Name, srcCredentialStore.Name, StringComparison.OrdinalIgnoreCase) == 0);
+            var dstCredentialStore = ResolveDstByName(dstDrive.CredentialStores.Get(), srcCredentialStore.Name, cs => cs.Name);
             if (dstCredentialStore is null)
             {
                 _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have credential store with Name = '{srcCredentialStore.Name}'.");
@@ -1145,6 +1150,26 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateCredentialStoreIdError", ErrorCategory.InvalidOperation, target));
             return null;
         }
+    }
+
+    // Generic name-match resolver used by the simple FindDst* methods
+    // (FindDstRobot / FindDstMachine / FindDstQueue / FindDstRelease /
+    // FindDstCalendar / FindDstCredentialStore / FindDstBucket).
+    //
+    // Default StringComparison is OrdinalIgnoreCase to mirror the bulk of
+    // the FindDst* family. FindDstBucket explicitly passes Ordinal because
+    // the original implementation used case-sensitive '==' name comparison
+    // -- behaviour preserved here pending a deliberate decision; see
+    // BugDiscovery in tests for the case-sensitivity question.
+    internal static T? ResolveDstByName<T>(
+        IEnumerable<T>? candidates,
+        string? srcName,
+        Func<T, string?> nameOf,
+        StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+        where T : class
+    {
+        if (candidates is null || string.IsNullOrEmpty(srcName)) return null;
+        return candidates.FirstOrDefault(c => c is not null && string.Equals(nameOf(c), srcName, comparison));
     }
 
     // Result of FindDstUser's pure-logic resolver (see ResolveDstUserPure).
@@ -1300,7 +1325,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             //msg = $"Migrating id of the robot {Path.Combine(srcDrive.NameColon, srcRobot.Name!)}";
 
             var dstRobots = dstDrive.RobotsFromFolder.Get(dstFolder);
-            var dstRobot = dstRobots?.FirstOrDefault(r => string.Compare(r.Name, srcRobot.Name, StringComparison.OrdinalIgnoreCase) == 0);
+            var dstRobot = ResolveDstByName(dstRobots, srcRobot.Name, r => r.Name);
             if (dstRobot is null)
             {
                 _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have robot with Name = '{srcRobot.Name}' ({srcRobot.Username}) in '{dstFolder.GetPSPath()}'.");
@@ -1392,7 +1417,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 return null;
             }
             //msg = $"Migrating id of the machine {Path.Combine(srcDrive.NameColon, srcMachine.Name!)}";
-            var dstMachineFolder = dstDrive.FolderMachinesAssigned.Get(dstFolder).FirstOrDefault(m => string.Compare(m.Name, srcMachine.Name, StringComparison.OrdinalIgnoreCase) == 0);
+            var dstMachineFolder = ResolveDstByName(dstDrive.FolderMachinesAssigned.Get(dstFolder), srcMachine.Name, m => m.Name);
             if (dstMachineFolder is null)
             {
                 string target = dstFolder.GetPSPath();
@@ -1511,7 +1536,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         QueueDefinition dstQueue = null;
         try
         {
-            dstQueue = dstDrive.Queues.Get(dstFolder)?.FirstOrDefault(q => string.Compare(q.Name, srcQueue.Name, StringComparison.OrdinalIgnoreCase) == 0);
+            dstQueue = ResolveDstByName(dstDrive.Queues.Get(dstFolder), srcQueue.Name, q => q.Name);
         }
         catch (Exception ex)
         {
@@ -1605,7 +1630,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         target = dstFolder.GetPSPath();
         try
         {
-            dstRelease = dstDrive.Releases.Get(dstFolder)?.FirstOrDefault(q => string.Compare(q.Name, srcRelease.Name, StringComparison.OrdinalIgnoreCase) == 0);
+            dstRelease = ResolveDstByName(dstDrive.Releases.Get(dstFolder), srcRelease.Name, r => r.Name);
         }
         catch (Exception ex)
         {
@@ -1639,7 +1664,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         ExtendedCalendar dstCalendar = null;
         try
         {
-            dstCalendar = dstDrive.OrchAPISession.GetCalendars()?.FirstOrDefault(r => string.Compare(r.Name, srcCalendar.Name, StringComparison.OrdinalIgnoreCase) == 0);
+            dstCalendar = ResolveDstByName(dstDrive.OrchAPISession.GetCalendars(), srcCalendar.Name, c => c.Name);
         }
         catch (Exception ex)
         {
