@@ -22,6 +22,31 @@ The recommended path is **GitHub Actions-based automated publish** (see [Automat
 
 ---
 
+## Approval gate
+
+Tagging / PSGallery publishing / Slack announcing are **public commitments**. PSGallery does not allow unpublish; a bad tag stays in the package history forever. Treat the tag push as the point of no return.
+
+Before any of the following:
+
+- creating or pushing a `vX.Y.Z` tag,
+- publishing to PSGallery (manual fallback),
+- announcing the release on Slack or any external channel,
+
+**both** of the following must hold:
+
+1. **Every release-acceptance gate is green** (see [§4](#4-release-acceptance-gates)) — `dotnet build`, `dotnet format --verify-no-changes`, `dotnet test`, all Pester gates, plus any live verification needed to back the claims in the new CHANGELOG entry.
+2. **The maintainer with publish rights explicitly says GO** in writing — having reviewed the test results from (1) and the CHANGELOG entry that will become the GitHub Release body.
+
+The two are independently mandatory: green-but-no-GO and GO-but-not-green both block the tag push.
+
+### When working with an AI assistant
+
+The same gate applies. The assistant may build, run tests, commit, and push code to `master`. The assistant **must not** tag, publish, or post external announcements until the maintainer has reviewed test results and given explicit GO. Generic instructions like "進めて" / "順にやって" do not authorise the tag step — when the assistant reaches that boundary it must stop, present the green-test summary, and ask. Instructions of the form "verify X before Y" mean "report verification results; let me decide Y", not "if verification fails, fix it then do Y".
+
+If a release is published in error and the maintainer notices afterwards, the response is to acknowledge the mistake, leave the published tag in place (it cannot be retracted), document any required follow-up in the next release, and recover the approval discipline going forward.
+
+---
+
 ## Prerequisites
 
 Each maintainer who can publish needs:
@@ -156,6 +181,12 @@ gh pr create --fill
 After CI passes and review, merge into `master`.
 
 ### 7. Tag the release
+
+> **STOP. Approval gate (see top of file).** Do not push the tag until
+> (a) every gate in §4 is green and (b) the maintainer with publish rights
+> has explicitly said GO after seeing the test summary. `git push origin
+> vX.Y.Z` immediately triggers the PSGallery publish — the tag push **is**
+> the release decision.
 
 ```powershell
 git switch master
