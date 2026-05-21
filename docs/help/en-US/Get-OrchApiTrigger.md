@@ -21,7 +21,7 @@ Gets the API triggers.
 
 ```
 Get-OrchApiTrigger [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
- [<CommonParameters>]
+ [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -78,6 +78,14 @@ PS Orch1:\> Get-OrchApiTrigger -Recurse
 ```
 
 Gets all API triggers from all folders recursively. When run from the root folder, this shows all API triggers across all folders in the tenant.
+
+### Example 5: Export API triggers to CSV for round-trip editing
+
+```powershell
+PS Orch1:\Shared> Get-OrchApiTrigger -Recurse -ExportCsv api-triggers.csv
+```
+
+Exports every API trigger reachable under the current folder to a CSV. Column names match parameter names on `New-OrchApiTrigger` and `Update-OrchApiTrigger`, so the same CSV pipes back through either cmdlet without rewriting. Use `-CsvEncoding` to override the default UTF-8 (no BOM).
 
 ## PARAMETERS
 
@@ -160,6 +168,48 @@ ParameterSets:
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ExportCsv
+
+If specified, writes the retrieved triggers to a CSV file at the given path instead of (or in addition to, as the cmdlet still writes objects to the pipeline) the default object output. The CSV row shape matches the parameter surface of `New-OrchApiTrigger` and `Update-OrchApiTrigger`, so `Get-OrchApiTrigger -ExportCsv ... | Import-Csv | Update-OrchApiTrigger` round-trips state without manual column mapping.
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -CsvEncoding
+
+Specifies the text encoding for the CSV file. Defaults to UTF-8 (no BOM). Tab-completes against available encodings.
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: UTF-8 (no BOM)
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []

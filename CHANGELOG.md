@@ -6,6 +6,114 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.5.1] - 2026-05-21
+
+CSV-driven workflow + wire-shape parity release. Closes six
+`Copy-Orch* / Get-Orch* / Remove-Orch*` cmdlets that were missing
+their `New-` counterparts and adds the first `Update-Orch*` for the
+HttpTrigger surface. `Get-OrchApiTrigger -ExportCsv` round-trips
+cleanly into `New-OrchApiTrigger` / `Update-OrchApiTrigger`. Two
+serialize / payload bugs surfaced by live dev-tools captures (yotsuda
+tenant) are fixed in the shared helper so every cmdlet that touches
+HttpTriggers or trigger MachineRobots benefits.
+
+### Added
+
+- **`New-OrchApiTrigger`** — wraps POST `/odata/HttpTriggers`. Full
+  TriggerBase + HttpTrigger field surface (Name, Release, Method, Slug,
+  CallingMode, AllowInsecureSsl, RunAsCaller, JobPriority, RunAsMe,
+  RuntimeType, TargetFramework, ResumeOnSameContext, RequiresUserInteraction,
+  StopStrategy, StopJobAfterSeconds / KillJobAfterSeconds,
+  AlertPendingJobAfterSeconds / AlertRunningJobAfterSeconds,
+  RemoteControlAccess, ConsecutiveJobFailuresThreshold /
+  JobFailuresGracePeriodInHours, InputArguments, MachineRobots).
+  Defaults `Tags=[]`, `MachineRobots=[{}]` (placeholder), and
+  `Slug=Name` when those parameters are omitted — the server returns a
+  generic 500 `An error has occurred.` if any of the three is absent
+  from the POST body.
+
+- **`Update-OrchApiTrigger`** — wraps PUT `/odata/HttpTriggers({id})`
+  where id is the GUID `HttpTrigger.Id`. Mirrors the New surface plus
+  `-NewName` (rename). Uses dirty-detection (no PUT if every passed-in
+  value already matches server state) and re-fetches the trigger after
+  PUT so the cmdlet output reflects post-update state.
+
+- **`Get-OrchApiTrigger -ExportCsv` / `-CsvEncoding`** — emit every
+  API trigger reachable under the target path as a CSV whose column
+  names match `New-OrchApiTrigger` / `Update-OrchApiTrigger`
+  parameters. ReleaseKey is resolved to Release Name on emit so the
+  CSV is human-editable; MachineRobots is serialised via the existing
+  shared helper, preserving binding identity through the round-trip.
+
+- **`New-OrchTestSet`** — wraps POST `/odata/TestSets`. Known
+  limitation: the wrapped endpoint rejects barebones calls with
+  errorCode 3204 (`Test Set is empty. It should have at least one
+  package and one test case.`); standalone creation needs Packages[]
+  and TestCases[] which aren't yet exposed as parameters — pipe a
+  complete TestSet from `Copy-OrchTestSet` until standalone-creation
+  parameter expansion lands.
+
+- **`New-OrchTestSetSchedule`** — wraps POST `/odata/TestSetSchedules`.
+  Mandatory `-TestSetName` resolves to TestSetId at submit time.
+  CronExpression defaults to every-minute; TimeZoneId defaults to the
+  local time zone.
+
+- **`New-OrchTestDataQueue`** — wraps POST `/odata/TestDataQueues`.
+  Defaults `-ContentJsonSchema` to `{}` (empty schema = any value)
+  when omitted; the server returns 400 `The ContentJsonSchema field
+  is required.` without that field.
+
+- **`New-OrchActionCatalog`** — wraps POST
+  `/odata/TaskCatalogs/UiPath.Server.Configuration.OData.CreateTaskCatalog`.
+  External noun matches the in-product UI label; the wire entity is
+  the legacy `TaskCatalog`.
+
+- **PlatyPS help md** for each of the six new cmdlets, plus expanded
+  `Get-OrchApiTrigger.md` covering `-ExportCsv` / `-CsvEncoding` and
+  the CSV-roundtrip workflow.
+
+### Changed
+
+- **`HttpTrigger` entity** gains `RunAsCaller` (bool) and `Key`
+  (string), both confirmed against live dev-tools POST/PUT captures.
+  `RunAsCaller` was previously silently dropped on every POST/PUT
+  built from a cmdlet.
+
+- **`SerializeMachineRobotSessions` falls back past `Robot.Username`
+  for Modern (folder-user-bound) robots.** The previous implementation
+  emitted only `robot?.Username`, which Modern robots leave null
+  (carrying the real user name on `Robot.User.UserName` instead). The
+  result was that a user-bound trigger round-tripped as `[{}]` in the
+  CSV cell, and the next `Update-Orch*Trigger` cleared the binding.
+  Fixed by chaining `robot?.Username → robot?.User?.UserName →
+  mr.RobotUserName` and emitting the first non-empty value. Shared
+  helper, so the fix benefits every cmdlet that touches trigger
+  MachineRobots (`Get-OrchTriggerDetail`, `Get-OrchApiTrigger`,
+  `New/Update-OrchTrigger`, `New/Update-OrchApiTrigger`).
+
+- **`HttpMethodItems` candidates switched to mixed case** (`Get`,
+  `Post`, `Put`, `Delete`, `Patch`) matching the wire format the
+  server returns on GET — uppercase candidates would round-trip but
+  read back lower-case, confusing dirty-detection on subsequent
+  Updates.
+
+- **`OrchAPISession.CreateTestSet` return type:** `void` → `TestSet?`.
+  The POST response body was previously captured but discarded; the
+  new return matches every other Create method in the file and lets
+  `New-OrchTestSet` emit the created entity.
+
+### Fixed
+
+- **`New-OrchApiTrigger` POST 500 from missing structural fields.**
+  Wire investigation confirmed the server treats `Tags`,
+  `MachineRobots`, and `Slug` as required even though Swagger marks
+  them optional. The cmdlet now defaults them when callers omit, so
+  barebones invocations succeed.
+
+- **`Get-OrchApiTrigger -ExportCsv` MachineRobots round-trip wipes
+  Modern-robot bindings.** Covered by the
+  `SerializeMachineRobotSessions` change above.
+
 ## [1.5.0] - 2026-05-21
 
 Architecture cleanup release. The cache layer collapses into a single
