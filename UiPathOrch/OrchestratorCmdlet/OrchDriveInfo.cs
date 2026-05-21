@@ -245,6 +245,12 @@ public partial class OrchDriveInfo : OrchPSDriveInfoBase
 
     internal string? _partitionGlobalId = null;
     internal object _partitionGlobalIdLock = new();
+
+    // Property form of the lazy-init logic in GetPartitionGlobalId(). Cache
+    // classes (PerOrganization variants) read via the inherited base property
+    // so they work for any DriveInfo subtype.
+    internal override string? PartitionGlobalId => GetPartitionGlobalId();
+
     internal string? GetPartitionGlobalId()
     {
         if (_partitionGlobalId is not null) return _partitionGlobalId;

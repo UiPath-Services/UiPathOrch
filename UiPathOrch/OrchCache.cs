@@ -19,7 +19,7 @@ public interface IFolderCacheClearable
 public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
 {
     private readonly object _lock = new();
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
     // volatile + publish-after-init: ensures readers on weakly-ordered CPUs (e.g. ARM/Apple Silicon)
     // never observe a non-null _cache that points at a partially-initialized object.
     private volatile T? _cache = null;
@@ -27,7 +27,7 @@ public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
     private readonly Func<T?> getter;
     private readonly Action<T>? initializer;
 
-    public SingleCachePerTenant(OrchDriveInfo drive, Func<T?> getter, Action<T>? initializer = null)
+    public SingleCachePerTenant(OrchPSDriveInfoBase drive, Func<T?> getter, Action<T>? initializer = null)
     {
         _drive = drive;
         _drive._allTenantCache.Add(this);
@@ -84,13 +84,13 @@ public class SingleCachePerTenant<T> : ITenantCacheClearable where T : class
 public class ListCachePerTenant<T> : ITenantCacheClearable
 {
     private readonly object _lock = new();
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
     private volatile List<T>? _cache = null;
     private readonly ExceptionCachePerTenant _exception = new();
     private readonly Func<IEnumerable<T>> getter;
     private readonly Action<T>? initializer;
 
-    public ListCachePerTenant(OrchDriveInfo drive, Func<IEnumerable<T>> getter, Action<T>? initializer = null)
+    public ListCachePerTenant(OrchPSDriveInfoBase drive, Func<IEnumerable<T>> getter, Action<T>? initializer = null)
     {
         _drive = drive;
         _drive._allTenantCache.Add(this);
@@ -142,7 +142,7 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
 // This represents the cache of unique entities across all organizations.
 public class ListCachePerOrganization<T> : ITenantCacheClearable
 {
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
     private static readonly ConcurrentDictionary<string, List<T>> _cache = [];
     private static readonly ExceptionsCachePer<string> _exception = new(); // Holds per-org exceptions
     // Per-partition lock for the list fetch path. Same partition → same lock
@@ -169,7 +169,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
     private static readonly ExceptionsCachePer<(string partitionGlobalId, string id)> _exceptionDetailed = new(); // Holds per (org, id) exceptions
 
     public ListCachePerOrganization(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<string, IEnumerable<T>> getter,
         Action<T>? initializer = null,
         Func<T, string?>? getterId = null,
@@ -186,7 +186,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
     public IEnumerable<T> Get()
     {
-        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        var partitionGlobalId = _drive.PartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) yield break;
 
         _exception.ThrowCachedExceptionIfAny(partitionGlobalId);
@@ -248,7 +248,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
         if (string.IsNullOrEmpty(id)) return default;
 
-        var partitionGlobalId = _drive.GetPartitionGlobalId()!;
+        var partitionGlobalId = _drive.PartitionGlobalId!;
 
         _exceptionDetailed.ThrowCachedExceptionIfAny((partitionGlobalId, id));
 
@@ -286,7 +286,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
     public void Set(T t)
     {
-        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        var partitionGlobalId = _drive.PartitionGlobalId;
         var id = _getterId?.Invoke(t);
         if (string.IsNullOrEmpty(partitionGlobalId) || string.IsNullOrEmpty(id)) return;
 
@@ -319,34 +319,34 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
     public void ClearCache(string? id)
     {
-        if (string.IsNullOrEmpty(_drive._partitionGlobalId)) return;
+        if (string.IsNullOrEmpty(_drive.PartitionGlobalId)) return;
 
         if (!string.IsNullOrEmpty(id))
         {
-            _cacheDetailed?.TryRemove((_drive._partitionGlobalId, id), out var _);
+            _cacheDetailed?.TryRemove((_drive.PartitionGlobalId, id), out var _);
         }
-        _cache.TryRemove(_drive._partitionGlobalId, out var _);
-        _exception.ClearCache(_drive._partitionGlobalId);
+        _cache.TryRemove(_drive.PartitionGlobalId, out var _);
+        _exception.ClearCache(_drive.PartitionGlobalId);
     }
 
     public void ClearCache()
     {
-        if (string.IsNullOrEmpty(_drive._partitionGlobalId)) return;
+        if (string.IsNullOrEmpty(_drive.PartitionGlobalId)) return;
 
         if (_cacheDetailed != null && !_cacheDetailed.IsEmpty)
         {
             foreach (var pair in _cacheDetailed)
             {
                 var key = pair.Key;
-                if (key.partitionGlobalId == _drive._partitionGlobalId)
+                if (key.partitionGlobalId == _drive.PartitionGlobalId)
                 {
                     _cacheDetailed.TryRemove(key, out _);
                 }
             }
         }
 
-        _cache.TryRemove(_drive._partitionGlobalId, out _);
-        _exception.ClearCache(_drive._partitionGlobalId);
+        _cache.TryRemove(_drive.PartitionGlobalId, out _);
+        _exception.ClearCache(_drive.PartitionGlobalId);
     }
 
 }
@@ -355,7 +355,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 // This represents the cache of a single entity shared across the entire organization.
 public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : class
 {
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
 
     // Cache per organization (static = shared across all drive instances)
     private static readonly ConcurrentDictionary<string, T> _cache = [];
@@ -369,7 +369,7 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
     private readonly Action<T>? _initializer;
 
     public SingleCachePerOrganization(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<string, T?> getter,
         Action<T>? initializer = null)
     {
@@ -381,7 +381,7 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
 
     public T? Get()
     {
-        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        var partitionGlobalId = _drive.PartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return null;
 
         _exception.ThrowCachedExceptionIfAny(partitionGlobalId);
@@ -423,7 +423,7 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
 
     public void ClearCache()
     {
-        var partitionGlobalId = _drive._partitionGlobalId;
+        var partitionGlobalId = _drive.PartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return;
 
         _cache.TryRemove(partitionGlobalId, out _);
@@ -438,7 +438,7 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
 public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearable where TIndexEntity : notnull
 {
     private readonly object _lock = new();
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
 
     // key: TIndexEntity.Id
     private volatile ConcurrentDictionary<Int64, TEntity?>? _cache = null;
@@ -450,7 +450,7 @@ public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearabl
     private readonly int? _supportedApiVersionFrom;
 
     public IndexedCachePerTenant(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<Int64, TEntity?> fetchFunc,
         Func<TIndexEntity, Int64> getIdFunc,
         Func<TIndexEntity, string> getNameFunc,
@@ -538,7 +538,7 @@ public class KeyedListCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     where TKey : notnull, IEquatable<TKey>
 {
     private readonly object _lock = new();
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
 
     private volatile ConcurrentDictionary<TKey, List<TEntity>>? _cache = null;
     private readonly ExceptionsCachePer<TKey> _exceptions = new();
@@ -548,7 +548,7 @@ public class KeyedListCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     private readonly int? _supportedApiVersionFrom;
 
     public KeyedListCachePerTenant(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<TKey, IEnumerable<TEntity>> fetchFunc,
         Action<TEntity, TKey>? initializer = null,
         IEqualityComparer<TKey>? keyComparer = null,
@@ -660,7 +660,7 @@ public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     where TKey : notnull, IEquatable<TKey>
 {
     private readonly object _lock = new();
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
 
     private volatile ConcurrentDictionary<TKey, TEntity?>? _cache = null;
     private readonly ExceptionsCachePer<TKey> _exceptions = new();
@@ -670,7 +670,7 @@ public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     private readonly int? _supportedApiVersionFrom;
 
     public KeyedSingleCachePerTenant(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<TKey, TEntity?> fetchFunc,
         Action<TEntity, TKey>? initializer = null,
         IEqualityComparer<TKey>? keyComparer = null,
@@ -798,13 +798,13 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
     // every fetch across all orgs, which was correct but unnecessarily coarse.
     private static readonly ConcurrentDictionary<string, object> _partitionLocks = new();
 
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
     private readonly Func<string, TKey, TEntity?> _fetchFunc;
     private readonly Action<TEntity, TKey>? _initializer;
     private readonly int? _supportedApiVersionFrom;
 
     public KeyedSingleCachePerOrganization(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<string, TKey, TEntity?> fetchFunc,
         Action<TEntity, TKey>? initializer = null,
         IEqualityComparer<TKey>? keyComparer = null,
@@ -825,7 +825,7 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
     {
         if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom) return default;
 
-        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        var partitionGlobalId = _drive.PartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return default;
 
         var compositeKey = (partitionGlobalId, key);
@@ -864,7 +864,7 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
         // (_partitionGlobalId is null), it can't have contributed entries
         // to this static cache, so a no-op is correct — and avoids
         // triggering PKCE for every unauthed drive on Clear-OrchCache -AllDrives.
-        var partitionGlobalId = _drive._partitionGlobalId;
+        var partitionGlobalId = _drive.PartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return;
 
         var compositeKey = (partitionGlobalId, key);
@@ -874,7 +874,7 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
 
     public void ClearCache()
     {
-        var partitionGlobalId = _drive._partitionGlobalId;
+        var partitionGlobalId = _drive.PartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return;
 
         // Drop every entry whose first tuple element is this drive's partition.
@@ -902,13 +902,13 @@ public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearabl
     // Per-partition lock — see KeyedSingleCachePerOrganization.
     private static readonly ConcurrentDictionary<string, object> _partitionLocks = new();
 
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
     private readonly Func<string, TKey, IEnumerable<TEntity>> _fetchFunc;
     private readonly Action<TEntity, TKey>? _initializer;
     private readonly int? _supportedApiVersionFrom;
 
     public KeyedListCachePerOrganization(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<string, TKey, IEnumerable<TEntity>> fetchFunc,
         Action<TEntity, TKey>? initializer = null,
         IEqualityComparer<TKey>? keyComparer = null,
@@ -929,7 +929,7 @@ public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearabl
             return new List<TEntity>().AsReadOnly();
         }
 
-        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        var partitionGlobalId = _drive.PartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId))
         {
             return new List<TEntity>().AsReadOnly();
@@ -967,7 +967,7 @@ public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearabl
     {
         // Read the cached partition id directly; see KeyedSingleCachePerOrganization
         // for the rationale (don't trigger auth on Clear-OrchCache).
-        var partitionGlobalId = _drive._partitionGlobalId;
+        var partitionGlobalId = _drive.PartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return;
 
         var compositeKey = (partitionGlobalId, key);
@@ -977,7 +977,7 @@ public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearabl
 
     public void ClearCache()
     {
-        var partitionGlobalId = _drive._partitionGlobalId;
+        var partitionGlobalId = _drive.PartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return;
 
         foreach (var k in _cache.Keys.Where(k => k.partitionGlobalId == partitionGlobalId).ToList())
@@ -1005,7 +1005,7 @@ public class KeyedSingleCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     where TKey : notnull, IEquatable<TKey>
 {
     private readonly object _lock = new();
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
 
     // Outer dict: folderId -> inner dict (key -> entity).
     private volatile ConcurrentDictionary<Int64, ConcurrentDictionary<TKey, TEntity?>>? _cache = null;
@@ -1016,7 +1016,7 @@ public class KeyedSingleCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     private readonly int? _supportedApiVersionFrom;
 
     public KeyedSingleCachePerFolder(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<Int64, TKey, TEntity?> fetchFunc,
         Action<TEntity, string, TKey>? initializer = null,
         IEqualityComparer<TKey>? keyComparer = null,
@@ -1119,7 +1119,7 @@ public class KeyedListCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     where TKey : notnull, IEquatable<TKey>
 {
     private readonly object _lock = new();
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
 
     // Outer dict: folderId -> inner dict (key -> list of entities).
     private volatile ConcurrentDictionary<Int64, ConcurrentDictionary<TKey, List<TEntity>>>? _cache = null;
@@ -1130,7 +1130,7 @@ public class KeyedListCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     private readonly int? _supportedApiVersionFrom;
 
     public KeyedListCachePerFolder(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<Int64, TKey, IEnumerable<TEntity>> fetchFunc,
         Action<TEntity, string, TKey>? initializer = null,
         IEqualityComparer<TKey>? keyComparer = null,
@@ -1236,7 +1236,7 @@ public class KeyedListCachePerFolder<TKey, TEntity> : IFolderCacheClearable
 public class SingleCachePerFolder<T> : IFolderCacheClearable
 {
     private readonly object _lock = new();
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
     private volatile ConcurrentDictionary<Int64, T?>? _cache = null;
     private readonly ExceptionsCachePer<Int64> _exceptions = new();
     private readonly Func<Int64?, T?> _getter;
@@ -1244,7 +1244,7 @@ public class SingleCachePerFolder<T> : IFolderCacheClearable
     private readonly int? _supportedApiVersionFrom;
 
     public SingleCachePerFolder(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<Int64?, T?> getter,
         Action<T, string>? initializer = null,
         int? supportedApiVersionFrom = null)
@@ -1317,7 +1317,7 @@ public class SingleCachePerFolder<T> : IFolderCacheClearable
 public class ListCachePerFolder<T> : IFolderCacheClearable
 {
     private readonly object _lock = new();
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
     private volatile ConcurrentDictionary<Int64, List<T>>? _cache = null;
     private readonly ExceptionsCachePer<Int64> _exceptions = new();
     private readonly Func<Int64, IEnumerable<T>> _getter;
@@ -1325,7 +1325,7 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
     private readonly int? _supportedApiVersionFrom;
 
     public ListCachePerFolder(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<Int64, IEnumerable<T>> getter,
         Action<T, string>? initializer = null,
         int? supportedApiVersionFrom = null)
@@ -1410,7 +1410,7 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
 public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClearable where TIndexEntity : notnull
 {
     private readonly object _lock = new();
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
 
     // 1st key: folderId
     // 2nd key: TIndexEntity.Id
@@ -1431,7 +1431,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
     private readonly int? _supportedApiVersionFrom;
 
     public IndexedListCachePerFolder(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<Int64, TIndexEntity, IEnumerable<TEntity>> fetchFunc,
         Func<TIndexEntity, Int64> getIdFunc,
         Func<TIndexEntity, string> getNameFunc,
@@ -1545,7 +1545,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     where TKey : notnull
 {
     private readonly object _lock = new();
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
 
     // 1st key: folderId, 2nd key: entityKey
     private volatile ConcurrentDictionary<Int64, ConcurrentDictionary<TKey, TEntity>>? _cache = null;
@@ -1564,7 +1564,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     private readonly Action<TEntity, TEntity?>? _mergeFunc;
 
     public IncrementalCachePerFolder(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<Int64, string?, ulong, ulong, string?, bool, IEnumerable<TEntity>> fetchFunc,
         Func<TEntity, TKey?> getKeyFunc,
         Action<TEntity, string>? initializer = null,
@@ -1725,7 +1725,7 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     where TKey : notnull
 {
     private readonly object _lock = new();
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
 
     private volatile ConcurrentDictionary<TKey, TEntity>? _cache = null;
     private readonly ExceptionCachePerTenant _exception = new();
@@ -1743,7 +1743,7 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     private readonly Action<TEntity, TEntity?>? _mergeFunc;
 
     public IncrementalCachePerTenant(
-        OrchDriveInfo drive,
+        OrchPSDriveInfoBase drive,
         Func<string?, ulong, ulong, IEnumerable<TEntity>> fetchFunc,
         Func<TEntity, TKey?> getKeyFunc,
         Action<TEntity, string>? initializer = null,
@@ -2385,7 +2385,7 @@ public class PmGroupMembersCache : ITenantCacheClearable
 {
     private const int ChunkSize = 20;
 
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
 
     // Shared static storage keyed by (partitionGlobalId, kind, name). null value
     // = "API confirmed this name has no member" (negative caching).
@@ -2393,7 +2393,7 @@ public class PmGroupMembersCache : ITenantCacheClearable
     private static readonly ExceptionsCachePer<string> _exceptions = new();
     private static readonly object _lock = new();
 
-    public PmGroupMembersCache(OrchDriveInfo drive)
+    public PmGroupMembersCache(OrchPSDriveInfoBase drive)
     {
         _drive = drive;
         _drive._allTenantCache.Add(this);
@@ -2410,7 +2410,7 @@ public class PmGroupMembersCache : ITenantCacheClearable
     /// </summary>
     public IDictionary<string, PmGroupMember?> GetMany(string kind, IEnumerable<string> names)
     {
-        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        var partitionGlobalId = _drive.PartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return new Dictionary<string, PmGroupMember?>();
 
         _exceptions.ThrowCachedExceptionIfAny(partitionGlobalId);
@@ -2473,7 +2473,7 @@ public class PmGroupMembersCache : ITenantCacheClearable
 
     public void ClearCache()
     {
-        var partitionGlobalId = _drive._partitionGlobalId;
+        var partitionGlobalId = _drive.PartitionGlobalId;
         if (string.IsNullOrEmpty(partitionGlobalId)) return;
         foreach (var k in _cache.Keys.Where(k => k.partitionGlobalId == partitionGlobalId).ToList())
         {
@@ -2496,11 +2496,11 @@ public class PmGroupMembersCache : ITenantCacheClearable
 /// </summary>
 public class RobotLogsCache : IFolderCacheClearable
 {
-    private readonly OrchDriveInfo _drive;
+    private readonly OrchPSDriveInfoBase _drive;
     private readonly object _lock = new();
     private volatile ConcurrentDictionary<long, ConcurrentBag<Log>>? _cache = null;
 
-    public RobotLogsCache(OrchDriveInfo drive)
+    public RobotLogsCache(OrchPSDriveInfoBase drive)
     {
         _drive = drive;
         _drive._allFolderCache.Add(this);

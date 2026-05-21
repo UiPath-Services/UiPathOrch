@@ -74,6 +74,7 @@ public class OrchDuDriveInfo : OrchPSDriveInfoBase
     }
 
     internal override OrchAPISession OrchAPISession => ParentDrive.OrchAPISession;
+    internal override string? PartitionGlobalId => ParentDrive.PartitionGlobalId;
 
     // NameColon / NameColonSeparator / RootFolder / ClearAllCache live on
     // OrchPSDriveInfoBase. The base implementation of ClearAllCache iterates

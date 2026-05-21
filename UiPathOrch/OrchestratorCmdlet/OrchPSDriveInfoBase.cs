@@ -43,6 +43,13 @@ public abstract class OrchPSDriveInfoBase : PSDriveInfo
     // session; OrchDuDriveInfo / OrchTmDriveInfo delegate to ParentDrive.
     internal abstract OrchAPISession OrchAPISession { get; }
 
+    // Automation Cloud organization identifier (partitionGlobalId, prt_id from
+    // JWT). Used by PerOrganization cache classes to key shared org-scoped
+    // singletons. OrchDriveInfo lazily initializes from JWT or API fallback;
+    // OrchDuDriveInfo / OrchTmDriveInfo delegate to ParentDrive so they share
+    // the same org identifier as the underlying Orch drive.
+    internal abstract string? PartitionGlobalId { get; }
+
     private string? _NameColon;
     internal string NameColon
     {
