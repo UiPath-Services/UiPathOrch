@@ -24,9 +24,14 @@ namespace UnitTests;
 public class OrchDuDriveInfoCacheRegistrationTests
 {
     [Theory]
-    [InlineData("DuRoles", typeof(DuListCachePerOrganization<DuRole>))]
-    [InlineData("DuProjects", typeof(DuListCachePerTenant<DuProject>))]
-    [InlineData("DuUsers", typeof(DuKeyedListCachePerOrganization<(string TenantKey, string ProjectId), DuUser>))]
+    // The Du* duplicates were retired in the 1.5.0 cache refactor — DU entities
+    // now use the universal cache classes (which take OrchPSDriveInfoBase).
+    // The DuListCachePerProject<T> form survives because there is no universal
+    // PerProject scope yet; Phase 5 of the refactor will fold it into a
+    // generalized PerFolder<string,...> shape.
+    [InlineData("DuRoles", typeof(ListCachePerOrganization<DuRole>))]
+    [InlineData("DuProjects", typeof(ListCachePerTenant<DuProject>))]
+    [InlineData("DuUsers", typeof(KeyedListCachePerOrganization<(string TenantKey, string ProjectId), DuUser>))]
     [InlineData("DuDocumentTypes", typeof(DuListCachePerProject<DuDocumentType>))]
     [InlineData("DuClassifiers", typeof(DuListCachePerProject<DuClassifier>))]
     // DuExtractors was the missing entry in the pre-1.4.3 manual clear loop —

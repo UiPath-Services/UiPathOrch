@@ -15,13 +15,13 @@ public class OrchDuDriveInfo : OrchPSDriveInfoBase
     // keyed in the cache). Entities are stored bare; cmdlets ShallowClone()
     // per emit and stamp drive-local Path / Project — same pattern as PM*
     // (post-1.4.2 per-org cache path isolation).
-    public DuListCachePerOrganization<DuRole> DuRoles = null!;
-    public DuKeyedListCachePerOrganization<(string TenantKey, string ProjectId), DuUser> DuUsers = null!;
+    public ListCachePerOrganization<DuRole> DuRoles = null!;
+    public KeyedListCachePerOrganization<(string TenantKey, string ProjectId), DuUser> DuUsers = null!;
 
     // Per-tenant: scoped to this single drive. For uniformity with the
     // org-scoped DU caches above, cmdlets ShallowClone() per emit and stamp
     // here too — same call-site code for every Du entity.
-    public DuListCachePerTenant<DuProject> DuProjects = null!;
+    public ListCachePerTenant<DuProject> DuProjects = null!;
     public DuListCachePerProject<DuDocumentType> DuDocumentTypes = null!;
     public DuListCachePerProject<DuClassifier> DuClassifiers = null!;
     public DuListCachePerProject<DuExtractor> DuExtractors = null!;

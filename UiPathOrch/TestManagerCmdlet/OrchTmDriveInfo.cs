@@ -10,12 +10,12 @@ public class OrchTmDriveInfo : OrchPSDriveInfoBase
 {
     // Test tenant entities
     // The number indicates the parameter count of the getter method (in OrchAPISession.cs)
-    public TmSingleCachePerTenant0<TmServerInfo> TmServerInformation = null!;
-    public TmSingleCachePerTenant0<TmConfig> TmConfiguration = null!;
+    public SingleCachePerTenant<TmServerInfo> TmServerInformation = null!;
+    public SingleCachePerTenant<TmConfig> TmConfiguration = null!;
     public TmSingleCachePerTenant1<TmProjectSettings> TmProjectSetting = null!;
 
     // Test list entities
-    public TmListCachePerTenant0<TmProject> TmProjects = null!;
+    public ListCachePerTenant<TmProject> TmProjects = null!;
     public TmListCachePerTenant1<TmTestCase> TmTestCases = null!;
     public TmListCachePerTenant1<TmTestSet> TmTestSets = null!;
     public TmListCachePerTenant1<TmTestExecution> TmTestExecutions = null!;
@@ -41,7 +41,7 @@ public class OrchTmDriveInfo : OrchPSDriveInfoBase
             // Caches need to be initialized after ParentDrive is set.
             // TmProjects is per-tenant — Path/FullName stamping in the
             // initializer is safe (no cross-drive sharing).
-            TmProjects = new(this, OrchAPISession.GetTmProjects, e =>
+            TmProjects = new(this, () => OrchAPISession.GetTmProjects() ?? [], e =>
             {
                 e.Path = NameColonSeparator;
                 e.FullName = NameColonSeparator + e.projectPrefix;
@@ -92,7 +92,8 @@ public class OrchTmDriveInfo : OrchPSDriveInfoBase
     }
 
     // Backward-compat thin wrapper for callers that still spell the legacy
-    // method. The cache class handles locking, exception caching, and the
-    // ReadOnlyCollection wrapping internally.
-    public ReadOnlyCollection<TmProject>? GetTmProjects() => TmProjects.Get();
+    // method. The universal ListCachePerTenant returns the internal List<T>
+    // directly; wrap as ReadOnlyCollection here to keep callers from mutating
+    // the cached list.
+    public ReadOnlyCollection<TmProject>? GetTmProjects() => TmProjects.Get().AsReadOnly();
 }

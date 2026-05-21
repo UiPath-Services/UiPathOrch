@@ -4342,7 +4342,7 @@ public class ActionDetail // added by UiPathOrch Not in the swagger doc.
 public class DuRole // added by UiPathOrch Not in the swagger doc.
 {
     // Path: drive-local; the entity is shared across drives of the same org
-    // via DuListCachePerOrganization. Never set on the shared singleton —
+    // via ListCachePerOrganization. Never set on the shared singleton —
     // set on the per-emit ShallowClone() copy.
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
@@ -4380,7 +4380,7 @@ public class RoleAssignmentDto // added by UiPathOrch Not in the swagger doc.
 public class DuUser // added by UiPathOrch Not in the swagger doc.
 {
     // Path / Project: drive-local; the entity is shared across drives of the
-    // same org via DuKeyedListCachePerOrganization. Never set on the shared
+    // same org via KeyedListCachePerOrganization. Never set on the shared
     // singleton — set on the per-emit ShallowClone() copy.
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch

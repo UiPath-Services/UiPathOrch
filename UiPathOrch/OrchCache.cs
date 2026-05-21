@@ -98,6 +98,12 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
         this.initializer = initializer;
     }
 
+    // Peek at the cached list without triggering a fetch. Used by providers
+    // (e.g., OrchDuProvider / OrchTmProvider) to enumerate children only when
+    // the cache is already populated, avoiding implicit API calls during
+    // wildcard expansion.
+    public List<T>? CachedValue => _cache;
+
     public List<T> Get()
     {
         _exception.ThrowCachedExceptionIfAny();
@@ -2124,156 +2130,6 @@ public class TmListCachePerTenant1<T> : ITenantCacheClearable
     {
         _cache = null;
         _exceptions.ClearCache();
-    }
-}
-
-// getFunc: Func with no arguments that returns IEnumerable<T>.
-// Tenant-scoped list (0-arity getter); sibling of TmListCachePerTenant1<T>
-// which takes a TmProject. Used for tenant-scope lists like the TmProject
-// catalog itself (where there's no per-project key to fetch by).
-public class TmListCachePerTenant0<T> : ITenantCacheClearable
-{
-    private readonly object _lock = new();
-    private readonly OrchTmDriveInfo _drive;
-    private volatile List<T>? _cache = null;
-    private readonly ExceptionCachePerTenant _exception = new();
-    private readonly Func<IEnumerable<T>?> _getter;
-    private readonly Action<T>? _initializer;
-    private readonly int? _supportedApiVersionFrom;
-
-    public TmListCachePerTenant0(
-        OrchTmDriveInfo drive,
-        Func<IEnumerable<T>?> getter,
-        Action<T>? initializer = null,
-        int? supportedApiVersionFrom = null)
-    {
-        _drive = drive;
-        _getter = getter;
-        _drive._allTenantCache.Add(this);
-        _initializer = initializer;
-        _supportedApiVersionFrom = supportedApiVersionFrom;
-    }
-
-    public ReadOnlyCollection<T> Get()
-    {
-        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
-        {
-            return new List<T>().AsReadOnly();
-        }
-
-        _exception.ThrowCachedExceptionIfAny();
-
-        if (_cache is null)
-        {
-            try
-            {
-                lock (_lock)
-                {
-                    if (_cache is null)
-                    {
-                        var temp = _getter()?.ToList() ?? [];
-                        if (_initializer is not null)
-                        {
-                            foreach (var entity in temp)
-                            {
-                                _initializer(entity);
-                            }
-                        }
-                        // Publish after init.
-                        _cache = temp;
-                    }
-                }
-            }
-            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
-            {
-                _exception.CacheException(ex);
-                throw;
-            }
-        }
-        return _cache.AsReadOnly();
-    }
-
-    /// <summary>
-    /// Passive read: returns the cached list if a Get() call has previously
-    /// succeeded, otherwise null. Does NOT trigger a fetch and does NOT throw
-    /// even if an exception is cached. Use from hot paths like provider
-    /// NormalizeRelativePath that must not initiate an API call.
-    /// </summary>
-    public IReadOnlyList<T>? CachedValue => _cache;
-
-    public void ClearCache()
-    {
-        _cache = null;
-        _exception.ClearCache();
-    }
-}
-
-// getFunc: Func with no arguments that returns T
-public class TmSingleCachePerTenant0<T> : ITenantCacheClearable where T : class
-{
-    private readonly object _lock = new();
-    private readonly OrchTmDriveInfo _drive;
-    private volatile T? _cache = null;
-    private readonly ExceptionCachePerTenant _exception = new();
-    private readonly Func<T?> _getFunc;
-    private readonly Action<T>? _initializer;
-    private readonly int? _supportedApiVersionFrom;
-
-    public TmSingleCachePerTenant0(
-        OrchTmDriveInfo drive,
-        Func<T?> getFunc,
-        Action<T>? initializer = null,
-        int? supportedApiVersionFrom = null)
-    {
-        _drive = drive;
-        _getFunc = getFunc;
-        _drive._allTenantCache.Add(this);
-        _initializer = initializer;
-        _supportedApiVersionFrom = supportedApiVersionFrom;
-    }
-
-    public T? Get()
-    {
-        if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
-        {
-            return default;
-        }
-
-        _exception.ThrowCachedExceptionIfAny();
-
-        if (_cache is null)
-        {
-            try
-            {
-                lock (_lock)
-                {
-                    if (_cache is null)
-                    {
-                        var temp = _getFunc();
-
-                        if (_initializer is not null && temp is not null)
-                        {
-                            _initializer(temp);
-                        }
-                        // Publish after init so concurrent readers never observe
-                        // a partially-initialized object.
-                        _cache = temp;
-                    }
-                }
-            }
-            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
-            {
-                _exception.CacheException(ex);
-                throw;
-            }
-        }
-        return _cache;
-    }
-
-    public void ClearCache()
-    {
-        _cache = null;
-        _exception.ClearCache();
     }
 }
 
