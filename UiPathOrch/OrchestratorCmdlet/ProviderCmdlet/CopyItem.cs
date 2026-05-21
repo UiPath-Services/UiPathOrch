@@ -835,12 +835,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
 
         var dstBuckets = dstDrive.Buckets.Get(newFolder);
-        // Case-SENSITIVE name match -- preserved from original implementation
-        // (Ordinal, not OrdinalIgnoreCase). All other FindDst* methods use
-        // OrdinalIgnoreCase; the asymmetry is intentionally kept here pending
-        // deliberate review. If the API treats bucket names case-sensitively,
-        // this is correct; if it doesn't, this is a latent bug.
-        var dstBucket = ResolveDstByName(dstBuckets, srcBucket.Name, b => b.Name, StringComparison.Ordinal);
+        // Case-insensitive name match. The Orchestrator server rejects
+        // bucket creation with "The name <X> is already used" when a same-
+        // name bucket exists in any case, so name uniqueness IS case-
+        // insensitive at the API level. The original '==' comparison was
+        // case-sensitive, would miss a dst bucket whose name differed
+        // only in case, and would then trigger that server-side rejection
+        // -- the latent symptom was "Copy-Item fails with already-used".
+        var dstBucket = ResolveDstByName(dstBuckets, srcBucket.Name, b => b.Name);
         if (dstBucket is null)
         {
             _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have the bucket with Name = '{srcBucket.Name}'.");
@@ -1201,13 +1203,15 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
     // Generic name-match resolver used by the simple FindDst* methods
     // (FindDstRobot / FindDstMachine / FindDstQueue / FindDstRelease /
-    // FindDstCalendar / FindDstCredentialStore / FindDstBucket).
+    // FindDstCalendar / FindDstCredentialStore / FindDstBucket /
+    // FindDstTestSet).
     //
-    // Default StringComparison is OrdinalIgnoreCase to mirror the bulk of
-    // the FindDst* family. FindDstBucket explicitly passes Ordinal because
-    // the original implementation used case-sensitive '==' name comparison
-    // -- behaviour preserved here pending a deliberate decision; see
-    // BugDiscovery in tests for the case-sensitivity question.
+    // All current callers use the default StringComparison.OrdinalIgnoreCase
+    // -- every entity kind the Orchestrator UI treats by name does so
+    // case-insensitively, and same-name uniqueness on the server side is
+    // case-insensitive too (creation with a differently-cased name fails
+    // with "name already used"). The Ordinal overload is retained for any
+    // future caller that has a legitimate case-sensitive need.
     internal static T? ResolveDstByName<T>(
         IEnumerable<T>? candidates,
         string? srcName,
@@ -1429,9 +1433,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             // For classic robots, no matching robot name can be found
 
             var dstRobots = dstDrive.RobotsFromFolder.Get(dstFolder);
+            // Both fields case-insensitive. Type is server-stable ("Unattended"
+            // / "Development" / etc.) so case variation is unlikely in
+            // practice, but the comparison costs nothing extra and any
+            // future server-side casing change would silently not match
+            // under the original case-sensitive '=='.
             var dstRobot = dstRobots?.FirstOrDefault(r =>
-                r.Type == srcRobot_Type && // This srcRobot.Type should always be "Unattended"..
-                string.Compare(r.Username, srcRobot_Username, StringComparison.OrdinalIgnoreCase) == 0);
+                string.Equals(r.Type, srcRobot_Type, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(r.Username, srcRobot_Username, StringComparison.OrdinalIgnoreCase));
             if (dstRobot is null)
             {
                 string target = dstFolder.GetPSPath();
@@ -2849,14 +2858,16 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
 
         var dstTestCases = dstDrive.TestCases.Get(newFolder);
-        // Case-SENSITIVE compound match (PackageIdentifier + Name). Preserved
-        // from original '==' comparisons. Same family of asymmetry as
-        // FindDstBucket / FindDstTestSet -- every other FindDst* in this file
-        // uses OrdinalIgnoreCase. Awaiting deliberate review (see
-        // BugDiscovery_FindDstBucketIsCaseSensitiveWhileOthersAreNot test).
+        // Case-insensitive compound match. Test entity names follow the
+        // same Orchestrator name-uniqueness rule as Buckets (rejected on
+        // create when a same-name entity differs only in case), so a
+        // case-sensitive '==' lookup here would miss a dst test case that
+        // exists under a different case and cause a spurious "not found"
+        // warning. PackageIdentifier is intrinsically case-stable but
+        // matched the same way for symmetry.
         var dstTestCase = dstTestCases.FirstOrDefault(tc =>
-            string.Equals(tc.PackageIdentifier, srcTestCase.PackageIdentifier, StringComparison.Ordinal) &&
-            string.Equals(tc.Name, srcTestCase.Name, StringComparison.Ordinal));
+            string.Equals(tc.PackageIdentifier, srcTestCase.PackageIdentifier, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(tc.Name, srcTestCase.Name, StringComparison.OrdinalIgnoreCase));
         if (dstTestCase is null)
         {
             _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have test case with PackageIdentifier = '{srcTestCase.PackageIdentifier}' and Name = '{srcTestCase.Name}'.");
@@ -3005,10 +3016,10 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
 
         var dstTestSets = dstDrive.TestSets.Get(newFolder);
-        // Case-SENSITIVE match preserved from original '==' comparison. Same
-        // asymmetry as FindDstBucket / FindDstTestCase -- the rest of the
-        // FindDst* family uses OrdinalIgnoreCase. Awaiting deliberate review.
-        var dstTestSet = ResolveDstByName(dstTestSets, srcTestSet.Name, ts => ts.Name, StringComparison.Ordinal);
+        // Case-insensitive name match (same rationale as FindDstBucket /
+        // FindDstTestCase). Original '==' was case-sensitive; missed dst
+        // test sets that existed under a different case.
+        var dstTestSet = ResolveDstByName(dstTestSets, srcTestSet.Name, ts => ts.Name);
         if (dstTestSet is null)
         {
             _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have test set with Name = '{srcTestSet.Name}'.");

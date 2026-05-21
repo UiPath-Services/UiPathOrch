@@ -98,26 +98,16 @@ public class ResolveDstByNameTests
     }
 
     [Fact]
-    public void BugDiscovery_FindDstBucketIsCaseSensitiveWhileOthersAreNot()
+    public void HelperSupportsBothCaseSensitiveAndCaseInsensitiveModes()
     {
-        // Documents an inconsistency that the refactor preserved verbatim:
-        // FindDstBucket uses StringComparison.Ordinal (case-sensitive)
-        // while every other FindDst* uses OrdinalIgnoreCase. The original
-        // FindDstBucket implementation used '==' for name comparison,
-        // which is case-sensitive in C#.
-        //
-        // If this is intentional (bucket names ARE case-sensitive in the
-        // Orchestrator API), the test below documents the policy. If not,
-        // FindDstBucket needs to switch to OrdinalIgnoreCase, the bug
-        // would be 'Copy-Item on a bucket whose name only differs in case
-        // from a destination bucket gets silently treated as a different
-        // entity'. Awaiting deliberate decision; do not "fix" by changing
-        // FindDstBucket without first confirming server semantics.
-
+        // Sanity check that the StringComparison parameter actually toggles
+        // the match behavior. All current FindDst* callers use the default
+        // OrdinalIgnoreCase; the Ordinal mode is retained for any future
+        // legitimate case-sensitive need.
         var candidates = new[] { new Item("MyBucket") };
         var caseInsensitive = ResolveDstByName(candidates, "mybucket", c => c.Name);
         var caseSensitive = ResolveDstByName(candidates, "mybucket", c => c.Name, StringComparison.Ordinal);
-        Assert.NotNull(caseInsensitive);  // FindDstQueue / FindDstRelease / etc. mode
-        Assert.Null(caseSensitive);       // FindDstBucket mode
+        Assert.NotNull(caseInsensitive);
+        Assert.Null(caseSensitive);
     }
 }
