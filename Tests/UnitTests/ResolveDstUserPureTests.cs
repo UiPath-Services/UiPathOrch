@@ -97,8 +97,12 @@ public class ResolveDstUserPureTests
     [Fact]
     public void EmailFallbackDisabledByAllowEmailFallbackFalse()
     {
-        // Simulates the second-pass retry in FindDstUser (post cache-clear),
-        // which deliberately only tries name match.
+        // The allowEmailFallback parameter still exists for any future
+        // caller that legitimately wants to skip the email fallback. The
+        // current FindDstUser callers both pass true (the first-pass
+        // default and the post-cache-clear retry both use email fallback
+        // -- the original implementation deliberately skipped email on the
+        // retry but that was an inconsistency, fixed during the audit).
         var src = U(1, userName: "different", email: "alice@directory.local");
         var dst = new[] { U(10, "alice@directory.local") };
         var (user, result) = ResolveDstUserPure(src, dst, userMapping: null, Assigned(10),

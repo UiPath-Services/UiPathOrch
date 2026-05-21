@@ -87,35 +87,22 @@ public class ResolveDstSessionPureTests
     }
 
     [Fact]
-    public void BugDiscovery_Tier2DoesNotCoerceDstNullsLikeTier1Does()
+    public void AllTiersCoerceDstNullsToEmpty()
     {
-        // Tier 1 path: src ServiceUserName="u1" vs dst.ServiceUserName=null
-        // -> "u1" != "" -> Tier 1 fails -> Tier 2 takes over.
-        // Tier 2 checks IsNullOrEmpty(dst.ServiceUserName) which IS true,
-        // so this row matches.
-        //
-        // What about Tier 2's MachineName check though? Tier 2 uses
-        // string.Equals(s.MachineName, srcMachineName, ...) WITHOUT
-        // null-coercion. If dst.MachineName is null and src is "" they
-        // would NOT match (null != "" in string.Equals). But with the
-        // null-coercion-only-on-Tier1 asymmetry, a dst session with
-        // (null, null, null) fields would:
-        //   - Match Tier 1 with src ("", "", "")
-        //   - NOT match Tier 2 because string.Equals(null, "", ...) = false
-        //   - NOT match Tier 3 same reason
-        // So the asymmetry is "Tier 1 is more forgiving with nulls than
-        // its fallbacks". Pinned down here; verify with a stricter or
-        // looser policy is intentional.
+        // All three tiers now null-coerce dst fields to "" before compare,
+        // so a row with (null, null, null) fields is reachable from any
+        // tier. The original implementation only coerced on Tier 1, which
+        // made the looser tiers unreachable for null-field rows --
+        // inconsistent and fixed.
 
         var dst = new[] { S(null, null, null) };
         var matchesTier1 = ResolveDstSessionPure(dst, "", "", "");
         Assert.NotNull(matchesTier1);
-        // The matched entry is the null-null-null row, exactly because
-        // Tier 1 coerced its nulls.
         Assert.Null(matchesTier1!.MachineName);
 
-        // If Tier 1 doesn't match (src non-empty), Tiers 2/3 won't catch
-        // the null-field row either because they use uncoerced Equals.
+        // Tier 1 misses because src is non-empty, but Tier 3 still
+        // doesn't match this row because MachineName is null vs "real-machine"
+        // (real value mismatch is a legitimate miss).
         var noMatch = ResolveDstSessionPure(dst, "real-machine", "real-host", "");
         Assert.Null(noMatch);
     }

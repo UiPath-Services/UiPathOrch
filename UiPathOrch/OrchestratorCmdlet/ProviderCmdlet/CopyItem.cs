@@ -1313,16 +1313,17 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
             // Retry once after clearing the tenant user cache. This handles the
             // case where AssignDirectoryUser was just called in CopyFolderUsers
-            // and the cached user list is stale. Email fallback is intentionally
-            // NOT repeated on this pass -- preserves the original asymmetric
-            // behaviour (questionable but we don't want to change semantics
-            // silently during the extract-pure-logic refactor).
+            // and the cached user list is stale. Email fallback is enabled
+            // on the retry too -- the first pass having tried email is no
+            // reason to skip it after a fresh fetch (a B2B user whose
+            // UserName != EmailAddress that wasn't in the stale cache is
+            // exactly what the retry exists for).
             if (result == FindDstUserResult.NotFound)
             {
                 dstDrive.Users.ClearCache();
                 (dstUser, result) = ResolveDstUserPure(
                     srcUser, dstDrive.Users.Get(), userMapping, assignedFolderUserIds,
-                    allowEmailFallback: false);
+                    allowEmailFallback: true);
             }
 
             // Re-compute the search name (cheap) for the warning messages.
@@ -1525,26 +1526,30 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         string srcHostMachineName,
         string srcServiceUserName)
     {
-        // Tier 1: full triple match, null-coerced.
+        // All tiers null-coerce dst fields to "" before compare so a dst
+        // session row with null fields is visible to every tier. The
+        // original implementation only coerced on Tier 1, which left
+        // null-field rows unreachable for the looser tiers -- inconsistent
+        // and fixed during this round of audits.
+
+        // Tier 1: full triple match.
         var dstSession = dstSessions.FirstOrDefault(s =>
             string.Equals(s.MachineName ?? "", srcMachineName, StringComparison.OrdinalIgnoreCase) &&
             string.Equals(s.HostMachineName ?? "", srcHostMachineName, StringComparison.OrdinalIgnoreCase) &&
             string.Equals(s.ServiceUserName ?? "", srcServiceUserName, StringComparison.OrdinalIgnoreCase));
         if (dstSession is not null) return dstSession;
 
-        // Tier 2: machine + host match, dst service user is empty.
-        // Intentionally NOT null-coercing dst-side fields here to preserve
-        // the original behaviour; see asymmetry note above.
+        // Tier 2: machine + host match, dst service user empty.
         dstSession = dstSessions.FirstOrDefault(s =>
-            string.Equals(s.MachineName, srcMachineName, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(s.HostMachineName, srcHostMachineName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(s.MachineName ?? "", srcMachineName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(s.HostMachineName ?? "", srcHostMachineName, StringComparison.OrdinalIgnoreCase) &&
             string.IsNullOrEmpty(s.ServiceUserName));
         if (dstSession is not null) return dstSession;
 
         // Tier 3: machine + host match only. Loosest.
         return dstSessions.FirstOrDefault(s =>
-            string.Equals(s.MachineName, srcMachineName, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(s.HostMachineName, srcHostMachineName, StringComparison.OrdinalIgnoreCase));
+            string.Equals(s.MachineName ?? "", srcMachineName, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(s.HostMachineName ?? "", srcHostMachineName, StringComparison.OrdinalIgnoreCase));
     }
 
     internal static MachineSessionRuntime? FindDstSession(IWritableHost _this,
@@ -1579,23 +1584,17 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         {
             var dstSessions = dstDrive.MachineSessionRuntimesByFolder.Fetch(dstFolder);
 
-            // Pre-flight check: if Tier 1 misses, emit a warning to surface
-            // the original (full-triple) match miss to the user, even if a
-            // looser fallback subsequently resolves. Preserved verbatim from
-            // the original implementation -- the warning timing is
-            // questionable (a Tier 2/3 success still leaves this warning in
-            // the user's output stream) but changing it would alter user-
-            // visible diagnostics during this extract-pure-logic refactor.
-            var tier1Hit = dstSessions.FirstOrDefault(s =>
-                string.Equals(s.MachineName ?? "", srcMachineName, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(s.HostMachineName ?? "", srcHostMachineName, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(s.ServiceUserName ?? "", srcServiceUserName, StringComparison.OrdinalIgnoreCase));
-            if (tier1Hit is null)
+            // Warn only when ALL three tiers miss. The original wrapper
+            // warned after Tier 1 failed and BEFORE Tiers 2/3 were tried,
+            // so a successful fallback resolution still left a misleading
+            // "not found" message in the user's output stream. Fixed
+            // during this round of audits.
+            var resolved = ResolveDstSessionPure(dstSessions, srcMachineName, srcHostMachineName, srcServiceUserName);
+            if (resolved is null)
             {
                 _this.WriteWarning($"\"{dstFolder.GetPSPath()}\": {msg}: The session not found with MachineName ='{srcMachineName}', HostMachineName = '{srcHostMachineName}' and ServiceUserName = '{srcServiceUserName}'.");
             }
-
-            return ResolveDstSessionPure(dstSessions, srcMachineName, srcHostMachineName, srcServiceUserName);
+            return resolved;
         }
         catch (Exception ex)
         {
