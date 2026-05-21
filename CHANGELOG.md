@@ -6,6 +6,54 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.5.2] - 2026-05-21
+
+`New-OrchTestSet` becomes fully usable. v1.5.1 shipped the cmdlet
+without exposing the `Packages[]` / `TestCases[]` fields the server
+requires, so standalone creation always failed with errorCode 3204.
+v1.5.2 adds the parameters and live-verifies the full create cycle on
+the yotsuda tenant (TestSet Id 56588, TestCaseCount 2 round-trip).
+
+### Added
+
+- **`New-OrchTestSet -Packages` and `-TestCases`** — typed
+  `TestSetPackage[]` / `TestCase[]` arrays. Both accept
+  ValueFromPipelineByPropertyName so pipeline-bound TestSet objects
+  flow through. Pass empty/null to keep the previous v1.5.1
+  "barebones rejected by server" shape; supply both to actually
+  create something the server accepts.
+
+### Changed
+
+- **`New-OrchTestSet` re-fetches via GetForEdit after Create.** The
+  POST response and the LIST GET both return TestSet rows with the
+  Packages and TestCases collections empty (only the per-item
+  `GetForEdit` endpoint populates them). The cmdlet now calls
+  GetForEdit once after Create so the emitted output reflects the
+  actual stored arrays — `Packages=1 TestCases=2` instead of
+  `Packages=0 TestCases=0` for the same just-created entity.
+
+- **`New-OrchTestSet.md` help** rewritten to drop the v1.5.1
+  "barebones rejected; pipe from Copy" advice (which was misleading —
+  pipeline-from-Get does NOT carry the arrays because the LIST
+  endpoint omits them) in favour of the actually-working explicit
+  `-Packages` / `-TestCases` path, with a worked example against a
+  test automation package.
+
+### Live verification
+
+  New-OrchTestSet (explicit Packages + TestCases)  PASS (Id 56588, TestCaseCount 2)
+  New-OrchTestSetSchedule                          cmdlet path verified;
+                                                   tenant rejected with
+                                                   "Test set schedule creation
+                                                   ...not allowed for this
+                                                   tenant" — server-side
+                                                   feature flag, out of cmdlet
+                                                   scope. Payload construction
+                                                   and TestSetName→Id
+                                                   resolution confirmed by the
+                                                   reaching-server error.
+
 ## [1.5.1] - 2026-05-21
 
 CSV-driven workflow + wire-shape parity release. Closes six

@@ -30,7 +30,9 @@ New-OrchTestSet [-Name] <string[]> [-Description <string>] [-Enabled <string>] [
 
 Creates a new TestSet in the target folder.
 
-KNOWN LIMITATION: the wrapped POST /odata/TestSets endpoint rejects barebones calls with a 400 `Test Set is empty. It should have at least one package and one test case.` (errorCode 3204). Standalone creation needs Packages[] and TestCases[] which aren't yet exposed as parameters here — pipe a complete TestSet from Copy-OrchTestSet (which carries the full payload from the source folder) until standalone-creation parameter expansion lands.
+The server rejects creation with errorCode 3204 (`Test Set is empty. It should have at least one package and one test case.`) unless both `-Packages` and `-TestCases` are supplied. Pass the typed `TestSetPackage[]` and `TestCase[]` arrays directly; live-verified end-to-end against a yotsuda tenant 2026-05-21.
+
+Pipeline-from-Get does NOT carry arrays: `Get-OrchTestSet` uses the LIST endpoint which returns `TestCaseCount` populated but the `Packages` and `TestCases` arrays empty. To clone a TestSet between folders use `Copy-OrchTestSet` instead — it calls the per-item GetForEdit endpoint server-side and carries the full payload without round-tripping through the cmdlet pipeline.
 
 This cmdlet supports ShouldProcess. Use -WhatIf to preview or -Confirm to be prompted.
 
@@ -42,13 +44,29 @@ Required permissions: TestSets.Create
 
 ## EXAMPLES
 
-### Example 1: Duplicate a TestSet via pipeline
+### Example 1: Create a TestSet with explicit Packages and TestCases
 
 ```powershell
-PS Orch1:\Shared> Get-OrchTestSet MyTestSet | New-OrchTestSet -Path Orch1:\OtherFolder
+PS Orch1:\Shared> $packages = ,([UiPath.PowerShell.Entities.TestSetPackage]@{
+                       PackageIdentifier = 'MyTestProject'
+                       VersionMask       = '1.0.0'
+                   })
+PS Orch1:\Shared> $cases = @(
+                       [UiPath.PowerShell.Entities.TestCase]@{ DefinitionId = 743; Enabled = $true; VersionNumber = '1.0.0'; ReleaseId = 426481 }
+                       [UiPath.PowerShell.Entities.TestCase]@{ DefinitionId = 744; Enabled = $true; VersionNumber = '1.0.0'; ReleaseId = 426481 }
+                   )
+PS Orch1:\Shared> New-OrchTestSet -Name MyTestSet -Packages $packages -TestCases $cases
 ```
 
-Copies the TestSet definition (including its Packages and TestCases) into a different folder. The pipeline carries every required field; barebones creation does not work without those fields.
+Constructs the TestSet payload from the live test-case-definition IDs (discoverable via `Get-OrchTestCase`) and the deployed release ID.
+
+### Example 2: Clone a TestSet into a different folder
+
+```powershell
+PS Orch1:\Shared> Copy-OrchTestSet -Name MyTestSet -Destination Orch1:\OtherFolder
+```
+
+Use `Copy-OrchTestSet`, not pipeline-from-Get, to duplicate a TestSet across folders — Copy carries the full payload server-side via GetForEdit. `Get-OrchTestSet | New-OrchTestSet` would lose the Packages and TestCases arrays because the LIST endpoint returns metadata only.
 
 ## PARAMETERS
 
