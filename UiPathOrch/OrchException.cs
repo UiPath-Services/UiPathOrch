@@ -172,15 +172,29 @@ public class OrchException : Exception
                     title = errorMessage;
                 }
 
-                // Check for nested error details
-                if (errorElement.TryGetProperty("details", out JsonElement detailsElement) && detailsElement.ValueKind == JsonValueKind.Array)
+                // Check for nested error details — either an array of
+                // { message } objects, or (ABP envelopes) a plain string that
+                // carries the actionable text, e.g. "You are not allowed to
+                // perform this operation."
+                if (errorElement.TryGetProperty("details", out JsonElement detailsElement))
                 {
-                    foreach (JsonElement detail in detailsElement.EnumerateArray())
+                    if (detailsElement.ValueKind == JsonValueKind.Array)
                     {
-                        string detailMessage = GetPropertyValue(detail, "message").ToString();
-                        if (!string.IsNullOrEmpty(detailMessage))
+                        foreach (JsonElement detail in detailsElement.EnumerateArray())
                         {
-                            title = detailMessage; // If there are multiple details, the last one will be used.
+                            string detailMessage = GetPropertyValue(detail, "message").ToString();
+                            if (!string.IsNullOrEmpty(detailMessage))
+                            {
+                                title = detailMessage; // If there are multiple details, the last one will be used.
+                            }
+                        }
+                    }
+                    else if (detailsElement.ValueKind == JsonValueKind.String)
+                    {
+                        string detail = detailsElement.ToString();
+                        if (!string.IsNullOrEmpty(detail) && !string.Equals(detail, title, StringComparison.Ordinal))
+                        {
+                            title = string.IsNullOrEmpty(title) ? detail : $"{title} {detail}";
                         }
                     }
                 }
@@ -205,8 +219,36 @@ public class OrchException : Exception
                 }
             }
 
-            // Combine the main message and the specific errors
-            ret = string.Join(' ', new[] { title }.Concat(errorMessages).Distinct());
+            // Bulk-operation envelopes carry per-item failures as an ARRAY of
+            // { code, description } (e.g. Add-/Copy-OrchPmUser DuplicateUserName,
+            // Add-DuUser), often nested under a "result" object. Pull out each
+            // description (or message) so the readable text isn't lost to the
+            // raw-JSON fallback.
+            static void CollectErrorArray(JsonElement parent, List<string> sink)
+            {
+                if (parent.ValueKind == JsonValueKind.Object &&
+                    parent.TryGetProperty("errors", out JsonElement arr) &&
+                    arr.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (JsonElement e in arr.EnumerateArray())
+                    {
+                        if (e.ValueKind != JsonValueKind.Object) continue;
+                        string desc = GetPropertyValue(e, "description").ToString();
+                        if (string.IsNullOrEmpty(desc)) desc = GetPropertyValue(e, "message").ToString();
+                        if (!string.IsNullOrEmpty(desc)) sink.Add(desc);
+                    }
+                }
+            }
+            CollectErrorArray(root, errorMessages);
+            if (root.TryGetProperty("result", out JsonElement resultElement))
+            {
+                CollectErrorArray(resultElement, errorMessages);
+            }
+
+            // Combine the main message and the specific errors (dropping empties
+            // so an absent title doesn't leave a leading space).
+            ret = string.Join(' ', new[] { title }.Concat(errorMessages)
+                .Where(s => !string.IsNullOrEmpty(s)).Distinct());
         }
         catch (Exception ex)
         {

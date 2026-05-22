@@ -1,0 +1,39 @@
+# Corpus of real Orchestrator/Identity error envelopes and the readable text
+# OrchException.ExtractMessage must surface from each. Drives
+# ErrorMessageExtractionTests.cs.
+#
+# HOW TO ADD A CASE: whenever an API call returns an error you had to read raw,
+# paste it here as one line:
+#     <expected substring><TAB><raw error JSON on one line>
+# The <expected substring> is text that MUST appear in the extracted message
+# (a stable, human-meaningful fragment — not the trace id). Lines starting with
+# '#' and blank lines are ignored. Columns are separated by a single TAB.
+#
+# Source of the seed cases: ErrorsCollection.txt (observed 2026-05).
+#
+# --- errorMessage envelope (scope / OAuth) ---
+is(are) invalid	{"errorMessage":"Scope(s) 'OR.Folders.Read,OR.Settings.Read,OR.Users.Read,PM.Group.Read,offline_access' is(are) invalid. Expect to have 'PM.RobotAccount' or 'PM.RobotAccount.Read'. "}
+IdentityServerApi' scope not found	{"errorMessage":"OAuth authorization failed. 'IdentityServerApi' scope not found."}
+# --- OData { message, errorCode, traceId } ---
+roleDto must not be null	{"message":"; roleDto must not be null","errorCode":0,"traceId":"00-9df23a0b8f3c379f83b977056c76fda2-9f0246949c69e350-00"}
+must be between 0 and 100	{"message":"The field take must be between 0 and 100","errorCode":1009,"traceId":"00-a1748eae82a7add9cd2870735bcd51ef-9a46a107cf90b991-00"}
+Folder does not exist	{"message":"Folder does not exist or the user does not have access to the folder.","errorCode":1100,"traceId":"00-f9ec99bcada90902ed5216acd5a19afc-a84b1a270cc7f87a-00"}
+QueueItem does not exist.	{"message":"QueueItem does not exist.","errorCode":1002,"traceId":"00-251a15bda95bc9fab2c2f1f469010705-1dca256d8c91bb21-01"}
+itemReviewStatusParameters must not be null	{"message":"itemReviewStatusParameters must not be null","errorCode":0,"traceId":"00-fbc101bfd0e701a9cd7eb7c0fbb7b03b-47ec2d4ee4e8ed71-01"}
+# --- PascalCase { StatusCode, StatusDescription, Message } ---
+Invalid Entity Names	{"StatusCode":400,"StatusDescription":"BadRequest","Message":"Invalid Entity Names. (Parameter 'entityIdentifiers')"}
+maximum supported value of 20	{"StatusCode":400,"StatusDescription":"BadRequest","Message":"entityNames size is larger that maximum supported value of 20 (Parameter 'entityNames')"}
+Duplicate usernames found	{"StatusCode":400,"StatusDescription":"BadRequest","Message":"Duplicate usernames found in database for specified input. (Parameter 'userNamesOrEmails')"}
+Cannot resolve users	{"StatusCode":404,"StatusDescription":"NotFound","Message":"Cannot resolve users=[530534bf-86f2-47df-bfff-007e4c2554ad] in CIS","Description":""}
+# --- ASP.NET ProblemDetails { errors:{field:[...]}, title } ---
+Error converting value	{"errors":{"entityType":["Error converting value \"robot\" to type 'UiPath.IdentityServer.Directory.Abstractions.DataContracts.DirectoryEntityType'. Path 'entityType', line 1, position 43."]},"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more validation errors occurred.","status":400,"traceId":"00-b4356a07063fc3fcc9cfc85d93806940-b5a1b0c76e7b0974-00"}
+One or more validation errors occurred	{"errors":{"entityType":["Error converting value \"DirectoryUser\" to type 'UiPath.IdentityServer.Directory.Abstractions.DataContracts.DirectoryEntityType'. Path 'entityType', line 1, position 126."]},"title":"One or more validation errors occurred.","status":400}
+# --- ABP envelope: error.details is a STRING (was being dropped) ---
+not allowed to perform this operation	{"message":"You are not authorized!","errorCode":0,"result":null,"targetUrl":null,"success":false,"error":{"code":0,"message":"You are not authorized!","details":"You are not allowed to perform this operation.","validationErrors":null},"unAuthorizedRequest":true,"__abp":true}
+# --- bulk add: nested result.errors[] of { code, description } (was raw-dumped) ---
+Username 'wenqi.li@uipath.com' is already taken.	{"result":{"succeeded":false,"errors":[{"code":"DuplicateUserName","description":"Username 'wenqi.li@uipath.com' is already taken."},{"code":"DuplicateEmail","description":"Email 'wenqi.li@uipath.com' is already taken."}]},"users":[]}
+Username '' is invalid	{"result":{"succeeded":false,"errors":[{"code":"InvalidUserName","description":"Username '' is invalid, can only contain letters or digits."}]},"users":[]}
+Username 'akari.tsuda@uipath.com' is already taken.	{"result":{"succeeded":false,"errors":[{"code":"DuplicateUserName","description":"Username 'akari.tsuda@uipath.com' is already taken."},{"code":"DuplicateEmail","description":"Email 'akari.tsuda@uipath.com' is already taken."}]},"users":[]}
+# NOTE: ErrorsCollection.txt also has a Japanese 'errorMessage' that arrived
+# mojibake'd. That is a response-body charset bug in OrchAPISession (not
+# ExtractMessage), so it is intentionally not a case here.
