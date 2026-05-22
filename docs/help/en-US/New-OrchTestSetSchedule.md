@@ -281,6 +281,8 @@ Main endpoint called: POST /odata/TestSetSchedules
 
 -TestSetName is mandatory and must reference an existing TestSet in the same folder.
 
+> **Unverified — behavior not guaranteed.** This cmdlet's create path has never been observed to succeed against a live tenant. Every Orchestrator tenant tested — including ones with the Testing feature enabled and test cases / test sets present — rejects creation with `errorCode 3234`: "Test set schedule creation and modification is not allowed for this tenant." That restriction is tenant-level and independent of the Testing toggle (it may be a server capability not enabled on any tenant reachable to us). The cmdlet sends a well-formed `POST /odata/TestSetSchedules` and faithfully surfaces the server's response, but on a tenant that permits creation its success path is untested and not guaranteed.
+
 ## RELATED LINKS
 
 [Get-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSetSchedule.md)

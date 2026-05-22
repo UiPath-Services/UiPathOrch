@@ -3241,6 +3241,21 @@ public partial class OrchAPISession : IDisposable
         return JsonSerializer.Deserialize<TestSetSchedule>(body)!;
     }
 
+    // PUT URL follows standard OData convention; tenant capability for
+    // TestSetSchedule modification is gated by the same feature flag as
+    // creation, so test-tenant verification is blocked until a tenant
+    // with the flag enabled is available (yotsuda has it off as of
+    // 2026-05-22). The endpoint URL itself matches what /odata/$metadata
+    // advertises; no PATCH variant is exposed by the OrchAPI surface.
+    public void UpdateTestSetSchedule(Int64 folderId, TestSetSchedule testSetSchedule)
+    {
+        if (testSetSchedule.Id is null)
+        {
+            throw new ArgumentException("TestSetSchedule.Id must be set for PUT.", nameof(testSetSchedule));
+        }
+        HttpRequest(HttpMethod.Put, $"/odata/TestSetSchedules({testSetSchedule.Id})", folderId, testSetSchedule);
+    }
+
     public void RemoveTestSetSchedules(Int64 folderId, Int64 testSetScheduleId)
     {
         HttpRequest(HttpMethod.Delete, $"/odata/TestSetSchedules({testSetScheduleId})", folderId);

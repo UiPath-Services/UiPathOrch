@@ -35,7 +35,15 @@ public class NewTestSetScheduleCmdlet : OrchestratorPSCmdlet
     public string? Enabled { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(TimeZoneIdCompleter))]
+    [SupportsWildcards]
     public string? TimeZoneId { get; set; }
+
+    // Optional calendar binding. Resolves name → CalendarId at submit time.
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(CalendarNameCompleter))]
+    [SupportsWildcards]
+    public string? CalendarName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -64,6 +72,16 @@ public class NewTestSetScheduleCmdlet : OrchestratorPSCmdlet
 
                 newSchedule.AssignStringIfNotNullOrEmpty(TimeZoneId, (s, v) => s.TimeZoneId = v);
                 newSchedule.TimeZoneId ??= TimeZoneInfo.Local.Id;
+
+                // Resolve CalendarName -> CalendarId (matches the New-OrchTrigger
+                // calendar binding behaviour).
+                newSchedule.AssignIdFromName(
+                    CalendarName,
+                    () => drive.Calendars.Get(),
+                    e => e.Name!,
+                    e => e.Id!,
+                    (s, v) => s.CalendarId = v,
+                    this, target, "Calendar");
 
                 // Resolve TestSetName -> TestSetId.
                 newSchedule.AssignIdFromName(

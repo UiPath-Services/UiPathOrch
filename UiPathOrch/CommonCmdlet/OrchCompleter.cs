@@ -1532,6 +1532,30 @@ internal class TimeZoneCompleter : OrchArgumentCompleter
     }
 }
 
+// Sister completer for parameters that bind to a TimeZoneInfo.Id value
+// (e.g. "Tokyo Standard Time" / "Asia/Tokyo"), not the human DisplayName.
+// Use this on `-TimeZoneId`-named parameters; use TimeZoneCompleter on
+// `-TimeZone`-named ones that get resolved name→id at submit time.
+internal class TimeZoneIdCompleter : OrchArgumentCompleter
+{
+    public override IEnumerable<CompletionResult> CompleteArgument(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones()
+            .Where(t => wp.IsMatch(t.Id) || wp.IsMatch(t.DisplayName)))
+        {
+            string tiphelp = $"{timeZone.DisplayName} (Id = '{timeZone.Id}')";
+            yield return new CompletionResult(PathTools.EscapePSText(timeZone.Id), timeZone.Id, CompletionResultType.ParameterValue, tiphelp);
+        }
+    }
+}
+
 internal class TriggerNameCompleter : FolderScopedCompleter<ProcessSchedule>
 {
     protected override IEnumerable<ProcessSchedule> GetEntities(OrchDriveInfo drive, Folder folder)
