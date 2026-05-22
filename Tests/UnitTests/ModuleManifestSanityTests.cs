@@ -29,6 +29,40 @@ public class ModuleManifestSanityTests
             "Staging/UiPathOrch.psd1 not found above " + System.AppContext.BaseDirectory);
     }
 
+    private static string LocateRepoFile(string fileName)
+    {
+        var dir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = System.IO.Path.Combine(dir.FullName, fileName);
+            if (System.IO.File.Exists(candidate)) return candidate;
+            dir = dir.Parent;
+        }
+        throw new System.IO.FileNotFoundException($"{fileName} not found above " + System.AppContext.BaseDirectory);
+    }
+
+    // Guard against the "bumped ModuleVersion but forgot the release notes"
+    // drift that shipped stale PSData.ReleaseNotes through 1.5.1 / 1.5.2 (the
+    // PSGallery page showed the previous version's notes). The manifest
+    // version, its PSData.ReleaseNotes, and the CHANGELOG must all agree on
+    // the current version — bumping the version without touching the other
+    // two is now a CI failure, not a silent stale-notes release.
+    [Fact]
+    public void ModuleVersion_HasMatchingReleaseNotes_AndChangelogEntry()
+    {
+        var psd1 = System.IO.File.ReadAllText(LocateModuleManifest());
+
+        var version = Regex.Match(psd1, @"ModuleVersion\s*=\s*'([^']+)'").Groups[1].Value;
+        Assert.False(string.IsNullOrEmpty(version), "ModuleVersion not found in the manifest.");
+
+        var rn = Regex.Match(psd1, @"ReleaseNotes\s*=\s*@'\r?\n(.*?)\r?\n'@", RegexOptions.Singleline);
+        Assert.True(rn.Success, "PSData.ReleaseNotes here-string not found in the manifest.");
+        Assert.Contains(version, rn.Groups[1].Value, System.StringComparison.Ordinal);
+
+        var changelog = System.IO.File.ReadAllText(LocateRepoFile("CHANGELOG.md"));
+        Assert.Contains($"## [{version}]", changelog, System.StringComparison.Ordinal);
+    }
+
     private static string ManifestText => System.IO.File.ReadAllText(LocateModuleManifest());
 
     // All concrete cmdlet classes in the UiPathOrch assembly, mapped to

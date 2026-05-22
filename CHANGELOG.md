@@ -8,207 +8,67 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [1.5.3] - 2026-05-21
 
-Adds the `Get-OrchTestSetDetail` "single-item GET" cmdlet that the
-`Get | New` clone path needs; adds `New-OrchWebhook`; extends
-`Get-Orch* -ExportCsv` across the entities whose write cmdlets can
-consume the CSV (Webhook and the Asset/Bucket/Queue Link trio) so the
-round-trip pattern is uniform; batches `Add-Orch*Link` imports into one
-API call per asset; extends the fixture and the RoundTrip Pester suite;
-and retires the unexported `Test-OrchShortenScope` diagnostic cmdlet
-into a proper unit test.
+Adds `New-OrchWebhook` and `Get-OrchTestSetDetail`, extends `-ExportCsv`
+to more `Get-Orch*` cmdlets, batches `Add-Orch*Link`, trims
+`New-/Update-OrchApiTrigger` to the parameters the web form uses, and
+unifies the three link output types into one.
 
 ### Breaking
 
-- **`Get-Orch{Asset,Bucket,Queue}Link` now output a single `EntityLink`
-  type** (previously `AssetLink` / `BucketLink` / `QueueLink`). The three
-  were identical except for the entity-id field name
-  (`AssetId` / `BucketId` / `QueueId`), now unified to **`Id`** so it binds
-  to a downstream cmdlet's `-Id` by property name. The CSV columns
-  (`Path` / `Name` / `Link`) are unchanged, so
-  `Get-Orch*Link -ExportCsv | Import-Csv | Add-/Remove-Orch*Link`
-  round-trips exactly as before. Only scripts that referenced the old type
-  names (e.g. `$x -is [AssetLink]`) or the per-type id property
-  (e.g. `$link.AssetId`) need updating. The link cmdlets shipped in v1.5.2,
-  so doing this now — at near-zero adoption — is the cheapest point to
-  consolidate.
+- **`Get-Orch{Asset,Bucket,Queue}Link` now output one `EntityLink`** (was
+  `AssetLink`/`BucketLink`/`QueueLink`); the per-type id field is unified to
+  `Id`. CSV columns (`Path`/`Name`/`Link`) are unchanged, so CSV
+  round-trips still work — only scripts using the old type names or a
+  per-type id (`$x.AssetId`) need updating.
 
 ### Added
 
-- **`New-OrchWebhook`** — wraps POST `/odata/Webhooks`, closing the
-  gap left by `Update-OrchWebhook` shipping without a New- counterpart.
-  Mirrors the Update- parameter surface; `-Name` / `-Url` mandatory;
-  defaults `SubscribeToAllEvents=true` when omitted. Live-verified on
-  the test drive (create + CSV round-trip through Update-).
-
-- **`New-/Update-OrchWebhook -Events`** — subscribe a webhook to a
-  specific set of event types instead of all events. `string[]` with
-  wildcard support, expanded against the live event-type list
-  (`Get-OrchWebhookEventType`), so `-Events task.*,job.completed`
-  resolves to every matching type; a `;`-joined value from a CSV cell
-  is accepted too. Supplying `-Events` flips `SubscribeToAllEvents` to
-  false unless the switch is set explicitly. `Get-OrchWebhook -ExportCsv`
-  gains an `Events` column so the subscription round-trips. Closes a
-  real gap — the cmdlets previously could only create all-events
-  webhooks (the Events array was wrongly assumed server-managed; the
-  POST/PUT body accepts it directly, confirmed on yotsuda 2026-05-22).
-  Live-verified: wildcard expansion, CSV round-trip, and
-  unmatched-pattern warning.
-
-- **`Get-OrchWebhook -ExportCsv` / `-CsvEncoding`** — every
-  `Update-OrchWebhook` parameter (incl. `Secret`) has a matching column
-  so the CSV round-trips into New-/Update-.
-
-- **`Add-OrchAssetLink` / `Add-OrchBucketLink` / `Add-OrchQueueLink`
-  `-ExportCsv` source via `Get-Orch*Link -ExportCsv`** — the three
-  link Get- cmdlets gain `-ExportCsv` (Path / Name / Link columns) via
-  their shared base, matching the `Add-Orch*Link` parameters.
-
-- **`Get-OrchTestSetDetail`** — per-item GetForEdit cmdlet that
-  returns TestSets with `Packages[]` and `TestCases[]` arrays
-  populated (the plain `Get-OrchTestSet` uses the LIST endpoint
-  which returns `TestCaseCount` but empty arrays). The documented
-  clone path
-  `Get-OrchTestSetDetail X | New-OrchTestSet -Path Dst -Name Y`
-  now actually works — live-verified against PAT:\Shared 2026-05-21.
-
-- **`Get-OrchTestDataQueue -ExportCsv` / `-CsvEncoding`** — matches
-  the pattern shared by every other Get-Orch* cmdlet. CSV columns
-  align with `New-OrchTestDataQueue` parameter names so
-  `Import-Csv | New-OrchTestDataQueue` round-trips.
-
-- **`Get-OrchActionCatalog -ExportCsv` / `-CsvEncoding`** — same
-  pattern. Round-trips into `New-OrchActionCatalog`.
-
-- **Fixture extension**: `TestData/Fixture/` gains
-  `api_triggers.csv`, `test_data_queues.csv`, and `task_catalogs.csv`.
-  `Import-Fixture.ps1` learns three new steps (renumbered 11a / 11b /
-  11c) that seed each entity family with three fixture rows per
-  type.
-
-  TestSet and TestSetSchedule fixtures are NOT added in this
-  release — they need a test automation package in the fixture
-  feed and a tenant feature flag respectively. Documented as a
-  follow-up.
-
-- **`CmdletV15Behaviors.Tests.ps1`** — Pester regression suite
-  pinning down the live-verified v1.5.0 - v1.5.2 behaviors so a
-  future refactor doesn't silently re-break them:
-  - `New-OrchApiTrigger` barebones succeeds (server-required
-    defaults `Tags=[]`, `MachineRobots=[{}]`, `Slug=Name` auto-
-    supplied).
-  - `New-OrchApiTrigger -RunAsCaller` round-trips via Get.
-  - `Get-OrchApiTrigger -ExportCsv | Import-Csv |
-    Update-OrchApiTrigger` round-trips Description / Enabled.
-  - `New-OrchTestDataQueue` barebones succeeds (cmdlet defaults
-    `ContentJsonSchema='{}'`).
-  - `New-OrchActionCatalog` barebones succeeds.
-  - `Get-OrchTestSetDetail` populates arrays when LIST reports
-    `TestCaseCount > 0`.
-
-- **RoundTrip Pester tests** for the new entities:
-  - `CopyItem.RoundTrip.Tests.ps1` gets `api triggers`,
-    `test data queues`, `action catalogs` tests.
-  - `Fixture.RoundTrip.Tests.ps1` gets `api_triggers.csv`,
-    `test_data_queues.csv`, `task_catalogs.csv` tests.
-
-### Fixed
-
-- **`New-/Update-OrchApiTrigger -CallingMode` completer was missing
-  `LongPolling`.** The candidate list shipped with only
-  `AsyncRequestReply` / `FireAndForget`; `LongPolling` is the third
-  server-accepted value (all three live-verified to round-trip,
-  Orch1 2026-05-22). Help text updated to match.
-
-- **Help text for `-ExportCsv` / `-CsvEncoding` was missing** on
-  `Get-OrchActionCatalog`, `Get-OrchTestDataQueue`, `Get-OrchWebhook`,
-  `Get-Orch{Asset,Bucket,Queue}Link`, and `Get-OrchTestSetSchedule` —
-  the parameters worked but `Get-Help` didn't list them. Now documented
-  (with each entity's CSV column list).
-
-- **`OrchException` error-message extraction surfaces two envelope shapes
-  it previously dumped raw.** Bulk-operation failures
-  (`{ "result": { "errors": [ { "code", "description" } ] } }` from
-  `Add-/Copy-OrchPmUser`, `Add-DuUser`, …) now yield the per-item
-  descriptions (e.g. "Username 'x' is already taken.") instead of the raw
-  JSON, and ABP envelopes whose `error.details` is a string (e.g. "You are
-  not allowed to perform this operation.") now surface that detail. An
-  absent title no longer leaves a leading space. Codified as a
-  corpus-driven regression test (`ErrorMessageExtractionTests` over
-  `TestData/ErrorMessageExtraction.tsv`, 17 real error bodies); add a
-  TAB-separated row whenever a new error shape turns up.
-
-### Removed
-
-- **`New-/Update-OrchApiTrigger` parameter surface trimmed to the
-  fields the Orchestrator web "API trigger" form actually exposes.**
-  The HttpTrigger DTO carries many more fields than the web form sets,
-  and while the server *stores* them on POST/PUT, exposing the full DTO
-  made the cmdlet confusing. For a first release the surface is kept
-  small and deliberate; fields can be added back on user request. Removed
-  parameters (also dropped from `Get-OrchApiTrigger -ExportCsv` columns):
-  - **Callback group** — `CallbackMode`, `SuccessCallbackUrl`,
-    `FailureCallbackUrl`, `Secret`, `AllowInsecureSsl`. `CallbackMode`
-    is read-only (the server rejects any value but its default
-    `Disabled` with a cryptic `httpTrigger must not be null` error;
-    a full web update leaves it `Disabled`), and the callback URL /
-    secret / SSL fields never appear in any web API-trigger payload
-    across CallingMode variations — they belong to a callback feature
-    that is inert for API triggers.
-  - **Job-execution extras** — `JobPriority`, `RunAsMe`,
-    `TargetFramework`, `RequiresUserInteraction`,
-    `JobFailuresGracePeriodInHours`. Real TriggerBase fields the server
-    accepts, but the web form doesn't surface them; left out of the
-    initial surface.
-
-  The retained parameters mirror the web form: `Name`, `Release`,
-  `Description`, `Enabled`, `Method`, `Slug`, `CallingMode`,
-  `RunAsCaller`, `RuntimeType`, `ResumeOnSameContext`, `StopStrategy`,
-  `StopJobAfterSeconds`, `KillJobAfterSeconds`,
-  `AlertPendingJobAfterSeconds`, `AlertRunningJobAfterSeconds`,
-  `RemoteControlAccess`, `ConsecutiveJobFailuresThreshold`,
-  `InputArguments`, `MachineRobots`. The HttpTrigger entity keeps all
-  fields, so they remain visible on `Get-OrchApiTrigger` object output.
-  `Copy-OrchApiTrigger` is unchanged — it deep-copies the whole entity,
-  faithfully replicating every field (it nulls only `CallbackMode`,
-  which the create endpoint rejects).
-
-  The CSV header ↔ parameter parity test's stale exempt list — which had
-  quietly excused ~16 params from needing a column — was pruned so the
-  test now enforces a real column for each retained parameter.
+- **`New-OrchWebhook`** — the missing New- counterpart to
+  `Update-OrchWebhook` (POST `/odata/Webhooks`).
+- **`New-/Update-OrchWebhook -Events`** — subscribe to specific event types
+  (`string[]`, wildcards, expanded against `Get-OrchWebhookEventType`);
+  round-trips through a new `Events` CSV column.
+- **`Get-OrchTestSetDetail`** — per-item GET returning populated
+  `Packages[]` / `TestCases[]`, so `Get-OrchTestSetDetail X | New-OrchTestSet`
+  clones the contents (the LIST `Get-OrchTestSet` returns empty arrays).
+- **`-ExportCsv` / `-CsvEncoding`** on `Get-OrchWebhook`,
+  `Get-Orch{Asset,Bucket,Queue}Link`, `Get-OrchTestDataQueue`, and
+  `Get-OrchActionCatalog` — columns match the corresponding write cmdlet so
+  `Import-Csv | New-/Add-` round-trips.
 
 ### Changed
 
-- **`Add-Orch{Asset,Bucket,Queue}Link` batches by entity.** The shared
-  base now buffers all pipeline input and issues one `ShareToFolders`
-  call per (source folder, entity) with the deduplicated set of target
-  folders, instead of one call per CSV row. A `Get-Orch*Link -ExportCsv`
-  of an asset shared into N folders (N rows) re-imports in 1 call
-  instead of N. Live-verified on yotsuda: a 36-row asset-link CSV
-  (18 distinct assets) imports in 18 calls; full delete→import→re-export
-  round-trip restores Asset 36 / Bucket 6 / Queue 2 identically.
+- **`Add-Orch{Asset,Bucket,Queue}Link` batch by entity** — one
+  `ShareToFolders` call per (source folder, entity) instead of one per CSV
+  row. The call is all-or-nothing: if any target folder is denied
+  (errorCode 1017) nothing is added for that entity, and the cmdlet names
+  the entity and folders so the offending CSV row can be fixed.
 
-  The batched `ShareToFolders` is **all-or-nothing**: if the caller
-  lacks `Assets.Create` (etc.) permission on any one target folder, the
-  whole call is rejected and none of that entity's links are added —
-  including the folders the caller *can* write to. (Confirmed by live
-  test: sharing into a permitted + an unpermitted folder in one batch
-  links neither; the server checks the *target* folder's permission,
-  errorCode 1017.) On rejection the cmdlet surfaces a clear error that
-  names the entity, lists the target folders, states that nothing was
-  added, and includes the server message (which names the offending
-  folder) — so the user can drop the offending row from the CSV and
-  re-run. No automatic per-folder fallback: the behaviour stays simple
-  and predictable.
+### Fixed
 
-  Note: a `Get-Orch*Link -ExportCsv` export never contains a folder the
-  exporting user can't see, so re-importing your own export never hits
-  the mixed-permission case. It only arises with hand-edited or
-  cross-user CSVs.
+- **`New-/Update-OrchApiTrigger -CallingMode`** now lists `LongPolling`
+  (was only `AsyncRequestReply` / `FireAndForget`).
+- **`OrchException`** surfaces readable text from bulk
+  (`result.errors[].description`, e.g. "Username 'x' is already taken.") and
+  ABP (`error.details` string) error envelopes instead of dumping raw JSON.
+- **`-ExportCsv` / `-CsvEncoding` help** added where `Get-Help` listed
+  neither (ActionCatalog, TestDataQueue, Webhook, the link cmdlets).
 
-- The `[11/12]` / `[12/14]` / `[13/14]` / `[14/14]` step numbering
-  in `Import-Fixture.ps1` becomes `/17` to reflect the three new
-  steps. No behavioral change for the step-by-step verbose output;
-  the renumbering is cosmetic.
+### Removed
+
+- **`New-/Update-OrchApiTrigger` parameters trimmed to the web "API
+  trigger" form's set.** Dropped the callback group (`CallbackMode`,
+  `SuccessCallbackUrl`, `FailureCallbackUrl`, `Secret`, `AllowInsecureSsl` —
+  `CallbackMode` is read-only, the rest inert for API triggers) and the job
+  extras (`JobPriority`, `RunAsMe`, `TargetFramework`,
+  `RequiresUserInteraction`, `JobFailuresGracePeriodInHours`). The fields
+  stay on the entity (`Get` output) and leave `Get-OrchApiTrigger -ExportCsv`.
+
+### Internal
+
+- `Test-OrchShortenScope` (never exported) retired into a unit test;
+  link/fixture round-trip Pester coverage and an error-message extraction
+  corpus test added. Gates: build clean, 586 unit + 336 live Pester pass.
 
 ## [1.5.2] - 2026-05-21
 
