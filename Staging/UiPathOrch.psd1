@@ -309,6 +309,7 @@ CmdletsToExport = @(
 
 'Get-OrchTestSetSchedule',
 'New-OrchTestSetSchedule',
+'Update-OrchTestSetSchedule',
 'Copy-OrchTestSetSchedule',
 'Remove-OrchTestSetSchedule',
 'Enable-OrchTestSetSchedule',
@@ -336,6 +337,7 @@ CmdletsToExport = @(
 'Remove-OrchBucketItem',
 
 'Get-OrchWebhook',
+'New-OrchWebhook',
 'Copy-OrchWebhook',
 'Update-OrchWebhook',
 'Remove-OrchWebhook',
