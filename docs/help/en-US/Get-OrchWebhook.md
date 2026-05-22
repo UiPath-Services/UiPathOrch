@@ -20,7 +20,7 @@ Gets webhooks from UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Get-OrchWebhook [-Path <string[]>] [[-Name] <string[]>] [<CommonParameters>]
+Get-OrchWebhook [-Path <string[]>] [[-Name] <string[]>] [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -122,6 +122,48 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 -InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
 -ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
 [about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
+
+### -CsvEncoding
+
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ExportCsv
+
+Exports webhooks to the specified CSV file path. Columns: Path, Name, Url, Description, Enabled, AllowInsecureSsl, SubscribeToAllEvents, Events, Secret — matching New-/Update-OrchWebhook parameter names so the file round-trips into either cmdlet. Events is a `;`-joined list of event types. Requires a filesystem path (not an Orch: drive path).
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
 ## INPUTS
 

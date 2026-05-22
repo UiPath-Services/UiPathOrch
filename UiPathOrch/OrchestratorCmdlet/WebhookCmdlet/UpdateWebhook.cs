@@ -35,6 +35,17 @@ public class UpdateWebhookCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(BoolCompleter))]
     public string? SubscribeToAllEvents { get; set; }
 
+    // Replace the event subscription set. Wildcards expand against the live
+    // event-type list (-Events task.*,job.completed); a ';'-joined CSV cell
+    // is accepted too. Supplying -Events implies SubscribeToAllEvents=false
+    // unless that flag is set explicitly.
+    // 'new' is intentional — hides the unused PSCmdlet.Events property.
+    // See New-OrchWebhook for the full rationale.
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [SupportsWildcards]
+    [ArgumentCompleter(typeof(WebhookEventTypeNameCompleter))]
+    public new string[]? Events { get; set; }
+
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
@@ -43,10 +54,14 @@ public class UpdateWebhookCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(Path);
         var wpName = Name.ConvertToWildcardPatternList();
+        bool subscribeAllBound = MyInvocation.BoundParameters.ContainsKey(nameof(SubscribeToAllEvents));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
+            // -Events doesn't vary by matched webhook; resolve once per drive.
+            var resolvedEvents = WebhookEventResolver.Resolve(this, drive, Events);
+
             ICollection<Webhook>? webhooks;
             try
             {
@@ -77,6 +92,20 @@ public class UpdateWebhookCmdlet : OrchestratorPSCmdlet
                 dirty |= patch.AssignBoolIfNotNull(Enabled, webhook, w => w.Enabled, (w, v) => w.Enabled = v);
                 dirty |= patch.AssignBoolIfNotNull(AllowInsecureSsl, webhook, w => w.AllowInsecureSsl, (w, v) => w.AllowInsecureSsl = v);
                 dirty |= patch.AssignBoolIfNotNull(SubscribeToAllEvents, webhook, w => w.SubscribeToAllEvents, (w, v) => w.SubscribeToAllEvents = v);
+
+                // Replace the event set when -Events was supplied. The server
+                // PATCH replaces Events wholesale, so we always send the
+                // resolved set; picking events implies not-subscribe-to-all
+                // unless the flag was set explicitly.
+                if (resolvedEvents is not null)
+                {
+                    patch.Events = resolvedEvents;
+                    dirty = true;
+                    if (!subscribeAllBound)
+                    {
+                        patch.SubscribeToAllEvents = false;
+                    }
+                }
 
                 if (!dirty) continue;
 

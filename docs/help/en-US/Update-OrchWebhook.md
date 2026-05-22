@@ -22,7 +22,7 @@ Updates an existing webhook in UiPath Orchestrator.
 ```
 Update-OrchWebhook [-Path <string[]>] [-Name] <string[]> [-AllowInsecureSsl <string>]
  [-Confirm] [-Description <string>] [-Enabled <string>] [-Secret <string>]
- [-SubscribeToAllEvents <string>] [-Url <string>] [-WhatIf] [<CommonParameters>]
+ [-SubscribeToAllEvents <string>] [-Events <string[]>] [-Url <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -255,6 +255,27 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -Events
+
+Replaces the webhook's event subscription set. Wildcards are expanded against the live event-type list, so `-Events task.*,job.completed` subscribes to all task events plus job.completed. A single `;`-joined value (as produced by `Get-OrchWebhook -ExportCsv`) is accepted too. The PATCH replaces `Events` wholesale; supplying `-Events` sets `SubscribeToAllEvents` to false unless that switch is given explicitly. Use `Get-OrchWebhookEventType` to list valid values.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -WhatIf
 
 Shows what would happen if the cmdlet runs. The cmdlet is not run.
@@ -310,7 +331,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 
-You can pipe webhook objects (such as CSV import rows) to this cmdlet. Properties are bound by name (Name, Description, Url, Secret, Enabled, AllowInsecureSsl, SubscribeToAllEvents, Path).
+You can pipe webhook objects (such as CSV import rows) to this cmdlet. Properties are bound by name (Name, Description, Url, Secret, Enabled, AllowInsecureSsl, SubscribeToAllEvents, Events, Path).
 
 ## OUTPUTS
 
