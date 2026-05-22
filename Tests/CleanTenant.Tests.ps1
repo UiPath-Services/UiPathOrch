@@ -195,7 +195,7 @@ Describe 'Asset Links' {
         $row.Path | Should -Match 'Production$'
         $row.Name | Should -Be 'asset-host'
         $row.Link | Should -Match '(Development|QA)$'
-        $row.AssetId      | Should -BeGreaterThan 0
+        $row.Id           | Should -BeGreaterThan 0
         $row.FolderId     | Should -BeGreaterThan 0
         $row.LinkFolderId | Should -BeGreaterThan 0
     }
@@ -264,7 +264,7 @@ Describe 'Queue Links' {
         $row.Path | Should -Match 'Production$'
         $row.Name | Should -Be 'queue-emails'
         $row.Link | Should -Match '(Development|QA)$'
-        $row.QueueId      | Should -BeGreaterThan 0
+        $row.Id           | Should -BeGreaterThan 0
         $row.FolderId     | Should -BeGreaterThan 0
         $row.LinkFolderId | Should -BeGreaterThan 0
     }
@@ -322,7 +322,7 @@ Describe 'Bucket Links' {
         $row.Path | Should -Match 'Production$'
         $row.Name | Should -Be 'bucket-files'
         $row.Link | Should -Match '(Development|SubA)$'
-        $row.BucketId     | Should -BeGreaterThan 0
+        $row.Id           | Should -BeGreaterThan 0
         $row.FolderId     | Should -BeGreaterThan 0
         $row.LinkFolderId | Should -BeGreaterThan 0
     }

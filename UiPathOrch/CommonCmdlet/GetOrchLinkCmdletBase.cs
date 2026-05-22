@@ -1,4 +1,6 @@
 using System.Management.Automation;
+using System.Text;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 
@@ -31,9 +33,8 @@ namespace UiPath.PowerShell.Commands;
 //     the [Parameter]/[SupportsWildcards] attributes must be re-declared on
 //     the override (matches the RemoveDriveEntityCmdletBase convention).
 //   - Implement the abstract members below.
-public abstract class GetOrchLinkCmdletBase<TEntity, TLink> : OrchestratorPSCmdlet
+public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
     where TEntity : class
-    where TLink : class
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -49,14 +50,32 @@ public abstract class GetOrchLinkCmdletBase<TEntity, TLink> : OrchestratorPSCmdl
     [Parameter]
     public uint Depth { get; set; }
 
+    // -ExportCsv on every link cmdlet (Asset/Bucket/Queue Link). Column
+    // names match the parameters on the corresponding Add-Orch*Link, so
+    // Get | Export-Csv | Import-Csv | Add-Orch*Link round-trips. The
+    // three columns Path / Name / Link are common to every link entity
+    // by base-class contract — no per-subclass override needed.
+    [Parameter]
+    public string? ExportCsv { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(EncodingCompleter))]
+    [EncodingArgumentTransformation]
+    public Encoding? CsvEncoding { get; set; }
+
+    private static readonly string[] CsvHeaders = ["Path", "Name", "Link"];
+
     // Stable identifier emitted on WriteError, e.g. "GetAssetLinkError".
     protected abstract string ErrorId { get; }
+
+    // Default CSV filename per concrete subclass (e.g. ExportedAssetLinks.csv).
+    protected abstract string DefaultCsvName { get; }
 
     protected abstract ICollection<TEntity> GetEntities(OrchDriveInfo drive, Folder folder);
     protected abstract string? GetEntityName(TEntity? entity);
     protected abstract long GetEntityId(TEntity entity);
     protected abstract AccessibleFoldersDto? GetFoldersForEntity(OrchDriveInfo drive, Folder srcFolder, TEntity entity);
-    protected abstract TLink BuildLink(string srcPath, TEntity entity, string linkFolderPath, long srcFolderId, long linkFolderId);
+    protected abstract EntityLink BuildLink(string srcPath, TEntity entity, string linkFolderPath, long srcFolderId, long linkFolderId);
 
     // SimpleFolder has no GetPSPath() — it's a value type returned by the
     // GetFoldersFor* family. Build the PSPath as drive prefix + FullyQualifiedName,
@@ -73,6 +92,9 @@ public abstract class GetOrchLinkCmdletBase<TEntity, TLink> : OrchestratorPSCmdl
             .OrderBy(df => df.folder.GetPSPath())
             .ToList();
         var wpName = Name.ConvertToWildcardPatternList();
+
+        var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+        using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
         using var cancelHandler = new ConsoleCancelHandler();
 
@@ -110,7 +132,26 @@ public abstract class GetOrchLinkCmdletBase<TEntity, TLink> : OrchestratorPSCmdl
                     if (linkId == srcId) continue;
                     if (!emitted.Add((srcId, entityId, linkId))) continue;
 
-                    WriteObject(BuildLink(sourcePath, entity, LinkFolderPSPath(drive, linkFolder), srcId, linkId));
+                    string linkFolderPath = LinkFolderPSPath(drive, linkFolder);
+                    if (writer is not null)
+                    {
+                        // These are exactly the three values every BuildLink
+                        // packages into the link object (Path = srcPath,
+                        // Name = entity.Name == GetEntityName(entity),
+                        // Link = linkFolderPath). Emit them directly: no link
+                        // allocation, no reflection, and the link DTOs stay
+                        // plain POCOs.
+                        string[] line = [
+                            EscapeCsvValue(sourcePath, true),
+                            EscapeCsvValue(GetEntityName(entity), true),
+                            EscapeCsvValue(linkFolderPath, true),
+                        ];
+                        writer.WriteCsvLine(line);
+                    }
+                    else
+                    {
+                        WriteObject(BuildLink(sourcePath, entity, linkFolderPath, srcId, linkId));
+                    }
                 }
             }
             catch (OrchException ex)
@@ -126,6 +167,11 @@ public abstract class GetOrchLinkCmdletBase<TEntity, TLink> : OrchestratorPSCmdl
         foreach (var (_, ex) in pool.Phase1Errors)
         {
             WriteError(new ErrorRecord(ex, ErrorId, ErrorCategory.InvalidOperation, ex.Target));
+        }
+
+        if (writer is not null)
+        {
+            WriteCSVExportedMessage(this, providerCsvPath);
         }
     }
 }

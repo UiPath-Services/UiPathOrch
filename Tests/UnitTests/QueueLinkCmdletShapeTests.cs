@@ -79,12 +79,12 @@ public class QueueLinkCmdletShapeTests
     [Fact]
     public void QueueLink_HasPipelineProperties()
     {
-        Assert.NotNull(typeof(QueueLink).GetProperty("Path"));
-        Assert.NotNull(typeof(QueueLink).GetProperty("Name"));
-        Assert.NotNull(typeof(QueueLink).GetProperty("Link"));
-        Assert.NotNull(typeof(QueueLink).GetProperty("QueueId"));
-        Assert.NotNull(typeof(QueueLink).GetProperty("FolderId"));
-        Assert.NotNull(typeof(QueueLink).GetProperty("LinkFolderId"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("Path"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("Name"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("Link"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("Id"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("FolderId"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("LinkFolderId"));
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class QueueLinkCmdletShapeTests
     {
         var outputAttr = typeof(GetQueueLinkCmdlet).GetCustomAttribute<OutputTypeAttribute>();
         Assert.NotNull(outputAttr);
-        Assert.Contains(outputAttr.Type, t => t.Type == typeof(QueueLink));
+        Assert.Contains(outputAttr.Type, t => t.Type == typeof(EntityLink));
     }
 
     [Fact]

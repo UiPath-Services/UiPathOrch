@@ -21,7 +21,7 @@ Gets the folder links of assets.
 
 ```
 Get-OrchAssetLink [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
- [<CommonParameters>]
+ [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -192,6 +192,48 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 -ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
 [about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
+### -CsvEncoding
+
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ExportCsv
+
+Exports asset links to the specified CSV file path. Columns: Path (source folder), Name (asset), Link (linked-to folder) — matching Add-/Remove-OrchAssetLink so `Import-Csv | Add-OrchAssetLink` round-trips. Requires a filesystem path (not an Orch: drive path).
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ## INPUTS
 
 ### System.String[]
@@ -200,9 +242,9 @@ You can pipe asset names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.SimpleFolder
+### UiPath.PowerShell.Entities.EntityLink
 
-Returns SimpleFolder objects representing folders that have access to each linked asset. Each object includes Id, DisplayName, FullyQualifiedName, Path, and PathName properties. The Path and PathName properties indicate the source asset (e.g., "Orch1:\Shared" and "Orch1:\Shared\DatabaseConnection").
+Returns EntityLink objects — one per (asset, linked folder) pair. Each carries Path (source folder), Name (asset name), Link (the linked-to folder), Id (asset id), FolderId (source), and LinkFolderId (target). Path/Name/Link pipe by name into Add-/Remove-OrchAssetLink.
 
 ## NOTES
 

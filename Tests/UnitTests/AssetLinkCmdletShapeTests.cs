@@ -94,12 +94,12 @@ public class AssetLinkCmdletShapeTests
         // ValueFromPipelineByPropertyName bindings on Add and Remove. If any
         // of these properties get renamed or dropped, the pipeline silently
         // breaks at runtime — these reflection asserts surface that at CI time.
-        Assert.NotNull(typeof(AssetLink).GetProperty("Path"));
-        Assert.NotNull(typeof(AssetLink).GetProperty("Name"));
-        Assert.NotNull(typeof(AssetLink).GetProperty("Link"));
-        Assert.NotNull(typeof(AssetLink).GetProperty("AssetId"));
-        Assert.NotNull(typeof(AssetLink).GetProperty("FolderId"));
-        Assert.NotNull(typeof(AssetLink).GetProperty("LinkFolderId"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("Path"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("Name"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("Link"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("Id"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("FolderId"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("LinkFolderId"));
     }
 
     [Fact]
@@ -109,7 +109,7 @@ public class AssetLinkCmdletShapeTests
         // -OutputType integration and for tooling that introspects pipelines.
         var outputAttr = typeof(GetAssetLinkCmdlet).GetCustomAttribute<OutputTypeAttribute>();
         Assert.NotNull(outputAttr);
-        Assert.Contains(outputAttr.Type, t => t.Type == typeof(AssetLink));
+        Assert.Contains(outputAttr.Type, t => t.Type == typeof(EntityLink));
     }
 
     [Fact]

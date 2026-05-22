@@ -5,14 +5,33 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-// Generic base for the Add-Orch{Asset,Bucket,Queue}Link trio. The algorithm —
-// parallel prefetch of the per-folder cache, same-drive target filtering,
-// batched Share*ToFolders call (toAdd populated, toRemove empty), targeted
-// cache invalidation — was independently mirrored across 3 cmdlet files
-// before this base was extracted. RemoveOrchLinkCmdletBase is a deliberate
-// near-clone of this class with toAdd/toRemove swapped and the action label
-// using "✗" instead of "→"; the two are kept separate so each is readable
-// straight through without a verb-flag branch.
+// Generic base for the Add-Orch{Asset,Bucket,Queue}Link trio.
+//
+// Batching model (v1.5.3): pipeline input is buffered across ProcessRecord
+// and the actual Share*ToFolders calls are issued once in EndProcessing,
+// grouped by (drive, source folder, entity). All target folders for one
+// entity collapse into a single API call with a deduplicated toAdd list.
+// This turns the common "one asset shared into N folders" CSV
+// (`Get-OrchAssetLink -ExportCsv` emits one row per target) from N
+// round-trips into 1.
+//
+//   Import-Csv links.csv | Add-OrchAssetLink
+//     row (Dept#2, DatabaseConnection, Development)
+//     row (Dept#2, DatabaseConnection, Finance)      -> 1 ShareAssetsToFolders
+//     row (Dept#2, DatabaseConnection, Production)       call, toAdd = {Development,
+//     row (Dept#2, DatabaseConnection, fuga)             Finance, Production, fuga}
+//
+// Direct invocation still works and still batches within the call:
+//   Add-OrchAssetLink -Name X -Link A,B,C   ->   one buffered tuple, one Share.
+//
+// Idempotency: Share*ToFolders is an incremental (toAdd / toRemove) op, so
+// re-adding an already-shared folder is a server-side no-op — exact-
+// duplicate rows are deduped here AND harmless server-side either way.
+//
+// Error isolation is per (source folder, entity) group rather than per row:
+// a group whose Share call fails is reported via WriteError and the rest
+// continue. A malformed source folder (GetEntities throws) is reported once
+// and skipped.
 //
 // Derived classes must:
 //   - Decorate the class with [Cmdlet(VerbsCommon.Add, "OrchXxxLink", SupportsShouldProcess = true)]
@@ -55,15 +74,53 @@ public abstract class AddOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
     protected abstract void ClearLinkCache(OrchDriveInfo drive, long entityId);
     protected abstract void ClearPerFolderCache(OrchDriveInfo drive, Folder folder);
 
+    // One buffered invocation's worth of parameter values. In pipeline mode
+    // each input object produces one entry (Name/Link/Path are single-valued
+    // per row); in direct mode there's a single entry with multi-valued
+    // arrays. Both shapes are resolved identically in EndProcessing.
+    private readonly List<(string[]? Name, string[]? Link, string[]? Path)> _buffered = new();
+
+    // Accumulator group: one entity in one source folder, with the union of
+    // every target folder requested for it across all buffered rows.
+    private sealed class LinkGroup
+    {
+        public required OrchDriveInfo Drive { get; init; }
+        public required Folder SrcFolder { get; init; }
+        public required TEntity Entity { get; init; }
+        public required long EntityId { get; init; }
+        public required string EntityName { get; init; }
+        public HashSet<long> TargetIds { get; } = new();
+        public List<Folder> TargetFolders { get; } = new();
+    }
+
     protected sealed override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth).ToList();
-        var drivesLinks = SessionState.EnumFolders(Link).ToList();
-        var wpName = Name.ConvertToWildcardPatternList();
+        // Buffer only — all the work happens in EndProcessing once the whole
+        // pipeline has been seen, so same-entity rows can be coalesced.
+        _buffered.Add((Name, Link, Path));
+    }
 
-        // Parallel prefetch warms the per-folder entity cache so the foreach
-        // below hits the cache instead of issuing serial round-trips.
-        Parallel.ForEach(drivesFolders, df =>
+    protected sealed override void EndProcessing()
+    {
+        if (_buffered.Count == 0) return;
+
+        using var cancelHandler = new ConsoleCancelHandler();
+
+        // Phase 1: resolve every buffered row into (drive, src folder, entity)
+        // groups, unioning target folder ids. Keyed by drive name + src folder
+        // id + entity id so the same asset across multiple rows merges.
+        var groups = new Dictionary<(string Drive, long Src, long Entity), LinkGroup>();
+        var prefetchTargets = new HashSet<(OrchDriveInfo drive, Folder folder)>();
+
+        foreach (var (names, links, paths) in _buffered)
+        {
+            var srcDrivesFolders = SessionState.EnumFolders(paths, Recurse.IsPresent, Depth).ToList();
+            foreach (var df in srcDrivesFolders) prefetchTargets.Add(df);
+        }
+
+        // Warm the per-folder entity caches in parallel before the serial
+        // grouping loop (mirrors the pre-batch behaviour).
+        Parallel.ForEach(prefetchTargets, df =>
         {
             try { GetEntities(df.drive, df.folder); }
             catch (Exception ex)
@@ -73,65 +130,102 @@ public abstract class AddOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
             }
         });
 
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
+        foreach (var (names, links, paths) in _buffered.WithCancellation(cancelHandler.Token))
         {
-            ICollection<TEntity> entities;
-            try
+            var srcDrivesFolders = SessionState.EnumFolders(paths, Recurse.IsPresent, Depth).ToList();
+            var drivesLinks = SessionState.EnumFolders(links).ToList();
+            var wpName = names.ConvertToWildcardPatternList();
+
+            foreach (var (drive, folder) in srcDrivesFolders)
             {
-                entities = GetEntities(drive, folder);
-            }
-            catch (Exception ex)
-            {
-                string targetErr = folder.GetPSPath();
-                WriteError(new ErrorRecord(new OrchException(targetErr, ex), ErrorId,
-                    ErrorCategory.InvalidOperation, targetErr));
-                continue;
-            }
-
-            // Cross-drive linking is not supported by the API; only same-drive targets apply.
-            var sameDriveLinks = drivesLinks.Where(dl => dl.drive == drive).ToList();
-            if (sameDriveLinks.Count == 0) continue;
-
-            foreach (var entity in entities
-                .FilterByWildcards(e => GetEntityName(e), wpName)
-                .OrderBy(e => GetEntityName(e)).WithCancellation(cancelHandler.Token))
-            {
-                // Batch all targets for this (folder, entity) into a single API call.
-                // Share*ToFolders accepts arrays for both the entity list and the
-                // ToAdd folder list, so 1 entity × N targets is one round-trip.
-                var toAddIds = sameDriveLinks
-                    .Select(dl => dl.folder.Id ?? 0)
-                    .Where(id => id != 0 && id != folder.Id)   // can't link to self
-                    .Distinct()
-                    .ToList();
-                if (toAddIds.Count == 0) continue;
-
-                string source = folder.GetPSPath();
-                string target = System.IO.Path.Combine(source, GetEntityName(entity)!);
-                string action = $"Add {LinkNoun} → {string.Join(", ", sameDriveLinks.Select(dl => dl.folder.GetPSPath()))}";
-
-                if (!ShouldProcess(target, action)) continue;
-
+                ICollection<TEntity> entities;
                 try
                 {
-                    long entityId = GetEntityId(entity);
-                    Share(drive.OrchAPISession, folder.Id ?? 0, new List<long> { entityId }, toAddIds, new List<long>());
-
-                    // Invalidate just what changed: this entity's link set, and the
-                    // per-folder entity list for each newly-targeted folder (which
-                    // now exposes this entity where it didn't before).
-                    ClearLinkCache(drive, entityId);
-                    foreach (var dl in sameDriveLinks.Where(dl => toAddIds.Contains(dl.folder.Id ?? 0)))
-                    {
-                        ClearPerFolderCache(drive, dl.folder);
-                    }
+                    entities = GetEntities(drive, folder);
                 }
                 catch (Exception ex)
                 {
-                    WriteError(new ErrorRecord(new OrchException(target, ex), ErrorId,
-                        ErrorCategory.InvalidOperation, target));
+                    string targetErr = folder.GetPSPath();
+                    WriteError(new ErrorRecord(new OrchException(targetErr, ex), ErrorId,
+                        ErrorCategory.InvalidOperation, targetErr));
+                    continue;
                 }
+
+                // Cross-drive linking is not supported by the API; same-drive only.
+                var sameDriveLinks = drivesLinks.Where(dl => dl.drive == drive).ToList();
+                if (sameDriveLinks.Count == 0) continue;
+
+                foreach (var entity in entities
+                    .FilterByWildcards(e => GetEntityName(e), wpName)
+                    .OrderBy(e => GetEntityName(e)).WithCancellation(cancelHandler.Token))
+                {
+                    long entityId = GetEntityId(entity);
+                    var key = (drive.NameColonSeparator, folder.Id ?? 0, entityId);
+                    if (!groups.TryGetValue(key, out var group))
+                    {
+                        group = new LinkGroup
+                        {
+                            Drive = drive,
+                            SrcFolder = folder,
+                            Entity = entity,
+                            EntityId = entityId,
+                            EntityName = GetEntityName(entity)!,
+                        };
+                        groups[key] = group;
+                    }
+
+                    foreach (var dl in sameDriveLinks)
+                    {
+                        long fid = dl.folder.Id ?? 0;
+                        if (fid == 0 || fid == folder.Id) continue;   // can't link to self
+                        if (group.TargetIds.Add(fid))
+                        {
+                            group.TargetFolders.Add(dl.folder);
+                        }
+                    }
+                }
+            }
+        }
+
+        // Phase 2: one Share call per group, with the deduped toAdd list.
+        foreach (var group in groups.Values.WithCancellation(cancelHandler.Token))
+        {
+            if (group.TargetIds.Count == 0) continue;
+
+            string source = group.SrcFolder.GetPSPath();
+            string target = System.IO.Path.Combine(source, group.EntityName);
+            string action = $"Add {LinkNoun} → {string.Join(", ", group.TargetFolders.Select(f => f.GetPSPath()))}";
+
+            if (!ShouldProcess(target, action)) continue;
+
+            try
+            {
+                Share(group.Drive.OrchAPISession, group.SrcFolder.Id ?? 0,
+                    new List<long> { group.EntityId }, group.TargetIds.ToList(), new List<long>());
+
+                // Invalidate just what changed: this entity's link set, and the
+                // per-folder entity list for each newly-targeted folder.
+                ClearLinkCache(group.Drive, group.EntityId);
+                foreach (var tf in group.TargetFolders)
+                {
+                    ClearPerFolderCache(group.Drive, tf);
+                }
+            }
+            catch (Exception ex)
+            {
+                // The Share call is atomic: if any target folder is rejected
+                // (e.g. the caller lacks Assets.Create permission there), the
+                // WHOLE batch fails and NONE of this entity's links are added.
+                // Make that explicit and list the folders involved so the user
+                // can drop the offending row(s) from the CSV and re-run. The
+                // server message (which names the rejected folder) is preserved.
+                string targets = string.Join(", ", group.TargetFolders.Select(f => f.GetPSPath()));
+                var wrapped = new OrchException(target,
+                    $"No {LinkNoun} added for '{group.EntityName}'. The batched share to [{targets}] " +
+                    $"is all-or-nothing and was rejected by the server (see below); fix or remove the " +
+                    $"offending target and re-run. Server: {ex.Message}", ex);
+                WriteError(new ErrorRecord(wrapped, ErrorId,
+                    ErrorCategory.InvalidOperation, target));
             }
         }
     }

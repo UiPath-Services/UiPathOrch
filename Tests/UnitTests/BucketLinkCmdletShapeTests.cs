@@ -79,12 +79,12 @@ public class BucketLinkCmdletShapeTests
     [Fact]
     public void BucketLink_HasPipelineProperties()
     {
-        Assert.NotNull(typeof(BucketLink).GetProperty("Path"));
-        Assert.NotNull(typeof(BucketLink).GetProperty("Name"));
-        Assert.NotNull(typeof(BucketLink).GetProperty("Link"));
-        Assert.NotNull(typeof(BucketLink).GetProperty("BucketId"));
-        Assert.NotNull(typeof(BucketLink).GetProperty("FolderId"));
-        Assert.NotNull(typeof(BucketLink).GetProperty("LinkFolderId"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("Path"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("Name"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("Link"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("Id"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("FolderId"));
+        Assert.NotNull(typeof(EntityLink).GetProperty("LinkFolderId"));
     }
 
     [Fact]
@@ -92,7 +92,7 @@ public class BucketLinkCmdletShapeTests
     {
         var outputAttr = typeof(GetBucketLinkCmdlet).GetCustomAttribute<OutputTypeAttribute>();
         Assert.NotNull(outputAttr);
-        Assert.Contains(outputAttr.Type, t => t.Type == typeof(BucketLink));
+        Assert.Contains(outputAttr.Type, t => t.Type == typeof(EntityLink));
     }
 
     [Fact]

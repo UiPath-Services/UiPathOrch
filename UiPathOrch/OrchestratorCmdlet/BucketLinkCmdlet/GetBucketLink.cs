@@ -7,8 +7,8 @@ using UiPath.PowerShell.Positional;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "OrchBucketLink")]
-[OutputType(typeof(BucketLink))]
-public class GetBucketLinkCmdlet : GetOrchLinkCmdletBase<Bucket, BucketLink>
+[OutputType(typeof(EntityLink))]
+public class GetBucketLinkCmdlet : GetOrchLinkCmdletBase<Bucket>
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(LinkedBucketNameCompleter))]
@@ -16,6 +16,7 @@ public class GetBucketLinkCmdlet : GetOrchLinkCmdletBase<Bucket, BucketLink>
     public override string[]? Name { get; set; }
 
     protected override string ErrorId => "GetBucketLinkError";
+    protected override string DefaultCsvName => "ExportedBucketLinks.csv";
 
     protected override ICollection<Bucket> GetEntities(OrchDriveInfo drive, Folder folder) => drive.Buckets.Get(folder);
     protected override string? GetEntityName(Bucket? e) => e?.Name;
@@ -24,13 +25,13 @@ public class GetBucketLinkCmdlet : GetOrchLinkCmdletBase<Bucket, BucketLink>
     protected override AccessibleFoldersDto? GetFoldersForEntity(OrchDriveInfo drive, Folder srcFolder, Bucket entity)
         => drive.GetFoldersForBucket(srcFolder, entity);
 
-    protected override BucketLink BuildLink(string srcPath, Bucket entity, string linkFolderPath, long srcFolderId, long linkFolderId)
+    protected override EntityLink BuildLink(string srcPath, Bucket entity, string linkFolderPath, long srcFolderId, long linkFolderId)
         => new()
         {
             Path = srcPath,
             Name = entity.Name,
             Link = linkFolderPath,
-            BucketId = entity.Id ?? 0,
+            Id = entity.Id ?? 0,
             FolderId = srcFolderId,
             LinkFolderId = linkFolderId,
         };

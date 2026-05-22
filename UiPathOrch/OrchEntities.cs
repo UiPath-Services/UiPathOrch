@@ -1181,40 +1181,18 @@ public class AssetFoldersShare
 }
 
 // One row of "asset X shared from folder Y is also accessible from folder Z".
-// Output type for Get-OrchAssetLink. Properties named so that the row pipes
-// directly into Add-OrchAssetLink / Remove-OrchAssetLink via
-// ValueFromPipelineByPropertyName: Path = source folder, Name = asset name,
-// Link = the linked-to folder.
-public class AssetLink
+// One row of a Get-Orch{Asset,Bucket,Queue}Link result: the entity named
+// Name, living in source folder Path, is shared/linked into folder Link.
+// Properties pipe by name into Add-/Remove-Orch*Link (Path/Name/Link).
+// A single unified type — asset/bucket/queue links differed only by the
+// name of the entity-id field (AssetId/BucketId/QueueId), now a single Id
+// (named Id so it binds to a downstream cmdlet's -Id by property name).
+public class EntityLink
 {
     public string? Path { get; set; }
     public string? Name { get; set; }
     public string? Link { get; set; }
-    public Int64? AssetId { get; set; }
-    public Int64? FolderId { get; set; }
-    public Int64? LinkFolderId { get; set; }
-}
-
-// Same shape as AssetLink but for storage buckets. Output type for
-// Get-OrchBucketLink; pipes by name into Add-/Remove-OrchBucketLink.
-public class BucketLink
-{
-    public string? Path { get; set; }
-    public string? Name { get; set; }
-    public string? Link { get; set; }
-    public Int64? BucketId { get; set; }
-    public Int64? FolderId { get; set; }
-    public Int64? LinkFolderId { get; set; }
-}
-
-// Same shape as AssetLink / BucketLink but for queue definitions. Output
-// type for Get-OrchQueueLink; pipes by name into Add-/Remove-OrchQueueLink.
-public class QueueLink
-{
-    public string? Path { get; set; }
-    public string? Name { get; set; }
-    public string? Link { get; set; }
-    public Int64? QueueId { get; set; }
+    public Int64? Id { get; set; }
     public Int64? FolderId { get; set; }
     public Int64? LinkFolderId { get; set; }
 }

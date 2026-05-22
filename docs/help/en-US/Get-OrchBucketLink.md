@@ -21,7 +21,7 @@ Gets the folder links of buckets.
 
 ```
 Get-OrchBucketLink [-Path <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
- [<CommonParameters>]
+ [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -171,6 +171,48 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 -ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
 [about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
+### -CsvEncoding
+
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ExportCsv
+
+Exports bucket links to the specified CSV file path. Columns: Path (source folder), Name (bucket), Link (linked-to folder) — matching Add-/Remove-OrchBucketLink so `Import-Csv | Add-OrchBucketLink` round-trips. Requires a filesystem path (not an Orch: drive path).
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ## INPUTS
 
 ### System.String[]
@@ -179,9 +221,9 @@ You can pipe bucket names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.BucketLink
+### UiPath.PowerShell.Entities.EntityLink
 
-Returns BucketLink objects describing which folders have access to each linked bucket. Use Get-Member on the output for the full property surface.
+Returns EntityLink objects describing which folders have access to each linked bucket. Each carries Path (source folder), Name (bucket name), Link (linked-to folder), Id (bucket id), FolderId, and LinkFolderId. Path/Name/Link pipe by name into Add-/Remove-OrchBucketLink.
 
 ## NOTES
 
