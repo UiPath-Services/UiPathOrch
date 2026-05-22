@@ -47,22 +47,6 @@ public class NewApiTriggerCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(StaticTextsCompleter<HttpCallingModeItems>))]
     public string? CallingMode { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public string? SuccessCallbackUrl { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public string? FailureCallbackUrl { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public string? Secret { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public string? CallbackMode { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BoolCompleter))]
-    public string? AllowInsecureSsl { get; set; }
-
     // Run the job as the API caller (vs. as the trigger owner). Observed
     // on POST/PUT payloads as 2026-05-21.
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -70,28 +54,22 @@ public class NewApiTriggerCmdlet : OrchestratorPSCmdlet
     public string? RunAsCaller { get; set; }
 
     // --- TriggerBase fields ---
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public int? JobPriority { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BoolCompleter))]
-    public string? RunAsMe { get; set; }
+    //
+    // The parameter surface is deliberately kept to the fields the
+    // Orchestrator web "create API trigger" form exposes. The HttpTrigger
+    // DTO carries more (callback URLs/secret/SSL, JobPriority, RunAsMe,
+    // TargetFramework, RequiresUserInteraction, JobFailuresGracePeriodInHours)
+    // and the server stores them, but the web form never sets them and the
+    // callback fields are inert (CallbackMode is read-only "Disabled"), so
+    // they are intentionally not exposed. Add them back per user request.
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<RuntimeTypes>))]
     public string? RuntimeType { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    public string? TargetFramework { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
     public string? ResumeOnSameContext { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BoolCompleter))]
-    public string? RequiresUserInteraction { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<SoftStop_Kill>))]
@@ -115,9 +93,6 @@ public class NewApiTriggerCmdlet : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public int? ConsecutiveJobFailuresThreshold { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public int? JobFailuresGracePeriodInHours { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public string? InputArguments { get; set; }
@@ -154,22 +129,13 @@ public class NewApiTriggerCmdlet : OrchestratorPSCmdlet
                 newTrigger.AssignStringIfNotNullOrEmpty(Method, (t, v) => t.Method = v);
                 newTrigger.AssignStringIfNotNullOrEmpty(Slug, (t, v) => t.Slug = v);
                 newTrigger.AssignStringIfNotNullOrEmpty(CallingMode, (t, v) => t.CallingMode = v);
-                newTrigger.AssignStringIfNotNullOrEmpty(SuccessCallbackUrl, (t, v) => t.SuccessCallbackUrl = v);
-                newTrigger.AssignStringIfNotNullOrEmpty(FailureCallbackUrl, (t, v) => t.FailureCallbackUrl = v);
-                newTrigger.AssignStringIfNotNullOrEmpty(Secret, (t, v) => t.Secret = v);
-                newTrigger.AssignStringIfNotNullOrEmpty(CallbackMode, (t, v) => t.CallbackMode = v);
-                newTrigger.AssignBoolIfNotNull(AllowInsecureSsl, (t, v) => t.AllowInsecureSsl = v);
                 newTrigger.AssignBoolIfNotNull(RunAsCaller, (t, v) => t.RunAsCaller = v);
 
                 // TriggerBase
                 newTrigger.AssignStringIfNotNullOrEmpty(Description, (t, v) => t.Description = v);
                 newTrigger.AssignBoolIfNotNull(Enabled, (t, v) => t.Enabled = v);
-                newTrigger.AssignNumberIfNotNullOrZero(JobPriority, (t, v) => t.JobPriority = v);
-                newTrigger.AssignBoolIfNotNull(RunAsMe, (t, v) => t.RunAsMe = v);
                 newTrigger.AssignStringIfNotNullOrEmpty(RuntimeType, (t, v) => t.RuntimeType = v);
-                newTrigger.AssignStringIfNotNullOrEmpty(TargetFramework, (t, v) => t.TargetFramework = v);
                 newTrigger.AssignBoolIfNotNull(ResumeOnSameContext, (t, v) => t.ResumeOnSameContext = v);
-                newTrigger.AssignBoolIfNotNull(RequiresUserInteraction, (t, v) => t.RequiresUserInteraction = v);
                 newTrigger.AssignStringIfNotNullOrEmpty(StopStrategy, (t, v) => t.StopStrategy = v);
                 newTrigger.AssignNumberIfNotNullOrZero(StopJobAfterSeconds, (t, v) => t.StopJobAfterSeconds = v);
                 newTrigger.AssignNumberIfNotNullOrZero(KillJobAfterSeconds, (t, v) => t.KillJobAfterSeconds = v);
@@ -177,7 +143,6 @@ public class NewApiTriggerCmdlet : OrchestratorPSCmdlet
                 newTrigger.AssignNumberIfNotNullOrZero(AlertRunningJobAfterSeconds, (t, v) => t.AlertRunningJobAfterSeconds = v);
                 newTrigger.AssignStringIfNotNullOrEmpty(RemoteControlAccess, (t, v) => t.RemoteControlAccess = v);
                 newTrigger.AssignNumberIfNotNullOrZero(ConsecutiveJobFailuresThreshold, (t, v) => t.ConsecutiveJobFailuresThreshold = v);
-                newTrigger.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours, (t, v) => t.JobFailuresGracePeriodInHours = v);
                 newTrigger.AssignStringIfNotNullOrEmpty(InputArguments, (t, v) => t.InputArguments = v);
 
                 newTrigger.MachineRobots = DeserializeMachineRobotSessions(this, drive, folder, target, MachineRobots);

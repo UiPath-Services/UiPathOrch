@@ -166,9 +166,12 @@ internal class HttpMethodItems : IStaticCandidates
     public static string[] Items { get; } = ["Get", "Post", "Put", "Delete", "Patch"];
 }
 
+// All three values live-verified against the server (Orch1 2026-05-22):
+// each round-trips through New-OrchApiTrigger -> Get-OrchApiTrigger.
+// LongPolling was missing from the original list.
 internal class HttpCallingModeItems : IStaticCandidates
 {
-    public static string[] Items { get; } = ["AsyncRequestReply", "FireAndForget"];
+    public static string[] Items { get; } = ["AsyncRequestReply", "FireAndForget", "LongPolling"];
 }
 
 internal class BucketOptionsItems : IStaticCandidates

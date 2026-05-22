@@ -50,48 +50,22 @@ public class UpdateApiTriggerCmdlet : OrchestratorPSCmdlet
     public string? CallingMode { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    public string? SuccessCallbackUrl { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public string? FailureCallbackUrl { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public string? Secret { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public string? CallbackMode { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BoolCompleter))]
-    public string? AllowInsecureSsl { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
     public string? RunAsCaller { get; set; }
 
     // --- TriggerBase fields ---
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public int? JobPriority { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BoolCompleter))]
-    public string? RunAsMe { get; set; }
+    // Kept to the fields the Orchestrator web "edit API trigger" form
+    // exposes. See New-OrchApiTrigger for why callbacks / JobPriority /
+    // RunAsMe / TargetFramework / RequiresUserInteraction /
+    // JobFailuresGracePeriodInHours are intentionally not exposed.
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<RuntimeTypes>))]
     public string? RuntimeType { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    public string? TargetFramework { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
     public string? ResumeOnSameContext { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(BoolCompleter))]
-    public string? RequiresUserInteraction { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<SoftStop_Kill>))]
@@ -115,9 +89,6 @@ public class UpdateApiTriggerCmdlet : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public int? ConsecutiveJobFailuresThreshold { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public int? JobFailuresGracePeriodInHours { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public string? InputArguments { get; set; }
@@ -172,22 +143,13 @@ public class UpdateApiTriggerCmdlet : OrchestratorPSCmdlet
                 dirty |= postTrigger.AssignStringIfNotNull(Method, trigger, t => t.Method, (t, v) => t.Method = v);
                 dirty |= postTrigger.AssignStringIfNotNull(Slug, trigger, t => t.Slug, (t, v) => t.Slug = v);
                 dirty |= postTrigger.AssignStringIfNotNull(CallingMode, trigger, t => t.CallingMode, (t, v) => t.CallingMode = v);
-                dirty |= postTrigger.AssignStringIfNotNull(SuccessCallbackUrl, trigger, t => t.SuccessCallbackUrl, (t, v) => t.SuccessCallbackUrl = v);
-                dirty |= postTrigger.AssignStringIfNotNull(FailureCallbackUrl, trigger, t => t.FailureCallbackUrl, (t, v) => t.FailureCallbackUrl = v);
-                dirty |= postTrigger.AssignStringIfNotNull(Secret, trigger, t => t.Secret, (t, v) => t.Secret = v);
-                dirty |= postTrigger.AssignStringIfNotNull(CallbackMode, trigger, t => t.CallbackMode, (t, v) => t.CallbackMode = v);
-                dirty |= postTrigger.AssignBoolIfNotNull(AllowInsecureSsl, trigger, t => t.AllowInsecureSsl, (t, v) => t.AllowInsecureSsl = v);
                 dirty |= postTrigger.AssignBoolIfNotNull(RunAsCaller, trigger, t => t.RunAsCaller, (t, v) => t.RunAsCaller = v);
 
                 // TriggerBase
                 dirty |= postTrigger.AssignStringIfNotNull(Description, trigger, t => t.Description, (t, v) => t.Description = v);
                 dirty |= postTrigger.AssignBoolIfNotNull(Enabled, trigger, t => t.Enabled, (t, v) => t.Enabled = v);
-                dirty |= postTrigger.AssignNumberIfNotNullOrZero(JobPriority, trigger, t => t.JobPriority, (t, v) => t.JobPriority = v);
-                dirty |= postTrigger.AssignBoolIfNotNull(RunAsMe, trigger, t => t.RunAsMe, (t, v) => t.RunAsMe = v);
                 dirty |= postTrigger.AssignStringIfNotNull(RuntimeType, trigger, t => t.RuntimeType, (t, v) => t.RuntimeType = v);
-                dirty |= postTrigger.AssignStringIfNotNull(TargetFramework, trigger, t => t.TargetFramework, (t, v) => t.TargetFramework = v);
                 dirty |= postTrigger.AssignBoolIfNotNull(ResumeOnSameContext, trigger, t => t.ResumeOnSameContext, (t, v) => t.ResumeOnSameContext = v);
-                dirty |= postTrigger.AssignBoolIfNotNull(RequiresUserInteraction, trigger, t => t.RequiresUserInteraction, (t, v) => t.RequiresUserInteraction = v);
                 dirty |= postTrigger.AssignStringIfNotNull(StopStrategy, trigger, t => t.StopStrategy, (t, v) => t.StopStrategy = v);
                 dirty |= postTrigger.AssignNumberIfNotNullOrZero(StopJobAfterSeconds, trigger, t => t.StopJobAfterSeconds, (t, v) => t.StopJobAfterSeconds = v);
                 dirty |= postTrigger.AssignNumberIfNotNullOrZero(KillJobAfterSeconds, trigger, t => t.KillJobAfterSeconds, (t, v) => t.KillJobAfterSeconds = v);
@@ -195,7 +157,6 @@ public class UpdateApiTriggerCmdlet : OrchestratorPSCmdlet
                 dirty |= postTrigger.AssignNumberIfNotNullOrZero(AlertRunningJobAfterSeconds, trigger, t => t.AlertRunningJobAfterSeconds, (t, v) => t.AlertRunningJobAfterSeconds = v);
                 dirty |= postTrigger.AssignStringIfNotNull(RemoteControlAccess, trigger, t => t.RemoteControlAccess, (t, v) => t.RemoteControlAccess = v);
                 dirty |= postTrigger.AssignNumberIfNotNullOrZero(ConsecutiveJobFailuresThreshold, trigger, t => t.ConsecutiveJobFailuresThreshold, (t, v) => t.ConsecutiveJobFailuresThreshold = v);
-                dirty |= postTrigger.AssignNumberIfNotNullOrZero(JobFailuresGracePeriodInHours, trigger, t => t.JobFailuresGracePeriodInHours, (t, v) => t.JobFailuresGracePeriodInHours = v);
                 dirty |= postTrigger.AssignStringIfNotNull(InputArguments, trigger, t => t.InputArguments, (t, v) => t.InputArguments = v);
 
                 if (MachineRobots is not null)

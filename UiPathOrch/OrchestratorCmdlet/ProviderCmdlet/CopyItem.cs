@@ -2651,6 +2651,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 var postingTrigger = OrchCollectionExtensions.DeepCopy(trigger);
                 postingTrigger.Id = null;
                 postingTrigger.OrganizationUnitId = null;
+                // CallbackMode is read-only: the create/edit endpoint never accepts
+                // it (the web UI doesn't post it either) and the server rejects any
+                // value other than its own default — echoing the source value back
+                // would, on a stricter tenant/version, fail the whole POST with
+                // "httpTrigger must not be null". Drop it like Id/OrganizationUnitId
+                // and let the server assign the default. Mirrors New-OrchApiTrigger,
+                // which no longer exposes -CallbackMode.
+                postingTrigger.CallbackMode = null;
                 // postingTrigger.Path = null; // Not needed since it has the JsonIgnore attribute
 
                 // Migrate ReleaseKey

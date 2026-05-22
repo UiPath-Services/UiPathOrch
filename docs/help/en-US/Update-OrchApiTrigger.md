@@ -22,13 +22,11 @@ Updates one or more existing API triggers in UiPath Orchestrator.
 ```
 Update-OrchApiTrigger [-Name] <string[]> [-NewName <string>] [-Release <string>]
  [-Description <string>] [-Enabled <string>] [-Method <string>] [-Slug <string>]
- [-CallingMode <string>] [-SuccessCallbackUrl <string>] [-FailureCallbackUrl <string>]
- [-Secret <string>] [-CallbackMode <string>] [-AllowInsecureSsl <string>] [-RunAsCaller <string>]
- [-JobPriority <int>] [-RunAsMe <string>] [-RuntimeType <string>] [-TargetFramework <string>]
- [-ResumeOnSameContext <string>] [-RequiresUserInteraction <string>] [-StopStrategy <string>]
+ [-CallingMode <string>] [-RunAsCaller <string>] [-RuntimeType <string>]
+ [-ResumeOnSameContext <string>] [-StopStrategy <string>]
  [-StopJobAfterSeconds <int>] [-KillJobAfterSeconds <int>] [-AlertPendingJobAfterSeconds <int>]
  [-AlertRunningJobAfterSeconds <int>] [-RemoteControlAccess <string>]
- [-ConsecutiveJobFailuresThreshold <int>] [-JobFailuresGracePeriodInHours <int>]
+ [-ConsecutiveJobFailuresThreshold <int>]
  [-InputArguments <string>] [-MachineRobots <string[]>] [-Path <string[]>] [-Recurse]
  [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
 ```
@@ -129,51 +127,9 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -AllowInsecureSsl
-
-Whether to skip TLS certificate validation on outbound callbacks. Accepts "true" or "false".
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -CallbackMode
-
-Callback delivery mode for the success/failure URLs.
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -CallingMode
 
-AsyncRequestReply (default — caller waits for the job result) or FireAndForget (caller returns immediately).
+How the caller waits for the job: LongPolling, FireAndForget (caller returns immediately), or AsyncRequestReply (caller waits for the job result).
 
 ```yaml
 Type: System.String
@@ -298,75 +254,12 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -FailureCallbackUrl
-
-URL the server POSTs to when the job fails.
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -InputArguments
 
 JSON object string supplying the job's input arguments.
 
 ```yaml
 Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -JobFailuresGracePeriodInHours
-
-Reset the consecutive-failure counter after this many hours without a failure.
-
-```yaml
-Type: System.Nullable`1[System.Int32]
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -JobPriority
-
-Numeric priority of jobs spawned by this trigger.
-
-```yaml
-Type: System.Nullable`1[System.Int32]
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -571,27 +464,6 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -RequiresUserInteraction
-
-Whether the job needs an interactive desktop. Accepts "true" or "false".
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -ResumeOnSameContext
 
 Whether the job resumes on the same robot context after suspension. Accepts "true" or "false".
@@ -634,51 +506,9 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -RunAsMe
-
-Whether the job runs under the trigger owner identity. Accepts "true" or "false".
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -RuntimeType
 
 Runtime to use for the job. Defaults to "Unattended" when omitted.
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Secret
-
-Shared secret embedded in callback notifications. Used by the receiving endpoint to validate the call.
 
 ```yaml
 Type: System.String
@@ -742,48 +572,6 @@ HelpMessage: ''
 ### -StopStrategy
 
 How to stop the job: SoftStop or Kill.
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -SuccessCallbackUrl
-
-URL the server POSTs to when the job completes successfully.
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -TargetFramework
-
-Target .NET framework for the package execution.
 
 ```yaml
 Type: System.String
