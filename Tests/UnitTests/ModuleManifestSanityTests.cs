@@ -1,0 +1,118 @@
+using System.Linq;
+using System.Management.Automation;
+using System.Reflection;
+using System.Text.RegularExpressions;
+using UiPath.PowerShell.Core;
+using Xunit;
+
+namespace UnitTests;
+
+// Cross-checks the module manifest (Staging/UiPathOrch.psd1) against the
+// cmdlet classes actually compiled into the assembly. The v1.5.x release
+// cycle added a dozen cmdlets one at a time, each needing a manifest
+// entry; the failure mode is "cmdlet ships in the DLL but is missing from
+// CmdletsToExport, so Install-Module users can't see it" (the same bug
+// that hid Remove-OrchAssetLink for a release). These tests make that
+// class of omission a CI failure.
+public class ModuleManifestSanityTests
+{
+    private static string LocateModuleManifest()
+    {
+        var dir = new System.IO.DirectoryInfo(System.AppContext.BaseDirectory);
+        while (dir != null)
+        {
+            var candidate = System.IO.Path.Combine(dir.FullName, "Staging", "UiPathOrch.psd1");
+            if (System.IO.File.Exists(candidate)) return candidate;
+            dir = dir.Parent;
+        }
+        throw new System.IO.FileNotFoundException(
+            "Staging/UiPathOrch.psd1 not found above " + System.AppContext.BaseDirectory);
+    }
+
+    private static string ManifestText => System.IO.File.ReadAllText(LocateModuleManifest());
+
+    // All concrete cmdlet classes in the UiPathOrch assembly, mapped to
+    // their "Verb-Noun" exported names.
+    private static System.Collections.Generic.IEnumerable<string> AllCmdletExportNames()
+    {
+        var asm = typeof(OrchProvider).Assembly;
+        foreach (var t in asm.GetTypes())
+        {
+            if (t.IsAbstract) continue;
+            var attr = t.GetCustomAttribute<CmdletAttribute>();
+            if (attr is null) continue;
+            yield return $"{attr.VerbName}-{attr.NounName}";
+        }
+    }
+
+    // Cmdlets deliberately compiled but NOT exported — work-in-progress or
+    // internal-only features. Surfaced by EveryCompiledCmdlet_IsListedInManifest
+    // on 2026-05-22; left unexported intentionally. If a v1.5.x (or later)
+    // cmdlet ever lands here it means the manifest entry was forgotten —
+    // remove it from this allowlist and add it to CmdletsToExport instead.
+    private static readonly System.Collections.Generic.HashSet<string> IntentionallyUnexported = new(System.StringComparer.OrdinalIgnoreCase)
+    {
+        // Business Rules — feature not yet shipped publicly.
+        "Get-OrchBusinessRule", "New-OrchBusinessRule", "Update-OrchBusinessRule", "Remove-OrchBusinessRule",
+        // Data Fabric (Df) — preview surface.
+        "Get-OrchDfEntity", "Get-OrchDfRecord", "Invoke-OrchDfQuery",
+        // Integration Service connections — preview.
+        "Get-OrchConnection",
+        // Test Manager (Tm) auxiliary cmdlets — not part of the public surface.
+        "Get-TmDefect", "Get-TmRole", "Get-TmTestExecutionResult",
+        // Platform Management licensing helper — incomplete: the actual
+        // license-assignment logic (using the -License parameter) is
+        // commented out; the cmdlet only adds the user to the licensed-
+        // user list. Do not export until the assignment half is finished.
+        "Add-PmLicenseToPmUser",
+        // Classic robot enable — incomplete implementation; Classic robots deprecated.
+        "Enable-OrchClassicRobot",
+    };
+
+    [Fact]
+    public void EveryCompiledCmdlet_IsListedInManifest_OrIntentionallyUnexported()
+    {
+        var manifest = ManifestText;
+        var missing = AllCmdletExportNames()
+            .Distinct()
+            .Where(name => !manifest.Contains($"'{name}'"))
+            .Where(name => !IntentionallyUnexported.Contains(name))
+            .OrderBy(n => n)
+            .ToList();
+
+        Assert.True(missing.Count == 0,
+            "These cmdlets are compiled into the assembly but missing from " +
+            "Staging/UiPathOrch.psd1 CmdletsToExport (Install-Module users won't see them). " +
+            "Either add a manifest entry, or — if intentionally hidden — add to the " +
+            "IntentionallyUnexported allowlist in this test with a reason:\n  " +
+            string.Join("\n  ", missing));
+    }
+
+    [Theory]
+    // The v1.5.x additions, explicitly enumerated so a regression on any
+    // one of them is named in the failure rather than buried in the
+    // bulk check above.
+    [InlineData("New-OrchApiTrigger")]
+    [InlineData("Update-OrchApiTrigger")]
+    [InlineData("New-OrchTestSet")]
+    [InlineData("Get-OrchTestSetDetail")]
+    [InlineData("New-OrchTestSetSchedule")]
+    [InlineData("Update-OrchTestSetSchedule")]
+    [InlineData("New-OrchTestDataQueue")]
+    [InlineData("New-OrchActionCatalog")]
+    [InlineData("New-OrchWebhook")]
+    public void V15Cmdlet_IsExported(string name)
+    {
+        Assert.Contains($"'{name}'", ManifestText);
+    }
+
+    [Fact]
+    public void ManifestModuleVersion_IsParseable()
+    {
+        // A malformed ModuleVersion would make Import-Module fail outright.
+        var m = Regex.Match(ManifestText, @"ModuleVersion\s*=\s*'(?<v>[^']+)'");
+        Assert.True(m.Success, "ModuleVersion line not found in manifest.");
+        Assert.True(System.Version.TryParse(m.Groups["v"].Value, out _),
+            $"ModuleVersion '{m.Groups["v"].Value}' is not a parseable version.");
+    }
+}
