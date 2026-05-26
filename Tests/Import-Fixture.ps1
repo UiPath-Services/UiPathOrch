@@ -179,6 +179,41 @@ Get-ChildItem "$FixturePath\TestDataQueueItems\*.csv" | ForEach-Object {
         -ImportCsv $_.FullName -Confirm:$false | Out-Null
 }
 
+# 12b3. Test set (depends on a test-automation package in Packages\, e.g.
+# TestAutomation.*.nupkg, uploaded in step 4). New-OrchTestSet needs the
+# package's deployed release id + test-case definition ids, so create a
+# process first, then build the typed TestSetPackage[] / TestCase[] arrays.
+# Test set *schedules* are intentionally NOT seeded -- their creation is
+# tenant-gated (errorCode 3234 "not allowed for this tenant" on some tenants),
+# so CopyItem.RoundTrip's test-set check covers the set, not the schedule.
+Write-Host "[11b3/17] Test set"
+$tsPkg = 'TestAutomation'
+$tsVer = @(Get-OrchPackageVersion -Path $root | Where-Object Id -eq $tsPkg |
+    Select-Object -ExpandProperty Version) | Sort-Object -Descending | Select-Object -First 1
+if ($tsVer) {
+    New-OrchProcess -Path $root -Id $tsPkg -Version $tsVer -Name $tsPkg -ErrorAction SilentlyContinue | Out-Null
+    Clear-OrchCache -Path $root
+    $tsRel = @(Get-OrchProcess -Path $root | Where-Object ProcessKey -eq $tsPkg) | Select-Object -First 1
+    $tsCases = @(Get-OrchTestCase -Path $root -Recurse) | Select-Object -First 3
+    if ($tsRel -and $tsCases) {
+        $tsPackages = , ([UiPath.PowerShell.Entities.TestSetPackage]@{
+                PackageIdentifier = $tsPkg; VersionMask = $tsRel.ProcessVersion
+            })
+        $tsTc = $tsCases | ForEach-Object {
+            [UiPath.PowerShell.Entities.TestCase]@{
+                DefinitionId = $_.Id; Enabled = $true
+                VersionNumber = $tsRel.ProcessVersion; ReleaseId = $tsRel.Id
+            }
+        }
+        New-OrchTestSet -Path $root -Name FixtureTestSet `
+            -Description 'Copy round-trip fixture test set' `
+            -Packages $tsPackages -TestCases $tsTc -ErrorAction SilentlyContinue | Out-Null
+    }
+}
+else {
+    Write-Host "  (skipped: no $tsPkg test package in $FixturePath\Packages)" -ForegroundColor DarkGray
+}
+
 # 12c. Action catalogs (TaskCatalog wire entity).
 Write-Host "[11c/17] Action catalogs"
 Import-Csv "$FixturePath\task_catalogs.csv" | Remap-Path | New-OrchActionCatalog | Out-Null

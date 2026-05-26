@@ -319,4 +319,35 @@ Describe 'Copy-Item -Recurse round-trip preserves per-folder entities' {
             -Name 'task_catalogs' `
             -ColumnsToCheck @('Description')
     }
+
+    It 'test sets round-trip' {
+        # Get-OrchTestSet has no -ExportCsv (the LIST endpoint returns metadata
+        # only), so compare objects by Path|Name with Description + TestCaseCount.
+        # Seeded by Import-Fixture via New-OrchTestSet against the TestAutomation
+        # test package. Verifies CopyTestSets re-creates the set on the dst side
+        # (retargeted to the copied package/release) instead of silently dropping
+        # it. NOTE: test set *schedules* are not covered -- their creation is
+        # tenant-gated (errorCode 3234 on some tenants), so the source can't be
+        # seeded reliably.
+        function script:Get-TestSetRows($root) {
+            $esc = [regex]::Escape($root)
+            Get-OrchTestSet -Path $root -Recurse | ForEach-Object {
+                [pscustomobject]@{
+                    Key           = (($_.Path -replace "^$esc", '<ROOT>') + '|' + $_.Name)
+                    Description   = [string]$_.Description
+                    TestCaseCount = [int]$_.TestCaseCount
+                }
+            }
+        }
+        $src = @(script:Get-TestSetRows $script:SrcRoot)
+        $dst = @(script:Get-TestSetRows $script:DstCopyRoot)
+        $dstByKey = @{}
+        foreach ($r in $dst) { $dstByKey[$r.Key] = $r }
+        foreach ($e in $src) {
+            $dstByKey.ContainsKey($e.Key) | Should -BeTrue `
+                -Because "test set '$($e.Key)' should exist on the copy destination after Copy-Item -Recurse"
+            $dstByKey[$e.Key].Description   | Should -Be $e.Description
+            $dstByKey[$e.Key].TestCaseCount | Should -Be $e.TestCaseCount
+        }
+    }
 }
