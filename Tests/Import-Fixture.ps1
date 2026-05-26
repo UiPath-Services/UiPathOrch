@@ -164,6 +164,21 @@ Import-Csv "$FixturePath\api_triggers.csv" | Remap-Path | New-OrchApiTrigger | O
 Write-Host "[11b/17] Test data queues"
 Import-Csv "$FixturePath\test_data_queues.csv" | Remap-Path | New-OrchTestDataQueue | Out-Null
 
+# 12b2. Test data queue items (depend on the queues just created). Per-queue
+# web-format CSVs under TestDataQueueItems\<Folder>_<Queue>.csv: the header
+# row is the queue's schema property names, matching the Orchestrator web
+# "Upload Items" format that Import-OrchTestDataQueueItem consumes.
+Write-Host "[11b2/17] Test data queue items"
+Get-ChildItem "$FixturePath\TestDataQueueItems\*.csv" | ForEach-Object {
+    $parts  = $_.BaseName -split '_', 2
+    $folder = $parts[0]
+    $queue  = $parts[1]
+    Import-OrchTestDataQueueItem `
+        -Path "${TargetDrive}:\TestFixture_Base\$folder" `
+        -Name $queue `
+        -ImportCsv $_.FullName -Confirm:$false | Out-Null
+}
+
 # 12c. Action catalogs (TaskCatalog wire entity).
 Write-Host "[11c/17] Action catalogs"
 Import-Csv "$FixturePath\task_catalogs.csv" | Remap-Path | New-OrchActionCatalog | Out-Null

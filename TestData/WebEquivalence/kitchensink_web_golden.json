@@ -1,0 +1,29 @@
+{
+    "queueName": "台所キュー",
+    "items": [
+        {
+            "intField": 42,
+            "numField": 3.14,
+            "boolField": true,
+            "strField": "hello",
+            "dateField": "2026-05-25",
+            "dateTimeField": "2026-05-25T10:30:00Z"
+        },
+        {
+            "intField": -7,
+            "numField": 100.5,
+            "boolField": false,
+            "strField": "カンマ,入り",
+            "dateField": "2026-12-31",
+            "dateTimeField": "2026-12-31T23:59:59+09:00"
+        },
+        {
+            "intField": 1000000,
+            "numField": 100,
+            "boolField": true,
+            "strField": "日本語テキスト",
+            "dateField": "2026-01-01",
+            "dateTimeField": "2026-01-01T00:00:00Z"
+        }
+    ]
+}

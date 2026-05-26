@@ -1,0 +1,21 @@
+{
+    "queueName": "台所キュー",
+    "items": [
+        {
+            "intField": 1,
+            "numField": 3.14,
+            "boolField": true,
+            "strField": "hello",
+            "dateField": "2026-05-25",
+            "dateTimeField": "2026-05-25T10:30:00Z"
+        },
+        {
+            "intField": 2,
+            "numField": 2.5,
+            "boolField": false,
+            "strField": "",
+            "dateField": "2026-06-01",
+            "dateTimeField": "2026-06-01T12:00:00Z"
+        }
+    ]
+}

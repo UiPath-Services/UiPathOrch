@@ -44,182 +44,37 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
-    public bool ParseCsvContent(string csvFilePath, out List<string> headers, out List<List<string>> contents, out List<CSVParseError> errorInfo)
-    {
-        headers = [];
-        contents = [];
-        errorInfo = [];
-        bool inQuotes = false;
-        StringBuilder currentField = new();
-        List<string> currentRow = [];
-        int currentRowNumber = 0;
+    // Delegates to the shared multi-line CSV reader; kept here (test-pinned name)
+    // so the web-equivalence test and CreateItemData call it unchanged.
+    internal static bool ParseCsvContent(string csvFilePath, Encoding? csvEncoding, int rowCap, out List<string> headers, out List<List<string>> contents, out List<CSVParseError> errorInfo, out int totalDataRows)
+        => CsvHelper.MultilineCsv.Parse(csvFilePath, csvEncoding, rowCap, out headers, out contents, out errorInfo, out totalDataRows);
 
-        if (CsvEncoding is null)
-        {
-            CsvEncoding = Encoding.UTF8;
-        }
-
-        foreach (var fullLine in File.ReadLines(csvFilePath, CsvEncoding))
-        {
-            bool lineHasError = false; // Flag to track whether this line has an error
-            string line = fullLine.TrimEnd('\r');
-
-            for (int i = 0; i < line.Length; i++)
-            {
-                char c = line[i];
-
-                // Toggle quoting status and handle escaped quotes
-                if (c == '"')
-                {
-                    if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
-                    { // Escaped quote
-                        currentField.Append('"');
-                        i++; // Skip the next quote
-                    }
-                    else if (!inQuotes && currentField.Length > 0)
-                    {
-                        currentField.Append('"');
-                    }
-                    else
-                    {
-                        inQuotes = !inQuotes; // Toggle quoting status
-                                              // Check if the closing quote is not properly followed by a comma or end of line
-                        if (!inQuotes && i < line.Length - 1 && line[i + 1] != ',' && line[i + 1] != '\n')
-                        {
-                            errorInfo.Add(new CSVParseError(currentRowNumber, "Quotes", "N/A", "Invalid Quotes"));
-                            lineHasError = true;
-                            // Break out of the loop to skip the rest of the line
-                            break;
-                        }
-                    }
-                }
-                else if (c == ',' && !inQuotes)
-                {
-                    // End of a field
-                    currentRow.Add(currentField.ToString());
-                    currentField.Clear();
-                }
-                else
-                {
-                    currentField.Append(c);
-                }
-
-                // After the loop
-                if (lineHasError)
-                {
-                    // If an error was detected, clear the currentField and currentRow to start fresh on the next line
-                    currentField.Clear();
-                    currentRow.Clear();
-                    break; // Skip to the next line in the outer loop
-                }
-            }
-
-            if (lineHasError)
-            {
-                // Discard all data for lines that had errors
-                currentField.Clear();
-                currentRow.Clear();
-                continue; // Proceed to the next line
-            }
-
-            // Add the last field if we're not inside quotes (end of line)
-            if (!inQuotes && currentRow.Count != 0)
-            {
-                currentRow.Add(currentField.ToString());
-                currentField.Clear();
-                if (currentRowNumber != 0 && headers.Count() < currentRow.Count())
-                {
-                    currentField.Clear();
-                    currentRow.Clear();
-                    errorInfo.Add(new CSVParseError(currentRowNumber, "Fields Mismatch", "N/A", "Too Many Fields"));
-                    continue;
-                }
-            }
-            else
-            {
-                // Multiline field, add newline character and continue accumulating
-                currentField.Append('\n');
-                continue;
-            }
-
-            // Process the header row separately
-            if (currentRowNumber == 0)
-            {
-                headers = new List<string>(currentRow);
-                ++currentRowNumber;
-            }
-            else if (currentRow.Count > 0) // Avoid adding empty lines as rows
-            {
-                contents.Add(new List<string>(currentRow));
-                ++currentRowNumber;
-            }
-
-            currentRow = new List<string>(); // Reset for the next row
-        }
-
-        // Final check for unmatched quotes
-        if (inQuotes)
-        {
-            errorInfo.Add(new CSVParseError(currentRowNumber, "Unmatched Quotes", "", "A field contains unmatched quotes"));
-        }
-
-        return !errorInfo.Any();
-    }
+    // Uncapped overload (retains every row). Pinned signature used by the
+    // web-equivalence unit test.
+    internal static bool ParseCsvContent(string csvFilePath, Encoding? csvEncoding, out List<string> headers, out List<List<string>> contents, out List<CSVParseError> errorInfo)
+        => ParseCsvContent(csvFilePath, csvEncoding, int.MaxValue, out headers, out contents, out errorInfo, out _);
 
     private (int rowNum, string content) CreateItemData(string csvFilePath, out List<CSVParseError> errorInfo)
     {
+        ParseCsvContent(csvFilePath, CsvEncoding, CsvUploadLimit.MaxRows, out var headers, out var contents, out errorInfo, out var totalDataRows);
+
+        // Reject oversized files before building the (potentially large) JSON
+        // payload, while keeping the exact row count for the caller's web-parity
+        // "{rowCount} records" message. ParseCsvContent retained at most MaxRows
+        // rows, so an oversized file is never materialized in full.
+        if (CsvUploadLimit.RowLimitError(totalDataRows) is not null)
+        {
+            return (totalDataRows, "");
+        }
+
         StringBuilder sb = new();
         sb.Append("{\"queueItems\":[\n");
-
-        ParseCsvContent(csvFilePath, out var headers, out var contents, out errorInfo);
 
         int currentRowNumber = 0;
         foreach (var values in contents)
         {
             ++currentRowNumber;
-            var queueItem = new QueueItemData4CsvImport();
-            foreach (var column in headers.Zip(values, (header, value) => (header, value)))
-            {
-                var (header, value) = column;
-                switch (header)
-                {
-                    case "Priority":
-                        if (!string.IsNullOrEmpty(value))
-                        {
-                            switch (value.ToLower())
-                            {
-                                case "1":
-                                case "low":
-                                    queueItem.Priority = "Low";
-                                    break;
-                                case "2":
-                                case "normal":
-                                    queueItem.Priority = "Normal";
-                                    break;
-                                case "3":
-                                case "high":
-                                    queueItem.Priority = "High";
-                                    break;
-                                default:
-                                    errorInfo.Add(new CSVParseError(currentRowNumber, "Field Error", header, "Invalid Data found"));
-                                    break;
-                            }
-                        }
-                        break;
-                    case "Reference":
-                        // Must be set even when the value is ""
-                        queueItem.Reference = value;
-                        break;
-                    default: // SpecificContent
-                        if (!string.IsNullOrEmpty(header))
-                        {
-                            queueItem.SpecificContent ??= new Dictionary<string, object>();
-                            queueItem.SpecificContent[header] = value;
-                        }
-                        break;
-                }
-            }
-            string strLine = System.Text.Json.JsonSerializer.Serialize(queueItem, JsonTools.jsoWhenWritingNull);
+            string strLine = BuildQueueItemJson(headers, values, currentRowNumber, errorInfo);
             if (currentRowNumber == 1)
             {
                 sb.Append(strLine);
@@ -242,7 +97,71 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
             return (0, "");
         }
 
-        return (contents.Count, sb.ToString());
+        return (totalDataRows, sb.ToString());
+    }
+
+    // CSV row -> queue item JSON (Priority text/number mapping, Reference, and
+    // everything else as SpecificContent string values). Extracted from the
+    // CreateItemData loop verbatim so the web-equivalence test can compare the
+    // cmdlet's items against a captured web BulkAddQueueItem body offline.
+    internal static string BuildQueueItemJson(IReadOnlyList<string> headers, IReadOnlyList<string> values, int rowNumber, List<CSVParseError> errorInfo)
+    {
+        var queueItem = new QueueItemData4CsvImport();
+        foreach (var column in headers.Zip(values, (header, value) => (header, value)))
+        {
+            var (header, value) = column;
+            switch (header)
+            {
+                case "Priority":
+                    if (!string.IsNullOrEmpty(value))
+                    {
+                        switch (value.ToLower())
+                        {
+                            case "1":
+                            case "low":
+                                queueItem.Priority = "Low";
+                                break;
+                            case "2":
+                            case "normal":
+                                queueItem.Priority = "Normal";
+                                break;
+                            case "3":
+                            case "high":
+                                queueItem.Priority = "High";
+                                break;
+                            default:
+                                errorInfo.Add(new CSVParseError(rowNumber, "Field Error", header, "Invalid Data found"));
+                                break;
+                        }
+                    }
+                    break;
+                case "Reference":
+                    // Must be set even when the value is ""
+                    queueItem.Reference = value;
+                    break;
+                default: // SpecificContent
+                    if (!string.IsNullOrEmpty(header))
+                    {
+                        queueItem.SpecificContent ??= new Dictionary<string, object>();
+                        queueItem.SpecificContent[header] = value;
+                    }
+                    break;
+            }
+        }
+        return System.Text.Json.JsonSerializer.Serialize(queueItem, JsonTools.jsoWhenWritingNull);
+    }
+
+    // The "queueItems" array as the cmdlet builds it from parsed CSV rows.
+    internal static string BuildQueueItemsArrayJson(IReadOnlyList<string> headers, IReadOnlyList<IReadOnlyList<string>> rows, List<CSVParseError> errorInfo)
+    {
+        var lines = new List<string>();
+        int rowNumber = 0;
+        foreach (var values in rows)
+        {
+            ++rowNumber;
+            lines.Add(BuildQueueItemJson(headers, values, rowNumber, errorInfo));
+        }
+        return "[" + string.Join(",", lines) + "]";
     }
 
     protected override void ProcessRecord()
@@ -262,12 +181,20 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                queueItemData.Add((p.FullPath, CreateItemData(p.FullPath, out var errorInfo)));
+                var data = CreateItemData(p.FullPath, out var errorInfo);
                 if (errorInfo is not null && errorInfo.Count != 0)
                 {
                     WriteObject(errorInfo, true);
                     return;
                 }
+                // Match the web "Upload Items" 15,000-row cap (reject, don't chunk).
+                var limitError = CsvUploadLimit.RowLimitError(data.rowNum);
+                if (limitError is not null)
+                {
+                    WriteError(new ErrorRecord(new OrchException(p.FullPath, limitError), "MaxRowsExceeded", ErrorCategory.LimitsExceeded, p.FullPath));
+                    continue;
+                }
+                queueItemData.Add((p.FullPath, data));
             }
             catch (Exception ex)
             {

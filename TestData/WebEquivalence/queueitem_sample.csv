@@ -1,0 +1,4 @@
+Reference,Priority,OrderId,Amount
+REF-001,High,A001,100
+REF-002,Low,A002,250
+REF-003,Normal,A003,300

@@ -52,11 +52,18 @@ Use `-CsvEncoding` to specify the encoding.
 | `Get-OrchAsset -ExportCsv` | `Import-Csv` → `Set-OrchAsset` |
 | `Get-OrchAsset -ExportCredentialCsv` | `Import-Csv` → `Set-OrchCredentialAsset` |
 | `Get-OrchTrigger -ExportCsv` | `Import-Csv` → `New-OrchTrigger` |
+| `Get-OrchApiTrigger -ExportCsv` | `Import-Csv` → `New-OrchApiTrigger` or `Update-OrchApiTrigger` |
 | `Get-OrchUser -ExportCsv` | `Import-Csv` → `Add-OrchUser` |
 | `Get-OrchRole -ExportCsv` | `Import-Csv` → `Set-OrchRole` |
 | `Get-OrchFolderUser -ExportCsv` | `Import-Csv` → `Add-OrchFolderUser` |
 | `Get-OrchFolderMachine -ExportCsv` | `Import-Csv` → `Add-OrchFolderMachine` |
 | `Get-OrchBucket -ExportCsv` | `Import-Csv` → `New-OrchBucket` |
+| `Get-OrchTestDataQueue -ExportCsv` | `Import-Csv` → `New-OrchTestDataQueue` |
+| `Get-OrchActionCatalog -ExportCsv` | `Import-Csv` → `New-OrchActionCatalog` |
+| `Get-OrchWebhook -ExportCsv` | `Import-Csv` → `New-OrchWebhook` or `Update-OrchWebhook` |
+| `Get-OrchAssetLink -ExportCsv` | `Import-Csv` → `Add-OrchAssetLink` |
+| `Get-OrchBucketLink -ExportCsv` | `Import-Csv` → `Add-OrchBucketLink` |
+| `Get-OrchQueueLink -ExportCsv` | `Import-Csv` → `Add-OrchQueueLink` |
 | `Get-OrchCalendarDate -ExportCsv` | `Import-Csv` → `Add-OrchCalendarDate` |
 | `Get-PmGroup -ExportCsv` | `Import-Csv` → `New-PmGroup` |
 | `Get-PmRobotAccount -ExportCsv` | `Import-Csv` → `Set-PmRobotAccount` |
@@ -142,6 +149,25 @@ Import-Csv C:\temp\processes.csv | Update-OrchProcess
 
 This pattern works for Update-OrchProcess, Update-OrchQueue, and other
 Update cmdlets.
+
+### Sharing Assets, Buckets, and Queues Across Folders (Links)
+
+`Get-Orch{Asset,Bucket,Queue}Link -ExportCsv` exports one row per
+(source folder, entity, linked folder) with `Path` / `Name` / `Link`
+columns, and `Add-Orch{Asset,Bucket,Queue}Link` imports them — so the
+folder-sharing layout can be snapshotted, edited, and reapplied:
+
+```powershell
+Get-OrchAssetLink -Path Orch1:\ -Recurse -ExportCsv C:\temp\asset-links.csv
+# edit / add / remove rows
+Import-Csv C:\temp\asset-links.csv | Add-OrchAssetLink
+```
+
+`Add-Orch*Link` batches every row for the same entity into a single API
+call. The share is all-or-nothing: if you lack permission on any one
+target folder in a row's group, none of that entity's links are added and
+the cmdlet reports the entity and folder that were rejected — fix or drop
+that row and re-run.
 
 ### Creating Folders in Bulk via CSV
 

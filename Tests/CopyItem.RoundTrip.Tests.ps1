@@ -286,6 +286,31 @@ Describe 'Copy-Item -Recurse round-trip preserves per-folder entities' {
             -ColumnsToCheck @('Description')
     }
 
+    It 'test data queue items round-trip' {
+        # Items have no unique Name (multiple items share a queue), so identity
+        # is queue-path + ContentJson. CopyTestDataQueues copies items via
+        # CopyTestDataQueueItems; this catches a silent item drop. Compared via
+        # objects (PathTestDataQueue + ContentJson): Get-OrchTestDataQueueItem
+        # has no -ExportCsv (its CSV would be per-queue/per-schema, not flat).
+        $getKeys = {
+            param($root)
+            Get-OrchTestDataQueueItem -Path $root -Recurse | ForEach-Object {
+                $q = $_.PathTestDataQueue -replace "^$([regex]::Escape($root))", '<ROOT>'
+                "$q|$($_.ContentJson)"
+            }
+        }
+        $srcKeys = @(& $getKeys $script:SrcRoot)
+        $dstKeys = @(& $getKeys $script:DstCopyRoot)
+
+        $dstSet = @{}
+        foreach ($k in $dstKeys) { $dstSet[$k] = $true }
+
+        foreach ($k in $srcKeys) {
+            $dstSet.ContainsKey($k) | Should -BeTrue `
+                -Because "test data queue item '$k' should exist on the copy destination after Copy-Item -Recurse"
+        }
+    }
+
     It 'action catalogs round-trip' {
         # Activated alongside v1.5.3's task_catalogs.csv fixture. Verifies
         # Copy-OrchActionCatalog preserves Description and Encrypted.

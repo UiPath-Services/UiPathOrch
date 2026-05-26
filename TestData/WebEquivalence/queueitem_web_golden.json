@@ -1,0 +1,30 @@
+{
+    "queueItems": [
+        {
+            "Priority": "High",
+            "SpecificContent": {
+                "OrderId": "A001",
+                "Amount": "100"
+            },
+            "Reference": "REF-001"
+        },
+        {
+            "Priority": "Low",
+            "SpecificContent": {
+                "OrderId": "A002",
+                "Amount": "250"
+            },
+            "Reference": "REF-002"
+        },
+        {
+            "Priority": "Normal",
+            "SpecificContent": {
+                "OrderId": "A003",
+                "Amount": "300"
+            },
+            "Reference": "REF-003"
+        }
+    ],
+    "queueName": "TestQueue123",
+    "commitType": "ProcessAllIndependently"
+}

@@ -321,6 +321,7 @@ CmdletsToExport = @(
 'Remove-OrchTestDataQueue',
 
 'Get-OrchTestDataQueueItem',
+'Import-OrchTestDataQueueItem',
 'Reset-OrchTestDataQueueItem',
 
 'Get-OrchAlert',

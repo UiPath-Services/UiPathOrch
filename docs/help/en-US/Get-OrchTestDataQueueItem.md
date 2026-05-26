@@ -201,4 +201,6 @@ Pipe to Format-OrchTestDataQueueItem for a table view that groups by queue and f
 
 [Format-OrchTestDataQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Format-OrchTestDataQueueItem.md)
 
+[Import-OrchTestDataQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchTestDataQueueItem.md)
+
 [Reset-OrchTestDataQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Reset-OrchTestDataQueueItem.md)

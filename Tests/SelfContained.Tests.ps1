@@ -342,6 +342,87 @@ Describe 'QueueItem Import' {
         $refs | Should -Contain 'REF-002'
         $refs | Should -Contain 'REF-003'
     }
+
+    It 'Import-OrchQueueItem preserves an embedded newline in a quoted CSV field' {
+        # A quoted field spanning two physical lines must be read as ONE field
+        # (multi-line parser), matching the web "Upload Items" dialog — not split.
+        $csv = Join-Path $script:TempDir 'queueitems_multiline.csv'
+        [System.IO.File]::WriteAllText($csv, "Reference,Note`nREF-ML,`"alpha`nbeta`"`n")
+        Import-OrchQueueItem -Name $script:QIQueueName -ImportCsv $csv | Out-Null
+        Start-Sleep -Seconds 2
+        Clear-OrchCache
+        $item = Get-OrchQueueItem -Name $script:QIQueueName -First 50 |
+            Where-Object Reference -eq 'REF-ML'
+        $item | Should -Not -BeNullOrEmpty
+        $item.SpecificContent.Note | Should -Be "alpha`nbeta"
+    }
+
+    It 'Import-OrchQueueItem rejects a CSV over the 15,000-row cap' {
+        # Mirrors the web's client-side 15,000-row limit (reject, don't chunk).
+        $csv = Join-Path $script:TempDir 'queueitems_overcap.csv'
+        $sb = [System.Text.StringBuilder]::new()
+        [void]$sb.AppendLine('Reference,Note')
+        for ($i = 1; $i -le 15001; $i++) { [void]$sb.AppendLine("OVERCAP-$i,n$i") }
+        [System.IO.File]::WriteAllText($csv, $sb.ToString())
+        $err = $null
+        Import-OrchQueueItem -Name $script:QIQueueName -ImportCsv $csv -ErrorVariable err -ErrorAction SilentlyContinue | Out-Null
+        $err | Should -Not -BeNullOrEmpty
+        $err[0].Exception.Message | Should -Match 'maximum number of rows allowed is 15000'
+    }
+}
+
+# ---------------------------------------------------------------------------
+# TestDataQueueItem Import (schema-typed; shares the multi-line CSV parser)
+# ---------------------------------------------------------------------------
+Describe 'TestDataQueueItem Import' {
+    BeforeAll {
+        $script:TdqName = "${script:Prefix}Tdq"
+        $script:TdqSchema = '{"type":"object","properties":{"id":{"type":"integer"},"note":{"type":"string"}},"additionalProperties":false}'
+        Push-Location $script:RootFolder
+        New-OrchTestDataQueue -Name $script:TdqName -ContentJsonSchema $script:TdqSchema | Out-Null
+        Clear-OrchCache
+    }
+
+    AfterAll {
+        Remove-OrchTestDataQueue -Name $script:TdqName -Confirm:$false -ErrorAction SilentlyContinue
+        Pop-Location
+    }
+
+    It 'Import-OrchTestDataQueueItem imports schema-typed items from CSV' {
+        $csv = Join-Path $script:TempDir 'tdqitems.csv'
+        [System.IO.File]::WriteAllText($csv, "id,note`n1,first`n2,second`n")
+        Import-OrchTestDataQueueItem -Name $script:TdqName -ImportCsv $csv -Confirm:$false
+        Start-Sleep -Seconds 2
+        Clear-OrchCache
+        $items = Get-OrchTestDataQueueItem -Name $script:TdqName
+        @($items).Count | Should -BeGreaterOrEqual 2
+    }
+
+    It 'Import-OrchTestDataQueueItem preserves an embedded newline in a quoted CSV field' {
+        # Shares Import-OrchQueueItem's multi-line parser, so a quoted field with
+        # an embedded newline round-trips as one field (web-golden-equivalent).
+        $csv = Join-Path $script:TempDir 'tdqitems_multiline.csv'
+        [System.IO.File]::WriteAllText($csv, "id,note`n101,`"alpha`nbeta`"`n")
+        Import-OrchTestDataQueueItem -Name $script:TdqName -ImportCsv $csv -Confirm:$false
+        Start-Sleep -Seconds 2
+        Clear-OrchCache
+        $item = Get-OrchTestDataQueueItem -Name $script:TdqName |
+            Where-Object { ($_.ContentJson | ConvertFrom-Json).id -eq 101 }
+        $item | Should -Not -BeNullOrEmpty
+        ($item.ContentJson | ConvertFrom-Json).note | Should -Be "alpha`nbeta"
+    }
+
+    It 'Import-OrchTestDataQueueItem rejects a CSV over the 15,000-row cap' {
+        $csv = Join-Path $script:TempDir 'tdqitems_overcap.csv'
+        $sb = [System.Text.StringBuilder]::new()
+        [void]$sb.AppendLine('id,note')
+        for ($i = 1; $i -le 15001; $i++) { [void]$sb.AppendLine("$i,n$i") }
+        [System.IO.File]::WriteAllText($csv, $sb.ToString())
+        $err = $null
+        Import-OrchTestDataQueueItem -Name $script:TdqName -ImportCsv $csv -Confirm:$false -ErrorVariable err -ErrorAction SilentlyContinue | Out-Null
+        $err | Should -Not -BeNullOrEmpty
+        $err[0].Exception.Message | Should -Match 'maximum number of rows allowed is 15000'
+    }
 }
 
 # ---------------------------------------------------------------------------

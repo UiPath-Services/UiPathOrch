@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Management.Automation;
+using System.Text;
 using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands.CsvHelper;
@@ -78,6 +79,145 @@ internal static class CsvLine
         }
         fields.Add(sb.ToString());
         return fields;
+    }
+}
+
+// Full multi-line / quote-aware CSV reader (RFC-4180-ish). Unlike CsvLine.Split
+// (a single physical line), it handles a quoted field that spans multiple lines
+// (an embedded newline) and "" escaped quotes — matching the Orchestrator web
+// "Upload Items" parser. Shared by Import-OrchQueueItem and
+// Import-OrchTestDataQueueItem so both read CSVs identically.
+//
+// rowCap bounds how many data rows are RETAINED in 'contents' (so an oversized
+// file is never fully materialized); totalDataRows reports the TRUE row count
+// regardless. Pass int.MaxValue to retain every row. Returns true when no parse
+// error was recorded.
+internal static class MultilineCsv
+{
+    internal static bool Parse(string csvFilePath, Encoding? csvEncoding, int rowCap, out List<string> headers, out List<List<string>> contents, out List<CSVParseError> errorInfo, out int totalDataRows)
+    {
+        headers = [];
+        contents = [];
+        errorInfo = [];
+        totalDataRows = 0;
+        bool inQuotes = false;
+        StringBuilder currentField = new();
+        List<string> currentRow = [];
+        int currentRowNumber = 0;
+
+        csvEncoding ??= Encoding.UTF8;
+
+        foreach (var fullLine in File.ReadLines(csvFilePath, csvEncoding))
+        {
+            bool lineHasError = false; // Flag to track whether this line has an error
+            string line = fullLine.TrimEnd('\r');
+
+            for (int i = 0; i < line.Length; i++)
+            {
+                char c = line[i];
+
+                // Toggle quoting status and handle escaped quotes
+                if (c == '"')
+                {
+                    if (inQuotes && i + 1 < line.Length && line[i + 1] == '"')
+                    { // Escaped quote
+                        currentField.Append('"');
+                        i++; // Skip the next quote
+                    }
+                    else if (!inQuotes && currentField.Length > 0)
+                    {
+                        currentField.Append('"');
+                    }
+                    else
+                    {
+                        inQuotes = !inQuotes; // Toggle quoting status
+                                              // Check if the closing quote is not properly followed by a comma or end of line
+                        if (!inQuotes && i < line.Length - 1 && line[i + 1] != ',' && line[i + 1] != '\n')
+                        {
+                            errorInfo.Add(new CSVParseError(currentRowNumber, "Quotes", "N/A", "Invalid Quotes"));
+                            lineHasError = true;
+                            // Break out of the loop to skip the rest of the line
+                            break;
+                        }
+                    }
+                }
+                else if (c == ',' && !inQuotes)
+                {
+                    // End of a field
+                    currentRow.Add(currentField.ToString());
+                    currentField.Clear();
+                }
+                else
+                {
+                    currentField.Append(c);
+                }
+
+                // After the loop
+                if (lineHasError)
+                {
+                    // If an error was detected, clear the currentField and currentRow to start fresh on the next line
+                    currentField.Clear();
+                    currentRow.Clear();
+                    break; // Skip to the next line in the outer loop
+                }
+            }
+
+            if (lineHasError)
+            {
+                // Discard all data for lines that had errors
+                currentField.Clear();
+                currentRow.Clear();
+                continue; // Proceed to the next line
+            }
+
+            // Add the last field if we're not inside quotes (end of line)
+            if (!inQuotes && currentRow.Count != 0)
+            {
+                currentRow.Add(currentField.ToString());
+                currentField.Clear();
+                if (currentRowNumber != 0 && headers.Count() < currentRow.Count())
+                {
+                    currentField.Clear();
+                    currentRow.Clear();
+                    errorInfo.Add(new CSVParseError(currentRowNumber, "Fields Mismatch", "N/A", "Too Many Fields"));
+                    continue;
+                }
+            }
+            else
+            {
+                // Multiline field, add newline character and continue accumulating
+                currentField.Append('\n');
+                continue;
+            }
+
+            // Process the header row separately
+            if (currentRowNumber == 0)
+            {
+                headers = new List<string>(currentRow);
+                ++currentRowNumber;
+            }
+            else if (currentRow.Count > 0) // Avoid adding empty lines as rows
+            {
+                ++totalDataRows;
+                // Stop retaining rows past the cap (the file will be rejected),
+                // but keep counting so the exact total reaches the caller.
+                if (contents.Count < rowCap)
+                {
+                    contents.Add(new List<string>(currentRow));
+                }
+                ++currentRowNumber;
+            }
+
+            currentRow = new List<string>(); // Reset for the next row
+        }
+
+        // Final check for unmatched quotes
+        if (inQuotes)
+        {
+            errorInfo.Add(new CSVParseError(currentRowNumber, "Unmatched Quotes", "", "A field contains unmatched quotes"));
+        }
+
+        return !errorInfo.Any();
     }
 }
 

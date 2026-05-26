@@ -1,0 +1,1 @@
+{"title":"三角形のテスト","description":"三角形アプリをテストするためのテストデータです。","properties":{"番号":{"type":"integer"},"辺A":{"type":"string"},"辺B":{"type":"string"},"辺C":{"type":"string"},"コメント":{"type":"string"},"期待値":{"type":"string"}},"additionalProperties":false,"$schema":"http://json-schema.org/draft-07/schema#"}

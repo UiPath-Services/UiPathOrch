@@ -1,0 +1,15 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "kitchen-sink",
+    "description": "One property per JSON type / string-format to pin web CSV coercion.",
+    "type": "object",
+    "properties": {
+        "intField": { "type": "integer" },
+        "numField": { "type": "number" },
+        "boolField": { "type": "boolean" },
+        "strField": { "type": "string" },
+        "dateField": { "type": "string", "format": "date" },
+        "dateTimeField": { "type": "string", "format": "date-time" }
+    },
+    "additionalProperties": false
+}

@@ -1,0 +1,11 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "title": "multiline-cell",
+    "description": "Probe how the web parses a quoted CSV field containing an embedded newline (multi-line aware vs line-based).",
+    "type": "object",
+    "properties": {
+        "id": { "type": "integer" },
+        "note": { "type": "string" }
+    },
+    "additionalProperties": false
+}
