@@ -350,4 +350,35 @@ Describe 'Copy-Item -Recurse round-trip preserves per-folder entities' {
             $dstByKey[$e.Key].TestCaseCount | Should -Be $e.TestCaseCount
         }
     }
+
+    It 'folder users round-trip' {
+        # Get-OrchFolderUser's identity column is UserName (not Name), so this
+        # uses a Path|UserName comparison instead of the shared Path|Name comparer.
+        # Seeded by Import-Fixture via Add-OrchFolderUser. Verifies CopyFolderUsers
+        # re-assigns each folder user (with the same role) on the dst side via
+        # same-tenant directory resolution -- a code path the asset/queue/etc.
+        # checks never exercise.
+        function script:Get-FolderUserRows($root, $csvName) {
+            $csv = Join-Path $script:ExportDir $csvName
+            Get-OrchFolderUser -Path $root -Recurse -ExportCsv $csv | Out-Null
+            $esc = [regex]::Escape($root)
+            Import-Csv $csv | ForEach-Object {
+                [pscustomobject]@{
+                    Key   = (($_.Path -replace "^$esc", '<ROOT>') + '|' + $_.UserName)
+                    Type  = [string]$_.Type
+                    Roles = [string]$_.FolderRoles
+                }
+            }
+        }
+        $src = @(script:Get-FolderUserRows $script:SrcRoot     'src_folder_users.csv')
+        $dst = @(script:Get-FolderUserRows $script:DstCopyRoot 'dst_folder_users.csv')
+        $dstByKey = @{}
+        foreach ($r in $dst) { $dstByKey[$r.Key] = $r }
+        foreach ($e in $src) {
+            $dstByKey.ContainsKey($e.Key) | Should -BeTrue `
+                -Because "folder user '$($e.Key)' should be assigned on the copy destination after Copy-Item -Recurse"
+            $dstByKey[$e.Key].Type  | Should -Be $e.Type
+            $dstByKey[$e.Key].Roles | Should -Be $e.Roles
+        }
+    }
 }

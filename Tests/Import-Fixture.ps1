@@ -214,6 +214,22 @@ else {
     Write-Host "  (skipped: no $tsPkg test package in $FixturePath\Packages)" -ForegroundColor DarkGray
 }
 
+# 12b4. Folder user (depends on folders [step 1] + tenant directory users
+# [step 3b]). Assign a DirectoryUser other than the current user to the root
+# fixture folder so CopyItem.RoundTrip's folder-users check has a source.
+# CopyFolderUsers re-resolves the user against the dst directory (same-tenant).
+Write-Host "[11b4/17] Folder user"
+$fuMe = (Get-OrchCurrentUser -Path "${TargetDrive}:\").UserName
+$fuAlt = Get-OrchUser -Path "${TargetDrive}:\" -Type DirectoryUser |
+    Where-Object { $_.UserName -ne $fuMe } | Select-Object -First 1
+if ($fuAlt) {
+    $fuName = if ($fuAlt.EmailAddress) { $fuAlt.EmailAddress } else { $fuAlt.UserName }
+    Add-OrchFolderUser -Path $root -Type DirectoryUser -UserName $fuName -Roles 'Automation User' -ErrorAction SilentlyContinue | Out-Null
+}
+else {
+    Write-Host "  (skipped: no DirectoryUser other than the current user)" -ForegroundColor DarkGray
+}
+
 # 12c. Action catalogs (TaskCatalog wire entity).
 Write-Host "[11c/17] Action catalogs"
 Import-Csv "$FixturePath\task_catalogs.csv" | Remap-Path | New-OrchActionCatalog | Out-Null
