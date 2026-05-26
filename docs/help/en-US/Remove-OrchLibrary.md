@@ -74,6 +74,24 @@ PS Orch1:\> Remove-OrchLibrary * 1.0.0-beta* -WhatIf
 
 Shows what would happen if all pre-release versions matching "1.0.0-beta*" were removed across all libraries, without actually deleting anything.
 
+### Example 5: Bulk removal of a hand-picked set of versions via CSV
+
+```powershell
+PS Orch1:\> Get-OrchLibraryVersion MyShared.Utilities | Select-Object Id,Version | Export-Csv c:RemoveVersions.csv
+```
+
+Enumerate the published versions and export them to a CSV. Because the current location is the Orch1: drive, qualify the file with a filesystem drive — `c:RemoveVersions.csv` writes to the current directory of the C: drive; a bare path would resolve against the Orchestrator drive, which cannot store files. Open the file in its associated editor, keep only the rows you want to delete, then pipe the curated file back into the cmdlet:
+
+```powershell
+PS Orch1:\> c:RemoveVersions.csv   # Press Tab to expand to the absolute path
+```
+
+```powershell
+PS Orch1:\> Import-Csv c:RemoveVersions.csv | Remove-OrchLibrary -WhatIf
+```
+
+The Id and Version columns bind to the parameters of the same name, so each row removes one specific library version. Use this when the set of versions to delete is an arbitrary, hand-picked list that a single wildcard cannot express.
+
 ## PARAMETERS
 
 ### -Path

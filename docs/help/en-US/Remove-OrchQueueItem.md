@@ -69,10 +69,10 @@ PS Orch1:\Shared> Remove-OrchQueueItem OrderQueue 55012 -WhatIf
 ```
 
 ```output
-What if: Performing the operation "Remove QueueItem" on target "Queue: 'OrderQueue [Shared]' Id: '55012'".
+What if: Performing the operation "Remove Queue Items" on target "Orch1:\Shared\OrderQueue".
 ```
 
-Shows what would happen without actually deleting any items.
+Shows what would happen without actually deleting any items. Confirmation is requested once per queue (not per item), and the target is the queue's path.
 
 ### Example 4: Remove queue items from a specific folder
 
@@ -81,6 +81,24 @@ PS C:\> Remove-OrchQueueItem -Path Orch1:\Shared TestQueue2 -Id 70345,70346,7034
 ```
 
 Deletes the queue items with IDs 70345, 70346, and 70347 from TestQueue2 in the Shared folder on Orch1.
+
+### Example 5: Bulk removal of a hand-picked set via CSV
+
+```powershell
+PS Orch1:\Shared> Get-OrchQueueItem OrderQueue -Status Successful | Select-Object Name,Id,RowVersion | Export-Csv c:RemoveItems.csv
+```
+
+Enumerate the candidate items and export them to a CSV. Because the current location is the Orch1: drive, qualify the file with a filesystem drive — `c:RemoveItems.csv` writes to the current directory of the C: drive; a bare path would resolve against the Orchestrator drive, which cannot store files. Open the file in its associated editor, keep only the rows you want to delete, then pipe the curated file back into the cmdlet:
+
+```powershell
+PS Orch1:\Shared> c:RemoveItems.csv   # Press Tab to expand to the absolute path
+```
+
+```powershell
+PS Orch1:\Shared> Import-Csv c:RemoveItems.csv | Remove-OrchQueueItem -WhatIf
+```
+
+The Name (queue), Id, and RowVersion columns bind to the parameters of the same name. Supplying RowVersion avoids a per-item lookup; if the column is blank, the cmdlet resolves it automatically. Use this to delete an arbitrary, hand-picked set of items that a single wildcard cannot express.
 
 ## PARAMETERS
 

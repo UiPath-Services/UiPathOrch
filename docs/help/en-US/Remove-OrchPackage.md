@@ -76,6 +76,24 @@ PS C:\> Remove-OrchPackage -Path Orch1:\Shared -Id BlankProcess19 -Version 1.0.*
 
 Removes all 1.0.x versions of "BlankProcess19" from the Shared folder. When -Path uses an absolute path (Orch1:\...), the command can be run from any location.
 
+### Example 5: Bulk removal of a hand-picked set of versions via CSV
+
+```powershell
+PS Orch1:\Shared> Get-OrchPackageVersion MyProcess | Select-Object Id,Version | Export-Csv c:RemovePackages.csv
+```
+
+Enumerate the package versions in the current folder feed and export them to a CSV. Because the current location is the Orch1: drive, qualify the file with a filesystem drive — `c:RemovePackages.csv` writes to the current directory of the C: drive; a bare path would resolve against the Orchestrator drive, which cannot store files. Open the file in its associated editor, keep only the rows you want to delete, then pipe the curated file back into the cmdlet:
+
+```powershell
+PS Orch1:\Shared> c:RemovePackages.csv   # Press Tab to expand to the absolute path
+```
+
+```powershell
+PS Orch1:\Shared> Import-Csv c:RemovePackages.csv | Remove-OrchPackage -WhatIf
+```
+
+The Id and Version columns bind to the parameters of the same name, so each row removes one specific package version. Use this for an arbitrary, hand-picked set of (Id, Version) pairs that a single wildcard cannot express — for example, retaining different versions for different packages.
+
 ## PARAMETERS
 
 ### -Path

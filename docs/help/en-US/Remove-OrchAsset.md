@@ -28,7 +28,7 @@ Remove-OrchAsset [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]
 
 ## DESCRIPTION
 
-Removes assets from UiPath Orchestrator folders. This cmdlet removes entire assets including all their per-robot values. It handles all asset types (Text, Bool, Integer, and Credential).
+Removes assets from UiPath Orchestrator folders. This cmdlet removes entire assets including all their per-robot values. It handles all asset types (Text, Bool, Integer, Credential, and Secret).
 
 The -Name parameter supports wildcards to remove multiple assets at once. The -ValueType parameter can filter which asset types to remove, allowing targeted removal such as removing only credential assets.
 
@@ -65,15 +65,15 @@ What if: Performing the operation "Remove Asset" on target "Orch1:\Shared\TestAs
 What if: Performing the operation "Remove Asset" on target "Orch1:\Shared\TestAsset2024".
 ```
 
-Shows which assets would be removed without executing the command. Wildcard patterns match multiple assets.
+Shows which assets would be removed without executing the command. Wildcard patterns match multiple assets. Once you have confirmed the listed targets, re-run the same command without -WhatIf to actually delete them.
 
 ### Example 3: Remove all credential assets
 
 ```powershell
-PS Orch1:\Shared> Remove-OrchAsset * -ValueType Credential
+PS Orch1:\Shared> Remove-OrchAsset * -ValueType Credential -WhatIf
 ```
 
-Removes all credential-type assets from the current folder while leaving Text, Bool, and Integer assets intact. The -ValueType parameter filters by asset type.
+Previews removal of all credential-type assets in the current folder while leaving Text, Bool, Integer, and Secret assets intact; the -ValueType parameter filters by asset type. Because this would delete every credential asset at once, confirm the listed targets first, then re-run the same command without -WhatIf to delete them.
 
 ### Example 4: Remove assets from a specific folder
 
@@ -98,6 +98,28 @@ PS Orch1:\> Remove-OrchAsset -Depth 1 Temp*
 ```
 
 Removes assets matching "Temp*" from the root folder and its immediate subfolders (depth 1). When -Depth is specified, -Recurse is implied.
+
+### Example 7: Bulk removal of a hand-picked set via CSV
+
+```powershell
+PS Orch1:\> Get-OrchAsset -Recurse * | Select-Object Path,Name | Export-Csv c:RemoveAssets.csv
+```
+
+Enumerate the candidate assets and export them to a CSV. Because the current location is the Orch1: drive, qualify the file with a filesystem drive — for example `c:RemoveAssets.csv`, which writes to the current directory of the C: drive. A bare path such as `RemoveAssets.csv` would resolve against the Orchestrator drive, which cannot store files.
+
+Open the file in its associated editor by typing its path and pressing Enter, then delete the rows you want to keep, leaving only the rows you want to delete:
+
+```powershell
+PS Orch1:\> c:RemoveAssets.csv   # Press Tab to expand to the absolute path
+```
+
+Pipe the curated file back into the cmdlet:
+
+```powershell
+PS Orch1:\> Import-Csv c:RemoveAssets.csv | Remove-OrchAsset -WhatIf
+```
+
+Each CSV column binds to the parameter of the same name (Path and Name), so exactly the rows you left are removed. Use this when the set of assets to delete is arbitrary and cannot be expressed by a single wildcard pattern. For a simple "delete everything matching a pattern" case, no pipeline is needed — `Remove-OrchAsset -Recurse * -WhatIf` does it directly.
 
 ## PARAMETERS
 
@@ -261,7 +283,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 
-You can pipe asset names to this cmdlet via the Name property.
+You can pipe objects to this cmdlet by property name: the `Name` property binds to -Name (asset names) and the `Path` property binds to -Path (target folders). This lets you pipe `Import-Csv` output — or `Get-OrchAsset | Select-Object Path,Name` — directly into the cmdlet.
 
 ## OUTPUTS
 
@@ -273,7 +295,9 @@ This cmdlet does not produce any output.
 
 This cmdlet removes entire assets. To remove only per-robot values while keeping the asset, use Set-OrchAsset with `-Value ''` and -UserName.
 
-Unlike Set-OrchAsset, this cmdlet removes assets of all value types including Credential. Use -ValueType to restrict which types are removed.
+Unlike Set-OrchAsset, this cmdlet removes assets of all value types including Credential and Secret. Use -ValueType to restrict which types are removed.
+
+By default, this cmdlet does not prompt for confirmation; deletion proceeds immediately. Always preview the targets with -WhatIf first, or use -Confirm to be prompted before each asset is removed.
 
 The cmdlet processes each matching asset individually, so if one removal fails (e.g., due to permissions), remaining assets continue to be processed.
 

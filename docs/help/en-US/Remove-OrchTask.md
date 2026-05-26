@@ -57,7 +57,7 @@ Required permissions: Tasks.Delete
 PS Orch1:\Shared> Remove-OrchTask -Id 8144232
 ```
 
-Deletes the task with the specified Id from the current folder, prompting for confirmation.
+Deletes the task with the specified Id from the current folder. By default no confirmation prompt appears; the task is deleted immediately.
 
 ### Example 2: Bulk-delete completed tasks via pipeline
 

@@ -48,7 +48,7 @@ Required permissions: Queues.Delete
 PS Orch1:\Shared> Remove-OrchQueue TestQueue2
 ```
 
-Removes the queue definition named "TestQueue2" from the current folder. You will be prompted for confirmation before the queue is deleted.
+Removes the queue definition named "TestQueue2" from the current folder. By default no confirmation prompt appears; the queue is deleted immediately. Use -WhatIf to preview, or -Confirm to be prompted.
 
 ### Example 2: Preview removal with WhatIf using wildcards
 
@@ -61,7 +61,7 @@ Displays what would happen if all queues matching "Test*" were removed, without 
 ### Example 3: Remove queues recursively
 
 ```powershell
-PS Orch1:\> Remove-OrchQueue TestQueue2 -Recurse
+PS Orch1:\> Remove-OrchQueue -Recurse TestQueue2
 ```
 
 Removes the queue named "TestQueue2" from the root folder and all subfolders recursively.

@@ -59,7 +59,7 @@ PS Orch1:\Shared> Remove-OrchBucketLink -Name TestBucket1 -Link Orch1:\Dept#2 -W
 ```
 
 ```output
-What if: Performing the operation "Remove BucketLink 'Orch1:\Dept#2'" on target "Orch1:\Shared\TestBucket1".
+What if: Performing the operation "Remove BucketLink ✗ Orch1:\Dept#2" on target "Orch1:\Shared\TestBucket1".
 ```
 
 Shows what would happen without executing.
@@ -75,7 +75,7 @@ Removes both the Dept#2 and Dept#3 folder links from every bucket matching "Test
 ### Example 4: Recursively unlink across subfolders
 
 ```powershell
-PS C:\> Remove-OrchBucketLink -Path Orch1:\Depts\* -Recurse -Depth 2 -Name SharedBucket -Link Orch1:\Common
+PS C:\> Remove-OrchBucketLink -Path Orch1:\Depts\* -Depth 2 -Name SharedBucket -Link Orch1:\Common
 ```
 
 Walks the subfolders of Orch1:\Depts up to 2 levels deep, finds buckets named "SharedBucket", and removes the Common folder from each one's link list.

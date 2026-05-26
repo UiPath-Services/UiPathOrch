@@ -98,6 +98,24 @@ What if: Performing the operation "Remove BucketItem" on target "Orch1:\Shared\D
 
 Shows what would happen without actually removing the file. Use this to verify which files would be affected before performing the operation.
 
+### Example 7: Bulk removal of a hand-picked set of files via CSV
+
+```powershell
+PS Orch1:\Shared> Get-OrchBucketItem DataBucket * | Select-Object FullPath | Export-Csv c:RemoveFiles.csv
+```
+
+Enumerate the files in the bucket and export their paths to a CSV. Because the current location is the Orch1: drive, qualify the file with a filesystem drive — `c:RemoveFiles.csv` writes to the current directory of the C: drive; a bare path would resolve against the Orchestrator drive, which cannot store files. Open the file in its associated editor, keep only the rows you want to delete, then pipe the curated file back into the cmdlet, naming the bucket once:
+
+```powershell
+PS Orch1:\Shared> c:RemoveFiles.csv   # Press Tab to expand to the absolute path
+```
+
+```powershell
+PS Orch1:\Shared> Import-Csv c:RemoveFiles.csv | Remove-OrchBucketItem DataBucket -WhatIf
+```
+
+The FullPath column binds to -FullPath, while the bucket is supplied once as -Name (DataBucket) on the command line. Use this to delete an arbitrary, hand-picked set of files that a single wildcard cannot express.
+
 ## PARAMETERS
 
 ### -Path
