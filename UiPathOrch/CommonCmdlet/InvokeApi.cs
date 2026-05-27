@@ -316,8 +316,15 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
 
     // ----- helpers -----
 
-    private static HttpContent BuildBodyContent(object body, string contentType)
+    internal static HttpContent BuildBodyContent(object body, string contentType)
     {
+        // A caller can hand us a [string] that PowerShell wrapped in a live PSObject
+        // (e.g. some ConvertTo-Json pipeline shapes). Unwrap to the BaseObject first so
+        // a wrapped JSON string is recognized as a string below, instead of falling into
+        // JsonSerializer.Serialize(PSObject) — which throws a System.Text.Json
+        // object-cycle exception.
+        if (body is PSObject pso) body = pso.BaseObject;
+
         // A direct byte[] body bypasses serialization (for blobs etc.).
         if (body is byte[] bytes)
         {
