@@ -169,6 +169,55 @@ BeforeAll {
 
         script:Compare-CopySubset $srcRows $dstRows $ColumnsToCheck $Name
     }
+
+    function script:Export-AndDiffLinks {
+        <#
+        .SYNOPSIS
+            Link round-trip: every entity SHARED across folders (Add-Orch*Link)
+            must have its share graph reproduced on the dst copy by the
+            LinkAsset / LinkBucket / LinkQueue "short-circuit" -- i.e. linked
+            into the copied sibling folder instead of duplicated.
+
+            Unlike the other kinds, a link's identity is Path|Name|LINK: the
+            same entity is shared into multiple folders, so Path|Name alone
+            collides and the shared Compare-CopySubset comparer would mask
+            missing links. Get-Orch*Link -ExportCsv emits one row per directed
+            (homeFolder -> sharedFolder) pair; both folder columns are
+            re-anchored to their respective roots so src and dst align.
+        #>
+        param(
+            [scriptblock]$Getter,   # { param($path, $csv) Get-OrchBucketLink -Path $path -Recurse -ExportCsv $csv | Out-Null }
+            [string]$Name           # e.g. 'bucket_links'
+        )
+        $srcCsv = Join-Path $script:ExportDir "src_$Name.csv"
+        $dstCsv = Join-Path $script:ExportDir "dst_$Name.csv"
+        & $Getter $script:SrcRoot     $srcCsv
+        & $Getter $script:DstCopyRoot $dstCsv
+
+        $toKeys = {
+            param($csvPath, $root)
+            $esc = [regex]::Escape($root)
+            @(Import-Csv $csvPath | ForEach-Object {
+                (($_.Path -replace "^$esc", '<ROOT>') + '|' + $_.Name + '|' +
+                 ($_.Link -replace "^$esc", '<ROOT>'))
+            })
+        }
+        $srcKeys = @(& $toKeys $srcCsv $script:SrcRoot)
+        $dstKeys = @(& $toKeys $dstCsv $script:DstCopyRoot)
+
+        # Don't pass vacuously if the fixture predates link seeding
+        # (Import-Fixture steps 13-15): a src with zero links of this kind means
+        # a stale fixture -- fail loudly rather than silently verify nothing.
+        $srcKeys.Count | Should -BeGreaterThan 0 `
+            -Because "the fixture should seed at least one $Name (re-run Import-Fixture if this fails)"
+
+        $dstSet = @{}
+        foreach ($k in $dstKeys) { $dstSet[$k] = $true }
+        foreach ($k in $srcKeys) {
+            $dstSet.ContainsKey($k) | Should -BeTrue `
+                -Because "$Name '$k' should be reproduced on the copy destination after Copy-Item -Recurse (Link* short-circuit)"
+        }
+    }
 }
 
 AfterAll {
@@ -380,5 +429,31 @@ Describe 'Copy-Item -Recurse round-trip preserves per-folder entities' {
             $dstByKey[$e.Key].Type  | Should -Be $e.Type
             $dstByKey[$e.Key].Roles | Should -Be $e.Roles
         }
+    }
+
+    It 'asset links round-trip' {
+        # Verifies LinkAsset reproduces the cross-folder share graph (an asset
+        # shared into sibling folders via Add-OrchAssetLink) on the copy instead
+        # of duplicating the asset. Seeded by Import-Fixture step 13 (asset_links).
+        Export-AndDiffLinks `
+            -Getter { param($path, $csv) Get-OrchAssetLink -Path $path -Recurse -ExportCsv $csv | Out-Null } `
+            -Name 'asset_links'
+    }
+
+    It 'bucket links round-trip' {
+        # Verifies LinkBucket (ApiVersion >= 12) reproduces the bucket share
+        # graph rather than duplicating the bucket. Seeded by Import-Fixture
+        # step 14 (bucket_links).
+        Export-AndDiffLinks `
+            -Getter { param($path, $csv) Get-OrchBucketLink -Path $path -Recurse -ExportCsv $csv | Out-Null } `
+            -Name 'bucket_links'
+    }
+
+    It 'queue links round-trip' {
+        # Verifies LinkQueue reproduces the queue share graph. Seeded by
+        # Import-Fixture step 15 (queue_links).
+        Export-AndDiffLinks `
+            -Getter { param($path, $csv) Get-OrchQueueLink -Path $path -Recurse -ExportCsv $csv | Out-Null } `
+            -Name 'queue_links'
     }
 }
