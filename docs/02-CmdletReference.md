@@ -553,6 +553,9 @@ Organization-level license group management.
 | Remove-PmLicenseFromPmLicensedGroup | Remove a license from a licensed group |
 | Remove-PmAllocationFromPmLicensedGroup | Remove allocation from a licensed group |
 | Remove-PmLicensedGroup | Remove a licensed group |
+| Add-PmLicenseToPmLicensedUser | Add a license to a licensed user |
+| Remove-PmLicenseFromPmLicensedUser | Remove a license from a licensed user |
+| Remove-PmLicensedUser | Remove a licensed user (drops the row from the licensed-users set) |
 
 <a id="23-platform-management-external-apps-and-other"></a>
 ## 23. Platform Management - External Apps & Other
