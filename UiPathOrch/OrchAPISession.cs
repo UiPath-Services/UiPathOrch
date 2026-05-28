@@ -3844,6 +3844,25 @@ public partial class OrchAPISession : IDisposable
         HttpRequestPortal(HttpMethod.Put, "/portal_/api/license/accountant/UserLicense", null, command);
     }
 
+    private class RemovePmLicensedUserCommand
+    {
+        public string[]? userIds { get; set; }
+    }
+
+    // This is an undocumented API.
+    // Drops the listed users from the licensed-users set entirely (cleans up the
+    // "No license" rows left behind by an empty-licenseCodes PutPmLicenseUser).
+    // Captured from the Portal "License Allocations to Users" UI delete action;
+    // analog of RemovePmLicensedGroup, but the body is {userIds:[]} (batched)
+    // rather than {id:string} (single). Batching one DELETE per drive is the
+    // natural fit for this shape and avoids N round trips for N users.
+    public void RemovePmLicensedUser(string[] userIds)
+    {
+        if (userIds is null || userIds.Length == 0) return;
+        var cmd = new RemovePmLicensedUserCommand { userIds = userIds };
+        HttpRequestPortal(HttpMethod.Delete, "/portal_/api/license/accountant/UserLicense", null, cmd);
+    }
+
     internal static readonly JsonSerializerOptions jsoMemberConverter = new()
     {
         Converters = { new MemberConverter() }
