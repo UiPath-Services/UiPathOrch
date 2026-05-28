@@ -1418,28 +1418,20 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignDirectoryUser", null, request);
     }
 
-    // Routes folder-user assignment to the right endpoint based on the
-    // Orchestrator edition: Cloud (always) and post-API-16 deployments use
-    // /AssignDirectoryUser; older OnPrem (observed: 22.10 = API 15) uses the
-    // /AssignDomainUser endpoint. Calling the wrong one returns
-    // "An unknown failure has occurred" on the affected environment.
+    // Routes folder-user assignment based on the Orchestrator edition: Cloud
+    // takes /AssignDirectoryUser; OnPrem takes /AssignDomainUser. Calling the
+    // wrong one surfaces as either "An unknown failure has occurred" or
+    // 400 "Invalid OData query options." on the affected environment.
     //
-    // IsCloud is checked first because ApiVersion auto-discovery requires the
-    // OR.Settings scope (see EnsureAuthenticated) and may be null otherwise;
-    // on Cloud the endpoint choice is unambiguous regardless of ApiVersion
-    // availability. A null ApiVersion on a non-Cloud drive falls through to
-    // AssignDomainUser, which is the safe choice for the OnPrem versions the
-    // codebase historically supported.
-    //
-    // TODO: the "16" threshold is provisional — derived from the 22.10 = 15.0
-    // observation (BIN OUYANG report) without a confirmed first-version-with-
-    // AssignDirectoryUser-only. Verify against multiple OnPrem versions and
-    // tighten if needed.
+    // The choice depends purely on IsCloud, not on ApiVersion. Verified via
+    // web devtools captures on OnPrem 22.10.1 (API 15.0), 23.4.0 (API 16.0)
+    // and 25.10.2 (API 17.0) — all three versions use /AssignDomainUser
+    // (web payload byte-identical to what this cmdlet sends). If a future
+    // OnPrem release ever drops /AssignDomainUser in favor of
+    // /AssignDirectoryUser, add a version-aware branch here at that time.
     public void AssignFolderUser(DomainUserAssignment user)
     {
-        bool useDirectoryEndpoint = _drive._psDrive.IsCloud
-            || (ApiVersion.HasValue && ApiVersion.Value >= 16);
-        if (useDirectoryEndpoint)
+        if (_drive._psDrive.IsCloud)
         {
             AssignDirectoryUser(user);
         }
