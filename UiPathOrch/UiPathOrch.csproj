@@ -47,13 +47,4 @@
     <InternalsVisibleTo Include="UnitTests" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Update="OCProvider.psd1">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="UiPathOrch.Format.ps1xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
 </Project>
