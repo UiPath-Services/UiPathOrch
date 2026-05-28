@@ -575,7 +575,10 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                 {
                     target = $"{param.Name?[0]}";
                 }
-                Exception e = new Exception($"ValueType '{param.ValueType}' is invalid.");
+                Exception e = new Exception(
+                    $"ValueType '{param.ValueType}' is invalid (expected: {string.Join(", ", ValidValueTypes)}). "
+                    + "Set-OrchAsset takes ValueType first, then Name (Set-OrchAsset <ValueType> <Name>); "
+                    + "pass -Name explicitly if you meant an asset name.");
                 var errorRecord = new ErrorRecord(new OrchException(target, e), "SetAssetError", ErrorCategory.InvalidOperation, target);
                 WriteError(errorRecord);
                 continue;
