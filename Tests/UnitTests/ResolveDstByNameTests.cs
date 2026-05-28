@@ -80,7 +80,7 @@ public class ResolveDstByNameTests
     public void TolerantOfNullEntriesInCandidates()
     {
         var candidates = new Item?[] { null, new Item("Alice"), null };
-        var got = ResolveDstByName(candidates!, "Alice", c => c!.Name);
+        var got = ResolveDstByName<Item>(candidates!, "Alice", c => c.Name);
         Assert.NotNull(got);
         Assert.Equal("Alice", got!.Name);
     }
