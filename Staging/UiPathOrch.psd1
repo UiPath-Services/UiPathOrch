@@ -163,6 +163,7 @@ CmdletsToExport = @(
 'Remove-PmLicenseFromPmLicensedGroup',
 
 'Add-PmLicenseToPmLicensedUser',
+'Remove-PmLicenseFromPmLicensedUser',
 
 'Get-OrchClassicRobot',
 'Get-OrchClassicEnvironment',
