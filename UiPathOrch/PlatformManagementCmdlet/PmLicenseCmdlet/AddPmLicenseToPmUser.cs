@@ -4,16 +4,27 @@ using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
+// Allocates one or more user license bundles to a Platform Management user.
+// Mirrors the shape of Add-PmLicenseToPmLicensedGroup (its group counterpart):
+// ProcessRecord collects target bundle codes per user across pipeline rows; the
+// actual PUT happens in EndProcessing so multiple licenses for the same user
+// fold into a single request. The PUT is atomic-replace (matches the Portal
+// "Licenses > Users" UI), so we merge the user's existing
+// userBundleLicenses with the new codes before submitting.
 [Cmdlet(VerbsCommon.Add, "PmLicenseToPmUser", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
+[OutputType(typeof(Entities.NuLicensedUser))]
 public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
 {
-    // Manages license codes
-    //private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;
-    private Dictionary<(OrchDriveInfo drive, PmDirectoryEntityInfo group), HashSet<string>>? _parameterSets;
+    // Per (drive, userId): the pre-existing licensed-user record (if any), the
+    // bundle codes to add, and a friendly label used for ShouldProcess targets
+    // and error messages. The HashSet is shared by reference across pipeline
+    // rows touching the same user.
+    private Dictionary<(OrchDriveInfo drive, string userId),
+        (NuLicensedUser? existing, HashSet<string> codes, string displayName)>? _parameterSets;
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(UserNameCompleter))]
@@ -86,107 +97,183 @@ public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
             CommandAst commandAst,
             IDictionary fakeBoundParameters)
         {
-            var drives = ResolvePmDrives(fakeBoundParameters);
-
-            var wpEmail = GetFakeBoundParameters(fakeBoundParameters, "Email").ConvertToWildcardPatternList();
+            // Suggest friendly bundle names from the static catalog (e.g.
+            // "Attended - Named User"). The server validates the resolved codes
+            // on PUT, so an org that doesn't own a bundle still gets a useful
+            // error rather than a misleading "no candidates" silence here. The
+            // raw code is shown in the tooltip for users who prefer codes.
             var wpLicense = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            //var results = ParallelResults3.GroupBy(drives, drive => drive.PmUsers.Get());
-
-            //foreach (var drive in drives)
-            //{
-            //    var licenses = drive.OrchAPISession.GetPmLicensedUsersAvailableLicenses();
-
-            //    foreach (var license in licenses ?? [])
-            //    {
-            //        if (license.allocated == license.total) continue;
-            //        if (AvailableUserBundlesItems.Items.TryGetValue(license.code ?? "", out var licenseName))
-            //        {
-            //            yield return new CompletionResult(PathTools.EscapePSText(licenseName), licenseName, CompletionResultType.Text, licenseName);
-            //        }
-            //        else
-            //        {
-            //            yield return new CompletionResult(PathTools.EscapePSText(license.code), license.code, CompletionResultType.Text, license.code);
-            //        }
-            //    }
-            //}
-            yield break;
+            // Self-exclusion is inlined (not via ExcludeByWildcards) because the
+            // catalog is a Dictionary<string,string> — iterating yields the
+            // KeyValuePair *struct*, and ExcludeByWildcards<T>'s Func<T?,_>
+            // selector turns kv into Nullable<KeyValuePair>, which makes `.Value`
+            // resolve to Nullable<T>.Value instead of the dict entry's value.
+            foreach (var kv in AvailableUserBundlesItems.Items
+                .Where(kv => wp.IsMatch(kv.Value) || wp.IsMatch(kv.Key))
+                .OrderBy(kv => kv.Value))
+            {
+                if (wpLicense?.Any(p => p.IsMatch(kv.Value)) == true) continue;
+                string name = kv.Value;
+                string tiphelp = $"{name} ({kv.Key})";
+                yield return new CompletionResult(PathTools.EscapePSText(name), name, CompletionResultType.Text, tiphelp);
+            }
         }
+    }
+
+    // Resolves -License wildcards against the static bundle catalog. A pattern
+    // matches a bundle if it matches the friendly name OR the raw code, so
+    // users can pass either form. Pure / static for unit testing.
+    internal static HashSet<string> ResolveLicenseCodes(IEnumerable<WildcardPattern>? wpLicense)
+    {
+        var codes = new HashSet<string>();
+        if (wpLicense is null) return codes;
+        foreach (var kv in AvailableUserBundlesItems.Items)
+        {
+            foreach (var wp in wpLicense)
+            {
+                if (wp.IsMatch(kv.Value) || wp.IsMatch(kv.Key))
+                {
+                    codes.Add(kv.Key);
+                    break;
+                }
+            }
+        }
+        return codes;
     }
 
     protected override void ProcessRecord()
     {
         _parameterSets ??= [];
 
-        var drives = SessionState.EnumPmDrives(Path);
-
         Email = Email.Split1stValueByUnescapedCommas()?.ToArray();
         var wpLicense = License.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
+        var targetCodes = ResolveLicenseCodes(wpLicense);
+        if (targetCodes.Count == 0)
+        {
+            // No catalog bundle matched the License pattern; nothing to allocate
+            // on this row. Matches Add-PmLicenseToPmLicensedGroup's silent-skip
+            // behavior when its wildcard matches no available bundle.
+            return;
+        }
+
+        var drives = SessionState.EnumPmDrives(Path);
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
+            var existingLicensedUsers = drive.PmLicensedUsers.Get();
+
             foreach (var email in (Email ?? []).WithCancellation(cancelHandler.Token))
             {
-                // If not a licensed user,
-                // call POST /portal_/api/license/accountant/UserLicense/users
+                // Already in the licensed-users set? Reuse its record so we can
+                // merge bundles in EndProcessing. Match on both 'name' and
+                // 'email' since the input parameter accepts either form.
+                var targetUser = existingLicensedUsers.FirstOrDefault(e =>
+                    string.Compare(e.name, email, StringComparison.OrdinalIgnoreCase) == 0
+                    || string.Compare(e.email, email, StringComparison.OrdinalIgnoreCase) == 0);
 
-                var existingLicensedUsers = drive.PmLicensedUsers.Get();
-                var targetUser = existingLicensedUsers.FirstOrDefault(e => string.Compare(e.name, email, StringComparison.OrdinalIgnoreCase) == 0);
-
-                if (targetUser is null)
+                string? userId;
+                string displayName;
+                if (targetUser is not null)
                 {
+                    userId = targetUser.id;
+                    displayName = targetUser.name ?? targetUser.email ?? email;
+                }
+                else
+                {
+                    // Not yet a licensed user — look the principal up in the
+                    // directory to get an identifier for the PUT. PutPmLicenseUser
+                    // covers both add + bundle-assignment in one round trip.
                     var resolvedUser = drive.PmBulkResolveByName("user", [email], e => e, null);
-                    if (resolvedUser == null || !resolvedUser.Any())
+                    if (resolvedUser is null || !resolvedUser.Any())
                     {
-                        // The specified user does not exist
+                        WriteError(new ErrorRecord(
+                            new OrchException(drive.NameColonSeparator,
+                                new Exception($"User '{email}' was not found in the directory on {drive.NameColonSeparator}.")),
+                            "UserNotFoundError", ErrorCategory.ObjectNotFound, email));
                         continue;
                     }
-
-                    AddLicensedUserCommand payload = new()
-                    {
-                        userIds = [resolvedUser.First().Value!.identifier!]
-                    };
-                    drive.OrchAPISession.PutLicensedUser(payload);
+                    userId = resolvedUser.First().Value!.identifier!;
+                    displayName = email;
                 }
 
+                if (string.IsNullOrEmpty(userId)) continue;
 
+                if (!_parameterSets.TryGetValue((drive, userId), out var entry))
+                {
+                    entry = (targetUser, [], displayName);
+                    _parameterSets[(drive, userId)] = entry;
+                }
+                entry.codes.UnionWith(targetCodes);
+            }
+        }
+    }
 
+    protected override void EndProcessing()
+    {
+        if (_parameterSets is null) return;
 
+        using var cancelHandler = new ConsoleCancelHandler();
+        foreach (var kvp in _parameterSets
+            .OrderBy(p => p.Key.drive.Name)
+            .ThenBy(p => p.Value.displayName, StringComparer.OrdinalIgnoreCase)
+            .WithCancellation(cancelHandler.Token))
+        {
+            var (drive, userId) = kvp.Key;
+            var (existing, codesToAdd, displayName) = kvp.Value;
 
+            // PUT is atomic-replace, so merge the user's pre-existing bundles
+            // with the new codes before submitting. If nothing actually changes,
+            // skip the round trip (matches the group cmdlet's contract).
+            var existingSet = new HashSet<string>(existing?.userBundleLicenses ?? []);
+            int initialCount = existingSet.Count;
+            existingSet.UnionWith(codesToAdd);
+            if (existingSet.Count == initialCount) continue;
 
+            string target = $"{drive.NameColonSeparator}{displayName}";
+            if (!ShouldProcess(target, "Add License to PmUser")) continue;
 
+            try
+            {
+                UpdateLicensedUserCommand cmd = new()
+                {
+                    userIds = [userId],
+                    licenseCodes = existingSet.ToArray(),
+                    // NuLicensedUser does not surface useExternalLicense; the
+                    // Portal request defaults to false (verified from capture).
+                    useExternalLicense = false,
+                };
+                drive.OrchAPISession.PutPmLicenseUser(cmd);
 
+                // Bundle allocations and the licensed-users list are both stale
+                // after the PUT. Drop both caches so the refresh below (and any
+                // subsequent cmdlet) sees fresh data.
+                drive.PmLicensedUsers.ClearCache();
+                drive.PmAvailableUserBundles.ClearCache();
 
-
-
-
-                //var groups = drive.SearchPmDirectoryCache.Get(groupName.ToLower());
-                //if (groups is null) continue;
-
-                //foreach (var group in groups
-                //    .Where(g => g.objectType == "DirectoryGroup" || g.objectType == "LocalGroup")
-                //    .OrderBy(e => e.identityName))
-                //{
-                //    //var licenseGroups = drive.GetPmLicensedGroups();
-                //    //var targetGroups = licenseGroups.SelectByWildcards(g => g?.name, wpGroupName);
-
-                //    //foreach (var group in targetGroups.OrderBy(g => g.name))
-                //    {
-                //        if (!_parameterSets.TryGetValue((drive, group), out var codes))
-                //        {
-                //            codes = [];
-                //            _parameterSets[(drive, group)] = codes;
-                //        }
-
-                //        var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.identifier, group.identityName!);
-                //        codes.UnionWith(availableUserBundles?.availableUserBundles?
-                //            .SelectByWildcards(b => b?.name, wpLicense)?
-                //            .Select(b => b.code!) ?? []);
-                //    }
-                //}
+                // Emit the post-PUT view of the user with friendly bundle
+                // labels stamped on a per-emit ShallowClone (matches the
+                // ShallowClone path-isolation convention in this codebase).
+                var refreshed = drive.PmLicensedUsers.Get()
+                    .FirstOrDefault(u => u.id == userId);
+                if (refreshed is not null)
+                {
+                    var clone = refreshed.ShallowClone();
+                    clone.Path = drive.NameColonSeparator;
+                    clone.userBundleLicenseNames = clone.userBundleLicenses
+                        ?.Select(b => AvailableUserBundlesItems.Items.TryGetValue(b, out var n) ? n : b)
+                        .ToArray();
+                    WriteObject(clone);
+                }
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(
+                    new OrchException(target, ex),
+                    "AddPmLicenseToPmUserError", ErrorCategory.InvalidOperation, target));
+                continue;
             }
         }
     }

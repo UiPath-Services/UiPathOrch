@@ -3632,6 +3632,20 @@ public class AddLicensedUserCommand
     public string[]? userIds { get; set; }
 }
 
+// PUT /portal_/api/license/accountant/UserLicense — atomically sets the listed
+// users' allocated license bundles to licenseCodes (analog of the group's
+// UpdateLicensedGroupCommand, with field name 'licenseCodes' instead of 'ubls').
+// Idempotent: also makes a user a licensed user if they aren't yet, so a single
+// PUT covers add-user + bundle-assignment. Captured from the Portal "Licenses >
+// Users" UI request — the bare endpoint (no /users suffix) is distinct from
+// AddLicensedUserCommand's POST .../users.
+public class UpdateLicensedUserCommand
+{
+    public string[]? userIds { get; set; }
+    public string[]? licenseCodes { get; set; }
+    public bool useExternalLicense { get; set; }
+}
+
 public class KeyValuePair(string? key, string? value) // added by UiPathOrch
 {
     public string? key { get; set; } = key;

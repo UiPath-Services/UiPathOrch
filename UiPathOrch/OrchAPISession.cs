@@ -3833,6 +3833,17 @@ public partial class OrchAPISession : IDisposable
         HttpRequestPortal(HttpMethod.Post, "/portal_/api/license/accountant/UserLicense/users", null, payload);
     }
 
+    // This is an undocumented API.
+    // Sets the listed users' allocated license bundles atomically (replace, not
+    // append). Captured from the Portal "Licenses > Users" UI; the bare endpoint
+    // (no /users suffix) and PUT verb are distinct from PutLicensedUser's
+    // POST .../users. Also makes a user a licensed user when they aren't yet,
+    // so a single PUT covers both add-user and bundle-assignment.
+    public void PutPmLicenseUser(UpdateLicensedUserCommand command)
+    {
+        HttpRequestPortal(HttpMethod.Put, "/portal_/api/license/accountant/UserLicense", null, command);
+    }
+
     internal static readonly JsonSerializerOptions jsoMemberConverter = new()
     {
         Converters = { new MemberConverter() }
