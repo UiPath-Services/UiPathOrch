@@ -8,12 +8,15 @@ internal class PathInfoComparer : IEqualityComparer<PathInfo>
 {
     bool IEqualityComparer<PathInfo>.Equals(PathInfo? x, PathInfo? y)
     {
-        return StringComparer.OrdinalIgnoreCase.Equals(x!.Path, y!.Path);
+        if (x is null || y is null) return ReferenceEquals(x, y);
+        return StringComparer.OrdinalIgnoreCase.Equals(x.Path, y.Path);
     }
 
     int IEqualityComparer<PathInfo>.GetHashCode(PathInfo obj)
     {
-        return obj.GetHashCode();
+        // Must agree with Equals (Path, OrdinalIgnoreCase) so HashSet/Distinct dedup
+        // correctly; the default reference hash here silently broke that contract.
+        return obj.Path is null ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj.Path);
     }
 }
 
