@@ -7,7 +7,10 @@ on:
 
 jobs:
   release:
-    runs-on: windows-latest
+    # Pinned to match ci.yml (not windows-latest): windows-latest is being
+    # redirected to a newer image that shifts the preinstalled .NET set and
+    # destabilizes tooling discovery (see the Check formatting retry below).
+    runs-on: windows-2022
     permissions:
       contents: write
     steps:
@@ -42,8 +45,22 @@ jobs:
         # Run the same dotnet format gate as ci.yml. Without this step a
         # tag push to a master with stale formatting would publish to
         # PSGallery before CI even reports failure (the two workflows race
-        # and Release usually wins).
-        run: dotnet format --verify-no-changes --verbosity diagnostic
+        # and Release usually wins). Use the same retry loop as ci.yml so the
+        # transient "Unable to locate dotnet CLI" infra flake doesn't abort a
+        # release; a GENUINE formatting failure still fails after all attempts.
+        shell: pwsh
+        run: |
+          $max = 3
+          for ($i = 1; $i -le $max; $i++) {
+            dotnet format --verify-no-changes --verbosity diagnostic
+            if ($LASTEXITCODE -eq 0) { exit 0 }
+            if ($i -lt $max) {
+              Write-Host "::warning::dotnet format attempt $i/$max failed (exit $LASTEXITCODE); retrying in 10s..."
+              Start-Sleep -Seconds 10
+            }
+          }
+          Write-Host "::error::dotnet format failed after $max attempts."
+          exit 1
 
       - name: Test (same gate as CI)
         # Same rationale: tests must pass before Publish-Module. Catches
