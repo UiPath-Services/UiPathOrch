@@ -1394,6 +1394,37 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignDirectoryUser", null, request);
     }
 
+    // Routes folder-user assignment to the right endpoint based on the
+    // Orchestrator edition: Cloud (always) and post-API-16 deployments use
+    // /AssignDirectoryUser; older OnPrem (observed: 22.10 = API 15) uses the
+    // /AssignDomainUser endpoint. Calling the wrong one returns
+    // "An unknown failure has occurred" on the affected environment.
+    //
+    // IsCloud is checked first because ApiVersion auto-discovery requires the
+    // OR.Settings scope (see EnsureAuthenticated) and may be null otherwise;
+    // on Cloud the endpoint choice is unambiguous regardless of ApiVersion
+    // availability. A null ApiVersion on a non-Cloud drive falls through to
+    // AssignDomainUser, which is the safe choice for the OnPrem versions the
+    // codebase historically supported.
+    //
+    // TODO: the "16" threshold is provisional — derived from the 22.10 = 15.0
+    // observation (BIN OUYANG report) without a confirmed first-version-with-
+    // AssignDirectoryUser-only. Verify against multiple OnPrem versions and
+    // tighten if needed.
+    public void AssignFolderUser(DomainUserAssignment user)
+    {
+        bool useDirectoryEndpoint = _drive._psDrive.IsCloud
+            || (ApiVersion.HasValue && ApiVersion.Value >= 16);
+        if (useDirectoryEndpoint)
+        {
+            AssignDirectoryUser(user);
+        }
+        else
+        {
+            AssignDomainUser(user);
+        }
+    }
+
     public void AssignUser(Int64 folderId, Int64 userId, IEnumerable<Int64>? roleIds)
     {
         var payload = new Dictionary<string, object?>();

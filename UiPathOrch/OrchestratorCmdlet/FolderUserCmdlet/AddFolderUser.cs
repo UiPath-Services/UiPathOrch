@@ -219,6 +219,11 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
                 string foundUserName = null;
                 string foundUserDisplayName = null;
                 string foundUserIdentifier = null;
+                // Captured from the directory lookup so the AssignFolderUser payload
+                // sends the real domain (e.g. an EntraID-federated tenant domain on
+                // OnPrem) instead of the hard-coded "autogen" — that mismatch
+                // surfaces as "An unknown failure has occurred" on the server.
+                string? foundUserDomain = null;
 
                 #region Search for user from cache
                 if (type == "DirectoryRobot")
@@ -240,11 +245,16 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
                     foundUserName = member.identityName;
                     foundUserDisplayName = member.displayName;
                     foundUserIdentifier = member.identifier;
+                    foundUserDomain = member.domain;
                 }
                 else
                 {
                     // For non-Robot types, retrieve from cache.
                     // No API calls should occur here, so no need to output exceptions.
+                    // NOTE: PmGroupMember does not expose `domain` — foundUserDomain
+                    // stays null and the payload falls back to "autogen". If a
+                    // future EntraID-federated OnPrem case fails for these types,
+                    // we need a separate directory lookup that yields the domain.
                     try
                     {
                         var kind = ConvertToKind(type);
@@ -317,7 +327,11 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
 
                     DomainUserAssignment assignment = new()
                     {
-                        Domain = "autogen",
+                        // Use the domain returned by the directory lookup when we
+                        // have it (DirectoryRobot path); the "autogen" fallback
+                        // matches the historical default for non-Robot types and
+                        // for OnPrem environments without federated identity.
+                        Domain = string.IsNullOrEmpty(foundUserDomain) ? "autogen" : foundUserDomain,
                         DirectoryIdentifier = foundUserIdentifier,
                         UserType = type,
                         RolesPerFolder =
@@ -330,12 +344,13 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
                         ]
                     };
 
-                    // Which one is the correct one to call?
-                    // Both seem to work, though.
                     try
                     {
-                        drive.OrchAPISession.AssignDomainUser(assignment); // The one documented in swagger
-                        //drive.OrchAPISession.AssignDirectoryUser(assignment); // The one actually called by the web interface
+                        // AssignFolderUser routes to AssignDirectoryUser (Cloud /
+                        // post-API-16 OnPrem) or AssignDomainUser (OnPrem 22.10 =
+                        // API 15) — the wrong endpoint surfaces as "An unknown
+                        // failure has occurred" on the affected environment.
+                        drive.OrchAPISession.AssignFolderUser(assignment);
 
                         drive.FolderUsersWithNoInherited.ClearCache();
                         drive.FolderUsersWithInherited.ClearCache();

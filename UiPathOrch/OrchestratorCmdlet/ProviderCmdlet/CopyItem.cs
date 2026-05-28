@@ -545,7 +545,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         UserType = userRole.UserEntity?.Type,
                         RolesPerFolder = newRolesPerFolder
                     };
-                    dstDrive.OrchAPISession.AssignDirectoryUser(postingUser);
+                    dstDrive.OrchAPISession.AssignFolderUser(postingUser);
 
                     dstDrive.FolderUsersWithInherited.ClearCache(newFolder);
                     dstDrive.FolderUsersWithNoInherited.ClearCache(newFolder);
@@ -587,7 +587,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             };
             try
             {
-                drive.OrchAPISession.AssignDirectoryUser(duser);
+                drive.OrchAPISession.AssignFolderUser(duser);
             }
             catch (Exception ex)
             {
