@@ -355,6 +355,20 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
+    // Token expiry derived from the IdP's reported `expires_in`; falls back to a
+    // conservative 1 hour when the auth flow doesn't report a lifetime (PAT /
+    // user-password), so behavior is unchanged for those modes. Using the real
+    // lifetime avoids a too-late refresh (and the resulting 401 surfaced to the
+    // caller) when the IdP issues tokens shorter than 1h, e.g. on Automation
+    // Suite / on-premises Identity policies.
+    private DateTime ComputeTokenExpiry(DateTime from)
+        => ComputeTokenExpiry(from, _authManager.ExpiresInSeconds);
+
+    // Pure expiry decision, separated for unit testing: use the IdP-reported
+    // lifetime when positive, else the conservative 1h fallback.
+    internal static DateTime ComputeTokenExpiry(DateTime from, int expiresInSeconds)
+        => expiresInSeconds > 0 ? from.AddSeconds(expiresInSeconds) : from.AddHours(1);
+
     internal void EnsureAuthenticated()
     {
         if (!_isAuthenticated)
@@ -368,7 +382,7 @@ public partial class OrchAPISession : IDisposable
                     SetToken(token);
 
                     _isAuthenticated = true;
-                    _expiryTime = DateTime.Now.AddHours(1);
+                    _expiryTime = ComputeTokenExpiry(DateTime.Now);
 
                     if (ApiVersion is null && _drive is not null &&
                         (_drive._psDrive.Scope?.Contains("OR.Settings") ?? false))
@@ -402,7 +416,7 @@ public partial class OrchAPISession : IDisposable
                 if (now > _expiryTime.AddMinutes(-5))
                 {
                     SetToken(RenewAccessToken());
-                    _expiryTime = now.AddHours(1);
+                    _expiryTime = ComputeTokenExpiry(now);
                 }
             }
         }

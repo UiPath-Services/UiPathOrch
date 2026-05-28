@@ -42,6 +42,12 @@ internal class OrchestratorAuthManager
     private string? _access_token;
     private string? _refresh_token;
 
+    // Lifetime (seconds) reported by the last token response's `expires_in`.
+    // 0 when unknown — PAT and user/password flows never call GetAccessToken, so
+    // the session falls back to its conservative 1h assumption for those modes.
+    private int _expiresInSeconds;
+    internal int ExpiresInSeconds => _expiresInSeconds;
+
     internal bool IsAuthenticated => !string.IsNullOrEmpty(_access_token);
 
     internal string? AccessToken => _access_token;
@@ -266,7 +272,37 @@ internal class OrchestratorAuthManager
         string access_token = root.TryGetProperty("access_token", out JsonElement accessTokenElement) ? accessTokenElement.GetString() ?? "" : "";
         string refresh_token = root.TryGetProperty("refresh_token", out JsonElement refreshTokenElement) ? refreshTokenElement.GetString() ?? "" : "";
 
+        // Capture the IdP-reported lifetime so the session can set a real expiry
+        // instead of assuming 1h. Absent/zero → session keeps its 1h fallback.
+        _expiresInSeconds = ParseExpiresInSeconds(root);
+
         return (access_token, refresh_token);
+    }
+
+    // Reads the OAuth `expires_in` (seconds) from a token response body. RFC 6749
+    // specifies a JSON number, but a quoted numeric string ("3600") is also
+    // accepted so a non-conforming IdP's shorter-than-1h lifetime is honored
+    // rather than discarded into the 1h fallback. Returns 0 when the value is
+    // absent, non-numeric, or non-positive — which tells the session to use its
+    // conservative 1h fallback. Pure / static so it can be unit-tested without an
+    // HTTP round trip.
+    internal static int ParseExpiresInSeconds(JsonElement root)
+    {
+        if (!root.TryGetProperty("expires_in", out JsonElement el))
+            return 0;
+
+        // TryGetInt32 THROWS on a non-number element, so branch on ValueKind and
+        // parse a quoted value explicitly (invariant — `expires_in` is digits only).
+        int seconds = el.ValueKind switch
+        {
+            JsonValueKind.Number when el.TryGetInt32(out int n) => n,
+            JsonValueKind.String when int.TryParse(el.GetString(),
+                System.Globalization.NumberStyles.Integer,
+                System.Globalization.CultureInfo.InvariantCulture, out int n) => n,
+            _ => 0,
+        };
+
+        return seconds > 0 ? seconds : 0;
     }
 
     private static string RandomString(int length)
