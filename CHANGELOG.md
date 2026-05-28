@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **CSV import for `Import-OrchQueueItem` and `Import-OrchTestDataQueueItem`** —
+  load queue items / test data queue items from a CSV file, matching the
+  Orchestrator web "Upload Items" behavior: web-parity 15,000-row cap and a
+  shared multi-line CSV parser (quoted fields may span lines). Test data queue
+  values are coerced per the queue's schema (integer/number invariant-parsed,
+  strings preserved).
+
 ## [1.5.3] - 2026-05-21
 
 Adds `New-OrchWebhook` and `Get-OrchTestSetDetail`, extends `-ExportCsv`
