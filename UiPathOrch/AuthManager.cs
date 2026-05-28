@@ -533,10 +533,21 @@ internal class OrchestratorAuthManager
                 }
             }, cts);
 
+            // Abort a stalled PKCE wait so the cmdlet can't hang indefinitely.
+            // When Identity leaves the browser on an error page (e.g. a partition
+            // mismatch) it never redirects back to the local listener, so
+            // GetContextAsync never returns. Interactive users can Ctrl+C (handled
+            // below); the 3-minute timeout covers non-interactive contexts
+            // (CI / automation) where no Ctrl+C ever arrives. On timeout Wait
+            // returns false and the finally still runs Stop()/Close(), freeing the
+            // port and unwinding the listener task.
+            const int pkceTimeoutMs = 3 * 60 * 1000;
+            bool completed = false;
             try
             {
-                // Block the main thread until the task completes or is canceled
-                listeningTask.Wait(cts);
+                // Block the main thread until the task completes, is canceled
+                // (Ctrl+C), or the timeout elapses.
+                completed = listeningTask.Wait(pkceTimeoutMs, cts);
             }
             catch (OperationCanceledException oce)
             {
@@ -590,6 +601,22 @@ internal class OrchestratorAuthManager
                 }
 
                 listener.Close();
+            }
+
+            if (!completed)
+            {
+                // Timed out: not Ctrl+C, not completed -- the browser never called
+                // back. The finally above already stopped/closed the listener and
+                // freed the port; surface an actionable terminating error rather
+                // than let the caller proceed unauthenticated (which returns
+                // misleading empty results).
+                throw new InvalidOperationException(
+                    "PKCE sign-in timed out after 3 minutes (no browser callback received). "
+                    + "If the browser was left on a sign-in error page (e.g. "
+                    + "An unknown error has occurred. (#200)), "
+                    + "copy that page's full URL from the address bar, "
+                    + "run `cd $HOME`, then "
+                    + "`Resolve-OrchAuthError '<url>'`.");
             }
 
             if (capturedException is not null)
