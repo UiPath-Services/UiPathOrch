@@ -123,19 +123,14 @@ public class GetAssetCmdlet : OrchestratorPSCmdlet
 
             // Description is written on the first row of each asset only; subsequent rows leave
             // the column empty. See SetCredentialAsset.MergeDescription for the importer rule.
-            var line = new StringBuilder();
             bool isDescriptionOut = false;
 
             if (!string.IsNullOrEmpty(asset.Value))
             {
                 isDescriptionOut = true;
-                line.Append($"{EscapeCsvValue(asset.Path, true)},");
-                line.Append($"{EscapeCsvValue(asset.Name, true)},");
-                line.Append($"{asset.Description!},");
-                line.Append($"{EscapeCsvValue(credentialStore, true)},,,");
-                line.Append($"{asset.CredentialUsername},,");
-                line.Append($"{asset.ExternalName}");
-                writer.WriteLine(line.ToString());
+                writer.WriteCsvLine(BuildCredentialCsvRow(
+                    asset.Path, asset.Name, asset.Description, credentialStore,
+                    null, null, asset.CredentialUsername, asset.ExternalName));
             }
 
             if (asset.UserValues is not null)
@@ -148,28 +143,37 @@ public class GetAssetCmdlet : OrchestratorPSCmdlet
                         credentialStore = credentialStores.FirstOrDefault(cs => cs.Id == userValue.CredentialStoreId)?.Name ?? "";
                     }
 
-                    line = new StringBuilder();
-                    line.Append($"{EscapeCsvValue(userValue.Path, true)},");
-                    line.Append($"{EscapeCsvValue(asset.Name, true)},");
-                    if (isDescriptionOut)
-                    {
-                        line.Append(",");
-                    }
-                    else
-                    {
-                        isDescriptionOut = true;
-                        line.Append($"{asset.Description!},");
-                    }
-                    line.Append($"{EscapeCsvValue(credentialStore, true)},");
-                    line.Append($"{EscapeCsvValue(userValue.UserName, true)},");
-                    line.Append($"{EscapeCsvValue(userValue.MachineName, true)},");
-                    line.Append($"{userValue.CredentialUsername!},,");
-                    line.Append($"{userValue.ExternalName}");
-                    writer.WriteLine(line.ToString());
+                    string? description = isDescriptionOut ? "" : asset.Description;
+                    isDescriptionOut = true;
+
+                    writer.WriteCsvLine(BuildCredentialCsvRow(
+                        userValue.Path, asset.Name, description, credentialStore,
+                        userValue.UserName, userValue.MachineName, userValue.CredentialUsername, userValue.ExternalName));
                 }
             }
         }
     }
+
+    // Builds one credential-CSV row in CsvCredentialHeaders column order: Path, Name,
+    // Description, CredentialStore, UserName, MachineName, CredentialUsername,
+    // CredentialPassword, ExternalName. CredentialPassword is always empty (passwords are
+    // never exported). Pure / static so the per-field escaping is unit-testable without a
+    // live drive — the credential-store NAME lookup (which needs SessionState) is resolved
+    // by the caller and passed in as credentialStore.
+    internal static string?[] BuildCredentialCsvRow(
+        string? path, string? name, string? description, string? credentialStore,
+        string? userName, string? machineName, string? credentialUsername, string? externalName)
+        => [
+            EscapeCsvValue(path, true),
+            EscapeCsvValue(name, true),
+            EscapeCsvValue(description),
+            EscapeCsvValue(credentialStore, true),
+            EscapeCsvValue(userName, true),
+            EscapeCsvValue(machineName, true),
+            EscapeCsvValue(credentialUsername),
+            "",
+            EscapeCsvValue(externalName),
+        ];
 
     protected override void ProcessRecord()
     {
