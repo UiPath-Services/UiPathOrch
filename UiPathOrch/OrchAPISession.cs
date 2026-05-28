@@ -119,6 +119,30 @@ public partial class OrchAPISession : IDisposable
             ret = hc.Send(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             resTime = DateTime.Now;
 
+            // Primary ApiVersion discovery: read the `api-supported-versions`
+            // response header (always present on Orchestrator responses, no
+            // scope dependency). Set on the very first API response in the
+            // session so subsequent per-version routing decisions see it.
+            // The fallback path in EnsureAuthenticated (GetActivitySettings,
+            // gated on OR.Settings scope) remains as defense-in-depth; the
+            // `ApiVersion is null` guard there means it only runs when this
+            // primary path didn't fire (e.g. on a hypothetical Orchestrator
+            // version that omits the header). Benign race: concurrent first
+            // responses converge on the same value.
+            if (ApiVersion is null && ret.Headers.TryGetValues("api-supported-versions", out var apiVersionHeaders))
+            {
+                double max = 0;
+                foreach (var entry in apiVersionHeaders)
+                {
+                    foreach (var token in entry.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+                    {
+                        if (double.TryParse(token, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double n) && n > max)
+                            max = n;
+                    }
+                }
+                if (max > 0) ApiVersion = max;
+            }
+
             // Buffer response body when the async logger will need to read it,
             // preventing "stream already consumed" race between caller and logger.
             if (logEnabled && httpClient == null && ret.Content != null)
