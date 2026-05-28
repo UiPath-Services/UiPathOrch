@@ -78,7 +78,7 @@ public class CopyTriggerCmdlet : OrchestratorPSCmdlet
             catch (Exception ex)
             {
                 string target = dstFolder.GetPSPath();
-                WriteError(new ErrorRecord(new OrchException(target, ex), "CopyQueueError", ErrorCategory.InvalidOperation, dstFolder));
+                WriteError(new ErrorRecord(new OrchException(target, ex), "CopyTriggerError", ErrorCategory.InvalidOperation, dstFolder));
             }
         }
     }

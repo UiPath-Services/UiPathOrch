@@ -184,7 +184,7 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
             catch (Exception ex)
             {
                 string target = dstFolder.GetPSPath();
-                WriteError(new ErrorRecord(new OrchException(target, ex), "CopyQueueError", ErrorCategory.InvalidOperation, target));
+                WriteError(new ErrorRecord(new OrchException(target, ex), "CopyQueueItemError", ErrorCategory.InvalidOperation, target));
             }
         }
     }

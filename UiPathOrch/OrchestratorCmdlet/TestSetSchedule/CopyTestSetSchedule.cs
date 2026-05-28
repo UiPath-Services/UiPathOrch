@@ -75,7 +75,7 @@ public class CopyTestSetScheduleCmdlet : OrchestratorPSCmdlet
             catch (Exception ex)
             {
                 string target = dstFolder.GetPSPath();
-                WriteError(new ErrorRecord(new OrchException(target, ex), "CopyTestScheduleError", ErrorCategory.InvalidOperation, dstFolder));
+                WriteError(new ErrorRecord(new OrchException(target, ex), "CopyTestSetScheduleError", ErrorCategory.InvalidOperation, dstFolder));
             }
         }
     }
