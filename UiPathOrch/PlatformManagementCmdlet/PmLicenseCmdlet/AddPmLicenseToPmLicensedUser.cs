@@ -15,9 +15,9 @@ namespace UiPath.PowerShell.Commands;
 // fold into a single request. The PUT is atomic-replace (matches the Portal
 // "Licenses > Users" UI), so we merge the user's existing
 // userBundleLicenses with the new codes before submitting.
-[Cmdlet(VerbsCommon.Add, "PmLicenseToPmUser", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Add, "PmLicenseToPmLicensedUser", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.NuLicensedUser))]
-public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
+public class AddPmLicenseToPmLicensedUserCmdlet : OrchestratorPSCmdlet
 {
     // Per (drive, userId): the pre-existing licensed-user record (if any), the
     // bundle codes to add, and a friendly label used for ShouldProcess targets
@@ -272,7 +272,7 @@ public class AddPmLicenseToPmUserCmdlet : OrchestratorPSCmdlet
             {
                 WriteError(new ErrorRecord(
                     new OrchException(target, ex),
-                    "AddPmLicenseToPmUserError", ErrorCategory.InvalidOperation, target));
+                    "AddPmLicenseToPmLicensedUserError", ErrorCategory.InvalidOperation, target));
                 continue;
             }
         }

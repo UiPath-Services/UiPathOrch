@@ -94,11 +94,12 @@ public class ModuleManifestSanityTests
         "Get-OrchConnection",
         // Test Manager (Tm) auxiliary cmdlets — not part of the public surface.
         "Get-TmDefect", "Get-TmRole", "Get-TmTestExecutionResult",
-        // Platform Management licensing helper — incomplete: the actual
-        // license-assignment logic (using the -License parameter) is
-        // commented out; the cmdlet only adds the user to the licensed-
-        // user list. Do not export until the assignment half is finished.
-        "Add-PmLicenseToPmUser",
+        // Platform Management licensing helper — implementation complete
+        // (PUT /UserLicense with userIds + licenseCodes, ShouldProcess gated),
+        // held back from the public surface until the PUT is live-verified on
+        // a test tenant. Remove from this allowlist and add to
+        // CmdletsToExport in the psd1 once verified.
+        "Add-PmLicenseToPmLicensedUser",
         // Classic robot enable — incomplete implementation; Classic robots deprecated.
         "Enable-OrchClassicRobot",
     };
