@@ -54,7 +54,8 @@ public class PmGroupMembersCache : ITenantCacheClearable
     /// </summary>
     public IDictionary<string, PmGroupMember?> GetMany(string kind, IEnumerable<string> names)
     {
-        var partitionGlobalId = _drive.PartitionGlobalId;
+        // Data-fetch path: force the partition lookup (the property is passive).
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
         if (string.IsNullOrEmpty(partitionGlobalId)) return new Dictionary<string, PmGroupMember?>();
 
         _exceptions.ThrowCachedExceptionIfAny(partitionGlobalId);

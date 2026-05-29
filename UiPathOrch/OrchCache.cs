@@ -192,7 +192,10 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
     public IEnumerable<T> Get()
     {
-        var partitionGlobalId = _drive.PartitionGlobalId;
+        // Data-fetch path: force the partition lookup. The PartitionGlobalId
+        // property is passive (returns null until populated) so a Get() at
+        // session start would silently yield nothing instead of authenticating.
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
         if (string.IsNullOrEmpty(partitionGlobalId)) yield break;
 
         _exception.ThrowCachedExceptionIfAny(partitionGlobalId);
@@ -254,7 +257,8 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
         if (string.IsNullOrEmpty(id)) return default;
 
-        var partitionGlobalId = _drive.PartitionGlobalId!;
+        // Data-fetch path: force the partition lookup (the property is passive).
+        var partitionGlobalId = _drive.GetPartitionGlobalId()!;
 
         _exceptionDetailed.ThrowCachedExceptionIfAny((partitionGlobalId, id));
 
@@ -292,7 +296,8 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
     public void Set(T t)
     {
-        var partitionGlobalId = _drive.PartitionGlobalId;
+        // Data-fetch path: force the partition lookup (the property is passive).
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
         var id = _getterId?.Invoke(t);
         if (string.IsNullOrEmpty(partitionGlobalId) || string.IsNullOrEmpty(id)) return;
 
@@ -387,7 +392,8 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
 
     public T? Get()
     {
-        var partitionGlobalId = _drive.PartitionGlobalId;
+        // Data-fetch path: force the partition lookup (the property is passive).
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
         if (string.IsNullOrEmpty(partitionGlobalId)) return null;
 
         _exception.ThrowCachedExceptionIfAny(partitionGlobalId);
@@ -831,7 +837,8 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
     {
         if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom) return default;
 
-        var partitionGlobalId = _drive.PartitionGlobalId;
+        // Data-fetch path: force the partition lookup (the property is passive).
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
         if (string.IsNullOrEmpty(partitionGlobalId)) return default;
 
         var compositeKey = (partitionGlobalId, key);
@@ -935,7 +942,8 @@ public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearabl
             return new List<TEntity>().AsReadOnly();
         }
 
-        var partitionGlobalId = _drive.PartitionGlobalId;
+        // Data-fetch path: force the partition lookup (the property is passive).
+        var partitionGlobalId = _drive.GetPartitionGlobalId();
         if (string.IsNullOrEmpty(partitionGlobalId))
         {
             return new List<TEntity>().AsReadOnly();

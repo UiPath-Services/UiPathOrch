@@ -49,11 +49,20 @@ public abstract class OrchDriveInfoBase : PSDriveInfo
     // OrchDuDriveInfo / OrchTmDriveInfo delegate to ParentDrive so they share
     // the same org identifier as the underlying Orch drive.
     //
-    // Callers that must not trigger auth (e.g., Clear-OrchCache scanning every
-    // registered drive) should first gate on `IsAuthenticated` -- reading
-    // PartitionGlobalId on an unauthenticated drive would trigger the same
-    // PKCE / API fallback path used by data-fetch cmdlets.
+    // PASSIVE: returns the cached value (null if the drive has never authed).
+    // Safe to read from cleanup paths (Clear-OrchCache, Import-OrchConfig's
+    // drive teardown, etc.) without provoking PKCE on drives the user hasn't
+    // touched yet. Callers that need to force the lookup (data-fetch paths)
+    // must call <see cref="GetPartitionGlobalId"/> instead.
     internal abstract string? PartitionGlobalId { get; }
+
+    // ACTIVE: returns the partition id, lazily fetching it from the JWT
+    // (cheap) or the Users API (triggers auth) on the first call. Use from
+    // data-fetch paths where the caller is already committed to issuing
+    // API calls; never from cache cleanup, where the regression that drove
+    // this split lives -- ClearCache on an unauthed drive was firing PKCE
+    // because PartitionGlobalId was doing the fetch.
+    internal abstract string? GetPartitionGlobalId();
 
     // Auth-state probe that never triggers a token request. True iff the
     // AuthManager already holds an access token from a prior cmdlet (or from
