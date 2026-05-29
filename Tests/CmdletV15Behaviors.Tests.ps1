@@ -280,14 +280,17 @@ Describe 'v1.5.3: New-OrchWebhook + Get-OrchWebhook -ExportCsv' {
         $name = "${script:Prefix}webhook-rt"
         $csv  = Join-Path $env:TEMP "${script:Prefix}webhook-rt.csv"
         try {
-            # -SubscribeToAllEvents false: the round-trip flips Enabled to true
-            # below; an enabled subscribe-to-all webhook on a fake URL would
-            # fire, fail delivery, auto-disable, and email the admin. Subscribing
-            # to no events keeps it inert regardless of Enabled. (CSV column
-            # presence, not value, is what's asserted, so this is safe.)
+            # -SubscribeToAllEvents false + -Events <one rare event>: the
+            # round-trip flips Enabled to true below; an enabled subscribe-to-all
+            # webhook on a fake URL would fire on every tenant event, fail
+            # delivery, auto-disable, and email the admin. Subscribing to a
+            # single quiet event keeps it inert in practice. (The server now
+            # rejects empty -Events when SubscribeToAllEvents=false, so we
+            # must specify at least one; CSV column presence, not value, is
+            # what's asserted, so any valid event works.)
             New-OrchWebhook -Path "${script:TargetDrive}:" -Name $name `
                 -Url 'https://example.invalid/initial' -Description 'initial' -Enabled $false `
-                -SubscribeToAllEvents false `
+                -SubscribeToAllEvents false -Events 'process.created' `
                 -ErrorAction Stop | Out-Null
 
             Get-OrchWebhook -Path "${script:TargetDrive}:" -Name $name -ExportCsv $csv | Out-Null
