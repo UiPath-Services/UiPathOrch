@@ -45,7 +45,7 @@ public class RemovePmLicenseFromPmLicensedUserCmdlet : OrchestratorPSCmdlet
     // that can have anything removed.
     private class UserNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -78,7 +78,7 @@ public class RemovePmLicenseFromPmLicensedUserCmdlet : OrchestratorPSCmdlet
     // Falls back to a hint when -Email isn't bound yet.
     private class LicenseCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

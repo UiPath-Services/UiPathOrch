@@ -38,7 +38,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
 
     internal class PackageFeedFolderCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -102,7 +102,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
 
     private class PathCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

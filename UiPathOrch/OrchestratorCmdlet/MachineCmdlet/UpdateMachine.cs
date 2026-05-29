@@ -89,7 +89,7 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
     // Dedicated to machine Tags
     private class TagsCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

@@ -63,7 +63,7 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
 
     private class RuntimeTypeCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -103,7 +103,7 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
                    || type == typeof(decimal);
         }
 
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

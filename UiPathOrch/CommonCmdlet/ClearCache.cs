@@ -56,7 +56,7 @@ public class ClearCacheCmdlet : PSCmdlet
     // folder enumeration here would be expensive and noisy.
     public class Position0AllDriveCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

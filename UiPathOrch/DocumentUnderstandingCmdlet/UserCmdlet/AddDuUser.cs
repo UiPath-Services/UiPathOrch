@@ -51,7 +51,7 @@ public class AddDuRoleToDuUserCmdlet : OrchestratorPSCmdlet
     //{
     //    //  0: User, 1: Group, 2: Machine, 3: Robot, 4: ExternalApplication
 
-    //    public override IEnumerable<CompletionResult> CompleteArgument(
+    //    public override IEnumerable<CompletionResult> CompleteArgumentCore(
     //        string commandName,
     //        string parameterName,
     //        string wordToComplete,
@@ -107,7 +107,7 @@ public class AddDuRoleToDuUserCmdlet : OrchestratorPSCmdlet
     // This RoleCompleter only enumerates roles that are NOT assigned to the user
     private class RoleCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

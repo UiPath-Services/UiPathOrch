@@ -33,7 +33,7 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
 
     private class SearchGroupNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -80,7 +80,7 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
 
     private class LicenseCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

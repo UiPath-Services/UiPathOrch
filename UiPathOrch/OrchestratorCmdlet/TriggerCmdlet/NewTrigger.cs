@@ -147,7 +147,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
 
     private class NewTriggerNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -169,7 +169,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
     // For Update-OrchTrigger, displaying the current values would be more user-friendly, so this implementation is not shared.
     private class ExecutorRobotsCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -224,7 +224,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
             return JsonSerializer.Serialize(ret, JsonTools.jsoOneLine);
         }
 
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

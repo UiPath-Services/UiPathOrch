@@ -26,7 +26,7 @@ public class AddMachineClientSecretCmdlet : OrchestratorPSCmdlet
     // to generalize this more broadly.
     private class MachineNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

@@ -59,7 +59,7 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
             return groups.All(g => IsMemberOf(g, user));
         }
 
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

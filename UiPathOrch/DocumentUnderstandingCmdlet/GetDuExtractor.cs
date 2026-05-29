@@ -27,7 +27,7 @@ public class GetDuExtractorCmdlet : OrchestratorPSCmdlet
 
     private class ExtractorNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

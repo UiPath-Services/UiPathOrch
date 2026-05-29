@@ -44,7 +44,7 @@ public class AddRoleToFolderUserCmdlet : OrchestratorPSCmdlet
     // TODO: It would be better to create a FolderUserUserNameCompleter class.
     private class UserNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -85,7 +85,7 @@ public class AddRoleToFolderUserCmdlet : OrchestratorPSCmdlet
 
     private class FullNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -126,7 +126,7 @@ public class AddRoleToFolderUserCmdlet : OrchestratorPSCmdlet
 
     private class RolesCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

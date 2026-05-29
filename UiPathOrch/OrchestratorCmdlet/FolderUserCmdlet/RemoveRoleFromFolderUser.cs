@@ -44,7 +44,7 @@ public class RemoveRoleFromFolderUserCmdlet : OrchestratorPSCmdlet
 
     private class FolderUserUserNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -89,7 +89,7 @@ public class RemoveRoleFromFolderUserCmdlet : OrchestratorPSCmdlet
 
     private class FolderUserFullNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -134,7 +134,7 @@ public class RemoveRoleFromFolderUserCmdlet : OrchestratorPSCmdlet
 
     private class RolesCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

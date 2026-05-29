@@ -24,7 +24,7 @@ public class EnableApiTriggerCmdletBase<Enable> : OrchestratorPSCmdlet where Ena
     // This cannot be shared because it only enumerates disabled API triggers
     internal class NameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

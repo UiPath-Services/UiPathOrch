@@ -81,7 +81,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
 
     private class LevelCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -109,7 +109,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
 
     private class MachineCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -141,7 +141,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
 
     private class WindowsIdentityCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -174,7 +174,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
 
     private class JobKeyCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

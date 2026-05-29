@@ -29,7 +29,7 @@ public class GetPmLicense : OrchestratorPSCmdlet
 
     private class LicenseCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -62,7 +62,7 @@ public class GetPmLicense : OrchestratorPSCmdlet
 
     private class CodeCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

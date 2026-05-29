@@ -27,7 +27,7 @@ public class RemovePersonalWorkspaceCmdlet : OrchestratorPSCmdlet
 
     private class NameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -60,7 +60,7 @@ public class RemovePersonalWorkspaceCmdlet : OrchestratorPSCmdlet
 
     private class OwnerNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

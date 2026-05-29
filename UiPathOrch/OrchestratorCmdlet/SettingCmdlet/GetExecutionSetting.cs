@@ -34,7 +34,7 @@ public class GetExecutionSettingCmdlet : OrchestratorPSCmdlet
 
     private class ScopeCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -58,7 +58,7 @@ public class GetExecutionSettingCmdlet : OrchestratorPSCmdlet
 
     private class DisplayNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

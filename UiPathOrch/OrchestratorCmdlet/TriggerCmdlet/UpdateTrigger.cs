@@ -150,7 +150,7 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
     // For New-OrchTrigger, showing all available users would be more user-friendly, so this implementation is not shared.
     private class ExecutorRobotsCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -193,7 +193,7 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
 
     internal class MachineRobotsCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

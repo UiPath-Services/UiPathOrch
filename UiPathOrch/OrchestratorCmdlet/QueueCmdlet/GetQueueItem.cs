@@ -105,7 +105,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
 
     private class RobotCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -143,7 +143,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
 
     private class ReviewerCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

@@ -31,7 +31,7 @@ public class ExportPackageCmdlet : OrchestratorPSCmdlet
 
     private class IdCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -72,7 +72,7 @@ public class ExportPackageCmdlet : OrchestratorPSCmdlet
 
     private class VersionCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

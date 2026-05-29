@@ -63,7 +63,7 @@ public class GetAuditLogCmdlet : OrchestratorPSCmdlet
 
     private class IdCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -100,7 +100,7 @@ public class GetAuditLogCmdlet : OrchestratorPSCmdlet
 
     private class UserNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

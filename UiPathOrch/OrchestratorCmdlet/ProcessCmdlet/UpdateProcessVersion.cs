@@ -36,7 +36,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
 
     private class NameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -82,7 +82,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
 
     private class IdCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -128,7 +128,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
 
     private class VersionCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

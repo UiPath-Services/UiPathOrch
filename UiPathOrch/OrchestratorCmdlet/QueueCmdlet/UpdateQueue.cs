@@ -97,7 +97,7 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
     // Dedicated to queue Tags
     private class TagsCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

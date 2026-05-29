@@ -27,7 +27,7 @@ public class EnableFolderMachineAccountMappingCmdletBase<Enable> : OrchestratorP
     // Only enumerate folder machines that are not PropagateToSubFolders
     internal class FolderMachineNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -59,7 +59,7 @@ public class EnableFolderMachineAccountMappingCmdletBase<Enable> : OrchestratorP
 
     internal class UserNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

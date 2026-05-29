@@ -25,7 +25,7 @@ public class EnableMaintenanceModeCmdletBase<Enable> : OrchestratorPSCmdlet wher
 
     internal class MachineNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -68,7 +68,7 @@ public class EnableMaintenanceModeCmdletBase<Enable> : OrchestratorPSCmdlet wher
 
     internal class HostMachineNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -111,7 +111,7 @@ public class EnableMaintenanceModeCmdletBase<Enable> : OrchestratorPSCmdlet wher
 
     internal class ServiceUserNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -154,7 +154,7 @@ public class EnableMaintenanceModeCmdletBase<Enable> : OrchestratorPSCmdlet wher
 
     internal class SessionIdCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

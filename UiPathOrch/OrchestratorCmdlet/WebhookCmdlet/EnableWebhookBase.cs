@@ -19,7 +19,7 @@ public class EnableWebhookCmdletBase<Enable> : OrchestratorPSCmdlet where Enable
     // This only enumerates disabled Webhooks, so it cannot be shared.
     internal class NameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

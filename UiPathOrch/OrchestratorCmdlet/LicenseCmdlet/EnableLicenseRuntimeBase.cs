@@ -21,7 +21,7 @@ public class EnableLicenseRuntimeCmdletBase<Enable> : OrchestratorPSCmdlet where
 
     internal class KeyCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

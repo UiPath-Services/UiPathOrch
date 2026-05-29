@@ -161,7 +161,7 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
 
     internal class PackageVersionCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -197,7 +197,7 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
 
     private class EntryPointCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -233,7 +233,7 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
 
     private class InputArgumentsCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -280,7 +280,7 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
     // Dedicated to process Tags
     private class TagsCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

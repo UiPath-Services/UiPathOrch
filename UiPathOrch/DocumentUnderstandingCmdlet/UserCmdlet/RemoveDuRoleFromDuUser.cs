@@ -44,7 +44,7 @@ public class RemoveDuRoleFromDuUserCmdlet : OrchestratorPSCmdlet
     // This RoleCompleter only enumerates roles that are assigned to the user
     private class RoleCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

@@ -93,7 +93,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
     // Cannot be shared because non-existent assets are displayed as "New asset name here"
     private class NameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -131,7 +131,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
 
     private class UserNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -167,7 +167,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
 
     private class MachineNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -202,7 +202,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
 
     private class CredentialUsernameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -215,7 +215,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
 
     private class CredentialPasswordCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -228,7 +228,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
 
     private class DescriptionCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

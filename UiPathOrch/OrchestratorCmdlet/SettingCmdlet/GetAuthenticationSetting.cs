@@ -23,7 +23,7 @@ public class GetAuthenticationSettingCmdlet : OrchestratorPSCmdlet
 
     private class KeyCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

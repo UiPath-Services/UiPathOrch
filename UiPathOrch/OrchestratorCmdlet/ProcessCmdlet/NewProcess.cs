@@ -157,7 +157,7 @@ public class NewProcessCmdlet : OrchestratorPSCmdlet
 
     private class EntryPointCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -204,7 +204,7 @@ public class NewProcessCmdlet : OrchestratorPSCmdlet
 
     private class InputArgumentsCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

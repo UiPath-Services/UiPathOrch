@@ -18,7 +18,51 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
 {
     protected static SessionState? SessionState => OrchDriveInfo.SessionState;
 
-    public abstract IEnumerable<CompletionResult> CompleteArgument(string commandName, string parameterName, string wordToComplete, CommandAst commandAst, IDictionary fakeBoundParameters);
+    // Argument completers must never throw. PowerShell invokes them on the
+    // PSReadLine thread during <Tab>, and most completers do blocking network
+    // I/O via drive.<cache>.Get(...), which can re-throw a cached OrchException
+    // or surface a transient auth/HTTP failure (ParallelResults.GroupBy rethrows
+    // as AggregateException). An escaped exception lands as a raw error in the
+    // user's prompt instead of "no completions". This sealed wrapper enumerates
+    // the derived CompleteArgumentCore defensively and yields nothing on failure.
+    // Cancellation is intentionally propagated, not swallowed.
+    public IEnumerable<CompletionResult> CompleteArgument(string commandName, string parameterName, string wordToComplete, CommandAst commandAst, IDictionary fakeBoundParameters)
+    {
+        IEnumerator<CompletionResult>? e = null;
+        try
+        {
+            e = CompleteArgumentCore(commandName, parameterName, wordToComplete, commandAst, fakeBoundParameters).GetEnumerator();
+        }
+        catch (OperationCanceledException) { throw; }
+        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Completer {GetType().Name} threw before enumeration: {ex.Message}"); }
+
+        if (e is null) yield break;
+
+        using (e)
+        {
+            while (true)
+            {
+                CompletionResult current;
+                try
+                {
+                    if (!e.MoveNext()) break;
+                    current = e.Current;
+                }
+                catch (OperationCanceledException) { throw; }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Completer {GetType().Name} threw during enumeration: {ex.Message}");
+                    break;
+                }
+                yield return current;
+            }
+        }
+    }
+
+    // Produces the completion candidates. May throw / may do network I/O; the
+    // public CompleteArgument wrapper above contains any failure so tab-completion
+    // degrades to "no completions" rather than erroring in the prompt.
+    public abstract IEnumerable<CompletionResult> CompleteArgumentCore(string commandName, string parameterName, string wordToComplete, CommandAst commandAst, IDictionary fakeBoundParameters);
 
     protected static string? GetFakeBoundParameter(IDictionary fakeBoundParameters, string parameterName)
     {
@@ -741,7 +785,7 @@ internal abstract class FolderScopedCompleter<TEntity> : OrchArgumentCompleter
         CommandAst commandAst, IDictionary fakeBoundParameters)
         => ResolvePath(commandAst, fakeBoundParameters);
 
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName, string parameterName, string wordToComplete,
         CommandAst commandAst, IDictionary fakeBoundParameters)
     {
@@ -779,7 +823,7 @@ public abstract class DriveScopedCompleter<TEntity> : OrchArgumentCompleter
     protected virtual List<OrchDriveInfo> ResolveDrives(IDictionary fakeBoundParameters)
         => ResolveOrchDrives(fakeBoundParameters);
 
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName, string parameterName, string wordToComplete,
         CommandAst commandAst, IDictionary fakeBoundParameters)
     {
@@ -839,7 +883,7 @@ internal class EventTriggerNameCompleter : FolderScopedCompleter<ApiTrigger>
 
 internal class AssetNameCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -875,7 +919,7 @@ internal class AssetNameCompleter : OrchArgumentCompleter
 
 internal class AssetValueTypeCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -969,7 +1013,7 @@ internal abstract class LinkedEntityNameCompleter<TEntity> : EntityLinkCompleter
 {
     protected abstract string GetTipHelp(TEntity entity);
 
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1011,7 +1055,7 @@ internal abstract class LinkedEntityNameCompleter<TEntity> : EntityLinkCompleter
 internal abstract class EntityLinkFolderCompleter<TEntity> : EntityLinkCompleterBase<TEntity>
     where TEntity : class
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1104,7 +1148,7 @@ internal class BucketNameCompleter<WritableOnly> : FolderScopedCompleter<Bucket>
 
 internal class BucketFullPathCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1183,7 +1227,7 @@ internal class MachineNameCompleter : DriveScopedCompleter<ExtendedMachine>
 
 internal class MachineRobotUsersCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1214,7 +1258,7 @@ internal class MachineRobotUsersCompleter : OrchArgumentCompleter
 
 internal class LibraryIdCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1250,7 +1294,7 @@ internal class LibraryIdCompleter : OrchArgumentCompleter
 
 internal class LibraryVersionCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1298,7 +1342,7 @@ internal class LibraryVersionCompleter : OrchArgumentCompleter
 
 internal class PackageIdCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1335,7 +1379,7 @@ internal class PackageIdCompleter : OrchArgumentCompleter
 
 internal class PackageVersionCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1398,7 +1442,7 @@ internal class QueueNameCompleter : FolderScopedCompleter<QueueDefinition>
 // nested completers.
 internal class JobIdCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1456,7 +1500,7 @@ public abstract class TenantUserDualFieldCompleterBase : OrchArgumentCompleter
     protected abstract Func<User, string?> SelfField { get; }
     protected abstract Func<User, string?> OtherField { get; }
 
-    public sealed override IEnumerable<CompletionResult> CompleteArgument(
+    public sealed override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1514,7 +1558,7 @@ public class TenantUserFullNameCompleter : TenantUserDualFieldCompleterBase
 
 internal class TimeZoneCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1538,7 +1582,7 @@ internal class TimeZoneCompleter : OrchArgumentCompleter
 // `-TimeZone`-named ones that get resolved name→id at submit time.
 internal class TimeZoneIdCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1567,7 +1611,7 @@ internal class TriggerNameCompleter : FolderScopedCompleter<ProcessSchedule>
 
 internal class UpdatePolicyVersionCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1626,7 +1670,7 @@ internal class TaskTitleCompleter : FolderScopedCompleter<OrchTask>
 
 internal class PmDirectoryNameCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1674,7 +1718,7 @@ internal class PmDirectoryNameCompleter : OrchArgumentCompleter
 
 internal class PmDirectoryNameCompleter4Du : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1717,7 +1761,7 @@ internal class PmDirectoryNameCompleter4Du : OrchArgumentCompleter
 
 internal class UserNameInPmGroupCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1773,7 +1817,7 @@ internal class UserNameInPmGroupCompleter : OrchArgumentCompleter
 
 internal class TypeInPmGroupCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1806,7 +1850,7 @@ internal class TypeInPmGroupCompleter : OrchArgumentCompleter
 
 internal class ExternalApplicationNameCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1885,7 +1929,7 @@ internal class TestSetNameCompleter : FolderScopedCompleter<TestSet>
 /// </summary>
 internal class TestSetExecutionNameCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1925,7 +1969,7 @@ internal class TestSetExecutionNameCompleter : OrchArgumentCompleter
 /// </summary>
 internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -1987,7 +2031,7 @@ internal class TestCaseExecutionIdCompleter : OrchArgumentCompleter
 /// </summary>
 internal class TestCaseExecutionEntryPointCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -2094,7 +2138,7 @@ internal abstract class TmProjectScopedCompleter<TEntity> : OrchArgumentComplete
     protected virtual string GetTipHelp(TEntity entity) => GetName(entity);
     protected virtual CompletionResultType ResultType => CompletionResultType.Text;
 
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName, string parameterName, string wordToComplete,
         CommandAst commandAst, IDictionary fakeBoundParameters)
     {
@@ -2159,7 +2203,7 @@ internal class TmTestExecutionNameCompleter : TmProjectScopedCompleter<TmTestExe
 
 internal class StaticTextsCompleter<TItems> : OrchArgumentCompleter where TItems : IStaticCandidates
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -2184,7 +2228,7 @@ internal class BoolCompleter : StaticTextsCompleter<True_False> { }
 // key is always a string
 internal class KeyOfDictionaryCompleter<TItems, TValue> : OrchArgumentCompleter where TItems : IDictionaryItems<TValue>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -2210,7 +2254,7 @@ internal class KeyOfDictionaryCompleter<TItems, TValue> : OrchArgumentCompleter 
 // value is always a string
 internal class ValueOfDictionaryCompleter<TItems> : OrchArgumentCompleter where TItems : IDictionaryItems<string>
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -2235,7 +2279,7 @@ internal class ValueOfDictionaryCompleter<TItems> : OrchArgumentCompleter where 
 // This parameter only accepts a single value, so there is no need to consider positional parameters.
 internal class TimeAfterCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -2250,7 +2294,7 @@ internal class TimeAfterCompleter : OrchArgumentCompleter
 // This parameter only accepts a single value, so there is no need to consider positional parameters.
 internal class TimeBeforeCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -2264,7 +2308,7 @@ internal class TimeBeforeCompleter : OrchArgumentCompleter
 
 internal class OneWeekAfterCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -2279,7 +2323,7 @@ internal class OneWeekAfterCompleter : OrchArgumentCompleter
 
 public class DriveCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -2309,7 +2353,7 @@ public class DriveCompleter : OrchArgumentCompleter
 // Similar to DriveCompleter, but this has the ability to exclude the source drive.
 internal class DestinationDriveCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -2340,7 +2384,7 @@ internal class DestinationDriveCompleter : OrchArgumentCompleter
 
 internal class TmDriveCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -2368,7 +2412,7 @@ internal class TmDriveCompleter : OrchArgumentCompleter
 
 internal class DuNameCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,
@@ -2408,7 +2452,7 @@ internal class DuNameCompleter : OrchArgumentCompleter
 // Personally, neither option is acceptable.
 //internal class DuUserNameCompleter<TPositional> : OrchArgumentCompleter where TPositional : IStaticCandidates
 //{
-//    public override IEnumerable<CompletionResult> CompleteArgument(
+//    public override IEnumerable<CompletionResult> CompleteArgumentCore(
 //        string commandName,
 //        string parameterName,
 //        string wordToComplete,
@@ -2446,7 +2490,7 @@ internal class DuNameCompleter : OrchArgumentCompleter
 
 public class EncodingCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,

@@ -39,7 +39,7 @@ public class RemovePmLicensedUserCmdlet : OrchestratorPSCmdlet
     // confirming.
     private class UserNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

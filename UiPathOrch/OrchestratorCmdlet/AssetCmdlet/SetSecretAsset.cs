@@ -84,7 +84,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
 
     private class NameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -119,7 +119,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
 
     private class UserNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -150,7 +150,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
 
     private class MachineNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -179,7 +179,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
 
     private class SecretValueCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -192,7 +192,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
 
     private class ExternalNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
@@ -205,7 +205,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
 
     private class DescriptionCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

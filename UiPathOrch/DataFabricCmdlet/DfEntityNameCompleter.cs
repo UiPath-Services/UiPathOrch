@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Completer;
 // tab presses during typing do not re-hit the /api/Entity endpoint.
 public class DfEntityNameCompleter : OrchArgumentCompleter
 {
-    public override IEnumerable<CompletionResult> CompleteArgument(
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
         string wordToComplete,

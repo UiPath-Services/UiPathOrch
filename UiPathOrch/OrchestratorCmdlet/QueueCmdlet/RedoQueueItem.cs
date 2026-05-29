@@ -34,7 +34,7 @@ public class RedoQueueItemCmdlet : OrchestratorPSCmdlet
 
     internal class IdCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

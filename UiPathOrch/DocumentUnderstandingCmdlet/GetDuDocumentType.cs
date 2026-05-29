@@ -27,7 +27,7 @@ public class GetDuDocumentTypeCmdlet : OrchestratorPSCmdlet
 
     private class DocumentTypeNameCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,

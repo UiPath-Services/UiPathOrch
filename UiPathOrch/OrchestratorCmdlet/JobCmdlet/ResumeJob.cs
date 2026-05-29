@@ -34,7 +34,7 @@ public class ResumeJobCmdlet : OrchestratorPSCmdlet
     // Resume only applies to Suspended state.
     private class KeyCompleter : OrchArgumentCompleter
     {
-        public override IEnumerable<CompletionResult> CompleteArgument(
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,
             string parameterName,
             string wordToComplete,
