@@ -117,4 +117,17 @@ Get-OrchUser -Path $root -ErrorAction SilentlyContinue |
     Where-Object { $_.UserName -and $_.UserName -ne $currentUser -and $_.UserType -ne 'Robot' } |
     Remove-OrchUser -Confirm:$false -ErrorAction SilentlyContinue
 
+# Reset the target drive's cwd. Any folder the caller had cd'd into is now
+# deleted, and a stale cwd silently breaks downstream cmdlets that resolve
+# paths relative to it (notably Import-Fixture's link rows, which pipe
+# Path/Link via property-name binding through resolvers that consult the
+# current location for context). The PSDriveInfo object is registered in
+# the runspace, so mutating CurrentLocation here persists in the caller's
+# session for the next operation.
+$drv = Get-PSDrive -Name $TargetDrive -ErrorAction SilentlyContinue
+if ($drv -and $drv.CurrentLocation) {
+    Write-Host "Resetting cwd on ${TargetDrive}: from '$($drv.CurrentLocation)' to drive root (previous folder was wiped)"
+    $drv.CurrentLocation = ''
+}
+
 Write-Host "Done." -ForegroundColor Green
