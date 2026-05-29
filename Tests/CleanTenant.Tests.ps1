@@ -65,8 +65,10 @@ Describe 'Folders' {
 }
 
 Describe 'Processes' {
-    It 'returns 6 processes with -Recurse from root' {
-        (Get-OrchProcess -Path $script:Root -Recurse).Count | Should -Be 6
+    # 6 from processes.csv (BlankProcess19) + 1 from test-set fixture in
+    # Import-Fixture.ps1 (TestAutomation, required by the test-set seed).
+    It 'returns 7 processes with -Recurse from root (6 BlankProcess19 + 1 TestAutomation)' {
+        (Get-OrchProcess -Path $script:Root -Recurse).Count | Should -Be 7
     }
 
     It 'returns processes for a specific folder' {
@@ -76,8 +78,12 @@ Describe 'Processes' {
         $procs.Name | Should -Contain 'proc-blank-2'
     }
 
-    It 'all processes reference BlankProcess19 v1.0.3' {
-        $procs = Get-OrchProcess -Path $script:Root -Recurse
+    It 'csv-seeded processes reference BlankProcess19 v1.0.3' {
+        # Filter out the TestAutomation process Import-Fixture adds to drive
+        # the test-set fixture; only the processes.csv rows are asserted.
+        $procs = Get-OrchProcess -Path $script:Root -Recurse |
+            Where-Object Name -Like 'proc-*'
+        $procs.Count | Should -Be 6
         $procs | ForEach-Object {
             $_.ProcessKey     | Should -Be 'BlankProcess19'
             $_.ProcessVersion | Should -Be '1.0.3'
