@@ -35,27 +35,94 @@ public class EncodingArgumentTransformationAttribute : ArgumentTransformationAtt
 
 public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 {
-    // Flush deferred warnings so they appear during cmdlet execution,
-    // not during tab completion where Console output would corrupt the prompt.
+    // Drives this cmdlet is about to operate on -- only their PendingWarning
+    // gets flushed in BeginProcessing. The legacy code walked every registered
+    // drive, which surfaced unrelated drives' pending warnings during the next
+    // cmdlet on an unrelated drive ("Orch1:\> Get-OrchAsset" emitting WARNINGs
+    // about 'local:\' because local: had touched HTTP earlier).
+    //
+    // Smart default covers the two dominant conventions:
+    //   1) the current location's drive (no -Path required), and
+    //   2) any string / string[] -Path parameter values, drive name parsed out.
+    //
+    // Subclasses whose drive-targeting parameter is named differently
+    // (-SourcePath / -DestinationPath / -Folder / ...) override this method
+    // so their target drives flush in the same cmdlet call rather than the
+    // next one. Drives that don't make it into the set keep their warning
+    // pending; it surfaces the next time they're current or named on -Path.
+    protected virtual IEnumerable<string> GetTargetDriveNames()
+    {
+        // (1) Current location -- map Du / Tm shadow drives back to their parent
+        // because PendingWarning lives on the parent's OrchAPISession.
+        switch (SessionState.Drive.Current)
+        {
+            case OrchDriveInfo od: yield return od.Name; break;
+            case OrchDuDriveInfo du: yield return du.ParentDrive.Name; break;
+            case OrchTmDriveInfo tm: yield return tm.ParentDrive.Name; break;
+        }
+
+        // (2) Bound -Path values -- delegated to a pure helper so the test
+        // suite can lock in the shape coercion + drive-name parsing without
+        // having to spin up a PSCmdlet runtime to populate BoundParameters.
+        if (MyInvocation.BoundParameters.TryGetValue("Path", out var pathObj))
+        {
+            foreach (var name in ExtractDriveNamesFromBoundPath(pathObj))
+                yield return name;
+        }
+    }
+
+    // Coerces a BoundParameters["Path"] value (which the PowerShell binder
+    // may deliver as string[], string, or other IEnumerable<string> shapes)
+    // into the drive names it references. Empty / null entries and entries
+    // without a parseable drive prefix are silently skipped so the caller's
+    // target-drive set stays clean. Pure helper so the test suite can cover
+    // the shape combinations without a real PSCmdlet runtime.
+    internal static IEnumerable<string> ExtractDriveNamesFromBoundPath(object? pathObj)
+    {
+        IEnumerable<string>? paths = pathObj switch
+        {
+            IEnumerable<string> arr => arr,
+            string s => [s],
+            _ => null,
+        };
+        if (paths is null) yield break;
+
+        foreach (var p in paths)
+        {
+            var name = OrchDriveInfo.ExtractDriveName(p);
+            if (!string.IsNullOrEmpty(name)) yield return name;
+        }
+    }
+
+    // Flush deferred warnings for the drives this cmdlet will touch (see
+    // GetTargetDriveNames). Deferring rather than emitting at the producer
+    // site is still required because some producers (OrchProvider.GetChildItems)
+    // run during tab completion where Console output would corrupt the prompt.
     protected override void BeginProcessing()
     {
         base.BeginProcessing();
 
+        var targets = new HashSet<string>(
+            GetTargetDriveNames().Where(n => !string.IsNullOrEmpty(n)),
+            StringComparer.OrdinalIgnoreCase);
+        if (targets.Count == 0) return;
+
         foreach (var drive in SessionState.EnumAllOrchDrives())
         {
+            if (!targets.Contains(drive.Name)) continue;
+
             var warning = drive.OrchAPISession.PendingWarning;
-            if (warning is not null)
+            if (warning is null) continue;
+
+            drive.OrchAPISession.ClearPendingWarning();
+            drive.OrchAPISession.EntraIdWarningChecked = true;
+            // Producers concatenate multiple warnings with "\n\n". A single
+            // WriteWarning() with embedded newlines would render the blank
+            // separator as a stray "WARNING:" line, so emit each paragraph
+            // as its own WriteWarning call.
+            foreach (var segment in warning.Split(["\n\n"], StringSplitOptions.RemoveEmptyEntries))
             {
-                drive.OrchAPISession.ClearPendingWarning();
-                drive.OrchAPISession.EntraIdWarningChecked = true;
-                // Producers concatenate multiple warnings with "\n\n". A single
-                // WriteWarning() with embedded newlines would render the blank
-                // separator as a stray "WARNING:" line, so emit each paragraph
-                // as its own WriteWarning call.
-                foreach (var segment in warning.Split(["\n\n"], StringSplitOptions.RemoveEmptyEntries))
-                {
-                    WriteWarning(segment);
-                }
+                WriteWarning(segment);
             }
         }
     }
