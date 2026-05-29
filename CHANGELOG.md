@@ -10,9 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 Adds the `PmLicensed*User` cmdlet family, an `Add-OrchFolderUser
 -Domain` escape hatch for EntraID-federated OnPrem tenants, and CSV
-import for queue / test data queue items. Plus a regression fix for
-`Import-OrchConfig` (was firing PKCE on every enabled drive), tighter
-per-cmdlet warning scoping, and a stack of asset / auth / Copy-Orch* fixes.
+import for queue / test data queue items. Tighter per-cmdlet warning
+scoping plus a stack of asset / auth / Copy-Orch* fixes.
 
 ### Added
 
