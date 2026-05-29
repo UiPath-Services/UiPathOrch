@@ -45,16 +45,6 @@ per-cmdlet warning scoping, and a stack of asset / auth / Copy-Orch* fixes.
 
 ### Fixed
 
-- **Regression: `Import-OrchConfig` fired PKCE on every enabled drive.**
-  Per-organization cache classes' `ClearCache()` read
-  `_drive.PartitionGlobalId`, which was an active property that fell
-  through to the authenticated Users API when the JWT lacked `prt_id`.
-  During `Import-OrchConfig`'s drive teardown the registry-driven cache
-  clear walked every drive and triggered auth on each one — one browser
-  per drive. Split the API surface: the `PartitionGlobalId` property is
-  now passive (returns the cached field; null until populated), and the
-  active form lives on a new `GetPartitionGlobalId()` method that
-  data-fetch paths call explicitly.
 - **`Add-OrchFolderUser` routed to the wrong endpoint on OnPrem.** The
   cmdlet was choosing the OData operation by `ApiVersion`, but
   `AssignDirectoryUser` is Cloud-only — OnPrem 22.10 / 23.4 / 25.10 all

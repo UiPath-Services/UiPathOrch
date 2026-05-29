@@ -476,10 +476,9 @@ PrivateData = @{
 (Platform Management license assignment / cleanup). Add-OrchFolderUser
 gains -Domain for EntraID-federated OnPrem tenants where the default
 "autogen" partition is rejected. CSV import for Import-OrchQueueItem and
-Import-OrchTestDataQueueItem (web-parity 15,000-row cap). Fixes
-Import-OrchConfig firing PKCE on every enabled drive (PartitionGlobalId
-turned passive), tightens per-cmdlet warning scoping, and a stack of
-asset / auth / Copy-Orch* fixes.
+Import-OrchTestDataQueueItem (web-parity 15,000-row cap). Tightens
+per-cmdlet warning scoping plus a stack of asset / auth / Copy-Orch*
+fixes.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
