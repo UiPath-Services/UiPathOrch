@@ -38,6 +38,17 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
+    // Federated-identity escape hatch. The Search API call hard-codes
+    // `domain=autogen`, which works for Automation Cloud and for non-federated
+    // OnPrem but is rejected with a generic 500 ("An unknown failure has
+    // occurred") by EntraID-federated OnPrem tenants. In that environment the
+    // web UI presents a Domain dropdown (`frc`, `root`, etc.); set -Domain to
+    // the same value here. Affects both the directory Search call (Robot
+    // resolution) and the AssignDomainUser payload (Domain field) so an
+    // explicit value overrides the autogen default end-to-end.
+    [Parameter]
+    public string? Domain { get; set; }
+
     private class UserNameCompleter : OrchArgumentCompleter
     {
         //  0: User, 1: Group, 2: Machine, 3: Robot, 4: ExternalApplication
@@ -232,8 +243,11 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
                     DirectoryObject? member = null;
                     try
                     {
-                        // 3 refers to Robot. See DirectoryTypeItems
-                        member = ResolveDirectoryName(this, drive, userName, 3);
+                        // 3 refers to Robot. See DirectoryTypeItems.
+                        // Domain is null by default (=> "autogen" in the API call),
+                        // overridable by the cmdlet's -Domain parameter for
+                        // EntraID-federated OnPrem tenants.
+                        member = ResolveDirectoryName(this, drive, userName, 3, Domain);
                     }
                     catch (Exception ex)
                     {
@@ -327,11 +341,12 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
 
                     DomainUserAssignment assignment = new()
                     {
-                        // Use the domain returned by the directory lookup when we
-                        // have it (DirectoryRobot path); the "autogen" fallback
-                        // matches the historical default for non-Robot types and
-                        // for OnPrem environments without federated identity.
-                        Domain = string.IsNullOrEmpty(foundUserDomain) ? "autogen" : foundUserDomain,
+                        // Priority: explicit -Domain (user override for federated
+                        // tenants) > directory-lookup result (DirectoryRobot path
+                        // captures `member.domain`) > "autogen" historical default
+                        // (Automation Cloud and non-federated OnPrem).
+                        Domain = !string.IsNullOrEmpty(Domain) ? Domain
+                            : (string.IsNullOrEmpty(foundUserDomain) ? "autogen" : foundUserDomain),
                         DirectoryIdentifier = foundUserIdentifier,
                         UserType = type,
                         RolesPerFolder =

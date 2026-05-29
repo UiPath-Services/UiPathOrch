@@ -596,7 +596,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
     }
 
-    protected static DirectoryObject? ResolveDirectoryName(IWritableHost _host, OrchDriveInfo drive, string name, int type)
+    protected static DirectoryObject? ResolveDirectoryName(IWritableHost _host, OrchDriveInfo drive, string name, int type, string? domain = null)
     {
         string strType = type switch
         {
@@ -608,7 +608,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
             _ => throw new InvalidOperationException()
         };
 
-        var resolved = drive.SearchDirectory(name).Where(g => g.type == type).ToList();
+        var resolved = drive.SearchDirectory(name, domain).Where(g => g.type == type).ToList();
 
         if (resolved.Count == 0)
         {

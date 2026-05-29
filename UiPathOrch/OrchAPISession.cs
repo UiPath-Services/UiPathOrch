@@ -2724,7 +2724,7 @@ public partial class OrchAPISession : IDisposable
     // https://uipath-japan.slack.com/archives/C0175DZP4PQ/p1751336407409919?thread_ts=1751275792.210139&cid=C0175DZP4PQ
     private DateTime _lastSearchDirectory = DateTime.MinValue;
     private readonly object _lockSearchDirectory = new object();
-    public DirectoryObject[]? SearchDirectory(string prefix)
+    public DirectoryObject[]? SearchDirectory(string prefix, string? domain = null)
     {
         lock (_lockSearchDirectory)
         {
@@ -2739,7 +2739,14 @@ public partial class OrchAPISession : IDisposable
 
             _lastSearchDirectory = DateTime.UtcNow;
         }
-        return HttpRequest<DirectoryObject[]>(HttpMethod.Get, $"/api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={HttpUtility.UrlEncode(prefix)}&searchContext=All");
+        // `domain` defaults to "autogen", which works for Automation Cloud and
+        // for non-federated OnPrem (the server's default partition). EntraID-
+        // federated OnPrem tenants reject "autogen" with a generic 500 ("An
+        // unknown failure has occurred") and require the actual tenant domain
+        // (e.g. "frc"). The caller passes the user-supplied -Domain in those
+        // cases; we don't currently auto-discover the domain list.
+        var effectiveDomain = string.IsNullOrEmpty(domain) ? "autogen" : domain;
+        return HttpRequest<DirectoryObject[]>(HttpMethod.Get, $"/api/DirectoryService/SearchForUsersAndGroups?domain={HttpUtility.UrlEncode(effectiveDomain)}&prefix={HttpUtility.UrlEncode(prefix)}&searchContext=All");
     }
 
     #endregion

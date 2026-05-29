@@ -731,12 +731,18 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     // by `searchWord` (`name` truncated at the first '+', '-', or '_'); the underlying
     // API can't handle those characters. Cached entries are then post-filtered by full
     // `name` prefix match.
-    public IEnumerable<DirectoryObject> SearchDirectory(string name)
+    //
+    // `domain` defaults to null (=> "autogen" in the API call). EntraID-federated
+    // OnPrem tenants reject "autogen" with a generic 500 and need the tenant's real
+    // domain (e.g. "frc"). The cache key is composed `searchWord|domain` so distinct
+    // domains don't fight over the same slot.
+    public IEnumerable<DirectoryObject> SearchDirectory(string name, string? domain = null)
     {
         int index = name.IndexOfAny(['+', '-', '_']);
         string searchWord = index >= 0 ? name.Substring(0, index) : name;
+        string cacheKey = searchWord + "|" + (domain ?? "");
 
-        var value = SearchDirectoryCache.Get(searchWord);
+        var value = SearchDirectoryCache.Get(cacheKey);
 
         // Prefer prefix match against the full name; fall back to all results when
         // none match (a single entry in `value` is likely the desired user).
@@ -1341,7 +1347,18 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         // the caller cmdlet on a per-emit ShallowClone copy.
 
         SearchDirectoryCache = new(this,
-            searchWord => OrchAPISession.SearchDirectory(searchWord),
+            cacheKey =>
+            {
+                // Cache key is "searchWord|domain" — split so we forward both to
+                // the API call. Empty domain segment falls back to "autogen"
+                // inside OrchAPISession.SearchDirectory.
+                int sep = cacheKey.IndexOf('|');
+                string searchWord = sep >= 0 ? cacheKey.Substring(0, sep) : cacheKey;
+                string? domain = sep >= 0 && sep < cacheKey.Length - 1
+                    ? cacheKey.Substring(sep + 1)
+                    : null;
+                return OrchAPISession.SearchDirectory(searchWord, domain);
+            },
             (arr, _) =>
             {
                 if (arr is null) return;
