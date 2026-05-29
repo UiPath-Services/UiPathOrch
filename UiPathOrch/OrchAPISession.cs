@@ -403,7 +403,14 @@ public partial class OrchAPISession : IDisposable
                 {
                     // Set initial token
                     string token = _authManager.RequestToken();
-                    SetToken(token);
+                    if (!SetToken(token))
+                    {
+                        // A 200 token response with no access_token leaves the session
+                        // with no Bearer header. Don't mark it authenticated behind a
+                        // fresh expiry (every later call would 401 until the expiry
+                        // lapsed); fail now so the caller surfaces / retries.
+                        throw new Exception("Authentication returned an empty access token.");
+                    }
 
                     _isAuthenticated = true;
                     _expiryTime = ComputeTokenExpiry(DateTime.Now);
@@ -439,8 +446,18 @@ public partial class OrchAPISession : IDisposable
             {
                 if (now > _expiryTime.AddMinutes(-5))
                 {
-                    SetToken(RenewAccessToken());
-                    _expiryTime = ComputeTokenExpiry(now);
+                    if (SetToken(RenewAccessToken()))
+                    {
+                        _expiryTime = ComputeTokenExpiry(now);
+                    }
+                    else
+                    {
+                        // Refresh returned an empty token. Keeping the old (expiring)
+                        // Bearer header while advancing expiry would pin the stale
+                        // token until a 401; force a full re-auth on the next call.
+                        _isAuthenticated = false;
+                        throw new Exception("Token refresh returned an empty access token; re-authentication required.");
+                    }
                 }
             }
         }
@@ -485,13 +502,23 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    private void SetToken(string? access_token)
+    // Returns true when a usable (non-empty) token was applied to the client.
+    // The bool lets the (re)auth flow avoid advancing expiry / marking the
+    // session authenticated when a token endpoint returns a 200 with no
+    // access_token (GetAccessToken yields "" in that case) — otherwise the
+    // stale Bearer header would be pinned behind a fresh expiry until a 401.
+    private bool SetToken(string? access_token)
     {
-        if (!string.IsNullOrEmpty(access_token))
+        if (!IsTokenApplied(access_token))
         {
-            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", access_token);
+            return false;
         }
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", access_token);
+        return true;
     }
+
+    // Pure guard, separated for unit testing: a token is usable only when non-empty.
+    internal static bool IsTokenApplied(string? access_token) => !string.IsNullOrEmpty(access_token);
 
     protected virtual void Dispose(bool disposing)
     {

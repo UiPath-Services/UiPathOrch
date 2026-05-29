@@ -269,14 +269,26 @@ internal class OrchestratorAuthManager
         using JsonDocument doc = JsonDocument.Parse(body);
         JsonElement root = doc.RootElement;
 
-        string access_token = root.TryGetProperty("access_token", out JsonElement accessTokenElement) ? accessTokenElement.GetString() ?? "" : "";
-        string refresh_token = root.TryGetProperty("refresh_token", out JsonElement refreshTokenElement) ? refreshTokenElement.GetString() ?? "" : "";
+        var (access_token, refresh_token) = ParseTokens(root);
 
         // Capture the IdP-reported lifetime so the session can set a real expiry
         // instead of assuming 1h. Absent/zero → session keeps its 1h fallback.
         _expiresInSeconds = ParseExpiresInSeconds(root);
 
         return (access_token, refresh_token);
+    }
+
+    // Reads the access/refresh tokens from a token response body. Absent fields
+    // yield "" rather than throwing (mirroring the tolerance applied to
+    // expires_in) — a 200 response missing access_token is reported as an empty
+    // token, which the session's SetToken guard then refuses to apply (instead of
+    // pinning a stale Bearer header behind a fresh expiry). Pure / static so this
+    // precondition of the stale-token guard is unit-testable.
+    internal static (string accessToken, string refreshToken) ParseTokens(JsonElement root)
+    {
+        string accessToken = root.TryGetProperty("access_token", out JsonElement a) ? a.GetString() ?? "" : "";
+        string refreshToken = root.TryGetProperty("refresh_token", out JsonElement r) ? r.GetString() ?? "" : "";
+        return (accessToken, refreshToken);
     }
 
     // Reads the OAuth `expires_in` (seconds) from a token response body. RFC 6749
