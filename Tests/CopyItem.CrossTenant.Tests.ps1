@@ -64,8 +64,12 @@
 #>
 
 BeforeAll {
-    $script:SrcDrive = 'Orch2'   # source tenant (disposable)
-    $script:DstDrive = 'Orch1'   # destination tenant (different svc)
+    # Env-var overrides so the run can swap in any pair of connected drives
+    # (Orch2 + Orch1 is the default convention used in repo docs, but Orch1
+    # can be unavailable at run time -- e.g. PKCE not completed -- and any
+    # two distinct OrchDrive mounts work equally well).
+    $script:SrcDrive = if ($env:UIPATHORCH_TEST_DRIVE)     { $env:UIPATHORCH_TEST_DRIVE     } else { 'Orch2' }
+    $script:DstDrive = if ($env:UIPATHORCH_TEST_DST_DRIVE) { $env:UIPATHORCH_TEST_DST_DRIVE } else { 'Orch1' }
     $script:SkipReason = $null
 
     $rnd = $PID
