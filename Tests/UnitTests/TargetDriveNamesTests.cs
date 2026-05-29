@@ -53,4 +53,81 @@ public class TargetDriveNamesTests
         Assert.Empty(OrchestratorPSCmdlet.ExtractDriveNamesFromBoundPath(42));
         Assert.Empty(OrchestratorPSCmdlet.ExtractDriveNamesFromBoundPath(true));
     }
+
+    // The smart-default looks at two BoundParameters keys: "Path" (~88% of
+    // cmdlets) and "Destination" (Copy-Orch* convention, 25 cmdlets). Tests
+    // below lock in both keys are recognized, drive names from each are
+    // included, and neither key alone or in combination is dropped.
+    [Fact]
+    public void BoundParameters_PathOnly_YieldsPathDrive()
+    {
+        var bound = new Dictionary<string, object> { ["Path"] = "Orch1:\\Shared" };
+        var result = OrchestratorPSCmdlet
+            .GetTargetDriveNamesFromBoundParameters(bound)
+            .ToArray();
+        Assert.Equal(new[] { "Orch1" }, result);
+    }
+
+    [Fact]
+    public void BoundParameters_DestinationOnly_YieldsDestinationDrive()
+    {
+        // Copy-Orch* with -Destination but no -Path bound (e.g. running from
+        // the source drive's current location).
+        var bound = new Dictionary<string, object> { ["Destination"] = "Orch2:\\Shared" };
+        var result = OrchestratorPSCmdlet
+            .GetTargetDriveNamesFromBoundParameters(bound)
+            .ToArray();
+        Assert.Equal(new[] { "Orch2" }, result);
+    }
+
+    [Fact]
+    public void BoundParameters_PathAndDestination_YieldsBoth()
+    {
+        // Full Copy-Orch* shape: source via -Path, destination via -Destination.
+        var bound = new Dictionary<string, object>
+        {
+            ["Path"] = "Orch1:\\Shared",
+            ["Destination"] = new[] { "Orch2:\\Shared", "Orch3:\\Backup" },
+        };
+        var result = OrchestratorPSCmdlet
+            .GetTargetDriveNamesFromBoundParameters(bound)
+            .ToArray();
+        Assert.Equal(new[] { "Orch1", "Orch2", "Orch3" }, result);
+    }
+
+    [Fact]
+    public void BoundParameters_DestinationLocalFilesystem_YieldsHarmlessC()
+    {
+        // Export-Orch* uses -Destination for a local fs path. ExtractDriveName
+        // returns "C", which the BeginProcessing loop later filters out via
+        // EnumAllOrchDrives. The helper itself doesn't filter — that's
+        // intentional, so this test locks in the helper-side behavior and the
+        // filter responsibility lives at the call site.
+        var bound = new Dictionary<string, object>
+        {
+            ["Destination"] = "C:\\Downloads\\foo.nupkg",
+        };
+        var result = OrchestratorPSCmdlet
+            .GetTargetDriveNamesFromBoundParameters(bound)
+            .ToArray();
+        Assert.Equal(new[] { "C" }, result);
+    }
+
+    [Fact]
+    public void BoundParameters_OtherKeys_AreIgnored()
+    {
+        // The smart default only knows the two convention keys; cmdlets that
+        // bind drive-path-shaped values to other names (-SourcePath, -Folder,
+        // ...) must override GetTargetDriveNames themselves.
+        var bound = new Dictionary<string, object>
+        {
+            ["SourcePath"] = "Orch1:\\Shared",
+            ["Name"] = "MyAsset",
+            ["Recurse"] = true,
+        };
+        var result = OrchestratorPSCmdlet
+            .GetTargetDriveNamesFromBoundParameters(bound)
+            .ToArray();
+        Assert.Empty(result);
+    }
 }

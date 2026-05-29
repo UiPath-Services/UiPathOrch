@@ -61,14 +61,28 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
             case OrchTmDriveInfo tm: yield return tm.ParentDrive.Name; break;
         }
 
-        // (2) Bound -Path values -- delegated to a pure helper so the test
-        // suite can lock in the shape coercion + drive-name parsing without
-        // having to spin up a PSCmdlet runtime to populate BoundParameters.
-        if (MyInvocation.BoundParameters.TryGetValue("Path", out var pathObj))
-        {
-            foreach (var name in ExtractDriveNamesFromBoundPath(pathObj))
-                yield return name;
-        }
+        // (2)(3) Bound -Path / -Destination values -- delegated to a static
+        // helper so the keys covered by the smart default can be locked in
+        // by the test suite without spinning up a PSCmdlet runtime.
+        foreach (var name in GetTargetDriveNamesFromBoundParameters(MyInvocation.BoundParameters))
+            yield return name;
+    }
+
+    // Smart-default's bound-parameter half: extracts drive names from -Path
+    // (covers ~88% of cmdlets) and -Destination (Copy-Orch* convention -- 25
+    // cmdlets share the exact name, all as Orch drive paths). Export-Orch*
+    // 4 cmdlets also expose -Destination but as a local filesystem path
+    // (C:\Downloads, etc.); the BeginProcessing loop intersects against
+    // EnumAllOrchDrives so non-Orch names like "C" filter out as no-ops.
+    // No false positives in practice.
+    internal static IEnumerable<string> GetTargetDriveNamesFromBoundParameters(
+        IDictionary<string, object> boundParameters)
+    {
+        if (boundParameters.TryGetValue("Path", out var pathObj))
+            foreach (var n in ExtractDriveNamesFromBoundPath(pathObj)) yield return n;
+
+        if (boundParameters.TryGetValue("Destination", out var destObj))
+            foreach (var n in ExtractDriveNamesFromBoundPath(destObj)) yield return n;
     }
 
     // Coerces a BoundParameters["Path"] value (which the PowerShell binder
