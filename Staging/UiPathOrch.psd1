@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.5.3'
+ModuleVersion = '1.6.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -472,9 +472,14 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.5.3 - New-OrchWebhook (with -Events), Get-OrchTestSetDetail, -ExportCsv on
-more Get-Orch* cmdlets, and batched Add-Orch*Link. Breaking: the Asset / Bucket
-/ Queue link cmdlets now return a single EntityLink type.
+1.6.0 - Add-/Remove-PmLicenseFromPmLicensedUser + Remove-PmLicensedUser
+(Platform Management license assignment / cleanup). Add-OrchFolderUser
+gains -Domain for EntraID-federated OnPrem tenants where the default
+"autogen" partition is rejected. CSV import for Import-OrchQueueItem and
+Import-OrchTestDataQueueItem (web-parity 15,000-row cap). Fixes
+Import-OrchConfig firing PKCE on every enabled drive (PartitionGlobalId
+turned passive), tightens per-cmdlet warning scoping, and a stack of
+asset / auth / Copy-Orch* fixes.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

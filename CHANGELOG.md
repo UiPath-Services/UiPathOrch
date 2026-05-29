@@ -6,14 +6,117 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.6.0] - 2026-05-30
+
+Adds the `PmLicensed*User` cmdlet family, an `Add-OrchFolderUser
+-Domain` escape hatch for EntraID-federated OnPrem tenants, and CSV
+import for queue / test data queue items. Plus a regression fix for
+`Import-OrchConfig` (was firing PKCE on every enabled drive), tighter
+per-cmdlet warning scoping, and a stack of asset / auth / Copy-Orch* fixes.
+
 ### Added
 
-- **CSV import for `Import-OrchQueueItem` and `Import-OrchTestDataQueueItem`** —
-  load queue items / test data queue items from a CSV file, matching the
+- **`Add-PmLicenseToPmLicensedUser`** — allocate one or more user-bundle
+  licenses to a Platform Management user. Atomic-replace PUT against the
+  License Accountant API; the cmdlet merges with the user's existing
+  bundles and submits one request per user per drive, so multiple
+  `-License` values for the same user fold into a single round trip.
+- **`Remove-PmLicenseFromPmLicensedUser`** — strip one or more bundles from
+  a Platform Management user. Mirror of the Add cmdlet using the same PUT
+  endpoint with the user's current bundle set minus the matched codes;
+  `-License *` empties the bundle list (the row remains as "No license").
+- **`Remove-PmLicensedUser`** — drop the licensed-user row entirely,
+  including the empty-bundle rows left behind by
+  `Remove-PmLicenseFromPmLicensedUser <user> *`. Batched DELETE per drive
+  (N users = 1 round trip).
+- **`Add-OrchFolderUser -Domain <name>`** — opt-in override for the
+  directory Search call's `domain=` parameter. Required for EntraID-
+  federated OnPrem tenants where the default `autogen` is rejected with
+  "An unknown failure has occurred" (the web UI's Domain dropdown supplies
+  values like `frc`, `root`). Affects both Robot resolution and the
+  AssignDomainUser payload; safe to omit on Automation Cloud and
+  non-federated OnPrem (behavior is byte-for-byte identical to v1.5.3).
+- **CSV import for `Import-OrchQueueItem` and `Import-OrchTestDataQueueItem`**
+  — load queue / test data queue items from a CSV file, matching the
   Orchestrator web "Upload Items" behavior: web-parity 15,000-row cap and a
-  shared multi-line CSV parser (quoted fields may span lines). Test data queue
-  values are coerced per the queue's schema (integer/number invariant-parsed,
-  strings preserved).
+  shared multi-line CSV parser (quoted fields may span lines). Test data
+  queue values are coerced per the queue's schema (integer/number
+  invariant-parsed, strings preserved).
+
+### Fixed
+
+- **Regression: `Import-OrchConfig` fired PKCE on every enabled drive.**
+  Per-organization cache classes' `ClearCache()` read
+  `_drive.PartitionGlobalId`, which was an active property that fell
+  through to the authenticated Users API when the JWT lacked `prt_id`.
+  During `Import-OrchConfig`'s drive teardown the registry-driven cache
+  clear walked every drive and triggered auth on each one — one browser
+  per drive. Split the API surface: the `PartitionGlobalId` property is
+  now passive (returns the cached field; null until populated), and the
+  active form lives on a new `GetPartitionGlobalId()` method that
+  data-fetch paths call explicitly.
+- **`Add-OrchFolderUser` routed to the wrong endpoint on OnPrem.** The
+  cmdlet was choosing the OData operation by `ApiVersion`, but
+  `AssignDirectoryUser` is Cloud-only — OnPrem 22.10 / 23.4 / 25.10 all
+  expect `AssignDomainUser` regardless of API version. Route by `IsCloud`
+  instead; honor the directory's `domain` value (where the lookup returns
+  one) in the assignment payload.
+- **`Get-OrchAsset -ExportCredentialCsv` corrupted output for values
+  containing commas / quotes / newlines.** Username, store, and free-form
+  fields were emitted without CSV escaping, so round-trips through
+  `Import-Csv | Set-OrchCredentialAsset` could shift values across
+  columns. Every field now goes through `EscapeCsvValue`; covered by
+  `CredentialCsvRoundTripTests`.
+- **`Set-OrchAsset` invalid `-ValueType` error didn't explain positional
+  binding.** Users hitting "ValueType 'foo' is invalid" couldn't tell why
+  their first positional argument was being read as `-ValueType` — the
+  error now spells out the positional order
+  (`Set-OrchAsset <ValueType> <Name>`) and points at `-Name` if the user
+  meant an asset name.
+- **`Invoke-OrchApi -Body` failed on PSObject inputs.** Piping
+  `ConvertTo-Json` output (a PSObject-wrapped string) directly tripped
+  `System.Text.Json` object-cycle detection. The cmdlet now unwraps to
+  `.BaseObject` before serialization.
+- **`Copy-Orch*` emitted mismatched `FullyQualifiedErrorId` strings.** The
+  error IDs didn't match the cmdlet they came from, so scripts filtering
+  on `ErrorRecord.FullyQualifiedErrorId` couldn't trap them reliably.
+  Fixed across `Copy-OrchQueueItem`, `CopyTestSet`, `CopyTestSetSchedule`,
+  `CopyTrigger`.
+- **`PathInfoComparer` violated the `Equals` / `GetHashCode` contract.**
+  Equal instances could return different hash codes, breaking hash-based
+  collections; now derives both from the same canonical form and guards
+  against null.
+- **Token expiry hard-coded 1h instead of honoring `expires_in`.** The
+  IdP-reported lifetime is now parsed (JSON number or quoted-numeric
+  string) and used directly; 1h fallback kept for PAT / user-password
+  flows that don't report a lifetime. Prevents a too-late refresh / 401
+  on Automation Suite / OnPrem identities with shorter policies.
+- **PKCE listener hung indefinitely when the browser landed on an
+  Identity error page.** Added a 3-minute backstop so CI / automation
+  contexts can't deadlock on a never-arriving redirect; surfaces an
+  actionable terminating error pointing at `Resolve-OrchAuthError`.
+- **Discover `ApiVersion` from the `api-supported-versions` response
+  header.** Replaces the post-auth `GetActivitySettings` round trip with
+  a free read from any API response. Settings-based detection stays as
+  defense in depth (guarded by `ApiVersion is null`, so the two paths
+  converge).
+- **Cmdlets emitted unrelated drives' PendingWarning.**
+  `OrchestratorPSCmdlet.BeginProcessing` walked every registered drive,
+  so a routine cmdlet on `Orch1:` could surface
+  `WARNING: ... 'local:\'` lines that the user wasn't operating on.
+  Filter to drives the cmdlet actually targets (current location +
+  bound `-Path` / `-Destination`) via a virtual `GetTargetDriveNames()`
+  hook with a smart default covering the two dominant conventions.
+
+### Docs
+
+- **Help md for the three `PmLicensed*User` cmdlets** added.
+- **`Remove-Orch*` documentation pass**: `-Path` pipeline binding,
+  no-prompt default, `-WhatIf` preview-then-re-run workflow, and CSV
+  round-trip examples for Library / Package / QueueItem / BucketItem.
+  Factual corrections to `Remove-OrchQueue`, `Remove-OrchTask`,
+  `Remove-OrchQueueItem`, and the three `Remove-Orch*Link` cmdlets'
+  `-WhatIf` operation strings.
 
 ## [1.5.3] - 2026-05-21
 

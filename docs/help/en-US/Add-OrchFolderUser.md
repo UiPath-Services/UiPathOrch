@@ -20,8 +20,9 @@ Assigns users to folders in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Add-OrchFolderUser [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Type] <string>
- [-UserName] <string[]> [[-Roles] <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
+Add-OrchFolderUser [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Domain <string>]
+ [-Type] <string> [-UserName] <string[]> [[-Roles] <string[]>] [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -116,6 +117,29 @@ Includes the target folder and all its subfolders in the operation.
 ```yaml
 Type: System.Management.Automation.SwitchParameter
 DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Domain
+
+Overrides the directory `domain` parameter used in the Robot resolution call. Default is `autogen`, which works for Automation Cloud and for non-federated OnPrem tenants. EntraID-federated OnPrem tenants reject `autogen` with a generic 500 ("An unknown failure has occurred") and require the tenant's actual domain — set -Domain to the same value the web UI's Domain dropdown shows on the Add User page (e.g. `frc`).
+
+Affects both the directory Search call (-Type DirectoryRobot path) and the AssignDomainUser payload's `Domain` field, so an explicit value overrides the autogen default end-to-end. DirectoryUser / Group / ExternalApplication resolve via a different endpoint that doesn't take a domain parameter; -Domain still flows into the assignment payload for those types.
+
+```yaml
+Type: System.String
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
