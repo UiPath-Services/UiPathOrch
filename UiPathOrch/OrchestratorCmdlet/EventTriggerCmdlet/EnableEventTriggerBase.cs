@@ -97,7 +97,7 @@ public class EnableEventTriggerCmdletBase<Enable> : OrchestratorPSCmdlet where E
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetApiTriggerError", ErrorCategory.InvalidOperation, drive));
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetEventTriggerError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }

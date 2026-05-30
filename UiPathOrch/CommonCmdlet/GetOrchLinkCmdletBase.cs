@@ -158,6 +158,18 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
             {
                 WriteError(new ErrorRecord(ex, ErrorId, ErrorCategory.InvalidOperation, ex.Target));
             }
+            catch (OperationCanceledException)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                // A non-Orch failure on the main thread here (e.g. IOException
+                // from WriteCsvLine, or a BuildLink fault) should surface as a
+                // per-item error, not terminate the whole cmdlet mid-enumeration.
+                string target = task.Source.Item2.GetPSPath(); // Item2 = folder (see deconstruction above)
+                WriteError(new ErrorRecord(new OrchException(target, ex), ErrorId, ErrorCategory.InvalidOperation, target));
+            }
         }
 
         // Phase 1 errors (per-folder GetEntities failures) — drained after

@@ -6,7 +6,10 @@ using UiPath.PowerShell.Completer;
 
 namespace UiPath.PowerShell.Commands;
 
-// WIP
+// WIP — disabled. ProcessRecord's body is an empty try{} (a no-op), so shipping
+// this would register Enable-OrchClassicRobot as a silently-succeeding cmdlet.
+// Gated out (like ConnectJob) until implemented; re-enable by removing #if false.
+#if false
 [Cmdlet(VerbsLifecycle.Enable, "OrchClassicRobot")]
 [OutputType(typeof(Entities.Session))]
 class EnableClassicRobotCmdlet : OrchestratorPSCmdlet
@@ -49,3 +52,4 @@ class EnableClassicRobotCmdlet : OrchestratorPSCmdlet
         }
     }
 }
+#endif
