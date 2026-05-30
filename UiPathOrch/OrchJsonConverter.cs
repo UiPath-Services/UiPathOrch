@@ -72,7 +72,7 @@ public class StringOrIntConverter : JsonConverter<int>
         if (reader.TokenType == JsonTokenType.String)
         {
             // When the token is a string
-            if (int.TryParse(reader.GetString(), out int result))
+            if (int.TryParse(reader.GetString(), System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out int result))
             {
                 return result;
             }
@@ -159,7 +159,7 @@ public class DateTimeArrayJsonConverter : JsonConverter<DateTime[]>
 
             if (reader.TokenType == JsonTokenType.String)
             {
-                var dateTime = DateTime.Parse(reader.GetString()!).ToLocalTime();
+                var dateTime = reader.GetDateTime().ToLocalTime(); // invariant ISO-8601 parse (matches LocalDateTimeConverter)
                 dateList.Add(dateTime);
             }
             else

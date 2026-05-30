@@ -186,12 +186,18 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
     internal static string EscapeCsvValue(bool? value)
     {
-        return value?.ToString().ToUpper() ?? "";
+        // "True"/"False" are ASCII; use invariant casing so it never depends on
+        // host culture. bool.TryParse on import is culture-invariant + case-
+        // insensitive, so "TRUE"/"FALSE" round-trip anywhere.
+        return value?.ToString().ToUpperInvariant() ?? "";
     }
 
     internal static string EscapeCsvValue(DateTime? value)
     {
-        return value?.ToString() ?? "";
+        // Route through the invariant ISO-8601 formatter so exported timestamps
+        // round-trip across hosts with different cultures (a bare ToString() is
+        // locale-specific and drops Kind/seconds).
+        return FormatDateTimeWithKind(value) ?? "";
     }
 
     internal static string EscapeCsvValue(IEnumerable<string?>? values, bool escapeWildcard = false)
@@ -221,16 +227,13 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
         string format = "yyyy-MM-ddTHH:mm:ss";
 
+        // InvariantCulture so the ':' time separator (and digits) are fixed —
+        // a custom format's ':' is otherwise replaced by the current culture's
+        // TimeSeparator, which some ICU locales render as a different codepoint.
+        var iso = dateTime.Value.ToString(format, System.Globalization.CultureInfo.InvariantCulture);
+
         // If UTC, append "Z" suffix
-        if (dateTime.Value.Kind == DateTimeKind.Utc)
-        {
-            return dateTime.Value.ToString(format) + "Z";
-        }
-        else
-        {
-            // Local or Unspecified
-            return dateTime.Value.ToString(format);
-        }
+        return dateTime.Value.Kind == DateTimeKind.Utc ? iso + "Z" : iso;
     }
 
     // returns (physicalFilePath, psFilePath)
@@ -244,17 +247,22 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         {
             resolvedPaths = state.Path.GetResolvedPSPathFromPSPath(paramExportCsv);
         }
-        catch // If a file path (not a directory path) was specified, strip the non-existent file name and re-resolve the parent folder path
+        catch (ItemNotFoundException) // The file doesn't exist yet: strip the file name and re-resolve the parent folder.
         {
-            string parentFolder = Path.GetDirectoryName(paramExportCsv);
+            string? parentFolder = Path.GetDirectoryName(paramExportCsv);
             defaultFileName = Path.GetFileName(paramExportCsv);
+            // A bare relative filename (no directory component) targets the current location.
+            if (string.IsNullOrEmpty(parentFolder))
+            {
+                parentFolder = state.Path.CurrentFileSystemLocation.ProviderPath;
+            }
             try
             {
                 resolvedPaths = state.Path.GetResolvedPSPathFromPSPath(parentFolder);
             }
             catch
             {
-                throw new ItemNotFoundException($"Cannot find path '{paramExportCsv}' because it does not exist.'");
+                throw new ItemNotFoundException($"Cannot find path '{paramExportCsv}' because it does not exist.");
             }
         }
 
