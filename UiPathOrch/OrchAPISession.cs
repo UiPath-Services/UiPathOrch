@@ -487,8 +487,26 @@ public partial class OrchAPISession : IDisposable
             {
                 _isAuthenticated = false;
             }
-            throw new HttpResponseException(GetBody(response), response);
+            throw new HttpResponseException(CapErrorBody(GetBody(response)), response);
         }
+    }
+
+    // Upper bound on the response-body text that becomes the exception MESSAGE.
+    // The full body stays on HttpResponseException.Response for programmatic use;
+    // this only bounds what OrchException.ExtractMessage can echo into
+    // Start-Transcript / CI logs when the body is non-JSON or lacks known error
+    // fields. 8 KB is generous enough that real Orchestrator JSON error envelopes
+    // still parse, while a multi-MB HTML/gateway dump can't flood the transcript.
+    // Mirrors the cap the Invoke-OrchApi error path already applies.
+    internal const int MaxErrorBodyChars = 8192;
+
+    internal static string CapErrorBody(string body)
+    {
+        if (string.IsNullOrEmpty(body) || body.Length <= MaxErrorBodyChars)
+        {
+            return body;
+        }
+        return body.Substring(0, MaxErrorBodyChars) + "… [truncated]";
     }
 
     private void EnsureVersionSupport(float requiredVersion)
