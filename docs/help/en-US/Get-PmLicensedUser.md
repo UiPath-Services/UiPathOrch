@@ -21,7 +21,7 @@ Gets licensed users from a UiPath Automation Cloud organization.
 
 ```
 Get-PmLicensedUser [-Path <string[]>] [[-Name] <string[]>] [[-Email] <string[]>]
- [<CommonParameters>]
+ [-CsvEncoding <Encoding>] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -31,6 +31,8 @@ Get-PmLicensedUser [-Path <string[]>] [[-Name] <string[]>] [[-Email] <string[]>]
 Gets user license information from a UiPath Automation Cloud organization at the platform management level. This cmdlet retrieves the list of users who have been allocated licenses (named user licenses).
 
 The -Name and -Email parameters can be used independently or together to filter results. Both support wildcards. Tab completion for -Name suggests user names, filtering by the currently specified -Email. Tab completion for -Email suggests user email addresses, filtering by the currently specified -Name.
+
+When -ExportCsv is specified, the output is written to a CSV file with Path, UserName, and License columns — one row per (user, license) — instead of to the pipeline. That CSV round-trips back into Add-PmLicenseToPmLicensedUser to reassign the licenses. Orphaned license rows (licenses not tied to a directory user) are omitted because they cannot be reassigned on import.
 
 Primary Endpoint: GET /portal_/api/license/accountant/UserLicense/user/page (License Accountant API)
 
@@ -72,6 +74,15 @@ PS Orch1:\> Get-PmLicensedUser -Name ytsuda* -Email *@gmail.com
 
 Gets licensed users whose names start with "ytsuda" and whose email addresses end with "@gmail.com".
 
+### Example 5: Export licenses to CSV and re-import
+
+```powershell
+PS Orch1:\> Get-PmLicensedUser -ExportCsv C:\temp\license-users.csv
+PS Orch1:\> Import-Csv C:\temp\license-users.csv | Add-PmLicenseToPmLicensedUser
+```
+
+Exports one row per (user, license) with Path, UserName, and License columns, then re-imports them. The UserName column binds to Add-PmLicenseToPmLicensedUser's -Email parameter via its -UserName alias. The round trip is additive: editing the CSV and re-importing adds licenses but never revokes the ones left out.
+
 ## PARAMETERS
 
 ### -Path
@@ -95,6 +106,27 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -CsvEncoding
+
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -Email
 
 Specifies the email addresses to filter by. Supports wildcards. Tab completion dynamically suggests user email addresses, filtered by the current -Name selection.
@@ -110,6 +142,27 @@ ParameterSets:
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ExportCsv
+
+Exports the licensed users to the specified CSV file path. The CSV has Path, UserName, and License columns — one row per (user, license) — and round-trips into Add-PmLicenseToPmLicensedUser (the UserName column binds to that cmdlet's -Email parameter through its -UserName alias). Orphaned license rows (not tied to a directory user) are omitted. When this parameter is specified, no objects are written to the pipeline.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
@@ -160,8 +213,14 @@ Returns NuLicensedUser objects with properties including name and email.
 
 This cmdlet retrieves the named user license list from the organization's license management API.
 
+The License Accountant API returns an empty email field; the user's login is carried in the name field, which is why the CSV identifier column is UserName (it re-matches the user on import). Orphaned license rows are excluded from -ExportCsv because they have no user to reassign to.
+
 ## RELATED LINKS
 
 [Get-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedGroup.md)
 
-[Remove-PmAllocationFromPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmAllocationFromPmLicensedGroup.md)
+[Add-PmLicenseToPmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedUser.md)
+
+[Remove-PmLicenseFromPmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicenseFromPmLicensedUser.md)
+
+[CSV Export & Import Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/03-CsvExportImport.md)
