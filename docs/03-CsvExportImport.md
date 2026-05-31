@@ -68,6 +68,7 @@ Use `-CsvEncoding` to specify the encoding.
 | `Get-PmGroup -ExportCsv` | `Import-Csv` → `New-PmGroup` |
 | `Get-PmRobotAccount -ExportCsv` | `Import-Csv` → `Set-PmRobotAccount` |
 | `Get-PmLicensedGroup -ExportCsv` | `Import-Csv` → `Add-PmLicenseToPmLicensedGroup` |
+| `Get-PmLicensedUser -ExportCsv` | `Import-Csv` → `Add-PmLicenseToPmLicensedUser` |
 
 #### Credential Assets (`-ExportCredentialCsv`)
 
@@ -267,6 +268,32 @@ for operating on an entity's sub-collection (here, a group's license bundles).
 
 > To **remove** a group's licenses from a CSV instead, pipe the same shape
 > into `Remove-PmLicenseFromPmLicensedGroup`.
+
+### License Users
+
+`Get-PmLicensedUser -ExportCsv` is the user-level counterpart of the License
+Groups round trip above. It exports one row per (user, license) with
+`Path` / `UserName` / `License` columns, and `Add-PmLicenseToPmLicensedUser`
+imports them:
+
+```powershell
+Get-PmLicensedUser -Path Orch1: -ExportCsv C:\temp\license-users.csv
+# edit / add / remove rows
+Import-Csv C:\temp\license-users.csv | Add-PmLicenseToPmLicensedUser
+```
+
+The `UserName` column carries the user's login (which the License Accountant
+API returns in its `name` field; the `email` field is empty there). It binds
+to the Add cmdlet's `-Email` parameter through that parameter's `-UserName`
+alias; `License` is the friendly bundle name. Orphaned license rows (licenses
+not tied to a directory user) are left out of the export, since they can't be
+re-assigned to a user on import. As with groups, the round trip is
+**additive** — rows for the same user fold into a single atomic-replace
+update, adding a license the user already holds is a no-op, and re-importing
+an unedited export changes nothing.
+
+> To **remove** a user's licenses from a CSV instead, pipe the same shape
+> into `Remove-PmLicenseFromPmLicensedUser`.
 
 ### Creating Folders in Bulk via CSV
 
