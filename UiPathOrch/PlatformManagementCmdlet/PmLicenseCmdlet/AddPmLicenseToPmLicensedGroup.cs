@@ -92,33 +92,52 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
             var groupNames = GetFakeBoundParameters(fakeBoundParameters, "GroupName");
             var wpLicense = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
             foreach (var drive in drives)
             {
+                // Collect each matched group's (available codes, held codes) plus a
+                // representative bundle per code for the tooltip. Suggest the union of
+                // available licenses minus only the ones EVERY matched group already
+                // holds (SuggestableLicenseCodes), so a license missing from any one
+                // group stays actionable. Scoped per drive — a same-named group on
+                // another drive is a different entity.
+                var perGroup = new List<(IEnumerable<string?> available, IEnumerable<string?>? held)>();
+                var bundleByCode = new Dictionary<string, AvailableUserBundle>(StringComparer.OrdinalIgnoreCase);
+
                 foreach (var groupName in groupNames)
                 {
                     var groups = drive.SearchPmDirectoryCache.Get(groupName.ToLower());
                     if (groups is null) continue;
 
-                    foreach (var group in groups
-                        .Where(g => g.objectType == "DirectoryGroup" || g.objectType == "LocalGroup")
+                    foreach (var group in FilterDirectoryGroupsByName(groups, groupName)
                         .OrderBy(e => e.identityName))
                     {
                         var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.identifier, group.identityName!);
                         if (availableUserBundles?.availableUserBundles is null) continue;
 
-                        foreach (var bundle in availableUserBundles.availableUserBundles
-                            //.Where(bundle => !(group.userBundleLicenses?.Contains(bundle.code) ?? false))
-                            .ExcludeByWildcards(bundle => AvailableUserBundlesItems.Items[bundle!.code!], wpLicense)
-                            .OrderBy(bundle => AvailableUserBundlesItems.Items[bundle.code!]))
+                        var heldCodes = drive.PmLicensedGroups.Get()
+                            .FirstOrDefault(g => g.id == group.identifier)?.userBundleLicenses;
+                        perGroup.Add((availableUserBundles.availableUserBundles.Select(b => b?.code), heldCodes));
+
+                        foreach (var b in availableUserBundles.availableUserBundles)
                         {
-                            string desc = AvailableUserBundlesItems.Items[bundle.code!];
-                            string tiphelp = $"{drive.NameColonSeparator}{desc}  Available: {bundle.total - bundle.allocated}";
-                            //string tiphelp = $"{drive.NameColonSeparator}{bundle.code}  Available: {bundle.total - bundle.allocated}";
-                            yield return new CompletionResult(PathTools.EscapePSText(desc), desc, CompletionResultType.Text, tiphelp);
+                            if (b?.code is not null) bundleByCode.TryAdd(b.code, b);
                         }
                     }
+                }
+
+                foreach (var item in SuggestableLicenseCodes(perGroup)
+                    // Display name = catalog friendly name; raw-code fallback so an
+                    // uncatalogued bundle can't make completion throw.
+                    .Select(code => (code, desc: AvailableUserBundlesItems.Items.TryGetValue(code, out var n) ? n : code))
+                    .ExcludeByWildcards(x => x.desc, wpLicense)
+                    .OrderBy(x => x.desc))
+                {
+                    string tiphelp = drive.NameColonSeparator + item.desc;
+                    if (bundleByCode.TryGetValue(item.code, out var b))
+                    {
+                        tiphelp += $"  Available: {b.total - b.allocated}";
+                    }
+                    yield return new CompletionResult(PathTools.EscapePSText(item.desc), item.desc, CompletionResultType.Text, tiphelp);
                 }
             }
         }
@@ -139,6 +158,35 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
             (g.objectType == "DirectoryGroup" || g.objectType == "LocalGroup")
             && g.identityName is not null
             && wp.IsMatch(g.identityName));
+    }
+
+    // The license codes -License completion should suggest across one or more
+    // matched groups. Candidates = the union of every group's available bundles
+    // (the API returns held bundles too); excluded = only the codes EVERY group
+    // already holds (the intersection of the held sets). So for a single group it
+    // is exactly "available minus held"; for several groups a license stays
+    // suggested as long as at least one group is missing it. Case-insensitive on
+    // codes; empty input yields an empty set. Pure / static for unit testing.
+    internal static HashSet<string> SuggestableLicenseCodes(
+        IReadOnlyCollection<(IEnumerable<string?> available, IEnumerable<string?>? held)> groups)
+    {
+        var union = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        if (groups is null || groups.Count == 0) return union;
+
+        HashSet<string>? commonHeld = null;
+        foreach (var (available, held) in groups)
+        {
+            foreach (var c in available ?? []) if (c is not null) union.Add(c);
+
+            var heldSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (var c in held ?? []) if (c is not null) heldSet.Add(c);
+
+            if (commonHeld is null) commonHeld = heldSet;
+            else commonHeld.IntersectWith(heldSet);
+        }
+
+        if (commonHeld is not null) union.ExceptWith(commonHeld);
+        return union;
     }
 
     // Resolves -License wildcards to the bundle codes addable to a group. The
