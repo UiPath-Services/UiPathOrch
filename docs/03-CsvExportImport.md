@@ -169,6 +169,33 @@ Import-Csv C:\temp\processes.csv | Update-OrchProcess
 This pattern works for Update-OrchProcess, Update-OrchQueue, and other
 Update cmdlets.
 
+### Bulk Delete via CSV
+
+A cmdlet does not need its own `-ExportCsv` parameter to take part in a CSV
+workflow — any `Get-Orch*` output can be shaped with `Select-Object` and piped
+through `Export-Csv`, then re-imported into a state-changing cmdlet. Entity
+deletion can also be done in bulk via CSV import:
+
+```powershell
+# Enumerate all assets
+Get-OrchAsset -Path Orch1:\ -Recurse | select Path,Name | Export-Csv c:RemoveAssets.csv
+
+# Open .csv-associated editor, remove the assets you want to keep, and leave the ones you want to delete
+c:RemoveAssets.csv      # press Tab to expand to the absolute path
+
+# Bulk-delete the assets
+Import-Csv c:RemoveAssets.csv | Remove-OrchAsset -WhatIf
+```
+
+Drop the `-WhatIf` once the preview lists exactly the rows you intend to delete.
+`Remove-Orch*` cmdlets only need the columns that identify each entity (here
+`Path` and `Name`), so a trimmed `Select-Object` projection is enough — the
+other columns a full export would carry are simply ignored.
+
+The same shape works for other `Remove-Orch*` cmdlets (for example
+`Get-OrchQueue ... | select Path,Name | Export-Csv ...` then
+`Import-Csv ... | Remove-OrchQueue`).
+
 ### Sharing Assets, Buckets, and Queues Across Folders (Links)
 
 `Get-Orch{Asset,Bucket,Queue}Link -ExportCsv` exports one row per
