@@ -67,6 +67,7 @@ Use `-CsvEncoding` to specify the encoding.
 | `Get-OrchCalendarDate -ExportCsv` | `Import-Csv` → `Add-OrchCalendarDate` |
 | `Get-PmGroup -ExportCsv` | `Import-Csv` → `New-PmGroup` |
 | `Get-PmRobotAccount -ExportCsv` | `Import-Csv` → `Set-PmRobotAccount` |
+| `Get-PmLicensedGroup -ExportCsv` | `Import-Csv` → `Add-PmLicenseToPmLicensedGroup` |
 
 #### Credential Assets (`-ExportCredentialCsv`)
 
@@ -168,6 +169,30 @@ call. The share is all-or-nothing: if you lack permission on any one
 target folder in a row's group, none of that entity's links are added and
 the cmdlet reports the entity and folder that were rejected — fix or drop
 that row and re-run.
+
+### License Groups
+
+`Get-PmLicensedGroup -ExportCsv` exports one row per (group, license) with
+`Path` / `GroupName` / `License` columns, and
+`Add-PmLicenseToPmLicensedGroup` imports them — so a group's bundle
+assignments can be snapshotted, edited, and reapplied:
+
+```powershell
+Get-PmLicensedGroup -Path Orch1: -ExportCsv C:\temp\license-groups.csv
+# edit / add / remove rows
+Import-Csv C:\temp\license-groups.csv | Add-PmLicenseToPmLicensedGroup
+```
+
+The `License` column is the friendly bundle name (e.g.
+`Attended - Named User`) — the same value `-License` tab-completes and
+accepts. Rows naming the same group (case-insensitively) are merged into a
+single update carrying the union of their licenses, so the license API's
+atomic-replace behavior never lets one row drop another's bundles. Adding
+a license a group already holds is a no-op, so re-importing an unedited
+export changes nothing.
+
+> To **remove** a group's licenses from a CSV instead, pipe the same shape
+> into `Remove-PmLicenseFromPmLicensedGroup`.
 
 ### Creating Folders in Bulk via CSV
 
