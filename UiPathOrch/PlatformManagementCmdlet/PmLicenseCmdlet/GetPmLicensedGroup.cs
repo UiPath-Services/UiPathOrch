@@ -5,6 +5,7 @@ using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Positional; // AvailableUserBundlesItems (license code → display name)
 
 namespace UiPath.PowerShell.Commands;
 
@@ -42,29 +43,40 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
     [EncodingArgumentTransformation]
     public Encoding? CsvEncoding { get; set; }
 
-    private static readonly string DefaultCsvName = "ExportedPmUserLicenseGroups.csv";
+    private static readonly string DefaultCsvName = "ExportedPmLicensedGroups.csv";
+
+    // Columns match Add-OrchPmLicenseToPmLicensedGroup (and
+    // Remove-OrchPmLicenseFromPmLicensedGroup) parameter names exactly, so the
+    // exported CSV round-trips: one row per (group, license), letting the user
+    // delete rows to drop individual licenses before re-importing. License is
+    // the human-readable display name (e.g. "Attended - Named User"), which is
+    // what the -License parameter accepts.
     private static readonly string[] CsvHeaders = [
         "Path",
         "GroupName",
-        "UserName",
-        "DisplayName",
-        "Email",
-        "LastInUse"
+        "License"
     ];
 
-    // This CSV is intended to be imported by Remove-OrchPmAllocationFromPmUserLicenseGroup,
-    // so this format is fine.
-    private static void WriteCsvContent(StreamWriter writer, string drivePath, string? groupName, IEnumerable<NuLicensedGroupMember> output)
+    // One row per license the group holds, ordered by display name. The group's
+    // userBundleLicenses are short codes (e.g. "ATTUNU"); convert each to the
+    // display name the -License parameter expects. Unknown codes (a newer server
+    // bundle this build doesn't map) fall back to the raw code so nothing is
+    // silently lost. Pure / static so the row shape is unit-testable without a
+    // live server.
+    internal static List<string> BuildLicenseDisplayNames(NuLicensedGroup group)
+        => (group.userBundleLicenses ?? [])
+            .Select(code => AvailableUserBundlesItems.Items.TryGetValue(code, out var name) ? name : code)
+            .OrderBy(license => license)
+            .ToList();
+
+    private static void WriteCsvContent(StreamWriter writer, string drivePath, NuLicensedGroup group)
     {
-        foreach (var member in output)
+        foreach (var license in BuildLicenseDisplayNames(group))
         {
             string[] line = [
                 EscapeCsvValue(drivePath, true),
-                EscapeCsvValue(groupName, true),
-                EscapeCsvValue(member.name),
-                EscapeCsvValue(member.displayName),
-                EscapeCsvValue(member.email),
-                EscapeCsvValue(member.lastInUse?.ToLocalTime())
+                EscapeCsvValue(group.name, true),
+                EscapeCsvValue(license)
             ];
             writer.WriteCsvLine(line);
         }
@@ -120,13 +132,15 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        if (ExpandAllocation.IsPresent || writer is not null)
+        if (ExpandAllocation.IsPresent && writer is null)
         {
             // Two-phase parallel fetch (see Get-OrchUserDetail). Phase 1:
             // per-drive licensed-group list + name filter. Phase 2: the
             // per-group allocation fetch (GetPmLicensedGroupAllocations).
             // Shared cap=4 semaphore; per-org caches serialize same-partition
             // fetches internally. Emission stays on the pipeline thread.
+            // -ExportCsv does NOT come here: its license data lives on the
+            // group list itself, so it uses the cheap list-only path below.
             using var cancelHandler = new ConsoleCancelHandler();
 
             using var pool = OrchThreadPool.RunForEachChained(
@@ -155,14 +169,7 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
                         .OrderBy(u => u?.name);
 
                     string pathGroupName = System.IO.Path.Combine(drive.NameColonSeparator, group?.name ?? "");
-                    if (writer is null)
-                    {
-                        WriteObject(targetEntities.Select(m => { var c = m.ShallowClone(); c.Path = drive.NameColonSeparator; c.GroupName = group?.name; c.PathGroupName = pathGroupName; return c; }), true);
-                    }
-                    else
-                    {
-                        WriteCsvContent(writer, drive.NameColonSeparator, group?.name, targetEntities);
-                    }
+                    WriteObject(targetEntities.Select(m => { var c = m.ShallowClone(); c.Path = drive.NameColonSeparator; c.GroupName = group?.name; c.PathGroupName = pathGroupName; return c; }), true);
                 }
                 catch (OrchException ex)
                 {
@@ -176,14 +183,12 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
                 WriteError(new ErrorRecord(ex, "GetPmNamedUserLicenseGroupError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
-        //else if (ExpandUserBundleLicenses.IsPresent)
-        //{
-
-        //}
         else
         {
             // List-only mode: no per-item fan-out, single-phase parallel
             // fetch (per-org caches serialize same-partition internally).
+            // Serves both plain output and -ExportCsv — the group list already
+            // carries userBundleLicenses, so CSV export needs no extra fetch.
             using var poolResults = OrchThreadPool.RunForEach(drives,
                 drive => drive.NameColonSeparator,
                 drive => drive,
@@ -197,10 +202,22 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
                     var fetched = poolResult.GetResult(cancelHandler.Token);
                     if (fetched is null) continue;
                     var drive = poolResult.Source;
-                    WriteObject(fetched
+                    var targetGroups = fetched
                         .FilterByWildcards(g => g?.name, wpGroupName)
-                        .OrderBy(g => g?.name)
-                        .Select(g => { var c = g.ShallowClone(); c.Path = drive.NameColonSeparator; return c; }), true);
+                        .OrderBy(g => g?.name);
+
+                    if (writer is null)
+                    {
+                        WriteObject(targetGroups
+                            .Select(g => { var c = g.ShallowClone(); c.Path = drive.NameColonSeparator; return c; }), true);
+                    }
+                    else
+                    {
+                        foreach (var group in targetGroups)
+                        {
+                            WriteCsvContent(writer, drive.NameColonSeparator, group);
+                        }
+                    }
                 }
                 catch (OrchException ex)
                 {
