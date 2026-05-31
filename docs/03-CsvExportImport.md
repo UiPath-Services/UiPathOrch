@@ -105,6 +105,18 @@ a CSV is piped into a cmdlet, each column value is bound to the parameter
 with the same name. This mechanism works with all cmdlets that accept
 pipeline input, including New, Update, Set, Add, Copy, and Remove cmdlets.
 
+**Importing never deletes what the CSV omits.** The import verb decides how
+each row is applied, but none of them treat the CSV as the desired full state:
+
+- `New-` / `Set-` / `Update-` — create or update the entity named by the row.
+- `Add-` — add the row's items to the entity's existing collection (roles,
+  licenses, folder links). Re-importing an unchanged export is a no-op.
+- `Remove-` — delete the entity, or remove the row's items from a collection.
+
+To *drop* something, delete it explicitly with the matching `Remove-` cmdlet —
+removing a row from the CSV and re-importing does **not** remove the
+corresponding entity or collection item.
+
 For example, when you import the following CSV into `Copy-OrchAsset`:
 
 | Path | Name | Destination |
@@ -196,6 +208,11 @@ single update carrying the union of their licenses, so the license API's
 atomic-replace behavior never lets one row drop another's bundles. Adding
 a license a group already holds is a no-op, so re-importing an unedited
 export changes nothing.
+
+The round trip is **additive** — like `Get-OrchUser -ExportCsv` →
+`Add-OrchUser`, the CSV adds licenses and never revokes the ones you leave
+out. The `Add-…To…` / `Remove-…From…` naming follows the module's convention
+for operating on an entity's sub-collection (here, a group's license bundles).
 
 > To **remove** a group's licenses from a CSV instead, pipe the same shape
 > into `Remove-PmLicenseFromPmLicensedGroup`.
