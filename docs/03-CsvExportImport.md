@@ -131,6 +131,12 @@ Import-Csv C:\temp\assets.csv | Set-OrchAsset -Path .
 - Empty cells in CSV are treated as "not specified" and do not overwrite
   existing values.
 - Boolean values accept `true`/`false` (case-insensitive).
+- Preview an import with `-WhatIf` before running it for real — the
+  state-changing cmdlets (New, Update, Set, Add, Copy, Remove) support it,
+  so each row reports what it *would* do without making any change:
+  ```powershell
+  Import-Csv C:\temp\assets.csv | Set-OrchAsset -WhatIf
+  ```
 - Use `Get-Help <CmdletName> -Parameter *` to see all available parameters
   and their types.
 
