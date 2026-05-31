@@ -223,10 +223,6 @@ internal static class MultilineCsv
 
 internal class CsvLineBase
 {
-    // Expression<T> ���g���΁A�����������Ȍ��ɏ������������ǁA�����܂ł���̂��Ȃ��B�B
-    // OrchDriveInfo �� OrchDuDriveInfo �̃x�[�X������āANameColonSeparator �͂������Ɉړ����ׂ����B
-    // �ŁAPSDriveInfo ���� OrchDriveInfoBase ���g�������ǂ��B
-    // ���̂܂܂ł��������ǁA���� string �̍\�z�����ʂ��ȁB�B
     // Multi-row CSV-aggregation helpers used by Add-OrchUser when several CSV rows
     // identify the same user (e.g. one row per role): the first row populates the
     // CsvLine via the constructor, subsequent rows pass through Update() which calls
