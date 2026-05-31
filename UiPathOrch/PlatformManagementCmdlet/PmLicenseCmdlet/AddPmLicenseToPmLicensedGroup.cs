@@ -12,9 +12,15 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
 public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
 {
-    // Manages license codes
-    //private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;
-    private Dictionary<(OrchDriveInfo drive, PmDirectoryEntityInfo group), HashSet<string>>? _parameterSets;
+    // Accumulates the bundle codes to add per group across all pipeline rows,
+    // applied once each in EndProcessing (the license API is atomic-replace, so a
+    // group must be PUT exactly once with its full merged set — never once per row).
+    // Keyed by (drive, lower-cased group name): -GroupName identifies a group by
+    // name, so rows naming the same group case-insensitively aggregate together
+    // regardless of which PmDirectoryEntityInfo instance the directory cache hands
+    // back. The value carries the resolved group (for its identifier on the PUT)
+    // alongside the merged codes.
+    private Dictionary<(OrchDriveInfo drive, string groupNameKey), (PmDirectoryEntityInfo group, HashSet<string> codes)>? _parameterSets;
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(SearchGroupNameCompleter))]
@@ -239,22 +245,20 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
                 foreach (var group in FilterDirectoryGroupsByName(groups, groupName)
                     .OrderBy(e => e.identityName).WithCancellation(cancelHandler.Token))
                 {
-                    //var licenseGroups = drive.GetPmLicensedGroups();
-                    //var targetGroups = licenseGroups.SelectByWildcards(g => g?.name, wpGroupName);
-
-                    //foreach (var group in targetGroups.OrderBy(g => g.name))
+                    // Aggregate by name (case-insensitive) so multiple rows for the
+                    // same group merge into one PUT. identityName is non-null here
+                    // (FilterDirectoryGroupsByName filters out null names).
+                    var key = (drive, group.identityName!.ToLowerInvariant());
+                    if (!_parameterSets.TryGetValue(key, out var entry))
                     {
-                        if (!_parameterSets.TryGetValue((drive, group), out var codes))
-                        {
-                            codes = [];
-                            _parameterSets[(drive, group)] = codes;
-                        }
-
-                        var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.identifier, group.identityName!);
-                        codes.UnionWith(ResolveLicenseCodesForGroup(
-                            wpLicense,
-                            availableUserBundles?.availableUserBundles?.Select(b => b?.code)));
+                        entry = (group, []);
+                        _parameterSets[key] = entry;
                     }
+
+                    var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.identifier, group.identityName!);
+                    entry.codes.UnionWith(ResolveLicenseCodesForGroup(
+                        wpLicense,
+                        availableUserBundles?.availableUserBundles?.Select(b => b?.code)));
                 }
             }
         }
@@ -267,10 +271,10 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var parameterSet in _parameterSets
             .OrderBy(p => p.Key.drive.Name)
-            .OrderBy(p => p.Key.group.identityName).WithCancellation(cancelHandler.Token))
+            .ThenBy(p => p.Key.groupNameKey).WithCancellation(cancelHandler.Token))
         {
-            var (drive, group) = parameterSet.Key;
-            var codesToAdd = parameterSet.Value;
+            var drive = parameterSet.Key.drive;
+            var (group, codesToAdd) = parameterSet.Value;
 
             var existingLicensedGroup = drive.PmLicensedGroups.Get();
             var targetGroup = existingLicensedGroup.FirstOrDefault(g => g.id == group.identifier);

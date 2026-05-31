@@ -50,25 +50,41 @@ BeforeAll {
     $script:grp = $null
     $script:unheldCode = $null
     $script:unheldName = $null
+    # A group with >=2 available-but-unheld licenses, used by the aggregation test.
+    $script:grp2 = $null
+    $script:unheld2Names = $null
+    $script:unheld2Codes = $null
     if ($script:hasDrive) {
         Clear-OrchCache -Path $script:drive -ErrorAction SilentlyContinue | Out-Null
         foreach ($g in (Get-PmLicensedGroup -Path $script:drive)) {
             $held   = @($g.userBundleLicenses)
             $unheld = @(script:AvailableCodes $g.id |
                 Where-Object { $_ -and $_ -notin $held -and $script:codeToName.ContainsKey($_) })
-            if ($unheld.Count -gt 0) {
+            if ($unheld.Count -gt 0 -and $null -eq $script:grp) {
                 $script:grp        = $g
                 $script:unheldCode = $unheld[0]
                 $script:unheldName = $script:codeToName[$unheld[0]]
-                break
+            }
+            # Prefer an ASCII-named group for the case-insensitivity assertion.
+            if ($unheld.Count -ge 2 -and $null -eq $script:grp2 -and $g.name -match '^[\x20-\x7e]+$') {
+                $script:grp2         = $g
+                $script:unheld2Codes = @($unheld[0], $unheld[1])
+                $script:unheld2Names = @($script:codeToName[$unheld[0]], $script:codeToName[$unheld[1]])
             }
         }
     }
-    $script:hasGroup = $null -ne $script:grp
+    $script:hasGroup  = $null -ne $script:grp
+    $script:hasGroup2 = $null -ne $script:grp2
 
     function script:RequireGroup {
         if (-not $script:hasDrive) { Set-ItResult -Skipped -Because "drive '$script:DriveName' is not connected"; return $false }
         if (-not $script:hasGroup) { Set-ItResult -Skipped -Because "no licensed group with an available-but-unheld license on $script:drive"; return $false }
+        return $true
+    }
+
+    function script:RequireGroup2 {
+        if (-not $script:hasDrive)  { Set-ItResult -Skipped -Because "drive '$script:DriveName' is not connected"; return $false }
+        if (-not $script:hasGroup2) { Set-ItResult -Skipped -Because "no ASCII-named licensed group with >=2 available-but-unheld licenses on $script:drive"; return $false }
         return $true
     }
 }
@@ -140,6 +156,46 @@ Describe 'ExportCsv -> Add round trip' {
         }
         $restored = @((Get-PmLicensedGroup -Path $script:drive |
             Where-Object name -eq $script:grp.name).userBundleLicenses | Sort-Object)
+        $restored | Should -Be $before
+    }
+}
+
+Describe 'Multi-row aggregation (same group, case-insensitive)' {
+    It 'merges two CSV rows naming one group in different case into a single applied set' {
+        if (-not (script:RequireGroup2)) { return }
+        $name = $script:grp2.name
+        $lower = $name.ToLowerInvariant()
+        $upper = $name.ToUpperInvariant()
+        $codeA, $codeB = $script:unheld2Codes
+        $nameA, $nameB = $script:unheld2Names
+
+        $before = @((Get-PmLicensedGroup -Path $script:drive |
+            Where-Object name -eq $name).userBundleLicenses | Sort-Object)
+        $csv = Join-Path ([IO.Path]::GetTempPath()) "pmlg_agg_$([guid]::NewGuid().ToString('N')).csv"
+        try {
+            # Same group, different case per row, a different license each — these
+            # must aggregate (atomic-replace API: one PUT carrying BOTH licenses).
+            @(
+                [pscustomobject]@{ Path = $script:drive; GroupName = $lower; License = $nameA }
+                [pscustomobject]@{ Path = $script:drive; GroupName = $upper; License = $nameB }
+            ) | Export-Csv $csv -NoTypeInformation -Encoding utf8
+
+            Import-Csv $csv | Add-PmLicenseToPmLicensedGroup -Confirm:$false | Out-Null
+            Clear-OrchCache -Path $script:drive -ErrorAction SilentlyContinue | Out-Null
+
+            $after = @((Get-PmLicensedGroup -Path $script:drive |
+                Where-Object name -eq $name).userBundleLicenses)
+            # Both licenses present — neither row clobbered the other.
+            $after | Should -Contain $codeA
+            $after | Should -Contain $codeB
+        } finally {
+            Remove-Item $csv -ErrorAction SilentlyContinue
+            Remove-PmLicenseFromPmLicensedGroup -Path $script:drive -GroupName $name `
+                -License $nameA, $nameB -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
+            Clear-OrchCache -Path $script:drive -ErrorAction SilentlyContinue | Out-Null
+        }
+        $restored = @((Get-PmLicensedGroup -Path $script:drive |
+            Where-Object name -eq $name).userBundleLicenses | Sort-Object)
         $restored | Should -Be $before
     }
 }
