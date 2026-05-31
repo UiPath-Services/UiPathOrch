@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.6.0'
+ModuleVersion = '1.6.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -472,13 +472,14 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.6.0 - Add-/Remove-PmLicenseFromPmLicensedUser + Remove-PmLicensedUser
-(Platform Management license assignment / cleanup). Add-OrchFolderUser
-gains -Domain for EntraID-federated OnPrem tenants where the default
-"autogen" partition is rejected. CSV import for Import-OrchQueueItem and
-Import-OrchTestDataQueueItem (web-parity 15,000-row cap). Tightens
-per-cmdlet warning scoping plus a stack of asset / auth / Copy-Orch*
-fixes.
+1.6.1 - Get-PmLicensedGroup -ExportCsv now round-trips into
+Add-PmLicenseToPmLicensedGroup (one row per group+license; the prior
+export could not be re-imported). Add-PmLicenseToPmLicensedGroup matches
+group names exactly, resolves license names via the bundle catalog, and
+aggregates pipeline rows per group; its -License completion lists only
+unassigned licenses. Plus hardening: argument completers no longer throw
+into <Tab>, token refresh no longer pins a stale token, and HTTP error
+bodies are capped in exceptions.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

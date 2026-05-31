@@ -6,6 +6,64 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.6.1] - 2026-05-31
+
+A round-trip and resolution fix for the Platform Management license-group
+cmdlets, plus a stack of hardening fixes from a code-quality pass.
+
+### Fixed
+
+- **`Get-PmLicensedGroup -ExportCsv` → `Add-PmLicenseToPmLicensedGroup`
+  round trip.** The export previously emitted member-oriented rows that
+  bound to no `Add-PmLicenseToPmLicensedGroup` parameter, so the CSV could
+  not be re-imported to assign licenses. It now emits one row per
+  *(group, license)* with `Path` / `GroupName` / `License` columns matching
+  the cmdlet's parameters (`License` is the friendly bundle name).
+  **This changes the exported CSV layout** from the prior member columns.
+- **`Add-PmLicenseToPmLicensedGroup` group and license resolution.** Group
+  names were matched by directory-search prefix, so a request for `GroupA`
+  could also hit `GroupA2`; they are now matched exactly (wildcards still
+  honored). License names were matched against an API field that is empty on
+  the live server, so a friendly name silently resolved to nothing; they are
+  now resolved through the bundle catalog (friendly name *or* raw code).
+  Pipeline rows are aggregated by group name (case-insensitive) so multiple
+  rows for one group merge into a single atomic-replace update instead of
+  clobbering each other.
+- **Argument completers no longer leak exceptions into `<Tab>`.** A transient
+  auth / HTTP failure (or a cached error) during tab completion previously
+  surfaced as a raw error in the prompt; completion now degrades to "no
+  matches" while still propagating cancellation.
+- **Token refresh no longer pins a stale token.** A token endpoint returning
+  `200` without an `access_token` would advance the expiry behind an
+  unchanged Bearer header; the session now fails / forces re-authentication.
+- **HTTP error-response bodies are capped in exception messages** (8 KB), so
+  a large non-JSON error payload can no longer flood `Start-Transcript` /
+  CI logs.
+- **`Get-Orch{Asset,Bucket,Queue}Link` survives an unexpected per-item
+  failure.** Orchestrator-side errors were already reported per item and the
+  run continued, but a non-`OrchException` fault while draining one result
+  (e.g. an `IOException` from writing a CSV row) would abort the whole
+  cmdlet; such faults now become a non-terminating error for that item and
+  the remaining items still process. `Ctrl+C` cancellation still stops the
+  run promptly.
+- **`Enable-/Disable-OrchEventTrigger` reported a copy-pasted error id.** A
+  drive-level failure surfaced with `FullyQualifiedErrorId` `GetApiTriggerError`
+  (left over from the API-trigger cmdlet); it now correctly reports
+  `GetEventTriggerError`.
+
+### Changed
+
+- **`Add-PmLicenseToPmLicensedGroup` `-License` tab completion** now lists
+  only licenses the group does **not** already hold. For multiple groups
+  (wildcard or comma-separated `-GroupName`) it offers the union of each
+  group's available licenses minus only those held by *every* named group.
+- **`Set-OrchLocation` raises proper error records when the module can't be
+  resolved.** A missing module (`Set-OrchLocation NoSuchModule`) or an
+  ambiguous wildcard match used to surface a bare `InvalidOperationException`;
+  it now throws a terminating `ErrorRecord` with a specific id
+  (`ModuleNotFound` / `AmbiguousModuleName`) and category, so the failure is
+  catchable and self-explanatory.
+
 ## [1.6.0] - 2026-05-30
 
 Adds the `PmLicensed*User` cmdlet family, an `Add-OrchFolderUser
