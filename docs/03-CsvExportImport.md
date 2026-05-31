@@ -196,6 +196,30 @@ The same shape works for other `Remove-Orch*` cmdlets (for example
 `Get-OrchQueue ... | select Path,Name | Export-Csv ...` then
 `Import-Csv ... | Remove-OrchQueue`).
 
+### Snapshot State, Change It, Restore It
+
+A CSV can also record a *subset* of entities so you can restore exactly that
+subset later. For example, record which triggers are currently enabled, disable
+every trigger (e.g. for a maintenance window), then re-enable only the ones
+that were on before:
+
+```powershell
+# Record the currently-enabled triggers
+Get-OrchTrigger -Path Orch1:\ -Recurse | where Enabled -EQ $true | Export-Csv c:triggers.csv
+
+# Disable all triggers
+Disable-OrchTrigger -Path Orch1:\ -Recurse *
+
+# ... maintenance window ...
+
+# Re-enable only the triggers that were enabled before
+Import-Csv c:triggers.csv | Enable-OrchTrigger -WhatIf
+```
+
+`Enable-OrchTrigger` binds each row's `Path` and `Name` from the CSV, so the
+full `Get-OrchTrigger` export needs no trimming — the extra columns are
+ignored. Drop the `-WhatIf` once the preview is correct.
+
 ### Sharing Assets, Buckets, and Queues Across Folders (Links)
 
 `Get-Orch{Asset,Bucket,Queue}Link -ExportCsv` exports one row per
