@@ -11,7 +11,7 @@ internal class TupleComparer<T> : IEqualityComparer<T>
     {
         if (x is null || y is null) return false;
 
-        // Tuple �̑S�v�f���r����
+        // Compare every element of the tuple structurally.
         return StructuralComparisons.StructuralEqualityComparer.Equals(x, y);
     }
 
@@ -19,7 +19,7 @@ internal class TupleComparer<T> : IEqualityComparer<T>
     {
         if (obj is null) return 0;
 
-        // Tuple �̑S�v�f���l�������n�b�V���R�[�h�𐶐�
+        // Build a hash code from every element value of the tuple.
         return StructuralComparisons.StructuralEqualityComparer.GetHashCode(obj);
     }
 }
