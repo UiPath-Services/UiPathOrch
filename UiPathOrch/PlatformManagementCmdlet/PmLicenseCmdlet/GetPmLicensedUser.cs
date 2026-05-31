@@ -35,18 +35,26 @@ public class GetUserLicenseUser : OrchestratorPSCmdlet
 
     private static readonly string DefaultCsvName = "ExportedPmLicensedUsers.csv";
 
-    // Columns match Add-PmLicenseToPmLicensedUser (and
-    // Remove-PmLicenseFromPmLicensedUser) parameter names exactly, so the
-    // exported CSV round-trips: one row per (user, license), letting the user
-    // delete rows to drop individual licenses before re-importing. License is
-    // the human-readable display name (e.g. "Attended - Named User"), which is
-    // what the -License parameter accepts. Email is the column the Add cmdlet's
-    // Position-0 parameter binds (its -UserName alias accepts the same value).
+    // Columns round-trip into Add-PmLicenseToPmLicensedUser: UserName binds to
+    // its Position-0 -Email parameter via that parameter's [Alias("UserName")],
+    // License to -License, Path to -Path. The identifier column is UserName
+    // (not Email) on purpose: the License Accountant API returns an empty
+    // 'email' for every user (verified on live tenants) and carries the login
+    // in 'name', so 'name' is the value that re-matches the user on import
+    // (Add matches name OR email). Symmetric with Get-PmLicensedGroup's
+    // GroupName column. License is the friendly display name the -License
+    // parameter accepts.
     private static readonly string[] CsvHeaders = [
         "Path",
-        "Email",
+        "UserName",
         "License"
     ];
+
+    // True for rows that represent a real, re-importable user. orphan=true rows
+    // are dangling license pools whose 'name' is a bundle display name rather
+    // than a user, so they are left out of the export — re-importing one would
+    // try to allocate to a user that doesn't exist. Pure / static for testing.
+    internal static bool IsExportableUser(NuLicensedUser user) => !(user.orphan ?? false);
 
     // One row per license the user holds, ordered by display name. The user's
     // userBundleLicenses are short codes (e.g. "ATTUNU"); convert each to the
@@ -60,25 +68,24 @@ public class GetUserLicenseUser : OrchestratorPSCmdlet
             .OrderBy(license => license)
             .ToList();
 
-    // Builds one CSV row (Path, Email, License) with every field escaped, in
+    // Builds one CSV row (Path, UserName, License) with every field escaped, in
     // CsvHeaders order. Pure / static so the round trip — write here, read back
     // via the project's RFC-4180 splitter, bind to Add-PmLicenseToPmLicensedUser
-    // — is unit-testable, and so a comma/quote in Email can't shift columns.
-    // Prefers email (the Add cmdlet's canonical identifier) and falls back to
-    // name when a licensed user has no email recorded.
-    internal static string[] BuildLicenseCsvRow(string? drivePath, string? email, string? license) =>
+    // — is unit-testable, and so a comma/quote in the user name can't shift
+    // columns.
+    internal static string[] BuildLicenseCsvRow(string? drivePath, string? userName, string? license) =>
     [
         EscapeCsvValue(drivePath, true),
-        EscapeCsvValue(email, true),
+        EscapeCsvValue(userName, true),
         EscapeCsvValue(license)
     ];
 
     private static void WriteCsvContent(StreamWriter writer, string drivePath, NuLicensedUser user)
     {
-        string? identifier = !string.IsNullOrEmpty(user.email) ? user.email : user.name;
+        if (!IsExportableUser(user)) return;
         foreach (var license in BuildLicenseDisplayNames(user))
         {
-            writer.WriteCsvLine(BuildLicenseCsvRow(drivePath, identifier, license));
+            writer.WriteCsvLine(BuildLicenseCsvRow(drivePath, user.name, license));
         }
     }
 

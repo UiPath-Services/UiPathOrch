@@ -24,6 +24,11 @@ public class ExportCsvOptionalityTests
         yield return new object[] { typeof(GetAssetLinkCmdlet) };
         yield return new object[] { typeof(GetBucketLinkCmdlet) };
         yield return new object[] { typeof(GetQueueLinkCmdlet) };
+        // -ExportCsv added in 1.6.2; single [OutputType(NuLicensedUser)].
+        // (GetUserLicenseGroup is intentionally absent: it declares two
+        // [OutputType] attributes, which would make the single-attribute
+        // OutputTypeUnchanged check below throw AmbiguousMatchException.)
+        yield return new object[] { typeof(GetUserLicenseUser) };
     }
 
     [Theory]
