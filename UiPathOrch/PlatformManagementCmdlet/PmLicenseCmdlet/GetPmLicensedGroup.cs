@@ -69,16 +69,22 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
             .OrderBy(license => license)
             .ToList();
 
+    // Builds one CSV row (Path, GroupName, License) with every field escaped, in
+    // CsvHeaders order. Pure / static so the round trip — write here, read back
+    // via the project's RFC-4180 splitter, bind to Add-OrchPmLicenseToPmLicensedGroup
+    // — is unit-testable, and so a comma/quote in GroupName can't shift columns.
+    internal static string[] BuildLicenseCsvRow(string? drivePath, string? groupName, string? license) =>
+    [
+        EscapeCsvValue(drivePath, true),
+        EscapeCsvValue(groupName, true),
+        EscapeCsvValue(license)
+    ];
+
     private static void WriteCsvContent(StreamWriter writer, string drivePath, NuLicensedGroup group)
     {
         foreach (var license in BuildLicenseDisplayNames(group))
         {
-            string[] line = [
-                EscapeCsvValue(drivePath, true),
-                EscapeCsvValue(group.name, true),
-                EscapeCsvValue(license)
-            ];
-            writer.WriteCsvLine(line);
+            writer.WriteCsvLine(BuildLicenseCsvRow(drivePath, group.name, license));
         }
     }
 
