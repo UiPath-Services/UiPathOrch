@@ -124,6 +124,53 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
         }
     }
 
+    // The directory Search API matches by prefix (startsWith), so a request for
+    // "Developers" also returns "Developers2", and a -ExportCsv round trip would
+    // license the wrong / extra group. Narrow the results to the name actually
+    // requested: a bare name matches exactly and a wildcard pattern matches per
+    // its pattern (GroupName is [SupportsWildcards]) — the same WildcardPattern
+    // semantics Get-/Remove- use, so each exported row binds to exactly one group.
+    // Pure / static so the prefix-over-match guard is unit-testable.
+    internal static IEnumerable<PmDirectoryEntityInfo> FilterDirectoryGroupsByName(
+        IEnumerable<PmDirectoryEntityInfo> groups, string requestedName)
+    {
+        var wp = new WildcardPattern(requestedName, WildcardOptions.IgnoreCase);
+        return groups.Where(g =>
+            (g.objectType == "DirectoryGroup" || g.objectType == "LocalGroup")
+            && g.identityName is not null
+            && wp.IsMatch(g.identityName));
+    }
+
+    // Resolves -License wildcards to the bundle codes addable to a group. The
+    // available-bundles API returns codes (its bundle `name` is always empty on
+    // this build), so matching goes through the static catalog: a pattern matches
+    // a bundle if it matches the catalog friendly name OR the raw code (so users
+    // can pass either form, and a Get-PmLicensedGroup -ExportCsv License column —
+    // which is the friendly name — round-trips). Restricted to availableCodes so
+    // only licenses actually offered to the group are added. Pure / static for
+    // unit testing.
+    internal static HashSet<string> ResolveLicenseCodesForGroup(
+        IEnumerable<WildcardPattern>? wpLicense, IEnumerable<string?>? availableCodes)
+    {
+        var resolved = new HashSet<string>();
+        if (wpLicense is null || availableCodes is null) return resolved;
+
+        foreach (var code in availableCodes)
+        {
+            if (code is null) continue;
+            string friendly = AvailableUserBundlesItems.Items.TryGetValue(code, out var n) ? n : code;
+            foreach (var wp in wpLicense)
+            {
+                if (wp.IsMatch(friendly) || wp.IsMatch(code))
+                {
+                    resolved.Add(code);
+                    break;
+                }
+            }
+        }
+        return resolved;
+    }
+
     protected override void ProcessRecord()
     {
         _parameterSets ??= [];
@@ -141,8 +188,7 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
                 var groups = drive.SearchPmDirectoryCache.Get(groupName.ToLower());
                 if (groups is null) continue;
 
-                foreach (var group in groups
-                    .Where(g => g.objectType == "DirectoryGroup" || g.objectType == "LocalGroup")
+                foreach (var group in FilterDirectoryGroupsByName(groups, groupName)
                     .OrderBy(e => e.identityName).WithCancellation(cancelHandler.Token))
                 {
                     //var licenseGroups = drive.GetPmLicensedGroups();
@@ -157,9 +203,9 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
                         }
 
                         var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.identifier, group.identityName!);
-                        codes.UnionWith(availableUserBundles?.availableUserBundles?
-                            .SelectByWildcards(b => b?.name, wpLicense)?
-                            .Select(b => b.code!) ?? []);
+                        codes.UnionWith(ResolveLicenseCodesForGroup(
+                            wpLicense,
+                            availableUserBundles?.availableUserBundles?.Select(b => b?.code)));
                     }
                 }
             }
