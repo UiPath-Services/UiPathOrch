@@ -263,8 +263,7 @@ export changes nothing.
 
 The round trip is **additive** — like `Get-OrchUser -ExportCsv` →
 `Add-OrchUser`, the CSV adds licenses and never revokes the ones you leave
-out. The `Add-…To…` / `Remove-…From…` naming follows the module's convention
-for operating on an entity's sub-collection (here, a group's license bundles).
+out.
 
 > To **remove** a group's licenses from a CSV instead, pipe the same shape
 > into `Remove-PmGroupLicense`.
