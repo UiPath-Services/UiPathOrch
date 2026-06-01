@@ -51,6 +51,7 @@ Use `-CsvEncoding` to specify the encoding.
 | `Get-OrchMachine -ExportCsv` | `Import-Csv` → `New-OrchMachine` |
 | `Get-OrchAsset -ExportCsv` | `Import-Csv` → `Set-OrchAsset` |
 | `Get-OrchAsset -ExportCredentialCsv` | `Import-Csv` → `Set-OrchCredentialAsset` |
+| `Get-OrchSecretAsset -ExportCsv` | `Import-Csv` → `Set-OrchSecretAsset` |
 | `Get-OrchTrigger -ExportCsv` | `Import-Csv` → `New-OrchTrigger` |
 | `Get-OrchApiTrigger -ExportCsv` | `Import-Csv` → `New-OrchApiTrigger` or `Update-OrchApiTrigger` |
 | `Get-OrchUser -ExportCsv` | `Import-Csv` → `Add-OrchUser` |
@@ -59,16 +60,21 @@ Use `-CsvEncoding` to specify the encoding.
 | `Get-OrchFolderMachine -ExportCsv` | `Import-Csv` → `Add-OrchFolderMachine` |
 | `Get-OrchBucket -ExportCsv` | `Import-Csv` → `New-OrchBucket` |
 | `Get-OrchTestDataQueue -ExportCsv` | `Import-Csv` → `New-OrchTestDataQueue` |
+| `Get-OrchTestSetSchedule -ExportCsv` | `Import-Csv` → `New-OrchTestSetSchedule` or `Update-OrchTestSetSchedule` |
 | `Get-OrchActionCatalog -ExportCsv` | `Import-Csv` → `New-OrchActionCatalog` |
 | `Get-OrchWebhook -ExportCsv` | `Import-Csv` → `New-OrchWebhook` or `Update-OrchWebhook` |
 | `Get-OrchAssetLink -ExportCsv` | `Import-Csv` → `Add-OrchAssetLink` |
 | `Get-OrchBucketLink -ExportCsv` | `Import-Csv` → `Add-OrchBucketLink` |
 | `Get-OrchQueueLink -ExportCsv` | `Import-Csv` → `Add-OrchQueueLink` |
+| `Get-OrchCalendar -ExportCsv` | `Import-Csv` → `Add-OrchCalendarDate` |
 | `Get-OrchCalendarDate -ExportCsv` | `Import-Csv` → `Add-OrchCalendarDate` |
 | `Get-PmGroup -ExportCsv` | `Import-Csv` → `New-PmGroup` |
 | `Get-PmRobotAccount -ExportCsv` | `Import-Csv` → `Set-PmRobotAccount` |
+| `Get-PmUser -ExportCsv` | `Import-Csv` → `New-PmUser` or `Update-PmUser` |
+| `Get-PmGroupMember -ExportCsv` | `Import-Csv` → `Add-PmGroupMember` |
 | `Get-PmGroupLicense -ExportCsv` | `Import-Csv` → `Add-PmGroupLicense` |
 | `Get-PmUserLicense -ExportCsv` | `Import-Csv` → `Add-PmUserLicense` |
+| `Get-DuUser -ExportCsv` | `Import-Csv` → `Add-DuUser` |
 
 #### Credential Assets (`-ExportCredentialCsv`)
 
