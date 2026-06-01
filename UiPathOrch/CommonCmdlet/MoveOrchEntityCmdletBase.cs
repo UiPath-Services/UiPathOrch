@@ -93,17 +93,6 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
 
     private readonly List<(string[]? Name, string? Destination, string[]? Path)> _buffered = new();
 
-    // One entity in one source folder, with the destination subfolder it should
-    // land in (the source root is mirrored under -Destination).
-    private sealed class MoveGroup
-    {
-        public required OrchDriveInfo Drive { get; init; }
-        public required Folder SrcFolder { get; init; }
-        public required Folder DstFolder { get; init; }
-        public required long EntityId { get; init; }
-        public required string EntityName { get; init; }
-    }
-
     protected sealed override void ProcessRecord()
     {
         _buffered.Add((Name, Destination, Path));
@@ -165,11 +154,15 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
         // the same subfolder creates it once.
         var dstFolderByFqn = new Dictionary<string, Folder?>(StringComparer.OrdinalIgnoreCase);
 
-        // Resolve each buffered row into (drive, src folder, entity) groups. The
-        // destination subfolder mirrors the source folder's path relative to the
-        // source root. Keyed by drive + src + entity so duplicates merge.
-        var groups = new Dictionary<(string Drive, long Src, long Entity), MoveGroup>();
+        // Entities already moved this run, so a duplicate (same entity reached
+        // via overlapping -Path arguments) isn't moved twice.
+        var movedKeys = new HashSet<(string Drive, long Src, long Entity)>();
 
+        // Process in a single pass so folder creation and entity moves interleave
+        // in execution order: a destination subfolder is created right before the
+        // first entity that moves into it (not all up front). EnumFolders returns
+        // source folders shallow-first, so the root folder's entities move before
+        // a subfolder is created for the subfolder's entities.
         foreach (var (names, _, paths) in _buffered.WithCancellation(cancelHandler.Token))
         {
             // The source root anchors the relative path that is mirrored under
@@ -204,7 +197,7 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
             var srcDrivesFolders = SessionState.EnumFolders(paths, Recurse.IsPresent, Depth).ToList();
             var wpName = names.ConvertToWildcardPatternList();
 
-            foreach (var (drive, folder) in srcDrivesFolders)
+            foreach (var (drive, folder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
             {
                 ICollection<TEntity> entities;
                 try
@@ -223,70 +216,56 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
                     .OrderBy(e => GetEntityName(e)).ToList();
                 if (matched.Count == 0) continue;
 
-                // The destination subfolder mirrors this source folder relative
-                // to the source root. Resolve (creating as needed) once per
-                // source folder; null means it couldn't be ensured (error
-                // already written, or -WhatIf declined the folder creation).
-                Folder? dstFolder = ResolveMirroredDestination(drive, srcRootFolder, folder, destRootFolder, dstFolderByFqn);
-                if (dstFolder is null) continue;
+                long srcId = folder.Id ?? 0;
+                string source = folder.GetPSPath();
 
                 foreach (var entity in matched.WithCancellation(cancelHandler.Token))
                 {
                     long entityId = GetEntityId(entity);
-                    var key = (drive.NameColonSeparator, folder.Id ?? 0, entityId);
-                    if (!groups.ContainsKey(key))
+                    if (!movedKeys.Add((drive.NameColonSeparator, srcId, entityId))) continue;
+
+                    string entityName = GetEntityName(entity)!;
+                    string target = System.IO.Path.Combine(source, entityName);
+
+                    // Resolve (creating as needed, just before the move) the
+                    // destination subfolder mirroring this source folder. null
+                    // means it couldn't be ensured — error already written, or
+                    // -WhatIf returned a placeholder declined deeper up.
+                    Folder? dstFolder = ResolveMirroredDestination(drive, srcRootFolder, folder, destRootFolder, dstFolderByFqn);
+                    if (dstFolder is null) continue;
+
+                    long dstId = dstFolder.Id ?? 0;
+                    if (srcId == dstId) continue; // already there — no-op
+                    string dst = dstFolder.GetPSPath();
+
+                    if (!ShouldProcess(target, $"Move {EntityNoun} to {dst}")) continue;
+
+                    try
                     {
-                        groups[key] = new MoveGroup
-                        {
-                            Drive = drive,
-                            SrcFolder = folder,
-                            DstFolder = dstFolder,
-                            EntityId = entityId,
-                            EntityName = GetEntityName(entity)!,
-                        };
+                        // Atomic relocate: add the destination link and remove the
+                        // source link in a single request. Operate from the source
+                        // folder so srcFolderId is the entity's current context.
+                        Share(drive.OrchAPISession, srcId,
+                            new List<long> { entityId },
+                            new List<long> { dstId },
+                            new List<long> { srcId });
+
+                        // Both folders' entity lists and this entity's link set changed.
+                        ClearLinkCache(drive, entityId);
+                        ClearPerFolderCache(drive, folder);
+                        ClearPerFolderCache(drive, dstFolder);
+                    }
+                    catch (Exception ex)
+                    {
+                        // The relocate is atomic, so on failure nothing moved.
+                        // Common cause: no create permission in the destination.
+                        var wrapped = new OrchException(target,
+                            $"'{entityName}' was not moved to '{dst}'. The relocation is atomic and was " +
+                            $"rejected by the server (the entity remains in '{source}'). Server: {ex.Message}", ex);
+                        WriteError(new ErrorRecord(wrapped, ErrorId,
+                            ErrorCategory.InvalidOperation, target));
                     }
                 }
-            }
-        }
-
-        // One Share call per group: toAdd=[dst], toRemove=[src], atomic.
-        foreach (var group in groups.Values.WithCancellation(cancelHandler.Token))
-        {
-            string source = group.SrcFolder.GetPSPath();
-            string target = System.IO.Path.Combine(source, group.EntityName);
-
-            long srcId = group.SrcFolder.Id ?? 0;
-            long dstId = group.DstFolder.Id ?? 0;
-            if (srcId == dstId) continue; // already there — no-op
-            string dst = group.DstFolder.GetPSPath();
-            string action = $"Move {EntityNoun} to {dst}";
-
-            if (!ShouldProcess(target, action)) continue;
-
-            try
-            {
-                // Atomic relocate: add the destination link and remove the
-                // source link in a single request. Operate from the source
-                // folder so srcFolderId is the entity's current context.
-                Share(group.Drive.OrchAPISession, srcId,
-                    new List<long> { group.EntityId },
-                    new List<long> { dstId },
-                    new List<long> { srcId });
-
-                // Both folders' entity lists and this entity's link set changed.
-                ClearLinkCache(group.Drive, group.EntityId);
-                ClearPerFolderCache(group.Drive, group.SrcFolder);
-                ClearPerFolderCache(group.Drive, group.DstFolder);
-            }
-            catch (Exception ex)
-            {
-                // The relocate is atomic, so on failure nothing moved. Common
-                // cause: the caller lacks create permission in the destination.
-                var wrapped = new OrchException(target,
-                    $"'{group.EntityName}' was not moved to '{dst}'. The relocation is atomic and was " +
-                    $"rejected by the server (the entity remains in '{source}'). Server: {ex.Message}", ex);
-                WriteError(new ErrorRecord(wrapped, ErrorId,
-                    ErrorCategory.InvalidOperation, target));
             }
         }
     }
