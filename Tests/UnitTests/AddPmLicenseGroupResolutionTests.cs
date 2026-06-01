@@ -5,10 +5,10 @@ using Xunit;
 
 namespace UnitTests;
 
-// Add-PmLicenseToPmLicensedGroup resolves a group name against the directory
+// Add-PmGroupLicense resolves a group name against the directory
 // Search API, which matches by PREFIX (startsWith) — so "ほえほえグループ" also
 // returns "ほえほえグループ2". FilterDirectoryGroupsByName must narrow that to
-// the requested name so a Get-PmLicensedGroup -ExportCsv row binds back to
+// the requested name so a Get-PmGroupLicense -ExportCsv row binds back to
 // exactly one group. Verified against the live Orch1 directory (the 2-group
 // prefix collision is real, 2026-05-31).
 public class AddPmLicenseGroupResolutionTests

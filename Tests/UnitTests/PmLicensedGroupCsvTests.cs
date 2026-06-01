@@ -6,9 +6,9 @@ using CsvLine = UiPath.PowerShell.Commands.CsvHelper.CsvLine;
 
 namespace UnitTests;
 
-// Get-OrchPmLicensedGroup -ExportCsv emits one row per (group, license) with the
+// Get-PmGroupLicense -ExportCsv emits one row per (group, license) with the
 // License column as the human-readable display name, so the CSV round-trips into
-// Add-OrchPmLicenseToPmLicensedGroup (whose -License takes that display name).
+// Add-PmGroupLicense (whose -License takes that display name).
 // BuildLicenseDisplayNames is the pure core: codes -> display names, ordered,
 // with unknown codes falling back to the raw code so nothing is dropped.
 public class PmLicensedGroupCsvTests
@@ -56,7 +56,7 @@ public class PmLicensedGroupCsvTests
     }
 
     // ---- Round trip: the row the exporter writes must read back into the same
-    // Path/GroupName/License values that Add-OrchPmLicenseToPmLicensedGroup binds.
+    // Path/GroupName/License values that Add-PmGroupLicense binds.
     // Column index in CsvHeaders order: Path=0, GroupName=1, License=2.
     private const int Path = 0, GroupName = 1, License = 2;
 
@@ -103,7 +103,7 @@ public class PmLicensedGroupCsvTests
     {
         // End to end: a group's codes -> display names -> CSV rows -> read back.
         // Each parsed row carries the group identity plus exactly one license,
-        // which is what Import-Csv | Add-OrchPmLicenseToPmLicensedGroup consumes.
+        // which is what Import-Csv | Add-PmGroupLicense consumes.
         var group = new NuLicensedGroup { name = "Ops", userBundleLicenses = ["ATTUNU", "ACNU"] };
 
         var parsed = GetUserLicenseGroup.BuildLicenseDisplayNames(group)

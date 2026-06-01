@@ -9,8 +9,8 @@ namespace UnitTests;
 // (its bundle `name` is empty on the live server, verified on Orch1 2026-05-31),
 // so resolution must go through the static catalog: match a pattern against the
 // friendly name OR the raw code, restricted to the codes the group can actually
-// be offered. This is what makes Get-PmLicensedGroup -ExportCsv (License =
-// friendly name) round-trip into Add-PmLicenseToPmLicensedGroup.
+// be offered. This is what makes Get-PmGroupLicense -ExportCsv (License =
+// friendly name) round-trip into Add-PmGroupLicense.
 public class ResolveLicenseCodesForGroupTests
 {
     private static List<WildcardPattern> P(params string[] patterns) =>

@@ -1,15 +1,15 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicenseFromPmLicensedUser.md'
+HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmUserLicense.md'
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 05/28/2026
 PlatyPS schema version: 2024-05-01
-title: Remove-PmLicenseFromPmLicensedUser
+title: Remove-PmUserLicense
 ---
 
-# Remove-PmLicenseFromPmLicensedUser
+# Remove-PmUserLicense
 
 ## SYNOPSIS
 
@@ -20,7 +20,7 @@ Removes one or more user bundle licenses from a Platform Management user.
 ### __AllParameterSets
 
 ```
-Remove-PmLicenseFromPmLicensedUser [-Path <string[]>] [-Email] <string[]>
+Remove-PmUserLicense [-Path <string[]>] [-Email] <string[]>
  [-License] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
@@ -28,14 +28,14 @@ Remove-PmLicenseFromPmLicensedUser [-Path <string[]>] [-Email] <string[]>
 
 ## DESCRIPTION
 
-Mirror of `Add-PmLicenseToPmLicensedUser` for the subtractive case: re-uses the same atomic-replace PUT endpoint, submitting the user's current `userBundleLicenses` MINUS the matched codes.
+Mirror of `Add-PmUserLicense` for the subtractive case: re-uses the same atomic-replace PUT endpoint, submitting the user's current `userBundleLicenses` MINUS the matched codes.
 
 Unlike `Add`'s resolver (which matches the `-License` pattern against the full catalog), `Remove` resolves `-License` wildcards against the user's CURRENT bundles only:
 
 - `-License *` strips exactly the user's currently-held set (one PUT with empty `licenseCodes`).
 - A pattern that doesn't match any held bundle is a silent no-op.
 
-Stripping every bundle (via `*`) leaves the user record present in `Get-PmLicensedUser` with an empty `userBundleLicenses` list. To drop the record itself, use `Remove-PmLicensedUser`.
+Stripping every bundle (via `*`) leaves the user record present in `Get-PmUserLicense` with an empty `userBundleLicenses` list. To drop the record itself, use `Remove-PmLicensedUser`.
 
 Primary Endpoint: PUT /portal_/api/license/accountant/UserLicense (License Accountant API)
 
@@ -48,7 +48,7 @@ Required permissions: (managed by Identity Server)
 ### Example 1: Remove a specific license from a user
 
 ```powershell
-PS Orch1:\> Remove-PmLicenseFromPmLicensedUser alice@contoso.com "Citizen Developer - Named User"
+PS Orch1:\> Remove-PmUserLicense alice@contoso.com "Citizen Developer - Named User"
 ```
 
 Removes the "Citizen Developer - Named User" bundle from alice@contoso.com, keeping any other bundles.
@@ -56,7 +56,7 @@ Removes the "Citizen Developer - Named User" bundle from alice@contoso.com, keep
 ### Example 2: Strip every license the user currently holds
 
 ```powershell
-PS Orch1:\> Remove-PmLicenseFromPmLicensedUser alice@contoso.com *
+PS Orch1:\> Remove-PmUserLicense alice@contoso.com *
 ```
 
 Removes every bundle alice currently holds. The user record stays in the licensed-users set with an empty bundle list (use `Remove-PmLicensedUser` to drop the record entirely).
@@ -64,7 +64,7 @@ Removes every bundle alice currently holds. The user record stays in the license
 ### Example 3: Remove all Attended-family bundles
 
 ```powershell
-PS Orch1:\> Remove-PmLicenseFromPmLicensedUser alice@contoso.com Attended*
+PS Orch1:\> Remove-PmUserLicense alice@contoso.com Attended*
 ```
 
 Removes only Attended* bundles from the user's current set. Other bundles (e.g. RPA Developer) are kept.
@@ -72,7 +72,7 @@ Removes only Attended* bundles from the user's current set. Other bundles (e.g. 
 ### Example 4: Preview without applying
 
 ```powershell
-PS Orch1:\> Remove-PmLicenseFromPmLicensedUser alice@contoso.com Citizen* -WhatIf
+PS Orch1:\> Remove-PmUserLicense alice@contoso.com Citizen* -WhatIf
 ```
 
 Shows what would happen without sending the PUT.
@@ -208,7 +208,7 @@ Returns the refreshed licensed-user record after the PUT, with the remaining `us
 
 ## NOTES
 
-`-License *` strips every bundle the user holds — but **does not remove the user from the licensed-users set**. The user remains as a "No license" row in the Portal UI / `Get-PmLicensedUser` output. To drop the row entirely, follow up with `Remove-PmLicensedUser`.
+`-License *` strips every bundle the user holds — but **does not remove the user from the licensed-users set**. The user remains as a "No license" row in the Portal UI / `Get-PmUserLicense` output. To drop the row entirely, follow up with `Remove-PmLicensedUser`.
 
 If the target user is not in the licensed-users set, a non-terminating `UserNotLicensedError` is written (there's nothing to remove from a non-licensed user).
 
@@ -216,10 +216,10 @@ If the target user is not in the licensed-users set, a non-terminating `UserNotL
 
 ## RELATED LINKS
 
-[Add-PmLicenseToPmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedUser.md)
+[Add-PmUserLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmUserLicense.md)
 
 [Remove-PmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicensedUser.md)
 
-[Get-PmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedUser.md)
+[Get-PmUserLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUserLicense.md)
 
-[Remove-PmLicenseFromPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicenseFromPmLicensedGroup.md)
+[Remove-PmGroupLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmGroupLicense.md)

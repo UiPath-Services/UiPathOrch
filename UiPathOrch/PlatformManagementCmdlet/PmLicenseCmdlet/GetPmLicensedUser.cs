@@ -9,7 +9,7 @@ using UiPath.PowerShell.Positional; // AvailableUserBundlesItems (license code �
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "PmLicensedUser")]
+[Cmdlet(VerbsCommon.Get, "PmUserLicense")]
 [OutputType(typeof(Entities.NuLicensedUser))]
 public class GetUserLicenseUser : OrchestratorPSCmdlet
 {
@@ -35,13 +35,13 @@ public class GetUserLicenseUser : OrchestratorPSCmdlet
 
     private static readonly string DefaultCsvName = "ExportedPmLicensedUsers.csv";
 
-    // Columns round-trip into Add-PmLicenseToPmLicensedUser: UserName binds to
+    // Columns round-trip into Add-PmUserLicense: UserName binds to
     // its Position-0 -Email parameter via that parameter's [Alias("UserName")],
     // License to -License, Path to -Path. The identifier column is UserName
     // (not Email) on purpose: the License Accountant API returns an empty
     // 'email' for every user (verified on live tenants) and carries the login
     // in 'name', so 'name' is the value that re-matches the user on import
-    // (Add matches name OR email). Symmetric with Get-PmLicensedGroup's
+    // (Add matches name OR email). Symmetric with Get-PmGroupLicense's
     // GroupName column. License is the friendly display name the -License
     // parameter accepts.
     private static readonly string[] CsvHeaders = [
@@ -70,7 +70,7 @@ public class GetUserLicenseUser : OrchestratorPSCmdlet
 
     // Builds one CSV row (Path, UserName, License) with every field escaped, in
     // CsvHeaders order. Pure / static so the round trip — write here, read back
-    // via the project's RFC-4180 splitter, bind to Add-PmLicenseToPmLicensedUser
+    // via the project's RFC-4180 splitter, bind to Add-PmUserLicense
     // — is unit-testable, and so a comma/quote in the user name can't shift
     // columns.
     internal static string[] BuildLicenseCsvRow(string? drivePath, string? userName, string? license) =>
@@ -172,7 +172,7 @@ public class GetUserLicenseUser : OrchestratorPSCmdlet
         // Fetch in parallel; per-org caches serialize same-partition fetches
         // internally. Filtering / WriteObject stay on the pipeline thread. The
         // licensed-users list already carries userBundleLicenses, so -ExportCsv
-        // needs no extra per-user fetch (mirrors Get-PmLicensedGroup's list path).
+        // needs no extra per-user fetch (mirrors Get-PmGroupLicense's list path).
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,

@@ -28,9 +28,9 @@ Remove-PmLicensedUser [-Path <string[]>] [[-Email] <string[]>] [-Confirm] [-What
 
 ## DESCRIPTION
 
-Removes one or more users from the licensed-users set entirely (the "License Allocations to Users" table in the Portal UI), including the empty-bundle "No license" rows left behind by `Remove-PmLicenseFromPmLicensedUser <user> *`.
+Removes one or more users from the licensed-users set entirely (the "License Allocations to Users" table in the Portal UI), including the empty-bundle "No license" rows left behind by `Remove-PmUserLicense <user> *`.
 
-This is the user-side counterpart of `Remove-PmLicensedGroup`. Unlike `Remove-PmLicenseFromPmLicensedUser` (which strips bundles but leaves the row), this cmdlet drops the row itself.
+This is the user-side counterpart of `Remove-PmLicensedGroup`. Unlike `Remove-PmUserLicense` (which strips bundles but leaves the row), this cmdlet drops the row itself.
 
 The endpoint accepts a batched `userIds` array, so the cmdlet collects matching users across pipeline rows and `-Email` wildcards (OR-match on email/name, dedup by id) and submits ONE DELETE per drive in `EndProcessing` — N users = 1 round trip, not N. `ShouldProcess` is still invoked per user so `-WhatIf` and `-Confirm` prompt granularly; only approved users are included in the batch.
 
@@ -55,10 +55,10 @@ Removes alice@contoso.com from the licensed-users set.
 ### Example 2: Remove all "No license" rows left by prior bundle strips
 
 ```powershell
-PS Orch1:\> Get-PmLicensedUser | Where-Object { -not $_.userBundleLicenses } | Remove-PmLicensedUser
+PS Orch1:\> Get-PmUserLicense | Where-Object { -not $_.userBundleLicenses } | Remove-PmLicensedUser
 ```
 
-Drops every licensed-user row whose bundle list is empty (typical cleanup after `Remove-PmLicenseFromPmLicensedUser <user> *`).
+Drops every licensed-user row whose bundle list is empty (typical cleanup after `Remove-PmUserLicense <user> *`).
 
 ### Example 3: Preview removal of multiple users by wildcard
 
@@ -176,13 +176,13 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 
-You can pipe objects with Email and Path properties (e.g. `NuLicensedUser` records from `Get-PmLicensedUser`) to this cmdlet.
+You can pipe objects with Email and Path properties (e.g. `NuLicensedUser` records from `Get-PmUserLicense`) to this cmdlet.
 
 ## OUTPUTS
 
 ### None
 
-This cmdlet does not produce output. The deletion is performed as a side effect; the licensed-users cache is cleared so the next `Get-PmLicensedUser` reflects the new state.
+This cmdlet does not produce output. The deletion is performed as a side effect; the licensed-users cache is cleared so the next `Get-PmUserLicense` reflects the new state.
 
 ## NOTES
 
@@ -190,14 +190,14 @@ The DELETE is batched per drive — `N` matched users on the same drive issue a 
 
 Removing a user from the licensed-users set is independent of removing the underlying directory user. The user remains in the directory (still discoverable via `Search-OrchDirectory`); only the license allocation row is dropped.
 
-The licensed-users and available-user-bundles caches are cleared after the DELETE so subsequent `Get-PmLicensedUser` / `Get-PmLicense` reflect the new state.
+The licensed-users and available-user-bundles caches are cleared after the DELETE so subsequent `Get-PmUserLicense` / `Get-PmLicense` reflect the new state.
 
 ## RELATED LINKS
 
-[Remove-PmLicenseFromPmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicenseFromPmLicensedUser.md)
+[Remove-PmUserLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmUserLicense.md)
 
-[Add-PmLicenseToPmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedUser.md)
+[Add-PmUserLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmUserLicense.md)
 
-[Get-PmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedUser.md)
+[Get-PmUserLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUserLicense.md)
 
 [Remove-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicensedGroup.md)

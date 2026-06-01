@@ -6,7 +6,7 @@ using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Remove, "PmAllocationFromPmLicensedGroup", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Remove, "PmGroupLicenseAllocation", SupportsShouldProcess = true)]
 public class RemoveAllocationFromUserLicenseGroup : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

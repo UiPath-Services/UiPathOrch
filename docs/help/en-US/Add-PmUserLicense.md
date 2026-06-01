@@ -1,15 +1,15 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedUser.md'
+HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmUserLicense.md'
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 05/28/2026
 PlatyPS schema version: 2024-05-01
-title: Add-PmLicenseToPmLicensedUser
+title: Add-PmUserLicense
 ---
 
-# Add-PmLicenseToPmLicensedUser
+# Add-PmUserLicense
 
 ## SYNOPSIS
 
@@ -20,7 +20,7 @@ Adds one or more user bundle licenses to a Platform Management user.
 ### __AllParameterSets
 
 ```
-Add-PmLicenseToPmLicensedUser [-Path <string[]>] [-Email] <string[]>
+Add-PmUserLicense [-Path <string[]>] [-Email] <string[]>
  [-License] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
@@ -28,7 +28,7 @@ Add-PmLicenseToPmLicensedUser [-Path <string[]>] [-Email] <string[]>
 
 ## DESCRIPTION
 
-Allocates one or more user bundle licenses to a Platform Management user. The user analog of `Add-PmLicenseToPmLicensedGroup`: the cmdlet collects target bundle codes per (drive, user) across pipeline rows and `-License` wildcards, merges them with the user's existing `userBundleLicenses`, and submits one PUT per user in `EndProcessing` so multiple license additions for the same user fold into a single request.
+Allocates one or more user bundle licenses to a Platform Management user. The user analog of `Add-PmGroupLicense`: the cmdlet collects target bundle codes per (drive, user) across pipeline rows and `-License` wildcards, merges them with the user's existing `userBundleLicenses`, and submits one PUT per user in `EndProcessing` so multiple license additions for the same user fold into a single request.
 
 The underlying endpoint is atomic-replace (it sets the user's full bundle list to the value submitted), so the cmdlet always includes the user's existing bundles in addition to the new codes. If nothing actually changes (every matched code is already held), the API call is skipped.
 
@@ -47,7 +47,7 @@ Required permissions: (managed by Identity Server)
 ### Example 1: Add a license to a user
 
 ```powershell
-PS Orch1:\> Add-PmLicenseToPmLicensedUser alice@contoso.com "Citizen Developer - Named User"
+PS Orch1:\> Add-PmUserLicense alice@contoso.com "Citizen Developer - Named User"
 ```
 
 Adds the "Citizen Developer - Named User" bundle to alice@contoso.com. Because `-Email` and `-License` are positional (positions 0 and 1), parameter names can be omitted.
@@ -55,7 +55,7 @@ Adds the "Citizen Developer - Named User" bundle to alice@contoso.com. Because `
 ### Example 2: Add multiple licenses by wildcard
 
 ```powershell
-PS Orch1:\> Add-PmLicenseToPmLicensedUser alice@contoso.com Attended*
+PS Orch1:\> Add-PmUserLicense alice@contoso.com Attended*
 ```
 
 Adds every bundle whose friendly name matches `Attended*` (e.g. "Attended - Named User", "Attended - Multiuser").
@@ -63,7 +63,7 @@ Adds every bundle whose friendly name matches `Attended*` (e.g. "Attended - Name
 ### Example 3: Use raw bundle codes
 
 ```powershell
-PS Orch1:\> Add-PmLicenseToPmLicensedUser alice@contoso.com ATTUNU,CTZDEVNU
+PS Orch1:\> Add-PmUserLicense alice@contoso.com ATTUNU,CTZDEVNU
 ```
 
 Adds the bundles by their raw codes. Both code and friendly name match the same catalog.
@@ -71,7 +71,7 @@ Adds the bundles by their raw codes. Both code and friendly name match the same 
 ### Example 4: Preview without applying
 
 ```powershell
-PS Orch1:\> Add-PmLicenseToPmLicensedUser alice@contoso.com Citizen* -WhatIf
+PS Orch1:\> Add-PmUserLicense alice@contoso.com Citizen* -WhatIf
 ```
 
 Shows what would happen without sending the PUT.
@@ -217,10 +217,10 @@ When `-Email` matches a principal that is neither already licensed nor resolvabl
 
 ## RELATED LINKS
 
-[Remove-PmLicenseFromPmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicenseFromPmLicensedUser.md)
+[Remove-PmUserLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmUserLicense.md)
 
 [Remove-PmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicensedUser.md)
 
-[Get-PmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedUser.md)
+[Get-PmUserLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUserLicense.md)
 
-[Add-PmLicenseToPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedGroup.md)
+[Add-PmGroupLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmGroupLicense.md)

@@ -8,7 +8,7 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Remove, "PmLicenseFromPmLicensedGroup", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Remove, "PmGroupLicense", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
 public class RemoveLicenseFromLicenseGroup : OrchestratorPSCmdlet
 {

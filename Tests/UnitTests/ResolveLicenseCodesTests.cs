@@ -7,7 +7,7 @@ namespace UnitTests;
 // Pins AddPmLicenseToPmLicensedUserCmdlet.ResolveLicenseCodes — the pure -License
 // wildcard → bundle-code resolver. Matches by friendly name OR raw code so
 // users can pass either form; an empty match yields an empty set (the cmdlet
-// then silently skips, matching Add-PmLicenseToPmLicensedGroup).
+// then silently skips, matching Add-PmGroupLicense).
 public class ResolveLicenseCodesTests
 {
     private static List<WildcardPattern> Patterns(params string[] patterns) =>

@@ -67,8 +67,8 @@ Use `-CsvEncoding` to specify the encoding.
 | `Get-OrchCalendarDate -ExportCsv` | `Import-Csv` → `Add-OrchCalendarDate` |
 | `Get-PmGroup -ExportCsv` | `Import-Csv` → `New-PmGroup` |
 | `Get-PmRobotAccount -ExportCsv` | `Import-Csv` → `Set-PmRobotAccount` |
-| `Get-PmLicensedGroup -ExportCsv` | `Import-Csv` → `Add-PmLicenseToPmLicensedGroup` |
-| `Get-PmLicensedUser -ExportCsv` | `Import-Csv` → `Add-PmLicenseToPmLicensedUser` |
+| `Get-PmGroupLicense -ExportCsv` | `Import-Csv` → `Add-PmGroupLicense` |
+| `Get-PmUserLicense -ExportCsv` | `Import-Csv` → `Add-PmUserLicense` |
 
 #### Credential Assets (`-ExportCredentialCsv`)
 
@@ -242,15 +242,15 @@ that row and re-run.
 
 ### License Groups
 
-`Get-PmLicensedGroup -ExportCsv` exports one row per (group, license) with
+`Get-PmGroupLicense -ExportCsv` exports one row per (group, license) with
 `Path` / `GroupName` / `License` columns, and
-`Add-PmLicenseToPmLicensedGroup` imports them — so a group's bundle
+`Add-PmGroupLicense` imports them — so a group's bundle
 assignments can be snapshotted, edited, and reapplied:
 
 ```powershell
-Get-PmLicensedGroup -Path Orch1: -ExportCsv C:\temp\license-groups.csv
+Get-PmGroupLicense -Path Orch1: -ExportCsv C:\temp\license-groups.csv
 # edit / add / remove rows
-Import-Csv C:\temp\license-groups.csv | Add-PmLicenseToPmLicensedGroup
+Import-Csv C:\temp\license-groups.csv | Add-PmGroupLicense
 ```
 
 The `License` column is the friendly bundle name (e.g.
@@ -267,19 +267,19 @@ out. The `Add-…To…` / `Remove-…From…` naming follows the module's conven
 for operating on an entity's sub-collection (here, a group's license bundles).
 
 > To **remove** a group's licenses from a CSV instead, pipe the same shape
-> into `Remove-PmLicenseFromPmLicensedGroup`.
+> into `Remove-PmGroupLicense`.
 
 ### License Users
 
-`Get-PmLicensedUser -ExportCsv` is the user-level counterpart of the License
+`Get-PmUserLicense -ExportCsv` is the user-level counterpart of the License
 Groups round trip above. It exports one row per (user, license) with
-`Path` / `UserName` / `License` columns, and `Add-PmLicenseToPmLicensedUser`
+`Path` / `UserName` / `License` columns, and `Add-PmUserLicense`
 imports them:
 
 ```powershell
-Get-PmLicensedUser -Path Orch1: -ExportCsv C:\temp\license-users.csv
+Get-PmUserLicense -Path Orch1: -ExportCsv C:\temp\license-users.csv
 # edit / add / remove rows
-Import-Csv C:\temp\license-users.csv | Add-PmLicenseToPmLicensedUser
+Import-Csv C:\temp\license-users.csv | Add-PmUserLicense
 ```
 
 The `UserName` column carries the user's login (which the License Accountant
@@ -293,7 +293,7 @@ update, adding a license the user already holds is a no-op, and re-importing
 an unedited export changes nothing.
 
 > To **remove** a user's licenses from a CSV instead, pipe the same shape
-> into `Remove-PmLicenseFromPmLicensedUser`.
+> into `Remove-PmUserLicense`.
 
 ### Creating Folders in Bulk via CSV
 

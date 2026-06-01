@@ -9,13 +9,13 @@ using UiPath.PowerShell.Positional;
 namespace UiPath.PowerShell.Commands;
 
 // Allocates one or more user license bundles to a Platform Management user.
-// Mirrors the shape of Add-PmLicenseToPmLicensedGroup (its group counterpart):
+// Mirrors the shape of Add-PmGroupLicense (its group counterpart):
 // ProcessRecord collects target bundle codes per user across pipeline rows; the
 // actual PUT happens in EndProcessing so multiple licenses for the same user
 // fold into a single request. The PUT is atomic-replace (matches the Portal
 // "Licenses > Users" UI), so we merge the user's existing
 // userBundleLicenses with the new codes before submitting.
-[Cmdlet(VerbsCommon.Add, "PmLicenseToPmLicensedUser", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Add, "PmUserLicense", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.NuLicensedUser))]
 public class AddPmLicenseToPmLicensedUserCmdlet : OrchestratorPSCmdlet
 {
@@ -153,7 +153,7 @@ public class AddPmLicenseToPmLicensedUserCmdlet : OrchestratorPSCmdlet
         if (targetCodes.Count == 0)
         {
             // No catalog bundle matched the License pattern; nothing to allocate
-            // on this row. Matches Add-PmLicenseToPmLicensedGroup's silent-skip
+            // on this row. Matches Add-PmGroupLicense's silent-skip
             // behavior when its wildcard matches no available bundle.
             return;
         }

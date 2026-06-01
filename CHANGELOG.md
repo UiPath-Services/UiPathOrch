@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-06-01
+
+**Breaking change.** Renames the Platform Management license **operation**
+cmdlets to a uniform `<Verb>-Pm{Group,User}License` shape, so a
+`Get-Pm{Group,User}License -ExportCsv` round-trips into the matching
+`Add-Pm{Group,User}License`. No aliases are kept — the old names are gone;
+update any scripts that use them.
+
+### Changed
+
+| Old name | New name |
+|---|---|
+| `Get-PmLicensedGroup` | `Get-PmGroupLicense` |
+| `Add-PmLicenseToPmLicensedGroup` | `Add-PmGroupLicense` |
+| `Remove-PmLicenseFromPmLicensedGroup` | `Remove-PmGroupLicense` |
+| `Remove-PmAllocationFromPmLicensedGroup` | `Remove-PmGroupLicenseAllocation` |
+| `Get-PmLicensedUser` | `Get-PmUserLicense` |
+| `Add-PmLicenseToPmLicensedUser` | `Add-PmUserLicense` |
+| `Remove-PmLicenseFromPmLicensedUser` | `Remove-PmUserLicense` |
+
+The entity-delete cmdlets `Remove-PmLicensedGroup` and `Remove-PmLicensedUser`
+(which drop a group/user from the licensed set entirely) and the read-only
+`Get-PmLicense`, `Get-PmLicenseAllocation`, `Get-PmLicenseInventory`, and
+`Get-PmLicenseContract` reference cmdlets are unchanged. Cmdlet behavior,
+parameters, and output are otherwise identical — only the names changed.
+
 ## [1.6.2] - 2026-06-01
 
 Adds `Move-Orch{Asset,Bucket,Queue}` for relocating an entity between folders

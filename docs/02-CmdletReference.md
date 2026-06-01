@@ -547,14 +547,14 @@ Organization-level license group management.
 | Get-PmLicenseAllocation | Get per-tenant license allocations (Robots & Services tab) |
 | Get-PmLicenseContract | Get the account-level license contract (subscription, products, ML keys) |
 | Get-PmLicenseInventory | Get the org-level license inventory dashboard summary |
-| Get-PmLicensedGroup | List licensed groups |
-| Get-PmLicensedUser | List licensed users |
-| Add-PmLicenseToPmLicensedGroup | Add a license to a licensed group |
-| Remove-PmLicenseFromPmLicensedGroup | Remove a license from a licensed group |
-| Remove-PmAllocationFromPmLicensedGroup | Remove allocation from a licensed group |
+| Get-PmGroupLicense | List licensed groups |
+| Get-PmUserLicense | List licensed users |
+| Add-PmGroupLicense | Add a license to a licensed group |
+| Remove-PmGroupLicense | Remove a license from a licensed group |
+| Remove-PmGroupLicenseAllocation | Remove allocation from a licensed group |
 | Remove-PmLicensedGroup | Remove a licensed group |
-| Add-PmLicenseToPmLicensedUser | Add a license to a licensed user |
-| Remove-PmLicenseFromPmLicensedUser | Remove a license from a licensed user |
+| Add-PmUserLicense | Add a license to a licensed user |
+| Remove-PmUserLicense | Remove a license from a licensed user |
 | Remove-PmLicensedUser | Remove a licensed user (drops the row from the licensed-users set) |
 
 <a id="23-platform-management-external-apps-and-other"></a>

@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 // Drops one or more users from the Platform Management licensed-users set
 // (the "License Allocations to Users" table in the Portal UI), including
 // the empty-bundle "No license" rows left behind by
-// Remove-PmLicenseFromPmLicensedUser <user> *. Wraps the bare DELETE endpoint
+// Remove-PmUserLicense <user> *. Wraps the bare DELETE endpoint
 // /portal_/api/license/accountant/UserLicense with body {userIds:[...]}.
 //
 // The DELETE accepts a batched userIds array, so this cmdlet collects matching

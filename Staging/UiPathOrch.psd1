@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.6.2'
+ModuleVersion = '1.7.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -154,16 +154,16 @@ CmdletsToExport = @(
 'Get-PmLicenseAllocation',
 'Get-PmLicenseInventory',
 'Get-PmLicenseContract',
-'Get-PmLicensedUser',
 
-'Get-PmLicensedGroup',
+'Get-PmGroupLicense',
+'Add-PmGroupLicense',
+'Remove-PmGroupLicense',
+'Remove-PmGroupLicenseAllocation',
 'Remove-PmLicensedGroup',
-'Add-PmLicenseToPmLicensedGroup',
-'Remove-PmAllocationFromPmLicensedGroup',
-'Remove-PmLicenseFromPmLicensedGroup',
 
-'Add-PmLicenseToPmLicensedUser',
-'Remove-PmLicenseFromPmLicensedUser',
+'Get-PmUserLicense',
+'Add-PmUserLicense',
+'Remove-PmUserLicense',
 'Remove-PmLicensedUser',
 
 'Get-OrchClassicRobot',
@@ -475,15 +475,21 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.6.2 - Move-OrchAsset / Move-OrchBucket / Move-OrchQueue relocate an
-entity between folders in one tenant drive via a single atomic
-ShareToFolders call (the entity keeps its Id and data — asset value,
-queue items, bucket Identifier). Same-drive only; -Destination is one
-folder; -Recurse mirrors the source tree under the destination, creating
-subfolders on demand. Get-PmLicensedUser gains -ExportCsv, completing the
-licensed-user CSV round trip into Add-PmLicenseToPmLicensedUser
-(Path/UserName/License columns; orphan rows excluded). Plus ShouldProcess
-wording cleanup (plain "to"/"from", no arrow glyphs) and a CSV docs pass.
+1.7.0 - BREAKING: the Platform Management license operation cmdlets are
+renamed to a uniform <Verb>-Pm{Group,User}License shape, so a
+Get-Pm{Group,User}License -ExportCsv round-trips into the matching
+Add-Pm{Group,User}License. No aliases are kept; update scripts to the new
+names:
+  Get-PmLicensedGroup                    -> Get-PmGroupLicense
+  Add-PmLicenseToPmLicensedGroup         -> Add-PmGroupLicense
+  Remove-PmLicenseFromPmLicensedGroup    -> Remove-PmGroupLicense
+  Remove-PmAllocationFromPmLicensedGroup -> Remove-PmGroupLicenseAllocation
+  Get-PmLicensedUser                     -> Get-PmUserLicense
+  Add-PmLicenseToPmLicensedUser          -> Add-PmUserLicense
+  Remove-PmLicenseFromPmLicensedUser     -> Remove-PmUserLicense
+The entity-delete cmdlets Remove-PmLicensedGroup / Remove-PmLicensedUser and
+the Get-PmLicense* reference cmdlets are unchanged. Behavior, parameters, and
+output are identical — only the names changed.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

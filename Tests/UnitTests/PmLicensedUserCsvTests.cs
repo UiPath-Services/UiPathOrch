@@ -7,10 +7,10 @@ using Xunit;
 
 namespace UnitTests;
 
-// Pins the Get-PmLicensedUser -ExportCsv row shape: one row per (user,
+// Pins the Get-PmUserLicense -ExportCsv row shape: one row per (user,
 // license), columns Path/UserName/License, friendly license names, CSV
 // escaping, and exclusion of orphan license-pool rows. Mirrors the round trip
-// into Add-PmLicenseToPmLicensedUser (Position-0 -Email param, alias UserName).
+// into Add-PmUserLicense (Position-0 -Email param, alias UserName).
 // The identifier column is UserName because the License Accountant API returns
 // an empty email and carries the login in 'name'. Pure unit tests — no live
 // server. Symmetric with PmLicensedGroupCsvTests.
@@ -112,7 +112,7 @@ public class PmLicensedUserCsvTests
     [Fact]
     public void UserNameColumn_BindsToAddCmdletEmailParameterViaAlias()
     {
-        // The CSV's UserName column binds to Add-PmLicenseToPmLicensedUser's
+        // The CSV's UserName column binds to Add-PmUserLicense's
         // -Email parameter through its [Alias("UserName")]. Pin both the alias
         // and the License/Path parameters so the round trip can't silently break.
         var emailProp = typeof(AddPmLicenseToPmLicensedUserCmdlet).GetProperty("Email");

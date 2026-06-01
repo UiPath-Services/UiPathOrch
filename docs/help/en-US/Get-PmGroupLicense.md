@@ -1,15 +1,15 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedGroup.md'
+HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmGroupLicense.md'
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 03/06/2026
 PlatyPS schema version: 2024-05-01
-title: Get-PmLicensedGroup
+title: Get-PmGroupLicense
 ---
 
-# Get-PmLicensedGroup
+# Get-PmGroupLicense
 
 ## SYNOPSIS
 
@@ -20,7 +20,7 @@ Gets licensed groups from a UiPath Automation Cloud organization.
 ### ExpandAllocation
 
 ```
-Get-PmLicensedGroup [-Path <string[]>] [[-GroupName] <string[]>] [[-UserName] <string[]>]
+Get-PmGroupLicense [-Path <string[]>] [[-GroupName] <string[]>] [[-UserName] <string[]>]
  [-CsvEncoding <Encoding>] [-ExpandAllocation] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
@@ -34,7 +34,7 @@ By default, this cmdlet returns NuLicensedGroup objects representing the groups 
 
 The -GroupName parameter supports wildcards and tab completion. The -UserName parameter (used with -ExpandAllocation) filters the expanded user allocations and also supports tab completion.
 
-When -ExportCsv is specified, the output is written to a CSV file with Path, GroupName, and License columns — one row per (group, license) — instead of to the pipeline. That CSV round-trips back into Add-PmLicenseToPmLicensedGroup to reassign the bundles (the License column is the friendly bundle name that -License accepts). This is the group-level bundle assignment, not the per-user allocation list that -ExpandAllocation returns.
+When -ExportCsv is specified, the output is written to a CSV file with Path, GroupName, and License columns — one row per (group, license) — instead of to the pipeline. That CSV round-trips back into Add-PmGroupLicense to reassign the bundles (the License column is the friendly bundle name that -License accepts). This is the group-level bundle assignment, not the per-user allocation list that -ExpandAllocation returns.
 
 Primary Endpoint: GET /api/license/accountant/UserLicense/group/page (License Accountant API)
 
@@ -47,7 +47,7 @@ Required permissions: (managed by Identity Server)
 ### Example 1: Get all licensed groups
 
 ```powershell
-PS Orch1:\> Get-PmLicensedGroup
+PS Orch1:\> Get-PmGroupLicense
 ```
 
 Gets all licensed groups in the current organization, showing group-level information.
@@ -55,7 +55,7 @@ Gets all licensed groups in the current organization, showing group-level inform
 ### Example 2: Get a specific licensed group
 
 ```powershell
-PS Orch1:\> Get-PmLicensedGroup Everyone
+PS Orch1:\> Get-PmGroupLicense Everyone
 ```
 
 Gets the "Everyone" licensed group. Because -GroupName is a positional parameter (position 0), the parameter name can be omitted.
@@ -63,7 +63,7 @@ Gets the "Everyone" licensed group. Because -GroupName is a positional parameter
 ### Example 3: Expand group allocations
 
 ```powershell
-PS Orch1:\> Get-PmLicensedGroup -ExpandAllocation
+PS Orch1:\> Get-PmGroupLicense -ExpandAllocation
 ```
 
 Gets all licensed groups and expands them to show individual user allocations.
@@ -71,7 +71,7 @@ Gets all licensed groups and expands them to show individual user allocations.
 ### Example 4: Get allocations for a specific group and user
 
 ```powershell
-PS Orch1:\> Get-PmLicensedGroup Everyone -UserName *yoshifumi* -ExpandAllocation
+PS Orch1:\> Get-PmGroupLicense Everyone -UserName *yoshifumi* -ExpandAllocation
 ```
 
 Gets allocations for users whose names contain "yoshifumi" in the "Everyone" licensed group.
@@ -79,8 +79,8 @@ Gets allocations for users whose names contain "yoshifumi" in the "Everyone" lic
 ### Example 5: Export group bundles to CSV and re-import
 
 ```powershell
-PS Orch1:\> Get-PmLicensedGroup -ExportCsv C:\temp\license-groups.csv
-PS Orch1:\> Import-Csv C:\temp\license-groups.csv | Add-PmLicenseToPmLicensedGroup
+PS Orch1:\> Get-PmGroupLicense -ExportCsv C:\temp\license-groups.csv
+PS Orch1:\> Import-Csv C:\temp\license-groups.csv | Add-PmGroupLicense
 ```
 
 Exports one row per (group, license) with Path, GroupName, and License columns, then re-imports them. The round trip is additive: editing the CSV and re-importing adds bundles but never revokes the ones left out.
@@ -152,7 +152,7 @@ HelpMessage: ''
 
 ### -ExportCsv
 
-Exports the licensed groups' bundle assignments to the specified CSV file path. The CSV has Path, GroupName, and License columns — one row per (group, license) — and round-trips into Add-PmLicenseToPmLicensedGroup (the License column is the friendly bundle name that cmdlet's -License accepts). This is the group-level bundle list, not the per-user allocations returned by -ExpandAllocation. When this parameter is specified, no objects are written to the pipeline.
+Exports the licensed groups' bundle assignments to the specified CSV file path. The CSV has Path, GroupName, and License columns — one row per (group, license) — and round-trips into Add-PmGroupLicense (the License column is the friendly bundle name that cmdlet's -License accepts). This is the group-level bundle list, not the per-user allocations returned by -ExpandAllocation. When this parameter is specified, no objects are written to the pipeline.
 
 ```yaml
 Type: System.String
@@ -241,18 +241,18 @@ Returns licensed group member (allocation) objects when -ExpandAllocation is spe
 
 The -UserName filter only takes effect when -ExpandAllocation is specified. Without expansion, only group-level objects are returned.
 
--ExportCsv writes the group-level bundle list (Path, GroupName, License), which round-trips into Add-PmLicenseToPmLicensedGroup. To remove bundles from a CSV instead, pipe the same shape into Remove-PmLicenseFromPmLicensedGroup.
+-ExportCsv writes the group-level bundle list (Path, GroupName, License), which round-trips into Add-PmGroupLicense. To remove bundles from a CSV instead, pipe the same shape into Remove-PmGroupLicense.
 
 ## RELATED LINKS
 
-[Get-PmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedUser.md)
+[Get-PmUserLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUserLicense.md)
 
 [Remove-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicensedGroup.md)
 
-[Add-PmLicenseToPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedGroup.md)
+[Add-PmGroupLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmGroupLicense.md)
 
-[Remove-PmLicenseFromPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicenseFromPmLicensedGroup.md)
+[Remove-PmGroupLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmGroupLicense.md)
 
-[Remove-PmAllocationFromPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmAllocationFromPmLicensedGroup.md)
+[Remove-PmGroupLicenseAllocation](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmGroupLicenseAllocation.md)
 
 [CSV Export & Import Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/03-CsvExportImport.md)

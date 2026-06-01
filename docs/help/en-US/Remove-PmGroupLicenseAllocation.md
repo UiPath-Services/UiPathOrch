@@ -1,15 +1,15 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmAllocationFromPmLicensedGroup.md'
+HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmGroupLicenseAllocation.md'
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 03/06/2026
 PlatyPS schema version: 2024-05-01
-title: Remove-PmAllocationFromPmLicensedGroup
+title: Remove-PmGroupLicenseAllocation
 ---
 
-# Remove-PmAllocationFromPmLicensedGroup
+# Remove-PmGroupLicenseAllocation
 
 ## SYNOPSIS
 
@@ -20,7 +20,7 @@ Removes a user allocation from a licensed group in a UiPath Automation Cloud org
 ### __AllParameterSets
 
 ```
-Remove-PmAllocationFromPmLicensedGroup [-Path <string[]>] [-GroupName] <string[]>
+Remove-PmGroupLicenseAllocation [-Path <string[]>] [-GroupName] <string[]>
  [-UserName] <string[]> [-Confirm] [-NoMatchWarning] [-WhatIf] [<CommonParameters>]
 ```
 
@@ -34,7 +34,7 @@ The -GroupName and -UserName parameters both support wildcards, enabling flexibl
 
 The -NoMatchWarning switch enables warnings when the specified -GroupName or -UserName pattern does not match any existing entries. This is useful during CSV import to identify rows that do not correspond to actual allocations.
 
-This cmdlet accepts pipeline input, allowing bulk allocation removal from a CSV file exported by Get-PmLicensedGroup -ExportCsv.
+This cmdlet accepts pipeline input, allowing bulk allocation removal from a CSV file exported by Get-PmGroupLicense -ExportCsv.
 
 Primary Endpoint: DELETE /api/license/accountant/UserLicense/group/{groupId}/user/{userId} (License Accountant API)
 
@@ -47,7 +47,7 @@ Required permissions: (managed by Identity Server)
 ### Example 1: Remove a user allocation from a group
 
 ```powershell
-PS Orch1:\> Remove-PmAllocationFromPmLicensedGroup "Automation Developers" ytsuda@gmail.com
+PS Orch1:\> Remove-PmGroupLicenseAllocation "Automation Developers" ytsuda@gmail.com
 ```
 
 Removes the allocation for ytsuda@gmail.com from the "Automation Developers" licensed group. Because -GroupName and -UserName are positional parameters (positions 0 and 1), parameter names can be omitted.
@@ -55,7 +55,7 @@ Removes the allocation for ytsuda@gmail.com from the "Automation Developers" lic
 ### Example 2: Remove all allocations from a group
 
 ```powershell
-PS Orch1:\> Remove-PmAllocationFromPmLicensedGroup "Automation Developers" *
+PS Orch1:\> Remove-PmGroupLicenseAllocation "Automation Developers" *
 ```
 
 Removes all user allocations from the "Automation Developers" licensed group.
@@ -63,7 +63,7 @@ Removes all user allocations from the "Automation Developers" licensed group.
 ### Example 3: Bulk remove allocations from CSV
 
 ```powershell
-PS Orch1:\> Import-Csv C:\temp\allocations.csv | Remove-PmAllocationFromPmLicensedGroup
+PS Orch1:\> Import-Csv C:\temp\allocations.csv | Remove-PmGroupLicenseAllocation
 ```
 
 Removes allocations listed in the CSV file. The CSV should contain columns: GroupName, UserName, and optionally Path.
@@ -71,7 +71,7 @@ Removes allocations listed in the CSV file. The CSV should contain columns: Grou
 ### Example 4: Remove with no-match warning
 
 ```powershell
-PS Orch1:\> Import-Csv C:\temp\allocations.csv | Remove-PmAllocationFromPmLicensedGroup -NoMatchWarning
+PS Orch1:\> Import-Csv C:\temp\allocations.csv | Remove-PmGroupLicenseAllocation -NoMatchWarning
 ```
 
 Removes allocations and displays warnings for any CSV rows where the GroupName or UserName does not match.
@@ -79,7 +79,7 @@ Removes allocations and displays warnings for any CSV rows where the GroupName o
 ### Example 5: Preview allocation removal
 
 ```powershell
-PS Orch1:\> Remove-PmAllocationFromPmLicensedGroup "Automation Developers" * -WhatIf
+PS Orch1:\> Remove-PmGroupLicenseAllocation "Automation Developers" * -WhatIf
 ```
 
 Shows which allocations would be removed without actually removing them.
@@ -240,12 +240,12 @@ The cmdlet supports Ctrl+C cancellation during batch operations.
 
 Each allocation is removed individually via the API. The allocation cache is cleared after each removal.
 
-The CSV exported by Get-PmLicensedGroup -ExportCsv can be directly piped to this cmdlet for bulk allocation removal.
+The CSV exported by Get-PmGroupLicense -ExportCsv can be directly piped to this cmdlet for bulk allocation removal.
 
 ## RELATED LINKS
 
-[Get-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedGroup.md)
+[Get-PmGroupLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmGroupLicense.md)
 
-[Add-PmLicenseToPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedGroup.md)
+[Add-PmGroupLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmGroupLicense.md)
 
-[Get-PmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedUser.md)
+[Get-PmUserLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUserLicense.md)

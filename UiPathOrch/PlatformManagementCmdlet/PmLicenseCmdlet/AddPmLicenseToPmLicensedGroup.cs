@@ -8,7 +8,7 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Add, "PmLicenseToPmLicensedGroup", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Add, "PmGroupLicense", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
 public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
 {
@@ -199,7 +199,7 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
     // available-bundles API returns codes (its bundle `name` is always empty on
     // this build), so matching goes through the static catalog: a pattern matches
     // a bundle if it matches the catalog friendly name OR the raw code (so users
-    // can pass either form, and a Get-PmLicensedGroup -ExportCsv License column —
+    // can pass either form, and a Get-PmGroupLicense -ExportCsv License column —
     // which is the friendly name — round-trips). Restricted to availableCodes so
     // only licenses actually offered to the group are added. Pure / static for
     // unit testing.

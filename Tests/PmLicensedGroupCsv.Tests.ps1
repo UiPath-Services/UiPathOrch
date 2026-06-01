@@ -3,8 +3,8 @@
 
 <#
 .SYNOPSIS
-    Integration coverage for the Get-PmLicensedGroup -ExportCsv ->
-    Add-PmLicenseToPmLicensedGroup round trip and the -License completer.
+    Integration coverage for the Get-PmGroupLicense -ExportCsv ->
+    Add-PmGroupLicense round trip and the -License completer.
 
 .DESCRIPTION
     Runs against a LIVE tenant (drive from $env:UIPATHORCH_TEST_DRIVE, default
@@ -56,7 +56,7 @@ BeforeAll {
     $script:unheld2Codes = $null
     if ($script:hasDrive) {
         Clear-OrchCache -Path $script:drive -ErrorAction SilentlyContinue | Out-Null
-        foreach ($g in (Get-PmLicensedGroup -Path $script:drive)) {
+        foreach ($g in (Get-PmGroupLicense -Path $script:drive)) {
             $held   = @($g.userBundleLicenses)
             $unheld = @(script:AvailableCodes $g.id |
                 Where-Object { $_ -and $_ -notin $held -and $script:codeToName.ContainsKey($_) })
@@ -89,12 +89,12 @@ BeforeAll {
     }
 }
 
-Describe 'Get-PmLicensedGroup -ExportCsv' {
+Describe 'Get-PmGroupLicense -ExportCsv' {
     It 'exports Path/GroupName/License columns only' {
         if (-not (script:RequireGroup)) { return }
         $csv = Join-Path ([IO.Path]::GetTempPath()) "pmlg_$([guid]::NewGuid().ToString('N')).csv"
         try {
-            Get-PmLicensedGroup -Path $script:drive -ExportCsv $csv | Out-Null
+            Get-PmGroupLicense -Path $script:drive -ExportCsv $csv | Out-Null
             $cols = (Import-Csv $csv | Select-Object -First 1).PSObject.Properties.Name | Sort-Object
             $cols | Should -Be (@('GroupName','License','Path') | Sort-Object)
         } finally { Remove-Item $csv -ErrorAction SilentlyContinue }
@@ -104,18 +104,18 @@ Describe 'Get-PmLicensedGroup -ExportCsv' {
         if (-not (script:RequireGroup)) { return }
         $csv = Join-Path ([IO.Path]::GetTempPath()) "pmlg_$([guid]::NewGuid().ToString('N')).csv"
         try {
-            Get-PmLicensedGroup -Path $script:drive -ExportCsv $csv | Out-Null
+            Get-PmGroupLicense -Path $script:drive -ExportCsv $csv | Out-Null
             $rows = Import-Csv $csv
             ($rows | Where-Object { $script:codeToName.ContainsKey($_.License) }) | Should -BeNullOrEmpty
         } finally { Remove-Item $csv -ErrorAction SilentlyContinue }
     }
 }
 
-Describe 'Add-PmLicenseToPmLicensedGroup -License completer' {
+Describe 'Add-PmGroupLicense -License completer' {
     It 'excludes held licenses and offers the unheld one' {
         if (-not (script:RequireGroup)) { return }
         Clear-OrchCache -Path $script:drive -ErrorAction SilentlyContinue | Out-Null
-        $line = "Add-PmLicenseToPmLicensedGroup -Path $($script:drive) -GroupName '$($script:grp.name)' -License "
+        $line = "Add-PmGroupLicense -Path $($script:drive) -GroupName '$($script:grp.name)' -License "
         $matches = (TabExpansion2 $line $line.Length).CompletionMatches |
             ForEach-Object { $_.CompletionText.Trim("'") }
 
@@ -133,28 +133,28 @@ Describe 'ExportCsv -> Add round trip' {
         if (-not (script:RequireGroup)) { return }
         $csv = Join-Path ([IO.Path]::GetTempPath()) "pmlg_$([guid]::NewGuid().ToString('N')).csv"
         try {
-            Get-PmLicensedGroup -Path $script:drive -ExportCsv $csv | Out-Null
-            { Import-Csv $csv | Add-PmLicenseToPmLicensedGroup -WhatIf } | Should -Not -Throw
+            Get-PmGroupLicense -Path $script:drive -ExportCsv $csv | Out-Null
+            { Import-Csv $csv | Add-PmGroupLicense -WhatIf } | Should -Not -Throw
         } finally { Remove-Item $csv -ErrorAction SilentlyContinue }
     }
 
     It 'adds an available-but-unheld license then restores the group' {
         if (-not (script:RequireGroup)) { return }
-        $before = @((Get-PmLicensedGroup -Path $script:drive |
+        $before = @((Get-PmGroupLicense -Path $script:drive |
             Where-Object name -eq $script:grp.name).userBundleLicenses | Sort-Object)
         try {
-            Add-PmLicenseToPmLicensedGroup -Path $script:drive -GroupName $script:grp.name `
+            Add-PmGroupLicense -Path $script:drive -GroupName $script:grp.name `
                 -License $script:unheldName -Confirm:$false | Out-Null
             Clear-OrchCache -Path $script:drive -ErrorAction SilentlyContinue | Out-Null
-            $after = @((Get-PmLicensedGroup -Path $script:drive |
+            $after = @((Get-PmGroupLicense -Path $script:drive |
                 Where-Object name -eq $script:grp.name).userBundleLicenses)
             $after | Should -Contain $script:unheldCode
         } finally {
-            Remove-PmLicenseFromPmLicensedGroup -Path $script:drive -GroupName $script:grp.name `
+            Remove-PmGroupLicense -Path $script:drive -GroupName $script:grp.name `
                 -License $script:unheldName -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
             Clear-OrchCache -Path $script:drive -ErrorAction SilentlyContinue | Out-Null
         }
-        $restored = @((Get-PmLicensedGroup -Path $script:drive |
+        $restored = @((Get-PmGroupLicense -Path $script:drive |
             Where-Object name -eq $script:grp.name).userBundleLicenses | Sort-Object)
         $restored | Should -Be $before
     }
@@ -169,7 +169,7 @@ Describe 'Multi-row aggregation (same group, case-insensitive)' {
         $codeA, $codeB = $script:unheld2Codes
         $nameA, $nameB = $script:unheld2Names
 
-        $before = @((Get-PmLicensedGroup -Path $script:drive |
+        $before = @((Get-PmGroupLicense -Path $script:drive |
             Where-Object name -eq $name).userBundleLicenses | Sort-Object)
         $csv = Join-Path ([IO.Path]::GetTempPath()) "pmlg_agg_$([guid]::NewGuid().ToString('N')).csv"
         try {
@@ -180,21 +180,21 @@ Describe 'Multi-row aggregation (same group, case-insensitive)' {
                 [pscustomobject]@{ Path = $script:drive; GroupName = $upper; License = $nameB }
             ) | Export-Csv $csv -NoTypeInformation -Encoding utf8
 
-            Import-Csv $csv | Add-PmLicenseToPmLicensedGroup -Confirm:$false | Out-Null
+            Import-Csv $csv | Add-PmGroupLicense -Confirm:$false | Out-Null
             Clear-OrchCache -Path $script:drive -ErrorAction SilentlyContinue | Out-Null
 
-            $after = @((Get-PmLicensedGroup -Path $script:drive |
+            $after = @((Get-PmGroupLicense -Path $script:drive |
                 Where-Object name -eq $name).userBundleLicenses)
             # Both licenses present — neither row clobbered the other.
             $after | Should -Contain $codeA
             $after | Should -Contain $codeB
         } finally {
             Remove-Item $csv -ErrorAction SilentlyContinue
-            Remove-PmLicenseFromPmLicensedGroup -Path $script:drive -GroupName $name `
+            Remove-PmGroupLicense -Path $script:drive -GroupName $name `
                 -License $nameA, $nameB -Confirm:$false -ErrorAction SilentlyContinue | Out-Null
             Clear-OrchCache -Path $script:drive -ErrorAction SilentlyContinue | Out-Null
         }
-        $restored = @((Get-PmLicensedGroup -Path $script:drive |
+        $restored = @((Get-PmGroupLicense -Path $script:drive |
             Where-Object name -eq $name).userBundleLicenses | Sort-Object)
         $restored | Should -Be $before
     }

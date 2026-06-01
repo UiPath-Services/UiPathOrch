@@ -9,7 +9,7 @@ using UiPath.PowerShell.Positional; // AvailableUserBundlesItems (license code �
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "PmLicensedGroup")]
+[Cmdlet(VerbsCommon.Get, "PmGroupLicense")]
 [OutputType(typeof(Entities.NuLicensedGroup))]
 [OutputType(typeof(Entities.NuLicensedGroupMember))]
 public class GetUserLicenseGroup : OrchestratorPSCmdlet
@@ -27,7 +27,7 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
     [Parameter(ParameterSetName = "ExpandAllocation")]
     public SwitchParameter ExpandAllocation { get; set; }
 
-    // TODO: This needs to be implemented. We want to make this CSV importable by the Add-OrchPmLicenseToLicenseGroup cmdlet.
+    // TODO: This needs to be implemented. We want to make this CSV importable by the Add-PmGroupLicense cmdlet.
     //[Parameter(ParameterSetName = "License")]
     //public SwitchParameter License { get; set; }
 
@@ -45,8 +45,8 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
 
     private static readonly string DefaultCsvName = "ExportedPmLicensedGroups.csv";
 
-    // Columns match Add-OrchPmLicenseToPmLicensedGroup (and
-    // Remove-OrchPmLicenseFromPmLicensedGroup) parameter names exactly, so the
+    // Columns match Add-PmGroupLicense (and
+    // Remove-PmGroupLicense) parameter names exactly, so the
     // exported CSV round-trips: one row per (group, license), letting the user
     // delete rows to drop individual licenses before re-importing. License is
     // the human-readable display name (e.g. "Attended - Named User"), which is
@@ -71,7 +71,7 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
 
     // Builds one CSV row (Path, GroupName, License) with every field escaped, in
     // CsvHeaders order. Pure / static so the round trip — write here, read back
-    // via the project's RFC-4180 splitter, bind to Add-OrchPmLicenseToPmLicensedGroup
+    // via the project's RFC-4180 splitter, bind to Add-PmGroupLicense
     // — is unit-testable, and so a comma/quote in GroupName can't shift columns.
     internal static string[] BuildLicenseCsvRow(string? drivePath, string? groupName, string? license) =>
     [

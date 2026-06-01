@@ -1,15 +1,15 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedUser.md'
+HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUserLicense.md'
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 03/06/2026
 PlatyPS schema version: 2024-05-01
-title: Get-PmLicensedUser
+title: Get-PmUserLicense
 ---
 
-# Get-PmLicensedUser
+# Get-PmUserLicense
 
 ## SYNOPSIS
 
@@ -20,7 +20,7 @@ Gets licensed users from a UiPath Automation Cloud organization.
 ### __AllParameterSets
 
 ```
-Get-PmLicensedUser [-Path <string[]>] [[-Name] <string[]>] [[-Email] <string[]>]
+Get-PmUserLicense [-Path <string[]>] [[-Name] <string[]>] [[-Email] <string[]>]
  [-CsvEncoding <Encoding>] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
@@ -32,7 +32,7 @@ Gets user license information from a UiPath Automation Cloud organization at the
 
 The -Name and -Email parameters can be used independently or together to filter results. Both support wildcards. Tab completion for -Name suggests user names, filtering by the currently specified -Email. Tab completion for -Email suggests user email addresses, filtering by the currently specified -Name.
 
-When -ExportCsv is specified, the output is written to a CSV file with Path, UserName, and License columns — one row per (user, license) — instead of to the pipeline. That CSV round-trips back into Add-PmLicenseToPmLicensedUser to reassign the licenses. Orphaned license rows (licenses not tied to a directory user) are omitted because they cannot be reassigned on import.
+When -ExportCsv is specified, the output is written to a CSV file with Path, UserName, and License columns — one row per (user, license) — instead of to the pipeline. That CSV round-trips back into Add-PmUserLicense to reassign the licenses. Orphaned license rows (licenses not tied to a directory user) are omitted because they cannot be reassigned on import.
 
 Primary Endpoint: GET /portal_/api/license/accountant/UserLicense/user/page (License Accountant API)
 
@@ -45,7 +45,7 @@ Required permissions: (managed by Identity Server)
 ### Example 1: Get all licensed users
 
 ```powershell
-PS Orch1:\> Get-PmLicensedUser
+PS Orch1:\> Get-PmUserLicense
 ```
 
 Gets all licensed users in the current organization.
@@ -53,7 +53,7 @@ Gets all licensed users in the current organization.
 ### Example 2: Get a licensed user by name
 
 ```powershell
-PS Orch1:\> Get-PmLicensedUser ytsuda@gmail.com
+PS Orch1:\> Get-PmUserLicense ytsuda@gmail.com
 ```
 
 Gets the licensed user with the specified name. Because -Name is a positional parameter (position 0), the parameter name can be omitted.
@@ -61,7 +61,7 @@ Gets the licensed user with the specified name. Because -Name is a positional pa
 ### Example 3: Filter by email
 
 ```powershell
-PS Orch1:\> Get-PmLicensedUser -Email *@gmail.com
+PS Orch1:\> Get-PmUserLicense -Email *@gmail.com
 ```
 
 Gets all licensed users whose email addresses end with "@gmail.com".
@@ -69,7 +69,7 @@ Gets all licensed users whose email addresses end with "@gmail.com".
 ### Example 4: Filter by both name and email
 
 ```powershell
-PS Orch1:\> Get-PmLicensedUser -Name ytsuda* -Email *@gmail.com
+PS Orch1:\> Get-PmUserLicense -Name ytsuda* -Email *@gmail.com
 ```
 
 Gets licensed users whose names start with "ytsuda" and whose email addresses end with "@gmail.com".
@@ -77,11 +77,11 @@ Gets licensed users whose names start with "ytsuda" and whose email addresses en
 ### Example 5: Export licenses to CSV and re-import
 
 ```powershell
-PS Orch1:\> Get-PmLicensedUser -ExportCsv C:\temp\license-users.csv
-PS Orch1:\> Import-Csv C:\temp\license-users.csv | Add-PmLicenseToPmLicensedUser
+PS Orch1:\> Get-PmUserLicense -ExportCsv C:\temp\license-users.csv
+PS Orch1:\> Import-Csv C:\temp\license-users.csv | Add-PmUserLicense
 ```
 
-Exports one row per (user, license) with Path, UserName, and License columns, then re-imports them. The UserName column binds to Add-PmLicenseToPmLicensedUser's -Email parameter via its -UserName alias. The round trip is additive: editing the CSV and re-importing adds licenses but never revokes the ones left out.
+Exports one row per (user, license) with Path, UserName, and License columns, then re-imports them. The UserName column binds to Add-PmUserLicense's -Email parameter via its -UserName alias. The round trip is additive: editing the CSV and re-importing adds licenses but never revokes the ones left out.
 
 ## PARAMETERS
 
@@ -150,7 +150,7 @@ HelpMessage: ''
 
 ### -ExportCsv
 
-Exports the licensed users to the specified CSV file path. The CSV has Path, UserName, and License columns — one row per (user, license) — and round-trips into Add-PmLicenseToPmLicensedUser (the UserName column binds to that cmdlet's -Email parameter through its -UserName alias). Orphaned license rows (not tied to a directory user) are omitted. When this parameter is specified, no objects are written to the pipeline.
+Exports the licensed users to the specified CSV file path. The CSV has Path, UserName, and License columns — one row per (user, license) — and round-trips into Add-PmUserLicense (the UserName column binds to that cmdlet's -Email parameter through its -UserName alias). Orphaned license rows (not tied to a directory user) are omitted. When this parameter is specified, no objects are written to the pipeline.
 
 ```yaml
 Type: System.String
@@ -217,10 +217,10 @@ The License Accountant API returns an empty email field; the user's login is car
 
 ## RELATED LINKS
 
-[Get-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedGroup.md)
+[Get-PmGroupLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmGroupLicense.md)
 
-[Add-PmLicenseToPmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedUser.md)
+[Add-PmUserLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmUserLicense.md)
 
-[Remove-PmLicenseFromPmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicenseFromPmLicensedUser.md)
+[Remove-PmUserLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmUserLicense.md)
 
 [CSV Export & Import Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/03-CsvExportImport.md)

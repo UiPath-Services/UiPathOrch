@@ -197,7 +197,7 @@ Returns one object per bundle with `code`, `name`, `allocated`, `inUse`, and `to
 
 This cmdlet is organization-scoped. Because the underlying Portal API returns the same data for every tenant that shares an organization, querying multiple drives within the same organization is redundant. Group by the organization slug in the drive URL to avoid duplicate API calls.
 
-Use `Get-PmLicensedGroup` and `Get-PmLicensedUser` to enumerate the groups and users that consume these bundles.
+Use `Get-PmGroupLicense` and `Get-PmUserLicense` to enumerate the groups and users that consume these bundles.
 
 ## RELATED LINKS
 
@@ -207,6 +207,6 @@ Use `Get-PmLicensedGroup` and `Get-PmLicensedUser` to enumerate the groups and u
 
 [Get-PmLicenseContract](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicenseContract.md)
 
-[Get-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedGroup.md)
+[Get-PmGroupLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmGroupLicense.md)
 
-[Get-PmLicensedUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedUser.md)
+[Get-PmUserLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUserLicense.md)

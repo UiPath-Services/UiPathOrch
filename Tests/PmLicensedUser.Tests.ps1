@@ -4,7 +4,7 @@
 <#
 .SYNOPSIS
     End-to-end Pester coverage for the PmLicensed*User cmdlet family added
-    in v1.6.0: Add-PmLicenseToPmLicensedUser, Remove-PmLicenseFromPmLicensedUser,
+    in v1.6.0: Add-PmUserLicense, Remove-PmUserLicense,
     Remove-PmLicensedUser.
 
 .DESCRIPTION
@@ -23,7 +23,7 @@
     - A directory user (default 'akrtsuda@gmail.com', or
       $env:UIPATHORCH_TEST_LICENSED_USER) that is NOT currently in the
       licensed-users list. The user does NOT need to be in the tenant —
-      Add-PmLicenseToPmLicensedUser resolves them from the directory.
+      Add-PmUserLicense resolves them from the directory.
 
     The tests deliberately exercise the same user across all Describe
     blocks to validate the merge / strip / drop sequencing, which is the
@@ -57,7 +57,7 @@ BeforeAll {
 
     # Pre-clean: if a prior failed run left the test user in the licensed
     # set, drop them so the first It starts from a known-empty state.
-    $existing = Get-PmLicensedUser -Path $script:DrivePath -ErrorAction SilentlyContinue |
+    $existing = Get-PmUserLicense -Path $script:DrivePath -ErrorAction SilentlyContinue |
         Where-Object email -eq $script:TestUser
     if ($existing) {
         Remove-PmLicensedUser -Path $script:DrivePath -Email $script:TestUser -Confirm:$false -ErrorAction SilentlyContinue
@@ -72,10 +72,10 @@ AfterAll {
     Remove-PmLicensedUser -Path $script:DrivePath -Email $script:TestUser -Confirm:$false -ErrorAction SilentlyContinue
 }
 
-Describe 'Add-PmLicenseToPmLicensedUser' {
+Describe 'Add-PmUserLicense' {
     It 'allocates a single bundle to a previously-unlicensed user' {
-        Add-PmLicenseToPmLicensedUser -Path $script:DrivePath -Email $script:TestUser -License $script:License1 -Confirm:$false
-        $u = Get-PmLicensedUser -Path $script:DrivePath | Where-Object email -eq $script:TestUser
+        Add-PmUserLicense -Path $script:DrivePath -Email $script:TestUser -License $script:License1 -Confirm:$false
+        $u = Get-PmUserLicense -Path $script:DrivePath | Where-Object email -eq $script:TestUser
         $u | Should -Not -BeNullOrEmpty
         $u.userBundleLicenses | Should -Contain $script:License1
     }
@@ -84,24 +84,24 @@ Describe 'Add-PmLicenseToPmLicensedUser' {
         # Atomic-replace PUT: re-submitting the same set is a no-op on the
         # server side; the cmdlet should also short-circuit when the merge
         # produces no new codes (NOTES in the help md spells this out).
-        Add-PmLicenseToPmLicensedUser -Path $script:DrivePath -Email $script:TestUser -License $script:License1 -Confirm:$false
-        $u = Get-PmLicensedUser -Path $script:DrivePath | Where-Object email -eq $script:TestUser
+        Add-PmUserLicense -Path $script:DrivePath -Email $script:TestUser -License $script:License1 -Confirm:$false
+        $u = Get-PmUserLicense -Path $script:DrivePath | Where-Object email -eq $script:TestUser
         $u.userBundleLicenses | Should -Contain $script:License1
         ($u.userBundleLicenses | Where-Object { $_ -eq $script:License1 }).Count | Should -Be 1
     }
 
     It 'merges a second bundle without dropping the first (atomic-replace + merge)' {
-        Add-PmLicenseToPmLicensedUser -Path $script:DrivePath -Email $script:TestUser -License $script:License2 -Confirm:$false
-        $u = Get-PmLicensedUser -Path $script:DrivePath | Where-Object email -eq $script:TestUser
+        Add-PmUserLicense -Path $script:DrivePath -Email $script:TestUser -License $script:License2 -Confirm:$false
+        $u = Get-PmUserLicense -Path $script:DrivePath | Where-Object email -eq $script:TestUser
         $u.userBundleLicenses | Should -Contain $script:License1
         $u.userBundleLicenses | Should -Contain $script:License2
     }
 }
 
-Describe 'Remove-PmLicenseFromPmLicensedUser' {
+Describe 'Remove-PmUserLicense' {
     It 'removes a specific bundle while leaving others intact' {
-        Remove-PmLicenseFromPmLicensedUser -Path $script:DrivePath -Email $script:TestUser -License $script:License1 -Confirm:$false
-        $u = Get-PmLicensedUser -Path $script:DrivePath | Where-Object email -eq $script:TestUser
+        Remove-PmUserLicense -Path $script:DrivePath -Email $script:TestUser -License $script:License1 -Confirm:$false
+        $u = Get-PmUserLicense -Path $script:DrivePath | Where-Object email -eq $script:TestUser
         $u | Should -Not -BeNullOrEmpty
         $u.userBundleLicenses | Should -Not -Contain $script:License1
         $u.userBundleLicenses | Should -Contain $script:License2
@@ -111,8 +111,8 @@ Describe 'Remove-PmLicenseFromPmLicensedUser' {
         # The contract: the user record stays in the licensed-users set
         # with an empty bundle list (the "No license" row in the Portal UI).
         # Dropping the row entirely is Remove-PmLicensedUser's job.
-        Remove-PmLicenseFromPmLicensedUser -Path $script:DrivePath -Email $script:TestUser -License '*' -Confirm:$false
-        $u = Get-PmLicensedUser -Path $script:DrivePath | Where-Object email -eq $script:TestUser
+        Remove-PmUserLicense -Path $script:DrivePath -Email $script:TestUser -License '*' -Confirm:$false
+        $u = Get-PmUserLicense -Path $script:DrivePath | Where-Object email -eq $script:TestUser
         $u | Should -Not -BeNullOrEmpty
         $u.userBundleLicenses | Should -BeNullOrEmpty
     }
@@ -121,18 +121,18 @@ Describe 'Remove-PmLicenseFromPmLicensedUser' {
 Describe 'Remove-PmLicensedUser' {
     It 'drops the licensed-user row entirely' {
         Remove-PmLicensedUser -Path $script:DrivePath -Email $script:TestUser -Confirm:$false
-        $u = Get-PmLicensedUser -Path $script:DrivePath | Where-Object email -eq $script:TestUser
+        $u = Get-PmUserLicense -Path $script:DrivePath | Where-Object email -eq $script:TestUser
         $u | Should -BeNullOrEmpty
     }
 }
 
-Describe 'Get-PmLicensedUser -ExportCsv' {
+Describe 'Get-PmUserLicense -ExportCsv' {
     # Round-trip coverage for the -ExportCsv added in 1.6.2. Runs after the
     # sequence above has dropped the test user, then re-adds two bundles so
     # there is a known multi-license user to export. AfterAll (top of file)
     # drops the user regardless.
     BeforeAll {
-        Add-PmLicenseToPmLicensedUser -Path $script:DrivePath -Email $script:TestUser `
+        Add-PmUserLicense -Path $script:DrivePath -Email $script:TestUser `
             -License $script:License1, $script:License2 -Confirm:$false
         $script:CsvPath = Join-Path ([IO.Path]::GetTempPath()) "pmlu_$([guid]::NewGuid().ToString('N')).csv"
     }
@@ -141,7 +141,7 @@ Describe 'Get-PmLicensedUser -ExportCsv' {
     }
 
     It 'emits Path / UserName / License columns (not Email)' {
-        Get-PmLicensedUser -Path $script:DrivePath -ExportCsv $script:CsvPath | Out-Null
+        Get-PmUserLicense -Path $script:DrivePath -ExportCsv $script:CsvPath | Out-Null
         $cols = (Import-Csv $script:CsvPath | Select-Object -First 1).PSObject.Properties.Name | Sort-Object
         $cols | Should -Be (@('License', 'Path', 'UserName') | Sort-Object)
     }
@@ -162,10 +162,10 @@ Describe 'Get-PmLicensedUser -ExportCsv' {
         ($rows | Where-Object { [string]::IsNullOrWhiteSpace($_.UserName) }) | Should -BeNullOrEmpty
     }
 
-    It 're-imports into Add-PmLicenseToPmLicensedUser without error (-WhatIf)' {
+    It 're-imports into Add-PmUserLicense without error (-WhatIf)' {
         # The UserName column binds to -Email via its alias; a full unedited
         # re-import is a no-op (every license already held), so -WhatIf just
         # previews and binds cleanly.
-        { Import-Csv $script:CsvPath | Add-PmLicenseToPmLicensedUser -WhatIf } | Should -Not -Throw
+        { Import-Csv $script:CsvPath | Add-PmUserLicense -WhatIf } | Should -Not -Throw
     }
 }

@@ -1,26 +1,26 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicenseFromPmLicensedGroup.md'
+HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmGroupLicense.md'
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 03/06/2026
 PlatyPS schema version: 2024-05-01
-title: Remove-PmLicenseFromPmLicensedGroup
+title: Add-PmGroupLicense
 ---
 
-# Remove-PmLicenseFromPmLicensedGroup
+# Add-PmGroupLicense
 
 ## SYNOPSIS
 
-Removes a user bundle license from a licensed group in a UiPath Automation Cloud organization.
+Adds a user bundle license to a licensed group in a UiPath Automation Cloud organization.
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Remove-PmLicenseFromPmLicensedGroup [-Path <string[]>] [-GroupName] <string[]>
+Add-PmGroupLicense [-Path <string[]>] [-GroupName] <string[]>
  [-License] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
@@ -28,11 +28,11 @@ Remove-PmLicenseFromPmLicensedGroup [-Path <string[]>] [-GroupName] <string[]>
 
 ## DESCRIPTION
 
-Removes one or more user bundle licenses from a licensed group at the organization (platform management) level. This cmdlet accepts pipeline input, collecting all removals during ProcessRecord and applying them in bulk during EndProcessing.
+Adds one or more user bundle licenses to a licensed group at the organization (platform management) level. The group is resolved via directory search, so the -GroupName parameter requires entering at least one character to trigger the search-based tab completer.
 
-The -GroupName parameter supports wildcards and tab completion for existing licensed groups. The -License parameter supports wildcards and tab completion that dynamically shows licenses currently assigned to the selected group(s), including availability information as tooltips.
+The -License parameter supports tab completion that dynamically shows available license bundles for the selected group, including the number of remaining available licenses. Licenses already assigned to the group are excluded from the completion suggestions. Supports wildcards for matching multiple license types.
 
-If a license is not currently assigned to the group, the removal is skipped silently.
+This cmdlet accepts pipeline input, collecting all additions during ProcessRecord and applying them in bulk during EndProcessing. If a license is already assigned to the group, it is not added again (duplicates are skipped).
 
 Primary Endpoint: PUT /api/license/accountant/UserLicense/group (License Accountant API)
 
@@ -42,29 +42,29 @@ Required permissions: (managed by Identity Server)
 
 ## EXAMPLES
 
-### Example 1: Remove a license from a group
+### Example 1: Add a license to a group
 
 ```powershell
-PS Orch1:\> Remove-PmLicenseFromPmLicensedGroup Developers Unattended
+PS Orch1:\> Add-PmGroupLicense "Automation Developers" Unattended
 ```
 
-Removes the "Unattended" license bundle from the "Developers" licensed group. Because -GroupName and -License are positional parameters (positions 0 and 1), parameter names can be omitted.
+Adds the "Unattended" license bundle to the "Automation Developers" licensed group. Because -GroupName and -License are positional parameters (positions 0 and 1), parameter names can be omitted.
 
-### Example 2: Remove all licenses from a group
+### Example 2: Add multiple licenses using wildcards
 
 ```powershell
-PS Orch1:\> Remove-PmLicenseFromPmLicensedGroup Developers *
+PS Orch1:\> Add-PmGroupLicense "Automation Developers" *Attended*
 ```
 
-Removes all license bundles from the "Developers" licensed group.
+Adds all available license bundles matching "*Attended*" to the "Automation Developers" group.
 
-### Example 3: Preview license removal
+### Example 3: Preview license addition
 
 ```powershell
-PS Orch1:\> Remove-PmLicenseFromPmLicensedGroup Developers "Citizen Developer" -WhatIf
+PS Orch1:\> Add-PmGroupLicense "Automation Developers" "Citizen Developer" -WhatIf
 ```
 
-Shows what would happen without actually removing the license.
+Shows what would happen without actually adding the license.
 
 ## PARAMETERS
 
@@ -91,7 +91,7 @@ HelpMessage: ''
 
 ### -GroupName
 
-Specifies the name(s) of the licensed group(s) to remove licenses from. Supports wildcards. Tab completion dynamically suggests licensed group names. This parameter has the alias "Name".
+Specifies the name(s) of the group(s) to add licenses to. The group is resolved via directory search. Tab completion requires entering at least one character to search. Supports wildcards. This parameter has the alias "Name".
 
 ```yaml
 Type: System.String[]
@@ -113,7 +113,7 @@ HelpMessage: ''
 
 ### -License
 
-Specifies the license bundle name(s) to remove. Supports wildcards. Tab completion dynamically suggests licenses currently assigned to the selected group(s), with availability information as tooltips.
+Specifies the license bundle name(s) to add. Supports wildcards. Tab completion dynamically suggests available license bundles for the selected group, showing the number of remaining available licenses as tooltips.
 
 ```yaml
 Type: System.String[]
@@ -193,18 +193,20 @@ You can pipe objects with GroupName, License, and Path properties to this cmdlet
 
 ### UiPath.PowerShell.Entities.UpdateLicensedGroupResponse
 
-Returns the updated licensed group response, including the remaining list of assigned user bundle license codes and their human-readable names.
+Returns the updated licensed group response, including the list of assigned user bundle license codes and their human-readable names.
 
 ## NOTES
 
-All pipeline input is collected first, then API calls are made during EndProcessing. If a license is not currently assigned to the group, the removal is skipped.
+All pipeline input is collected first, then API calls are made during EndProcessing. If a license is already assigned to the group, the operation is skipped for that license.
 
-License names are resolved from internal bundle codes to human-readable names.
+The group is resolved via directory search, accepting both DirectoryGroup and LocalGroup types.
+
+License codes are internally mapped to human-readable names for both tab completion display and output.
 
 ## RELATED LINKS
 
-[Add-PmLicenseToPmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Add-PmLicenseToPmLicensedGroup.md)
+[Remove-PmGroupLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmGroupLicense.md)
 
-[Get-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmLicensedGroup.md)
+[Get-PmGroupLicense](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmGroupLicense.md)
 
 [Remove-PmLicensedGroup](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmLicensedGroup.md)

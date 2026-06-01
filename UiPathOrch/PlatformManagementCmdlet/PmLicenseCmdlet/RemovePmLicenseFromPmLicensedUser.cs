@@ -9,13 +9,13 @@ using UiPath.PowerShell.Positional;
 namespace UiPath.PowerShell.Commands;
 
 // Removes one or more user license bundles from a Platform Management user.
-// Mirror of Add-PmLicenseToPmLicensedUser: re-uses the same atomic-replace PUT
+// Mirror of Add-PmUserLicense: re-uses the same atomic-replace PUT
 // (PutPmLicenseUser) but submits the user's existing userBundleLicenses MINUS
 // the matched codes. `-License *` strips every bundle the user currently holds
 // — whether that also drops the user from the licensed-users set or leaves an
 // empty record is an API-side observation (silent emit on the empty result
 // either way, matching Add's contract).
-[Cmdlet(VerbsCommon.Remove, "PmLicenseFromPmLicensedUser", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.Remove, "PmUserLicense", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.NuLicensedUser))]
 public class RemovePmLicenseFromPmLicensedUserCmdlet : OrchestratorPSCmdlet
 {
