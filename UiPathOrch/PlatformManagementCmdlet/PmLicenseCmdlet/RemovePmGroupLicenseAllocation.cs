@@ -7,7 +7,7 @@ using UiPath.PowerShell.Core;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "PmGroupLicenseAllocation", SupportsShouldProcess = true)]
-public class RemoveAllocationFromUserLicenseGroup : OrchestratorPSCmdlet
+public class RemovePmGroupLicenseAllocationCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter))]
@@ -120,7 +120,7 @@ public class RemoveAllocationFromUserLicenseGroup : OrchestratorPSCmdlet
                         }
                         catch (Exception ex)
                         {
-                            WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "RemoveAllocationFromNamedUserLicenseGroup", ErrorCategory.InvalidOperation, drive));
+                            WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "RemovePmGroupLicenseAllocationError", ErrorCategory.InvalidOperation, drive));
                         }
                     }
                 }

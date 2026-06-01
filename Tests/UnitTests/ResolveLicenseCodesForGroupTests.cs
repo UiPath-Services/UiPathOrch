@@ -4,7 +4,7 @@ using Xunit;
 
 namespace UnitTests;
 
-// Pins AddPmLicenseToPmLicenseGroup.ResolveLicenseCodesForGroup — the pure
+// Pins AddPmGroupLicenseCmdlet.ResolveLicenseCodesForGroup — the pure
 // -License resolver for groups. The available-bundles API returns codes only
 // (its bundle `name` is empty on the live server, verified on Orch1 2026-05-31),
 // so resolution must go through the static catalog: match a pattern against the
@@ -21,7 +21,7 @@ public class ResolveLicenseCodesForGroupTests
     [Fact]
     public void FriendlyName_RoundTripsToCode_WhenAvailable()
     {
-        var got = AddPmLicenseToPmLicenseGroup.ResolveLicenseCodesForGroup(
+        var got = AddPmGroupLicenseCmdlet.ResolveLicenseCodesForGroup(
             P("Attended - Named User"), new[] { "ATTUNU", "RPADEVPRONU" });
         Assert.Equal(new HashSet<string> { "ATTUNU" }, got);
     }
@@ -29,7 +29,7 @@ public class ResolveLicenseCodesForGroupTests
     [Fact]
     public void RawCode_AlsoMatches()
     {
-        var got = AddPmLicenseToPmLicenseGroup.ResolveLicenseCodesForGroup(
+        var got = AddPmGroupLicenseCmdlet.ResolveLicenseCodesForGroup(
             P("RPADEVPRONU"), new[] { "ATTUNU", "RPADEVPRONU" });
         Assert.Equal(new HashSet<string> { "RPADEVPRONU" }, got);
     }
@@ -38,7 +38,7 @@ public class ResolveLicenseCodesForGroupTests
     public void OnlyAvailableCodesAreReturned()
     {
         // Pattern matches the catalog, but the bundle isn't offered to this group.
-        var got = AddPmLicenseToPmLicenseGroup.ResolveLicenseCodesForGroup(
+        var got = AddPmGroupLicenseCmdlet.ResolveLicenseCodesForGroup(
             P("Tester - Named User"), new[] { "ATTUNU" });
         Assert.Empty(got);
     }
@@ -48,7 +48,7 @@ public class ResolveLicenseCodesForGroupTests
     {
         // "Automation Developer*" matches RPADEVPRONU (Automation Developer -
         // Named User) and RPADEVPROCU (… Multiuser); only the available one returns.
-        var got = AddPmLicenseToPmLicenseGroup.ResolveLicenseCodesForGroup(
+        var got = AddPmGroupLicenseCmdlet.ResolveLicenseCodesForGroup(
             P("Automation Developer*"), new[] { "RPADEVPRONU", "ATTUNU" });
         Assert.Equal(new HashSet<string> { "RPADEVPRONU" }, got);
     }
@@ -56,7 +56,7 @@ public class ResolveLicenseCodesForGroupTests
     [Fact]
     public void CaseInsensitive_FriendlyName()
     {
-        var got = AddPmLicenseToPmLicenseGroup.ResolveLicenseCodesForGroup(
+        var got = AddPmGroupLicenseCmdlet.ResolveLicenseCodesForGroup(
             P("attended - named user"), new[] { "ATTUNU" });
         Assert.Equal(new HashSet<string> { "ATTUNU" }, got);
     }
@@ -66,7 +66,7 @@ public class ResolveLicenseCodesForGroupTests
     {
         // A future bundle the static catalog doesn't map can still be added by its
         // exact code (its friendly name falls back to the raw code).
-        var got = AddPmLicenseToPmLicenseGroup.ResolveLicenseCodesForGroup(
+        var got = AddPmGroupLicenseCmdlet.ResolveLicenseCodesForGroup(
             P("ZZNEWBUNDLE"), new[] { "ZZNEWBUNDLE", "ATTUNU" });
         Assert.Equal(new HashSet<string> { "ZZNEWBUNDLE" }, got);
     }
@@ -74,7 +74,7 @@ public class ResolveLicenseCodesForGroupTests
     [Fact]
     public void NoMatch_ReturnsEmpty_NotNull()
     {
-        var got = AddPmLicenseToPmLicenseGroup.ResolveLicenseCodesForGroup(
+        var got = AddPmGroupLicenseCmdlet.ResolveLicenseCodesForGroup(
             P("NoSuchBundle*"), new[] { "ATTUNU" });
         Assert.NotNull(got);
         Assert.Empty(got);
@@ -83,7 +83,7 @@ public class ResolveLicenseCodesForGroupTests
     [Fact]
     public void NullArgs_ReturnEmpty()
     {
-        Assert.Empty(AddPmLicenseToPmLicenseGroup.ResolveLicenseCodesForGroup(null, new[] { "ATTUNU" }));
-        Assert.Empty(AddPmLicenseToPmLicenseGroup.ResolveLicenseCodesForGroup(P("*"), null));
+        Assert.Empty(AddPmGroupLicenseCmdlet.ResolveLicenseCodesForGroup(null, new[] { "ATTUNU" }));
+        Assert.Empty(AddPmGroupLicenseCmdlet.ResolveLicenseCodesForGroup(P("*"), null));
     }
 }

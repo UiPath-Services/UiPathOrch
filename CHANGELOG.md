@@ -30,7 +30,9 @@ The entity-delete cmdlets `Remove-PmLicensedGroup` and `Remove-PmLicensedUser`
 (which drop a group/user from the licensed set entirely) and the read-only
 `Get-PmLicense`, `Get-PmLicenseAllocation`, `Get-PmLicenseInventory`, and
 `Get-PmLicenseContract` reference cmdlets are unchanged. Cmdlet behavior,
-parameters, and output are otherwise identical — only the names changed.
+parameters, and output are otherwise identical — only the names changed. The
+`FullyQualifiedErrorId` values these cmdlets emit on error were also aligned to
+the new names (e.g. `AddPmUserLicenseError`).
 
 ## [1.6.2] - 2026-06-01
 

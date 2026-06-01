@@ -3,7 +3,7 @@ using Xunit;
 
 namespace UnitTests;
 
-// Pins AddPmLicenseToPmLicenseGroup.SuggestableLicenseCodes — the set behind the
+// Pins AddPmGroupLicenseCmdlet.SuggestableLicenseCodes — the set behind the
 // -License completer. Candidates are the union of each matched group's available
 // bundles (the available-bundles API returns held bundles too); excluded are
 // only the codes EVERY group already holds (intersection of held sets). So a
@@ -19,7 +19,7 @@ public class SuggestableLicenseCodesTests
     [Fact]
     public void SingleGroup_SubtractsHeldFromAvailable()
     {
-        var got = AddPmLicenseToPmLicenseGroup.SuggestableLicenseCodes(new[]
+        var got = AddPmGroupLicenseCmdlet.SuggestableLicenseCodes(new[]
         {
             G(new[] { "ATTUNU", "RPADEVPRONU", "RPADEVNU", "CTZDEVNU" }, new[] { "ATTUNU", "RPADEVPRONU" }),
         });
@@ -29,7 +29,7 @@ public class SuggestableLicenseCodesTests
     [Fact]
     public void SingleGroup_NothingHeld_ReturnsAllAvailable()
     {
-        var got = AddPmLicenseToPmLicenseGroup.SuggestableLicenseCodes(new[]
+        var got = AddPmGroupLicenseCmdlet.SuggestableLicenseCodes(new[]
         {
             G(new[] { "ATTUNU", "CTZDEVNU" }, null),
         });
@@ -39,7 +39,7 @@ public class SuggestableLicenseCodesTests
     [Fact]
     public void SingleGroup_AllHeld_ReturnsEmpty()
     {
-        var got = AddPmLicenseToPmLicenseGroup.SuggestableLicenseCodes(new[]
+        var got = AddPmGroupLicenseCmdlet.SuggestableLicenseCodes(new[]
         {
             G(new[] { "ATTUNU", "CTZDEVNU" }, new[] { "ATTUNU", "CTZDEVNU" }),
         });
@@ -53,7 +53,7 @@ public class SuggestableLicenseCodesTests
     {
         // Both hold ATTUNU (common) → excluded. CTZDEVNU held by group1 only →
         // still suggested (group2 is missing it). RPADEVNU held by neither.
-        var got = AddPmLicenseToPmLicenseGroup.SuggestableLicenseCodes(new[]
+        var got = AddPmGroupLicenseCmdlet.SuggestableLicenseCodes(new[]
         {
             G(new[] { "ATTUNU", "CTZDEVNU", "RPADEVNU" }, new[] { "ATTUNU", "CTZDEVNU" }),
             G(new[] { "ATTUNU", "CTZDEVNU", "RPADEVNU" }, new[] { "ATTUNU" }),
@@ -65,7 +65,7 @@ public class SuggestableLicenseCodesTests
     public void MultiGroup_UnionsAvailableAcrossGroups()
     {
         // group1 offers ATTUNU; group2 offers CTZDEVNU. Neither commonly held.
-        var got = AddPmLicenseToPmLicenseGroup.SuggestableLicenseCodes(new[]
+        var got = AddPmGroupLicenseCmdlet.SuggestableLicenseCodes(new[]
         {
             G(new[] { "ATTUNU" }, null),
             G(new[] { "CTZDEVNU" }, null),
@@ -80,7 +80,7 @@ public class SuggestableLicenseCodesTests
         // the whole available union is suggested. (This is the live Orch1 state:
         // ほえほえグループ holds RPADEVPRONU, Automation Express holds AKIT,CTZDEVNU —
         // no overlap — so completion offers the full available set.)
-        var got = AddPmLicenseToPmLicenseGroup.SuggestableLicenseCodes(new[]
+        var got = AddPmGroupLicenseCmdlet.SuggestableLicenseCodes(new[]
         {
             G(new[] { "ATTUNU", "CTZDEVNU" }, new[] { "ATTUNU" }),
             G(new[] { "ATTUNU", "CTZDEVNU" }, new[] { "CTZDEVNU" }),
@@ -91,7 +91,7 @@ public class SuggestableLicenseCodesTests
     [Fact]
     public void MultiGroup_AllCommonlyHeld_ReturnsEmpty()
     {
-        var got = AddPmLicenseToPmLicenseGroup.SuggestableLicenseCodes(new[]
+        var got = AddPmGroupLicenseCmdlet.SuggestableLicenseCodes(new[]
         {
             G(new[] { "ATTUNU" }, new[] { "ATTUNU" }),
             G(new[] { "ATTUNU" }, new[] { "ATTUNU" }),
@@ -102,7 +102,7 @@ public class SuggestableLicenseCodesTests
     [Fact]
     public void CaseInsensitive_OnHeldCodes()
     {
-        var got = AddPmLicenseToPmLicenseGroup.SuggestableLicenseCodes(new[]
+        var got = AddPmGroupLicenseCmdlet.SuggestableLicenseCodes(new[]
         {
             G(new[] { "ATTUNU", "CTZDEVNU" }, new[] { "attunu" }),
         });
@@ -112,14 +112,14 @@ public class SuggestableLicenseCodesTests
     [Fact]
     public void EmptyInput_ReturnsEmpty()
     {
-        Assert.Empty(AddPmLicenseToPmLicenseGroup.SuggestableLicenseCodes(
+        Assert.Empty(AddPmGroupLicenseCmdlet.SuggestableLicenseCodes(
             System.Array.Empty<(IEnumerable<string?>, IEnumerable<string?>?)>()));
     }
 
     [Fact]
     public void NullsInInput_AreIgnored()
     {
-        var got = AddPmLicenseToPmLicenseGroup.SuggestableLicenseCodes(new[]
+        var got = AddPmGroupLicenseCmdlet.SuggestableLicenseCodes(new[]
         {
             G(new[] { "ATTUNU", null!, "CTZDEVNU" }, new[] { (string?)null }),
         });

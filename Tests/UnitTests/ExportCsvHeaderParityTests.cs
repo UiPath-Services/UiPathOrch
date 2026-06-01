@@ -38,7 +38,7 @@ public class ExportCsvHeaderParityTests
         // Get-PmGroupLicense -ExportCsv emits group×license rows that bind
         // back into Add-PmGroupLicense (the "new"-equivalent
         // import target; no Update- form). Same param shape as the Remove- form.
-        yield return new object[] { typeof(GetUserLicenseGroup), typeof(AddPmLicenseToPmLicenseGroup), null! };
+        yield return new object[] { typeof(GetPmGroupLicenseCmdlet), typeof(AddPmGroupLicenseCmdlet), null! };
     }
 
     [Theory]

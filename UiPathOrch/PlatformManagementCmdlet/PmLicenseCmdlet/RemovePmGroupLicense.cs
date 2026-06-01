@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Remove, "PmGroupLicense", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
-public class RemoveLicenseFromLicenseGroup : OrchestratorPSCmdlet
+public class RemovePmGroupLicenseCmdlet : OrchestratorPSCmdlet
 {
     // Manages license codes
     private Dictionary<(OrchDriveInfo drive, NuLicensedGroup group), HashSet<string>>? _parameterSets;
@@ -154,7 +154,7 @@ public class RemoveLicenseFromLicenseGroup : OrchestratorPSCmdlet
                 }
                 catch (Exception ex)
                 {
-                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "RemovePmLicenseFromPmLicenseGroupError", ErrorCategory.InvalidOperation, drive));
+                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "RemovePmGroupLicenseError", ErrorCategory.InvalidOperation, drive));
                     continue;
                 }
             }

@@ -25,7 +25,7 @@ public class PmLicensedUserCsvTests
             userBundleLicenses = ["RPADEVPRONU", "ATTUNU"],
         };
 
-        var names = GetUserLicenseUser.BuildLicenseDisplayNames(user);
+        var names = GetPmUserLicenseCmdlet.BuildLicenseDisplayNames(user);
 
         // ATTUNU → "Attended - Named User", RPADEVPRONU → "Automation Developer - Named User"
         // sorted alphabetically by display name.
@@ -41,7 +41,7 @@ public class PmLicensedUserCsvTests
             userBundleLicenses = ["ZZZ_UNKNOWN"],
         };
 
-        var names = GetUserLicenseUser.BuildLicenseDisplayNames(user);
+        var names = GetPmUserLicenseCmdlet.BuildLicenseDisplayNames(user);
 
         Assert.Equal(["ZZZ_UNKNOWN"], names);
     }
@@ -51,14 +51,14 @@ public class PmLicensedUserCsvTests
     {
         var user = new NuLicensedUser { name = "ada@example.com", userBundleLicenses = null };
 
-        Assert.Empty(GetUserLicenseUser.BuildLicenseDisplayNames(user));
+        Assert.Empty(GetPmUserLicenseCmdlet.BuildLicenseDisplayNames(user));
     }
 
     [Fact]
     public void BuildLicenseCsvRow_EscapesAndOrdersColumns()
     {
         // A comma in the user name must be quoted so it can't shift columns.
-        var row = GetUserLicenseUser.BuildLicenseCsvRow("Orch1:", "ada, lovelace", "Attended - Named User");
+        var row = GetPmUserLicenseCmdlet.BuildLicenseCsvRow("Orch1:", "ada, lovelace", "Attended - Named User");
 
         Assert.Equal(["Orch1:", "\"ada, lovelace\"", "Attended - Named User"], row);
     }
@@ -66,7 +66,7 @@ public class PmLicensedUserCsvTests
     [Fact]
     public void BuildLicenseCsvRow_NullValues_BecomeEmptyStrings()
     {
-        var row = GetUserLicenseUser.BuildLicenseCsvRow(null, null, null);
+        var row = GetPmUserLicenseCmdlet.BuildLicenseCsvRow(null, null, null);
 
         Assert.Equal(["", "", ""], row);
     }
@@ -76,7 +76,7 @@ public class PmLicensedUserCsvTests
     [Fact]
     public void IsExportableUser_RealUser_IsExported()
     {
-        Assert.True(GetUserLicenseUser.IsExportableUser(
+        Assert.True(GetPmUserLicenseCmdlet.IsExportableUser(
             new NuLicensedUser { name = "ada@example.com", orphan = false }));
     }
 
@@ -84,7 +84,7 @@ public class PmLicensedUserCsvTests
     public void IsExportableUser_NullOrphan_IsExported()
     {
         // Defensive: a missing orphan flag is treated as a real user.
-        Assert.True(GetUserLicenseUser.IsExportableUser(
+        Assert.True(GetPmUserLicenseCmdlet.IsExportableUser(
             new NuLicensedUser { name = "ada@example.com", orphan = null }));
     }
 
@@ -93,7 +93,7 @@ public class PmLicensedUserCsvTests
     {
         // orphan=true rows carry a bundle display name in 'name' and no user —
         // they must not appear in the round-trippable export.
-        Assert.False(GetUserLicenseUser.IsExportableUser(
+        Assert.False(GetPmUserLicenseCmdlet.IsExportableUser(
             new NuLicensedUser { name = "Attended - Named User", orphan = true }));
     }
 
@@ -102,7 +102,7 @@ public class PmLicensedUserCsvTests
     [Fact]
     public void CsvHeaders_AreExactlyPathUserNameLicense()
     {
-        var field = typeof(GetUserLicenseUser).GetField("CsvHeaders",
+        var field = typeof(GetPmUserLicenseCmdlet).GetField("CsvHeaders",
             BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(field);
         var headers = (string[]?)field!.GetValue(null);
@@ -115,13 +115,13 @@ public class PmLicensedUserCsvTests
         // The CSV's UserName column binds to Add-PmUserLicense's
         // -Email parameter through its [Alias("UserName")]. Pin both the alias
         // and the License/Path parameters so the round trip can't silently break.
-        var emailProp = typeof(AddPmLicenseToPmLicensedUserCmdlet).GetProperty("Email");
+        var emailProp = typeof(AddPmUserLicenseCmdlet).GetProperty("Email");
         Assert.NotNull(emailProp);
         var alias = emailProp!.GetCustomAttribute<AliasAttribute>();
         Assert.NotNull(alias);
         Assert.Contains("UserName", alias!.AliasNames);
 
-        Assert.NotNull(typeof(AddPmLicenseToPmLicensedUserCmdlet).GetProperty("License"));
-        Assert.NotNull(typeof(AddPmLicenseToPmLicensedUserCmdlet).GetProperty("Path"));
+        Assert.NotNull(typeof(AddPmUserLicenseCmdlet).GetProperty("License"));
+        Assert.NotNull(typeof(AddPmUserLicenseCmdlet).GetProperty("Path"));
     }
 }

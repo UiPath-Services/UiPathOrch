@@ -17,7 +17,7 @@ namespace UiPath.PowerShell.Commands;
 // either way, matching Add's contract).
 [Cmdlet(VerbsCommon.Remove, "PmUserLicense", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.NuLicensedUser))]
-public class RemovePmLicenseFromPmLicensedUserCmdlet : OrchestratorPSCmdlet
+public class RemovePmUserLicenseCmdlet : OrchestratorPSCmdlet
 {
     // Per (drive, userId): the existing licensed-user record (always present —
     // we error early if the target isn't in the licensed-users set), the bundle
@@ -259,7 +259,7 @@ public class RemovePmLicenseFromPmLicensedUserCmdlet : OrchestratorPSCmdlet
             {
                 WriteError(new ErrorRecord(
                     new OrchException(target, ex),
-                    "RemovePmLicenseFromPmLicensedUserError", ErrorCategory.InvalidOperation, target));
+                    "RemovePmUserLicenseError", ErrorCategory.InvalidOperation, target));
                 continue;
             }
         }

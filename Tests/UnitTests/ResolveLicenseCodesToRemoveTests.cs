@@ -4,7 +4,7 @@ using Xunit;
 
 namespace UnitTests;
 
-// Pins RemovePmLicenseFromPmLicensedUserCmdlet.ResolveLicenseCodesToRemove —
+// Pins RemovePmUserLicenseCmdlet.ResolveLicenseCodesToRemove —
 // the pure -License wildcard ∩ current-bundles resolver. Unlike Add's resolver
 // (which matches against the full catalog), Remove matches against ONLY what
 // the user currently holds, so non-matching patterns are a silent no-op and
@@ -18,7 +18,7 @@ public class ResolveLicenseCodesToRemoveTests
     public void StarPattern_StripsExactlyTheHeldSet()
     {
         var held = new[] { "ATTUNU", "RPADEVNU", "CTZDEVNU" };
-        var got = RemovePmLicenseFromPmLicensedUserCmdlet.ResolveLicenseCodesToRemove(
+        var got = RemovePmUserLicenseCmdlet.ResolveLicenseCodesToRemove(
             Patterns("*"), held);
         Assert.Equal(new HashSet<string>(held), got);
     }
@@ -28,7 +28,7 @@ public class ResolveLicenseCodesToRemoveTests
     {
         // User holds Citizen + Attended; pattern matches both by friendly name.
         var held = new[] { "ATTUNU", "CTZDEVNU" };
-        var got = RemovePmLicenseFromPmLicensedUserCmdlet.ResolveLicenseCodesToRemove(
+        var got = RemovePmUserLicenseCmdlet.ResolveLicenseCodesToRemove(
             Patterns("Citizen*"), held);
         Assert.Equal(new HashSet<string> { "CTZDEVNU" }, got);
     }
@@ -37,7 +37,7 @@ public class ResolveLicenseCodesToRemoveTests
     public void ExactCode_MatchesByCode()
     {
         var held = new[] { "ATTUNU", "RPADEVNU", "CTZDEVNU" };
-        var got = RemovePmLicenseFromPmLicensedUserCmdlet.ResolveLicenseCodesToRemove(
+        var got = RemovePmUserLicenseCmdlet.ResolveLicenseCodesToRemove(
             Patterns("RPADEVNU"), held);
         Assert.Equal(new HashSet<string> { "RPADEVNU" }, got);
     }
@@ -48,7 +48,7 @@ public class ResolveLicenseCodesToRemoveTests
         // User holds only Attended; pattern matches Citizen in catalog — but
         // Remove cares only about what's actually held, so this is a no-op.
         var held = new[] { "ATTUNU" };
-        var got = RemovePmLicenseFromPmLicensedUserCmdlet.ResolveLicenseCodesToRemove(
+        var got = RemovePmUserLicenseCmdlet.ResolveLicenseCodesToRemove(
             Patterns("Citizen*"), held);
         Assert.Empty(got);
     }
@@ -57,14 +57,14 @@ public class ResolveLicenseCodesToRemoveTests
     public void MultiplePatterns_Union()
     {
         var held = new[] { "ATTUNU", "RPADEVNU", "CTZDEVNU" };
-        var got = RemovePmLicenseFromPmLicensedUserCmdlet.ResolveLicenseCodesToRemove(
+        var got = RemovePmUserLicenseCmdlet.ResolveLicenseCodesToRemove(
             Patterns("ATTUNU", "Citizen - Named User"), held);
         Assert.Contains("ATTUNU", got);
         // "Citizen - Named User" doesn't match any friendly name (real name is
         // "Citizen Developer - Named User"), so only ATTUNU matches.
         Assert.Single(got);
 
-        var got2 = RemovePmLicenseFromPmLicensedUserCmdlet.ResolveLicenseCodesToRemove(
+        var got2 = RemovePmUserLicenseCmdlet.ResolveLicenseCodesToRemove(
             Patterns("ATTUNU", "Citizen Developer - Named User"), held);
         Assert.Equal(new HashSet<string> { "ATTUNU", "CTZDEVNU" }, got2);
     }
@@ -73,7 +73,7 @@ public class ResolveLicenseCodesToRemoveTests
     public void CaseInsensitive_ByFriendlyName()
     {
         var held = new[] { "ATTUNU" };
-        var got = RemovePmLicenseFromPmLicensedUserCmdlet.ResolveLicenseCodesToRemove(
+        var got = RemovePmUserLicenseCmdlet.ResolveLicenseCodesToRemove(
             Patterns("attended - named user"), held);
         Assert.Equal(new HashSet<string> { "ATTUNU" }, got);
     }
@@ -84,7 +84,7 @@ public class ResolveLicenseCodesToRemoveTests
         // If a user somehow holds a code not in the friendly-name catalog, we
         // can still remove it by passing the exact code (raw-code match).
         var held = new[] { "FUTURE_BUNDLE" };
-        var got = RemovePmLicenseFromPmLicensedUserCmdlet.ResolveLicenseCodesToRemove(
+        var got = RemovePmUserLicenseCmdlet.ResolveLicenseCodesToRemove(
             Patterns("FUTURE_BUNDLE"), held);
         Assert.Equal(new HashSet<string> { "FUTURE_BUNDLE" }, got);
     }
@@ -92,7 +92,7 @@ public class ResolveLicenseCodesToRemoveTests
     [Fact]
     public void NullPatterns_ReturnsEmpty()
     {
-        var got = RemovePmLicenseFromPmLicensedUserCmdlet.ResolveLicenseCodesToRemove(
+        var got = RemovePmUserLicenseCmdlet.ResolveLicenseCodesToRemove(
             null, new[] { "ATTUNU" });
         Assert.Empty(got);
     }
@@ -100,7 +100,7 @@ public class ResolveLicenseCodesToRemoveTests
     [Fact]
     public void NullHeld_ReturnsEmpty()
     {
-        var got = RemovePmLicenseFromPmLicensedUserCmdlet.ResolveLicenseCodesToRemove(
+        var got = RemovePmUserLicenseCmdlet.ResolveLicenseCodesToRemove(
             Patterns("*"), null);
         Assert.Empty(got);
     }

@@ -19,7 +19,7 @@ public class PmLicensedGroupCsvTests
     [Fact]
     public void ConvertsCodesToDisplayNames()
     {
-        var rows = GetUserLicenseGroup.BuildLicenseDisplayNames(Group("ATTUNU", "TSTNU"));
+        var rows = GetPmGroupLicenseCmdlet.BuildLicenseDisplayNames(Group("ATTUNU", "TSTNU"));
         Assert.Equal(new[] { "Attended - Named User", "Tester - Named User" }, rows);
     }
 
@@ -28,7 +28,7 @@ public class PmLicensedGroupCsvTests
     {
         // Input code order is RPADEVNU, ACCU; display names sort as
         // "Action Center - Multiuser" < "RPA Developer - Named User".
-        var rows = GetUserLicenseGroup.BuildLicenseDisplayNames(Group("RPADEVNU", "ACCU"));
+        var rows = GetPmGroupLicenseCmdlet.BuildLicenseDisplayNames(Group("RPADEVNU", "ACCU"));
         Assert.Equal(new[] { "Action Center - Multiuser", "RPA Developer - Named User" }, rows);
     }
 
@@ -36,22 +36,22 @@ public class PmLicensedGroupCsvTests
     public void UnknownCode_FallsBackToRawCode()
     {
         // A bundle code this build doesn't map must survive as-is, not vanish.
-        var rows = GetUserLicenseGroup.BuildLicenseDisplayNames(Group("ZZNEWBUNDLE"));
+        var rows = GetPmGroupLicenseCmdlet.BuildLicenseDisplayNames(Group("ZZNEWBUNDLE"));
         Assert.Equal(new[] { "ZZNEWBUNDLE" }, rows);
     }
 
     [Fact]
     public void NoLicenses_ProducesNoRows()
     {
-        Assert.Empty(GetUserLicenseGroup.BuildLicenseDisplayNames(Group()));
-        Assert.Empty(GetUserLicenseGroup.BuildLicenseDisplayNames(new NuLicensedGroup { name = "G" }));
+        Assert.Empty(GetPmGroupLicenseCmdlet.BuildLicenseDisplayNames(Group()));
+        Assert.Empty(GetPmGroupLicenseCmdlet.BuildLicenseDisplayNames(new NuLicensedGroup { name = "G" }));
     }
 
     [Fact]
     public void OneRowPerLicense()
     {
         // Group×license fan-out: 3 licenses -> 3 rows.
-        var rows = GetUserLicenseGroup.BuildLicenseDisplayNames(Group("ATTUNU", "TSTNU", "ACNU"));
+        var rows = GetPmGroupLicenseCmdlet.BuildLicenseDisplayNames(Group("ATTUNU", "TSTNU", "ACNU"));
         Assert.Equal(3, rows.Count);
     }
 
@@ -66,7 +66,7 @@ public class PmLicensedGroupCsvTests
     [Fact]
     public void PlainRow_RoundTripsToThreeColumns()
     {
-        var f = RoundTrip(GetUserLicenseGroup.BuildLicenseCsvRow(
+        var f = RoundTrip(GetPmGroupLicenseCmdlet.BuildLicenseCsvRow(
             @"Orch1:", "Developers", "Attended - Named User"));
 
         Assert.Equal(3, f.Count);
@@ -79,7 +79,7 @@ public class PmLicensedGroupCsvTests
     public void GroupName_WithComma_RoundTripsIntact_NoColumnShift()
     {
         // A comma in the group name must not push License into a 4th column.
-        var f = RoundTrip(GetUserLicenseGroup.BuildLicenseCsvRow(
+        var f = RoundTrip(GetPmGroupLicenseCmdlet.BuildLicenseCsvRow(
             @"Orch1:", "Finance, EMEA", "Tester - Named User"));
 
         Assert.Equal(3, f.Count);
@@ -90,7 +90,7 @@ public class PmLicensedGroupCsvTests
     [Fact]
     public void GroupName_WithQuote_RoundTripsIntact()
     {
-        var f = RoundTrip(GetUserLicenseGroup.BuildLicenseCsvRow(
+        var f = RoundTrip(GetPmGroupLicenseCmdlet.BuildLicenseCsvRow(
             @"Orch1:", "\"VIP\" group", "RPA Developer - Named User"));
 
         Assert.Equal(3, f.Count);
@@ -106,8 +106,8 @@ public class PmLicensedGroupCsvTests
         // which is what Import-Csv | Add-PmGroupLicense consumes.
         var group = new NuLicensedGroup { name = "Ops", userBundleLicenses = ["ATTUNU", "ACNU"] };
 
-        var parsed = GetUserLicenseGroup.BuildLicenseDisplayNames(group)
-            .Select(lic => RoundTrip(GetUserLicenseGroup.BuildLicenseCsvRow(@"Orch1:", group.name, lic)))
+        var parsed = GetPmGroupLicenseCmdlet.BuildLicenseDisplayNames(group)
+            .Select(lic => RoundTrip(GetPmGroupLicenseCmdlet.BuildLicenseCsvRow(@"Orch1:", group.name, lic)))
             .ToList();
 
         Assert.All(parsed, f => Assert.Equal(3, f.Count));

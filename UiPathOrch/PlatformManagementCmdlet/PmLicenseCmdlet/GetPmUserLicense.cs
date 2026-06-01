@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "PmUserLicense")]
 [OutputType(typeof(Entities.NuLicensedUser))]
-public class GetUserLicenseUser : OrchestratorPSCmdlet
+public class GetPmUserLicenseCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(NameCompleter))]
@@ -61,7 +61,7 @@ public class GetUserLicenseUser : OrchestratorPSCmdlet
     // display name the -License parameter expects. Unknown codes (a newer server
     // bundle this build doesn't map) fall back to the raw code so nothing is
     // silently lost. Pure / static so the row shape is unit-testable without a
-    // live server. Mirrors GetUserLicenseGroup.BuildLicenseDisplayNames.
+    // live server. Mirrors GetPmGroupLicenseCmdlet.BuildLicenseDisplayNames.
     internal static List<string> BuildLicenseDisplayNames(NuLicensedUser user)
         => (user.userBundleLicenses ?? [])
             .Select(code => AvailableUserBundlesItems.Items.TryGetValue(code, out var name) ? name : code)
@@ -205,7 +205,7 @@ public class GetUserLicenseUser : OrchestratorPSCmdlet
             }
             catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(ex, "GetPmLicensedUserError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(ex, "GetPmUserLicenseError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
 

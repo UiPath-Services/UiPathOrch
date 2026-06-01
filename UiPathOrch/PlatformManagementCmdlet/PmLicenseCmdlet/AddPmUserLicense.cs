@@ -17,7 +17,7 @@ namespace UiPath.PowerShell.Commands;
 // userBundleLicenses with the new codes before submitting.
 [Cmdlet(VerbsCommon.Add, "PmUserLicense", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.NuLicensedUser))]
-public class AddPmLicenseToPmLicensedUserCmdlet : OrchestratorPSCmdlet
+public class AddPmUserLicenseCmdlet : OrchestratorPSCmdlet
 {
     // Per (drive, userId): the pre-existing licensed-user record (if any), the
     // bundle codes to add, and a friendly label used for ShouldProcess targets
@@ -272,7 +272,7 @@ public class AddPmLicenseToPmLicensedUserCmdlet : OrchestratorPSCmdlet
             {
                 WriteError(new ErrorRecord(
                     new OrchException(target, ex),
-                    "AddPmLicenseToPmLicensedUserError", ErrorCategory.InvalidOperation, target));
+                    "AddPmUserLicenseError", ErrorCategory.InvalidOperation, target));
                 continue;
             }
         }

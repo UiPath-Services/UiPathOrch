@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Add, "PmGroupLicense", SupportsShouldProcess = true)]
 [OutputType(typeof(Entities.UpdateLicensedGroupResponse))]
-public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
+public class AddPmGroupLicenseCmdlet : OrchestratorPSCmdlet
 {
     // Accumulates the bundle codes to add per group across all pipeline rows,
     // applied once each in EndProcessing (the license API is atomic-replace, so a
@@ -316,7 +316,7 @@ public class AddPmLicenseToPmLicenseGroup : OrchestratorPSCmdlet
                 }
                 catch (Exception ex)
                 {
-                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "AddPmLicenseToPmLicenseGroupError", ErrorCategory.InvalidOperation, drive));
+                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "AddPmGroupLicenseError", ErrorCategory.InvalidOperation, drive));
                     continue;
                 }
             }

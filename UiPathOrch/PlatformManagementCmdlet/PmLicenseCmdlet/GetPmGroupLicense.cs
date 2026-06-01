@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Get, "PmGroupLicense")]
 [OutputType(typeof(Entities.NuLicensedGroup))]
 [OutputType(typeof(Entities.NuLicensedGroupMember))]
-public class GetUserLicenseGroup : OrchestratorPSCmdlet
+public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmLicensedGroupNameCompleter))]
@@ -179,14 +179,14 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
                 }
                 catch (OrchException ex)
                 {
-                    WriteError(new ErrorRecord(ex, "GetPmLicensedGroupError", ErrorCategory.InvalidOperation, ex.Target));
+                    WriteError(new ErrorRecord(ex, "GetPmGroupLicenseError", ErrorCategory.InvalidOperation, ex.Target));
                 }
             }
 
-            // Phase 1 (per-drive list) failures keep the legacy ErrorId.
+            // Phase 1 (per-drive list) failures.
             foreach (var (_, ex) in pool.Phase1Errors)
             {
-                WriteError(new ErrorRecord(ex, "GetPmNamedUserLicenseGroupError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(ex, "GetPmGroupLicenseError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
         else
@@ -227,7 +227,7 @@ public class GetUserLicenseGroup : OrchestratorPSCmdlet
                 }
                 catch (OrchException ex)
                 {
-                    WriteError(new ErrorRecord(ex, "GetPmNamedUserLicenseGroupError", ErrorCategory.InvalidOperation, ex.Target));
+                    WriteError(new ErrorRecord(ex, "GetPmGroupLicenseError", ErrorCategory.InvalidOperation, ex.Target));
                 }
             }
         }

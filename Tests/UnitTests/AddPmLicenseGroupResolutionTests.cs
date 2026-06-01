@@ -24,7 +24,7 @@ public class AddPmLicenseGroupResolutionTests
     {
         // The exact bug: prefix search returned both; only the exact one binds.
         var dir = new[] { G("ほえほえグループ"), G("ほえほえグループ2") };
-        var r = AddPmLicenseToPmLicenseGroup.FilterDirectoryGroupsByName(dir, "ほえほえグループ");
+        var r = AddPmGroupLicenseCmdlet.FilterDirectoryGroupsByName(dir, "ほえほえグループ");
         Assert.Equal(new[] { "ほえほえグループ" }, Names(r));
     }
 
@@ -32,7 +32,7 @@ public class AddPmLicenseGroupResolutionTests
     public void BareName_IsCaseInsensitive()
     {
         var dir = new[] { G("Developers") };
-        var r = AddPmLicenseToPmLicenseGroup.FilterDirectoryGroupsByName(dir, "developers");
+        var r = AddPmGroupLicenseCmdlet.FilterDirectoryGroupsByName(dir, "developers");
         Assert.Equal(new[] { "Developers" }, Names(r));
     }
 
@@ -41,7 +41,7 @@ public class AddPmLicenseGroupResolutionTests
     {
         // [SupportsWildcards] is preserved: an explicit pattern still fans out.
         var dir = new[] { G("ほえほえグループ"), G("ほえほえグループ2"), G("Other") };
-        var r = AddPmLicenseToPmLicenseGroup.FilterDirectoryGroupsByName(dir, "ほえほえ*");
+        var r = AddPmGroupLicenseCmdlet.FilterDirectoryGroupsByName(dir, "ほえほえ*");
         Assert.Equal(new[] { "ほえほえグループ", "ほえほえグループ2" }, Names(r));
     }
 
@@ -56,7 +56,7 @@ public class AddPmLicenseGroupResolutionTests
             G("Sales", "Application"),
             G("Sales", "LocalGroup"),
         };
-        var r = AddPmLicenseToPmLicenseGroup.FilterDirectoryGroupsByName(dir, "Sales").ToList();
+        var r = AddPmGroupLicenseCmdlet.FilterDirectoryGroupsByName(dir, "Sales").ToList();
         Assert.Equal(2, r.Count); // DirectoryGroup + LocalGroup only
         Assert.All(r, g => Assert.Contains(g.objectType, new[] { "DirectoryGroup", "LocalGroup" }));
     }
@@ -65,6 +65,6 @@ public class AddPmLicenseGroupResolutionTests
     public void NoMatch_ReturnsEmpty()
     {
         var dir = new[] { G("Alpha"), G("Beta") };
-        Assert.Empty(AddPmLicenseToPmLicenseGroup.FilterDirectoryGroupsByName(dir, "Gamma"));
+        Assert.Empty(AddPmGroupLicenseCmdlet.FilterDirectoryGroupsByName(dir, "Gamma"));
     }
 }
