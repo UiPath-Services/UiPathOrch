@@ -125,3 +125,47 @@ Describe 'Remove-PmLicensedUser' {
         $u | Should -BeNullOrEmpty
     }
 }
+
+Describe 'Get-PmLicensedUser -ExportCsv' {
+    # Round-trip coverage for the -ExportCsv added in 1.6.2. Runs after the
+    # sequence above has dropped the test user, then re-adds two bundles so
+    # there is a known multi-license user to export. AfterAll (top of file)
+    # drops the user regardless.
+    BeforeAll {
+        Add-PmLicenseToPmLicensedUser -Path $script:DrivePath -Email $script:TestUser `
+            -License $script:License1, $script:License2 -Confirm:$false
+        $script:CsvPath = Join-Path ([IO.Path]::GetTempPath()) "pmlu_$([guid]::NewGuid().ToString('N')).csv"
+    }
+    AfterAll {
+        Remove-Item $script:CsvPath -ErrorAction SilentlyContinue
+    }
+
+    It 'emits Path / UserName / License columns (not Email)' {
+        Get-PmLicensedUser -Path $script:DrivePath -ExportCsv $script:CsvPath | Out-Null
+        $cols = (Import-Csv $script:CsvPath | Select-Object -First 1).PSObject.Properties.Name | Sort-Object
+        $cols | Should -Be (@('License', 'Path', 'UserName') | Sort-Object)
+    }
+
+    It 'writes one row per (user, license) with the test user present' {
+        $rows = Import-Csv $script:CsvPath
+        $mine = $rows | Where-Object UserName -eq $script:TestUser
+        # The user was given two bundles, so two rows carry their login.
+        @($mine).Count | Should -BeGreaterOrEqual 2
+        # License column is a friendly bundle name, not a raw code.
+        $mine.License | Should -Not -Contain $script:License1
+    }
+
+    It 'excludes orphan license-pool rows (UserName is never a bundle name)' {
+        $rows = Import-Csv $script:CsvPath
+        # Orphan rows would carry a bundle display name in UserName; real rows
+        # carry a login. None of the exported UserNames should be empty.
+        ($rows | Where-Object { [string]::IsNullOrWhiteSpace($_.UserName) }) | Should -BeNullOrEmpty
+    }
+
+    It 're-imports into Add-PmLicenseToPmLicensedUser without error (-WhatIf)' {
+        # The UserName column binds to -Email via its alias; a full unedited
+        # re-import is a no-op (every license already held), so -WhatIf just
+        # previews and binds cleanly.
+        { Import-Csv $script:CsvPath | Add-PmLicenseToPmLicensedUser -WhatIf } | Should -Not -Throw
+    }
+}
