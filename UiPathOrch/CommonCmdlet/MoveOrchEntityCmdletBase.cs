@@ -224,7 +224,7 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
             long srcId = group.SrcFolder.Id ?? 0;
             long dstId = group.DstFolder.Id ?? 0;
             string dst = group.DstFolder.GetPSPath();
-            string action = $"Move {EntityNoun} → {dst}";
+            string action = $"Move {EntityNoun} to {dst}";
 
             if (!ShouldProcess(target, action)) continue;
 

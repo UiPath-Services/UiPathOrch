@@ -59,7 +59,7 @@ PS Orch1:\Shared> Move-OrchAsset -Name TestAsset1 -Destination Orch1:\Dept#2 -Wh
 ```
 
 ```output
-What if: Performing the operation "Move Asset → Orch1:\Dept#2" on target "Orch1:\Shared\TestAsset1".
+What if: Performing the operation "Move Asset to Orch1:\Dept#2" on target "Orch1:\Shared\TestAsset1".
 ```
 
 Shows what would happen without executing the command.

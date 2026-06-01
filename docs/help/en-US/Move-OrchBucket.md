@@ -59,7 +59,7 @@ PS Orch1:\Shared> Move-OrchBucket -Name TestBucket -Destination Orch1:\Dept#2 -W
 ```
 
 ```output
-What if: Performing the operation "Move Bucket → Orch1:\Dept#2" on target "Orch1:\Shared\TestBucket".
+What if: Performing the operation "Move Bucket to Orch1:\Dept#2" on target "Orch1:\Shared\TestBucket".
 ```
 
 Shows what would happen without executing the command.

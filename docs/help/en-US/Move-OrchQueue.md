@@ -59,7 +59,7 @@ PS Orch1:\Shared> Move-OrchQueue -Name TestQueue -Destination Orch1:\Dept#2 -Wha
 ```
 
 ```output
-What if: Performing the operation "Move Queue → Orch1:\Dept#2" on target "Orch1:\Shared\TestQueue".
+What if: Performing the operation "Move Queue to Orch1:\Dept#2" on target "Orch1:\Shared\TestQueue".
 ```
 
 Shows what would happen without executing the command.
