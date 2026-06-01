@@ -91,10 +91,29 @@ public class MoveOrchEntityCmdletShapeTests
     public void MoveCmdlet_NameAndDestination_SupportWildcards(System.Type cmdletType, string paramName)
     {
         // -Name selects entities (wildcards like the link cmdlets); -Destination
-        // is wildcard-resolved to a single folder (the base flags >1 as ambiguous).
+        // accepts a wildcard but must expand to exactly one folder (the base
+        // errors if it resolves to zero or more than one).
         var prop = cmdletType.GetProperty(paramName);
         Assert.NotNull(prop);
         Assert.NotNull(prop!.GetCustomAttribute<SupportsWildcardsAttribute>());
+    }
+
+    [Theory]
+    [InlineData(typeof(MoveAssetCmdlet))]
+    [InlineData(typeof(MoveBucketCmdlet))]
+    [InlineData(typeof(MoveQueueCmdlet))]
+    public void MoveCmdlet_Destination_IsScalarNotArray(System.Type cmdletType)
+    {
+        // An entity has one home folder, so -Destination is a single string, not
+        // a string[]. This rejects a comma-separated list at bind time instead of
+        // accepting it and erroring at run time. -Name (which entity to move) and
+        // -Path (which source folders) stay arrays.
+        var dest = cmdletType.GetProperty("Destination");
+        Assert.NotNull(dest);
+        Assert.Equal(typeof(string), dest!.PropertyType);
+
+        Assert.Equal(typeof(string[]), cmdletType.GetProperty("Name")!.PropertyType);
+        Assert.Equal(typeof(string[]), cmdletType.GetProperty("Path")!.PropertyType);
     }
 
     [Theory]
@@ -102,8 +121,8 @@ public class MoveOrchEntityCmdletShapeTests
     public void MoveCmdlet_DerivesFromMoveBase(System.Type cmdletType, string _)
     {
         // Each concrete cmdlet must route through the shared base so the atomic
-        // add-dst/remove-src relocation and the cross-drive / ambiguous guards
-        // are inherited rather than re-implemented per entity.
+        // add-dst/remove-src relocation, the cross-drive guard, and the single-
+        // destination rule are inherited rather than re-implemented per entity.
         var baseType = cmdletType.BaseType;
         Assert.NotNull(baseType);
         Assert.True(baseType!.IsGenericType, $"{cmdletType.Name} should derive from MoveOrchEntityCmdletBase<T>.");

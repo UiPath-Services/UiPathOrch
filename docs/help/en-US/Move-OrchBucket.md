@@ -21,7 +21,7 @@ Moves a storage bucket from one folder to another within the same Orchestrator d
 
 ```
 Move-OrchBucket [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
- [-Destination] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
+ [-Destination] <string> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -169,10 +169,10 @@ HelpMessage: ''
 
 ### -Destination
 
-Specifies the destination folder to move the buckets into. This is a mandatory parameter and must resolve to a single folder on the same Orch: drive as the source. Supports wildcards and tab completion; a pattern that matches more than one folder is reported as ambiguous.
+Specifies the destination folder to move the buckets into. This is a mandatory parameter and a single folder (not a list) on the same Orch: drive as the source — a bucket has one home folder. A wildcard is accepted but must expand to exactly one folder; a pattern that matches zero or more than one folder is an error. Supports tab completion.
 
 ```yaml
-Type: System.String[]
+Type: System.String
 DefaultValue: None
 SupportsWildcards: true
 Aliases: []
@@ -254,7 +254,7 @@ This cmdlet does not produce any output.
 
 The move is same-drive only. The destination must be on the same Orchestrator drive as the source; a cross-drive destination is rejected with an error pointing at Copy-OrchBucket.
 
-A destination equal to the source folder is a no-op. A -Destination pattern that resolves to more than one folder is reported as ambiguous (a bucket has a single home folder).
+A destination equal to the source folder is a no-op. -Destination is a single folder; a comma-separated list is rejected at bind time, and a wildcard that expands to more than one folder is an error (a bucket has a single home folder).
 
 Move relocates the one bucket definition, keeping its Id and Identifier; the underlying storage and its files are untouched. It is not a copy — to create a new bucket definition, use Copy-OrchBucket.
 

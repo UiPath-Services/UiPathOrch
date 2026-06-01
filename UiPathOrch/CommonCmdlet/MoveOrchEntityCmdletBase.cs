@@ -49,12 +49,14 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
     [SupportsWildcards]
     public virtual string[]? Name { get; set; }
 
-    // The destination folder the entity is moved INTO. Single folder per entity
-    // (an entity has one home). Wildcards are allowed but must resolve to one
-    // folder on the entity's drive.
+    // The destination folder the entity is moved INTO. A single folder, because
+    // an entity has one home — so this is a scalar, not an array: a comma-
+    // separated list is rejected at bind time rather than at run time. A
+    // wildcard is accepted, but it must expand to exactly one folder on the
+    // entity's drive; expanding to more than one is an error.
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
-    public virtual string[]? Destination { get; set; }
+    public virtual string? Destination { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -79,17 +81,15 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
     protected abstract void ClearLinkCache(OrchDriveInfo drive, long entityId);
     protected abstract void ClearPerFolderCache(OrchDriveInfo drive, Folder folder);
 
-    private readonly List<(string[]? Name, string[]? Destination, string[]? Path)> _buffered = new();
+    private readonly List<(string[]? Name, string? Destination, string[]? Path)> _buffered = new();
 
-    // One entity in one source folder, with its resolved destination folder.
+    // One entity in one source folder.
     private sealed class MoveGroup
     {
         public required OrchDriveInfo Drive { get; init; }
         public required Folder SrcFolder { get; init; }
         public required long EntityId { get; init; }
         public required string EntityName { get; init; }
-        public Folder? DstFolder { get; set; }
-        public bool Ambiguous { get; set; }
     }
 
     protected sealed override void ProcessRecord()
@@ -122,20 +122,57 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
             }
         });
 
-        // Resolve each buffered row into (drive, src folder, entity) groups,
-        // pinning the single destination folder. Keyed by drive + src + entity
-        // so the same entity across rows merges (and conflicting destinations
-        // are flagged ambiguous).
+        // -Destination is a single command-line value (a scalar that may use a
+        // wildcard); on a pipeline every row carries the same one. Resolve it
+        // once, up front. It must expand to exactly one folder: zero folders or
+        // more than one is a hard error for the whole invocation (an entity has
+        // one home, so there's nothing sensible to do with 0 or 2+ targets).
+        var destination = _buffered.Select(b => b.Destination).FirstOrDefault(d => !string.IsNullOrEmpty(d));
+        var destFolders = SessionState.EnumFolders(destination is null ? null : new[] { destination }).ToList();
+        if (destFolders.Count == 0)
+        {
+            WriteError(new ErrorRecord(
+                new ItemNotFoundException($"-Destination '{destination}' did not resolve to any folder."),
+                ErrorId, ErrorCategory.ObjectNotFound, destination));
+            return;
+        }
+        if (destFolders.Count > 1)
+        {
+            WriteError(new ErrorRecord(
+                new OrchException(destination ?? "",
+                    $"-Destination '{destination}' resolved to {destFolders.Count} folders " +
+                    $"[{string.Join(", ", destFolders.Select(d => d.folder.GetPSPath()))}]. " +
+                    $"An {EntityNoun.ToLowerInvariant()} has a single home folder — specify a destination that matches exactly one."),
+                ErrorId, ErrorCategory.InvalidArgument, destination));
+            return;
+        }
+        var (destDrive, destFolder) = destFolders[0];
+
+        // Resolve each buffered row into (drive, src folder, entity) groups.
+        // Keyed by drive + src + entity so the same entity across rows merges.
         var groups = new Dictionary<(string Drive, long Src, long Entity), MoveGroup>();
 
-        foreach (var (names, destinations, paths) in _buffered.WithCancellation(cancelHandler.Token))
+        foreach (var (names, _, paths) in _buffered.WithCancellation(cancelHandler.Token))
         {
             var srcDrivesFolders = SessionState.EnumFolders(paths, Recurse.IsPresent, Depth).ToList();
-            var destDrivesFolders = SessionState.EnumFolders(destinations).ToList();
             var wpName = names.ConvertToWildcardPatternList();
 
             foreach (var (drive, folder) in srcDrivesFolders)
             {
+                // The move is a same-drive relocation; ShareToFolders can't reach
+                // a destination on a different drive than the source.
+                if (drive != destDrive)
+                {
+                    string src = folder.GetPSPath();
+                    WriteError(new ErrorRecord(
+                        new OrchException(src,
+                            $"Move-Orch{EntityNoun} only moves within the same tenant drive. " +
+                            $"Destination '{destFolder.GetPSPath()}' is on a different drive than the source '{src}'. " +
+                            $"Use Copy-Orch{EntityNoun} to copy across drives."),
+                        ErrorId, ErrorCategory.InvalidArgument, src));
+                    continue;
+                }
+
                 ICollection<TEntity> entities;
                 try
                 {
@@ -149,58 +186,28 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
                     continue;
                 }
 
-                // The move is a same-drive relocation; a destination on another
-                // drive can't be reached by ShareToFolders. Surface that rather
-                // than silently dropping it.
-                var sameDriveDests = destDrivesFolders.Where(d => d.drive == drive).ToList();
-                var crossDriveDests = destDrivesFolders.Where(d => d.drive != drive).ToList();
-                if (crossDriveDests.Count > 0)
-                {
-                    string src = folder.GetPSPath();
-                    WriteError(new ErrorRecord(
-                        new OrchException(src,
-                            $"Move-Orch{EntityNoun} only moves within the same tenant drive. " +
-                            $"Destination(s) [{string.Join(", ", crossDriveDests.Select(d => d.folder.GetPSPath()))}] " +
-                            $"are on a different drive than the source '{src}'. Use Copy-Orch{EntityNoun} to copy across drives."),
-                        ErrorId, ErrorCategory.InvalidArgument, src));
-                }
-
                 foreach (var entity in entities
                     .FilterByWildcards(e => GetEntityName(e), wpName)
                     .OrderBy(e => GetEntityName(e)).WithCancellation(cancelHandler.Token))
                 {
                     long entityId = GetEntityId(entity);
                     var key = (drive.NameColonSeparator, folder.Id ?? 0, entityId);
-                    if (!groups.TryGetValue(key, out var group))
+                    if (!groups.ContainsKey(key))
                     {
-                        group = new MoveGroup
+                        groups[key] = new MoveGroup
                         {
                             Drive = drive,
                             SrcFolder = folder,
                             EntityId = entityId,
                             EntityName = GetEntityName(entity)!,
                         };
-                        groups[key] = group;
-                    }
-
-                    foreach (var d in sameDriveDests)
-                    {
-                        long did = d.folder.Id ?? 0;
-                        if (did == 0) continue;
-                        if (group.DstFolder is null)
-                        {
-                            group.DstFolder = d.folder;
-                        }
-                        else if (group.DstFolder.Id != did)
-                        {
-                            // Two different destinations for the same entity —
-                            // an entity has one home, so this is ambiguous.
-                            group.Ambiguous = true;
-                        }
                     }
                 }
             }
         }
+
+        long dstId = destFolder.Id ?? 0;
+        string dst = destFolder.GetPSPath();
 
         // One Share call per group: toAdd=[dst], toRemove=[src], atomic.
         foreach (var group in groups.Values.WithCancellation(cancelHandler.Token))
@@ -208,22 +215,9 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
             string source = group.SrcFolder.GetPSPath();
             string target = System.IO.Path.Combine(source, group.EntityName);
 
-            if (group.Ambiguous)
-            {
-                WriteError(new ErrorRecord(
-                    new OrchException(target,
-                        $"Cannot move '{group.EntityName}': -Destination resolved to more than one folder. " +
-                        $"An {EntityNoun.ToLowerInvariant()} has a single home folder — specify exactly one destination."),
-                    ErrorId, ErrorCategory.InvalidArgument, target));
-                continue;
-            }
-
-            if (group.DstFolder is null) continue;             // no destination resolved on this drive
-            if (group.DstFolder.Id == group.SrcFolder.Id) continue; // already there — no-op
+            if (group.SrcFolder.Id == dstId) continue; // already there — no-op
 
             long srcId = group.SrcFolder.Id ?? 0;
-            long dstId = group.DstFolder.Id ?? 0;
-            string dst = group.DstFolder.GetPSPath();
             string action = $"Move {EntityNoun} to {dst}";
 
             if (!ShouldProcess(target, action)) continue;
@@ -241,7 +235,7 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
                 // Both folders' entity lists and this entity's link set changed.
                 ClearLinkCache(group.Drive, group.EntityId);
                 ClearPerFolderCache(group.Drive, group.SrcFolder);
-                ClearPerFolderCache(group.Drive, group.DstFolder);
+                ClearPerFolderCache(group.Drive, destFolder);
             }
             catch (Exception ex)
             {
