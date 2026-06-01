@@ -60,6 +60,8 @@ Module setup, connection management, and troubleshooting.
 | Set-OrchLocation | Set the current folder location |
 | Get-OrchCurrentUser | Get current authenticated user info |
 | Switch-OrchCurrentUser | Re-authenticate as a different user on a drive |
+| Get-OrchProductVersion | Get the Orchestrator product version per drive |
+| Resolve-OrchAuthError | Diagnose a sign-in failure from the browser URL |
 | Invoke-OrchApi | Call an Orchestrator / Identity / Portal API endpoint directly |
 | Get-OrchRobot | Get robots (legacy, replaced by Machine) |
 | Get-OrchClassicEnvironment | Get classic environments (legacy) |
@@ -74,6 +76,7 @@ Tenant-level user accounts, authentication, sessions, and personal workspaces.
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchUser | List tenant users |
+| Get-OrchUserDetail | Get per-user detailed information |
 | Add-OrchUser | Add a user to the tenant |
 | Copy-OrchUser | Copy users to another tenant |
 | Update-OrchUser | Update user properties |
@@ -192,6 +195,7 @@ Processes (package deployments to folders).
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchProcess | List processes in a folder |
+| Get-OrchProcessDetail | Get per-process detailed information |
 | New-OrchProcess | Create a process from a package |
 | Copy-OrchProcess | Copy processes to another tenant/folder |
 | Edit-OrchProcess | Edit process properties interactively |
@@ -235,6 +239,7 @@ Time triggers, API triggers, and event triggers.
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchTrigger | List time triggers |
+| Get-OrchTriggerDetail | Get per-trigger detailed information |
 | New-OrchTrigger | Create a time trigger |
 | Copy-OrchTrigger | Copy triggers to another tenant/folder |
 | Update-OrchTrigger | Update trigger properties |
@@ -248,6 +253,8 @@ Time triggers, API triggers, and event triggers.
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchApiTrigger | List API triggers |
+| New-OrchApiTrigger | Create an API trigger |
+| Update-OrchApiTrigger | Update API trigger properties |
 | Copy-OrchApiTrigger | Copy API triggers |
 | Enable-OrchApiTrigger | Enable an API trigger |
 | Disable-OrchApiTrigger | Disable an API trigger |
@@ -296,6 +303,7 @@ Assets (key-value configuration), credential stores, and asset links.
 |--------|-------------|
 | Get-OrchCredentialStore | List credential stores |
 | Copy-OrchCredentialStore | Copy credential stores |
+| Update-OrchCredentialStore | Update credential store properties |
 | Remove-OrchCredentialStore | Remove a credential store |
 
 ### Asset Links (Multi-folder Asset Sharing)
@@ -304,6 +312,7 @@ Assets (key-value configuration), credential stores, and asset links.
 |--------|-------------|
 | Get-OrchAssetLink | List asset links |
 | Add-OrchAssetLink | Create an asset link to share across folders |
+| Remove-OrchAssetLink | Remove a folder link from an asset |
 
 ## 10. Queue Management
 
@@ -330,6 +339,14 @@ Queues and queue items for work distribution.
 | Format-OrchQueueItem | Format queue items as one table per queue, expanding SpecificContent |
 | Remove-OrchQueueItem | Remove a queue item |
 
+### Queue Links (Multi-folder Queue Sharing)
+
+| Cmdlet | Description |
+|--------|-------------|
+| Get-OrchQueueLink | List queue links |
+| Add-OrchQueueLink | Link a queue to additional folders |
+| Remove-OrchQueueLink | Remove a folder link from a queue |
+
 ## 11. Storage Bucket Management
 
 Cloud/local storage buckets and their contents.
@@ -338,12 +355,21 @@ Cloud/local storage buckets and their contents.
 |--------|-------------|
 | Get-OrchBucket | List storage buckets |
 | New-OrchBucket | Create a storage bucket |
+| Update-OrchBucket | Update storage bucket properties |
 | Copy-OrchBucket | Copy buckets to another tenant/folder |
 | Remove-OrchBucket | Remove a storage bucket |
 | Get-OrchBucketItem | List files in a storage bucket |
 | Import-OrchBucketItem | Upload a file to a storage bucket |
 | Export-OrchBucketItem | Download a file from a storage bucket |
 | Remove-OrchBucketItem | Remove a file from a storage bucket |
+
+### Bucket Links (Multi-folder Bucket Sharing)
+
+| Cmdlet | Description |
+|--------|-------------|
+| Get-OrchBucketLink | List bucket links |
+| Add-OrchBucketLink | Link a bucket to additional folders |
+| Remove-OrchBucketLink | Remove a folder link from a bucket |
 
 ## 12. Machine Management
 
@@ -369,6 +395,7 @@ Machine templates, sessions, and client secrets.
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchCalendar | List calendars |
+| Get-OrchCalendarDate | List a calendar's excluded dates |
 | Copy-OrchCalendar | Copy calendars to another tenant |
 | Remove-OrchCalendar | Remove a calendar |
 | Add-OrchCalendarDate | Add dates to a calendar |
@@ -379,6 +406,8 @@ Machine templates, sessions, and client secrets.
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchWebhook | List webhooks |
+| New-OrchWebhook | Create a webhook |
+| Update-OrchWebhook | Update an existing webhook |
 | Copy-OrchWebhook | Copy webhooks to another tenant |
 | Enable-OrchWebhook | Enable a disabled webhook |
 | Disable-OrchWebhook | Disable a webhook |
@@ -395,6 +424,7 @@ Long-running, human-in-the-loop workflows. Action catalogs define the form templ
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchActionCatalog | List action catalogs |
+| New-OrchActionCatalog | Create an action catalog |
 | Copy-OrchActionCatalog | Copy action catalogs |
 | Remove-OrchActionCatalog | Remove an action catalog |
 
@@ -425,6 +455,8 @@ Test automation management (Orchestrator-side).
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchTestSet | List test sets |
+| Get-OrchTestSetDetail | Get test sets with their Packages and TestCases arrays populated |
+| New-OrchTestSet | Create a test set |
 | Copy-OrchTestSet | Copy test sets to another tenant/folder |
 | Start-OrchTestSet | Execute a test set |
 | Get-OrchTestSetExecution | Get test set execution results |
@@ -436,6 +468,8 @@ Test automation management (Orchestrator-side).
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchTestSetSchedule | List test set schedules |
+| New-OrchTestSetSchedule | Create a test set schedule |
+| Update-OrchTestSetSchedule | Update existing test set schedules |
 | Copy-OrchTestSetSchedule | Copy test set schedules |
 | Enable-OrchTestSetSchedule | Enable a test set schedule |
 | Disable-OrchTestSetSchedule | Disable a test set schedule |
@@ -446,8 +480,10 @@ Test automation management (Orchestrator-side).
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchTestDataQueue | List test data queues |
+| New-OrchTestDataQueue | Create a test data queue |
 | Copy-OrchTestDataQueue | Copy test data queues |
 | Get-OrchTestDataQueueItem | Get items in a test data queue |
+| Import-OrchTestDataQueueItem | Bulk-add items from a CSV (web "Upload Items" format) |
 | Format-OrchTestDataQueueItem | Format test data queue items as one table per queue, expanding ContentJson |
 | Reset-OrchTestDataQueueItem | Reset consumed test data queue items |
 | Remove-OrchTestDataQueue | Remove a test data queue |
