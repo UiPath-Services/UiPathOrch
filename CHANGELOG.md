@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **`New-OrchTrigger` / `Update-OrchTrigger` `-MachineRobots` now resolves robot
+  accounts and modern folder-user-bound robots**, not just users with a classic
+  Unattended Robot configured. The resolver matched the supplied user name only
+  against `User.UnattendedRobot.UserName` and read the RobotId from there, so a
+  robot account — or any robot whose identity lives on `RobotProvision` or the
+  account login — failed to resolve: the trigger was saved with the MachineId
+  but no RobotId, and a `… is not configured as Unattended Robot` warning was
+  emitted. It now matches the same merged robot view the read side already uses
+  (`Robot.Username` = `UnattendedRobot.UserName ?? RobotProvision.UserName`,
+  with a fallback to the account login `Robot.User.UserName`) and takes the
+  RobotId from the matched robot, so the binding is sent in full.
+
 ## [1.7.1] - 2026-06-01
 
 ### Changed

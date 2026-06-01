@@ -490,11 +490,14 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
         try
         {
-            var tenantUsers = drive.Users.Get();
-
-            // This call was previously needed to prevent Orchestrator from failing to find robots,
-            // but since we replaced it with GetUsers(), it is no longer necessary.
-            //_ = drive.RobotsFromFolder.Get(folder);
+            // Resolve against the same merged robot view the serialize side uses:
+            // Robot.Username = UnattendedRobot.UserName ?? RobotProvision.UserName,
+            // Robot.Id = UnattendedRobot.RobotId ?? RobotProvision.RobotId (see
+            // OrchDriveInfo's Robots). Matching only UnattendedRobot.UserName here
+            // missed robot accounts and modern folder-user-bound robots — whose
+            // name lives on RobotProvision or the account login — so their RobotId
+            // was dropped and the trigger PUT carried MachineId only.
+            var robots = drive.Robots.Get();
 
             // These may contain wildcards, so expand all of them
             IEnumerable<MachineRobotSessionForSerialize?> mrss = null;
@@ -512,16 +515,18 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
             foreach (var mrs in mrss ?? [])
             {
-                // Resolve UserName to the appropriate Id
-                // Multiple Users may match because wildcards are supported
-                List<Entities.User> users = null;
+                // Resolve UserName to a robot. Match the merged Robot.Username
+                // (UnattendedRobot ?? RobotProvision) or the account's own login
+                // (Robot.User.UserName), so robot accounts and modern
+                // folder-user-bound robots resolve too. Wildcards supported.
+                List<Robot> matchedRobots = null;
                 if (!string.IsNullOrEmpty(mrs?.UserName))
                 {
                     var wpUserName = new WildcardPattern(mrs.UserName, WildcardOptions.IgnoreCase);
-                    users = tenantUsers.Where(u => wpUserName.IsMatch(u.UnattendedRobot?.UserName)).ToList();
-                    if (users.Count == 0)
+                    matchedRobots = robots.Where(r => wpUserName.IsMatch(r.Username) || wpUserName.IsMatch(r.User?.UserName)).ToList();
+                    if (matchedRobots.Count == 0)
                     {
-                        WriteWarning($"'{target}': The user name '{mrs.UserName}' is not configured as Unattended Robot in '{drive.NameColonSeparator}'.");
+                        WriteWarning($"'{target}': The user name '{mrs.UserName}' does not match any unattended robot, robot account, or unattended-enabled user in '{drive.NameColonSeparator}'.");
                     }
                 }
 
@@ -541,11 +546,11 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                     }
                 }
 
-                // Skip if neither user nor machine is available
-                if ((users is null || users.Count == 0) && (machines is null || machines.Count == 0)) continue;
+                // Skip if neither robot nor machine is available
+                if ((matchedRobots is null || matchedRobots.Count == 0) && (machines is null || machines.Count == 0)) continue;
 
                 // For convenience, insert a single null element as a placeholder
-                if (users is null || users.Count == 0) users = [null!];
+                if (matchedRobots is null || matchedRobots.Count == 0) matchedRobots = [null!];
                 if (machines is null || machines.Count == 0) machines = [null!];
 
                 // Resolve SessionName to the appropriate Id
@@ -578,9 +583,9 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                 if (sessions is null || sessions.Count == 0) sessions = [null!];
 
                 // Generate and process all combinations
-                var combinations = users
-                    .SelectMany(user => machines, (user, machine) => new { user, machine })
-                    .SelectMany(pair => sessions, (pair, session) => new { pair.user, pair.machine, session });
+                var combinations = matchedRobots
+                    .SelectMany(robot => machines, (robot, machine) => new { robot, machine })
+                    .SelectMany(pair => sessions, (pair, session) => new { pair.robot, pair.machine, session });
 
                 foreach (var c in combinations)
                 {
@@ -589,7 +594,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
                     targets.Add(new MachineRobotSession()
                     {
-                        RobotId = c.user?.UnattendedRobot?.RobotId,
+                        RobotId = c.robot?.Id,
                         MachineId = c.machine?.Id,
                         SessionId = c.session?.SessionId
                     });
