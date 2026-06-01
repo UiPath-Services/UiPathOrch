@@ -6,10 +6,10 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 // Generic base for the Remove-Orch{Asset,Bucket,Queue}Link trio. Mirror of
-// AddOrchLinkCmdletBase with two changes: Share*ToFolders is called with
-// toAdd empty and toRemove populated, and the ShouldProcess action label
-// uses "✗" instead of "→". The two bases are kept separate (rather than
-// fused on a verb-flag) so each reads straight through without dispatch.
+// AddOrchLinkCmdletBase with one change: Share*ToFolders is called with toAdd
+// empty and toRemove populated (the ShouldProcess action reads "Remove X from
+// ..." vs "Add X to ..."). The two bases are kept separate (rather than fused
+// on a verb-flag) so each reads straight through without dispatch.
 //
 // Derived classes must:
 //   - Decorate the class with
@@ -107,7 +107,7 @@ public abstract class RemoveOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
 
                 string source = folder.GetPSPath();
                 string target = System.IO.Path.Combine(source, GetEntityName(entity)!);
-                string action = $"Remove {LinkNoun} ✗ {string.Join(", ", sameDriveLinks.Select(dl => dl.folder.GetPSPath()))}";
+                string action = $"Remove {LinkNoun} from {string.Join(", ", sameDriveLinks.Select(dl => dl.folder.GetPSPath()))}";
 
                 if (!ShouldProcess(target, action)) continue;
 

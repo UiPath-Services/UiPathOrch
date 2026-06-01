@@ -194,7 +194,7 @@ public abstract class AddOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
 
             string source = group.SrcFolder.GetPSPath();
             string target = System.IO.Path.Combine(source, group.EntityName);
-            string action = $"Add {LinkNoun} → {string.Join(", ", group.TargetFolders.Select(f => f.GetPSPath()))}";
+            string action = $"Add {LinkNoun} to {string.Join(", ", group.TargetFolders.Select(f => f.GetPSPath()))}";
 
             if (!ShouldProcess(target, action)) continue;
 

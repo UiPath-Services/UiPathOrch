@@ -57,7 +57,7 @@ PS Orch1:\Shared> Add-OrchAssetLink -Name TestAsset1 -Link Orch1:\Dept#2 -WhatIf
 ```
 
 ```output
-What if: Performing the operation "Add AssetLink 'Orch1:\Dept#2'" on target "Orch1:\Shared\TestAsset1".
+What if: Performing the operation "Add AssetLink to Orch1:\Dept#2" on target "Orch1:\Shared\TestAsset1".
 ```
 
 Shows what would happen without executing the command.

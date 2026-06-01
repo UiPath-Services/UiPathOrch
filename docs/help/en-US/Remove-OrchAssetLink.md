@@ -59,7 +59,7 @@ PS Orch1:\Shared> Remove-OrchAssetLink -Name TestAsset1 -Link Orch1:\Dept#2 -Wha
 ```
 
 ```output
-What if: Performing the operation "Remove AssetLink ✗ Orch1:\Dept#2" on target "Orch1:\Shared\TestAsset1".
+What if: Performing the operation "Remove AssetLink from Orch1:\Dept#2" on target "Orch1:\Shared\TestAsset1".
 ```
 
 Shows what would happen without executing.

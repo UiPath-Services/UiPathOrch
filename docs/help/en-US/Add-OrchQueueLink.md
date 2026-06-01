@@ -59,7 +59,7 @@ PS Orch1:\Shared> Add-OrchQueueLink -Name InvoiceQueue -Link Orch1:\Dept#2 -What
 ```
 
 ```output
-What if: Performing the operation "Add QueueLink 'Orch1:\Dept#2'" on target "Orch1:\Shared\InvoiceQueue".
+What if: Performing the operation "Add QueueLink to Orch1:\Dept#2" on target "Orch1:\Shared\InvoiceQueue".
 ```
 
 Shows what would happen without executing the command.

@@ -59,7 +59,7 @@ PS Orch1:\Shared> Add-OrchBucketLink -Name TestBucket1 -Link Orch1:\Dept#2 -What
 ```
 
 ```output
-What if: Performing the operation "Add BucketLink 'Orch1:\Dept#2'" on target "Orch1:\Shared\TestBucket1".
+What if: Performing the operation "Add BucketLink to Orch1:\Dept#2" on target "Orch1:\Shared\TestBucket1".
 ```
 
 Shows what would happen without executing the command.

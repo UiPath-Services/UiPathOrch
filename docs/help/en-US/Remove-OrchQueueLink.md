@@ -59,7 +59,7 @@ PS Orch1:\Shared> Remove-OrchQueueLink -Name InvoiceQueue -Link Orch1:\Dept#2 -W
 ```
 
 ```output
-What if: Performing the operation "Remove QueueLink ✗ Orch1:\Dept#2" on target "Orch1:\Shared\InvoiceQueue".
+What if: Performing the operation "Remove QueueLink from Orch1:\Dept#2" on target "Orch1:\Shared\InvoiceQueue".
 ```
 
 Shows what would happen without executing.
