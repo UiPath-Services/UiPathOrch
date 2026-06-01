@@ -293,9 +293,12 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
 
     // Returns the destination folder that mirrors srcFolder's path relative to
     // srcRootFolder, under destRootFolder — creating any missing intermediate
-    // folders as plain modern folders (no package feed). Returns null if the
-    // chain can't be ensured (folder-create error, or -WhatIf declined a
-    // creation). Resolved folders are memoized by FullyQualifiedName.
+    // folders as plain modern folders (no package feed). Under -WhatIf it emits
+    // the "New Folder" preview but creates nothing, returning a placeholder
+    // folder so the caller can still preview the entity moves into it (the
+    // placeholder's negative Id is never used because the move is also gated on
+    // ShouldProcess and won't execute under -WhatIf). Returns null only on a
+    // real folder-create error. Resolved folders are memoized by FQN.
     private Folder? ResolveMirroredDestination(
         OrchDriveInfo drive, Folder srcRootFolder, Folder srcFolder,
         Folder destRootFolder, Dictionary<string, Folder?> cache)
@@ -305,6 +308,7 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
         if (string.IsNullOrEmpty(relativePath)) return destRootFolder;
 
         Folder current = destRootFolder;
+        long placeholderId = -1;
         foreach (var segment in relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries))
         {
             string childFqn = string.IsNullOrEmpty(current.FullyQualifiedName)
@@ -313,7 +317,7 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
 
             if (cache.TryGetValue(childFqn, out var cached))
             {
-                if (cached is null) return null; // a prior attempt failed/declined
+                if (cached is null) return null; // a prior attempt errored
                 current = cached;
                 continue;
             }
@@ -327,32 +331,46 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
             if (child is null)
             {
                 // Mirror the source tree: create the missing subfolder. Folder
-                // creation is itself a state change, so gate it on ShouldProcess.
+                // creation is a state change, so gate it on ShouldProcess — which
+                // also emits the "New Folder" -WhatIf line. When ShouldProcess
+                // returns false (-WhatIf, or declined -Confirm) don't create it;
+                // instead carry a placeholder so the entity moves into this
+                // folder still preview. Cache the placeholder so deeper segments
+                // and sibling entities reuse it without re-prompting.
                 string newPath = System.IO.Path.Combine(current.GetPSPath(), segment);
                 if (!ShouldProcess(newPath, "New Folder"))
                 {
-                    cache[childFqn] = null;
-                    return null;
-                }
-                try
-                {
-                    child = drive.OrchAPISession.CreateFolder(segment, null, "Processes", parentId);
-                    if (child is not null)
+                    child = new Folder
                     {
-                        child.Path = current.GetPSPath();
-                        drive.AppendFolderToCache(child);
+                        Id = placeholderId--,
+                        DisplayName = segment,
+                        ParentId = parentId,
+                        FullyQualifiedName = childFqn,
+                        Path = current.GetPSPath(),
+                    };
+                }
+                else
+                {
+                    try
+                    {
+                        child = drive.OrchAPISession.CreateFolder(segment, null, "Processes", parentId);
+                        if (child is not null)
+                        {
+                            child.Path = current.GetPSPath();
+                            drive.AppendFolderToCache(child);
+                        }
                     }
-                }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(newPath, ex),
-                        ErrorId, ErrorCategory.InvalidOperation, newPath));
-                    child = null;
-                }
-                if (child is null)
-                {
-                    cache[childFqn] = null;
-                    return null;
+                    catch (Exception ex)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(newPath, ex),
+                            ErrorId, ErrorCategory.InvalidOperation, newPath));
+                        child = null;
+                    }
+                    if (child is null)
+                    {
+                        cache[childFqn] = null;
+                        return null;
+                    }
                 }
             }
 
