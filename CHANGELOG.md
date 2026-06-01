@@ -6,6 +6,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-06-01
+
+### Changed
+
+- **`Copy-Orch*` `-Recurse` now mirrors the source tree, creating missing
+  destination subfolders on demand** instead of erroring
+  `… does not exist` and skipping them. Created folders are plain modern
+  folders with no package feed. The destination root must still exist, and
+  folders **directly under the tenant root are not auto-created** — a
+  top-level folder's package-feed setting can't be inferred from the source,
+  so create those explicitly. `-WhatIf` previews each `New Folder` plus the
+  copy into it. Affects `Copy-OrchActionCatalog`, `Copy-OrchApiTrigger`,
+  `Copy-OrchAsset`, `Copy-OrchBucket`, `Copy-OrchFolderMachine`,
+  `Copy-OrchFolderUser`, `Copy-OrchProcess`, `Copy-OrchQueue`,
+  `Copy-OrchQueueItem`, `Copy-OrchTestDataQueue`, `Copy-OrchTestSet`,
+  `Copy-OrchTestSetSchedule`, and `Copy-OrchTrigger`. (`Copy-OrchPackage` /
+  `Copy-OrchLibrary` are excluded — packages and libraries have restricted
+  placement.)
+
 ## [1.7.0] - 2026-06-01
 
 **Breaking change.** Renames the Platform Management license **operation**

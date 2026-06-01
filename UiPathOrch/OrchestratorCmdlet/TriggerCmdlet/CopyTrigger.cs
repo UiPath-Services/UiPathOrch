@@ -33,6 +33,7 @@ public class CopyTriggerCmdlet : OrchestratorPSCmdlet
         var srcDrivesFolders = SessionState.EnumFolders([Path], Recurse.IsPresent, Depth, false);
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
+        var dstFolderCache = new Dictionary<string, Folder?>();
 
         // If source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
@@ -56,7 +57,7 @@ public class CopyTriggerCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
-            Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
+            Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder, createIfMissing: true, createCache: dstFolderCache);
             if (dstFolder is null || srcFolder == dstFolder) continue;
 
             // Clear the cache beforehand

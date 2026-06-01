@@ -152,7 +152,14 @@ public interface IWritableHost
 public static class IWritableHostExtensions
 {
     // Some of this implementation should probably be refactored as Folder extension methods, but
-    internal static Folder? GetRelativeDstFolder(this IWritableHost _this, Folder srcRootFolder, Folder srcFolder, OrchDriveInfo dstDrive, Folder dstRootFolder, bool includeRoot = false)
+    // When createIfMissing is true, a destination folder that doesn't exist yet
+    // is created on demand (mirroring the source tree) instead of erroring —
+    // a plain modern folder with no package feed ("Processes"), matching
+    // Move-Orch*'s -Recurse mirror. createCache dedups the create/ShouldProcess
+    // across the per-folder calls of a single Copy invocation (pass one dict for
+    // the whole run). Only the Copy-Orch* cmdlets opt in; the Copy-Item provider
+    // has its own folder-creation path and does not call this with createIfMissing.
+    internal static Folder? GetRelativeDstFolder(this IWritableHost _this, Folder srcRootFolder, Folder srcFolder, OrchDriveInfo dstDrive, Folder dstRootFolder, bool includeRoot = false, bool createIfMissing = false, Dictionary<string, Folder?>? createCache = null)
     {
         var strDstRootFolder = dstRootFolder.FullyQualifiedName;
         //if (strDstRootFolder != "") strDstRootFolder += '/';
@@ -185,21 +192,121 @@ public static class IWritableHostExtensions
         }
 
         var dstFolder = dstDrive.GetFolders().FirstOrDefault(f => string.Compare(f.FullyQualifiedName, strDstFolder, StringComparison.OrdinalIgnoreCase) == 0);
-        if (dstFolder is null)
+        if (dstFolder is not null)
         {
-            if ('/' != System.IO.Path.DirectorySeparatorChar)
-            {
-                strDstFolder = strDstFolder.Replace('/', System.IO.Path.DirectorySeparatorChar);
-            }
-            _this.WriteError(new ErrorRecord(
-                new OrchException(srcFolder.GetPSPath(), $"{dstDrive.NameColonSeparator}{strDstFolder} does not exist."),
-                "NoCorrespondingDstFolderError",
-                ErrorCategory.InvalidOperation,
-                dstDrive));
-            return null;
+            return dstFolder;
         }
 
-        return dstFolder;
+        if (createIfMissing)
+        {
+            // Mirror the source tree: create the missing folder (and any missing
+            // ancestors) instead of erroring.
+            return _this.CreateMirroredDstFolder(dstDrive, dstRootFolder, relativePath, createCache ?? new Dictionary<string, Folder?>());
+        }
+
+        if ('/' != System.IO.Path.DirectorySeparatorChar)
+        {
+            strDstFolder = strDstFolder.Replace('/', System.IO.Path.DirectorySeparatorChar);
+        }
+        _this.WriteError(new ErrorRecord(
+            new OrchException(srcFolder.GetPSPath(), $"{dstDrive.NameColonSeparator}{strDstFolder} does not exist."),
+            "NoCorrespondingDstFolderError",
+            ErrorCategory.InvalidOperation,
+            dstDrive));
+        return null;
+    }
+
+    // Resolve-or-create the destination folder mirroring relativePath under
+    // dstRootFolder, creating each missing segment as a plain modern folder
+    // (feed type "Processes" = no package feed). Folder creation is a state
+    // change, so it's gated on ShouldProcess — which also emits the "New Folder"
+    // -WhatIf line; when ShouldProcess returns false (-WhatIf / declined -Confirm)
+    // a negative-Id placeholder is carried so the entity copy into the folder
+    // still previews. cache dedups creates and prompts across the per-folder
+    // calls of one Copy run. Mirror of MoveOrchEntityCmdletBase.ResolveMirroredDestination.
+    private static Folder? CreateMirroredDstFolder(this IWritableHost _this, OrchDriveInfo dstDrive, Folder dstRootFolder, string relativePath, Dictionary<string, Folder?> cache)
+    {
+        if (string.IsNullOrEmpty(relativePath)) return dstRootFolder;
+
+        Folder current = dstRootFolder;
+        long placeholderId = -1;
+        foreach (var segment in relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        {
+            string childFqn = string.IsNullOrEmpty(current.FullyQualifiedName)
+                ? segment
+                : $"{current.FullyQualifiedName}/{segment}";
+
+            if (cache.TryGetValue(childFqn, out var cached))
+            {
+                if (cached is null) return null; // a prior attempt errored
+                current = cached;
+                continue;
+            }
+
+            long parentId = current.Id ?? 0;
+            Folder? child = dstDrive.GetFolders()
+                .FirstOrDefault(f => f.ParentId == parentId
+                    && string.Compare(f.DisplayName, segment, StringComparison.OrdinalIgnoreCase) == 0);
+
+            if (child is null)
+            {
+                if (string.IsNullOrEmpty(current.FullyQualifiedName))
+                {
+                    // A folder directly under the tenant root is a top-level
+                    // folder whose package-feed setting is significant and can't
+                    // be inferred from the source — don't auto-create it. Surface
+                    // the same "does not exist" error so the user creates it
+                    // explicitly with the feed they want.
+                    _this.WriteError(new ErrorRecord(
+                        new OrchException(dstDrive.NameColonSeparator,
+                            $"{dstDrive.NameColonSeparator}{childFqn} does not exist. Create top-level folders explicitly — their package-feed setting can't be inferred."),
+                        "NoCorrespondingDstFolderError", ErrorCategory.InvalidOperation, dstDrive));
+                    cache[childFqn] = null;
+                    return null;
+                }
+
+                string newPath = System.IO.Path.Combine(current.GetPSPath(), segment);
+                if (!_this.ShouldProcess(newPath, "New Folder"))
+                {
+                    child = new Folder
+                    {
+                        Id = placeholderId--,
+                        DisplayName = segment,
+                        ParentId = parentId,
+                        FullyQualifiedName = childFqn,
+                        Path = current.GetPSPath(),
+                    };
+                }
+                else
+                {
+                    try
+                    {
+                        child = dstDrive.OrchAPISession.CreateFolder(segment, null, "Processes", parentId);
+                        if (child is not null)
+                        {
+                            child.Path = current.GetPSPath();
+                            dstDrive.AppendFolderToCache(child);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _this.WriteError(new ErrorRecord(new OrchException(newPath, ex),
+                            "CreateDstFolderError", ErrorCategory.InvalidOperation, newPath));
+                        child = null;
+                    }
+                    if (child is null)
+                    {
+                        cache[childFqn] = null;
+                        return null;
+                    }
+                }
+            }
+
+            cache[childFqn] = child;
+            current = child;
+        }
+
+        return current;
     }
 
     // If exception handling and error message output to the console are not needed, call drive.CreatePmGroup() directly.

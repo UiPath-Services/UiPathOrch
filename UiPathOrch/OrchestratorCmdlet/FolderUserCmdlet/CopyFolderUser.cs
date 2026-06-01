@@ -86,6 +86,7 @@ public class CopyFolderUserCmdlet : OrchestratorPSCmdlet
         var srcDrivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
+        var dstFolderCache = new Dictionary<string, Folder?>();
 
         var userMapping = SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv);
 
@@ -117,7 +118,7 @@ public class CopyFolderUserCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
-            Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
+            Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder, createIfMissing: true, createCache: dstFolderCache);
             if (dstFolder is null || srcFolder == dstFolder) continue;
 
             try

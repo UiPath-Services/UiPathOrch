@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.7.0'
+ModuleVersion = '1.7.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -475,21 +475,15 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.7.0 - BREAKING: the Platform Management license operation cmdlets are
-renamed to a uniform <Verb>-Pm{Group,User}License shape, so a
-Get-Pm{Group,User}License -ExportCsv round-trips into the matching
-Add-Pm{Group,User}License. No aliases are kept; update scripts to the new
-names:
-  Get-PmLicensedGroup                    -> Get-PmGroupLicense
-  Add-PmLicenseToPmLicensedGroup         -> Add-PmGroupLicense
-  Remove-PmLicenseFromPmLicensedGroup    -> Remove-PmGroupLicense
-  Remove-PmAllocationFromPmLicensedGroup -> Remove-PmGroupLicenseAllocation
-  Get-PmLicensedUser                     -> Get-PmUserLicense
-  Add-PmLicenseToPmLicensedUser          -> Add-PmUserLicense
-  Remove-PmLicenseFromPmLicensedUser     -> Remove-PmUserLicense
-The entity-delete cmdlets Remove-PmLicensedGroup / Remove-PmLicensedUser and
-the Get-PmLicense* reference cmdlets are unchanged. Behavior, parameters, and
-output are identical — only the names changed.
+1.7.1 - Copy-Orch* with -Recurse now mirrors the source folder tree, creating
+missing destination subfolders on demand (plain modern folders, no package
+feed) instead of erroring "... does not exist" and skipping them. The
+destination root must still exist, and folders directly under the tenant root
+are not auto-created — a top-level folder's package-feed setting can't be
+inferred, so create those explicitly. -WhatIf previews each New Folder plus the
+copy into it. Affects Copy-Orch{ActionCatalog, ApiTrigger, Asset, Bucket,
+FolderMachine, FolderUser, Process, Queue, QueueItem, TestDataQueue, TestSet,
+TestSetSchedule, Trigger}.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

@@ -309,6 +309,21 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
 
             if (child is null)
             {
+                if (string.IsNullOrEmpty(current.FullyQualifiedName))
+                {
+                    // A folder directly under the tenant root is a top-level
+                    // folder whose package-feed setting is significant and can't
+                    // be inferred from the source — don't auto-create it. Surface
+                    // an error so the user creates it explicitly with the feed
+                    // they want.
+                    WriteError(new ErrorRecord(
+                        new OrchException(drive.NameColonSeparator,
+                            $"{drive.NameColonSeparator}{childFqn} does not exist. Create top-level folders explicitly — their package-feed setting can't be inferred."),
+                        ErrorId, ErrorCategory.InvalidOperation, drive));
+                    cache[childFqn] = null;
+                    return null;
+                }
+
                 // Mirror the source tree: create the missing subfolder. Folder
                 // creation is a state change, so gate it on ShouldProcess — which
                 // also emits the "New Folder" -WhatIf line. When ShouldProcess

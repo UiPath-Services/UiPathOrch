@@ -34,6 +34,7 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
         var srcDrivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
+        var dstFolderCache = new Dictionary<string, Folder?>();
 
         // If the source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
@@ -52,7 +53,7 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
         int idxQueue = 0;
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
-            Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
+            Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder, createIfMissing: true, createCache: dstFolderCache);
             if (dstFolder is null || srcFolder == dstFolder) continue;
 
             try

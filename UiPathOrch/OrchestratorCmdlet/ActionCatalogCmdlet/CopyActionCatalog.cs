@@ -33,6 +33,7 @@ public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
         var srcDrivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
+        var dstFolderCache = new Dictionary<string, Folder?>();
 
         // If source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
@@ -56,7 +57,7 @@ public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
-            Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
+            Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder, createIfMissing: true, createCache: dstFolderCache);
             if (dstFolder is null || srcFolder == dstFolder) continue;
 
             try
