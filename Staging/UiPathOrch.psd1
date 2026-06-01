@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.6.1'
+ModuleVersion = '1.6.2'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -475,14 +475,15 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.6.1 - Get-PmLicensedGroup -ExportCsv now round-trips into
-Add-PmLicenseToPmLicensedGroup (one row per group+license; the prior
-export could not be re-imported). Add-PmLicenseToPmLicensedGroup matches
-group names exactly, resolves license names via the bundle catalog, and
-aggregates pipeline rows per group; its -License completion lists only
-unassigned licenses. Plus hardening: argument completers no longer throw
-into <Tab>, token refresh no longer pins a stale token, and HTTP error
-bodies are capped in exceptions.
+1.6.2 - Move-OrchAsset / Move-OrchBucket / Move-OrchQueue relocate an
+entity between folders in one tenant drive via a single atomic
+ShareToFolders call (the entity keeps its Id and data — asset value,
+queue items, bucket Identifier). Same-drive only; -Destination is one
+folder; -Recurse mirrors the source tree under the destination, creating
+subfolders on demand. Get-PmLicensedUser gains -ExportCsv, completing the
+licensed-user CSV round trip into Add-PmLicenseToPmLicensedUser
+(Path/UserName/License columns; orphan rows excluded). Plus ShouldProcess
+wording cleanup (plain "to"/"from", no arrow glyphs) and a CSV docs pass.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

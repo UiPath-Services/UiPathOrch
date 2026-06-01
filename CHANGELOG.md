@@ -6,6 +6,69 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.6.2] - 2026-06-01
+
+Adds `Move-Orch{Asset,Bucket,Queue}` for relocating an entity between folders
+in one drive, and `Get-PmLicensedUser -ExportCsv` to complete the licensed-user
+CSV round trip. Plus ShouldProcess wording cleanup and a CSV documentation pass.
+
+### Added
+
+- **`Move-OrchAsset` / `Move-OrchBucket` / `Move-OrchQueue`** — relocate an
+  entity from one folder to another within the same tenant drive. An
+  asset/bucket/queue is a single tenant-level entity surfaced into folders via
+  the share endpoint; the move issues one atomic `ShareToFolders` request
+  (`toAdd=[destination]`, `toRemove=[source]`) so the entity leaves the source
+  and stays a first-class entity in the destination — keeping its Id and its
+  data (asset value, queue items, bucket Identifier/storage). It is a true move
+  of the one entity, not a copy. Same-drive only (a cross-drive destination is
+  an error pointing at `Copy-Orch*`). `-Destination` is a single folder (a
+  wildcard must expand to exactly one). With `-Recurse` the source tree is
+  mirrored under the destination — an entity in a subfolder lands in the
+  matching subfolder (created on demand as a plain modern folder, no package
+  feed), not flattened into the destination root — and `-WhatIf` previews the
+  folder creations and the moves in execution order.
+- **`Get-PmLicensedUser -ExportCsv` / `-CsvEncoding`** — export the licensed
+  users as one row per (user, license) with `Path` / `UserName` / `License`
+  columns, round-tripping into `Add-PmLicenseToPmLicensedUser`
+  (`Import-Csv ... | Add-PmLicenseToPmLicensedUser`). The `UserName` column
+  binds to the Add cmdlet's `-Email` parameter via its `-UserName` alias; the
+  License Accountant API returns an empty email and carries the login in the
+  name field, so the column is `UserName`. Orphaned license rows (licenses not
+  tied to a directory user) are excluded, since they can't be reassigned on
+  import. This mirrors the `Get-PmLicensedGroup -ExportCsv` round trip.
+
+### Changed
+
+- **ShouldProcess wording uses plain verbs, no glyphs.** `Move-Orch*` prints
+  `Move <Entity> to <folder>` (not `→`), and `Add-Orch*Link` /
+  `Remove-Orch*Link` print `Add/Remove <Link> to/from <folder>` (was
+  `→` / `✗`). These were the only cmdlets using arrow glyphs in their
+  `-WhatIf` / `-Confirm` text; they now match the plain-verb convention used
+  everywhere else, including the existing `Move-OrchFolderUser`. The link
+  cmdlets' help `-WhatIf` examples were corrected to match.
+
+### Docs
+
+- **CSV Export & Import guide** clarifies that importing is **additive** —
+  none of the import verbs treat the CSV as the desired full state, so removing
+  a row never deletes the corresponding entity (use the matching `Remove-`
+  cmdlet). Added a **Bulk Delete via CSV** section (a cmdlet needs no
+  `-ExportCsv` of its own to join a CSV workflow) and a **snapshot / restore**
+  example (record enabled triggers, disable all, re-enable only those).
+- **`Get-PmLicensedUser` help** documents `-ExportCsv`; **`Get-PmLicensedGroup`
+  help** was corrected to describe the shipped `-ExportCsv` (group-level
+  `Path`/`GroupName`/`License` rows round-tripping into
+  `Add-PmLicenseToPmLicensedGroup`) instead of the pre-1.6.1 allocation CSV.
+- `Enable-OrchTrigger` / `Disable-OrchTrigger` help now links to the CSV guide.
+
+### Tests
+
+- Integration Pester for `Move-Orch*` (relocate, value/items/Identifier
+  preserved, `-WhatIf`, same-folder no-op, `-Recurse` mirroring) and for
+  `Get-PmLicensedUser -ExportCsv` (columns, orphan exclusion, round trip);
+  xUnit shape tests for the Move cmdlets.
+
 ## [1.6.1] - 2026-05-31
 
 A round-trip and resolution fix for the Platform Management license-group
