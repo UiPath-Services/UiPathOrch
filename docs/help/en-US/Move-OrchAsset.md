@@ -105,7 +105,7 @@ HelpMessage: ''
 
 ### -Recurse
 
-Includes the source folder and all its subfolders when selecting assets to move.
+Includes the source folder and all its subfolders when selecting assets to move. The source tree is mirrored under -Destination: an asset in a source subfolder lands in the matching subfolder under the destination (created if it doesn't exist), not flattened into the destination root.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -255,6 +255,8 @@ This cmdlet does not produce any output.
 The move is same-drive only. The destination must be on the same Orchestrator drive as the source; a cross-drive destination is rejected with an error pointing at Copy-OrchAsset.
 
 A destination equal to the source folder is a no-op. -Destination is a single folder; a comma-separated list is rejected at bind time, and a wildcard that expands to more than one folder is an error (an asset has a single home folder).
+
+With -Recurse the source tree is mirrored under -Destination (robocopy /MOVE /E semantics): missing destination subfolders are created as plain modern folders with no package feed, and folder creation honors -WhatIf.
 
 Move relocates the one shared asset, keeping its Id and value; it is not a copy. To duplicate an asset (create a new one), use Copy-OrchAsset.
 

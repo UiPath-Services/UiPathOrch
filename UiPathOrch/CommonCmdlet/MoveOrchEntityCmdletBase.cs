@@ -28,12 +28,22 @@ namespace UiPath.PowerShell.Commands;
 // rather than silently doing nothing. A -Destination equal to the source
 // folder is a no-op (the entity is already there).
 //
+// -Recurse mirrors the source tree (robocopy /MOVE /E semantics, the same
+// shape the FileSystem provider gives a recursive move): an entity in a source
+// subfolder lands in the matching subfolder under -Destination, not flattened
+// into the destination root. The destination subfolder is computed from the
+// entity's source-folder path relative to the source root and is created if it
+// doesn't exist yet (a plain modern folder with no package feed — "Processes" —
+// matching New-Item and Copy-Item's sub-folder convention; feeds are a
+// root-folder concept and Move only ever creates sub-folders under the
+// existing destination root). Folder creation honors -WhatIf.
+//
 // Pipeline / batching: like the link cmdlets, input is buffered across
 // ProcessRecord and coalesced in EndProcessing so multiple rows naming the same
 // (source folder, entity) collapse into one Share call. Unlike Add-Orch*Link,
 // the destination is a single folder per move (an entity has one home), so the
-// destination is resolved to exactly one folder; multiple destinations for the
-// same entity are an error (an entity can't be moved to two homes at once).
+// destination is resolved to exactly one folder; multiple destinations are an
+// error (an entity can't be moved to two homes at once).
 //
 // Derived classes must:
 //   - Decorate the class with
@@ -83,11 +93,13 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
 
     private readonly List<(string[]? Name, string? Destination, string[]? Path)> _buffered = new();
 
-    // One entity in one source folder.
+    // One entity in one source folder, with the destination subfolder it should
+    // land in (the source root is mirrored under -Destination).
     private sealed class MoveGroup
     {
         public required OrchDriveInfo Drive { get; init; }
         public required Folder SrcFolder { get; init; }
+        public required Folder DstFolder { get; init; }
         public required long EntityId { get; init; }
         public required string EntityName { get; init; }
     }
@@ -146,33 +158,54 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
                 ErrorId, ErrorCategory.InvalidArgument, destination));
             return;
         }
-        var (destDrive, destFolder) = destFolders[0];
+        var (destDrive, destRootFolder) = destFolders[0];
 
-        // Resolve each buffered row into (drive, src folder, entity) groups.
-        // Keyed by drive + src + entity so the same entity across rows merges.
+        // Cache of destination subfolders already resolved/created this run,
+        // keyed by their FullyQualifiedName, so a tree with many entities under
+        // the same subfolder creates it once.
+        var dstFolderByFqn = new Dictionary<string, Folder?>(StringComparer.OrdinalIgnoreCase);
+
+        // Resolve each buffered row into (drive, src folder, entity) groups. The
+        // destination subfolder mirrors the source folder's path relative to the
+        // source root. Keyed by drive + src + entity so duplicates merge.
         var groups = new Dictionary<(string Drive, long Src, long Entity), MoveGroup>();
 
         foreach (var (names, _, paths) in _buffered.WithCancellation(cancelHandler.Token))
         {
+            // The source root anchors the relative path that is mirrored under
+            // -Destination. Resolve -Path to a single root (wildcards allowed,
+            // but to one folder) the same way -Destination is resolved.
+            OrchDriveInfo srcDrive;
+            Folder srcRootFolder;
+            try
+            {
+                (srcDrive, srcRootFolder) = SessionState.ResolveToSingleFolder(paths is { Length: > 0 } ? paths[0] : null);
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(string.Join(", ", paths ?? []), ex),
+                    ErrorId, ErrorCategory.InvalidArgument, paths));
+                continue;
+            }
+
+            // Same-drive relocation only; ShareToFolders can't cross drives.
+            if (srcDrive != destDrive)
+            {
+                string src = srcRootFolder.GetPSPath();
+                WriteError(new ErrorRecord(
+                    new OrchException(src,
+                        $"Move-Orch{EntityNoun} only moves within the same tenant drive. " +
+                        $"Destination '{destRootFolder.GetPSPath()}' is on a different drive than the source '{src}'. " +
+                        $"Use Copy-Orch{EntityNoun} to copy across drives."),
+                    ErrorId, ErrorCategory.InvalidArgument, src));
+                continue;
+            }
+
             var srcDrivesFolders = SessionState.EnumFolders(paths, Recurse.IsPresent, Depth).ToList();
             var wpName = names.ConvertToWildcardPatternList();
 
             foreach (var (drive, folder) in srcDrivesFolders)
             {
-                // The move is a same-drive relocation; ShareToFolders can't reach
-                // a destination on a different drive than the source.
-                if (drive != destDrive)
-                {
-                    string src = folder.GetPSPath();
-                    WriteError(new ErrorRecord(
-                        new OrchException(src,
-                            $"Move-Orch{EntityNoun} only moves within the same tenant drive. " +
-                            $"Destination '{destFolder.GetPSPath()}' is on a different drive than the source '{src}'. " +
-                            $"Use Copy-Orch{EntityNoun} to copy across drives."),
-                        ErrorId, ErrorCategory.InvalidArgument, src));
-                    continue;
-                }
-
                 ICollection<TEntity> entities;
                 try
                 {
@@ -186,9 +219,18 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
                     continue;
                 }
 
-                foreach (var entity in entities
-                    .FilterByWildcards(e => GetEntityName(e), wpName)
-                    .OrderBy(e => GetEntityName(e)).WithCancellation(cancelHandler.Token))
+                var matched = entities.FilterByWildcards(e => GetEntityName(e), wpName)
+                    .OrderBy(e => GetEntityName(e)).ToList();
+                if (matched.Count == 0) continue;
+
+                // The destination subfolder mirrors this source folder relative
+                // to the source root. Resolve (creating as needed) once per
+                // source folder; null means it couldn't be ensured (error
+                // already written, or -WhatIf declined the folder creation).
+                Folder? dstFolder = ResolveMirroredDestination(drive, srcRootFolder, folder, destRootFolder, dstFolderByFqn);
+                if (dstFolder is null) continue;
+
+                foreach (var entity in matched.WithCancellation(cancelHandler.Token))
                 {
                     long entityId = GetEntityId(entity);
                     var key = (drive.NameColonSeparator, folder.Id ?? 0, entityId);
@@ -198,6 +240,7 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
                         {
                             Drive = drive,
                             SrcFolder = folder,
+                            DstFolder = dstFolder,
                             EntityId = entityId,
                             EntityName = GetEntityName(entity)!,
                         };
@@ -206,18 +249,16 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
             }
         }
 
-        long dstId = destFolder.Id ?? 0;
-        string dst = destFolder.GetPSPath();
-
         // One Share call per group: toAdd=[dst], toRemove=[src], atomic.
         foreach (var group in groups.Values.WithCancellation(cancelHandler.Token))
         {
             string source = group.SrcFolder.GetPSPath();
             string target = System.IO.Path.Combine(source, group.EntityName);
 
-            if (group.SrcFolder.Id == dstId) continue; // already there — no-op
-
             long srcId = group.SrcFolder.Id ?? 0;
+            long dstId = group.DstFolder.Id ?? 0;
+            if (srcId == dstId) continue; // already there — no-op
+            string dst = group.DstFolder.GetPSPath();
             string action = $"Move {EntityNoun} to {dst}";
 
             if (!ShouldProcess(target, action)) continue;
@@ -235,7 +276,7 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
                 // Both folders' entity lists and this entity's link set changed.
                 ClearLinkCache(group.Drive, group.EntityId);
                 ClearPerFolderCache(group.Drive, group.SrcFolder);
-                ClearPerFolderCache(group.Drive, destFolder);
+                ClearPerFolderCache(group.Drive, group.DstFolder);
             }
             catch (Exception ex)
             {
@@ -248,5 +289,77 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
                     ErrorCategory.InvalidOperation, target));
             }
         }
+    }
+
+    // Returns the destination folder that mirrors srcFolder's path relative to
+    // srcRootFolder, under destRootFolder — creating any missing intermediate
+    // folders as plain modern folders (no package feed). Returns null if the
+    // chain can't be ensured (folder-create error, or -WhatIf declined a
+    // creation). Resolved folders are memoized by FullyQualifiedName.
+    private Folder? ResolveMirroredDestination(
+        OrchDriveInfo drive, Folder srcRootFolder, Folder srcFolder,
+        Folder destRootFolder, Dictionary<string, Folder?> cache)
+    {
+        // relativePath is "" for the root itself, else e.g. "sub" or "a/b".
+        string relativePath = srcFolder.GetRelativePath(srcRootFolder);
+        if (string.IsNullOrEmpty(relativePath)) return destRootFolder;
+
+        Folder current = destRootFolder;
+        foreach (var segment in relativePath.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        {
+            string childFqn = string.IsNullOrEmpty(current.FullyQualifiedName)
+                ? segment
+                : $"{current.FullyQualifiedName}/{segment}";
+
+            if (cache.TryGetValue(childFqn, out var cached))
+            {
+                if (cached is null) return null; // a prior attempt failed/declined
+                current = cached;
+                continue;
+            }
+
+            // Existing child with this name under the current folder?
+            long parentId = current.Id ?? 0;
+            Folder? child = drive.GetFolders()
+                .FirstOrDefault(f => f.ParentId == parentId
+                    && string.Compare(f.DisplayName, segment, StringComparison.OrdinalIgnoreCase) == 0);
+
+            if (child is null)
+            {
+                // Mirror the source tree: create the missing subfolder. Folder
+                // creation is itself a state change, so gate it on ShouldProcess.
+                string newPath = System.IO.Path.Combine(current.GetPSPath(), segment);
+                if (!ShouldProcess(newPath, "New Folder"))
+                {
+                    cache[childFqn] = null;
+                    return null;
+                }
+                try
+                {
+                    child = drive.OrchAPISession.CreateFolder(segment, null, "Processes", parentId);
+                    if (child is not null)
+                    {
+                        child.Path = current.GetPSPath();
+                        drive.AppendFolderToCache(child);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(newPath, ex),
+                        ErrorId, ErrorCategory.InvalidOperation, newPath));
+                    child = null;
+                }
+                if (child is null)
+                {
+                    cache[childFqn] = null;
+                    return null;
+                }
+            }
+
+            cache[childFqn] = child;
+            current = child;
+        }
+
+        return current;
     }
 }
