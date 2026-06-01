@@ -216,7 +216,10 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
 
             MachineRobotSessionForSerialize ret = new()
             {
-                UserName = user?.UnattendedRobot?.UserName,
+                // Emit a name the -MachineRobots resolver accepts for every robot
+                // kind: the unattended-robot name, else the RobotProvision name
+                // (robot accounts / modern robots), else the account login.
+                UserName = user?.UnattendedRobot?.UserName ?? user?.RobotProvision?.UserName ?? user?.UserName,
                 MachineName = machine?.Name,
                 SessionName = sessionName
             };
@@ -268,7 +271,10 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
 
                 var drive = SessionState.GetOrchDrive(c.user?.Path);
                 var targetUser = drive.Users.Get().Where(u => u.Id == c.user?.Id).FirstOrDefault();
-                if (targetUser?.UnattendedRobot?.UserName is null) continue;
+                // Keep any provisioned robot — robot accounts and modern robots
+                // carry their RobotId on RobotProvision, not UnattendedRobot.
+                if (targetUser is null
+                    || (targetUser.UnattendedRobot?.RobotId is null && targetUser.RobotProvision?.RobotId is null)) continue;
 
                 string text = MakeCandidateText(targetUser, c.machine, c.session);
 

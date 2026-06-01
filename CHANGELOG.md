@@ -18,7 +18,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   emitted. It now matches the same merged robot view the read side already uses
   (`Robot.Username` = `UnattendedRobot.UserName ?? RobotProvision.UserName`,
   with a fallback to the account login `Robot.User.UserName`) and takes the
-  RobotId from the matched robot, so the binding is sent in full.
+  RobotId from the matched robot, so the binding is sent in full. The
+  `-MachineRobots` tab-completion now offers robot accounts and modern robots
+  too (it previously listed only users with a classic Unattended Robot).
 
 ## [1.7.1] - 2026-06-01
 
