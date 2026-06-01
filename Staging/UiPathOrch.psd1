@@ -234,6 +234,7 @@ CmdletsToExport = @(
 'Get-OrchAsset',
 'Set-OrchAsset',
 'Copy-OrchAsset',
+'Move-OrchAsset',
 'Remove-OrchAsset',
 
 'Set-OrchCredentialAsset',
@@ -288,6 +289,7 @@ CmdletsToExport = @(
 'New-OrchQueue',
 'Update-OrchQueue',
 'Copy-OrchQueue',
+'Move-OrchQueue',
 'Remove-OrchQueue',
 
 'Get-OrchQueueItem',
@@ -333,6 +335,7 @@ CmdletsToExport = @(
 'Get-OrchBucket',
 'New-OrchBucket',
 'Copy-OrchBucket',
+'Move-OrchBucket',
 'Update-OrchBucket',
 'Remove-OrchBucket',
 
