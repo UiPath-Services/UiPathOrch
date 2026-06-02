@@ -544,6 +544,16 @@ Organization-level user management (Identity Server API).
 | Update-PmUser | Update user properties |
 | Remove-PmUser | Remove a user from the organization |
 
+### User Preferences
+
+Per-user portal preferences (theme, language, ...) via the identity Setting API, as generic Key/Value pairs.
+
+| Cmdlet | Description |
+|--------|-------------|
+| Get-PmUserPreference | Read a user's portal settings |
+| Set-PmUserPreference | Set a user's portal settings (-Key / -Value) |
+| Copy-PmUserPreference | Copy a user's settings to the same user in another organization |
+
 <a id="20-platform-management-groups"></a>
 ## 20. Platform Management - Groups
 

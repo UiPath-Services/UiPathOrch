@@ -16,6 +16,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   groups, so `Get-PmRobotAccount -ExportCsv` round-trips through it. To add or
   remove individual group memberships of an *existing* robot account, prefer
   `Add-`/`Remove-PmGroupMember -Type DirectoryRobotUser` (additive).
+- **`Get-`/`Set-`/`Copy-PmUserPreference`** — read, write and copy a user's
+  organization-level portal preferences (theme, language, ...) via the identity
+  `Setting` API as generic `-Key` / `-Value` pairs. `Get-PmUserPreference -ExportCsv`
+  writes `Path,UserName,Key,Value`, which round-trips through `Import-Csv |
+  Set-PmUserPreference` (rows for the same user are coalesced into one request).
+  `Copy-PmUserPreference -Destination` copies a user's settings to the same-named
+  user in another organization. `-Key` tab-completes the known portal keys, and
+  `-Value` adapts to the chosen `-Key` (e.g. `UserLanguage.Language` lists
+  `ja`, `en`, … with friendly labels); completions insert the raw value, so the
+  friendly names never reach the command or CSV.
 
 ## [1.7.1] - 2026-06-02
 
@@ -1316,10 +1326,10 @@ long operations now bail promptly between iterations.
 - **Four unregistered experimental cmdlet files** deleted that were left in
   the tree with comments stating they didn't actually work
   (`GetMaintenanceSetting.cs`, `GetPmUserProfile.cs`, `GetDirectoryScope.cs`,
-  `UpdatePmUserSetting.cs`). None were in the psd1 export list, none had
+  `UpdatePmUserPreference.cs`). None were in the psd1 export list, none had
   tests, none were referenced from the docs. The corresponding internal
   `OrchAPISession` helpers (`GetPmUserProfile`, `GetPmDirectoryScope`,
-  `GetMaintenance`, `PutPmUserSetting`) remain available for future reuse.
+  `GetMaintenance`, `PutPmUserPreference`) remain available for future reuse.
 - **`Test.cs` (`Get-OrchTest`)** debug-only experimental cmdlet whose
   `EndProcessing` ran a background `Task.Run` to insert `cd orch1:` into the
   PSReadLine buffer two seconds after the cmdlet exited.
