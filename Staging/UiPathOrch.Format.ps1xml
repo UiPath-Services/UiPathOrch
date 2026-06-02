@@ -85,6 +85,61 @@
       </TableControl>
     </View>
 
+    <!--
+      Get-/Set-PmNotificationSubscription emit one row per (topic, mode); group under a
+      "Publisher: <Path><Publisher>" header and show the topic, mode and state.
+    -->
+    <View>
+      <Name>PmNotificationSubscription</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.PmNotificationSubscription</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Publisher</Label>
+        <PropertyName>PathPublisher</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Group</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Topic</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Mode</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Subscribed</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Mandatory</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Group</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>DisplayName</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Mode</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>IsSubscribed</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>IsMandatory</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
     <View>
       <Name>OrchPSDrive</Name>
       <ViewSelectedBy>

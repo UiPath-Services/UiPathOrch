@@ -4138,6 +4138,26 @@ public partial class OrchAPISession : IDisposable
             $"/api/Setting?{keyQuery}partitionGlobalId={partitionGlobalId}&userId={userId}");
     }
 
+    // The notification (usersubscriptionservice) endpoints are account-scoped and
+    // addressed by the account GUID (partitionGlobalId), e.g.
+    // https://cloud.uipath.com/{accountId}/notificationservice_/usersubscriptionservice/api/v1/...
+    private string NotificationServiceBase(string partitionGlobalId) =>
+        $"{new Uri(_base_url).GetLeftPart(UriPartial.Authority)}/{partitionGlobalId}/notificationservice_/usersubscriptionservice/api/v1";
+
+    // Reads the connected user's notification subscriptions (publishers -> topics ->
+    // per-mode subscription state). No userId is taken; the service uses the token's user.
+    public PmNotificationSubscriptionResponse? GetUserSubscriptions(string partitionGlobalId)
+    {
+        string body = HttpRequestImpl(HttpMethod.Get, NotificationServiceBase(partitionGlobalId), "/UserSubscription/", null, (string?)null);
+        return string.IsNullOrEmpty(body) ? null : JsonSerializer.Deserialize<PmNotificationSubscriptionResponse>(body);
+    }
+
+    // Updates one or more (topicId, mode) subscription toggles for the connected user.
+    public void UpdateUserSubscriptions(string partitionGlobalId, UpdateUserSubscriptionPayload payload)
+    {
+        HttpRequestImpl(HttpMethod.Post, NotificationServiceBase(partitionGlobalId), "/UserSubscription/", null, payload);
+    }
+
     // Seems to return an empty array. Hmm.
     public void GetPmRule(string partitionGlobalId)
     {

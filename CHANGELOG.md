@@ -33,6 +33,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   key). The output groups under a per-user header (`User: <drive>\<user>`); the
   `UserLanguage.Date` timestamp is shown as a local date/time for readability, while
   the stored value stays the raw string so CSV round-trips.
+- **`Get-`/`Set-PmNotificationSubscription`** — read and change **your own**
+  notification subscriptions (which events notify you, and by which delivery mode)
+  via the notification service. `Get-PmNotificationSubscription` lists one row per
+  `(topic, mode)` — publisher, topic group, name, `Mode` (`InApp` / `Email`) and
+  whether you're subscribed — grouped by publisher; `-Publisher` / `-Mode` filter and
+  `-IncludeHidden` reveals non-visible topics. `Set-PmNotificationSubscription -Topic
+  <name|guid> -Mode <InApp|Email> -Subscribed <bool>` toggles a subscription (topic
+  names are resolved per drive); rows for the same drive are coalesced into one
+  request, so `Get-… | … | Set-…` round-trips. Self-only: the service uses the token's
+  user, so there is no `-UserName`. Automation Cloud only.
 
 ## [1.7.1] - 2026-06-02
 

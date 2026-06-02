@@ -3694,6 +3694,74 @@ public class PmUserPreference // added by UiPathOrch
     public string? Value { get; set; }
 }
 
+// --- Notification subscriptions (notificationservice usersubscriptionservice) ---
+// camelCase to match the identity/notification JSON (deserialized case-sensitively).
+
+// GET /api/v1/UserSubscription response.
+public class PmNotificationSubscriptionResponse // added by UiPathOrch
+{
+    public PmNotificationPublisher[]? publishers { get; set; }
+}
+
+public class PmNotificationPublisher // added by UiPathOrch
+{
+    public string? name { get; set; }
+    public string? displayName { get; set; }
+    public string? id { get; set; }
+    public PmNotificationTopic[]? topics { get; set; }
+}
+
+public class PmNotificationTopic // added by UiPathOrch
+{
+    public string? name { get; set; }
+    public string? displayName { get; set; }
+    public string? description { get; set; }
+    public string? group { get; set; }
+    public string? id { get; set; }
+    public string? category { get; set; }
+    public bool? isSubscribed { get; set; }
+    public bool? isMandatory { get; set; }
+    public bool? isVisible { get; set; }
+    public PmNotificationTopicMode[]? modes { get; set; }
+}
+
+public class PmNotificationTopicMode // added by UiPathOrch
+{
+    public string? name { get; set; }
+    public bool? isSubscribed { get; set; }
+    public bool? isSubscribedByDefault { get; set; }
+}
+
+// POST /api/v1/UserSubscription payload.
+public class UpdateUserSubscriptionPayload // added by UiPathOrch
+{
+    public List<UserSubscriptionItem>? userSubscriptions { get; set; }
+}
+
+public class UserSubscriptionItem // added by UiPathOrch
+{
+    public string? topicId { get; set; }
+    public bool isSubscribed { get; set; }
+    public string? notificationMode { get; set; }
+}
+
+// Pipeline output of Get-/Set-PmNotificationSubscription: one row per (topic, mode).
+public class PmNotificationSubscription // added by UiPathOrch
+{
+    public string? Path { get; set; }
+    // Precomputed "<Path><Publisher>" for the grouped view header (cf. PathUserName).
+    public string? PathPublisher { get; set; }
+    public string? Publisher { get; set; }
+    public string? Group { get; set; }
+    public string? Topic { get; set; }       // stable key, e.g. "Apps.Shared"
+    public string? DisplayName { get; set; }  // friendly, e.g. "Apps Shared"
+    public string? Category { get; set; }     // Success / Error
+    public string? Mode { get; set; }         // InApp / Email
+    public bool? IsSubscribed { get; set; }
+    public bool? IsMandatory { get; set; }
+    public string? TopicId { get; set; }      // GUID, used by Set
+}
+
 // added by UiPathOrch
 public class NuLicensedGroup // The proper class name is unknown.
 {

@@ -388,6 +388,8 @@ CmdletsToExport = @(
 'Get-PmUserPreference',
 'Set-PmUserPreference',
 'Copy-PmUserPreference',
+'Get-PmNotificationSubscription',
+'Set-PmNotificationSubscription',
 
 'Get-PmGroup',
 'New-PmGroup',

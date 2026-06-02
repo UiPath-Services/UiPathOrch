@@ -1354,7 +1354,9 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             {
                 // Self-only: the connected user's id is the Orchestrator Key, which
                 // equals the identity `sub` the Setting API expects as `userId`.
-                var userId = CurrentUser.Get()?.Key;
+                // CurrentUser is assigned later in this ctor but is always set by the
+                // time this fetch lambda runs, hence the null-forgiving access.
+                var userId = CurrentUser!.Get()?.Key;
                 if (string.IsNullOrEmpty(userId)) return null;
                 // The Setting GET needs explicit key filters; fetch just this key.
                 return OrchAPISession.GetUserSettings(partitionGlobalId, userId, [key])
