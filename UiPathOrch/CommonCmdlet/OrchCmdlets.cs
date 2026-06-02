@@ -515,29 +515,32 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
             foreach (var mrs in mrss ?? [])
             {
-                // Resolve UserName to a robot. Match the merged Robot.Username
-                // (UnattendedRobot ?? RobotProvision) or the account's own login
-                // (Robot.User.UserName), so robot accounts and modern
-                // folder-user-bound robots resolve too. Wildcards supported.
+                // Resolve UserName to a robot by an exact (case-insensitive) match
+                // against the merged Robot.Username (UnattendedRobot ?? RobotProvision)
+                // or the account's own login (Robot.User.UserName), so robot accounts
+                // and modern folder-user-bound robots resolve too. Matching is literal,
+                // not wildcard: a robot user name usually contains a backslash
+                // (domain\user), which a wildcard pattern would treat as an escape, so
+                // the serialized/displayed value would not round-trip.
                 List<Robot> matchedRobots = null;
                 if (!string.IsNullOrEmpty(mrs?.UserName))
                 {
-                    var wpUserName = new WildcardPattern(mrs.UserName, WildcardOptions.IgnoreCase);
-                    matchedRobots = robots.Where(r => wpUserName.IsMatch(r.Username) || wpUserName.IsMatch(r.User?.UserName)).ToList();
+                    matchedRobots = robots.Where(r =>
+                        string.Equals(r.Username, mrs.UserName, StringComparison.OrdinalIgnoreCase)
+                        || string.Equals(r.User?.UserName, mrs.UserName, StringComparison.OrdinalIgnoreCase)).ToList();
                     if (matchedRobots.Count == 0)
                     {
                         WriteWarning($"'{target}': The user name '{mrs.UserName}' does not match any unattended robot, robot account, or unattended-enabled user in '{drive.NameColonSeparator}'.");
                     }
                 }
 
-                // Resolve MachineName to the appropriate Id
-                // Multiple Machines may match because wildcards are supported
+                // Resolve MachineName to the appropriate Id by an exact
+                // (case-insensitive) match.
                 List<MachineFolder> machines = null;
                 if (!string.IsNullOrEmpty(mrs?.MachineName))
                 {
-                    var wpMachineName = new WildcardPattern(mrs.MachineName, WildcardOptions.IgnoreCase);
                     machines = drive.FolderMachines.Get(folder)
-                        .Where(m => wpMachineName.IsMatch(m.Name))
+                        .Where(m => string.Equals(m.Name, mrs.MachineName, StringComparison.OrdinalIgnoreCase))
                         .Where(m => ValidScopes.Value.Contains(m.Scope!))
                         .ToList();
                     if (machines.Count == 0)
@@ -553,15 +556,13 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                 if (matchedRobots is null || matchedRobots.Count == 0) matchedRobots = [null!];
                 if (machines is null || machines.Count == 0) machines = [null!];
 
-                // Resolve SessionName to the appropriate Id
-                // Multiple Sessions may match because wildcards are supported
+                // Resolve SessionName to the appropriate Id by an exact
+                // (case-insensitive) match.
                 List<MachineSessionRuntime> sessions = null;
                 if (!string.IsNullOrEmpty(mrs?.SessionName))
                 {
-                    var wpSessionName = new WildcardPattern(mrs.SessionName, WildcardOptions.IgnoreCase);
                     sessions = drive.MachineSessionRuntimesByFolder.Fetch(folder)
                         //.Where(s => s.RuntimeType == "Unattended") // Not needed. SessionId is the same regardless of RuntimeType.
-                        //.Where(s => wpMachineName.IsMatch(s.MachineName)) // This condition is evaluated later
                         .Where(s =>
                         {
                             var sessionName = s.HostMachineName;
@@ -569,7 +570,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                             {
                                 sessionName += (" - " + s.ServiceUserName);
                             }
-                            return wpSessionName.IsMatch(sessionName);
+                            return string.Equals(sessionName, mrs.SessionName, StringComparison.OrdinalIgnoreCase);
                         })
                         .DistinctBy(s => s.SessionId)
                         .ToList();

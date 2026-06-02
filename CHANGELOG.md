@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **`-MachineRobots` matches robot / machine / session names exactly
+  (case-insensitive) rather than as wildcards.** A trigger binding is a precise
+  assignment, and a robot user name is domain-qualified (`domain\user`) where
+  the `\` was previously mis-read as a wildcard escape — so the
+  serialized/displayed value didn't round-trip back in. List multiple bindings
+  as explicit array elements instead of a `*` pattern. Affects
+  `New-`/`Update-OrchTrigger` and `New-`/`Update-OrchApiTrigger`.
+
 ### Fixed
 
 - **`New-`/`Update-OrchTrigger` and `New-`/`Update-OrchApiTrigger`
