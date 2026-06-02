@@ -55,14 +55,11 @@ internal static class PmUserPreferenceKeys
     public static readonly string[] ReadDefaults =
         [Language, LanguageDate, Theme, Accessibility, Favorites];
 
-    public static readonly (string Key, string Friendly)[] All =
-    [
-        (Theme, "Theme"),
-        (Accessibility, "Accessibility (high contrast / OS sync)"),
-        (Language, "Language"),
-        (LanguageDate, "Language date format"),
-        (Favorites, "Favorites"),
-    ];
+    // Keys offered by the -Key completer. The keys are self-descriptive, so the
+    // completion lists them plainly (no friendly suffix); friendly labels are only
+    // used by the -Value completer, where they actually disambiguate (e.g. ja → 日本語).
+    public static readonly string[] All =
+        [Theme, Accessibility, Language, LanguageDate, Favorites];
 
     // Suggested values per key, each with a friendly label. The completion text
     // is always the raw Value (e.g. "ja") so nothing friendly ever leaks into the
@@ -109,11 +106,9 @@ internal class PmPreferenceKeyCompleter : OrchArgumentCompleter
         IDictionary fakeBoundParameters)
     {
         var wp = CreateWPFromWordToComplete(wordToComplete);
-        foreach (var (key, friendly) in PmUserPreferenceKeys.All.Where(k => wp.IsMatch(k.Key)))
+        foreach (var key in PmUserPreferenceKeys.All.Where(k => wp.IsMatch(k)))
         {
-            // Insert the raw key; show "key — Friendly" in the list. Tooltip is just the
-            // key (no value/description) — the friendly is only a list-time hint.
-            yield return new CompletionResult(key, $"{key} — {friendly}", CompletionResultType.ParameterValue, key);
+            yield return new CompletionResult(key, key, CompletionResultType.ParameterValue, key);
         }
     }
 }
