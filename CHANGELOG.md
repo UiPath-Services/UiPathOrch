@@ -30,9 +30,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `ja`, `en`, … with friendly labels); completions insert the raw value, so the
   friendly names never reach the command or CSV. Reads are cached per
   organization and key (invalidated when `Set-`/`Copy-PmUserPreference` writes that
-  key). The output groups by `Path`; the `UserLanguage.Date` timestamp is shown as a
-  local date/time for readability, while the stored value stays the raw string so CSV
-  round-trips.
+  key). The output groups under a per-user header (`User: <drive>\<user>`); the
+  `UserLanguage.Date` timestamp is shown as a local date/time for readability, while
+  the stored value stays the raw string so CSV round-trips.
 
 ## [1.7.1] - 2026-06-02
 

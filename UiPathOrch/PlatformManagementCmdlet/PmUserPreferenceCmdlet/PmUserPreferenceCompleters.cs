@@ -61,6 +61,7 @@ internal static class PmUserPreferenceKeys
         (Accessibility, "Accessibility (high contrast / OS sync)"),
         (Language, "Language"),
         (LanguageDate, "Language date format"),
+        (Favorites, "Favorites"),
     ];
 
     // Suggested values per key, each with a friendly label. The completion text
@@ -110,8 +111,9 @@ internal class PmPreferenceKeyCompleter : OrchArgumentCompleter
         var wp = CreateWPFromWordToComplete(wordToComplete);
         foreach (var (key, friendly) in PmUserPreferenceKeys.All.Where(k => wp.IsMatch(k.Key)))
         {
-            // Insert the raw key; show "key — Friendly" in the list, Friendly as tooltip.
-            yield return new CompletionResult(key, $"{key} — {friendly}", CompletionResultType.ParameterValue, friendly);
+            // Insert the raw key; show "key — Friendly" in the list. Tooltip is just the
+            // key (no value/description) — the friendly is only a list-time hint.
+            yield return new CompletionResult(key, $"{key} — {friendly}", CompletionResultType.ParameterValue, key);
         }
     }
 }

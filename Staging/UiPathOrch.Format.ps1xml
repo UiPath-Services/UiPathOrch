@@ -42,8 +42,8 @@
 
     <!--
       Get-/Set-/Copy-PmUserPreference emit one record per preference key for the
-      connected user; group the rows by Path (the drive / organization) and show
-      just Key and Value, since Path is surfaced by GroupBy.
+      connected user; group the rows under a "User: <Path><UserName>" header and show
+      just Key and Value, since Path/User are surfaced by GroupBy.
     -->
     <View>
       <Name>PmUserPreference</Name>
@@ -51,8 +51,8 @@
         <TypeName>UiPath.PowerShell.Entities.PmUserPreference</TypeName>
       </ViewSelectedBy>
       <GroupBy>
-        <Label>Path</Label>
-        <PropertyName>Path</PropertyName>
+        <Label>User</Label>
+        <PropertyName>PathUserName</PropertyName>
       </GroupBy>
       <TableControl>
         <TableHeaders>

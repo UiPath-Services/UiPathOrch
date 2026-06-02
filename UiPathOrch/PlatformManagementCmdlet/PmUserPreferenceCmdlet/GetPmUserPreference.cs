@@ -48,6 +48,9 @@ public class GetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
             // them; also primes auth/partition for the cached lookups below.
             if (PmUserPreferenceCurrentUser.Resolve(this, drive) is null) continue;
 
+            // "<Path><connected user>" for the grouped view header (display only).
+            var pathUserName = drive.NameColonSeparator + drive.CurrentUser.Get()?.UserName;
+
             List<PmUserSettingDto> settings = [];
             try
             {
@@ -79,6 +82,7 @@ public class GetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
                     WriteObject(new PmUserPreference
                     {
                         Path = drive.NameColonSeparator,
+                        PathUserName = pathUserName,
                         Key = s.key,
                         Value = s.value,
                     });

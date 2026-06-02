@@ -59,6 +59,9 @@ public class SetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
             string? userId = PmUserPreferenceCurrentUser.Resolve(this, drive);
             if (userId is null) continue;
 
+            // "<Path><connected user>" for the grouped view header (display only).
+            var pathUserName = drive.NameColonSeparator + drive.CurrentUser.Get()?.UserName;
+
             string? partitionGlobalId;
             try
             {
@@ -87,7 +90,7 @@ public class SetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
                         // The cached value for this key is now stale; drop it so the
                         // next Get-PmUserPreference re-reads it.
                         if (!string.IsNullOrEmpty(s.key)) drive.PmUserPreferences.ClearCache(s.key);
-                        WriteObject(new PmUserPreference { Path = drive.NameColonSeparator, Key = s.key, Value = s.value });
+                        WriteObject(new PmUserPreference { Path = drive.NameColonSeparator, PathUserName = pathUserName, Key = s.key, Value = s.value });
                     }
                 }
                 catch (Exception ex)

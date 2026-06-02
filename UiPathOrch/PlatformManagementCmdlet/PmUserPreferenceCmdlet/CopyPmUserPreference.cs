@@ -64,6 +64,9 @@ public class CopyPmUserPreferenceCmdlet : OrchestratorPSCmdlet
             string? dstUserId = PmUserPreferenceCurrentUser.Resolve(this, dstDrive);
             if (dstUserId is null) continue;
 
+            // "<Path><destination user>" for the grouped view header (display only).
+            var dstPathUserName = dstDrive.NameColonSeparator + dstDrive.CurrentUser.Get()?.UserName;
+
             string? dstPartition;
             try
             {
@@ -93,7 +96,7 @@ public class CopyPmUserPreferenceCmdlet : OrchestratorPSCmdlet
                     {
                         // The destination's cached value for this key is now stale.
                         if (!string.IsNullOrEmpty(s.key)) dstDrive.PmUserPreferences.ClearCache(s.key);
-                        WriteObject(new PmUserPreference { Path = dstDrive.NameColonSeparator, Key = s.key, Value = s.value });
+                        WriteObject(new PmUserPreference { Path = dstDrive.NameColonSeparator, PathUserName = dstPathUserName, Key = s.key, Value = s.value });
                     }
                 }
                 catch (Exception ex)

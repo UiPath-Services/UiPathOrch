@@ -3684,6 +3684,12 @@ public class PmUserSettingDto // added by UiPathOrch
 public class PmUserPreference // added by UiPathOrch
 {
     public string? Path { get; set; }
+    // Precomputed "<Path><connected user>" (e.g. "Orch1:\jsmith@x.com") used as the
+    // grouped view's "User:" header — set on the DTO at emit time rather than built in
+    // a format ScriptBlock (cf. PathName / PathGroupName on other entities). Display
+    // only; NOT written by -ExportCsv (Path,Key,Value), so the CSV round-trip through
+    // Set-PmUserPreference is unaffected.
+    public string? PathUserName { get; set; }
     public string? Key { get; set; }
     public string? Value { get; set; }
 }
