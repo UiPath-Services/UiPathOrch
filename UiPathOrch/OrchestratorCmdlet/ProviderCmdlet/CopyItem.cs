@@ -1872,7 +1872,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         ExtendedCalendar dstCalendar = null;
         try
         {
-            dstCalendar = ResolveDstByName(dstDrive.OrchAPISession.GetCalendars(), srcCalendar.Name, c => c.Name);
+            dstCalendar = ResolveDstByName(dstDrive.Calendars.Get(), srcCalendar.Name, c => c.Name);
         }
         catch (Exception ex)
         {
