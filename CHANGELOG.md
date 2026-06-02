@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-06-02
+
 ### Changed
 
 - **`-MachineRobots` matches robot / machine / session names exactly
@@ -15,21 +17,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   serialized/displayed value didn't round-trip back in. List multiple bindings
   as explicit array elements instead of a `*` pattern. Affects
   `New-`/`Update-OrchTrigger` and `New-`/`Update-OrchApiTrigger`.
+- **`Copy-Orch*` `-Recurse` now mirrors the source tree, creating missing
+  destination subfolders on demand** instead of erroring
+  `… does not exist` and skipping them. Created folders are plain modern
+  folders with no package feed. The destination root must still exist, and
+  folders **directly under the tenant root are not auto-created** — a
+  top-level folder's package-feed setting can't be inferred from the source,
+  so create those explicitly. `-WhatIf` previews each `New Folder` plus the
+  copy into it. Affects `Copy-OrchActionCatalog`, `Copy-OrchApiTrigger`,
+  `Copy-OrchAsset`, `Copy-OrchBucket`, `Copy-OrchFolderMachine`,
+  `Copy-OrchFolderUser`, `Copy-OrchProcess`, `Copy-OrchQueue`,
+  `Copy-OrchQueueItem`, `Copy-OrchTestDataQueue`, `Copy-OrchTestSet`,
+  `Copy-OrchTestSetSchedule`, and `Copy-OrchTrigger`. (`Copy-OrchPackage` /
+  `Copy-OrchLibrary` are excluded — packages and libraries have restricted
+  placement.)
+
+### Deprecated
+
+- **`Set-PmRobotAccount`'s `GroupName0`–`GroupName9` parameters / CSV columns
+  are deprecated** in favour of a single comma-separated `GroupName` column.
+  `Get-PmRobotAccount -ExportCsv` now writes that one `GroupName` column (and is
+  no longer capped at 10 groups per robot); `Import-Csv | Set-PmRobotAccount`
+  reads it through the existing `-GroupName` parameter. CSVs produced by older
+  versions (the numbered columns) still import, now with a one-time deprecation
+  warning — re-export to migrate.
 
 ### Fixed
 
-- **`Add-OrchUser` now succeeds against older Orchestrator (e.g. 22.10, which
-  reports API version 15).** The `POST /odata/Users` body omitted `UpdatePolicy`
-  (which older Orchestrator requires) and always sent
-  `NotificationSubscription.Export` (added in API version 16, so absent on older
-  servers — which strict-bind and reject the unknown field); either caused the
-  request to be rejected with a bare `The input was not valid.` It now defaults
-  `UpdatePolicy` to `{ Type = "None" }` when the caller specifies no update policy
-  (only at API version &gt;= 15, where `UserDto` has the field), and drops
-  `Export` at API version &lt; 16 — version boundaries confirmed against the
-  per-version `UserNotificationSubscription` / `UserDto` swagger schemas. The
-  existing `RateLimitsDaily` / `RateLimitsRealTime` stripping (added in API
-  version 18) is unchanged.
 - **`New-`/`Update-OrchTrigger` and `New-`/`Update-OrchApiTrigger`
   `-MachineRobots` now resolve robot accounts and modern folder-user-bound
   robots**, not just users with a classic Unattended Robot configured. The resolver matched the supplied user name only
@@ -48,25 +62,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `Get-OrchApiTrigger` now render each MachineRobots entry in the same one-line
   JSON shape that `-MachineRobots` accepts, so a displayed binding pastes
   straight back.
+- **`Add-OrchUser` now succeeds against older Orchestrator (e.g. 22.10, which
+  reports API version 15).** The `POST /odata/Users` body omitted `UpdatePolicy`
+  (which older Orchestrator requires) and always sent
+  `NotificationSubscription.Export` (added in API version 16, so absent on older
+  servers — which strict-bind and reject the unknown field); either caused the
+  request to be rejected with a bare `The input was not valid.` It now defaults
+  `UpdatePolicy` to `{ Type = "None" }` when the caller specifies no update policy
+  (only at API version &gt;= 15, where `UserDto` has the field), and drops
+  `Export` at API version &lt; 16 — version boundaries confirmed against the
+  per-version `UserNotificationSubscription` / `UserDto` swagger schemas. The
+  existing `RateLimitsDaily` / `RateLimitsRealTime` stripping (added in API
+  version 18) is unchanged.
 
-## [1.7.1] - 2026-06-01
+### Performance
 
-### Changed
-
-- **`Copy-Orch*` `-Recurse` now mirrors the source tree, creating missing
-  destination subfolders on demand** instead of erroring
-  `… does not exist` and skipping them. Created folders are plain modern
-  folders with no package feed. The destination root must still exist, and
-  folders **directly under the tenant root are not auto-created** — a
-  top-level folder's package-feed setting can't be inferred from the source,
-  so create those explicitly. `-WhatIf` previews each `New Folder` plus the
-  copy into it. Affects `Copy-OrchActionCatalog`, `Copy-OrchApiTrigger`,
-  `Copy-OrchAsset`, `Copy-OrchBucket`, `Copy-OrchFolderMachine`,
-  `Copy-OrchFolderUser`, `Copy-OrchProcess`, `Copy-OrchQueue`,
-  `Copy-OrchQueueItem`, `Copy-OrchTestDataQueue`, `Copy-OrchTestSet`,
-  `Copy-OrchTestSetSchedule`, and `Copy-OrchTrigger`. (`Copy-OrchPackage` /
-  `Copy-OrchLibrary` are excluded — packages and libraries have restricted
-  placement.)
+- **`Copy-Orch*` resolves the destination calendar from the cached calendar
+  list** instead of re-fetching the whole tenant calendar list once per copied
+  trigger (cross-tenant copies of triggers bound to a calendar).
 
 ## [1.7.0] - 2026-06-01
 
