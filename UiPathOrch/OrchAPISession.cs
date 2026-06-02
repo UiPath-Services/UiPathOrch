@@ -2693,7 +2693,10 @@ public partial class OrchAPISession : IDisposable
         {
             if (user.NotificationSubscription is not null)
             {
-                // Added in ApiVersion 18.
+                // Added in ApiVersion 18. Older Orchestrator (e.g. 22.10) rejects
+                // POST /odata/Users with "The input was not valid." if these are
+                // present, so drop them.
+                user.NotificationSubscription.Export = null;
                 user.NotificationSubscription.RateLimitsDaily = null;
                 user.NotificationSubscription.RateLimitsRealTime = null;
             }
@@ -2708,7 +2711,11 @@ public partial class OrchAPISession : IDisposable
         //    user.UnattendedRobot.ExecutionSettings ??= new();
         //}
 
-        //user.UpdatePolicy ??= new() { Type = "None" };
+        // Older Orchestrator (e.g. 22.10) rejects POST /odata/Users with a bare
+        // "The input was not valid." when UpdatePolicy is absent; the web UI always
+        // sends it. Default it when the caller didn't specify a policy. (??= leaves
+        // an explicit -UpdatePolicyType / -UpdatePolicyVersion untouched.)
+        user.UpdatePolicy ??= new() { Type = "None" };
 
         return HttpRequest<User>(HttpMethod.Post, "/odata/Users", null, user);
     }
