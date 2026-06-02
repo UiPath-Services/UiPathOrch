@@ -3668,6 +3668,27 @@ public class UpdatePmUserSettingPayload // added by UiPathOrch
     public string? userId { get; set; }
 }
 
+// GET /api/identity/Setting response item.
+public class PmUserSettingDto // added by UiPathOrch
+{
+    public int? id { get; set; }
+    public string? key { get; set; }
+    public string? value { get; set; }
+    public string? partitionGlobalId { get; set; }
+    public string? userId { get; set; }
+}
+
+// Pipeline output of Get-/Set-/Copy-PmUserPreference. Property names line up with the
+// CSV columns and the Set-PmUserPreference parameters so that
+// Get-PmUserPreference -ExportCsv round-trips through Import-Csv | Set-PmUserPreference.
+public class PmUserPreference // added by UiPathOrch
+{
+    public string? Path { get; set; }
+    public string? UserName { get; set; }
+    public string? Key { get; set; }
+    public string? Value { get; set; }
+}
+
 // added by UiPathOrch
 public class NuLicensedGroup // The proper class name is unknown.
 {

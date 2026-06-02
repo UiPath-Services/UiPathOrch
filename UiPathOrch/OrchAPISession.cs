@@ -4126,6 +4126,15 @@ public partial class OrchAPISession : IDisposable
         HttpRequestIdentity(HttpMethod.Get, $"/api/Setting", null, (object)$"&partitionGlobalId={partitionGlobalId}&userId={userId}");
     }
 
+    // Typed read of a user's identity settings (theme, language, date, ...).
+    // The query must be on the URL (omitting userId makes it a partition-level
+    // read that requires host admin), so embed it in the path.
+    public PmUserSettingDto[]? GetUserSettings(string partitionGlobalId, string userId)
+    {
+        return HttpRequestIdentity<PmUserSettingDto[]>(HttpMethod.Get,
+            $"/api/Setting?partitionGlobalId={partitionGlobalId}&userId={userId}");
+    }
+
     // Seems to return an empty array. Hmm.
     public void GetPmRule(string partitionGlobalId)
     {

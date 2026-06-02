@@ -385,6 +385,10 @@ CmdletsToExport = @(
 'Copy-PmRobotAccount',
 'Remove-PmRobotAccount',
 
+'Get-PmUserPreference',
+'Set-PmUserPreference',
+'Copy-PmUserPreference',
+
 'Get-PmGroup',
 'New-PmGroup',
 'Copy-PmGroup',
