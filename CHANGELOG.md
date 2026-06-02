@@ -28,7 +28,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   user is resolved per organization). `-Key` tab-completes the known portal keys, and
   `-Value` adapts to the chosen `-Key` (e.g. `UserLanguage.Language` lists
   `ja`, `en`, … with friendly labels); completions insert the raw value, so the
-  friendly names never reach the command or CSV.
+  friendly names never reach the command or CSV. Reads are cached per
+  organization and key (invalidated when `Set-`/`Copy-PmUserPreference` writes that
+  key). The output groups by `Path`; the `UserLanguage.Date` timestamp is shown as a
+  local date/time for readability, while the stored value stays the raw string so CSV
+  round-trips.
 
 ## [1.7.1] - 2026-06-02
 

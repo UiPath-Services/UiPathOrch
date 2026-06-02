@@ -967,6 +967,9 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly KeyedSingleCachePerOrganization<string, PmDirectoryEntityInfo[]?> SearchPmDirectoryCache;
     public readonly KeyedSingleCachePerTenant<string, DirectoryObject[]?> SearchDirectoryCache;
     public readonly KeyedSingleCachePerOrganization<string, AvailableUserBundles> PmAvailableUserBundles;
+    // The connected user's own portal preference for one setting key, org-scoped
+    // (self-only: one user per drive). Invalidated per key by Set-/Copy-PmUserPreference.
+    public readonly KeyedSingleCachePerOrganization<string, PmUserSettingDto> PmUserPreferences;
     public readonly PmGroupMembersCache PmGroupMembers;
     public readonly RobotLogsCache RobotLogs;
     public readonly KeyedSingleCachePerTenant<long, User> UsersDetailed;
@@ -1345,6 +1348,18 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             (partitionGlobalId, key) => OrchAPISession.SearchPmDirectory(partitionGlobalId, key));
         // No initializer: PmDirectoryEntityInfo's drive-local Path is set by
         // the caller cmdlet on a per-emit ShallowClone copy.
+
+        PmUserPreferences = new(this,
+            (partitionGlobalId, key) =>
+            {
+                // Self-only: the connected user's id is the Orchestrator Key, which
+                // equals the identity `sub` the Setting API expects as `userId`.
+                var userId = CurrentUser.Get()?.Key;
+                if (string.IsNullOrEmpty(userId)) return null;
+                // The Setting GET needs explicit key filters; fetch just this key.
+                return OrchAPISession.GetUserSettings(partitionGlobalId, userId, [key])
+                    ?.FirstOrDefault(s => s is not null && string.Equals(s.key, key, StringComparison.OrdinalIgnoreCase));
+            });
 
         SearchDirectoryCache = new(this,
             cacheKey =>

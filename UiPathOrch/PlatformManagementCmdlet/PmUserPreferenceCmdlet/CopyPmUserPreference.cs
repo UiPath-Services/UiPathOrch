@@ -91,6 +91,8 @@ public class CopyPmUserPreferenceCmdlet : OrchestratorPSCmdlet
                     dstDrive.OrchAPISession.PutPmUserSetting(payload);
                     foreach (var s in settingList)
                     {
+                        // The destination's cached value for this key is now stale.
+                        if (!string.IsNullOrEmpty(s.key)) dstDrive.PmUserPreferences.ClearCache(s.key);
                         WriteObject(new PmUserPreference { Path = dstDrive.NameColonSeparator, Key = s.key, Value = s.value });
                     }
                 }

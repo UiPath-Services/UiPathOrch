@@ -44,27 +44,19 @@ public class GetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
-            string? partitionGlobalId;
+            // Surfaces a clear error on confidential-app drives (no user) and skips
+            // them; also primes auth/partition for the cached lookups below.
+            if (PmUserPreferenceCurrentUser.Resolve(this, drive) is null) continue;
+
+            List<PmUserSettingDto> settings = [];
             try
             {
-                // Also forces token acquisition (lazy auth) so the token is populated
-                // before we read the current user's id from it below.
-                partitionGlobalId = drive.GetPartitionGlobalId();
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetGlobalPartitionIdError", ErrorCategory.InvalidOperation, drive));
-                continue;
-            }
-            if (string.IsNullOrEmpty(partitionGlobalId)) continue;
-
-            string? userId = PmUserPreferenceCurrentUser.Resolve(this, drive);
-            if (userId is null) continue;
-
-            PmUserSettingDto[]? settings;
-            try
-            {
-                settings = drive.OrchAPISession.GetUserSettings(partitionGlobalId, userId, keys);
+                foreach (var key in keys)
+                {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
+                    var s = drive.PmUserPreferences.Get(key);
+                    if (s is not null && !string.IsNullOrEmpty(s.key)) settings.Add(s);
+                }
             }
             catch (Exception ex)
             {
@@ -72,7 +64,7 @@ public class GetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
-            foreach (var s in (settings ?? []).OrderBy(s => s.key))
+            foreach (var s in settings.OrderBy(s => s.key))
             {
                 if (writer is not null)
                 {

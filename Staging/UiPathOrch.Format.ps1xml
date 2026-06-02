@@ -70,7 +70,14 @@
                 <PropertyName>Key</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>Value</PropertyName>
+                <ScriptBlock>
+                  # UserLanguage.Date is a Unix-epoch-ms timestamp; render it as a
+                  # local date/time for readability. Display only — the stored Value
+                  # stays the raw string so CSV / Set-PmUserPreference round-trips.
+                  if ($_.Key -eq 'UserLanguage.Date' -and "$($_.Value)" -match '^\d+$') {
+                    [DateTimeOffset]::FromUnixTimeMilliseconds([int64]$_.Value).LocalDateTime
+                  } else { $_.Value }
+                </ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

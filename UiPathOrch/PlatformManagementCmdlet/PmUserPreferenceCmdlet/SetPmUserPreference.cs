@@ -84,6 +84,9 @@ public class SetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
                     drive.OrchAPISession.PutPmUserSetting(payload);
                     foreach (var s in settings)
                     {
+                        // The cached value for this key is now stale; drop it so the
+                        // next Get-PmUserPreference re-reads it.
+                        if (!string.IsNullOrEmpty(s.key)) drive.PmUserPreferences.ClearCache(s.key);
                         WriteObject(new PmUserPreference { Path = drive.NameColonSeparator, Key = s.key, Value = s.value });
                     }
                 }
