@@ -13,6 +13,7 @@ namespace UiPath.PowerShell.Commands;
 public class GetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(PmNotificationPublisherCompleter))]
     [SupportsWildcards]
     public string[]? Publisher { get; set; }
 

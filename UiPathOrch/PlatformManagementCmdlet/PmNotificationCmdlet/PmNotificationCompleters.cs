@@ -2,6 +2,8 @@ using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -21,6 +23,50 @@ internal class PmNotificationModeCompleter : OrchArgumentCompleter
         foreach (var mode in Modes.Where(m => wp.IsMatch(m)))
         {
             yield return new CompletionResult(mode, mode, CompletionResultType.ParameterValue, mode);
+        }
+    }
+}
+
+// Suggests notification publisher names (Apps, Studio, ...) for -Publisher, read
+// live from the notification service for each resolved drive (deduped across drives).
+internal class PmNotificationPublisherCompleter : OrchArgumentCompleter
+{
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var drives = ResolvePmDrives(fakeBoundParameters);
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        var results = ParallelResults.GroupBy(drives, drive =>
+        {
+            try
+            {
+                var pgi = drive.GetPartitionGlobalId();
+                if (string.IsNullOrEmpty(pgi)) return Array.Empty<PmNotificationPublisher>();
+                return drive.OrchAPISession.GetUserSubscriptions(pgi)?.publishers
+                       ?? Array.Empty<PmNotificationPublisher>();
+            }
+            catch
+            {
+                return Array.Empty<PmNotificationPublisher>();
+            }
+        });
+
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var result in results)
+        {
+            foreach (var pub in result
+                .Where(p => p is not null)
+                .OrderBy(p => p!.displayName ?? p.name))
+            {
+                var name = pub!.displayName ?? pub.name;
+                if (string.IsNullOrEmpty(name) || !wp.IsMatch(name) || !seen.Add(name)) continue;
+                yield return new CompletionResult(PathTools.EscapePSText(name), name, CompletionResultType.ParameterValue, name);
+            }
         }
     }
 }
