@@ -28,6 +28,11 @@ public class SetPmRobotAccountCmdlet : OrchestratorPSCmdlet
     public string[]? GroupName { get; set; }
 
     #region GroupName\d
+    // Deprecated. Kept only so CSVs exported by older versions (fixed
+    // GroupName0..GroupName9 columns) still import; new exports use a single
+    // comma-separated GroupName column bound by the GroupName parameter above.
+    // DontShow keeps them out of help / tab-completion; ProcessRecord emits a
+    // one-time deprecation warning when any is supplied.
     [Parameter(ParameterSetName = psByCsv, ValueFromPipelineByPropertyName = true, DontShow = true)]
     [SupportsWildcards]
     public string? GroupName0 { get; set; }
@@ -74,6 +79,10 @@ public class SetPmRobotAccountCmdlet : OrchestratorPSCmdlet
     public string[]? Path { get; set; }
 
     private static readonly char[] separator = [','];
+
+    // Warn only once per invocation when the deprecated GroupName0..GroupName9
+    // CSV columns (see the #region GroupName\d block) are actually supplied.
+    private bool _groupNameNDeprecationWarned;
 
     private class NameCompleter : OrchArgumentCompleter
     {
@@ -162,23 +171,24 @@ public class SetPmRobotAccountCmdlet : OrchestratorPSCmdlet
 
         if (ParameterSetName == psByCsv)
         {
-            groupNames =
+            // Deprecated: the fixed-width GroupName0..GroupName9 columns. The
+            // CSV export now emits a single comma-separated GroupName column
+            // (handled by the GroupName parameter above); these remain only so
+            // CSVs produced by older versions still import.
+            string?[] numberedGroupNames =
             [
-                ..groupNames,
-                ..new[]
-                {
-                    GroupName0,
-                    GroupName1,
-                    GroupName2,
-                    GroupName3,
-                    GroupName4,
-                    GroupName5,
-                    GroupName6,
-                    GroupName7,
-                    GroupName8,
-                    GroupName9
-                }.Where(r => !string.IsNullOrEmpty(r))
+                GroupName0, GroupName1, GroupName2, GroupName3, GroupName4,
+                GroupName5, GroupName6, GroupName7, GroupName8, GroupName9
             ];
+            numberedGroupNames = numberedGroupNames.Where(r => !string.IsNullOrEmpty(r)).ToArray();
+
+            if (numberedGroupNames.Length > 0 && !_groupNameNDeprecationWarned)
+            {
+                WriteWarning("GroupName0..GroupName9 are deprecated. Group memberships are now read from a single comma-separated 'GroupName' column; re-export with 'Get-PmRobotAccount -ExportCsv' to migrate. The numbered columns still work for now.");
+                _groupNameNDeprecationWarned = true;
+            }
+
+            groupNames = [.. groupNames, .. numberedGroupNames];
         }
 
         var wpUserName = UserName.ConvertToWildcardPatternList();

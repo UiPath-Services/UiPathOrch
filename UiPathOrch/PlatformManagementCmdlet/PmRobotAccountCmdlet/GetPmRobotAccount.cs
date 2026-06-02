@@ -35,7 +35,7 @@ public class GetPmRobotAccountCmdlet : OrchestratorPSCmdlet
 
     private static readonly string DefaultCsvName = "ExportedPmRobotAccounts.csv";
     private static readonly string[] CsvHeaders =
-        ["Path", "UserName", "GroupName0", "GroupName1", "GroupName2", "GroupName3", "GroupName4", "GroupName5", "GroupName6", "GroupName7", "GroupName8", "GroupName9"];
+        ["Path", "UserName", "GroupName"];
 
     //private static void WriteCsvContent(StreamWriter writer, IEnumerable<PmRobotAccount> robotAccounts, ConcurrentDictionary<string, PmGroup> groups)
     private static void WriteCsvContent(StreamWriter writer, string drivePath, IEnumerable<PmRobotAccount> robotAccounts, Dictionary<string, PmGroup> groups)
@@ -48,13 +48,16 @@ public class GetPmRobotAccountCmdlet : OrchestratorPSCmdlet
             line.Append($"{EscapeCsvValue(drivePath, true)},");
             line.Append($"{EscapeCsvValue(robotAccount.name, true)}");
 
-            foreach (var groupId in robotAccount.groupIds ?? [])
-            {
-                if (groups.TryGetValue(groupId, out var group))
-                {
-                    line.Append($",{EscapeCsvValue(group.name)}");
-                }
-            }
+            // All group memberships go in one comma-separated GroupName column
+            // (EscapeCsvValue quotes it because of the commas); Import-Csv |
+            // Set-PmRobotAccount splits it back on commas via -GroupName. This
+            // replaces the legacy fixed GroupName0..GroupName9 columns, which
+            // also capped a robot at 10 groups.
+            var groupNames = (robotAccount.groupIds ?? [])
+                .Where(id => groups.ContainsKey(id))
+                .Select(id => groups[id].name)
+                .Where(name => !string.IsNullOrEmpty(name));
+            line.Append($",{EscapeCsvValue(string.Join(",", groupNames))}");
 
             writer.WriteLine(line.ToString());
         }
