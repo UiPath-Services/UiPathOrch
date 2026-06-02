@@ -276,6 +276,35 @@ Start-Process "$root/swagger"
 Official documentation:
 [UiPath Orchestrator API Reference](https://docs.uipath.com/orchestrator/reference)
 
+## A PmUserPreference Change Doesn't Show in the Web UI
+
+After `Set-PmUserPreference` (or `Copy-PmUserPreference`) changes your
+language or theme, an already-open Orchestrator browser tab may keep
+showing the old value even after a normal refresh.
+
+This is expected. The cmdlet writes the preference to the identity
+Setting store exactly as the web UI does (a single
+`PUT /api/identity/Setting` with the `UserLanguage.Language` /
+`UserLanguage.Date` pair) — `Get-PmUserPreference` confirms the new
+value is stored. But the portal renders the *active* language/theme
+from a client-side cache (browser local storage) that is updated only
+when you change the setting through the web UI's own switcher. A
+server-side write doesn't touch that cache.
+
+To see a cmdlet-set value in the browser:
+
+- Sign out and sign back in, **or**
+- Clear the site's data / local storage (DevTools → Application →
+  Local Storage), **or**
+- Open the org in a new browser profile or a private window.
+
+A fresh sign-in reads the stored preference and applies it. So
+`Set-`/`Copy-PmUserPreference` are well suited to auditing, migrating,
+or provisioning preferences (which take effect on the next sign-in),
+not to live-switching the UI of a session that is already open. The
+`UserLanguage.Date` value is just a timestamp the web writes alongside
+the language; it is **not** a trigger that forces the cache to refresh.
+
 ## Common Investigation Workflow
 
 1. **Reproduce the issue** with verbose logging enabled

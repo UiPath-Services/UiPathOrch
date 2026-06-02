@@ -161,6 +161,8 @@ Returns the preferences written to each destination, with Path, Key and Value.
 
 The cmdlets use the name "PmUserPreference" to match the Orchestrator UI; the underlying API is the generic identity Setting endpoint. They operate on the connected user's own preferences only.
 
+Copied preferences are stored exactly as the Orchestrator web UI writes them and take effect on the destination user's next fresh sign-in. The web UI renders the active language/theme from a client-side cache, so a destination browser session that is already signed in may keep showing the previous value until re-login or after clearing site data. See `Set-PmUserPreference` for details.
+
 ## RELATED LINKS
 
 [Get-PmUserPreference](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUserPreference.md)

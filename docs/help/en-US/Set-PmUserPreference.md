@@ -192,6 +192,8 @@ Returns the preferences that were set, as objects with Path, Key and Value.
 
 The cmdlets use the name "PmUserPreference" to match the Orchestrator UI; the underlying API is the generic identity Setting endpoint. They operate on the connected user's own preferences only.
 
+This cmdlet writes the preference to the same identity Setting store, in the same way, that the Orchestrator web UI does. However, the web UI renders the *active* language/theme from a client-side cache that is updated only when you change the setting through the web UI itself. A value set with this cmdlet is therefore stored correctly and is applied on a fresh sign-in (or after clearing the browser's site data / using a new browser profile), but a browser session that is already signed in may keep showing the previous language/theme until then. In other words, this cmdlet is well suited to reading/auditing stored preferences and to provisioning or migrating them (which take effect on the next sign-in) — not to live-switching the UI of a browser session that is already open.
+
 ## RELATED LINKS
 
 [Get-PmUserPreference](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-PmUserPreference.md)
