@@ -2689,19 +2689,26 @@ public partial class OrchAPISession : IDisposable
 
     public User? PostUser(User user)
     {
-        if (ApiVersion < 18)
+        if (user.NotificationSubscription is not null)
         {
-            if (user.NotificationSubscription is not null)
+            // Drop notification flags the target server's schema predates, or it
+            // rejects POST /odata/Users with "The input was not valid." (older
+            // Orchestrator strict-binds and refuses unknown fields). Introduction
+            // versions per the UserNotificationSubscription swagger snapshots
+            // v15-v20.
+            if (ApiVersion < 16)
             {
-                // Added in ApiVersion 18. Older Orchestrator (e.g. 22.10) rejects
-                // POST /odata/Users with "The input was not valid." if these are
-                // present, so drop them.
+                // Export (and Serverless) added in ApiVersion 16; 22.10 == v15.
                 user.NotificationSubscription.Export = null;
+            }
+            if (ApiVersion < 18)
+            {
+                // RateLimitsDaily / RateLimitsRealTime added in ApiVersion 18.
                 user.NotificationSubscription.RateLimitsDaily = null;
                 user.NotificationSubscription.RateLimitsRealTime = null;
             }
         }
-        else
+        if (ApiVersion >= 18)
         {
             user.BypassBasicAuthRestriction = null; // Deprecated in ApiVersion 18.
         }
@@ -2711,11 +2718,16 @@ public partial class OrchAPISession : IDisposable
         //    user.UnattendedRobot.ExecutionSettings ??= new();
         //}
 
-        // Older Orchestrator (e.g. 22.10) rejects POST /odata/Users with a bare
-        // "The input was not valid." when UpdatePolicy is absent; the web UI always
-        // sends it. Default it when the caller didn't specify a policy. (??= leaves
-        // an explicit -UpdatePolicyType / -UpdatePolicyVersion untouched.)
-        user.UpdatePolicy ??= new() { Type = "None" };
+        // UpdatePolicy is on UserDto from ApiVersion 15 (absent on v11). Older
+        // Orchestrator (e.g. 22.10 == v15) rejects POST /odata/Users with a bare
+        // "The input was not valid." when it's absent, and the web UI always sends
+        // it — but pre-15 has no such field and would reject it as unknown. Default
+        // it (matching the web UI) only where the field exists. (??= leaves an
+        // explicit -UpdatePolicyType / -UpdatePolicyVersion untouched.)
+        if (ApiVersion >= 15)
+        {
+            user.UpdatePolicy ??= new() { Type = "None" };
+        }
 
         return HttpRequest<User>(HttpMethod.Post, "/odata/Users", null, user);
     }

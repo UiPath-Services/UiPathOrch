@@ -18,14 +18,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- **`Add-OrchUser` now succeeds against older Orchestrator (e.g. 22.10).** The
-  `POST /odata/Users` body omitted `UpdatePolicy` (which older Orchestrator
-  requires) and always sent the `NotificationSubscription.Export` flag (added in
-  API version 18, absent on older servers); either caused the request to be
-  rejected with a bare `The input was not valid.` It now defaults
-  `UpdatePolicy` to `{ Type = "None" }` when the caller specifies no update
-  policy, and drops `Export` (alongside the already-handled `RateLimitsDaily` /
-  `RateLimitsRealTime`) on API version &lt; 18.
+- **`Add-OrchUser` now succeeds against older Orchestrator (e.g. 22.10, which
+  reports API version 15).** The `POST /odata/Users` body omitted `UpdatePolicy`
+  (which older Orchestrator requires) and always sent
+  `NotificationSubscription.Export` (added in API version 16, so absent on older
+  servers — which strict-bind and reject the unknown field); either caused the
+  request to be rejected with a bare `The input was not valid.` It now defaults
+  `UpdatePolicy` to `{ Type = "None" }` when the caller specifies no update policy
+  (only at API version &gt;= 15, where `UserDto` has the field), and drops
+  `Export` at API version &lt; 16 — version boundaries confirmed against the
+  per-version `UserNotificationSubscription` / `UserDto` swagger schemas. The
+  existing `RateLimitsDaily` / `RateLimitsRealTime` stripping (added in API
+  version 18) is unchanged.
 - **`New-`/`Update-OrchTrigger` and `New-`/`Update-OrchApiTrigger`
   `-MachineRobots` now resolve robot accounts and modern folder-user-bound
   robots**, not just users with a classic Unattended Robot configured. The resolver matched the supplied user name only
