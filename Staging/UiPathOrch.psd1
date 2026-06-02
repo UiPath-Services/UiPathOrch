@@ -380,6 +380,7 @@ CmdletsToExport = @(
 'Copy-PmUser',
 
 'Get-PmRobotAccount',
+'New-PmRobotAccount',
 'Set-PmRobotAccount',
 'Copy-PmRobotAccount',
 'Remove-PmRobotAccount',

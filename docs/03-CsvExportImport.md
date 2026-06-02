@@ -69,7 +69,7 @@ Use `-CsvEncoding` to specify the encoding.
 | `Get-OrchCalendar -ExportCsv` | `Import-Csv` → `Add-OrchCalendarDate` |
 | `Get-OrchCalendarDate -ExportCsv` | `Import-Csv` → `Add-OrchCalendarDate` |
 | `Get-PmGroup -ExportCsv` | `Import-Csv` → `New-PmGroup` |
-| `Get-PmRobotAccount -ExportCsv` | `Import-Csv` → `Set-PmRobotAccount` |
+| `Get-PmRobotAccount -ExportCsv` | `Import-Csv` → `Set-PmRobotAccount` (or `New-PmRobotAccount`) |
 | `Get-PmUser -ExportCsv` | `Import-Csv` → `New-PmUser` or `Update-PmUser` |
 | `Get-PmGroupMember -ExportCsv` | `Import-Csv` → `Add-PmGroupMember` |
 | `Get-PmGroupLicense -ExportCsv` | `Import-Csv` → `Add-PmGroupLicense` |

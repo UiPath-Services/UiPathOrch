@@ -8,12 +8,18 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Set, "PmRobotAccount", DefaultParameterSetName = psDefault, SupportsShouldProcess = true)]
-[OutputType(typeof(PmRobotAccount))]
-public class SetPmRobotAccountCmdlet : OrchestratorPSCmdlet
+// Shared implementation for New-/Set-PmRobotAccount. Both create-or-update a
+// robot account and set its full group membership; the only difference is the
+// existing-account case (ErrorIfExists): Set updates it (upsert), New errors.
+// To change just some group memberships of an existing account, prefer
+// Add-/Remove-PmGroupMember (-Type DirectoryRobotUser), which is additive.
+public abstract class PmRobotAccountWriteCmdletBase : OrchestratorPSCmdlet
 {
     private const string psDefault = "ConsoleInput";
     private const string psByCsv = "CsvInput";
+
+    // New-PmRobotAccount overrides this to refuse an account that already exists.
+    protected virtual bool ErrorIfExists => false;
 
     [Parameter(ParameterSetName = psDefault, Position = 0, Mandatory = true)]
     [Parameter(ParameterSetName = psByCsv, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -276,6 +282,16 @@ public class SetPmRobotAccountCmdlet : OrchestratorPSCmdlet
                         .Where(r => r is not null)
                         .OrderBy(r => r.name).WithCancellation(cancelHandler.Token))
                     {
+                        // New-PmRobotAccount (strict create) refuses an account that already exists.
+                        if (ErrorIfExists)
+                        {
+                            string existsTarget = System.IO.Path.Combine(drive.NameColonSeparator, robot.name ?? "");
+                            WriteError(new ErrorRecord(
+                                new OrchException(existsTarget, $"PmRobotAccount '{robot.name}' already exists. Use Set-PmRobotAccount to update it, or Add-/Remove-PmGroupMember to change its group memberships."),
+                                "PmRobotAccountAlreadyExists", ErrorCategory.ResourceExists, existsTarget));
+                            continue;
+                        }
+
                         // Check if there are any updates; skip if none
                         bool areEqual = robot.groupIds!.Length == groupIdsToSet!.Count &&
                                 robot.groupIds!.Order().Zip(groupIdsToSet!.ToList().Order(), (a, b) => a == b).All(equal => equal);
@@ -324,4 +340,14 @@ public class SetPmRobotAccountCmdlet : OrchestratorPSCmdlet
             }
         }
     }
+}
+
+// Create-or-update a robot account — the standard Set/upsert: updates an
+// existing account, creates one if the name is new. To change just some group
+// memberships of an existing account, prefer Add-/Remove-PmGroupMember
+// (-Type DirectoryRobotUser). DefaultParameterSetName matches the base's psDefault.
+[Cmdlet(VerbsCommon.Set, "PmRobotAccount", DefaultParameterSetName = "ConsoleInput", SupportsShouldProcess = true)]
+[OutputType(typeof(PmRobotAccount))]
+public class SetPmRobotAccountCmdlet : PmRobotAccountWriteCmdletBase
+{
 }

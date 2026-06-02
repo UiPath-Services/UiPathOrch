@@ -568,8 +568,9 @@ Organization-level robot account management.
 | Cmdlet | Description |
 |--------|-------------|
 | Get-PmRobotAccount | List robot accounts |
+| New-PmRobotAccount | Create a robot account (errors if it already exists) |
+| Set-PmRobotAccount | Create or update a robot account |
 | Copy-PmRobotAccount | Copy robot accounts to another organization |
-| Set-PmRobotAccount | Update robot account properties |
 | Remove-PmRobotAccount | Remove a robot account |
 
 <a id="22-platform-management-licenses"></a>

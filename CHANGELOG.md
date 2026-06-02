@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **`New-PmRobotAccount`** — creates a robot account, erroring if one with the
+  name already exists (strict create, like `New-Item`); the existing-account
+  counterpart of the create-or-update `Set-PmRobotAccount`. It shares all
+  parameters and the create path with `Set-PmRobotAccount` (only the
+  already-exists case differs). `-GroupName` sets the new account's initial
+  groups, so `Get-PmRobotAccount -ExportCsv` round-trips through it. To add or
+  remove individual group memberships of an *existing* robot account, prefer
+  `Add-`/`Remove-PmGroupMember -Type DirectoryRobotUser` (additive).
+
 ## [1.7.1] - 2026-06-02
 
 ### Changed
