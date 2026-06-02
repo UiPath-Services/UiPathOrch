@@ -100,6 +100,7 @@ public class NewApiTriggerCmdlet : OrchestratorPSCmdlet
     // JSON-serialized MachineRobotSession[] (re-using the same shape as
     // New-OrchTrigger's MachineRobots).
     [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(MachineRobotsCompleter))]
     public string[]? MachineRobots { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

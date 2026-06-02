@@ -383,7 +383,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         return string.Join(',', targetRobots.Select(r => r.Name).Order());
     }
 
-    internal static string? SerializeMachineRobotSessions(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string? target, IEnumerable<MachineRobotSession>? machineRobots)
+    internal static string? SerializeMachineRobotSessions(OrchDriveInfo drive, Folder folder, IEnumerable<MachineRobotSession>? machineRobots)
     {
         if (machineRobots is null || !machineRobots.Any()) return null;
 

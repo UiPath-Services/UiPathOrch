@@ -161,7 +161,7 @@ public class GetTriggerDetailCmdlet : OrchestratorPSCmdlet
             try
             {
                 var (drive, folder) = caller.SessionState.ResolveToSingleFolder(t.Path);
-                machineRobots = SerializeMachineRobotSessions(caller, drive, folder!, t.GetPSPath(), t.MachineRobots);
+                machineRobots = SerializeMachineRobotSessions(drive, folder!, t.MachineRobots);
             }
             catch (Exception ex)
             {

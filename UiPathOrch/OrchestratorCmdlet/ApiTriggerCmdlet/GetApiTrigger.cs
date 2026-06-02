@@ -91,7 +91,7 @@ public class GetApiTriggerCmdlet : OrchestratorPSCmdlet
         foreach (var t in triggers)
         {
             var release = ResolveReleaseName(drive, folder, t.ReleaseKey);
-            var machineRobots = SerializeMachineRobotSessions(null, drive, folder, null, t.MachineRobots);
+            var machineRobots = SerializeMachineRobotSessions(drive, folder, t.MachineRobots);
 
             string[] line = [
                 EscapeCsvValue(t.Path, true),

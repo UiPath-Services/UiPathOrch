@@ -133,7 +133,7 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
     public string[]? ExecutorRobots { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(MachineRobotsCompleter))]
+    [ArgumentCompleter(typeof(TimeTriggerMachineRobotsCompleter))]
     public string[]? MachineRobots { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -187,50 +187,6 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
                         yield return new CompletionResult(PathTools.EscapePSText(executerRobots), executerRobots, CompletionResultType.Text, tooltip);
                     }
                 }
-            }
-        }
-    }
-
-    internal class MachineRobotsCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgumentCore(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-            // Exclude already-selected Names from candidates
-            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetTriggers(df.folder));
-
-            bool bExists = false;
-            foreach (var group in results)
-            {
-                var (drive, folder) = group.Source;
-
-                foreach (var trigger in group
-                    .Where(t => t.MachineRobots is not null)
-                    .FilterByWildcards(e => e?.Name, wpName)
-                    .Where(e => e?.MachineRobots is not null)
-                    .OrderBy(a => a.Name))
-                {
-                    string tiphelp = trigger.GetPSPath();
-                    string machineRobots = SerializeMachineRobotSessions(null, drive, folder!, null, trigger.MachineRobots);
-                    if (string.IsNullOrEmpty(machineRobots)) continue;
-
-                    bExists = true;
-                    yield return new CompletionResult("'" + machineRobots.Replace("'", "''") + "'", machineRobots, CompletionResultType.Text, tiphelp);
-                }
-            }
-            if (!bExists)
-            {
-                yield return new CompletionResult("'[{\"UserName\":\"\",\"MachineName\":\"\",\"SessionName\":\"\"}]'");
             }
         }
     }

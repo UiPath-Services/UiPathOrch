@@ -2750,6 +2750,15 @@ public class MachineRobotSession
     public string? RobotUserName { get; set; }
     public Int64? SessionId { get; set; }
     public string? SessionName { get; set; }
+
+    // Render in the exact shape New-/Update-OrchTrigger -MachineRobots deserializes
+    // (and the completer suggests): {"UserName":<robot>,"MachineName":<machine>,
+    // "SessionName":<session>} with null fields omitted, so the displayed value
+    // pastes straight back into -MachineRobots.
+    public override string ToString()
+        => JsonSerializer.Serialize(
+            new MachineRobotSessionForSerialize { UserName = RobotUserName, MachineName = MachineName, SessionName = SessionName },
+            JsonTools.jsoOneLine);
 }
 
 // Used to serialize MachineRobots for Get-OrchTrigger -ExportCsv

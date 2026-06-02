@@ -8,9 +8,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- **`New-OrchTrigger` / `Update-OrchTrigger` `-MachineRobots` now resolves robot
-  accounts and modern folder-user-bound robots**, not just users with a classic
-  Unattended Robot configured. The resolver matched the supplied user name only
+- **`New-`/`Update-OrchTrigger` and `New-`/`Update-OrchApiTrigger`
+  `-MachineRobots` now resolve robot accounts and modern folder-user-bound
+  robots**, not just users with a classic Unattended Robot configured. The resolver matched the supplied user name only
   against `User.UnattendedRobot.UserName` and read the RobotId from there, so a
   robot account — or any robot whose identity lives on `RobotProvision` or the
   account login — failed to resolve: the trigger was saved with the MachineId
@@ -18,9 +18,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   emitted. It now matches the same merged robot view the read side already uses
   (`Robot.Username` = `UnattendedRobot.UserName ?? RobotProvision.UserName`,
   with a fallback to the account login `Robot.User.UserName`) and takes the
-  RobotId from the matched robot, so the binding is sent in full. The
-  `-MachineRobots` tab-completion now offers robot accounts and modern robots
-  too (it previously listed only users with a classic Unattended Robot).
+  RobotId from the matched robot, so the binding is sent in full. All four
+  cmdlets share one resolver, so all are fixed. `-MachineRobots` tab-completion
+  is now consistent across them — `New-*` list the folder's available robots
+  (including robot accounts and modern robots, previously omitted) and
+  `Update-*` show the trigger's current binding. `Get-OrchTrigger` /
+  `Get-OrchApiTrigger` now render each MachineRobots entry in the same one-line
+  JSON shape that `-MachineRobots` accepts, so a displayed binding pastes
+  straight back.
 
 ## [1.7.1] - 2026-06-01
 

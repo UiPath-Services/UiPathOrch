@@ -94,6 +94,7 @@ public class UpdateApiTriggerCmdlet : OrchestratorPSCmdlet
     public string? InputArguments { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(ApiTriggerMachineRobotsCompleter))]
     public string[]? MachineRobots { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
