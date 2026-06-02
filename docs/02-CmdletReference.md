@@ -550,9 +550,9 @@ Per-user portal preferences (theme, language, ...) via the identity Setting API,
 
 | Cmdlet | Description |
 |--------|-------------|
-| Get-PmUserPreference | Read a user's portal settings |
-| Set-PmUserPreference | Set a user's portal settings (-Key / -Value) |
-| Copy-PmUserPreference | Copy a user's settings to the same user in another organization |
+| Get-PmUserPreference | Read your own portal preferences (theme, language, ...) |
+| Set-PmUserPreference | Set your own portal preferences (-Key / -Value) |
+| Copy-PmUserPreference | Migrate your own preferences to yourself in another organization |
 
 <a id="20-platform-management-groups"></a>
 ## 20. Platform Management - Groups

@@ -16,13 +16,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   groups, so `Get-PmRobotAccount -ExportCsv` round-trips through it. To add or
   remove individual group memberships of an *existing* robot account, prefer
   `Add-`/`Remove-PmGroupMember -Type DirectoryRobotUser` (additive).
-- **`Get-`/`Set-`/`Copy-PmUserPreference`** — read, write and copy a user's
+- **`Get-`/`Set-`/`Copy-PmUserPreference`** — read, write and migrate **your own**
   organization-level portal preferences (theme, language, ...) via the identity
-  `Setting` API as generic `-Key` / `-Value` pairs. `Get-PmUserPreference -ExportCsv`
-  writes `Path,UserName,Key,Value`, which round-trips through `Import-Csv |
-  Set-PmUserPreference` (rows for the same user are coalesced into one request).
-  `Copy-PmUserPreference -Destination` copies a user's settings to the same-named
-  user in another organization. `-Key` tab-completes the known portal keys, and
+  `Setting` API as generic `-Key` / `-Value` pairs. Preferences are personal, so the
+  cmdlets always act on the connected user (there is no `-UserName`); they require a
+  non-confidential application or PAT and skip — with an error — any drive connected
+  with a confidential application (which has no user). `Get-PmUserPreference -ExportCsv`
+  writes `Path,Key,Value`, which round-trips through `Import-Csv | Set-PmUserPreference`
+  (rows for the same drive are coalesced into one request). `Copy-PmUserPreference
+  -Destination` copies your settings to yourself in another organization (the identity
+  user is resolved per organization). `-Key` tab-completes the known portal keys, and
   `-Value` adapts to the chosen `-Key` (e.g. `UserLanguage.Language` lists
   `ja`, `en`, … with friendly labels); completions insert the raw value, so the
   friendly names never reach the command or CSV.

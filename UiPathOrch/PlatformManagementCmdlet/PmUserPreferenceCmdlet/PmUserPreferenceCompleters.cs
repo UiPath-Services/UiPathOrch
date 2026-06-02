@@ -6,34 +6,36 @@ using UiPath.PowerShell.Core;
 
 namespace UiPath.PowerShell.Commands;
 
-// Shared argument completers for Get-/Set-/Copy-PmUserPreference.
+// Shared helpers and argument completers for Get-/Set-/Copy-PmUserPreference.
 
-// Suggests organization users by userName for -UserName.
-internal class PmUserPreferenceUserNameCompleter : OrchArgumentCompleter
+// Resolves the identity user id of the user behind a drive's connection. The current
+// user's Orchestrator `Key` (a GUID) equals the identity `sub`, which is exactly the
+// `userId` the Setting API expects. The PmUserPreference cmdlets act on the connected
+// user's own preferences only, so a confidential application — which authenticates as
+// an app, not a user — has no preferences to read or write; in that case this writes a
+// descriptive error and returns null so the caller can skip the drive. Using
+// CurrentUser (rather than decoding the access token) also works for PAT connections
+// and doesn't depend on the token having been fetched yet.
+internal static class PmUserPreferenceCurrentUser
 {
-    public override IEnumerable<CompletionResult> CompleteArgumentCore(
-        string commandName,
-        string parameterName,
-        string wordToComplete,
-        CommandAst commandAst,
-        IDictionary fakeBoundParameters)
+    public static string? Resolve(Cmdlet cmdlet, OrchDriveInfo drive)
     {
-        var drives = ResolvePmDrives(fakeBoundParameters);
-        var wpSelf = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-        var wp = CreateWPFromWordToComplete(wordToComplete);
-
-        var results = ParallelResults.GroupBy(drives, drive => drive.PmUsers.Get());
-        foreach (var result in results)
+        try
         {
-            foreach (var user in result
-                .Where(u => u is not null && !string.IsNullOrEmpty(u.userName))
-                .Where(u => wp.IsMatch(u!.userName))
-                .ExcludeByWildcards(u => u!.userName!, wpSelf)
-                .OrderBy(u => u!.userName))
-            {
-                yield return new CompletionResult(PathTools.EscapePSText(user!.userName), user.userName!, CompletionResultType.ParameterValue, user.userName!);
-            }
+            var user = drive.CurrentUser.Get();
+            if (!string.IsNullOrEmpty(user?.Key)) return user.Key;
         }
+        catch (Exception ex)
+        {
+            cmdlet.WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetCurrentUserError", ErrorCategory.InvalidOperation, drive));
+            return null;
+        }
+
+        cmdlet.WriteError(new ErrorRecord(
+            new OrchException(drive.NameColonSeparator,
+                "Cannot determine the current user. PmUserPreference cmdlets act on the connected user's own preferences, but this drive is connected with a confidential application (which authenticates as an application, not a user). Connect with a non-confidential application or a personal access token."),
+            "NoCurrentUser", ErrorCategory.InvalidOperation, drive));
+        return null;
     }
 }
 
@@ -45,6 +47,13 @@ internal static class PmUserPreferenceKeys
     public const string Accessibility = "UserAccessibility.Accessibility";
     public const string Language = "UserLanguage.Language";
     public const string LanguageDate = "UserLanguage.Date";
+    public const string Favorites = "Favorites";
+
+    // The /api/Setting GET returns nothing unless given explicit key filters, so
+    // Get-/Copy-PmUserPreference fetch this known set of user-preference keys
+    // (matching what the Orchestrator portal requests).
+    public static readonly string[] ReadDefaults =
+        [Language, LanguageDate, Theme, Accessibility, Favorites];
 
     public static readonly (string Key, string Friendly)[] All =
     [

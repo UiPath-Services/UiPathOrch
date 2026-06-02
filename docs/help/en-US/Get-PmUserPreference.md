@@ -13,60 +13,68 @@ title: Get-PmUserPreference
 
 ## SYNOPSIS
 
-Reads a user's organization-level portal preferences (theme, language, ...).
+Reads your own organization-level portal preferences (theme, language, ...).
 
 ## SYNTAX
 
 ### Default (Default)
 
 ```
-Get-PmUserPreference [-UserName] <string[]> [-Path <string[]>] [-ExportCsv <string>]
- [<CommonParameters>]
+Get-PmUserPreference [[-Key] <string[]>] [-Path <string[]>] [-ExportCsv <string>]
+ [-CsvEncoding <Encoding>] [<CommonParameters>]
 ```
 
 ## ALIASES
 
 ## DESCRIPTION
 
-Reads the per-user portal preferences (the "Preferences" shown in the Orchestrator UI) for the named user(s), via the identity Setting API. Emits one object per (user, setting) with `Path`, `UserName`, `Key` and `Value`.
+Reads the per-user portal preferences (the "Preferences" shown in the Orchestrator UI) of the user connected to each drive, via the identity Setting API. Emits one object per setting with `Path`, `Key` and `Value`.
 
-The column names line up with the `Set-PmUserPreference` parameters, so `Get-PmUserPreference -ExportCsv` round-trips through `Import-Csv | Set-PmUserPreference`. `Copy-PmUserPreference` copies a user's preferences to another organization.
+The cmdlet always acts on the connected user's *own* preferences — there is no `-UserName` parameter — so the drive must be connected with a non-confidential application or a personal access token. A drive connected with a confidential application authenticates as an application, not a user, and has no preferences; such a drive is reported with an error and skipped.
 
-`-UserName` supports wildcards. Reading another user's preferences may require host-admin rights.
+The column names line up with the `Set-PmUserPreference` parameters, so `Get-PmUserPreference -ExportCsv` round-trips through `Import-Csv | Set-PmUserPreference`. `Copy-PmUserPreference` migrates your preferences to another organization.
 
 ## EXAMPLES
 
-### Example 1: Read a user's preferences
+### Example 1: Read your preferences
 
 ```powershell
-PS Orch1:\> Get-PmUserPreference jsmith
+PS Orch1:\> Get-PmUserPreference
 ```
 
-Lists the portal preferences (e.g. `UserLanguage.Language` = `ja`, `UserTheme.Theme` = `dark`) for the user "jsmith".
+Lists your portal preferences (e.g. `UserLanguage.Language` = `ja`, `UserTheme.Theme` = `dark`).
 
-### Example 2: Export to CSV for round-tripping
+### Example 2: Read a single key
 
 ```powershell
-PS Orch1:\> Get-PmUserPreference * -ExportCsv C:\temp\prefs.csv
+PS Orch1:\> Get-PmUserPreference UserTheme.Theme
 ```
 
-Exports every user's preferences with the columns `Path,UserName,Key,Value`, which import straight back through `Import-Csv C:\temp\prefs.csv | Set-PmUserPreference`.
+Returns just the theme. `-Key` tab-completes the known portal keys; you can pass several.
+
+### Example 3: Export to CSV for round-tripping
+
+```powershell
+PS Orch1:\> Get-PmUserPreference -ExportCsv C:\temp\prefs.csv
+```
+
+Exports your preferences with the columns `Path,Key,Value`, which import straight back through `Import-Csv C:\temp\prefs.csv | Set-PmUserPreference`.
 
 ## PARAMETERS
 
-### -UserName
+### -Key
 
-The name(s) of the user(s) whose preferences to read. Supports wildcards. Positional (position 0).
+Optional preference key(s) to read, e.g. `UserLanguage.Language`, `UserTheme.Theme`. When omitted, the well-known portal preference keys are read. Tab completion lists the known keys; any key is accepted. Positional (position 0).
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
-SupportsWildcards: true
+SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
   Position: 0
-  IsRequired: true
+  IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true
   ValueFromRemainingArguments: false
@@ -98,10 +106,31 @@ HelpMessage: ''
 
 ### -ExportCsv
 
-Writes the results to the given CSV file (columns `Path,UserName,Key,Value`) instead of to the pipeline, in a form `Import-Csv | Set-PmUserPreference` accepts.
+Writes the results to the given CSV file (columns `Path,Key,Value`) instead of to the pipeline, in a form `Import-Csv | Set-PmUserPreference` accepts.
 
 ```yaml
 Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -CsvEncoding
+
+The text encoding for the `-ExportCsv` file (e.g. `utf8`, `utf8BOM`, `unicode`). Defaults to the module's standard CSV encoding.
+
+```yaml
+Type: System.Text.Encoding
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -128,17 +157,17 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 
-You can pipe user names to this cmdlet via the UserName property.
+You can pipe preference keys to this cmdlet via the Key property.
 
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.PmUserPreference
 
-Returns one object per (user, preference) with Path, UserName, Key and Value.
+Returns one object per preference with Path, Key and Value.
 
 ## NOTES
 
-The cmdlets use the name "PmUserPreference" to match the Orchestrator UI; the underlying API is the generic identity Setting endpoint, so any key/value is supported, not only the well-known theme/language keys.
+The cmdlets use the name "PmUserPreference" to match the Orchestrator UI; the underlying API is the generic identity Setting endpoint, so any key/value is supported, not only the well-known theme/language keys. They operate on the connected user's own preferences only.
 
 ## RELATED LINKS
 

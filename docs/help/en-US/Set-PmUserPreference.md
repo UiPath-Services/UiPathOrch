@@ -13,24 +13,26 @@ title: Set-PmUserPreference
 
 ## SYNOPSIS
 
-Sets a user's organization-level portal preferences (theme, language, ...).
+Sets your own organization-level portal preferences (theme, language, ...).
 
 ## SYNTAX
 
 ### Default (Default)
 
 ```
-Set-PmUserPreference [-UserName] <string[]> [-Key] <string> [-Value] <string>
- [-Path <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
+Set-PmUserPreference [-Key] <string> [-Value] <string> [-Path <string[]>]
+ [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
 
 ## DESCRIPTION
 
-Sets per-user portal preferences (the "Preferences" shown in the Orchestrator UI) as generic `-Key` / `-Value` pairs, via the identity Setting API.
+Sets your own per-user portal preferences (the "Preferences" shown in the Orchestrator UI) as generic `-Key` / `-Value` pairs, via the identity Setting API.
 
-Each pipeline row is one key/value. Rows for the same `(drive, user)` are accumulated and sent as a single request per user, so an `Import-Csv` of several keys for one user (e.g. `UserLanguage.Language` and `UserLanguage.Date`) is one call. The parameter names line up with the columns written by `Get-PmUserPreference -ExportCsv`, so the export round-trips back in.
+The cmdlet always acts on the connected user's *own* preferences — there is no `-UserName` parameter — so the drive must be connected with a non-confidential application or a personal access token. A drive connected with a confidential application has no user and is reported with an error and skipped.
+
+Each pipeline row is one key/value. Rows for the same drive are accumulated and sent as a single request, so an `Import-Csv` of several keys (e.g. `UserLanguage.Language` and `UserLanguage.Date`) is one call. The parameter names line up with the columns written by `Get-PmUserPreference -ExportCsv`, so the export round-trips back in.
 
 `-Key` tab-completes the known portal keys; `-Value` adapts to the chosen `-Key` (for example `-Key UserLanguage.Language` lists `ja`, `en`, `de`, ...; `-Key UserTheme.Theme` lists `light`, `dark`, `dark-hc`) and shows a friendly label. The completion inserts the raw value, so the friendly labels never reach the command line or CSV. Any key/value is accepted, not only the suggested ones.
 
@@ -39,15 +41,15 @@ Each pipeline row is one key/value. Rows for the same `(drive, user)` are accumu
 ### Example 1: Set the UI language
 
 ```powershell
-PS Orch1:\> Set-PmUserPreference jsmith UserLanguage.Language ja
+PS Orch1:\> Set-PmUserPreference UserLanguage.Language ja
 ```
 
-Sets the portal language to Japanese for "jsmith". `-UserName`, `-Key` and `-Value` are positional.
+Sets your portal language to Japanese. `-Key` and `-Value` are positional.
 
 ### Example 2: Set the theme
 
 ```powershell
-PS Orch1:\> Set-PmUserPreference jsmith UserTheme.Theme dark
+PS Orch1:\> Set-PmUserPreference UserTheme.Theme dark
 ```
 
 ### Example 3: Import preferences from CSV
@@ -56,16 +58,16 @@ PS Orch1:\> Set-PmUserPreference jsmith UserTheme.Theme dark
 PS Orch1:\> Import-Csv C:\temp\prefs.csv | Set-PmUserPreference
 ```
 
-Imports a CSV exported by `Get-PmUserPreference -ExportCsv` (columns `Path,UserName,Key,Value`). Multiple rows for the same user are coalesced into one request.
+Imports a CSV exported by `Get-PmUserPreference -ExportCsv` (columns `Path,Key,Value`). Multiple rows for the same drive are coalesced into one request.
 
 ## PARAMETERS
 
-### -UserName
+### -Key
 
-The name(s) of the user(s) whose preferences to set. Positional (position 0).
+The preference key, e.g. `UserLanguage.Language`, `UserTheme.Theme`, `UserAccessibility.Accessibility`. Tab completion lists the known portal keys; any key is accepted. Positional (position 0).
 
 ```yaml
-Type: System.String[]
+Type: System.String
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -81,9 +83,9 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Key
+### -Value
 
-The preference key, e.g. `UserLanguage.Language`, `UserTheme.Theme`, `UserAccessibility.Accessibility`. Tab completion lists the known portal keys; any key is accepted. Positional (position 1).
+The value for the key. Tab completion adapts to the bound `-Key` (e.g. language codes for `UserLanguage.Language`) and shows a friendly label, but inserts the raw value. Positional (position 1).
 
 ```yaml
 Type: System.String
@@ -93,27 +95,6 @@ Aliases: []
 ParameterSets:
 - Name: (All)
   Position: 1
-  IsRequired: true
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -Value
-
-The value for the key. Tab completion adapts to the bound `-Key` (e.g. language codes for `UserLanguage.Language`) and shows a friendly label, but inserts the raw value. Positional (position 2).
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: 2
   IsRequired: true
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true
@@ -199,17 +180,17 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 
-You can pipe rows with UserName, Key and Value properties (e.g. from Import-Csv).
+You can pipe rows with Key and Value properties (e.g. from Import-Csv).
 
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.PmUserPreference
 
-Returns the preferences that were set, as objects with Path, UserName, Key and Value.
+Returns the preferences that were set, as objects with Path, Key and Value.
 
 ## NOTES
 
-The cmdlets use the name "PmUserPreference" to match the Orchestrator UI; the underlying API is the generic identity Setting endpoint.
+The cmdlets use the name "PmUserPreference" to match the Orchestrator UI; the underlying API is the generic identity Setting endpoint. They operate on the connected user's own preferences only.
 
 ## RELATED LINKS
 

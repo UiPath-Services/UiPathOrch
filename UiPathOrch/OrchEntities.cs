@@ -3684,7 +3684,6 @@ public class PmUserSettingDto // added by UiPathOrch
 public class PmUserPreference // added by UiPathOrch
 {
     public string? Path { get; set; }
-    public string? UserName { get; set; }
     public string? Key { get; set; }
     public string? Value { get; set; }
 }

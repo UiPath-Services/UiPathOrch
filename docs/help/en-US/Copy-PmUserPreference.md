@@ -13,14 +13,14 @@ title: Copy-PmUserPreference
 
 ## SYNOPSIS
 
-Copies a user's portal preferences to the same-named user in another organization.
+Migrates your own portal preferences to yourself in another organization.
 
 ## SYNTAX
 
 ### Default (Default)
 
 ```
-Copy-PmUserPreference [-UserName] <string[]> [-Destination] <string[]> [-Path <string>]
+Copy-PmUserPreference [-Destination] <string[]> [-Path <string>]
  [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
@@ -28,54 +28,33 @@ Copy-PmUserPreference [-UserName] <string[]> [-Destination] <string[]> [-Path <s
 
 ## DESCRIPTION
 
-Reads the portal preferences (theme, language, ...) of the matching user(s) in the source organization and writes them to the user with the same name in each destination organization. The destination user must already exist (use `Copy-PmUser` first if needed).
+Reads your own portal preferences (theme, language, ...) in the source organization and writes them to you in each destination organization. "You" is resolved per organization from that drive's connection — the identity user id differs across organizations — so every drive involved must be connected with a non-confidential application or a personal access token. A drive connected with a confidential application has no user and is reported with an error and skipped.
 
-`-UserName` supports wildcards. Copying within the same organization is a no-op.
+Copying within the same organization is a no-op.
 
 ## EXAMPLES
 
-### Example 1: Copy one user's preferences to another org
+### Example 1: Migrate your preferences to another org
 
 ```powershell
-PS C:\> Copy-PmUserPreference jsmith -Path Source: -Destination Dest:
+PS C:\> Copy-PmUserPreference -Path Source: -Destination Dest:
 ```
 
-Copies "jsmith"'s preferences from the `Source:` organization to "jsmith" in `Dest:`.
+Copies your preferences from the `Source:` organization to yourself in `Dest:`.
 
-### Example 2: Copy several users to multiple orgs
+### Example 2: Migrate to multiple orgs
 
 ```powershell
-PS C:\> Copy-PmUserPreference * -Path Source: -Destination Dest1:,Dest2:
+PS C:\> Copy-PmUserPreference -Path Source: -Destination Dest1:,Dest2:
 ```
 
-Copies every source user's preferences to the same-named users in both destinations.
+Copies your source preferences to yourself in both destinations.
 
 ## PARAMETERS
 
-### -UserName
-
-The name(s) of the user(s) whose preferences to copy. Supports wildcards. Positional (position 0).
-
-```yaml
-Type: System.String[]
-DefaultValue: ''
-SupportsWildcards: true
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: 0
-  IsRequired: true
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -Destination
 
-The destination Pm: drive(s) (organizations) to copy the preferences into. Positional (position 1).
+The destination Pm: drive(s) (organizations) to copy the preferences into. Positional (position 0).
 
 ```yaml
 Type: System.String[]
@@ -84,7 +63,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 1
+  Position: 0
   IsRequired: true
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true
@@ -170,17 +149,17 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 
-You can pipe user names to this cmdlet via the UserName property.
+You can pipe destination drive names to this cmdlet via the Destination property.
 
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.PmUserPreference
 
-Returns the preferences written to each destination user.
+Returns the preferences written to each destination, with Path, Key and Value.
 
 ## NOTES
 
-The destination user must already exist in the destination organization. The cmdlets use the name "PmUserPreference" to match the Orchestrator UI; the underlying API is the generic identity Setting endpoint.
+The cmdlets use the name "PmUserPreference" to match the Orchestrator UI; the underlying API is the generic identity Setting endpoint. They operate on the connected user's own preferences only.
 
 ## RELATED LINKS
 

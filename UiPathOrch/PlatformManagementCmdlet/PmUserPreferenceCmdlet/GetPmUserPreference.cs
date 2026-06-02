@@ -6,17 +6,17 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-// Reads a user's identity settings (theme, language, ...). Emits one
-// PmUserPreference per (user, key); -ExportCsv writes Path,UserName,Key,Value so the
-// output round-trips through Import-Csv | Set-PmUserPreference.
+// Reads the connected user's own portal preferences (theme, language, ...). Emits
+// one PmUserPreference per key; -ExportCsv writes Path,Key,Value so the output
+// round-trips through Import-Csv | Set-PmUserPreference. The cmdlet always acts on
+// the user behind the drive's token, so it requires a non-confidential app or PAT.
 [Cmdlet(VerbsCommon.Get, "PmUserPreference")]
 [OutputType(typeof(PmUserPreference))]
 public class GetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(PmUserPreferenceUserNameCompleter))]
-    [SupportsWildcards]
-    public string[]? UserName { get; set; }
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(PmPreferenceKeyCompleter))]
+    public string[]? Key { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -31,12 +31,12 @@ public class GetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
     public Encoding? CsvEncoding { get; set; }
 
     private static readonly string DefaultCsvName = "ExportedPmUserPreferences.csv";
-    private static readonly string[] CsvHeaders = ["Path", "UserName", "Key", "Value"];
+    private static readonly string[] CsvHeaders = ["Path", "Key", "Value"];
 
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(Path);
-        var wpUserName = UserName.ConvertToWildcardPatternList();
+        var keys = (Key is { Length: > 0 }) ? Key : PmUserPreferenceKeys.ReadDefaults;
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
@@ -47,6 +47,8 @@ public class GetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
             string? partitionGlobalId;
             try
             {
+                // Also forces token acquisition (lazy auth) so the token is populated
+                // before we read the current user's id from it below.
                 partitionGlobalId = drive.GetPartitionGlobalId();
             }
             catch (Exception ex)
@@ -56,46 +58,38 @@ public class GetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
             }
             if (string.IsNullOrEmpty(partitionGlobalId)) continue;
 
-            var users = drive.PmUsers.Get()
-                .Where(u => u is not null && !string.IsNullOrEmpty(u.userName))
-                .FilterByWildcards(u => u!.userName!, wpUserName)
-                .OrderBy(u => u!.userName);
+            string? userId = PmUserPreferenceCurrentUser.Resolve(this, drive);
+            if (userId is null) continue;
 
-            foreach (var user in users.WithCancellation(cancelHandler.Token))
+            PmUserSettingDto[]? settings;
+            try
             {
-                PmUserSettingDto[]? settings;
-                try
-                {
-                    settings = drive.OrchAPISession.GetUserSettings(partitionGlobalId, user!.id!);
-                }
-                catch (Exception ex)
-                {
-                    string t = System.IO.Path.Combine(drive.NameColonSeparator, user!.userName!);
-                    WriteError(new ErrorRecord(new OrchException(t, ex), "GetPmUserPreferenceError", ErrorCategory.InvalidOperation, t));
-                    continue;
-                }
+                settings = drive.OrchAPISession.GetUserSettings(partitionGlobalId, userId, keys);
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmUserPreferenceError", ErrorCategory.InvalidOperation, drive));
+                continue;
+            }
 
-                foreach (var s in (settings ?? []).OrderBy(s => s.key))
+            foreach (var s in (settings ?? []).OrderBy(s => s.key))
+            {
+                if (writer is not null)
                 {
-                    if (writer is not null)
+                    writer.WriteCsvLine([
+                        EscapeCsvValue(drive.NameColonSeparator, true),
+                        EscapeCsvValue(s.key),
+                        EscapeCsvValue(s.value),
+                    ]);
+                }
+                else
+                {
+                    WriteObject(new PmUserPreference
                     {
-                        writer.WriteCsvLine([
-                            EscapeCsvValue(drive.NameColonSeparator, true),
-                            EscapeCsvValue(user!.userName, true),
-                            EscapeCsvValue(s.key),
-                            EscapeCsvValue(s.value),
-                        ]);
-                    }
-                    else
-                    {
-                        WriteObject(new PmUserPreference
-                        {
-                            Path = drive.NameColonSeparator,
-                            UserName = user!.userName,
-                            Key = s.key,
-                            Value = s.value,
-                        });
-                    }
+                        Path = drive.NameColonSeparator,
+                        Key = s.key,
+                        Value = s.value,
+                    });
                 }
             }
         }

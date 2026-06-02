@@ -4126,13 +4126,16 @@ public partial class OrchAPISession : IDisposable
         HttpRequestIdentity(HttpMethod.Get, $"/api/Setting", null, (object)$"&partitionGlobalId={partitionGlobalId}&userId={userId}");
     }
 
-    // Typed read of a user's identity settings (theme, language, date, ...).
-    // The query must be on the URL (omitting userId makes it a partition-level
-    // read that requires host admin), so embed it in the path.
-    public PmUserSettingDto[]? GetUserSettings(string partitionGlobalId, string userId)
+    // Typed read of a user's identity settings (theme, language, ...). The GET
+    // returns nothing unless explicit key filters are supplied, so the caller
+    // passes the keys to fetch; they go on the URL as repeated key= params
+    // alongside partitionGlobalId and userId (omitting userId makes it a
+    // partition-level read that requires host admin).
+    public PmUserSettingDto[]? GetUserSettings(string partitionGlobalId, string userId, IEnumerable<string> keys)
     {
+        var keyQuery = string.Concat(keys.Select(k => $"key={Uri.EscapeDataString(k)}&"));
         return HttpRequestIdentity<PmUserSettingDto[]>(HttpMethod.Get,
-            $"/api/Setting?partitionGlobalId={partitionGlobalId}&userId={userId}");
+            $"/api/Setting?{keyQuery}partitionGlobalId={partitionGlobalId}&userId={userId}");
     }
 
     // Seems to return an empty array. Hmm.
