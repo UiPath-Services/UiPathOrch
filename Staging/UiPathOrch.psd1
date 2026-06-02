@@ -475,15 +475,25 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.7.1 - Copy-Orch* with -Recurse now mirrors the source folder tree, creating
-missing destination subfolders on demand (plain modern folders, no package
-feed) instead of erroring "... does not exist" and skipping them. The
-destination root must still exist, and folders directly under the tenant root
-are not auto-created — a top-level folder's package-feed setting can't be
-inferred, so create those explicitly. -WhatIf previews each New Folder plus the
-copy into it. Affects Copy-Orch{ActionCatalog, ApiTrigger, Asset, Bucket,
-FolderMachine, FolderUser, Process, Queue, QueueItem, TestDataQueue, TestSet,
-TestSetSchedule, Trigger}.
+1.7.1
+
+- Triggers: New-/Update-OrchTrigger and New-/Update-OrchApiTrigger -MachineRobots
+  now resolve robot accounts and modern folder-bound robots (not just users with
+  a classic Unattended Robot), and match robot/machine/session names exactly
+  rather than as wildcards, so domain\user values round-trip. Get-OrchTrigger /
+  Get-OrchApiTrigger render each binding in the same shape -MachineRobots accepts.
+- Copy-Orch* with -Recurse now mirrors the source folder tree, creating missing
+  destination subfolders on demand (plain modern folders, no package feed)
+  instead of erroring "... does not exist". Folders directly under the tenant
+  root are not auto-created. Affects Copy-Orch{ActionCatalog, ApiTrigger, Asset,
+  Bucket, FolderMachine, FolderUser, Process, Queue, QueueItem, TestDataQueue,
+  TestSet, TestSetSchedule, Trigger}.
+- Add-OrchUser now succeeds against older Orchestrator (e.g. 22.10): it sends the
+  UpdatePolicy the server requires and drops NotificationSubscription fields the
+  server's API version predates.
+- Deprecated: Set-PmRobotAccount's GroupName0..GroupName9 columns, in favour of a
+  single comma-separated GroupName column that Get-PmRobotAccount -ExportCsv now
+  writes. Old CSVs still import, with a one-time deprecation warning.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
