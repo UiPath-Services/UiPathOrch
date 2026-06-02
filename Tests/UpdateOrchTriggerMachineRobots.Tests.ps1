@@ -99,4 +99,42 @@ Describe 'Update-OrchTrigger -MachineRobots robot resolution' {
 
         script:ClearBinding
     }
+
+    It 'round-trips a MachineRobots binding through Get-OrchTrigger -ExportCsv and Import-Csv | Update-OrchTrigger' {
+        if (-not (script:Require)) { return }
+
+        # Bind a robot by its login and capture the resolved RobotId.
+        $mr = (@{ UserName = $script:RobotLogin; MachineName = $script:Machine } | ConvertTo-Json -Compress)
+        Update-OrchTrigger -Path $script:FolderPath -Name $script:Trigger -MachineRobots "[$mr]" -Confirm:$false *>$null
+        $before = @((Get-OrchTriggerDetail -Path $script:FolderPath -Name $script:Trigger).MachineRobots)[0]
+        $before.RobotId | Should -Not -BeNullOrEmpty
+
+        $csv = Join-Path ([IO.Path]::GetTempPath()) "trig_$([guid]::NewGuid().ToString('N')).csv"
+        try {
+            # Export: the MachineRobots column holds the serialized binding — the
+            # robot's resolved, usually domain-qualified, user name (e.g. host\user).
+            Get-OrchTrigger -Path $script:FolderPath -ExportCsv $csv *>$null
+            $row = Import-Csv $csv | Where-Object Name -eq $script:Trigger
+            $row | Should -Not -BeNullOrEmpty
+            $row.MachineRobots | Should -Match 'UserName'
+
+            # Wipe, then re-import the row. Import-Csv | Update-OrchTrigger must
+            # restore the exact binding from the exported domain\user value — this
+            # only works because matching is literal (a wildcard pattern would
+            # treat the backslash as an escape and drop the RobotId).
+            script:ClearBinding
+            @((Get-OrchTriggerDetail -Path $script:FolderPath -Name $script:Trigger).MachineRobots).Count | Should -Be 0
+
+            $reout = $row | Update-OrchTrigger -Confirm:$false *>&1
+            ($reout | Where-Object { "$_" -match 'not configured|does not match' }) | Should -BeNullOrEmpty
+
+            $after = @((Get-OrchTriggerDetail -Path $script:FolderPath -Name $script:Trigger).MachineRobots)[0]
+            $after.RobotId     | Should -Be $before.RobotId
+            $after.MachineName | Should -Be $before.MachineName
+        }
+        finally {
+            Remove-Item $csv -ErrorAction SilentlyContinue
+            script:ClearBinding
+        }
+    }
 }
