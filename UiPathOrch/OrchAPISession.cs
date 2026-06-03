@@ -3444,6 +3444,25 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/api/TestDataQueueActions/BulkAddItems", folderId, payload);
     }
 
+    // Single-item add — the per-item fallback when a BulkAddItems batch is rejected,
+    // so one bad row doesn't lose the whole batch. contentJson is a pre-serialized
+    // JSON object (the item's ContentJson), embedded raw.
+    public void AddTestDataQueueItem(Int64 folderId, string testDataQueueName, string contentJson)
+    {
+        EnsureVersionSupport(14);
+        var payload = $"{{\"queueName\":{JsonSerializer.Serialize(testDataQueueName ?? "")},\"content\":{contentJson}}}";
+        HttpRequest(HttpMethod.Post, "/api/TestDataQueueActions/AddItem", folderId, payload);
+    }
+
+    // Full-replace update of a Test Data Queue (PUT). Used to restore a queue's
+    // original ContentJsonSchema after a migration that temporarily relaxed it.
+    // PATCH is not supported by this OData entity (returns 404); PUT is.
+    public TestDataQueue? UpdateTestDataQueue(Int64 folderId, Int64 testDataQueueId, TestDataQueue testDataQueue)
+    {
+        EnsureVersionSupport(14);
+        return HttpRequest<TestDataQueue>(HttpMethod.Put, $"/odata/TestDataQueues({testDataQueueId})", folderId, testDataQueue);
+    }
+
     public void SetAllTestDataQueueItemsConsumed(Int64 folderId, string testDataQueueName, bool isConsumed)
     {
         EnsureVersionSupport(14);

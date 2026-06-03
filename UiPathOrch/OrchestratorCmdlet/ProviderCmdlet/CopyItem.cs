@@ -1,4 +1,6 @@
 using System.Collections.ObjectModel;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
@@ -3078,6 +3080,28 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
     }
 
+    // Returns the ContentJsonSchema with its top-level "required" array removed, plus a
+    // flag for whether anything changed. Used to temporarily relax a Test Data Queue's
+    // schema during migration so items missing now-required fields are still accepted;
+    // the original schema is restored afterwards. Returns the input unchanged
+    // (changed == false) for empty input, a schema with no "required", or unparseable JSON.
+    private static (string? schema, bool changed) RelaxRequiredSchema(string? contentJsonSchema)
+    {
+        if (string.IsNullOrWhiteSpace(contentJsonSchema)) return (contentJsonSchema, false);
+        try
+        {
+            if (JsonNode.Parse(contentJsonSchema) is JsonObject obj && obj.Remove("required"))
+            {
+                return (obj.ToJsonString(), true);
+            }
+        }
+        catch (JsonException)
+        {
+            // Malformed schema -> leave it as-is; create will surface any real problem.
+        }
+        return (contentJsonSchema, false);
+    }
+
     internal static void CopyTestDataQueueItems(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, TestDataQueue srcTestDataQueue,
         OrchDriveInfo dstDrive, Folder newFolder, string dstTestDataQueueName, bool shouldProcess)
@@ -3099,21 +3123,41 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             return;
         }
 
-        if (items.Count == 0) return;
+        var contents = items
+            .Select(i => i?.ContentJson)
+            .Where(c => !string.IsNullOrEmpty(c))
+            .Select(c => c!)
+            .ToList();
+        if (contents.Count == 0) return;
 
-        string strItems = "[" + string.Join(",", items.Select(i => i.ContentJson)) + "]";
-
-        try
-        {
-            if (shouldProcess || _this.ShouldProcess($"Items: {srcTestDataQueue.GetPSPath()} Destination: {newFolder.GetPSPath()}", "Copy TestDataQueueItem"))
-            {
-                dstDrive.OrchAPISession.AddTestDataQueueItems(newFolder.Id ?? 0, dstTestDataQueueName, strItems);
-            }
-        }
-        catch (Exception ex)
-        {
-            _this.WriteError(new ErrorRecord(new OrchException(newFolder.GetPSPath(), $"CopyTestDataQueueItem: {ex.Message}"), "CopyFolderError", ErrorCategory.InvalidOperation, newFolder));
+        if (!(shouldProcess || _this.ShouldProcess($"Items: {srcTestDataQueue.GetPSPath()} Destination: {newFolder.GetPSPath()}", "Copy TestDataQueueItem")))
             return;
+
+        // Upload in batches; if a batch is rejected (e.g. one malformed row), fall
+        // back to one item at a time so the good rows still land and the bad row is
+        // reported individually instead of failing the whole queue.
+        const int batchSize = 100;
+        long dstFolderId = newFolder.Id ?? 0;
+        foreach (var batch in contents.Chunk(batchSize))
+        {
+            try
+            {
+                dstDrive.OrchAPISession.AddTestDataQueueItems(dstFolderId, dstTestDataQueueName, "[" + string.Join(",", batch) + "]");
+            }
+            catch (Exception)
+            {
+                foreach (var content in batch)
+                {
+                    try
+                    {
+                        dstDrive.OrchAPISession.AddTestDataQueueItem(dstFolderId, dstTestDataQueueName, content);
+                    }
+                    catch (Exception exItem)
+                    {
+                        _this.WriteError(new ErrorRecord(new OrchException(newFolder.GetPSPath(), $"CopyTestDataQueueItem ('{dstTestDataQueueName}'): an item was rejected: {exItem.Message}"), "CopyTestDataQueueItemError", ErrorCategory.InvalidOperation, newFolder));
+                    }
+                }
+            }
         }
     }
 
@@ -3253,16 +3297,38 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 postingTestDataQueue.CreationTime = null;
                 postingTestDataQueue.CreatorUserId = null;
 
+                // Create the queue with the schema's top-level `required` list removed
+                // so items that predate a schema change (and so omit a now-required
+                // field) are still accepted, then restore the original schema after the
+                // items are uploaded. The destination queue ends up identical to the
+                // source — required is enforced for new items, legacy items are intact.
+                string? originalSchema = postingTestDataQueue.ContentJsonSchema;
+                var (relaxedSchema, relaxed) = RelaxRequiredSchema(originalSchema);
+                if (relaxed) postingTestDataQueue.ContentJsonSchema = relaxedSchema;
+
                 try
                 {
-                    dstDrive.OrchAPISession.CreateTestDataQueue(newFolder.Id ?? 0, postingTestDataQueue);
+                    var created = dstDrive.OrchAPISession.CreateTestDataQueue(newFolder.Id ?? 0, postingTestDataQueue);
                     CopyTestDataQueueItems(_this,
                         srcDrive, srcFolder, testDataQueue,
                         dstDrive, newFolder, testDataQueue.Name!, true);
+
+                    if (relaxed && created?.Id is long createdId)
+                    {
+                        try
+                        {
+                            postingTestDataQueue.ContentJsonSchema = originalSchema;
+                            dstDrive.OrchAPISession.UpdateTestDataQueue(newFolder.Id ?? 0, createdId, postingTestDataQueue);
+                        }
+                        catch (Exception exRestore)
+                        {
+                            _this.WriteWarning($"{msg}: items copied, but restoring the original schema (required fields) failed: {exRestore.Message}");
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    _this.WriteError(new ErrorRecord(new OrchException(newFolder.GetPSPath(), msg, ex), "CopyApiTriggerError", ErrorCategory.InvalidOperation, target));
+                    _this.WriteError(new ErrorRecord(new OrchException(newFolder.GetPSPath(), msg, ex), "CopyTestDataQueueError", ErrorCategory.InvalidOperation, target));
                 }
             }
         }

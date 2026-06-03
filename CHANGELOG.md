@@ -49,6 +49,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   doesn't offer and mandatory topics. Self-only: the service uses the token's user, so
   there is no `-UserName`. Automation Cloud only.
 
+### Changed
+
+- **`Copy-OrchTestDataQueue` (and `copy -Recurse` of test data queues) now copies
+  items whose data predates a schema change.** The destination queue is created with
+  its schema's top-level `required` list removed so items that omit a now-required
+  field are accepted, then the original schema is restored once the items are uploaded —
+  the destination ends up identical to the source (required enforced for new items,
+  legacy items intact). Items are also uploaded in batches with a per-item fallback:
+  if a bulk batch is rejected, each item is retried individually so one bad row is
+  reported on its own instead of failing the whole queue (and large queues no longer
+  risk a single over-size request).
+
 ## [1.7.1] - 2026-06-02
 
 ### Changed
