@@ -71,6 +71,7 @@ Use `-CsvEncoding` to specify the encoding.
 | `Get-PmGroup -ExportCsv` | `Import-Csv` → `New-PmGroup` |
 | `Get-PmRobotAccount -ExportCsv` | `Import-Csv` → `Set-PmRobotAccount` (or `New-PmRobotAccount`) |
 | `Get-PmUserPreference -ExportCsv` | `Import-Csv` → `Set-PmUserPreference` |
+| `Get-PmNotificationSubscription -ExportCsv` | `Import-Csv` → `Set-PmNotificationSubscription` |
 | `Get-PmUser -ExportCsv` | `Import-Csv` → `New-PmUser` or `Update-PmUser` |
 | `Get-PmGroupMember -ExportCsv` | `Import-Csv` → `Add-PmGroupMember` |
 | `Get-PmGroupLicense -ExportCsv` | `Import-Csv` → `Add-PmGroupLicense` |

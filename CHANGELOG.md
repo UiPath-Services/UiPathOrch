@@ -38,9 +38,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   via the notification service. `Get-PmNotificationSubscription` lists one row per
   `(topic, mode)` — publisher, topic group, name, `Mode` (`InApp` / `Email`) and
   whether you're subscribed — grouped by publisher; `-Publisher` / `-Mode` filter and
-  `-IncludeHidden` reveals non-visible topics. `Set-PmNotificationSubscription -Topic
-  <name|guid> -Mode <InApp|Email> -Subscribed <bool>` toggles a subscription (topic
-  names are resolved per drive); rows for the same drive are coalesced into one
+  `-IncludeHidden` reveals non-visible topics. `Get-PmNotificationSubscription -ExportCsv`
+  writes `Path,Publisher,Group,Topic,DisplayName,Mode,IsSubscribed`, which round-trips
+  through `Import-Csv | Set-PmNotificationSubscription`. `Set-PmNotificationSubscription
+  -Topic <name|guid> -Mode <InApp|Email> -Subscribed <true|false>` toggles a subscription
+  (topic names are resolved per drive); rows for the same drive are coalesced into one
   request, so `Get-… | … | Set-…` round-trips. Self-only: the service uses the token's
   user, so there is no `-UserName`. Automation Cloud only.
 

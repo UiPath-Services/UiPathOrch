@@ -21,7 +21,8 @@ Reads your own notification subscriptions (which events notify you, by mode).
 
 ```
 Get-PmNotificationSubscription [[-Publisher] <string[]>] [[-Mode] <string[]>]
- [-Path <string[]>] [-IncludeHidden] [<CommonParameters>]
+ [-Path <string[]>] [-IncludeHidden] [-ExportCsv <string>] [-CsvEncoding <Encoding>]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -53,6 +54,16 @@ Lists the `Apps` publisher's topics that have an Email delivery mode.
 ```powershell
 PS Orch1:\> Get-PmNotificationSubscription | Where-Object { -not $_.IsSubscribed }
 ```
+
+### Example 4: Export to CSV, edit, and re-apply
+
+```powershell
+PS Orch1:\> Get-PmNotificationSubscription -ExportCsv C:\temp\notif.csv
+# edit the IsSubscribed column in C:\temp\notif.csv, then:
+PS Orch1:\> Import-Csv C:\temp\notif.csv | Set-PmNotificationSubscription
+```
+
+Exports the subscriptions and re-applies the (edited) `IsSubscribed` values. The CSV stores `true`/`false` as text, which `Set-PmNotificationSubscription` parses back.
 
 ## PARAMETERS
 
@@ -125,6 +136,48 @@ Include topics the portal marks as not visible. By default only visible topics a
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ExportCsv
+
+Writes the results to the given CSV file (columns `Path,Publisher,Group,Topic,DisplayName,Mode,IsSubscribed`) instead of to the pipeline, in a form `Import-Csv | Set-PmNotificationSubscription` accepts. `Path`, `Topic`, `Mode` and `IsSubscribed` are the columns `Set-PmNotificationSubscription` binds; the rest are context for editing.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -CsvEncoding
+
+The text encoding for the `-ExportCsv` file (e.g. `utf8`, `utf8BOM`, `unicode`). Defaults to the module's standard CSV encoding.
+
+```yaml
+Type: System.Text.Encoding
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []

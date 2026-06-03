@@ -1,4 +1,5 @@
 using System.Management.Automation;
+using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -7,7 +8,8 @@ namespace UiPath.PowerShell.Commands;
 
 // Reads the connected user's notification subscriptions, flattened to one row per
 // (topic, mode). Self-only: the notification service uses the token's user, so there
-// is no -UserName. Output groups by publisher in the default view.
+// is no -UserName. Output groups by publisher in the default view. -ExportCsv writes a
+// file that round-trips through Import-Csv | Set-PmNotificationSubscription.
 [Cmdlet(VerbsCommon.Get, "PmNotificationSubscription")]
 [OutputType(typeof(PmNotificationSubscription))]
 public class GetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
@@ -28,6 +30,19 @@ public class GetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter IncludeHidden { get; set; }
 
+    [Parameter]
+    public string? ExportCsv { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(EncodingCompleter))]
+    [EncodingArgumentTransformation]
+    public Encoding? CsvEncoding { get; set; }
+
+    private static readonly string DefaultCsvName = "ExportedPmNotificationSubscriptions.csv";
+    // Path/Topic/Mode/IsSubscribed are what Set-PmNotificationSubscription binds; the
+    // rest are context columns to make the file readable when edited (Set ignores them).
+    private static readonly string[] CsvHeaders = ["Path", "Publisher", "Group", "Topic", "DisplayName", "Mode", "IsSubscribed"];
+
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(Path);
@@ -35,6 +50,9 @@ public class GetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
         var modeFilter = (Mode is { Length: > 0 })
             ? new HashSet<string>(Mode, StringComparer.OrdinalIgnoreCase)
             : null;
+
+        var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+        using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
@@ -77,23 +95,43 @@ public class GetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
                     {
                         if (modeFilter is not null && (m?.name is null || !modeFilter.Contains(m.name))) continue;
 
-                        WriteObject(new PmNotificationSubscription
+                        if (writer is not null)
                         {
-                            Path = drive.NameColonSeparator,
-                            PathPublisher = drive.NameColonSeparator + (pub.displayName ?? pub.name),
-                            Publisher = pub.displayName ?? pub.name,
-                            Group = topic.group,
-                            Topic = topic.name,
-                            DisplayName = topic.displayName,
-                            Category = topic.category,
-                            Mode = m!.name,
-                            IsSubscribed = m.isSubscribed,
-                            IsMandatory = topic.isMandatory,
-                            TopicId = topic.id,
-                        });
+                            writer.WriteCsvLine([
+                                EscapeCsvValue(drive.NameColonSeparator, true),
+                                EscapeCsvValue(pub.displayName ?? pub.name),
+                                EscapeCsvValue(topic.group),
+                                EscapeCsvValue(topic.name),
+                                EscapeCsvValue(topic.displayName),
+                                EscapeCsvValue(m!.name),
+                                EscapeCsvValue(m.isSubscribed?.ToString()),
+                            ]);
+                        }
+                        else
+                        {
+                            WriteObject(new PmNotificationSubscription
+                            {
+                                Path = drive.NameColonSeparator,
+                                PathPublisher = drive.NameColonSeparator + (pub.displayName ?? pub.name),
+                                Publisher = pub.displayName ?? pub.name,
+                                Group = topic.group,
+                                Topic = topic.name,
+                                DisplayName = topic.displayName,
+                                Category = topic.category,
+                                Mode = m!.name,
+                                IsSubscribed = m.isSubscribed,
+                                IsMandatory = topic.isMandatory,
+                                TopicId = topic.id,
+                            });
+                        }
                     }
                 }
             }
+        }
+
+        if (writer is not null)
+        {
+            WriteCSVExportedMessage(this, providerCsvPath);
         }
     }
 }
