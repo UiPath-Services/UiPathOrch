@@ -13,6 +13,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   named; it now walks the whole source tree and prints one line per folder, each naming
   where that folder would be copied (e.g. `Item: 'Orch1:\A\Sub' Destination:
   'Orch1:\Shared\A'`). The actual copy and a declined `-Confirm` are unaffected.
+- **A root-to-root `copy` reports tenant-entity counts and warns when folders are skipped.**
+  `copy Source:\ Destination:\` now shows how many of each tenant-level entity would be
+  copied — e.g. `Copy Library` on `Item: 'Source:\* (43)'` instead of a bare `*` — visible
+  under `-WhatIf` / `-Confirm`. And because a root copy without `-Recurse` copies no folders,
+  it now warns (`Copying tenant-level entities only. N folder(s) and their entities are not
+  copied without -Recurse.`) so the omission isn't mistaken for an empty tenant.
 
 ### Fixed
 

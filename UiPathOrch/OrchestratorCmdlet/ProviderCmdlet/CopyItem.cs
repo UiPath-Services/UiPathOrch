@@ -3778,9 +3778,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
     private bool ShouldCopyTenantEntities<T>(string kind, OrchDriveInfo srcDrive, IEnumerable<T>? srcEntities, OrchDriveInfo dstDrive)
     {
-        if (srcEntities?.Any() ?? false)
+        // Include the source count so the -WhatIf / -Confirm line shows how many of each
+        // kind would be copied (e.g. "Item: 'Orch1:\* (5)'") without enumerating every
+        // name — magnitude at a glance while keeping the per-type overview to one line.
+        int count = srcEntities?.Count() ?? 0;
+        if (count > 0)
         {
-            return ShouldProcess($"Item: '{srcDrive.NameColonSeparator}*' Destination: '{dstDrive.NameColonSeparator}'", $"Copy {kind}");
+            return ShouldProcess($"Item: '{srcDrive.NameColonSeparator}* ({count})' Destination: '{dstDrive.NameColonSeparator}'", $"Copy {kind}");
         }
         return false;
     }
@@ -3890,6 +3894,19 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 foreach (var folderToBeCopied in foldersToBeCopied)
                 {
                     isDirty = CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true, cancelHandler.Token, userMapping);
+                }
+            }
+            else if (!ExcludeEntities)
+            {
+                // A root-to-root copy without -Recurse copies the tenant-level entities
+                // above but no folders. Warn (in both real and -WhatIf runs) so the
+                // missing folders aren't mistaken for an empty tenant — -Recurse would
+                // also copy every folder and its entities. Personal workspaces are
+                // excluded from the count since they are never copied by -Recurse anyway.
+                int skipped = srcDrive.GetFolders().Count(f => f != srcDrive.RootFolder && f.FolderType != "Personal");
+                if (skipped > 0)
+                {
+                    WriteWarning($"Copying tenant-level entities only. {skipped} folder(s) and their entities are not copied without -Recurse.");
                 }
             }
             if (isDirty)
