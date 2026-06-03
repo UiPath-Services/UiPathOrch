@@ -302,6 +302,57 @@ an unedited export changes nothing.
 > To **remove** a user's licenses from a CSV instead, pipe the same shape
 > into `Remove-PmUserLicense`.
 
+### Portal Preferences
+
+`Get-PmUserPreference -ExportCsv` exports your own portal preferences (theme,
+language, favorites, ...) with `Path` / `Key` / `Value` columns, and
+`Set-PmUserPreference` imports them — so you can snapshot, edit, and reapply
+them:
+
+```powershell
+Get-PmUserPreference -ExportCsv C:\temp\prefs.csv
+# edit the Value column
+Import-Csv C:\temp\prefs.csv | Set-PmUserPreference
+```
+
+The cmdlets act on the connected user only (there is no `-UserName`), and rows
+for the same drive fold into a single request. `Copy-PmUserPreference` migrates
+the same preferences to yourself in another organization without a CSV. Note
+that a value written this way is stored correctly, but an already-signed-in
+browser keeps rendering the previous theme/language until you re-sign-in or
+clear the site's local storage (see [Troubleshooting](05-Troubleshooting.md)).
+
+### Notification Subscriptions
+
+`Get-PmNotificationSubscription -ExportCsv` exports your own notification
+subscriptions — one row per `(topic, mode)` — with
+`Path` / `Publisher` / `Group` / `Topic` / `DisplayName` / `Mode` / `IsSubscribed`
+columns, and `Set-PmNotificationSubscription` imports them, so you can snapshot
+your notification choices, flip the ones you want, and reapply:
+
+```powershell
+Get-PmNotificationSubscription -ExportCsv C:\temp\notif.csv
+# edit the IsSubscribed column (true / false)
+Import-Csv C:\temp\notif.csv | Set-PmNotificationSubscription
+```
+
+`Set-PmNotificationSubscription` binds `Path`, `Topic`, `Mode` and `IsSubscribed`;
+`Publisher` / `Group` / `DisplayName` are context columns that make the file
+readable and are ignored on import. Rows for the same drive fold into one
+request, and topics are matched by name. Mandatory topics are read-only — the
+service rejects a row that flips one off.
+
+`IsSubscribed` is stored as the text `true` / `false`, which the cmdlet parses
+back. This is also *why* `-Subscribed` is a `[string]` parameter rather than a
+`[bool]`: `Import-Csv` produces only strings, and a PowerShell `[bool]` / `[bool?]`
+parameter rejects string values (it binds `$true` / `$false` / `1` / `0`, not
+`"true"` / `"false"`), so a boolean-typed parameter could not round-trip through
+CSV at all. The same applies to the other `true`/`false` columns elsewhere in
+this guide.
+
+`Copy-PmNotificationSubscription` migrates the same choices to yourself in
+another organization directly (no CSV needed).
+
 ### Creating Folders in Bulk via CSV
 
 1. Export the folder structure from the source tenant:
