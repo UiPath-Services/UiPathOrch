@@ -3536,7 +3536,17 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         string target = $"Item: '{srcFolder.GetPSPath()}' Destination: '{dstFolder.GetPSPath()}'";
 
-        if (ShouldProcess(target, "Copy Folder"))
+        // Use the reason-returning overload so that under -WhatIf we can still descend
+        // into subfolders below (each emits its own "Copy Folder" line) while a declined
+        // -Confirm (reason != WhatIf) stops here. The two strings reproduce the output of
+        // ShouldProcess(target, "Copy Folder") verbatim — the -WhatIf line is identical.
+        bool proceed = ShouldProcess(
+            $"Performing the operation \"Copy Folder\" on target \"{target}\".",
+            $"Are you sure you want to perform this action?\nPerforming the operation \"Copy Folder\" on target \"{target}\".",
+            "Confirm",
+            out ShouldProcessReason shouldProcessReason);
+
+        if (proceed)
         {
             // totalNum: folder itself, users, machines, packages, processes, assets, 
             // queues, triggers, API triggers, buckets, testsets, testschedules, testdataqueues
@@ -3734,6 +3744,29 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             }
 
             return true;
+        }
+
+        // -WhatIf only: the destination folder is not actually created, so we recurse
+        // with a "would-be" folder whose PSPath is "<dstFolder>\<srcName>" — that's where
+        // this folder's copy would land — so every subfolder still emits its own
+        // "Copy Folder" -WhatIf line. A declined -Confirm (reason != WhatIf) stops here.
+        if (shouldProcessReason == ShouldProcessReason.WhatIf && recurse)
+        {
+            Folder wouldBeNewFolder = destinationWorkspace ?? new Folder
+            {
+                Path = dstFolder.GetPSPath(),
+                DisplayName = srcFolder.DisplayName,
+                FolderType = srcFolder.FolderType,
+                ParentId = dstFolder.Id,
+            };
+            if (wouldBeNewFolder.FolderType != "Personal")
+            {
+                foreach (var subfolder in GetDirectChildFolders(srcDrive.GetFolders(), srcFolder))
+                {
+                    CopyItemRecurse(srcDrive, subfolder, dstDrive, wouldBeNewFolder, true, cancelToken, userMapping);
+                    cancelToken.ThrowIfCancellationRequested();
+                }
+            }
         }
         return false;
     }

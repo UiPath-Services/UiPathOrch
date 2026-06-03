@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **`Copy-Item -Recurse -WhatIf` now previews every subfolder, not just the top one.**
+  A recursive `-WhatIf` used to print a single `Copy Folder` line for the folder you
+  named; it now walks the whole source tree and prints one line per folder, each naming
+  where that folder would be copied (e.g. `Item: 'Orch1:\A\Sub' Destination:
+  'Orch1:\Shared\A'`). The actual copy and a declined `-Confirm` are unaffected.
+
 ### Fixed
 
 - **`Copy-Item -WhatIf` / `-Confirm` now names the destination when copying a bucket.**
