@@ -96,9 +96,21 @@ Get-Help Get-OrchAsset -Online
 
 ## Documentation
 
-- **Manual:** Run `Get-OrchHelp` or browse the `Docs` folder in the module directory
+Guides (also published, searchable, at [uipath-services.github.io/UiPathOrch](https://uipath-services.github.io/UiPathOrch)):
+
+- [Getting Started](docs/00-GettingStarted.md) — install, OAuth setup, first connection
+- [Essential Guide for AI](docs/01-Essentials.md) — execution rules, decision flow, error protocol
+- [Cmdlet Reference](docs/02-CmdletReference.md) — cmdlets by area, with examples
+- [CSV Export & Import](docs/03-CsvExportImport.md) — bulk import / export patterns
+- [Migration & Copy Guide](docs/04-MigrationGuide.md) — lift-and-shift between tenants
+- [Other Providers (DU & Test Manager)](docs/05-OtherProvidersGuide.md) — the Document Understanding and Test Manager drives
+- [Troubleshooting](docs/90-Troubleshooting.md) — verbose logging, raw API access via `Invoke-OrchApi`
+- [Contributing](docs/99-ContributingGuide.md) — bug reporting, building from source
+
+Also:
+
+- **Inline help:** `Get-Help <cmdlet-name>` for OAuth scopes and usage; `Get-OrchHelp` for a summary (the same guides ship in the module's `Docs` folder)
 - **Marketplace:** [UiPathOrch on UiPath Marketplace](https://marketplace.uipath.com/listings/uipathorch)
-- **Cmdlet Help:** Use `Get-Help <cmdlet-name>` to view OAuth scopes and usage details
 
 ## AI Agent Integration
 
