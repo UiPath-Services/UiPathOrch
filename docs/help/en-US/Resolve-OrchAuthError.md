@@ -75,6 +75,8 @@ When a sign-in fails, the thrown error message points here. Pasting the browser 
 The full browser URL from the failed sign-in — the address bar of the tab UiPath Identity left open.
 Accepts one or more URLs and pipeline input.
 
+**Wrap the URL in single quotes.** These URLs contain `&` (and sometimes `$`), which PowerShell would otherwise treat as an operator / a variable, so an unquoted URL fails to parse or is silently truncated at the first `&`. Single quotes pass it through literally; double quotes are not enough, because they still expand `$`.
+
 ```yaml
 Type: System.String[]
 DefaultValue: None
