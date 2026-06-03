@@ -7,26 +7,27 @@ using Xunit;
 namespace UnitTests;
 
 // Pins the batch-failure classification shared by Import-OrchTestDataQueueItem
-// and Copy-OrchTestDataQueue: only a 400 Bad Request (a per-row data / schema
-// problem) is worth retrying one item at a time. Every other failure rejects
-// all rows the same way, so it must NOT trigger the per-item fallback (the
-// caller surfaces one error and stops instead).
+// and Copy-OrchTestDataQueue: only a 409 Conflict (the content-JSON-schema
+// validation failure Orchestrator returns for a per-row data problem, errorCode
+// 3219 — verified live) is worth retrying one item at a time. Every other
+// failure rejects all rows the same way, so it must NOT trigger the per-item
+// fallback (the caller surfaces one error and stops instead).
 public class TestDataQueueUploadPolicyTests
 {
     private static HttpResponseException Http(HttpStatusCode code) =>
         new("err", new HttpResponseMessage(code));
 
     [Fact]
-    public void BadRequest_triggers_per_item_fallback()
+    public void Conflict_triggers_per_item_fallback()
     {
-        Assert.True(TestDataQueueUploadPolicy.IsPerRowDataError(Http(HttpStatusCode.BadRequest)));
+        Assert.True(TestDataQueueUploadPolicy.IsPerRowDataError(Http(HttpStatusCode.Conflict)));
     }
 
     [Theory]
+    [InlineData(HttpStatusCode.BadRequest)]        // 400 — malformed request, recurs identically
     [InlineData(HttpStatusCode.Unauthorized)]      // 401 — token won't auto-recover
     [InlineData(HttpStatusCode.Forbidden)]         // 403 — permission won't auto-grant
     [InlineData(HttpStatusCode.NotFound)]          // 404 — the queue is gone
-    [InlineData(HttpStatusCode.Conflict)]          // 409 — not per-row here
     [InlineData(HttpStatusCode.TooManyRequests)]   // 429 — throttling, transient
     [InlineData(HttpStatusCode.InternalServerError)] // 500
     [InlineData(HttpStatusCode.ServiceUnavailable)]  // 503

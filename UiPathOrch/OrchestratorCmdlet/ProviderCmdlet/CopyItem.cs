@@ -3133,12 +3133,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         if (!(shouldProcess || _this.ShouldProcess($"Items: {srcTestDataQueue.GetPSPath()} Destination: {newFolder.GetPSPath()}", "Copy TestDataQueueItem")))
             return;
 
-        // Upload in batches. A batch rejected with 400 means one or more rows are
-        // individually invalid, so fall back to one item at a time: the good rows
-        // still land and only the bad rows are reported. Any other failure (auth /
-        // not-found / transient) would reject every remaining row the same way, so
-        // report it once and stop instead of flooding the caller. Same strategy as
-        // Import-OrchTestDataQueueItem.
+        // Upload in batches. A batch rejected for a content-schema violation (409)
+        // means one or more rows are individually invalid, so fall back to one item
+        // at a time: the good rows still land and only the bad rows are reported. Any
+        // other failure (auth / not-found / transient) would reject every remaining
+        // row the same way, so report it once and stop instead of flooding the caller.
+        // Same strategy as Import-OrchTestDataQueueItem.
         const int batchSize = 100;
         long dstFolderId = newFolder.Id ?? 0;
         foreach (var batch in contents.Chunk(batchSize))

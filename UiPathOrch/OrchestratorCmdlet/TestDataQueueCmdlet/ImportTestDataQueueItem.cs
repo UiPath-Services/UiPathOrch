@@ -193,14 +193,14 @@ public class ImportTestDataQueueItemCmdlet : OrchestratorPSCmdlet
                         string target = queue.GetPSPath();
                         if (ShouldProcess(target, $"Import {rows.Count} item(s) from {csvPath}"))
                         {
-                            // Upload in batches. A batch rejected with 400 means one
-                            // or more rows are individually invalid, so fall back to
-                            // one item at a time: the good rows still land and only
-                            // the bad rows are reported. Any other failure (auth /
-                            // not-found / transient) would reject every remaining row
-                            // the same way, so report it once and stop importing this
-                            // file rather than flooding the caller. Same strategy as
-                            // Copy-OrchTestDataQueue's item copy.
+                            // Upload in batches. A batch rejected for a content-schema
+                            // violation (409) means one or more rows are individually
+                            // invalid, so fall back to one item at a time: the good
+                            // rows still land and only the bad rows are reported. Any
+                            // other failure (auth / not-found / transient) would reject
+                            // every remaining row the same way, so report it once and
+                            // stop importing this file rather than flooding the caller.
+                            // Same strategy as Copy-OrchTestDataQueue's item copy.
                             const int batchSize = 100;
                             long folderId = folder.Id ?? 0;
                             string queueName = queue.Name ?? "";
