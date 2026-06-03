@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.7.1'
+ModuleVersion = '1.7.2'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -483,25 +483,22 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.7.1
+1.7.2
 
-- Triggers: New-/Update-OrchTrigger and New-/Update-OrchApiTrigger -MachineRobots
-  now resolve robot accounts and modern folder-bound robots (not just users with
-  a classic Unattended Robot), and match robot/machine/session names exactly
-  rather than as wildcards, so domain\user values round-trip. Get-OrchTrigger /
-  Get-OrchApiTrigger render each binding in the same shape -MachineRobots accepts.
-- Copy-Orch* with -Recurse now mirrors the source folder tree, creating missing
-  destination subfolders on demand (plain modern folders, no package feed)
-  instead of erroring "... does not exist". Folders directly under the tenant
-  root are not auto-created. Affects Copy-Orch{ActionCatalog, ApiTrigger, Asset,
-  Bucket, FolderMachine, FolderUser, Process, Queue, QueueItem, TestDataQueue,
-  TestSet, TestSetSchedule, Trigger}.
-- Add-OrchUser now succeeds against older Orchestrator (e.g. 22.10): it sends the
-  UpdatePolicy the server requires and drops NotificationSubscription fields the
-  server's API version predates.
-- Deprecated: Set-PmRobotAccount's GroupName0..GroupName9 columns, in favour of a
-  single comma-separated GroupName column that Get-PmRobotAccount -ExportCsv now
-  writes. Old CSVs still import, with a one-time deprecation warning.
+- New: New-PmRobotAccount — creates a robot account, erroring if one with the
+  name already exists (strict-create counterpart of Set-PmRobotAccount).
+- New: Get-/Set-/Copy-PmUserPreference — read, write and migrate your own
+  organization-level portal preferences (theme, language, ...) as -Key/-Value
+  pairs via the identity Setting API. Self-only; CSV round-trips; needs a
+  non-confidential app or PAT; Automation Cloud.
+- New: Get-/Set-/Copy-PmNotificationSubscription — read, change and migrate your
+  own notification subscriptions (which events notify you, and by which delivery
+  mode). Self-only; CSV round-trips; Automation Cloud.
+- Changed: Copy-OrchTestDataQueue now copies items whose data predates a schema
+  change (it relaxes the schema's required list for the upload, then restores it)
+  and uploads items in batches with a per-item fallback when a batch is rejected
+  for a content-schema violation (409). Import-OrchTestDataQueueItem uses the same
+  batched, per-item-fallback upload.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
