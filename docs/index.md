@@ -27,6 +27,7 @@ Get-OrchHelp
 - [Cmdlet Reference]({{ '/help/' | relative_url }}) — search 262 cmdlets, jump to any cmdlet's page
 - [CSV Export & Import](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/03-CsvExportImport.md) — bulk import / export patterns
 - [Migration & Copy Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/04-MigrationGuide.md) — lift-and-shift between tenants
+- [Other Providers (DU & Test Manager)](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/07-OtherProvidersGuide.md) — the Document Understanding and Test Manager drives
 
 ## For AI Agents
 
