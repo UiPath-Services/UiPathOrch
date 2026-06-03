@@ -12,8 +12,10 @@ namespace UiPath.PowerShell.Commands;
 // the header row holds the queue's ContentJsonSchema property names and each
 // subsequent row is one item. Each cell is coerced to the JSON type the
 // schema declares (integer / number / boolean -> JSON literal; everything
-// else -> string), then all rows are POSTed in a single bulk call per queue
-// (/api/TestDataQueueActions/BulkAddItems).
+// else -> string), then the rows are POSTed in batches per queue
+// (/api/TestDataQueueActions/BulkAddItems). If a batch is rejected (e.g. one
+// malformed row) it falls back to one item at a time so the good rows still
+// land and only the bad row is reported -- same as Copy-OrchTestDataQueue.
 //
 // Counterpart of Import-OrchQueueItem (file -> bulk add). It shares the
 // multi-line, quote-aware CSV reader (CsvHelper.MultilineCsv) with
@@ -191,17 +193,40 @@ public class ImportTestDataQueueItemCmdlet : OrchestratorPSCmdlet
                         string target = queue.GetPSPath();
                         if (ShouldProcess(target, $"Import {rows.Count} item(s) from {csvPath}"))
                         {
-                            try
+                            // Upload in batches; if a batch is rejected (e.g. one
+                            // malformed row) fall back to one item at a time so the
+                            // good rows still land and the bad row is reported
+                            // individually instead of failing the whole file. Same
+                            // strategy as Copy-OrchTestDataQueue's item copy.
+                            const int batchSize = 100;
+                            long folderId = folder.Id ?? 0;
+                            string queueName = queue.Name ?? "";
+                            int added = 0;
+                            foreach (var batch in rows.Chunk(batchSize))
                             {
-                                var itemJsonArray = BuildItemsArrayJson(headers, rows, schemaTypes);
-                                drive.OrchAPISession.AddTestDataQueueItems(folder.Id ?? 0, queue.Name ?? "", itemJsonArray);
-                                drive.TestDataQueueItems.ClearCache(folder);
-                                WriteVerbose($"Added {rows.Count} item(s) to {target} from {csvPath}.");
+                                try
+                                {
+                                    drive.OrchAPISession.AddTestDataQueueItems(folderId, queueName, BuildItemsArrayJson(headers, batch, schemaTypes));
+                                    added += batch.Length;
+                                }
+                                catch (Exception)
+                                {
+                                    foreach (var row in batch)
+                                    {
+                                        try
+                                        {
+                                            drive.OrchAPISession.AddTestDataQueueItem(folderId, queueName, BuildItemJson(headers, row, schemaTypes));
+                                            added++;
+                                        }
+                                        catch (Exception exItem)
+                                        {
+                                            WriteError(new ErrorRecord(new OrchException(target, $"Import-OrchTestDataQueueItem: an item from {csvPath} was rejected: {exItem.Message}"), "ImportTestDataQueueItemError", ErrorCategory.InvalidOperation, queue));
+                                        }
+                                    }
+                                }
                             }
-                            catch (Exception ex)
-                            {
-                                WriteError(new ErrorRecord(new OrchException(target, ex), "ImportTestDataQueueItemError", ErrorCategory.InvalidOperation, queue));
-                            }
+                            if (added > 0) drive.TestDataQueueItems.ClearCache(folder);
+                            WriteVerbose($"Added {added} item(s) to {target} from {csvPath}.");
                         }
                     }
                 }

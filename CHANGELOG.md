@@ -60,6 +60,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   if a bulk batch is rejected, each item is retried individually so one bad row is
   reported on its own instead of failing the whole queue (and large queues no longer
   risk a single over-size request).
+- **`Import-OrchTestDataQueueItem` now uploads in batches with a per-item fallback.**
+  Previously every row was POSTed in a single bulk call, so one malformed row failed
+  the whole file; now a rejected batch is retried one item at a time, the good rows
+  still land, and only the bad rows are reported individually (same strategy as
+  `Copy-OrchTestDataQueue`).
 - **The browser sign-in ("Connected") page lists the Document Understanding / Test
   Manager drives too.** When `Import-OrchConfig` mounts the `…Du:` / `…Tm:` shadow
   drives alongside an Orchestrator drive (i.e. when the drive's scope includes Du. /
