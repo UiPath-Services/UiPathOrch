@@ -193,11 +193,14 @@ public class ImportTestDataQueueItemCmdlet : OrchestratorPSCmdlet
                         string target = queue.GetPSPath();
                         if (ShouldProcess(target, $"Import {rows.Count} item(s) from {csvPath}"))
                         {
-                            // Upload in batches; if a batch is rejected (e.g. one
-                            // malformed row) fall back to one item at a time so the
-                            // good rows still land and the bad row is reported
-                            // individually instead of failing the whole file. Same
-                            // strategy as Copy-OrchTestDataQueue's item copy.
+                            // Upload in batches. A batch rejected with 400 means one
+                            // or more rows are individually invalid, so fall back to
+                            // one item at a time: the good rows still land and only
+                            // the bad rows are reported. Any other failure (auth /
+                            // not-found / transient) would reject every remaining row
+                            // the same way, so report it once and stop importing this
+                            // file rather than flooding the caller. Same strategy as
+                            // Copy-OrchTestDataQueue's item copy.
                             const int batchSize = 100;
                             long folderId = folder.Id ?? 0;
                             string queueName = queue.Name ?? "";
@@ -209,7 +212,7 @@ public class ImportTestDataQueueItemCmdlet : OrchestratorPSCmdlet
                                     drive.OrchAPISession.AddTestDataQueueItems(folderId, queueName, BuildItemsArrayJson(headers, batch, schemaTypes));
                                     added += batch.Length;
                                 }
-                                catch (Exception)
+                                catch (Exception exBatch) when (TestDataQueueUploadPolicy.IsPerRowDataError(exBatch))
                                 {
                                     foreach (var row in batch)
                                     {
@@ -223,6 +226,11 @@ public class ImportTestDataQueueItemCmdlet : OrchestratorPSCmdlet
                                             WriteError(new ErrorRecord(new OrchException(target, $"Import-OrchTestDataQueueItem: an item from {csvPath} was rejected: {exItem.Message}"), "ImportTestDataQueueItemError", ErrorCategory.InvalidOperation, queue));
                                         }
                                     }
+                                }
+                                catch (Exception exBatch)
+                                {
+                                    WriteError(new ErrorRecord(new OrchException(target, $"Import-OrchTestDataQueueItem: upload from {csvPath} failed after {added} item(s); the remaining rows were not imported: {exBatch.Message}"), "ImportTestDataQueueItemError", ErrorCategory.InvalidOperation, queue));
+                                    break;
                                 }
                             }
                             if (added > 0) drive.TestDataQueueItems.ClearCache(folder);

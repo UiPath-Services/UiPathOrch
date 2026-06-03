@@ -3133,9 +3133,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         if (!(shouldProcess || _this.ShouldProcess($"Items: {srcTestDataQueue.GetPSPath()} Destination: {newFolder.GetPSPath()}", "Copy TestDataQueueItem")))
             return;
 
-        // Upload in batches; if a batch is rejected (e.g. one malformed row), fall
-        // back to one item at a time so the good rows still land and the bad row is
-        // reported individually instead of failing the whole queue.
+        // Upload in batches. A batch rejected with 400 means one or more rows are
+        // individually invalid, so fall back to one item at a time: the good rows
+        // still land and only the bad rows are reported. Any other failure (auth /
+        // not-found / transient) would reject every remaining row the same way, so
+        // report it once and stop instead of flooding the caller. Same strategy as
+        // Import-OrchTestDataQueueItem.
         const int batchSize = 100;
         long dstFolderId = newFolder.Id ?? 0;
         foreach (var batch in contents.Chunk(batchSize))
@@ -3144,7 +3147,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             {
                 dstDrive.OrchAPISession.AddTestDataQueueItems(dstFolderId, dstTestDataQueueName, "[" + string.Join(",", batch) + "]");
             }
-            catch (Exception)
+            catch (Exception exBatch) when (TestDataQueueUploadPolicy.IsPerRowDataError(exBatch))
             {
                 foreach (var content in batch)
                 {
@@ -3157,6 +3160,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         _this.WriteError(new ErrorRecord(new OrchException(newFolder.GetPSPath(), $"CopyTestDataQueueItem ('{dstTestDataQueueName}'): an item was rejected: {exItem.Message}"), "CopyTestDataQueueItemError", ErrorCategory.InvalidOperation, newFolder));
                     }
                 }
+            }
+            catch (Exception exBatch)
+            {
+                _this.WriteError(new ErrorRecord(new OrchException(newFolder.GetPSPath(), $"CopyTestDataQueueItem ('{dstTestDataQueueName}'): upload failed; the remaining items were not copied: {exBatch.Message}"), "CopyTestDataQueueItemError", ErrorCategory.InvalidOperation, newFolder));
+                break;
             }
         }
     }
