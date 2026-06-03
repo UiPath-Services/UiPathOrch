@@ -40,6 +40,10 @@ internal class PmNotificationPublisherCompleter : OrchArgumentCompleter
     {
         var drives = ResolvePmDrives(fakeBoundParameters);
         var wp = CreateWPFromWordToComplete(wordToComplete);
+        // Already-entered comma-separated values are not suggested again.
+        var entered = new HashSet<string>(
+            GetSelfExclusionValues(commandAst, parameterName, wordToComplete),
+            StringComparer.OrdinalIgnoreCase);
 
         var results = ParallelResults.GroupBy(drives, drive =>
         {
@@ -64,7 +68,7 @@ internal class PmNotificationPublisherCompleter : OrchArgumentCompleter
                 .OrderBy(p => p!.displayName ?? p.name))
             {
                 var name = pub!.displayName ?? pub.name;
-                if (string.IsNullOrEmpty(name) || !wp.IsMatch(name) || !seen.Add(name)) continue;
+                if (string.IsNullOrEmpty(name) || !wp.IsMatch(name) || entered.Contains(name) || !seen.Add(name)) continue;
                 yield return new CompletionResult(PathTools.EscapePSText(name), name, CompletionResultType.ParameterValue, name);
             }
         }
