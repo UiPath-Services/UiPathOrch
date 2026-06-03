@@ -35,7 +35,7 @@ UiPathOrch ships with documentation written for AI agents that automate Orchestr
 
 - [Essential Guide for AI](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/01-Essentials.md) — execution rules, decision flow, error protocol
 - [Troubleshooting Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/05-Troubleshooting.md) — verbose logging, raw API access via Invoke-OrchApi
-- [Contributing Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/07-ContributingGuide.md) — bug reporting, building from source
+- [Contributing Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/99-ContributingGuide.md) — bug reporting, building from source
 
 ## Need Help?
 
