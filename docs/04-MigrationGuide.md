@@ -323,6 +323,14 @@ copy -Recurse Source:\ Destination:\
 
 This alone completes most of the migration work.
 
+> **`-Recurse` is what pulls in the folders.** On a root-to-root copy,
+> `copy Source:\ Destination:\` **without** `-Recurse` copies only the tenant-level
+> entities listed above (libraries, packages, credential stores, roles, users, machines,
+> calendars, webhooks). The folders themselves and their folder-level entities (assets,
+> queues, processes, triggers, buckets, test sets, test data queues, action catalogs,
+> etc.) are **not** copied. Add `-Recurse` — as the command above does — to also copy
+> every folder and its contents.
+
 #### Post-Processing for Entities Containing Passwords
 
 Since the Web API cannot retrieve passwords, entities containing passwords
