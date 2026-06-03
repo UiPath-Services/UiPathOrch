@@ -27,14 +27,14 @@ Get-OrchHelp
 - [Cmdlet Reference]({{ '/help/' | relative_url }}) — search 262 cmdlets, jump to any cmdlet's page
 - [CSV Export & Import](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/03-CsvExportImport.md) — bulk import / export patterns
 - [Migration & Copy Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/04-MigrationGuide.md) — lift-and-shift between tenants
-- [Other Providers (DU & Test Manager)](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/06-OtherProvidersGuide.md) — the Document Understanding and Test Manager drives
+- [Other Providers (DU & Test Manager)](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/05-OtherProvidersGuide.md) — the Document Understanding and Test Manager drives
 
 ## For AI Agents
 
 UiPathOrch ships with documentation written for AI agents that automate Orchestrator operations on the user's behalf.
 
 - [Essential Guide for AI](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/01-Essentials.md) — execution rules, decision flow, error protocol
-- [Troubleshooting Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/05-Troubleshooting.md) — verbose logging, raw API access via Invoke-OrchApi
+- [Troubleshooting Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/90-Troubleshooting.md) — verbose logging, raw API access via Invoke-OrchApi
 - [Contributing Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/99-ContributingGuide.md) — bug reporting, building from source
 
 ## Need Help?

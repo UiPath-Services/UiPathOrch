@@ -1,6 +1,6 @@
 ---
 title: Other Providers (DU & Test Manager)
-nav_order: 8
+nav_order: 7
 permalink: /other-providers/
 ---
 
@@ -157,7 +157,7 @@ Because the shadow drives derive from their parent Orchestrator drive:
 - **One connection and config entry.** Editing the parent drive in `UiPathOrchConfig.json`
   and re-running `Import-OrchConfig` re-mounts all three; there is no separate Du/Tm
   configuration. Connection problems are diagnosed exactly as for the parent drive (see
-  [Troubleshooting](05-Troubleshooting.md)).
+  [Troubleshooting](90-Troubleshooting.md)).
 - **`Clear-OrchCache`** clears the Du/Tm caches too — run it before retrying after an
   error or when project/entity lists look stale.
 - **The `Path` property** on every emitted object records the originating drive and

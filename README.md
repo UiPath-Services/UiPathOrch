@@ -136,7 +136,7 @@ Notes:
   Invoke-OrchApi -Path Orch: -Uri '/odata/Folders?$select=Id,DisplayName'
   ```
 
-- **Avoid piping `Get-OrchPSDrive` output to logs in CI.** Its output exposes a live `AccessToken` property as a documented diagnostic feature (see `Docs/05-Troubleshooting.md`); commands like `Get-OrchPSDrive | Format-List *` or `ConvertTo-Json` would emit it. GitHub Actions log masking covers only the registered `AppSecret`, not derived tokens. `Invoke-OrchApi` removes the need for this pattern in nearly all cases.
+- **Avoid piping `Get-OrchPSDrive` output to logs in CI.** Its output exposes a live `AccessToken` property as a documented diagnostic feature (see `Docs/90-Troubleshooting.md`); commands like `Get-OrchPSDrive | Format-List *` or `ConvertTo-Json` would emit it. GitHub Actions log masking covers only the registered `AppSecret`, not derived tokens. `Invoke-OrchApi` removes the need for this pattern in nearly all cases.
 
 ## License
 

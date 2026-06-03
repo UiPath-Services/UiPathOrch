@@ -320,7 +320,7 @@ for the same drive fold into a single request. `Copy-PmUserPreference` migrates
 the same preferences to yourself in another organization without a CSV. Note
 that a value written this way is stored correctly, but an already-signed-in
 browser keeps rendering the previous theme/language until you re-sign-in or
-clear the site's local storage (see [Troubleshooting](05-Troubleshooting.md)).
+clear the site's local storage (see [Troubleshooting](90-Troubleshooting.md)).
 
 ### Notification Subscriptions
 

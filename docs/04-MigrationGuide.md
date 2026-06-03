@@ -620,7 +620,7 @@ your next sign-in to the destination. Notification topics are matched by name
 (mandatory topics are skipped). A preference written this way is stored
 correctly, but an already-open browser keeps showing the previous theme/language
 until you re-sign-in or clear the site's local storage (see
-[Troubleshooting](05-Troubleshooting.md)). Automation Cloud only.
+[Troubleshooting](90-Troubleshooting.md)). Automation Cloud only.
 
 ---
 

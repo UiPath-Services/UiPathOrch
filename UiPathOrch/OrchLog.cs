@@ -279,7 +279,7 @@ public partial class OrchAPISession : IDisposable
     // WriteWarning) so users who opt into logging know that HTTP bodies hit disk.
     // The Authorization header is masked (see ConvertHeadersToOneLine), so logs are
     // safe to share unless a cmdlet submits a credential in the body — that detail
-    // is in Docs/05-Troubleshooting.md rather than this single-line warning.
+    // is in Docs/90-Troubleshooting.md rather than this single-line warning.
     private bool _loggingWarningEmitted;
 
     private void EnsureLoggingWarningEmitted()
