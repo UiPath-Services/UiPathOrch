@@ -28,7 +28,7 @@ Copy-OrchTestDataQueue [-Path <string>] [-Recurse] [-Depth <uint>] [-Name] <stri
 
 ## DESCRIPTION
 
-Copies test data queues from a source folder to a destination folder in UiPath Orchestrator. When used with -Recurse, the folder hierarchy is preserved at the destination.
+Copies test data queues from a source folder to a destination folder in UiPath Orchestrator. Each queue's items are copied along with its definition. When used with -Recurse, the folder hierarchy is preserved at the destination.
 
 The -Name parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see available test data queue names. Multiple values can be specified using comma-separated text that includes wildcards.
 
@@ -40,7 +40,7 @@ Primary Endpoint: POST /odata/TestDataQueues
 
 OAuth required scopes: OR.TestDataQueues or OR.TestDataQueues.Write
 
-Required permissions: TestDataQueues.View (source) and TestDataQueues.Create (destination)
+Required permissions: TestDataQueues.View (source); TestDataQueues.Create and TestDataQueues.Edit (destination — Edit is used to restore each queue's schema after its items are uploaded, see NOTES)
 
 ## EXAMPLES
 
@@ -255,7 +255,11 @@ Returns TestDataQueue objects representing the copied test data queues.
 
 If the source and destination resolve to the same folder, the operation is silently skipped.
 
-When using -Recurse, the relative folder hierarchy from the source is replicated at the destination. Destination subfolders that do not exist are skipped.
+When using -Recurse, the relative folder hierarchy from the source is replicated at the destination; destination subfolders that do not exist are created.
+
+A queue's items often predate a change to its schema, so some may omit a field the schema now marks `required`. To copy them faithfully, the destination queue is first created with the schema's top-level `required` list removed (so every item is accepted), then the original schema is restored once the items are uploaded — the destination ends up identical to the source: `required` is enforced for new items, and the legacy items are intact. Restoring the schema needs `TestDataQueues.Edit` on the destination; if that step fails, a warning is written and the items are still copied (the schema is left relaxed).
+
+Items are uploaded in batches; if a batch is rejected, each item in it is retried one at a time, so a single malformed item is reported on its own (and skipped) instead of failing the whole queue.
 
 ## RELATED LINKS
 
