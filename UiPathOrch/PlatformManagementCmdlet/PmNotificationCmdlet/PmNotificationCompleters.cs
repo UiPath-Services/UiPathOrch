@@ -38,12 +38,9 @@ internal class PmNotificationPublisherCompleter : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
+        var names = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
         var drives = ResolvePmDrives(fakeBoundParameters);
         var wp = CreateWPFromWordToComplete(wordToComplete);
-        // Already-entered comma-separated values are not suggested again.
-        var entered = new HashSet<string>(
-            GetSelfExclusionValues(commandAst, parameterName, wordToComplete),
-            StringComparer.OrdinalIgnoreCase);
 
         var results = ParallelResults.GroupBy(drives, drive =>
         {
@@ -60,16 +57,20 @@ internal class PmNotificationPublisherCompleter : OrchArgumentCompleter
             }
         });
 
+        // The same publisher exists on every drive of an org, so de-dupe by name.
         var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var result in results)
         {
+            var drive = result.Source;
             foreach (var pub in result
                 .Where(p => p is not null)
+                .Where(p => { var n = p!.displayName ?? p.name; return !string.IsNullOrEmpty(n) && wp.IsMatch(n) && !names.Contains(n); }) // Exclude already-entered items
                 .OrderBy(p => p!.displayName ?? p.name))
             {
                 var name = pub!.displayName ?? pub.name;
-                if (string.IsNullOrEmpty(name) || !wp.IsMatch(name) || entered.Contains(name) || !seen.Add(name)) continue;
-                yield return new CompletionResult(PathTools.EscapePSText(name), name, CompletionResultType.ParameterValue, name);
+                if (!seen.Add(name!)) continue;
+                string tiphelp = drive.NameColonSeparator + name;
+                yield return new CompletionResult(PathTools.EscapePSText(name), name, CompletionResultType.ParameterValue, tiphelp);
             }
         }
     }
