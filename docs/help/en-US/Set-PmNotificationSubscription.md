@@ -20,7 +20,7 @@ Subscribes or unsubscribes you to a notification topic for a delivery mode.
 ### Default (Default)
 
 ```
-Set-PmNotificationSubscription [-Topic] <string> [-Mode] <string> [-Subscribed] <bool>
+Set-PmNotificationSubscription [-Topic] <string> [-Mode] <string> [-Subscribed] <string>
  [-Path <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
@@ -95,11 +95,11 @@ HelpMessage: ''
 
 ### -Subscribed
 
-`$true` to subscribe, `$false` to unsubscribe. Accepts the `IsSubscribed` property from `Get-PmNotificationSubscription`. Positional (position 2).
+`true` to subscribe, `false` to unsubscribe (tab-completes `true` / `false`; `$true` / `$false` also work). Accepts the `IsSubscribed` property from `Get-PmNotificationSubscription`. Positional (position 2).
 
 ```yaml
-Type: System.Boolean
-DefaultValue: False
+Type: System.String
+DefaultValue: ''
 SupportsWildcards: false
 Aliases:
 - IsSubscribed
@@ -111,7 +111,9 @@ ParameterSets:
   ValueFromPipelineByPropertyName: true
   ValueFromRemainingArguments: false
 DontShow: false
-AcceptedValues: []
+AcceptedValues:
+- 'true'
+- 'false'
 HelpMessage: ''
 ```
 

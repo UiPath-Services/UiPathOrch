@@ -23,7 +23,8 @@ public class SetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
 
     [Parameter(Position = 2, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [Alias("IsSubscribed")]
-    public bool Subscribed { get; set; }
+    [ArgumentCompleter(typeof(BoolCompleter))]
+    public string? Subscribed { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -38,6 +39,15 @@ public class SetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
     {
         if (string.IsNullOrEmpty(Topic) || string.IsNullOrEmpty(Mode)) return;
 
+        var subscribed = Subscribed.ToNullableBool();
+        if (subscribed is null)
+        {
+            WriteError(new ErrorRecord(
+                new OrchException(Subscribed ?? string.Empty, $"-Subscribed must be 'true' or 'false' (got '{Subscribed}')."),
+                "InvalidSubscribedValue", ErrorCategory.InvalidArgument, Subscribed));
+            return;
+        }
+
         _pending ??= [];
 
         foreach (var drive in SessionState.EnumPmDrives(Path))
@@ -47,7 +57,7 @@ public class SetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
                 list = [];
                 _pending[drive] = list;
             }
-            list.Add(new Row(Topic, Mode, Subscribed));
+            list.Add(new Row(Topic, Mode, subscribed.Value));
         }
     }
 
