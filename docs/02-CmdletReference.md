@@ -555,6 +555,7 @@ Per-user portal preferences (theme, language, ...) via the identity Setting API,
 | Copy-PmUserPreference | Migrate your own preferences to yourself in another organization |
 | Get-PmNotificationSubscription | Read your own notification subscriptions (topic × mode) |
 | Set-PmNotificationSubscription | Subscribe/unsubscribe yourself to a notification topic for a mode |
+| Copy-PmNotificationSubscription | Migrate your own notification subscriptions to another organization |
 
 <a id="20-platform-management-groups"></a>
 ## 20. Platform Management - Groups
