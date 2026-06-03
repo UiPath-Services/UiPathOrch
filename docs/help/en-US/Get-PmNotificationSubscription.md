@@ -20,8 +20,8 @@ Reads your own notification subscriptions (which events notify you, by mode).
 ### Default (Default)
 
 ```
-Get-PmNotificationSubscription [[-Publisher] <string[]>] [-Path <string[]>]
- [-Mode <string[]>] [-IncludeHidden] [<CommonParameters>]
+Get-PmNotificationSubscription [[-Publisher] <string[]>] [[-Mode] <string[]>]
+ [-Path <string[]>] [-IncludeHidden] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -100,7 +100,7 @@ HelpMessage: ''
 
 ### -Mode
 
-Filter by delivery mode (`InApp`, `Email`).
+Filter by delivery mode (`InApp`, `Email`). Positional (position 1).
 
 ```yaml
 Type: System.String[]
@@ -109,10 +109,10 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: Named
+  Position: 1
   IsRequired: false
   ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
+  ValueFromPipelineByPropertyName: true
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []

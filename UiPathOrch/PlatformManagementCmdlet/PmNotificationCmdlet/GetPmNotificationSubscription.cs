@@ -17,13 +17,13 @@ public class GetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Publisher { get; set; }
 
+    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(PmNotificationModeCompleter))]
+    public string[]? Mode { get; set; }
+
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
-
-    [Parameter]
-    [ArgumentCompleter(typeof(PmNotificationModeCompleter))]
-    public string[]? Mode { get; set; }
 
     [Parameter]
     public SwitchParameter IncludeHidden { get; set; }
