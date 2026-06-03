@@ -599,6 +599,29 @@ started in the Orchestrator Web UI. Since starting exploration is not
 supported via API, it must be done manually. After starting exploration,
 run `Clear-OrchCache` to refresh.
 
+### Your Own Portal Preferences and Notification Subscriptions
+
+Portal preferences (theme, language, favorites) and notification subscriptions
+are **per user** and are *not* part of the tenant copy (`copy -Recurse`). These
+cmdlets are also **self-only** — they act on the connected user, so you can carry
+**your own** settings to a new organization, but you cannot migrate other users'
+preferences.
+
+```powershell
+# Portal preferences (theme, language, ...)
+Copy-PmUserPreference -Path Source: -Destination Destination:
+
+# Notification subscriptions (which events notify you, by InApp / Email)
+Copy-PmNotificationSubscription -Path Source: -Destination Destination:
+```
+
+Both resolve "you" per organization from each drive's token and take effect on
+your next sign-in to the destination. Notification topics are matched by name
+(mandatory topics are skipped). A preference written this way is stored
+correctly, but an already-open browser keeps showing the previous theme/language
+until you re-sign-in or clear the site's local storage (see
+[Troubleshooting](05-Troubleshooting.md)). Automation Cloud only.
+
 ---
 
 ## Appendix
