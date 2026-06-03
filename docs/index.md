@@ -38,4 +38,5 @@ UiPathOrch ships with documentation written for AI agents that automate Orchestr
 | Usage questions | [GitHub Discussions](https://github.com/UiPath-Services/UiPathOrch/discussions) |
 | UiPath broader topics | [UiPath Community Forum](https://forum.uipath.com/) |
 | Inline help | `Get-Help <CmdletName> -Examples` |
+| Online help | `Get-Help <CmdletName> -Online` (opens the cmdlet's help on GitHub) |
 | Module documentation summary | `Get-OrchHelp` |

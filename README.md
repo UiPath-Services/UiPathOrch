@@ -96,7 +96,7 @@ Get-Help Get-OrchAsset -Online
 
 ## Documentation
 
-Guides (also published, searchable, at [uipath-services.github.io/UiPathOrch](https://uipath-services.github.io/UiPathOrch)):
+Guides (each cmdlet's full help is also at `Get-Help <CmdletName> -Online`):
 
 - [Getting Started](docs/00-GettingStarted.md) — install, OAuth setup, first connection
 - [Essential Guide for AI](docs/01-Essentials.md) — execution rules, decision flow, error protocol
