@@ -3519,10 +3519,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
             if (destinationWorkspace is null)
             {
-                WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(),
-                    $"No corresponding personal workspace exists in {dstDrive.NameColonSeparator}. " +
-                    $"You may want to start exploring the destination personal workspace and reflect it in this PS console by running `Clear-OrchCache {dstDrive.NameColon}'."),
-                    "CopyFolderError", ErrorCategory.InvalidOperation, srcFolder));
+                // A personal workspace folder can't be discovered through the API until
+                // it has been opened ("start exploring") in the Orchestrator web UI — and
+                // that has to happen on both tenants. This isn't a failure of the copy, so
+                // surface it as guidance (not an error), then skip this workspace.
+                WriteWarning(
+                    $"To copy the personal workspace '{srcFolder.GetPSPath()}', the corresponding personal workspace folder must first be opened (start exploring) in the Orchestrator web UI on both the source ({srcDrive.NameColonSeparator}) and destination ({dstDrive.NameColonSeparator}) tenants. This is not supported through the API and must be done manually. Once both are explored, run `Clear-OrchCache` and copy again.");
                 return false;
             }
         }

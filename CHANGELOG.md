@@ -19,6 +19,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   under `-WhatIf` / `-Confirm`. And because a root copy without `-Recurse` copies no folders,
   it now warns (`Copying tenant-level entities only. N folder(s) and their entities are not
   copied without -Recurse.`) so the omission isn't mistaken for an empty tenant.
+- **Copying a personal workspace with no counterpart in the destination now warns with
+  guidance instead of erroring.** A recursive root copy (`copy Source:\ Destination:\
+  -Recurse`) used to emit an error for each source personal workspace the destination
+  hadn't opened yet — including under `-WhatIf`, where erroring during a preview is
+  wrong. It now writes a warning explaining that a personal workspace must be opened
+  ("start exploring") in the Orchestrator web UI on **both** tenants (the API cannot do
+  this) before it can be copied, then continues with the rest of the copy.
 
 ### Fixed
 
