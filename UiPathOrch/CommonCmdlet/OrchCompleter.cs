@@ -2223,6 +2223,18 @@ internal class StaticTextsCompleter<TItems> : OrchArgumentCompleter where TItems
     }
 }
 
+// Completion (true / false) for the module's boolean-valued cmdlet parameters,
+// which are deliberately declared as [string] (parsed at runtime with
+// string.ToNullableBool()), not [bool] / [bool?].
+//
+// The reason is CSV round-trip. Import-Csv produces String-typed property values
+// only, and PowerShell's [bool] / [bool?] parameter binder REJECTS strings: it
+// accepts $true / $false / 1 / 0, but a "true" / "false" cell from a CSV fails with
+// "Cannot convert value 'System.String' ...". The module is built around
+// Get -ExportCsv | Import-Csv | Set/New/Add, so a boolean-typed parameter could not
+// round-trip through CSV; a [string] parameter accepts the cell and ToNullableBool()
+// turns it into the bool the API needs. Making the parameter nullable does not help —
+// [bool?] rejects the CSV strings just as [bool] does, so the choice is [string].
 internal class BoolCompleter : StaticTextsCompleter<True_False> { }
 
 // key is always a string
