@@ -546,13 +546,20 @@ Organization-level user management (Identity Server API).
 
 ### User Preferences
 
-Per-user portal preferences (theme, language, ...) via the identity Setting API, as generic Key/Value pairs.
+Per-user portal preferences (theme, language, ...) via the identity Setting API, as generic Key/Value pairs. Self-only. `Get-PmUserPreference -ExportCsv` round-trips through `Import-Csv | Set-PmUserPreference`.
 
 | Cmdlet | Description |
 |--------|-------------|
 | Get-PmUserPreference | Read your own portal preferences (theme, language, ...) |
 | Set-PmUserPreference | Set your own portal preferences (-Key / -Value) |
 | Copy-PmUserPreference | Migrate your own preferences to yourself in another organization |
+
+### Notification Subscriptions
+
+Per-user notification subscriptions — which events notify you, and by which delivery mode (InApp / Email) — via the notification service. Self-only; Automation Cloud only. `Get-PmNotificationSubscription -ExportCsv` round-trips through `Import-Csv | Set-PmNotificationSubscription`.
+
+| Cmdlet | Description |
+|--------|-------------|
 | Get-PmNotificationSubscription | Read your own notification subscriptions (topic × mode) |
 | Set-PmNotificationSubscription | Subscribe/unsubscribe yourself to a notification topic for a mode |
 | Copy-PmNotificationSubscription | Migrate your own notification subscriptions to another organization |
