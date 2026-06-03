@@ -504,7 +504,19 @@ internal class OrchestratorAuthManager
                                 // but the manifest / PSGallery version is 3-part SemVer — use ToString(3) so the
                                 // rendered string and the PSGallery URL match what was actually published.
                                 string versionStr = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "";
-                                string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, _drive.NameColon, versionStr, LoadBotImageRandomly(), userStyle, userEncoded);
+
+                                // The Orchestrator drive plus the Du / Tm shadow drives that
+                                // Import-OrchConfig mounts alongside it — created when the drive's
+                                // scope includes Du. / TM. scopes (the same condition used to create
+                                // them), and named <Name>Du / <Name>Tm. List whichever apply.
+                                string baseName = _drive.NameColon.TrimEnd(':');
+                                string driveScope = _drive._psDrive.Scope ?? "";
+                                var mountedDrives = new List<string> { _drive.NameColon };
+                                if (driveScope.Contains("Du.")) mountedDrives.Add($"{baseName}Du:");
+                                if (driveScope.Contains("TM.")) mountedDrives.Add($"{baseName}Tm:");
+                                string mountedDrivesStr = string.Join(", ", mountedDrives);
+
+                                string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, mountedDrivesStr, versionStr, LoadBotImageRandomly(), userStyle, userEncoded);
 
                                 byte[] buffer = Encoding.UTF8.GetBytes(responseString);
                                 context.Response.ContentLength64 = buffer.Length;
