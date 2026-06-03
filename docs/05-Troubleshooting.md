@@ -70,6 +70,28 @@ multi-level reverse proxy that produces a two-segment path (`/dept/tenant`)
 
 After editing, reload with `Import-OrchConfig`.
 
+### Diagnosing a sign-in (PKCE) failure
+
+When a non-confidential (PKCE) sign-in fails, UiPathOrch's local listener only
+sees that no authorization code arrived — the real reason is on the page UiPath
+Identity left the browser on. Copy that URL from the browser's address bar and
+pass it to `Resolve-OrchAuthError`, which decodes the `errorCode` / `errorId`
+envelope and returns a human-readable `Diagnosis` and `RecommendedAction`:
+
+```powershell
+Resolve-OrchAuthError 'https://cloud.uipath.com/identity_/web/login?errorCode=...&returnUrl=...&traceId=...'
+```
+
+> **Wrap the URL in single quotes.** These URLs contain `&` (and sometimes `$`),
+> which PowerShell would otherwise treat as an operator / a variable, so an
+> unquoted URL fails to parse or is silently truncated at the first `&`. Single
+> quotes pass the URL through literally — double quotes are not enough, because
+> they still expand `$`.
+
+The diagnosis object also surfaces the External App / `ClientId` in use, the
+`RedirectUri` and `Scopes` Identity received, a `TraceId` (server-side
+correlation id for a support ticket), and the decoded `RawErrorId`.
+
 ## Enable Verbose Logging
 
 Logging must be enabled in the configuration file before logs are
