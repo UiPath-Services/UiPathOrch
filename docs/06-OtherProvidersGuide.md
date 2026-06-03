@@ -1,6 +1,6 @@
 ---
 title: Other Providers (DU & Test Manager)
-nav_order: 9
+nav_order: 8
 permalink: /other-providers/
 ---
 

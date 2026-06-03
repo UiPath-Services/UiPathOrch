@@ -339,12 +339,12 @@ the language; it is **not** a trigger that forces the cache to refresh.
 4. **Compare** the direct result with the cmdlet result
 5. **Read the source code** if the cause is still unclear. Clone the
    repository following the
-   [Building from Source](06-ContributingGuide.md#building-from-source)
+   [Building from Source](07-ContributingGuide.md#building-from-source)
    section and read the relevant C# code to understand how UiPathOrch
    processes the API response.
 6. If the issue is confirmed as a UiPathOrch bug, or if you cannot
    resolve it through the steps above, file a GitHub issue following the
-   [Contributing Guide](06-ContributingGuide.md). UiPathOrch is not
+   [Contributing Guide](07-ContributingGuide.md). UiPathOrch is not
    covered by UiPath Technical Support — GitHub is the only channel
    for getting help from the maintainers.
 
