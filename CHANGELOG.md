@@ -60,6 +60,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   if a bulk batch is rejected, each item is retried individually so one bad row is
   reported on its own instead of failing the whole queue (and large queues no longer
   risk a single over-size request).
+- **The browser sign-in ("Connected") page lists the Document Understanding / Test
+  Manager drives too.** When `Import-OrchConfig` mounts the `…Du:` / `…Tm:` shadow
+  drives alongside an Orchestrator drive (i.e. when the drive's scope includes Du. /
+  TM. scopes), the page now shows them as well — e.g. `Mounted as Orch1:, Orch1Du:,
+  Orch1Tm:` — instead of just the Orchestrator drive.
 
 ## [1.7.1] - 2026-06-02
 
