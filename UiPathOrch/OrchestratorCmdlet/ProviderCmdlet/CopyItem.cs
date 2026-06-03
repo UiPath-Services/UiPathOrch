@@ -2907,7 +2907,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         {
             cancelToken.ThrowIfCancellationRequested();
 
-            if (shouldProcess || _this.ShouldProcess(bucket.GetPSPath(), "Copy Bucket"))
+            if (shouldProcess || _this.ShouldProcess($"Item: '{bucket.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Bucket"))
             {
                 msg = $"Copying bucket {System.IO.Path.Combine(bucket.GetPSPath())}";
                 //reporter.WriteProgress(++index, bucket.Name);
@@ -3130,7 +3130,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             .ToList();
         if (contents.Count == 0) return;
 
-        if (!(shouldProcess || _this.ShouldProcess($"Items: {srcTestDataQueue.GetPSPath()} Destination: {newFolder.GetPSPath()}", "Copy TestDataQueueItem")))
+        if (!(shouldProcess || _this.ShouldProcess($"Items: '{srcTestDataQueue.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy TestDataQueueItem")))
             return;
 
         // Upload in batches. A batch rejected for a content-schema violation (409)
@@ -3536,7 +3536,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         string target = $"Item: '{srcFolder.GetPSPath()}' Destination: '{dstFolder.GetPSPath()}'";
 
-        if (ShouldProcess(target, $"Copy Folder"))
+        if (ShouldProcess(target, "Copy Folder"))
         {
             // totalNum: folder itself, users, machines, packages, processes, assets, 
             // queues, triggers, API triggers, buckets, testsets, testschedules, testdataqueues

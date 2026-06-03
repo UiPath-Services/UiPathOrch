@@ -4,6 +4,17 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- **`Copy-Item -WhatIf` / `-Confirm` now names the destination when copying a bucket.**
+  The bucket copy's `ShouldProcess` message listed only the source
+  (`Copy Bucket` on `Orch1:\Shared\MyBucket`), unlike every other entity, which shows
+  `Item: '<source>' Destination: '<destination>'`. Buckets now use the same shape, so
+  a `-WhatIf` / `-Confirm` line says where the bucket would be copied to. Affects
+  `Copy-OrchBucket` and bucket copies done by `copy -Recurse`.
+
 ## [1.7.2] - 2026-06-03
 
 ### Added
