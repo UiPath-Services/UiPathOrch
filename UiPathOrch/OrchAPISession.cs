@@ -1861,13 +1861,13 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<LibraryVersion> GetLibraryVersions(string libraryId, string? feedId = null)
     {
-        string endPoint = $"/odata/Libraries/UiPath.Server.Configuration.OData.GetVersions(packageId='{HttpUtility.UrlEncode(libraryId)}')";
+        string endPoint = $"/odata/Libraries/UiPath.Server.Configuration.OData.GetVersions(packageId='{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(libraryId))}')";
         return GetEnumerable<LibraryVersion>(endPoint, null, feedId is null ? null : $"&feedId={feedId}");
     }
 
     public IEnumerable<Package> GetPackageVersions(string? feedId, string processId)
     {
-        string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetProcessVersions(processId='{HttpUtility.UrlEncode(processId)}')";
+        string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetProcessVersions(processId='{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(processId))}')";
         string query = null;
         if (feedId is not null)
         {
@@ -1882,7 +1882,7 @@ public partial class OrchAPISession : IDisposable
 
         //string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageMainEntryPoint(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
 
-        string key = $"{packageId}:{packageVersion}";
+        string key = $"{PathTools.EscapeODataLiteral(packageId)}:{packageVersion}";
         string encodedKey = HttpUtility.UrlEncode(key);
         string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageMainEntryPoint(key='{encodedKey}')";
         if (!string.IsNullOrEmpty(feedId))
@@ -1899,7 +1899,7 @@ public partial class OrchAPISession : IDisposable
         // point metadata available" instead of a hard failure.
         if (ApiVersion < 12) return [];
 
-        string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageEntryPoints(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
+        string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageEntryPoints(key='{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(packageId))}:{packageVersion}')";
         if (!string.IsNullOrEmpty(feedId))
         {
             return GetEnumerable<PackageEntryPoint>(endPoint, null, $"&feedId={feedId}");
@@ -1998,7 +1998,7 @@ public partial class OrchAPISession : IDisposable
 
     public (string? FileName, byte[] FileContent) DownloadLibrary(string libraryId, string libraryVersion)
     {
-        string url = _base_url_orchestrator + $"/odata/Libraries/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(libraryId)}:{libraryVersion}')";
+        string url = _base_url_orchestrator + $"/odata/Libraries/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(libraryId))}:{libraryVersion}')";
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
         using var response = HttpClient_Send(request);
@@ -2032,7 +2032,7 @@ public partial class OrchAPISession : IDisposable
 
     public (string? FileName, byte[] FileContent) DownloadPackage(string feedId, string packageId, string packageVersion)
     {
-        string url = _base_url_orchestrator + $"/odata/Processes/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
+        string url = _base_url_orchestrator + $"/odata/Processes/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(packageId))}:{packageVersion}')";
         if (!string.IsNullOrEmpty(feedId))
         {
             url += $"?feedId={feedId}";
@@ -2095,7 +2095,7 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<SubtypedPackageResource> GetReleaseRequirement(Int64 folderId, Release release)
     {
-        var result = HttpRequest<HttpBodyValues<SubtypedPackageResource>>(HttpMethod.Get, $"/odata/Releases({release.Id})/UiPath.Server.Configuration.OData.GetResources(processKey='{HttpUtility.UrlEncode(release.ProcessKey)}:{release.ProcessVersion}')", folderId);
+        var result = HttpRequest<HttpBodyValues<SubtypedPackageResource>>(HttpMethod.Get, $"/odata/Releases({release.Id})/UiPath.Server.Configuration.OData.GetResources(processKey='{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(release.ProcessKey))}:{release.ProcessVersion}')", folderId);
         return result?.value ?? [];
     }
 
@@ -2886,13 +2886,13 @@ public partial class OrchAPISession : IDisposable
     #region License
     public IEnumerable<LicenseNamedUser> GetLicensesNamedUser(string robotType)
     {
-        return GetEnumerable<LicenseNamedUser>($"/odata/LicensesNamedUser/UiPath.Server.Configuration.OData.GetLicensesNamedUser(robotType='{robotType}')");
+        return GetEnumerable<LicenseNamedUser>($"/odata/LicensesNamedUser/UiPath.Server.Configuration.OData.GetLicensesNamedUser(robotType='{PathTools.EscapeODataLiteral(robotType)}')");
     }
 
     public IEnumerable<LicenseRuntime> GetLicensesRuntime(string robotType)
     {
         //return GetEnumerable<LicenseRuntime>($"/odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{robotType}')", null, "&$expand='LastLoginDate'");
-        return GetEnumerable<LicenseRuntime>($"/odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{robotType}')");
+        return GetEnumerable<LicenseRuntime>($"/odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{PathTools.EscapeODataLiteral(robotType)}')");
     }
 
     private struct LicensesToggleEnabledRequest
