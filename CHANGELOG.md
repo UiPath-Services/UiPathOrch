@@ -45,6 +45,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`ConvertTo-Json` of a tag nested beyond `-Depth` no longer serializes it as a string.**
+  `Tag` overrode `ToString()` to return `"DisplayName=DisplayValue"`, which `ConvertTo-Json`
+  emitted verbatim for any tag past the `-Depth` cut (instead of the structured object / the
+  usual truncation marker). The override is removed; the `DisplayName=DisplayValue` form used
+  by tag columns in `-ExportCsv` is preserved via an explicit formatter.
 - **A `401` mid-session no longer wedges the cache against a recoverable token.** When an
   access token expired or was rotated server-side, the resulting `401 Unauthorized` was
   cached as a "deterministic" failure, so every later read on that cache slot re-threw the

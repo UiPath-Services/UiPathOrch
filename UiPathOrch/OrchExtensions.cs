@@ -842,7 +842,18 @@ internal static class OrchStringExtensions
     internal static string? ConvertToString(this Tag[]? tags)
     {
         if (tags is null) return null;
-        return string.Join(',', tags.Select(t => t.ToString()));
+        return string.Join(',', tags.Select(FormatTag));
+    }
+
+    // The "DisplayName=DisplayValue" CSV form a tag serializes to. Kept here, off
+    // Tag.ToString(): an override there made ConvertTo-Json emit this string for any Tag
+    // nested beyond -Depth (e.g. `Get-OrchAsset | ConvertTo-Json` of several tagged items)
+    // instead of the structured object.
+    private static string? FormatTag(Tag t)
+    {
+        if (string.IsNullOrEmpty(t.DisplayName)) return null;
+        if (string.IsNullOrEmpty(t.Value)) return t.DisplayName;
+        return $"{t.DisplayName}={t.DisplayValue}";
     }
 
     // obsoleted: Use ConvertToTags() instead

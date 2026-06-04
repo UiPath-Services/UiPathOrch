@@ -2292,14 +2292,9 @@ public class Tag
     public string? Value { get; set; }
     public string? DisplayValue { get; set; }
 
-    // TODO: This needs to be removed... It causes incorrect ConvertTo-Json results.
-    // Instead, the same thing should be written in the view definition file.
-    public override string? ToString()
-    {
-        if (string.IsNullOrEmpty(DisplayName)) return null;
-        if (string.IsNullOrEmpty(Value)) return DisplayName;
-        return $"{DisplayName}={DisplayValue}";
-    }
+    // No ToString() override on purpose: it would make ConvertTo-Json render a Tag nested
+    // beyond -Depth as the "DisplayName=DisplayValue" string instead of the structured
+    // object. The CSV/string form lives in OrchExtensions.FormatTag instead.
 }
 
 // AssetDto
