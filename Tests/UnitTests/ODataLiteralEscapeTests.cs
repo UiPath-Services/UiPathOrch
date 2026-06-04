@@ -1,3 +1,4 @@
+using System;
 using UiPath.PowerShell.Core;
 using Xunit;
 
@@ -37,4 +38,19 @@ public class ODataLiteralEscapeTests
         Assert.Equal("O''Brien", once);
         Assert.Equal("O''''Brien", PathTools.EscapeODataLiteral(once));
     }
+
+    // Get-OrchLog (ProcessName/RobotName) and the TestSetExecution by-name lookup
+    // build a $filter value as Uri.EscapeDataString(EscapeODataLiteral(value)):
+    // the OData single quote is doubled FIRST, then the whole value is URL-encoded
+    // so URL-reserved characters (& # space ...) can't break the query. Order
+    // matters -- URL-encoding first would percent-encode the quote to %27 and the
+    // OData doubling would no longer apply. These pin the exact wire form.
+    [Theory]
+    [InlineData("plain", "plain")]
+    [InlineData("O'Brien", "O%27%27Brien")]              // '  -> '' -> %27%27
+    [InlineData("A & B", "A%20%26%20B")]                 // space + & url-encoded
+    [InlineData("C#Bot", "C%23Bot")]                     // # url-encoded
+    [InlineData("O'Brien & Co", "O%27%27Brien%20%26%20Co")] // combined
+    public void Filter_value_is_odata_escaped_then_url_encoded(string input, string expected)
+        => Assert.Equal(expected, Uri.EscapeDataString(PathTools.EscapeODataLiteral(input)));
 }
