@@ -149,7 +149,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
         }
     }
 
-    private class NoCorrespondDestinatoinFolderException : Exception { }
+    private class NoCorrespondDestinationFolderException : Exception { }
 
     private static bool PackageExists(OrchDriveInfo drive, Folder folder, Package version)
     {
@@ -264,7 +264,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
 
                             Folder? dstFolder = _this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder, true);
                             // Skip the copy if no folder with the same name exists
-                            if (dstFolder is null) throw new NoCorrespondDestinatoinFolderException();
+                            if (dstFolder is null) throw new NoCorrespondDestinationFolderException();
 
                             if (srcFolder == dstFolder) continue;
 
@@ -277,7 +277,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
                                     "CopyFolderEntityToRootFolderError",
                                     ErrorCategory.InvalidOperation,
                                     dstDrive));
-                                throw new NoCorrespondDestinatoinFolderException();
+                                throw new NoCorrespondDestinationFolderException();
                             }
 
                             // If a package with the same name already exists in dstFolder, show a warning and skip the copy
@@ -305,7 +305,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
                     }
                 }
             }
-            catch (NoCorrespondDestinatoinFolderException)
+            catch (NoCorrespondDestinationFolderException)
             {
                 // This exception is thrown to skip processing when the destination folder does not exist.
                 // The warning has already been written to the console, so nothing to do here
