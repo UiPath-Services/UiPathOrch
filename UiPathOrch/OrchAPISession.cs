@@ -2443,7 +2443,24 @@ public partial class OrchAPISession : IDisposable
         catch { /* ignore */ }
     }
 
-    private HttpClient? _httpClientForBucketItem = null;
+    // Buckets are read/written on multiple threads (see callers below), so this
+    // lazily-created dedicated client must be published atomically. A bare `??=`
+    // is not thread-safe: two threads could each construct a client and one would
+    // leak (only the last-assigned is disposed). volatile + double-checked lock
+    // guarantees the factory runs once and readers see a fully-constructed client.
+    private volatile HttpClient? _httpClientForBucketItem = null;
+    private readonly object _httpClientForBucketItemLock = new();
+
+    private void EnsureBucketItemHttpClient()
+    {
+        if (_httpClientForBucketItem is null)
+        {
+            lock (_httpClientForBucketItemLock)
+            {
+                _httpClientForBucketItem ??= InitializeHttpClient(_drive);
+            }
+        }
+    }
 
     private static void AddHeaders(HttpRequestMessage req, BlobFileAccess access)
     {
@@ -2487,7 +2504,7 @@ public partial class OrchAPISession : IDisposable
         // Since Buckets are fetched using multiple threads, the Authorization header cannot be
         // temporarily removed from _httpClient default headers.
         // It is safe to prepare a dedicated HttpClient for BucketItems.
-        _httpClientForBucketItem ??= InitializeHttpClient(_drive);
+        EnsureBucketItemHttpClient();
 
         // When access.RequiresAuth is true, should the request be sent with the Authorization header retained?
         using var res = HttpClient_Send(req, _httpClientForBucketItem, cancellationToken);
@@ -2550,7 +2567,7 @@ public partial class OrchAPISession : IDisposable
         // Since Buckets are fetched using multiple threads, the Authorization header cannot be
         // temporarily removed from _httpClient default headers.
         // It is safe to prepare a dedicated HttpClient for BucketItems.
-        _httpClientForBucketItem ??= InitializeHttpClient(_drive);
+        EnsureBucketItemHttpClient();
 
         // When access.RequiresAuth is true, should the request be sent with the Authorization header retained?
         using var res = HttpClient_Send(req, _httpClientForBucketItem, cancelToken);
@@ -2911,7 +2928,7 @@ public partial class OrchAPISession : IDisposable
             enabled = enabled
         };
 
-        HttpRequest(HttpMethod.Post, $"/odata/LicensesRuntime('{machineName.Replace("'", "''").Replace(" ", "%20")}')/UiPath.Server.Configuration.OData.ToggleEnabled", null, payload);
+        HttpRequest(HttpMethod.Post, $"/odata/LicensesRuntime('{Uri.EscapeDataString(PathTools.EscapeODataLiteral(machineName))}')/UiPath.Server.Configuration.OData.ToggleEnabled", null, payload);
     }
     #endregion
 
