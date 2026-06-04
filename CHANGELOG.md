@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Ctrl+C now interrupts an in-flight request.** A long or stalled HTTP call (pagination,
+  a copy, a raw `Invoke-OrchApi`) could previously be interrupted only between calls; the
+  single HTTP path now cancels the in-flight send — and any retry backoff — on Ctrl+C, so
+  a hung endpoint no longer blocks for up to the request timeout.
 - **Transient failures and expired tokens now recover automatically.** The single HTTP
   path retries `429` / `503` / `504` with capped exponential backoff (honoring a server
   `Retry-After`), and on a `401` it re-authenticates and retries once, so a token that

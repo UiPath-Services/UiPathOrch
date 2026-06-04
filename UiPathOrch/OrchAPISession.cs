@@ -107,9 +107,17 @@ public partial class OrchAPISession : IDisposable
             message.Headers.TryAddWithoutValidation("X-UIPATH-TenantName", _authManager.OnpremiseTenancy);
         }
 
+        // Make the blocking send (and the backoff between retries) interruptible by Ctrl+C
+        // even though no caller threads a token today. A fresh handler per call is the
+        // right scope — a CancellationTokenSource is one-shot, so a session-wide one
+        // couldn't be reused after the first cancellation. This is the single chokepoint,
+        // so it covers every path (the commented-out intent in the GetEnumerable* helpers).
+        using ConsoleCancelHandler? localCancel = cancellationToken.CanBeCanceled ? null : new ConsoleCancelHandler();
+        CancellationToken ct = localCancel?.Token ?? cancellationToken;
+
         if (httpClient != null)
         {
-            return SendOnce(message, httpClient, cancellationToken);
+            return SendOnce(message, httpClient, ct);
         }
 
         // Buffer the body once: an HttpRequestMessage can only be sent a single time, so
@@ -118,7 +126,7 @@ public partial class OrchAPISession : IDisposable
         List<KeyValuePair<string, IEnumerable<string>>>? contentHeaders = null;
         if (message.Content != null)
         {
-            bodyBytes = message.Content.ReadAsByteArrayAsync(cancellationToken).GetAwaiter().GetResult();
+            bodyBytes = message.Content.ReadAsByteArrayAsync(ct).GetAwaiter().GetResult();
             contentHeaders = message.Content.Headers.ToList();
         }
 
@@ -128,14 +136,14 @@ public partial class OrchAPISession : IDisposable
 
         while (true)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            ct.ThrowIfCancellationRequested();
 
             HttpRequestMessage attempt = firstAttempt
                 ? message
                 : CloneRequest(message, bodyBytes, contentHeaders);
             firstAttempt = false;
 
-            HttpResponseMessage response = SendOnce(attempt, null, cancellationToken);
+            HttpResponseMessage response = SendOnce(attempt, null, ct);
 
             HttpRetryPolicy.Action action = HttpRetryPolicy.Decide(response.StatusCode, reauthUsed, transientAttempt);
 
@@ -153,9 +161,9 @@ public partial class OrchAPISession : IDisposable
                 TimeSpan delay = HttpRetryPolicy.BackoffDelay(transientAttempt, retryAfter);
                 response.Dispose();
                 transientAttempt++;
-                if (delay > TimeSpan.Zero && cancellationToken.WaitHandle.WaitOne(delay))
+                if (delay > TimeSpan.Zero && ct.WaitHandle.WaitOne(delay))
                 {
-                    cancellationToken.ThrowIfCancellationRequested();
+                    ct.ThrowIfCancellationRequested();
                 }
                 continue;
             }
