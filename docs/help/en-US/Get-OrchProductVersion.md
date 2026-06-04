@@ -57,13 +57,16 @@ PS C:\> Get-OrchProductVersion -Path Orch1:
 
 Returns the OrchProductVersion for the Orch1: drive only.
 
-### Example 3: Get the versions of multiple drives by wildcard
+### Example 3: Get the versions of several specific drives
 
 ```powershell
-PS C:\> Get-OrchProductVersion -Path Orch*
+PS C:\> Get-OrchProductVersion -Path Orch1:,Orch2:
 ```
 
-Returns the OrchProductVersion for every drive whose name starts with "Orch".
+Returns the OrchProductVersion for the listed drives. -Path takes one or more
+drive-qualified paths; drive names cannot be wildcarded (PowerShell interprets
+-Path text as an item path, not a drive-name pattern). Omit -Path to target
+every connected drive (see Example 1).
 
 ## PARAMETERS
 
