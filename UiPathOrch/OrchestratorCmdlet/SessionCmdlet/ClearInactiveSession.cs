@@ -41,7 +41,7 @@ public class ClearInactiveSessionCmdlet : OrchestratorPSCmdlet
                 if (inactive.Count == 0) continue;
 
                 string target = $"{drive.NameColonSeparator} ({inactive.Count} inactive session(s))";
-                if (!ShouldProcess(target, "Delete Inactive Sessions")) continue;
+                if (!ShouldProcess(target, "Clear InactiveSession")) continue;
 
                 cancelHandler.Token.ThrowIfCancellationRequested();
                 try

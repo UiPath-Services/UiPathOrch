@@ -50,7 +50,7 @@ public class ImportOrchConfigCmdlet : PSCmdlet
             return;
         }
 
-        if (!ShouldProcess(configFilePath, "Import-OrchConfig"))
+        if (!ShouldProcess(configFilePath, "Import OrchConfig"))
         {
             return;
         }

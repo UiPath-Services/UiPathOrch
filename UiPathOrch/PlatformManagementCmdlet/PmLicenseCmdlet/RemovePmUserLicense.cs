@@ -222,7 +222,7 @@ public class RemovePmUserLicenseCmdlet : OrchestratorPSCmdlet
             if (existingSet.Count == initialCount) continue; // nothing actually removed
 
             string target = $"{drive.NameColonSeparator}{displayName}";
-            if (!ShouldProcess(target, "Remove License from PmLicensedUser")) continue;
+            if (!ShouldProcess(target, "Remove License from PmUser")) continue;
 
             try
             {

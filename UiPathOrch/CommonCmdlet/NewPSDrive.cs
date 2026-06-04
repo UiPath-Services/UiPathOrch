@@ -64,7 +64,7 @@ public class NewPSDriveCmdlet : PSCmdlet
 
     protected override void ProcessRecord()
     {
-        if (!ShouldProcess($"{Name}:{System.IO.Path.DirectorySeparatorChar}", "New-OrchPSDrive"))
+        if (!ShouldProcess($"{Name}:{System.IO.Path.DirectorySeparatorChar}", "New PSDrive"))
         {
             return;
         }

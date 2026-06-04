@@ -288,7 +288,7 @@ public class AddPmGroupLicenseCmdlet : OrchestratorPSCmdlet
             if (existingSet.Count == initialCount) continue;
 
             string target = group.GetPSPath(drive.NameColonSeparator);
-            if (ShouldProcess(target, "Add License to PmLicenseGroup"))
+            if (ShouldProcess(target, "Add License to PmGroup"))
             {
                 try
                 {

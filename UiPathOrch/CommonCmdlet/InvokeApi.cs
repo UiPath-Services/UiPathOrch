@@ -210,7 +210,7 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
         if (httpMethod != HttpMethod.Get && httpMethod != HttpMethod.Head)
         {
             string target = $"{httpMethod.Method} {url}";
-            if (!ShouldProcess(target, "Invoke-OrchApi"))
+            if (!ShouldProcess(target, "Invoke OrchApi"))
             {
                 return;
             }

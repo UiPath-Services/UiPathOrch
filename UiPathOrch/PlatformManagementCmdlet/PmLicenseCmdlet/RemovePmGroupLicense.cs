@@ -126,7 +126,7 @@ public class RemovePmGroupLicenseCmdlet : OrchestratorPSCmdlet
             if (existingSet.Count == initialCount) continue;
 
             string target = group.GetPSPath(drive.NameColonSeparator);
-            if (ShouldProcess(target, "Remove License from PmLicenseGroup"))
+            if (ShouldProcess(target, "Remove License from PmGroup"))
             {
                 try
                 {

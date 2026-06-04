@@ -17,7 +17,7 @@ public class SwitchOrchCurrentUserCmdlet : OrchestratorPSCmdlet
     {
         foreach (var drive in SessionState.EnumOrchDrives(Path))
         {
-            if (ShouldProcess(drive.NameColonSeparator, "Switch user (InPrivate browser)"))
+            if (ShouldProcess(drive.NameColonSeparator, "Switch CurrentUser"))
             {
                 try
                 {

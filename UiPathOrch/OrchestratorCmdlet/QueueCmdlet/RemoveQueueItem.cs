@@ -152,7 +152,7 @@ public class RemoveQueueItemCmdlet : OrchestratorPSCmdlet
         var queue = csvLines.First().Queue;
 
         string target = queue.GetPSPath();
-        if (ShouldProcess(target, "Remove Queue Items"))
+        if (ShouldProcess(target, "Remove QueueItem"))
         {
             #region Verify RowVersion for all _csvLines
             {

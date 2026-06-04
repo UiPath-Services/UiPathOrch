@@ -92,7 +92,7 @@ public class AddFolderMachineCmdlet : OrchestratorPSCmdlet
                     if (string.IsNullOrEmpty(targetMachine.Name)) continue;
 
                     string target = $"Item: {targetMachine.Name} Destination: {folder.GetPSPath()}";
-                    if (ShouldProcess(target, "Add Folder Machine"))
+                    if (ShouldProcess(target, "Add FolderMachine"))
                     {
                         _csvLines ??= [];
                         if (!_csvLines.TryGetValue((drive, folder), out var entry))

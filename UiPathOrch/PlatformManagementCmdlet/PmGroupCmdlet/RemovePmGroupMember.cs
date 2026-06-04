@@ -130,7 +130,7 @@ public class RemovePmGroupMemberCmdlet : OrchestratorPSCmdlet
                     }
 
                     string target = $"{member.TipHelp()} from {group?.GetPSPath(drive.NameColonSeparator)}";
-                    if (ShouldProcess(target, $"Remove Member From Group"))
+                    if (ShouldProcess(target, "Remove Member from PmGroup"))
                     {
                         _parameterSets ??= [];
                         if (!_parameterSets.TryGetValue((drive, detailedGroup!), out var membersToRemove))
