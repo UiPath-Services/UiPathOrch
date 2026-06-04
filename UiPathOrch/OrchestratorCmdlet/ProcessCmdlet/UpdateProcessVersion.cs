@@ -206,7 +206,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                         string target = System.IO.Path.Combine(folder.GetPSPath(), id.ToString());
                         if (Version is null)
                         {
-                            if (ShouldProcess(System.IO.Path.Combine(folder.GetPSPath(), id.ToString()), "Update Process Version to Latest"))
+                            if (ShouldProcess(System.IO.Path.Combine(folder.GetPSPath(), id.ToString()), "Update ProcessVersion to Latest"))
                             {
                                 try
                                 {
@@ -221,7 +221,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                         }
                         else
                         {
-                            if (ShouldProcess(target, $"Update Process Version to {Version}"))
+                            if (ShouldProcess(target, $"Update ProcessVersion to {Version}"))
                             {
                                 try
                                 {
@@ -250,7 +250,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                         {
                             if (release.IsLatestVersion ?? false)
                                 continue;
-                            if (ShouldProcess(release.GetPSPath(), "Update Process Version to Latest"))
+                            if (ShouldProcess(release.GetPSPath(), "Update ProcessVersion to Latest"))
                             {
                                 try
                                 {
@@ -272,7 +272,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                             if (toVersion is null) continue;
                             if (release.CurrentVersion!.VersionNumber == toVersion) continue;
 
-                            if (ShouldProcess(release.GetPSPath(), $"Update Process Version to {toVersion}"))
+                            if (ShouldProcess(release.GetPSPath(), $"Update ProcessVersion to {toVersion}"))
                             {
                                 try
                                 {

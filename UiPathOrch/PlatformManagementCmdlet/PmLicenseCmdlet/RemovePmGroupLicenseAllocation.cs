@@ -111,7 +111,7 @@ public class RemovePmGroupLicenseAllocationCmdlet : OrchestratorPSCmdlet
                         target += $" ({user.displayName})";
                     }
                     target += $" from {group.GetPSPath(drive.NameColonSeparator)}";
-                    if (ShouldProcess(target, "Remove Allocation from NamedUserLicenseGroup"))
+                    if (ShouldProcess(target, "Remove Allocation from PmGroup"))
                     {
                         try
                         {

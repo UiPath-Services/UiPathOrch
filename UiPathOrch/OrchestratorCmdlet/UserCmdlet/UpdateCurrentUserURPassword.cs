@@ -36,7 +36,7 @@ public class UpdateUserURCmdlet : OrchestratorPSCmdlet
 
                 cancelHandler.Token.ThrowIfCancellationRequested();
 
-                if (ShouldProcess(target, "Update Current User"))
+                if (ShouldProcess(target, "Update CurrentUser"))
                 {
                     try
                     {

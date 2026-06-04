@@ -83,7 +83,7 @@ public class ResetProcessVersionCmdlet : OrchestratorPSCmdlet
                     cancelHandler.Token.ThrowIfCancellationRequested();
 
                     string target = release.GetPSPath();
-                    if (ShouldProcess(target, "Reset Process Version"))
+                    if (ShouldProcess(target, "Reset ProcessVersion"))
                     {
                         try
                         {
