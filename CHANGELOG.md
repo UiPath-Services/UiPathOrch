@@ -29,6 +29,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **A `401` mid-session no longer wedges the cache against a recoverable token.** When an
+  access token expired or was rotated server-side, the resulting `401 Unauthorized` was
+  cached as a "deterministic" failure, so every later read on that cache slot re-threw the
+  stale `401` *before* the session could re-authenticate — leaving the drive stuck until
+  `Clear-OrchCache` / `Import-OrchConfig`. A `401` is now treated as recoverable (never
+  cached), so the next call re-authenticates with a fresh token and continues.
 - **`Copy-Item -WhatIf` / `-Confirm` now names the destination when copying a bucket.**
   The bucket copy's `ShouldProcess` message listed only the source
   (`Copy Bucket` on `Orch1:\Shared\MyBucket`), unlike every other entity, which shows

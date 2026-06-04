@@ -39,14 +39,19 @@ internal static class ExceptionCachePolicy
     private static bool IsDeterministicStatus(HttpStatusCode code) => code switch
     {
         HttpStatusCode.BadRequest => true,           // 400 — query is malformed; same query, same error
-        HttpStatusCode.Unauthorized => true,         // 401 — token won't auto-recover
+        // 401 Unauthorized is deliberately NOT cached. EnsureSuccessStatusCode flips
+        // _isAuthenticated off on a 401, so the next call re-authenticates — a token that
+        // merely expired or was rotated server-side then recovers on its own. Caching the
+        // 401 would make the cache re-throw it before that re-auth ever runs, wedging the
+        // cache slot against a recoverable condition until Clear-OrchCache/Import-OrchConfig.
+        // (A genuinely bad credential fails at the token endpoint, not as an API 401.)
         HttpStatusCode.Forbidden => true,            // 403 — permission won't auto-grant
         HttpStatusCode.NotFound => true,             // 404 — resource isn't coming back
         HttpStatusCode.Gone => true,                 // 410 — explicit permanent removal
         HttpStatusCode.InternalServerError => true,  // 500 — kept for back-compat (could be transient)
         HttpStatusCode.NotImplemented => true,       // 501 — feature absent on this server
         HttpStatusCode.BadGateway => true,           // 502 — kept for back-compat (could be transient)
-        _ => false,                                  // 408/429/503/504/etc. — transient, do not cache
+        _ => false,                                  // 401/408/429/503/504/etc. — recoverable or transient, do not cache
     };
 }
 
