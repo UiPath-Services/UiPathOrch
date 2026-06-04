@@ -8,6 +8,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Identity lookups (Pm users / groups / robot accounts, …) now make about half the requests.**
+  The three internal pagination loops were unified into one; the identity enumerator now stops
+  on a short page like the others instead of always fetching an extra empty page, so a typical
+  (small) identity result is one request instead of two. The shared loop also derives the page
+  size from the request rather than a hardcoded literal.
 - **Ctrl+C now interrupts an in-flight request.** A long or stalled HTTP call (pagination,
   a copy, a raw `Invoke-OrchApi`) could previously be interrupted only between calls; the
   single HTTP path now cancels the in-flight send — and any retry backoff — on Ctrl+C, so

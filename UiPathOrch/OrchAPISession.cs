@@ -703,146 +703,93 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
+    // Single offset-paging loop shared by the OData / identity / portal enumerators.
+    // `fetchPage(top, skip)` performs one request and returns that page's items (null/empty
+    // = no more); `first` caps the total yielded; `startSkip` is the initial offset.
+    //
+    // stopOnPartialPage:true relies on the Orchestrator Web API returning up to the requested
+    // `top` (page size 1000) — a short page is then the last one, so the loop ends without an
+    // extra empty request. If that assumption ever breaks (an endpoint caps a page below the
+    // requested top while still holding more), pass stopOnPartialPage:false for that endpoint:
+    // it stops only on an empty page (robust, at the cost of one extra request per enumeration).
+    internal static IEnumerable<T> Paginate<T>(Func<ulong, ulong, T[]?> fetchPage, ulong startSkip, ulong first, bool stopOnPartialPage)
+    {
+        const ulong PageSize = 1000;
+        ulong total = 0;
+        ulong skip = startSkip;
+
+        while (true)
+        {
+            ulong top = Math.Min(first - total, PageSize);
+            if (top == 0) yield break;
+
+            T[]? page = fetchPage(top, skip);
+            if (page is null || page.Length == 0) yield break;
+
+            foreach (var item in page)
+            {
+                yield return item;
+                if (++total == first) yield break;
+            }
+
+            if (stopOnPartialPage && (ulong)page.Length < top) yield break;
+            skip += (ulong)page.Length;
+        }
+    }
+
     private IEnumerable<T> GetEnumerable<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
-    {
-        ulong total = 0;
-
-        //using var cancelHandler = new ConsoleCancelHandler();
-        while (true)
+        => Paginate<T>((top, pageSkip) =>
         {
-            //cancelHandler.Token.ThrowIfCancellationRequested();
-
-            ulong top = Math.Min(first - total, 1000);
-            if (top == 0) break;
-
-            string url = $"{_base_url_orchestrator}{endPoint}?$top={top}&$skip={skip}{query}";
-
+            string url = $"{_base_url_orchestrator}{endPoint}?$top={top}&$skip={pageSkip}{query}";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (folderId.HasValue)
             {
                 request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
             }
-
             using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
-
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            HttpBodyValues<T> body = JsonSerializer.Deserialize<HttpBodyValues<T>>(strBody);
+            return JsonSerializer.Deserialize<HttpBodyValues<T>>(strBody)?.value;
+        }, skip, first, stopOnPartialPage: true);
 
-            if (body is not null && body.value is not null && body.value.Length != 0)
-            {
-                foreach (var value in body.value!)
-                {
-                    yield return value;
-                }
-                if (body.value.Length < 1000)
-                    break;
-                total += (ulong)body.value.Length;
-                skip += (ulong)body.value!.Length;
-            }
-            else
-                yield break;
-        }
-    }
-
+    // identity uses non-$ "top"/"skip" (see Paginate for the page-size assumption).
     private IEnumerable<T> GetEnumerableIdentity<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
-    {
-        ulong total = 0;
-
-        //using var cancelHandler = new ConsoleCancelHandler();
-        while (true)
+        => Paginate<T>((top, pageSkip) =>
         {
-            //cancelHandler.Token.ThrowIfCancellationRequested();
-
-            ulong top = Math.Min(first - total, 1000);
-            if (top == 0) break;
-
-            // Note: parameter names do not have a $ prefix. They are "top" and "skip", not "$top" and "$skip".
-            string url = $"{_base_url_identity}{endPoint}?top={top}&skip={skip}{query}";
-
+            string url = $"{_base_url_identity}{endPoint}?top={top}&skip={pageSkip}{query}";
             var request = new HttpRequestMessage(HttpMethod.Get, url);
-            //{
-            //    Content = new StringContent("", Encoding.UTF8, @"application/json")
-            //};
             if (folderId.HasValue)
             {
                 request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
             }
-
             using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
-
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            HttpBodyResults<T> body = JsonSerializer.Deserialize<HttpBodyResults<T>>(strBody);
-            if (body is not null && body.results is not null && body.results.Length != 0)
-            {
-                foreach (var value in body.results)
-                {
-                    yield return value;
-                    ++total;
-                    if (total == first)
-                        break;
-                }
-                if (body.results?.Length == 0 || total == first)
-                    break;
-                skip += (ulong)body.results!.Length;
-            }
-            else
-                break;
-        }
-    }
+            return JsonSerializer.Deserialize<HttpBodyResults<T>>(strBody)?.results;
+        }, skip, first, stopOnPartialPage: true);
 
     private static StringContent CreateEmptyContent() => new("", Encoding.UTF8, @"application/json");
 
+    // portal uses non-$ "top"/"skip" and requires a (possibly empty) request body.
     private IEnumerable<T> GetEnumerablePortal<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
-    {
-        ulong total = 0;
-
-        //using var cancelHandler = new ConsoleCancelHandler();
-        while (true)
+        => Paginate<T>((top, pageSkip) =>
         {
-            //cancelHandler.Token.ThrowIfCancellationRequested();
-
-            ulong top = Math.Min(first - total, 1000);
-            if (top == 0) break;
-
-            // Note: parameter names do not have a $ prefix. They are "top" and "skip", not "$top" and "$skip".
-            string url = $"{_base_url_portal}{endPoint}?top={top}&skip={skip}{query}";
-
+            string url = $"{_base_url_portal}{endPoint}?top={top}&skip={pageSkip}{query}";
             var request = new HttpRequestMessage(HttpMethod.Get, url)
             {
-                // The following line is needed even when the content is empty.
-                // Without it, the Get-OrchPmUser endpoint returns an error.
-                // Almost all other endpoints work fine without this line, though.
+                // The body is required even when empty: without it the Get-OrchPmUser
+                // endpoint returns an error (most other endpoints work without it).
                 Content = CreateEmptyContent()
             };
             if (folderId.HasValue)
             {
                 request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
             }
-
             using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
-
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            var body = JsonSerializer.Deserialize<HttpBodyResults<T>>(strBody);
-            if (body is not null && body.results is not null && body.results.Length != 0)
-            {
-                foreach (var value in body.results)
-                {
-                    yield return value;
-                    ++total;
-                    if (total == first)
-                        break;
-                }
-                if (body.results.Length < 1000 || total == first)
-                    break;
-                skip += (ulong)body.results.Length;
-            }
-            else
-                break;
-        }
-    }
+            return JsonSerializer.Deserialize<HttpBodyResults<T>>(strBody)?.results;
+        }, skip, first, stopOnPartialPage: true);
 
     // No pagination support
     private TColl? GetEnumerableWithoutPagingImpl<TColl>(string baseUrl, string endPoint, Int64? folderId = null, string? query = null)
