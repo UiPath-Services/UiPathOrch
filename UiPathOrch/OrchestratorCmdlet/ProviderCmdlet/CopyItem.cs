@@ -3794,10 +3794,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     protected override void CopyItem(string path, string copyPath, bool recurse)
     {
         var dynamicParameters = DynamicParameters as CopyItem_DynamicParameters;
-        if (dynamicParameters is not null && dynamicParameters.ExcludeEntities.IsPresent)
-        {
-            ExcludeEntities = true;
-        }
+        // Assign unconditionally (don't only set it to true) so the flag resets every
+        // call. The field carries -ExcludeEntities down through CopyItemRecurse; relying
+        // on a fresh provider instance per Copy-Item to clear it would silently leak the
+        // flag into a later un-flagged copy if instances were ever pooled/reused.
+        ExcludeEntities = dynamicParameters?.ExcludeEntities.IsPresent ?? false;
 
         OrchDriveInfo srcDrive = ExtractOrchDriveInfo(path);
         OrchDriveInfo dstDrive = ExtractOrchDriveInfo(copyPath);
