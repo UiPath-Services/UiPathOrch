@@ -160,6 +160,28 @@ public abstract class PmRobotAccountWriteCmdletBase : OrchestratorPSCmdlet
         }
     }
 
+    // For each requested user name (which may contain wildcards), the existing
+    // robot accounts it targets, plus the unescaped name to create when there
+    // are no matches. Shared by New (errors on a match) and Set (updates a
+    // match). Each requested name MUST be matched on its own pattern.
+    internal static List<(string createName, List<PmRobotAccount> matches)> SelectWriteTargets(
+        IEnumerable<PmRobotAccount?>? existingRobots, IReadOnlyList<string?>? requestedNames)
+    {
+        var plans = new List<(string, List<PmRobotAccount>)>();
+        if (requestedNames is null) return plans;
+        IEnumerable<PmRobotAccount?> existing = existingRobots ?? [];
+        foreach (var req in requestedNames)
+        {
+            if (req is null) continue;
+            // Match THIS requested name only — not the union of every requested
+            // pattern, or one match would make every name look already-present.
+            var wp = new[] { req }.ConvertToWildcardPatternList();
+            var matches = existing.SelectByWildcards(r => r?.name, wp).Select(r => r!).ToList();
+            plans.Add((WildcardPattern.Unescape(req), matches));
+        }
+        return plans;
+    }
+
     // This approach cannot properly clear the cache. It can only process the Path from the first row.
 
     protected override void ProcessRecord()
@@ -197,7 +219,6 @@ public abstract class PmRobotAccountWriteCmdletBase : OrchestratorPSCmdlet
             groupNames = [.. groupNames, .. numberedGroupNames];
         }
 
-        var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpGroupName = groupNames.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -244,13 +265,11 @@ public abstract class PmRobotAccountWriteCmdletBase : OrchestratorPSCmdlet
 
             if (groupIdsToSet?.Count == 0) groupIdsToSet = null;
 
-            foreach (var userNames in UserName!.WithCancellation(cancelHandler.Token))
+            foreach (var (userName, targetRobots) in
+                SelectWriteTargets(existingRobots, UserName!).WithCancellation(cancelHandler.Token))
             {
-                var targetRobots = existingRobots.SelectByWildcards(r => r?.name, wpUserName);
-
-                if (!targetRobots.Any())
+                if (targetRobots.Count == 0)
                 {
-                    var userName = WildcardPattern.Unescape(userNames);
                     string target = System.IO.Path.Combine(drive.NameColonSeparator, userName);
                     if (ShouldProcess(target, "Create PmRobotAccount"))
                     {
@@ -279,7 +298,6 @@ public abstract class PmRobotAccountWriteCmdletBase : OrchestratorPSCmdlet
                 else
                 {
                     foreach (var robot in targetRobots
-                        .Where(r => r is not null)
                         .OrderBy(r => r.name).WithCancellation(cancelHandler.Token))
                     {
                         // New-PmRobotAccount (strict create) refuses an account that already exists.
