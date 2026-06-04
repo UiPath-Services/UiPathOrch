@@ -161,23 +161,38 @@ public static class AuthErrorUrlParser
             // Resolve-OrchAuthError only ships from 1.4.3, so the historical
             // org-scoped Identity-URL regression (d57c287, fixed in 1.4.2)
             // cannot be the cause here — the caller already has the fix.
-            // Mention it as breadcrumb for git-history searches, but lead
-            // with the two causes that actually remain at runtime.
+            // Mention it as a breadcrumb for git-history searches, but lead
+            // with the causes that actually remain at runtime. Cause (a) —
+            // browser-session reuse across a multi-org mount — is the common
+            // one when the orgs use different identity providers, and it is
+            // recoverable in-session via Switch-OrchCurrentUser (which
+            // re-authenticates in a cookie-isolated InPrivate browser).
             r.Diagnosis = "Sign-in returned #219 \"user has not accepted "
                 + "the invitation\". The historical Cloud Identity-URL "
                 + "org-scoped regression (commit d57c287, fixed in 1.4.2) "
                 + "is not the cause here — you already have that fix. "
-                + "Most likely remaining causes: (a) the account is "
-                + "Entra-ID-federated and the org invitation/membership "
-                + "genuinely needs administrator action; or (b) the "
-                + "drive's IdentityUrl is manually pinned to an "
-                + "org-scoped path that re-introduces the same routing."
+                + "Most likely remaining causes: (a) several orgs were "
+                + "mounted in one session and they use different identity "
+                + "providers (e.g. a UiPath/Microsoft account vs Entra-ID "
+                + "SSO) — this drive's interactive sign-in reused the "
+                + "browser session of an earlier drive, so the token was "
+                + "issued for that earlier identity, which is not an "
+                + "accepted member of this org; (b) the account genuinely "
+                + "is not an accepted member here and the invitation/"
+                + "membership needs administrator action; or (c) the "
+                + "drive's IdentityUrl is manually pinned to an org-scoped "
+                + "path that re-introduces the same routing."
                 + appNote;
-            r.RecommendedAction = "Have an administrator confirm the "
-                + "user's invitation/membership in the target org. If a "
-                + "custom IdentityUrl is set in your UiPathOrch config, "
-                + "verify it is host-level (e.g. "
-                + "https://cloud.uipath.com/identity_) not org-scoped."
+            r.RecommendedAction = "First re-authenticate THIS drive in an "
+                + "isolated browser session: Switch-OrchCurrentUser -Path "
+                + "<drive> opens an InPrivate window with no shared cookies, "
+                + "so you sign in fresh against this org's own provider — "
+                + "this clears cause (a) without disturbing the other "
+                + "mounted drives. If #219 persists, have an administrator "
+                + "confirm the user's invitation/membership in the target "
+                + "org (b), and verify any custom IdentityUrl in your "
+                + "UiPathOrch config is host-level (e.g. "
+                + "https://cloud.uipath.com/identity_) not org-scoped (c)."
                 + traceNote;
             return;
         }

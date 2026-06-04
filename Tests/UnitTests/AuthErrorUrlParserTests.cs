@@ -56,10 +56,14 @@ public class AuthErrorUrlParserTests
         // "upgrade to 1.4.2" is no longer the recommendation (would be
         // self-referential nonsense — this cmdlet first shipped in 1.4.3).
         Assert.Contains("d57c287", d.Diagnosis);
-        // RecommendedAction now leads with the two causes that actually
-        // remain at runtime: federated invitation and manual IdentityUrl pin.
+        // RecommendedAction now leads with the in-session recovery for the
+        // common multi-org-mount cause (browser-session reuse), then the
+        // federated-invitation and manual-IdentityUrl-pin fallbacks.
+        Assert.Contains("Switch-OrchCurrentUser", d.RecommendedAction);
         Assert.Contains("administrator", d.RecommendedAction);
         Assert.Contains("IdentityUrl", d.RecommendedAction);
+        // Diagnosis names the multi-org session-reuse cause explicitly.
+        Assert.Contains("identity providers", d.Diagnosis);
         // traceId must be surfaced for the federated / IdP-side path.
         Assert.Contains("0HNLC91R48MO0:000015F1", d.RecommendedAction);
     }
