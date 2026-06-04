@@ -574,6 +574,24 @@ copy Orch1:\Shared Orch2:\
 
 Classic folders are automatically converted to modern folders when copied.
 
+`copy` (`Copy-Item`) takes two migration-specific parameters when the path is an
+Orchestrator drive:
+
+- **`-ExcludeEntities`** — recreate the folder tree **only**, copying no entities.
+  Neither tenant-level entities (libraries, packages, ...) nor folder-level entities
+  (assets, queues, processes, ...) are copied, and personal workspaces are skipped.
+  Use it to lay down the destination folder hierarchy first and migrate entities
+  selectively afterwards.
+
+  ```powershell
+  # Recreate Orch1's folder tree in Orch2 — folders only, no entities
+  copy -Recurse Orch1:\* Orch2:\ -ExcludeEntities
+  ```
+
+- **`-UserMappingCsv`** — map source user names to destination user names while
+  copying (see [Case B](#case-b-username-mapping-required) above for generating,
+  validating, and using the mapping CSV).
+
 ### Copying via CSV
 
 Export entities to CSV, edit as needed, then import into a Copy cmdlet.
