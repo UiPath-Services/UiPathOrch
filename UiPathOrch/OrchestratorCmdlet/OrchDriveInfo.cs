@@ -546,7 +546,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         }
 
         // If not in cache, search by name via API
-        var filter = $"&$filter=(Name%20eq%20%27{Uri.EscapeDataString(name)}%27)";
+        var filter = $"&$filter=(Name%20eq%20%27{Uri.EscapeDataString(PathTools.EscapeODataLiteral(name))}%27)";
         var results = TestSetExecutions.Fetch(folder, filter, 0, 1);
         var execution = results.FirstOrDefault();
         return execution?.Id;

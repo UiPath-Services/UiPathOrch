@@ -41,6 +41,13 @@ public static class PathTools
         return "'" + input.Replace("'", "''") + "'";
     }
 
+    // Escape a value for insertion INSIDE an OData single-quoted string literal:
+    // OData escapes a single quote by doubling it (''). Callers supply the
+    // surrounding quotes — this does NOT add them and does NOT URL-encode. Apply
+    // exactly once on the RAW value (before any Uri.EscapeDataString); escaping an
+    // already-escaped value would double the doubling.
+    public static string EscapeODataLiteral(string? input) => (input ?? string.Empty).Replace("'", "''");
+
     // Use this when calling WriteItemObject() in the provider's GetChildItems.
     // Characters like [ and ] seem to be handled automatically. * and ? are presumably not expected in file names.
     public static string EscapePSText2(string? input)
