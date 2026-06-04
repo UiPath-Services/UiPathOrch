@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.7.2'
+ModuleVersion = '1.7.3'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -483,22 +483,24 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.7.2
+1.7.3
 
-- New: New-PmRobotAccount — creates a robot account, erroring if one with the
-  name already exists (strict-create counterpart of Set-PmRobotAccount).
-- New: Get-/Set-/Copy-PmUserPreference — read, write and migrate your own
-  organization-level portal preferences (theme, language, ...) as -Key/-Value
-  pairs via the identity Setting API. Self-only; CSV round-trips; needs a
-  non-confidential app or PAT; Automation Cloud.
-- New: Get-/Set-/Copy-PmNotificationSubscription — read, change and migrate your
-  own notification subscriptions (which events notify you, and by which delivery
-  mode). Self-only; CSV round-trips; Automation Cloud.
-- Changed: Copy-OrchTestDataQueue now copies items whose data predates a schema
-  change (it relaxes the schema's required list for the upload, then restores it)
-  and uploads items in batches with a per-item fallback when a batch is rejected
-  for a content-schema violation (409). Import-OrchTestDataQueueItem uses the same
-  batched, per-item-fallback upload.
+- Robustness: the HTTP layer now retries 429/503/504 with capped backoff
+  (honoring Retry-After) and re-authenticates once on a 401, so transient
+  failures and expired/rotated tokens recover automatically; an auth circuit
+  breaker makes a genuinely broken credential fail fast. A 401 no longer wedges
+  the cache against a token that would re-authenticate.
+- Ctrl+C now interrupts an in-flight request (pagination, copy, Invoke-OrchApi),
+  not only between calls.
+- Identity lookups (Pm users / groups / robot accounts, ...) make about half the
+  requests after the three pagination loops were unified into one.
+- copy -WhatIf is more informative: a recursive -WhatIf previews every subfolder;
+  a root-to-root copy shows tenant-entity counts and warns that folders are
+  skipped without -Recurse; copying a personal workspace with no destination
+  counterpart warns with guidance instead of erroring; a bucket copy names its
+  destination.
+- Fixed: ConvertTo-Json of a tag nested beyond -Depth emitted the
+  "DisplayName=DisplayValue" string instead of the structured object.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
