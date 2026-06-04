@@ -30,7 +30,12 @@ public class GetOrchProductVersionCmdlet : OrchestratorPSCmdlet
             {
                 var info = result.GetResult(cancelHandler.Token);
                 if (info is null) continue;
-                WriteObject(info);
+
+                // ProductVersion caches one shared singleton per org; stamp the
+                // drive-local Path on a per-emit ShallowClone copy.
+                var copy = info.ShallowClone();
+                copy.Path = result.Source.NameColonSeparator;
+                WriteObject(copy);
             }
             catch (OrchException ex)
             {

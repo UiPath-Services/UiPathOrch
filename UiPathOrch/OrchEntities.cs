@@ -4917,26 +4917,30 @@ public class TmRole
     public string? deletedBy { get; set; }
 }
 
-// /api/Status/Version response. PascalCase C# properties map to the
-// endpoint's lowercase JSON keys via [JsonPropertyName] so PowerShell
-// output reads naturally (System.Text.Json default deserialization is
-// case-sensitive, hence the explicit attributes).
+// /api/Status/Version response. Property names match the endpoint's JSON
+// keys verbatim (System.Text.Json deserialization is case-sensitive by
+// default), consistent with the other DTOs in this file.
+//
+// Path is drive-local, but the cache holds ONE shared instance per org
+// (SingleCachePerOrganization) since the product version is org-global, so
+// Path is NEVER set on the cached singleton. Each cmdlet emit takes a
+// ShallowClone and sets Path on that copy. (See PmAuthenticationRoot.)
 public class OrchProductVersion
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
 
-    [JsonPropertyName("version")]
-    public string? Version { get; set; }
+    public string? version { get; set; }
 
-    [JsonPropertyName("timestamp")]
-    public DateTime? Timestamp { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? timestamp { get; set; }
 
-    [JsonPropertyName("deployment")]
-    public string? Deployment { get; set; }
+    public string? deployment { get; set; }
+    public string? configsVersion { get; set; }
 
-    [JsonPropertyName("configsVersion")]
-    public string? ConfigsVersion { get; set; }
+    // Per-emit shallow copy so a drive-local Path can be attached without
+    // mutating the shared org singleton (see PmAuthenticationRoot.ShallowClone).
+    public OrchProductVersion ShallowClone() => (OrchProductVersion)MemberwiseClone();
 }
 
 // UiPath.TestManagementHub.WebAPI.Controllers.ServerInfo

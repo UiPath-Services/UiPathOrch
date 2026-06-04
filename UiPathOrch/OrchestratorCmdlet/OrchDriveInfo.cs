@@ -920,6 +920,8 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly SingleCachePerOrganization<PmAuthenticationRoot> PmAuthenticationSetting;
     public readonly SingleCachePerOrganization<LicenseInventory> PmLicenseInventory;
     public readonly SingleCachePerOrganization<AccountLicense> PmLicenseContract;
+    // Org-global: /api/Status/Version is identical across tenants in an org.
+    public readonly SingleCachePerOrganization<OrchProductVersion> ProductVersion;
 
     // _allTenantCache / _allFolderCache live on OrchDriveInfoBase; cache
     // instances declared below register themselves via the inherited members.
@@ -931,7 +933,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly SingleCachePerTenant<UpdateSettings> UpdateSettings;
     public readonly SingleCachePerTenant<License> LicenseSettings;
     public readonly SingleCachePerTenant<LibraryFeed[]> LibraryFeeds;
-    public readonly SingleCachePerTenant<OrchProductVersion> ProductVersion;
 
     // Indexed tenant entities
     public readonly IndexedCachePerTenant<User, UserPrivilege> UserPrivileges;
@@ -1148,9 +1149,13 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
 
         PmLicenseContract = new(this, OrchAPISession.GetPmLicenseContract);
 
+        // ProductVersion is org-global (/api/Status/Version is identical across
+        // tenants), so it caches per organization. No initializer: Path is set
+        // by the cmdlet on a per-emit ShallowClone copy.
+        ProductVersion = new(this, OrchAPISession.GetProductVersion);
+
         // Non-indexed tenant entities
         ActivitySettings = new(this, OrchAPISession.GetActivitySettings, e => e.Path = NameColonSeparator);
-        ProductVersion = new(this, OrchAPISession.GetProductVersion, e => e.Path = NameColonSeparator);
         ConnectionString = new(this, OrchAPISession.GetConnectionString, e => e.Path = NameColonSeparator);
         LicenseSettings = new(this, OrchAPISession.GetLicenseSettings, e => e.Path = NameColonSeparator);
         // GetMachineSessionRuntimes() takes no params today; the IncrementalCachePerTenant

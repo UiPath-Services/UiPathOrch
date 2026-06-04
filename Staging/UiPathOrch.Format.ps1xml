@@ -210,16 +210,16 @@
             <Label>Path</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>Version</Label>
+            <Label>version</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>Deployment</Label>
+            <Label>deployment</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>ConfigsVersion</Label>
+            <Label>configsVersion</Label>
           </TableColumnHeader>
           <TableColumnHeader>
-            <Label>Timestamp</Label>
+            <Label>timestamp</Label>
           </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
@@ -229,16 +229,16 @@
                 <PropertyName>Path</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>Version</PropertyName>
+                <PropertyName>version</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>Deployment</PropertyName>
+                <PropertyName>deployment</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>ConfigsVersion</PropertyName>
+                <PropertyName>configsVersion</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>Timestamp</PropertyName>
+                <PropertyName>timestamp</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

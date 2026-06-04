@@ -931,8 +931,11 @@ public partial class OrchAPISession : IDisposable
     // (e.g. "26.3.0-s192.2662"), distinct from the API contract version
     // exposed as ApiVersion above. Cloud also returns deployment topology
     // (primary/primary etc.); on-prem leaves deployment / configsVersion null.
-    public OrchProductVersion? GetProductVersion()
+    public OrchProductVersion? GetProductVersion(string? partitionGlobalId)
     {
+        // partitionGlobalId satisfies the per-org cache getter contract; the
+        // endpoint itself is org-global (no tenant/partition in the URL).
+        if (string.IsNullOrEmpty(partitionGlobalId)) return null;
         return HttpRequest<OrchProductVersion>(HttpMethod.Get, "/api/Status/Version");
     }
 
