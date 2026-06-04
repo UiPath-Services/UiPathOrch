@@ -241,8 +241,9 @@ public partial class OrchAPISession : IDisposable
             // gated on OR.Settings scope) remains as defense-in-depth; the
             // `ApiVersion is null` guard there means it only runs when this
             // primary path didn't fire (e.g. on a hypothetical Orchestrator
-            // version that omits the header). Benign race: concurrent first
-            // responses converge on the same value.
+            // version that omits the header). Concurrent first responses converge
+            // on the same value and publish it through ApiVersion's volatile-flag
+            // setter, so a reader never observes a torn value.
             if (ApiVersion is null && ret.Headers.TryGetValues("api-supported-versions", out var apiVersionHeaders))
             {
                 double max = 0;
@@ -341,7 +342,26 @@ public partial class OrchAPISession : IDisposable
     internal volatile bool _isAuthenticated = false;
     private bool _disposed = false;
     private readonly OrchDriveInfo _drive;
-    public double? ApiVersion;
+    // ApiVersion is discovered from the first API response (see SendOnce) and read
+    // by many per-version routing gates, potentially from parallel request threads
+    // (bucket / identity fan-out). A bare `double?` is two fields (hasValue + value)
+    // that are neither written atomically nor safely published, so a reader could
+    // observe hasValue=true with a stale value=0 and mis-route to a legacy branch.
+    // Publish through a volatile flag: the volatile write of _apiVersionKnown orders
+    // the preceding _apiVersion write before it, and a reader that sees the flag set
+    // is guaranteed to see the value. Concurrent writers converge on the same number,
+    // so the value write itself is not torn in practice.
+    private double _apiVersion;
+    private volatile bool _apiVersionKnown;
+    public double? ApiVersion
+    {
+        get => _apiVersionKnown ? _apiVersion : null;
+        set
+        {
+            if (value is double v) { _apiVersion = v; _apiVersionKnown = true; }
+            else { _apiVersionKnown = false; _apiVersion = 0; }
+        }
+    }
 
     // Deferred warning message to be displayed when a cmdlet runs (not during tab completion)
     internal string? PendingWarning { get; set; }
