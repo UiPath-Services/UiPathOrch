@@ -220,7 +220,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
             filter.AddIfNotNull(targetReleases
                 //.SelectByWildcards(r => r?.Name, [ReleaseName])
                 //.Where(r => string.Compare(r?.Name, WildcardPattern.Unescape(ReleaseName), StringComparison.OrdinalIgnoreCase) == 0)
-                .CreateOrFilter(r => $"ProcessName eq '{PathTools.EscapeODataLiteral(r.Name)}'"));
+                .CreateOrFilter(r => $"ProcessName eq '{Uri.EscapeDataString(PathTools.EscapeODataLiteral(r.Name))}'"));
         }
         #endregion
 
@@ -295,7 +295,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
                 .Where(u => u.RobotNames is not null)
                 .SelectMany(u => u?.RobotNames!)
                 .Where(r => !string.IsNullOrEmpty(r))
-                .CreateOrFilter(r => $"RobotName eq '{PathTools.EscapeODataLiteral(r)}'"));
+                .CreateOrFilter(r => $"RobotName eq '{Uri.EscapeDataString(PathTools.EscapeODataLiteral(r))}'"));
         }
         #endregion
 
