@@ -112,7 +112,7 @@ Returns an OrchProductVersion object per targeted drive describing the Orchestra
 
 ## NOTES
 
-The version is cached per drive after the first query, so repeated calls in the same session do not re-hit the server. Use Clear-OrchCache to force a fresh fetch (e.g., after an in-place upgrade).
+The version is cached per organization after the first query (one fetch is shared by all drives/tenants in the same org), so repeated calls in the same session do not re-hit the server. Use Clear-OrchCache to force a fresh fetch (e.g., after an in-place upgrade).
 
 ## RELATED LINKS
 
