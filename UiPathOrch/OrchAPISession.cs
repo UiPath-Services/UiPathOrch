@@ -85,7 +85,119 @@ public partial class OrchAPISession : IDisposable
 
     private int http_call_num = 0;
     internal int NextCallId() => Interlocked.Increment(ref http_call_num);
+    // Sticky "authentication is broken" latch (tripped when a freshly re-issued token
+    // is still 401). Reset only by rebuilding the session (Import-OrchConfig).
+    private readonly AuthCircuitBreaker _authBreaker = new();
+
+    // The single send chokepoint. SendOnce does the actual send + per-attempt logging;
+    // this wrapper layers the retry / recovery policy on top (HttpRetryPolicy):
+    //   - 401: clear auth, re-authenticate and retry ONCE. A token that merely expired or
+    //     rotated recovers; if the freshly issued token is still 401 the credential is
+    //     genuinely broken, so trip the circuit breaker (later calls fail fast instead of
+    //     re-auth+retry per item) and surface the 401 for this call.
+    //   - 429 / 503 / 504: back off (honoring Retry-After) and retry up to MaxTransientRetries.
+    // An explicitly supplied httpClient is the auth flow's own client: send once, no
+    // retry/reauth, to avoid recursion.
     private HttpResponseMessage HttpClient_Send(HttpRequestMessage message, HttpClient? httpClient = null, CancellationToken cancellationToken = default)
+    {
+        // Add the on-premises tenant header once, here (not per attempt in SendOnce), so
+        // a retried clone carries it exactly once.
+        if (!string.IsNullOrEmpty(_authManager.OnpremiseTenancy))
+        {
+            message.Headers.TryAddWithoutValidation("X-UIPATH-TenantName", _authManager.OnpremiseTenancy);
+        }
+
+        if (httpClient != null)
+        {
+            return SendOnce(message, httpClient, cancellationToken);
+        }
+
+        // Buffer the body once: an HttpRequestMessage can only be sent a single time, so
+        // each retry must go on a fresh message rebuilt from these bytes.
+        byte[]? bodyBytes = null;
+        List<KeyValuePair<string, IEnumerable<string>>>? contentHeaders = null;
+        if (message.Content != null)
+        {
+            bodyBytes = message.Content.ReadAsByteArrayAsync(cancellationToken).GetAwaiter().GetResult();
+            contentHeaders = message.Content.Headers.ToList();
+        }
+
+        bool reauthUsed = false;
+        int transientAttempt = 0;
+        bool firstAttempt = true;
+
+        while (true)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            HttpRequestMessage attempt = firstAttempt
+                ? message
+                : CloneRequest(message, bodyBytes, contentHeaders);
+            firstAttempt = false;
+
+            HttpResponseMessage response = SendOnce(attempt, null, cancellationToken);
+
+            HttpRetryPolicy.Action action = HttpRetryPolicy.Decide(response.StatusCode, reauthUsed, transientAttempt);
+
+            if (action == HttpRetryPolicy.Action.Reauth)
+            {
+                response.Dispose();
+                ClearAuthentication();   // next SendOnce re-acquires the token via the HttpClient getter
+                reauthUsed = true;
+                continue;
+            }
+
+            if (action == HttpRetryPolicy.Action.Backoff)
+            {
+                TimeSpan? retryAfter = HttpRetryPolicy.ResolveRetryAfter(response.Headers.RetryAfter, DateTimeOffset.Now);
+                TimeSpan delay = HttpRetryPolicy.BackoffDelay(transientAttempt, retryAfter);
+                response.Dispose();
+                transientAttempt++;
+                if (delay > TimeSpan.Zero && cancellationToken.WaitHandle.WaitOne(delay))
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+                continue;
+            }
+
+            // Returning. If a freshly re-authenticated token is still 401, the credential
+            // is genuinely broken — latch the breaker so later calls fail fast.
+            if (response.StatusCode == HttpStatusCode.Unauthorized && reauthUsed)
+            {
+                _authBreaker.Trip(new HttpResponseException(
+                    "Authentication failed: a newly issued access token was still rejected with 401. " +
+                    "Verify the application / PAT scopes and validity, then run Import-OrchConfig.",
+                    new HttpResponseMessage(HttpStatusCode.Unauthorized)));
+            }
+            return response;
+        }
+    }
+
+    // Clone a request so a retry can be sent (the original is already spent). Copies the
+    // method, URI, version, request headers, and the buffered body + content headers.
+    private static HttpRequestMessage CloneRequest(HttpRequestMessage src, byte[]? body, List<KeyValuePair<string, IEnumerable<string>>>? contentHeaders)
+    {
+        var clone = new HttpRequestMessage(src.Method, src.RequestUri) { Version = src.Version };
+        foreach (var header in src.Headers)
+        {
+            clone.Headers.TryAddWithoutValidation(header.Key, header.Value);
+        }
+        if (body != null)
+        {
+            clone.Content = new ByteArrayContent(body);
+            clone.Content.Headers.Clear();
+            if (contentHeaders != null)
+            {
+                foreach (var header in contentHeaders)
+                {
+                    clone.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                }
+            }
+        }
+        return clone;
+    }
+
+    private HttpResponseMessage SendOnce(HttpRequestMessage message, HttpClient? httpClient = null, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -108,12 +220,6 @@ public partial class OrchAPISession : IDisposable
 
         try
         {
-            // Add tenant name to headers if specified in on-premises environment
-            if (!string.IsNullOrEmpty(_authManager.OnpremiseTenancy))
-            {
-                message.Headers.TryAddWithoutValidation("X-UIPATH-TenantName", _authManager.OnpremiseTenancy);
-            }
-
             reqTime = DateTime.Now;
             HttpClient hc = httpClient ?? HttpClient;
             ret = hc.Send(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -395,6 +501,10 @@ public partial class OrchAPISession : IDisposable
 
     internal void EnsureAuthenticated()
     {
+        // Fail fast if a prior call proved the credential is broken (re-issued token still
+        // 401). Avoids every call in a bulk operation re-authenticating + retrying anew.
+        _authBreaker.ThrowIfTripped();
+
         if (!_isAuthenticated)
         {
             lock (_authLock)

@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Transient failures and expired tokens now recover automatically.** The single HTTP
+  path retries `429` / `503` / `504` with capped exponential backoff (honoring a server
+  `Retry-After`), and on a `401` it re-authenticates and retries once, so a token that
+  expired or was rotated mid-operation recovers without surfacing an error. If a freshly
+  issued token is still rejected — a genuinely broken credential — an auth circuit breaker
+  trips so the rest of the operation fails fast instead of re-authenticating and retrying
+  per item; it resets on `Import-OrchConfig`.
 - **`Copy-Item -Recurse -WhatIf` now previews every subfolder, not just the top one.**
   A recursive `-WhatIf` used to print a single `Copy Folder` line for the folder you
   named; it now walks the whole source tree and prints one line per folder, each naming
