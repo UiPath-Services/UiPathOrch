@@ -168,7 +168,10 @@ public class UpdateUserCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
-            foreach (var identityName in UserName!.WithCancellation(cancelHandler.Token))
+            // targetUsers already selects every user matching any -UserName pattern
+            // in a single pass, so process the matched set once per drive. (A prior
+            // per-name outer loop re-ran this whole block once per requested name —
+            // redundant, since the match never depended on the individual name.)
             {
                 var users = drive.Users.Get();
                 var targetUsers = users.SelectByWildcards(u => u?.UserName, wpUserName).OrderBy(u => u.UserName);
