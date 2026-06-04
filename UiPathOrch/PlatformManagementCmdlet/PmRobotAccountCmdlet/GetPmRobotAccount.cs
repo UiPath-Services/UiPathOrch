@@ -34,6 +34,22 @@ public class GetPmRobotAccountCmdlet : OrchestratorPSCmdlet
     public Encoding? CsvEncoding { get; set; }
 
     private static readonly string DefaultCsvName = "ExportedPmRobotAccounts.csv";
+    // Why the header is "UserName" even though the robot account's identifier
+    // field is `name` (PmRobotAccount.name / CreateRobotAccountCommand.name):
+    //
+    // A robot account is a *principal*, and the identity family addresses
+    // principals (users AND robot accounts) uniformly as "UserName"
+    // (Add-/Remove-/Move-PmGroupMember, the license cmdlets). In those member
+    // cmdlets the member parameter is -UserName and "Name" is already an alias
+    // of -GroupName, so a robot account's member-identifier column MUST be
+    // "UserName" — a "Name" column would bind the group, not the member.
+    //
+    // Surfacing the column as "UserName" therefore lets ONE exported CSV both
+    // (a) import into Add-PmGroupMember as a member, and (b) round-trip into
+    // New-/Set-PmRobotAccount, whose primary -Name parameter accepts the
+    // "UserName" column via its -UserName alias. (-Name is primary so the
+    // cmdlet still matches the entity/API field, Get-/Remove-PmRobotAccount,
+    // and the Get | Set object pipe.) The value written is the account's `name`.
     private static readonly string[] CsvHeaders =
         ["Path", "UserName", "GroupName"];
 

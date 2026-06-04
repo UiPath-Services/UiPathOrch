@@ -21,11 +21,19 @@ public abstract class PmRobotAccountWriteCmdletBase : OrchestratorPSCmdlet
     // New-PmRobotAccount overrides this to refuse an account that already exists.
     protected virtual bool ErrorIfExists => false;
 
+    // -Name is primary: it matches the entity/API field (`name`),
+    // Get-/Remove-PmRobotAccount, and binds the Get | Set object pipe (.name).
+    // -UserName alias: a robot account is surfaced as "UserName" wherever it acts
+    // as a principal — the identity family (Add-PmGroupMember, the license
+    // cmdlets) and Get-PmRobotAccount -ExportCsv's column (see the rationale on
+    // that cmdlet's CsvHeaders). The alias lets a "UserName" column/property bind
+    // here via ValueFromPipelineByPropertyName, so an exported CSV round-trips.
     [Parameter(ParameterSetName = psDefault, Position = 0, Mandatory = true)]
     [Parameter(ParameterSetName = psByCsv, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [Alias("UserName")]
     [ArgumentCompleter(typeof(NameCompleter))]
     [SupportsWildcards]
-    public string[]? UserName { get; set; }
+    public string[]? Name { get; set; }
 
     [Parameter(ParameterSetName = psDefault, Position = 1)]
     [Parameter(ParameterSetName = psByCsv, ValueFromPipelineByPropertyName = true)]
@@ -266,7 +274,7 @@ public abstract class PmRobotAccountWriteCmdletBase : OrchestratorPSCmdlet
             if (groupIdsToSet?.Count == 0) groupIdsToSet = null;
 
             foreach (var (userName, targetRobots) in
-                SelectWriteTargets(existingRobots, UserName!).WithCancellation(cancelHandler.Token))
+                SelectWriteTargets(existingRobots, Name!).WithCancellation(cancelHandler.Token))
             {
                 if (targetRobots.Count == 0)
                 {

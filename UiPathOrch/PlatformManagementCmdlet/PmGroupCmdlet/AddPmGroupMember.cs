@@ -26,6 +26,12 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Type { get; set; }
 
+    // The member parameter is -UserName for both kinds of principal: a user
+    // (by its userName) and a robot account (by its `name` value — a robot
+    // account has no userName field). It is NOT -Name because "Name" is already
+    // an alias of -GroupName above; the group is the primary noun of this cmdlet.
+    // This is why Get-PmRobotAccount -ExportCsv writes its identifier under a
+    // "UserName" column (see that cmdlet) — so the export imports here directly.
     [Parameter(Position = 2, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmUserNameCompleter))]
     public string[]? UserName { get; set; }
