@@ -73,6 +73,9 @@ public class GetPmRobotAccountCmdlet : OrchestratorPSCmdlet
                 .Where(id => groups.ContainsKey(id))
                 .Select(id => groups[id].name)
                 .Where(name => !string.IsNullOrEmpty(name));
+            // TODO(csv-escape): element commas are not escaped here and Set-PmRobotAccount imports
+            // with a plain comma Split, so a group name containing a comma does not round-trip.
+            // Needs a 2-sided fix (escape commas here + a `,-aware split in Set-PmRobotAccount).
             line.Append($",{EscapeCsvValue(string.Join(",", groupNames))}");
 
             writer.WriteLine(line.ToString());

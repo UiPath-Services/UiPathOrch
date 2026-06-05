@@ -200,6 +200,8 @@ public abstract class PmRobotAccountWriteCmdletBase : OrchestratorPSCmdlet
         string?[] groupNames = GroupName ?? [];
 
         // Split GroupName specified in CSV by commas
+        // TODO(csv-escape): this plain Split does not honor `,-escaped commas, so a group name
+        // containing a comma cannot round-trip (see the Get-PmRobotAccount export).
         groupNames = groupNames
              .SelectMany(name => (name ?? "").Split(separator, StringSplitOptions.RemoveEmptyEntries))
              .Select(name => name.Trim())

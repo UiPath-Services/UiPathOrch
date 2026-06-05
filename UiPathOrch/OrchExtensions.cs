@@ -358,6 +358,8 @@ internal static class OrchCollectionExtensions
     private static string UnescapeBackticks(string input)
     {
         // Unescape backtick escaping
+        // TODO(csv-escape): `` collapses to ` then is stripped, so an escaped backtick in a literal
+        // value is lost. Rare; affects the resolving (non-wildcard) split path only.
         return input.Replace("``", "`").Replace("`", "");
     }
 

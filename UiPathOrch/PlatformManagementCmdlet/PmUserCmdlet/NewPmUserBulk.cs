@@ -106,6 +106,10 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
 
             foreach (var groupName in groupNameEnum ?? [])
             {
+                // TODO(csv-escape): a group name containing a wildcard metacharacter (* ? [ ]) does
+                // not round-trip -- the export does not WildcardPattern.Escape group names, and the
+                // literal branch below would create the group with the escaped name verbatim.
+                // (A comma in a group name does round-trip via the `,-escape on export.)
                 // If the group name contains wildcards, expand them; otherwise keep it as-is.
                 // If a group with the kept name doesn't exist, create it later.
                 if (WildcardPattern.ContainsWildcardCharacters(groupName))

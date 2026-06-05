@@ -382,3 +382,27 @@ expects a `NewName` parameter. Rename the column before importing:
    ```powershell
    Import-Csv C:\temp\folders.csv | Rename-Item
    ```
+
+## Known limitations: commas and wildcards in multi-value cells
+
+A few columns hold multiple values in one cell: a row's `Roles`, a machine's
+`RobotUsers`, a trigger's `ExecutorRobots`, and a user's or robot account's group
+memberships. These are exported as a single comma-joined cell and split back on
+import. A value that itself contains a comma still round-trips: the export escapes
+an in-element comma (writing it as a backtick followed by the comma) and the
+import treats that escaped comma as a literal, not a delimiter.
+
+The following are **not yet** fully round-trip-safe (marked `TODO(csv-escape)` in
+the source):
+
+- **`New-/Set-PmRobotAccount -GroupName`** - a group name containing a comma does
+  not round-trip; the importer uses a plain comma split.
+- **`New-PmUser -GroupName`** - a group name containing a wildcard metacharacter
+  (`*`, `?`, `[`, `]`) does not round-trip; the export does not escape it. A comma
+  does round-trip.
+- A literal backtick inside a value, on the resolving (non-wildcard) import path,
+  can be dropped.
+
+Workaround: put each value in its own row (or its own array element) instead of a
+comma-joined cell, and avoid commas, backticks, and wildcard characters in the
+value itself.
