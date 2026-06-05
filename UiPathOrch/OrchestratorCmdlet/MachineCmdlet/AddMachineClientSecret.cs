@@ -68,7 +68,7 @@ public class AddMachineClientSecretCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(Path);
 
-        var wpName = Name.Split1stValueByUnescapedCommasPreservingEscapes()?.ConvertToWildcardPatternList();
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))

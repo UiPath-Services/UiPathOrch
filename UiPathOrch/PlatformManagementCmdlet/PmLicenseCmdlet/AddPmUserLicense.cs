@@ -147,8 +147,7 @@ public class AddPmUserLicenseCmdlet : OrchestratorPSCmdlet
     {
         _parameterSets ??= [];
 
-        Email = Email.Split1stValueByUnescapedCommas()?.ToArray();
-        var wpLicense = License.Split1stValueByUnescapedCommasPreservingEscapes().ConvertToWildcardPatternList();
+        var wpLicense = License.ConvertToWildcardPatternList();
         var targetCodes = ResolveLicenseCodes(wpLicense);
         if (targetCodes.Count == 0)
         {

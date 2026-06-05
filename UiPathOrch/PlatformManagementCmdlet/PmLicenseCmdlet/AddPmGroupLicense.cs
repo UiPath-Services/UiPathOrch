@@ -231,8 +231,7 @@ public class AddPmGroupLicenseCmdlet : OrchestratorPSCmdlet
 
         var drives = SessionState.EnumPmDrives(Path);
 
-        GroupName = GroupName.Split1stValueByUnescapedCommas()?.ToArray();
-        var wpLicense = License.Split1stValueByUnescapedCommasPreservingEscapes().ConvertToWildcardPatternList();
+        var wpLicense = License.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))

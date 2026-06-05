@@ -325,9 +325,9 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         // The first element may come from CSV input, so split the first element by commas
-        var processedId = Id.Split1stValueByUnescapedCommas();
-        var processedVersion = Version.Split1stValueByUnescapedCommas();
-        var processedDestination = Destination.Split1stValueByUnescapedCommas();
+        var processedId = Id;
+        var processedVersion = Version;
+        var processedDestination = Destination;
 
         var wpId = processedId.ConvertToWildcardPatternList();
         var wpVersion = processedVersion.ConvertToWildcardPatternList();

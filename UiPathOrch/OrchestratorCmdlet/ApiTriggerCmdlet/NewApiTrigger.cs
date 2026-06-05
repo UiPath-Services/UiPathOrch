@@ -111,9 +111,6 @@ public class NewApiTriggerCmdlet : OrchestratorPSCmdlet
     {
         var drivesFolders = SessionState.EnumFolders(Path);
 
-        Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
-        Name = Name.Split1stValueByUnescapedCommas()?.ToArray();
-
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {

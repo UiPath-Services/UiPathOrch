@@ -23,7 +23,6 @@ public class RemoveUserLicenseGroup : OrchestratorPSCmdlet
         var drives = SessionState.EnumPmDrives(Path);
 
         var wpGroupName = GroupName
-            .Split1stValueByUnescapedCommasPreservingEscapes()
             .ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();

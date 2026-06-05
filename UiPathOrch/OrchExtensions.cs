@@ -395,22 +395,25 @@ internal static class OrchCollectionExtensions
             .Where(s => !string.IsNullOrWhiteSpace(s));
     }
 
-    // Since the input may come from CSV, split the first element by commas. Use the remaining elements as-is.
-    // The following processing ensures that escaped commas are not used as delimiters.
-    // sourceArray = Version[0].Split(',').Concat(Version.Skip(1)).ToArray();
-    internal static IEnumerable<string>? Split1stValueByUnescapedCommas(this IEnumerable<string>? source)
+    // Normalize a possibly comma-joined parameter into individual values by splitting
+    // EVERY element on unescaped commas. A native `-Name a,b,c` array is already split
+    // (each element is comma-free, so splitting is a no-op); a single CSV cell "a,b,c"
+    // is one element that splits. Both yield the same result regardless of position.
+    // (Historically this split only the first element -- a perf shortcut that skipped
+    // the regex on the already-split native-array tail -- but that made the behavior
+    // position-dependent when a later element held an unescaped comma.)
+    internal static IEnumerable<string>? SplitValuesByUnescapedCommas(this IEnumerable<string>? source)
     {
         if (source is null) return null;
-        return SplitByUnescapedCommas(source.FirstOrDefault()).Concat(source.Skip(1));
+        return source.SelectMany(SplitByUnescapedCommas);
     }
 
-    // Wildcard-feeding counterpart of Split1stValueByUnescapedCommas: splits the first
-    // element on unescaped commas but PRESERVES backtick escapes so a downstream
-    // WildcardPattern can treat `* `[ ... as literals. Remaining elements pass as-is.
-    internal static IEnumerable<string>? Split1stValueByUnescapedCommasPreservingEscapes(this IEnumerable<string>? source)
+    // Wildcard-feeding counterpart: same all-element split, but PRESERVES backtick
+    // escapes so a downstream WildcardPattern can treat `* `[ ... as literals.
+    internal static IEnumerable<string>? SplitValuesByUnescapedCommasPreservingEscapes(this IEnumerable<string>? source)
     {
         if (source is null) return null;
-        return SplitByUnescapedCommasPreservingEscapes(source.FirstOrDefault()).Concat(source.Skip(1));
+        return source.SelectMany(SplitByUnescapedCommasPreservingEscapes);
     }
     #endregion
 

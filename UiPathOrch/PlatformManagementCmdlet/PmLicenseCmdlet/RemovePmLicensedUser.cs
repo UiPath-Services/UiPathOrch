@@ -72,7 +72,6 @@ public class RemovePmLicensedUserCmdlet : OrchestratorPSCmdlet
     {
         _toRemove ??= [];
 
-        Email = Email.Split1stValueByUnescapedCommas()?.ToArray();
         var wpEmail = Email.ConvertToWildcardPatternList();
 
         var drives = SessionState.EnumPmDrives(Path);

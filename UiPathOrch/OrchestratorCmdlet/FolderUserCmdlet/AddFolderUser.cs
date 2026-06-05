@@ -160,7 +160,7 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
                 parameters.Add((
                     Type,
                     userName,
-                    Roles?.Split1stValueByUnescapedCommas()?.ToArray(),
+                    Roles?.SplitValuesByUnescapedCommas()?.ToArray(),
                     drive, folder)!
                 );
             }

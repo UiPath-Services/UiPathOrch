@@ -155,10 +155,7 @@ public class AddDuRoleToDuUserCmdlet : OrchestratorPSCmdlet
         _csvLines ??= new Dictionary<((OrchDuDriveInfo drive, DuProject project), string type, string name), CsvLine>(new SecondAndThirdItemIgnoreCaseComparer<OrchDuDriveInfo, DuProject>());
 
         // The first element may have been input from CSV, so split the first element by commas
-        Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
-        Type = Type.Split1stValueByUnescapedCommas()?.ToArray();
-        Name = Name.Split1stValueByUnescapedCommas()?.ToArray();
-        Roles = Roles.Split1stValueByUnescapedCommas()?.ToArray();
+        Roles = Roles.SplitValuesByUnescapedCommas()?.ToArray();
 
         var projects = SessionState.EnumDuFolders(Path, Recurse);
         var wpEntityType = Type.ConvertToWildcardPatternList();

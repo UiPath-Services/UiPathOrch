@@ -42,13 +42,21 @@ public class CommaSplitTests
         Assert.True(wildcard.IsMatch("machineZ01"));    // demonstrates the pre-fix behavior
     }
 
+    // Every element is split on unescaped commas (previously only the first element
+    // was, which made the result position-dependent). A native a,b,c array arrives
+    // already split, so each element is a no-op; a comma in any element now splits.
     [Fact]
-    public void Split1stValue_variants_only_split_the_first_element()
+    public void Split1stValue_splits_every_element_position_independently()
     {
-        var resolved = new[] { "a`,b", "c,d" }.Split1stValueByUnescapedCommas()!.ToArray();
-        Assert.Equal(new[] { "a,b", "c,d" }, resolved);   // 1st: escaped comma kept literal; 2nd: as-is
+        // A comma in the SECOND element now splits the same as in the first.
+        Assert.Equal(new[] { "a", "b", "c" }, new[] { "a", "b,c" }.SplitValuesByUnescapedCommas()!.ToArray());
+        Assert.Equal(new[] { "a", "b", "c" }, new[] { "a,b", "c" }.SplitValuesByUnescapedCommas()!.ToArray());
+        Assert.Equal(new[] { "a", "b", "c" }, new[] { "a", "b", "c" }.SplitValuesByUnescapedCommas()!.ToArray());
 
-        var preserved = new[] { "x`*y", "z" }.Split1stValueByUnescapedCommasPreservingEscapes()!.ToArray();
-        Assert.Equal(new[] { "x`*y", "z" }, preserved);   // escape preserved; 2nd: as-is
+        // Escaped comma stays literal in any position; other elements still split.
+        Assert.Equal(new[] { "a,b", "c", "d" }, new[] { "a`,b", "c,d" }.SplitValuesByUnescapedCommas()!.ToArray());
+
+        // Preserving variant: backtick escapes survive, every element split.
+        Assert.Equal(new[] { "x`*y", "z", "q" }, new[] { "x`*y,z", "q" }.SplitValuesByUnescapedCommasPreservingEscapes()!.ToArray());
     }
 }

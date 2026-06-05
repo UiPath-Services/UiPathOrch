@@ -155,8 +155,7 @@ public class RemovePmUserLicenseCmdlet : OrchestratorPSCmdlet
     {
         _parameterSets ??= [];
 
-        Email = Email.Split1stValueByUnescapedCommas()?.ToArray();
-        var wpLicense = License.Split1stValueByUnescapedCommasPreservingEscapes().ConvertToWildcardPatternList();
+        var wpLicense = License.ConvertToWildcardPatternList();
 
         var drives = SessionState.EnumPmDrives(Path);
 

@@ -92,7 +92,7 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         // Split GroupName specified in CSV by commas
-        var groupNameEnum = GroupName.Split1stValueByUnescapedCommas();
+        var groupNameEnum = GroupName.SplitValuesByUnescapedCommas();
 
         _params ??= [];
 

@@ -127,11 +127,6 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        GroupName = GroupName.Split1stValueByUnescapedCommas()?.ToArray();
-        Type = Type.Split1stValueByUnescapedCommas()?.ToArray();
-        UserName = UserName.Split1stValueByUnescapedCommas()?.ToArray();
-        Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
-
         // Check for duplicate user names ignoring case
         _csvLines ??= new(new ForthItemIgnoreCaseComparer<OrchDriveInfo, PmGroup, string>());
 

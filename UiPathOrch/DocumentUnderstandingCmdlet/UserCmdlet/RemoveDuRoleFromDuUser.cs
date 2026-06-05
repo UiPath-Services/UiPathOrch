@@ -93,7 +93,7 @@ public class RemoveDuRoleFromDuUserCmdlet : OrchestratorPSCmdlet
         var drivesProjects = SessionState.EnumDuFolders(Path, Recurse);
         var wpName = Name.ConvertToWildcardPatternList();
         //var wpUserName = UserName.ConvertToWildcardPatternList();
-        var wpRole = Roles.Split1stValueByUnescapedCommasPreservingEscapes().ConvertToWildcardPatternList();
+        var wpRole = Roles.SplitValuesByUnescapedCommasPreservingEscapes().ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),

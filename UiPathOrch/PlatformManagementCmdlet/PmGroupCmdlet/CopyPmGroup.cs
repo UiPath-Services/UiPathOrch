@@ -78,8 +78,8 @@ public class CopyPmGroupCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var srcDrive = SessionState.GetPmDrive(Path);
-        var dstDrives = SessionState.EnumPmDrives(Destination.Split1stValueByUnescapedCommas());
-        var wpGroupName = GroupName.Split1stValueByUnescapedCommasPreservingEscapes().ConvertToWildcardPatternList();
+        var dstDrives = SessionState.EnumPmDrives(Destination);
+        var wpGroupName = GroupName.ConvertToWildcardPatternList();
 
         var srcGroups = srcDrive.PmGroups.Get();
         var targetGroups = srcGroups.FilterByWildcards(g => g?.name, wpGroupName);

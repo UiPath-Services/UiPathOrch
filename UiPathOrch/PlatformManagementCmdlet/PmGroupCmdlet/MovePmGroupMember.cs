@@ -40,10 +40,10 @@ public class MoveOrchPmGroupMemberCmdlet : OrchestratorPSCmdlet
     {
         updates ??= [];
 
-        //Type = Type.Split1stValueByUnescapedCommas()?.ToArray();
-        var processedUserName = UserName.Split1stValueByUnescapedCommas();
-        var processedDestination = Destination.Split1stValueByUnescapedCommas();
-        var processedPath = Path.Split1stValueByUnescapedCommas();
+        //Type = Type.SplitValuesByUnescapedCommas()?.ToArray();
+        var processedUserName = UserName;
+        var processedDestination = Destination;
+        var processedPath = Path;
 
         var drives = SessionState.EnumPmDrives(processedPath);
         var wpGroupName = new WildcardPattern(GroupName, WildcardOptions.IgnoreCase);

@@ -97,7 +97,7 @@ public class RemoveRoleFromUserCmdlet : OrchestratorPSCmdlet
         var wpType = Type.ConvertToWildcardPatternList();
 
         // The first element may have been input from CSV, so split it by commas
-        var processedRoles = Roles.Split1stValueByUnescapedCommas();
+        var processedRoles = Roles.SplitValuesByUnescapedCommas();
 
         var wpRoles = processedRoles.ConvertToWildcardPatternList();
 

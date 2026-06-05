@@ -209,9 +209,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFolders(Path);
         int? specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
 
-        Path = Path.Split1stValueByUnescapedCommas()?.ToArray();
-        Name = Name.Split1stValueByUnescapedCommas()?.ToArray();
-        ExecutorRobots = ExecutorRobots.Split1stValueByUnescapedCommas()?.ToArray();
+        ExecutorRobots = ExecutorRobots.SplitValuesByUnescapedCommas()?.ToArray();
         // MachineRobots is deserialized by JsonSerializer, so there is no need to split by commas here
 
         using var cancelHandler = new ConsoleCancelHandler();

@@ -185,7 +185,6 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
 
         var wpId = Id.ConvertToWildcardPatternList();
         var wpVersion = Version
-            .Split1stValueByUnescapedCommasPreservingEscapes() // May come from CSV input, so split by commas
             .ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();

@@ -122,8 +122,8 @@ public class GetMachineClientSecretIdCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(Path);
 
-        var wpName = Name.Split1stValueByUnescapedCommasPreservingEscapes()?.ConvertToWildcardPatternList();
-        var wpSecretId = SecretId.Split1stValueByUnescapedCommasPreservingEscapes()?.ConvertToWildcardPatternList();
+        var wpName = Name.ConvertToWildcardPatternList();
+        var wpSecretId = SecretId.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
