@@ -81,7 +81,7 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(Path);
-        var processedRobotUsers = RobotUsers?.SplitValuesByUnescapedCommas();
+        var processedRobotUsers = RobotUsers?.SplitValuesByUnescapedCommasPreservingEscapes();
         // CSV-piped rows surface absent values as [""] (one empty string); normalise to null
         // so we don't pointlessly hit /odata/Robots/.../FindAllAcrossFolders, which 404s on
         // older OCs (e.g. ApiVersion 11 / OC 20.10) and is unnecessary when no users were

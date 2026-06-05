@@ -203,16 +203,20 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
     internal static string EscapeCsvValue(IEnumerable<string?>? values, bool escapeWildcard = false)
     {
         if (values is null) return "";
+        // Escape a comma inside each element as `, so the comma-joined cell round-trips:
+        // the import splitter treats `, as an escaped comma, not the element delimiter.
         if (escapeWildcard)
         {
             return EscapeCsvValue(string.Join(',', values
                 .Where(r => !string.IsNullOrEmpty(r))
-                .Select(r => WildcardPattern.Escape(r))
+                .Select(r => WildcardPattern.Escape(r!).Replace(",", "`,"))
                 .OrderBy(r => r)));
         }
         else
         {
-            return EscapeCsvValue(string.Join(',', values.OrderBy(r => r)));
+            return EscapeCsvValue(string.Join(',', values
+                .Select(r => r?.Replace(",", "`,"))
+                .OrderBy(r => r)));
         }
     }
 

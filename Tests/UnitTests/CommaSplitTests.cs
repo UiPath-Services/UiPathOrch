@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Management.Automation;
+using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Core;
 using Xunit;
 
@@ -58,5 +59,21 @@ public class CommaSplitTests
 
         // Preserving variant: backtick escapes survive, every element split.
         Assert.Equal(new[] { "x`*y", "z", "q" }, new[] { "x`*y,z", "q" }.SplitValuesByUnescapedCommasPreservingEscapes()!.ToArray());
+    }
+
+    // A list-attribute element containing a comma (or a wildcard metacharacter) round-trips:
+    // export escapes it (WildcardPattern.Escape + the `, comma-escape, CSV-quoted), and import
+    // un-splits it so WildcardPattern reads the comma/metachar as a literal.
+    [Fact]
+    public void List_element_with_comma_or_wildcard_round_trips()
+    {
+        var cell = OrchestratorPSCmdlet.EscapeCsvValue(new[] { "Admin, Special", "Robot*" }, true);
+        // Import-Csv strips the surrounding quotes and un-doubles internal quotes.
+        var field = cell.StartsWith("\"") && cell.EndsWith("\"") ? cell[1..^1].Replace("\"\"", "\"") : cell;
+        var items = OrchCollectionExtensions.SplitValuesByUnescapedCommasPreservingEscapes(new[] { field })!.ToArray();
+        Assert.Equal(2, items.Length);
+        Assert.True(new WildcardPattern(items[0], WildcardOptions.IgnoreCase).IsMatch("Admin, Special")); // `, -> literal comma
+        Assert.True(new WildcardPattern(items[1], WildcardOptions.IgnoreCase).IsMatch("Robot*"));         // `* -> literal *
+        Assert.False(new WildcardPattern(items[1], WildcardOptions.IgnoreCase).IsMatch("RobotZ"));        // not a wildcard
     }
 }

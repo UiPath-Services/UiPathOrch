@@ -80,7 +80,7 @@ public class GetMachineCmdlet : OrchestratorPSCmdlet
                 EscapeCsvValue(machine.TestAutomationSlots),
                 EscapeCsvValue(machine.AutomationType),
                 EscapeCsvValue(machine.TargetFramework),
-                EscapeCsvValue(robotUsers),
+                EscapeCsvValue(robotUsers, true),
                 machine.UpdatePolicy?.Type,
                 machine.UpdatePolicy?.SpecificVersion,
                 EscapeCsvValue(machine.MaintenanceWindow?.CronExpression),

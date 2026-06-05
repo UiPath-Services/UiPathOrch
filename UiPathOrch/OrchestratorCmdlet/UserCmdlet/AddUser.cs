@@ -416,7 +416,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
         _csvLines ??= new Dictionary<(OrchDriveInfo drive, int type, string userName), CsvLine>(new CsvLineComparer());
 
         // The first element may have been input from CSV, so split it by commas
-        Roles = Roles.SplitValuesByUnescapedCommas()?.ToArray();
+        Roles = Roles.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();
 
         var drives = SessionState.EnumOrchDrives(Path);
         var wpType = Type.ConvertToWildcardPatternList();
