@@ -395,8 +395,6 @@ import treats that escaped comma as a literal, not a delimiter.
 The following are **not yet** fully round-trip-safe (marked `TODO(csv-escape)` in
 the source):
 
-- **`New-/Set-PmRobotAccount -GroupName`** - a group name containing a comma does
-  not round-trip; the importer uses a plain comma split.
 - A literal backtick inside a value, on the resolving (non-wildcard) import path,
   can be dropped.
 

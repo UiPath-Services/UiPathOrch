@@ -92,8 +92,6 @@ public abstract class PmRobotAccountWriteCmdletBase : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
-    private static readonly char[] separator = [','];
-
     // Warn only once per invocation when the deprecated GroupName0..GroupName9
     // CSV columns (see the #region GroupName\d block) are actually supplied.
     private bool _groupNameNDeprecationWarned;
@@ -199,12 +197,10 @@ public abstract class PmRobotAccountWriteCmdletBase : OrchestratorPSCmdlet
         // GroupName must not be modified to ensure proper handling during CSV import
         string?[] groupNames = GroupName ?? [];
 
-        // Split GroupName specified in CSV by commas
-        // TODO(csv-escape): this plain Split does not honor `,-escaped commas, so a group name
-        // containing a comma cannot round-trip (see the Get-PmRobotAccount export).
+        // Split GroupName by commas, honoring `,-escaped commas and preserving backtick escapes
+        // (groupNames is wildcard-matched below via ConvertToWildcardPatternList).
         groupNames = groupNames
-             .SelectMany(name => (name ?? "").Split(separator, StringSplitOptions.RemoveEmptyEntries))
-             .Select(name => name.Trim())
+             .SelectMany(OrchCollectionExtensions.SplitByUnescapedCommasPreservingEscapes)
              .ToArray();
 
         if (ParameterSetName == psByCsv)
