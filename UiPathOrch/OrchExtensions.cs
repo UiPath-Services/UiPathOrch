@@ -357,10 +357,9 @@ internal static class OrchCollectionExtensions
     #region
     private static string UnescapeBackticks(string input)
     {
-        // Unescape backtick escaping
-        // TODO(csv-escape): `` collapses to ` then is stripped, so an escaped backtick in a literal
-        // value is lost. Rare; affects the resolving (non-wildcard) split path only.
-        return input.Replace("``", "`").Replace("`", "");
+        // A backtick escapes the next character: `` -> a literal `, `, -> a literal comma,
+        // `* -> a literal *. (Previously `` collapsed to ` then was stripped to nothing.)
+        return Regex.Replace(input, "`(.)", "$1");
     }
 
     // One comma-separated token, where a comma may be backtick-escaped (`,).

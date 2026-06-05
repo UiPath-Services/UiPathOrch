@@ -16,6 +16,7 @@ public class CommaSplitTests
     [InlineData("a,b,c", new[] { "a", "b", "c" })]
     [InlineData(" a , b ", new[] { "a", "b" })]   // trimmed
     [InlineData("a`,b,c", new[] { "a,b", "c" })]  // escaped comma -> literal comma, backtick removed
+    [InlineData("a``b", new[] { "a`b" })]         // escaped backtick -> literal backtick (was lost)
     public void SplitByUnescapedCommas_resolves_escapes(string input, string[] expected)
         => Assert.Equal(expected, OrchCollectionExtensions.SplitByUnescapedCommas(input).ToArray());
 
