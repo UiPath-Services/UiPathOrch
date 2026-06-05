@@ -276,7 +276,7 @@ public static class IWritableHostExtensions
                         DisplayName = segment,
                         ParentId = parentId,
                         FullyQualifiedName = childFqn,
-                        Path = current.GetPSPath(),
+                        FullName = System.IO.Path.Combine(current.GetPSPath(), segment),
                     };
                 }
                 else
@@ -286,7 +286,7 @@ public static class IWritableHostExtensions
                         child = dstDrive.OrchAPISession.CreateFolder(segment, null, "Processes", parentId);
                         if (child is not null)
                         {
-                            child.Path = current.GetPSPath();
+                            child.FullName = System.IO.Path.Combine(current.GetPSPath(), segment);
                             dstDrive.AppendFolderToCache(child);
                         }
                     }
@@ -414,7 +414,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         var newFolder = dstDrive.OrchAPISession.CreateFolder(newFolderDisplayName!, srcFolder.Description, feedType, dstFolder.Id);
         if (newFolder is not null)
         {
-            newFolder.Path = dstFolder.GetPSPath();
+            newFolder.FullName = System.IO.Path.Combine(dstFolder.GetPSPath(), newFolderDisplayName!);
             WriteItemObject(newFolder, newFolder.GetPSPath(), true);
             dstDrive.AppendFolderToCache(newFolder);
         }
@@ -3756,7 +3756,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         {
             Folder wouldBeNewFolder = destinationWorkspace ?? new Folder
             {
-                Path = dstFolder.GetPSPath(),
+                FullName = System.IO.Path.Combine(dstFolder.GetPSPath(), srcFolder.DisplayName ?? ""),
                 DisplayName = srcFolder.DisplayName,
                 FolderType = srcFolder.FolderType,
                 ParentId = dstFolder.Id,

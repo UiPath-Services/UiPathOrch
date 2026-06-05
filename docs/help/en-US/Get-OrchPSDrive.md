@@ -20,7 +20,7 @@ Gets information about UiPathOrch PSDrives.
 ### __AllParameterSets
 
 ```
-Get-OrchPSDrive [[-Path] <string[]>] [-Force] [<CommonParameters>]
+Get-OrchPSDrive [[-Path] <string[]>] [-LiteralPath <string[]>] [-Force] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -125,6 +125,28 @@ Type: System.String[]
 DefaultValue: None
 SupportsWildcards: true
 Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -LiteralPath
+
+Specifies the target folder or drive by literal path -- wildcard metacharacters (`[`, `]`, `*`, `?`) are treated as literal characters rather than patterns. Accepts the same drive-qualified paths as -Path. Its `PSPath` alias also binds the path of items piped from Get-ChildItem / Get-Item, so you can pipe folders directly. Use -LiteralPath instead of -Path when a folder name contains a wildcard metacharacter.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- PSPath
 ParameterSets:
 - Name: (All)
   Position: 0

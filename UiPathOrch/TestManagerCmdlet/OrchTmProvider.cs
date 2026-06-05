@@ -97,6 +97,17 @@ public class OrchTmProvider : NavigationCmdletProvider
 
     #region ItemCmdletProvider overrides
 
+    // Per-call clone stamped with this drive's drive-qualified path, so the emitted object's
+    // Path/FullName (hence GetPSPath()) are correct and never leak another drive's value.
+    // (GetChildItems/GetItem previously emitted the bare shared cache entity unstamped.)
+    private Entities.TmProject StampedClone(Entities.TmProject project)
+    {
+        var clone = project.ShallowClone();
+        clone.Path = OrchTmDriveInfo.NameColonSeparator;
+        clone.FullName = OrchTmDriveInfo.NameColonSeparator + project.projectPrefix;
+        return clone;
+    }
+
     protected override void GetItem(string path)
     {
         var psPath = Path.GetFileName(path);
@@ -105,7 +116,7 @@ public class OrchTmProvider : NavigationCmdletProvider
         var project = GetProject(path);
         if (project is not null)
         {
-            WriteItemObject(project, path, true);
+            WriteItemObject(StampedClone(project), OrchTmDriveInfo.NameColonSeparator + project.projectPrefix, true);
         }
     }
 
@@ -165,7 +176,7 @@ public class OrchTmProvider : NavigationCmdletProvider
             if (Stopping) return;
             string psPathEscaped = OrchTmDriveInfo.NameColonSeparator + project.projectPrefix;
             //string psPathEscaped = PathTools.EscapePSText2(psPath);
-            WriteItemObject(project, psPathEscaped, true);
+            WriteItemObject(StampedClone(project), psPathEscaped, true);
         }
     }
 

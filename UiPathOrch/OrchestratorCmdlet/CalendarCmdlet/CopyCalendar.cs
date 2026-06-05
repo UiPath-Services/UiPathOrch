@@ -24,6 +24,10 @@ public class CopyCalendarCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     internal static void CopyCalendars(
         IWritableHost _this,
         OrchDriveInfo srcDrive,
@@ -99,7 +103,7 @@ public class CopyCalendarCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var srcDrive = SessionState.GetOrchDrive(Path!);
+        var srcDrive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath)!);
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
         var wpName = Name.ConvertToWildcardPatternList();
 

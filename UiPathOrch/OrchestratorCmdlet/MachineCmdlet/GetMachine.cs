@@ -20,6 +20,10 @@ public class GetMachineCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter ExpandRobotUser { get; set; }
 
@@ -95,7 +99,7 @@ public class GetMachineCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);

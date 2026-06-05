@@ -1065,7 +1065,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     {
         _psDrive = drive;
         _psDrive.Root = _psDrive.Root?.TrimEnd('/');
-        RootFolder = new Folder() { DisplayName = "", FullyQualifiedName = "", Path = NameColonSeparator };
+        RootFolder = new Folder() { DisplayName = "", FullyQualifiedName = "", FullName = NameColonSeparator };
 
         // Initialize caches
 
@@ -1441,7 +1441,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
                         _tenantKey = exUser.TenantKey;
                         if (exUser.PersonalWorkspace is not null)
                         {
-                            exUser.PersonalWorkspace.Path = NameColon;
+                            exUser.PersonalWorkspace.FullName = NameColonSeparator + exUser.PersonalWorkspace.DisplayName;
                         }
                     }
                     return (User?)exUser;
@@ -1817,7 +1817,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             {
                 personalWorkspaceName = user.PersonalWorkspace.DisplayName;
                 user.PersonalWorkspace.ParentId = null; // Fix: this sometimes has a value for some reason
-                user.PersonalWorkspace.Path = NameColonSeparator;
                 user.PersonalWorkspace.FolderType ??= "Personal"; // Fix: this is null in ApiVer 11.1 for some reason
                 user.PersonalWorkspace.FeedType = "FolderHierarchy"; // Fix: this contains "Processes" for some reason
                 //user.PersonalWorkspace.FullName = NameColonSeparator + WildcardPattern.Escape(user.PersonalWorkspace.DisplayName);
@@ -1851,7 +1850,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
                             FeedType = "FolderHierarchy",
                             ProvisionType = "Automatic",
                             PermissionModel = "FineGrained",
-                            Path = NameColonSeparator,
                             FullName = NameColonSeparator + WildcardPattern.Escape(ws.Name)
                         };
                         newDicFolders.Add(pwFolder);
@@ -1867,21 +1865,17 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
                 // Skip already-added folders
                 folder.FolderType ??= "Standard"; // Fix: this is null in ApiVer 11.1 for some reason
 
-                // Set the Path member to the parent folder name
+                // Stamp FullName with the folder's own (drive-qualified) path.
                 int idx = folder.FullyQualifiedName!.LastIndexOf('/');
                 if (idx != -1)
                 {
                     string orchPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName.Substring(0, idx));
-                    folder.Path = NameColon + orchPath;
                     folder.FullName = NameColon + Path.Combine(orchPath, folder.DisplayName ?? "");
-                    //folder.FullName = NameColon + WildcardPattern.Escape(Path.Combine(orchPath, folder.DisplayName ?? ""));
                 }
                 else
                 {
                     string orchPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName);
-                    folder.Path = NameColonSeparator;
                     folder.FullName = NameColon + orchPath;
-                    //folder.FullName = NameColon + WildcardPattern.Escape(orchPath);
                 }
             }
             if (folders is not null)

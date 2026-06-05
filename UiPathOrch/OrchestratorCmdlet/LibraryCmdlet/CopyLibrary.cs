@@ -32,6 +32,10 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     // Does a library with the same name and version already exist in the destination feed?
     // HostFeed pertains to the source, so it does not need to be considered in this method.
     private static bool LibraryExists(OrchDriveInfo drive, LibraryVersion version)
@@ -180,7 +184,7 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var srcDrives = SessionState.EnumOrchDrives([Path]);
+        var srcDrives = SessionState.EnumOrchDrives([EffectivePath(Path, LiteralPath)]);
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
         var wpId = Id.ConvertToWildcardPatternList();

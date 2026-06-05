@@ -22,6 +22,10 @@ public abstract class RemoveDriveEntityCmdletBase<TEntity> : OrchestratorPSCmdle
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     protected abstract string EntityNoun { get; }
     protected abstract IEnumerable<TEntity> GetEntities(OrchDriveInfo drive);
     protected abstract void Remove(OrchDriveInfo drive, TEntity entity);
@@ -33,7 +37,7 @@ public abstract class RemoveDriveEntityCmdletBase<TEntity> : OrchestratorPSCmdle
 
     protected sealed override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         var wpName = Name.ConvertToWildcardPatternList();
         var getName = GetName;
         var getPSPath = GetPSPath;

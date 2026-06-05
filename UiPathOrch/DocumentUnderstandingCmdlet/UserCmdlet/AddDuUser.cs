@@ -43,6 +43,10 @@ public class AddDuRoleToDuUserCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -158,7 +162,7 @@ public class AddDuRoleToDuUserCmdlet : OrchestratorPSCmdlet
         // CSV cell, so split every element by commas (preserving backtick escapes).
         Roles = Roles.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();
 
-        var projects = SessionState.EnumDuFolders(Path, Recurse);
+        var projects = SessionState.EnumDuFolders(EffectivePath(Path, LiteralPath), Recurse);
         var wpEntityType = Type.ConvertToWildcardPatternList();
         var specifiedTypes = DirectoryTypes.Items.SelectByWildcards(t => t, wpEntityType);
 

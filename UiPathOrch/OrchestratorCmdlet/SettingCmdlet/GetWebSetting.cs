@@ -21,6 +21,10 @@ public class GetWebSettingCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class KeyCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -55,7 +59,7 @@ public class GetWebSettingCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         var wpKey = Key.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drives,

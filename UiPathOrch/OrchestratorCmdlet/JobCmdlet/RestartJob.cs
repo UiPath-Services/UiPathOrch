@@ -24,6 +24,10 @@ public class RestartJobCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -85,7 +89,7 @@ public class RestartJobCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        var dfs = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var dfs = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
         foreach (var (drive, folder) in dfs)
         {
             foreach (var jobId in Id!.WithCancellation(cancelHandler.Token))

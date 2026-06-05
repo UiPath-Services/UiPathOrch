@@ -32,6 +32,10 @@ public class GetExecutionSettingCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class ScopeCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -103,7 +107,7 @@ public class GetExecutionSettingCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         var wpScope = Scope.ConvertToWildcardPatternList();
         var wpDisplayName = DisplayName.ConvertToWildcardPatternList();
 

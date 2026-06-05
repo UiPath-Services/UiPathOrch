@@ -15,6 +15,10 @@ public class ImportPackageCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -39,7 +43,7 @@ public class ImportPackageCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumPackageFeedFolders(Path);
+        var drivesFolders = SessionState.EnumPackageFeedFolders(EffectivePath(Path, LiteralPath));
         if (Recurse && drivesFolders.Any(df => df.folder != df.drive.RootFolder))
         {
             throw new ArgumentException("The -Recurse parameter can only be specified for the tenant's root folder.");

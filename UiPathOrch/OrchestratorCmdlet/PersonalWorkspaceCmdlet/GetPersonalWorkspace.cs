@@ -20,6 +20,10 @@ public class GetPersonalWorkspaceCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -54,7 +58,7 @@ public class GetPersonalWorkspaceCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drives,

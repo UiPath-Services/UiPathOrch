@@ -20,8 +20,9 @@ Subscribes or unsubscribes you to a notification topic for a delivery mode.
 ### Default (Default)
 
 ```
-Set-PmNotificationSubscription [-Topic] <string> [-Mode] <string> [-Subscribed] <string>
- [-Path <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
+Set-PmNotificationSubscription [-Path <string[]>] [-LiteralPath <string[]>]
+ [-Topic] <string> [-Mode] <string> [-Subscribed] <string> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -126,6 +127,28 @@ Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -LiteralPath
+
+Specifies the target folder or drive by literal path -- wildcard metacharacters (`[`, `]`, `*`, `?`) are treated as literal characters rather than patterns. Accepts the same drive-qualified paths as -Path. Its `PSPath` alias also binds the path of items piped from Get-ChildItem / Get-Item, so you can pipe folders directly. Use -LiteralPath instead of -Path when a folder name contains a wildcard metacharacter.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- PSPath
 ParameterSets:
 - Name: (All)
   Position: Named

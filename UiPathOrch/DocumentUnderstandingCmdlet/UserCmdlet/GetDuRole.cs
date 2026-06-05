@@ -19,6 +19,10 @@ public class GetDuRoleCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class RoleCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -53,7 +57,7 @@ public class GetDuRoleCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumDuDrives(Path);
+        var drives = SessionState.EnumDuDrives(EffectivePath(Path, LiteralPath));
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drives,

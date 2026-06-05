@@ -16,6 +16,10 @@ public class EnableWebhookCmdletBase<Enable> : OrchestratorPSCmdlet where Enable
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     // This only enumerates disabled Webhooks, so it cannot be shared.
     internal class NameCompleter : OrchArgumentCompleter
     {
@@ -53,7 +57,7 @@ public class EnableWebhookCmdletBase<Enable> : OrchestratorPSCmdlet where Enable
     }
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
         //var wpName = Name.ConvertToWildcardPatternList();
 

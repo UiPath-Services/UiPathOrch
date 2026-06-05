@@ -24,6 +24,10 @@ public class RemovePackageCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -153,7 +157,7 @@ public class RemovePackageCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumPackageFeedFolders(Path, Recurse.IsPresent);
+        var drivesFolders = SessionState.EnumPackageFeedFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent);
 
         var wpId = Id.ConvertToWildcardPatternList();
         var wpVersion = Version.ConvertToWildcardPatternList();

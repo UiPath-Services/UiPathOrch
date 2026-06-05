@@ -23,6 +23,10 @@ public class SetSettingCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private readonly List<Settings> _pendingSettings = [];
     private string[]? _resolvedPath;
 
@@ -83,7 +87,7 @@ public class SetSettingCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        _resolvedPath ??= Path;
+        _resolvedPath ??= EffectivePath(Path, LiteralPath);
         _pendingSettings.Add(new Settings { Name = Name, Value = Value });
     }
 

@@ -44,6 +44,10 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     // Delegates to the shared multi-line CSV reader; kept here (test-pinned name)
     // so the web-equivalence test and CreateItemData call it unchanged.
     internal static bool ParseCsvContent(string csvFilePath, Encoding? csvEncoding, int rowCap, out List<string> headers, out List<List<string>> contents, out List<CSVParseError> errorInfo, out int totalDataRows)
@@ -166,7 +170,7 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
         var wpName = Name.ConvertToWildcardPatternList();
 
         if (string.IsNullOrEmpty(CommitType))

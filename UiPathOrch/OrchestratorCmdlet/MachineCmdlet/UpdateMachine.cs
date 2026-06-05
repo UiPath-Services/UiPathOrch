@@ -86,6 +86,10 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     // Dedicated to machine Tags
     private class TagsCompleter : OrchArgumentCompleter
     {
@@ -123,7 +127,7 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
         var wpName = Name.ConvertToWildcardPatternList();
 

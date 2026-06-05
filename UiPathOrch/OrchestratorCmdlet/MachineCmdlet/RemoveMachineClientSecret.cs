@@ -24,6 +24,10 @@ public class RemoveMachineClientSecretCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     // This completer cannot be shared because it excludes machines with Scope "PersonalWorkspace" and "AutomationCloudRobot".
     // It would be better to parameterize the excluded Scopes and share the logic, but that's a bit cumbersome...
     // Actually, we could introduce a class that parameterizes the enumeration and filtering parts
@@ -119,7 +123,7 @@ public class RemoveMachineClientSecretCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
         var wpName = Name.ConvertToWildcardPatternList();
         var wpSecretId = SecretId.ConvertToWildcardPatternList();

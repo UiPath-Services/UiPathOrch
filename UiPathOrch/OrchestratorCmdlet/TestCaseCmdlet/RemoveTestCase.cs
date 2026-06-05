@@ -24,6 +24,10 @@ public class RemoveTestCaseCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -37,7 +41,7 @@ public class RemoveTestCaseCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
         // -Name is taken literally (no comma-split): one CSV cell / quoted string is one
         // test case name. Select multiple via a native -Name a,b,c array or one per row.
         var wpName = Name.ConvertToWildcardPatternList();

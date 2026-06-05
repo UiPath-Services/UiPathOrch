@@ -15,6 +15,10 @@ public class EnableFolderMachineInheritCmdletBase<EnableInherit> : OrchestratorP
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     internal class FolderMachineNameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -52,7 +56,7 @@ public class EnableFolderMachineInheritCmdletBase<EnableInherit> : OrchestratorP
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
         var wpName = Name.ConvertToWildcardPatternList();
 
         string action = $"{(EnableInherit.Value ? "Enable" : "Disable")} FolderMachineInherit";

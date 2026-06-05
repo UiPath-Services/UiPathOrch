@@ -12,9 +12,13 @@ public class GetTmServerInfoCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(TmDriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumTmDrives(Path);
+        var drives = SessionState.EnumTmDrives(EffectivePath(Path, LiteralPath));
 
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,

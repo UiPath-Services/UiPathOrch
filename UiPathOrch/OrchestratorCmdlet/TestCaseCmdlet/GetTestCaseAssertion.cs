@@ -29,6 +29,10 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public string? ScreenshotPath { get; set; }
 
@@ -205,7 +209,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
     private void ProcessByTestSetExecutionName()
     {
-        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath));
 
         // If TestSetExecutionName is not specified, return the cache contents
         if (TestSetExecutionName is null)
@@ -283,7 +287,7 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
     private void ProcessById()
     {
-        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath));
 
         foreach (var (drive, folder) in drivesFolders)
         {

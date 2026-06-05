@@ -30,6 +30,10 @@ public class RemovePmGroupLicenseCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class PmLicenseCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -82,7 +86,7 @@ public class RemovePmGroupLicenseCmdlet : OrchestratorPSCmdlet
     {
         _parameterSets ??= [];
 
-        var drives = SessionState.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
 
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpLicense = License.ConvertToWildcardPatternList();

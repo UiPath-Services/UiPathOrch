@@ -20,7 +20,7 @@ Gets test case execution results from UiPath Orchestrator.
 ### ByName (Default)
 
 ```
-Get-OrchTestCaseExecution [-Path <string[]>] [-Recurse] [-Depth <uint>]
+Get-OrchTestCaseExecution [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <uint>]
  [[-TestSetExecutionName] <string>] [-First <ulong>] [-Last <string>] [-Name <string[]>]
  [-Skip <ulong>] [-StartTimeAfter <datetime>] [-StartTimeBefore <datetime>]
  [<CommonParameters>]
@@ -29,7 +29,7 @@ Get-OrchTestCaseExecution [-Path <string[]>] [-Recurse] [-Depth <uint>]
 ### ById
 
 ```
-Get-OrchTestCaseExecution [-Path <string[]>] [-Recurse] [-Depth <uint>] [-Name <string[]>]
+Get-OrchTestCaseExecution [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <uint>] [-Name <string[]>]
  -TestSetExecutionId <long> [<CommonParameters>]
 ```
 
@@ -116,6 +116,28 @@ Type: System.String[]
 DefaultValue: None
 SupportsWildcards: true
 Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -LiteralPath
+
+Specifies the target folder or drive by literal path -- wildcard metacharacters (`[`, `]`, `*`, `?`) are treated as literal characters rather than patterns. Accepts the same drive-qualified paths as -Path. Its `PSPath` alias also binds the path of items piped from Get-ChildItem / Get-Item, so you can pipe folders directly. Use -LiteralPath instead of -Path when a folder name contains a wildcard metacharacter.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- PSPath
 ParameterSets:
 - Name: (All)
   Position: Named

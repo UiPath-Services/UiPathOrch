@@ -20,7 +20,7 @@ Creates, updates, and removes non-credential assets.
 ### DefaultParameterSet (Default)
 
 ```
-Set-OrchAsset [-Path <string[]>] [[-ValueType] <string>] [-Name] <string[]>
+Set-OrchAsset [-Path <string[]>] [-LiteralPath <string[]>] [[-ValueType] <string>] [-Name] <string[]>
  [[-Value] <string>] [[-UserName] <string[]>] [[-MachineName] <string[]>] [-Confirm]
  [-Description <string>] [-WhatIf] [<CommonParameters>]
 ```
@@ -156,6 +156,28 @@ Type: System.String[]
 DefaultValue: None
 SupportsWildcards: true
 Aliases: []
+ParameterSets:
+- Name: DefaultParameterSet
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -LiteralPath
+
+Specifies the target folder or drive by literal path -- wildcard metacharacters (`[`, `]`, `*`, `?`) are treated as literal characters rather than patterns. Accepts the same drive-qualified paths as -Path. Its `PSPath` alias also binds the path of items piped from Get-ChildItem / Get-Item, so you can pipe folders directly. Use -LiteralPath instead of -Path when a folder name contains a wildcard metacharacter.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- PSPath
 ParameterSets:
 - Name: DefaultParameterSet
   Position: Named

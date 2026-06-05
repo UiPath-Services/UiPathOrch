@@ -510,7 +510,11 @@ public partial class OrchProvider : NavigationCmdletProvider
         Folder f = drive.GetFolder(orchPath);
         if (f is not null)
         {
-            string psPath = OrchDriveInfo.OrchProviderPathToPSPath(f!.FullyQualifiedName!);
+            // PSPath must be drive-qualified ("Orch1:\..."), identical to GetChildItems:
+            // prepend the drive name and escape wildcard metachars. Otherwise Get-Item's
+            // PSPath loses the drive ("::\Autopilot") and -LiteralPath/PSPath binding from
+            // Get-Item output fails to resolve.
+            string psPath = drive.NameColon + PathTools.EscapePSText2(OrchDriveInfo.OrchProviderPathToPSPath(f!.FullyQualifiedName!));
             WriteItemObject(f, psPath, true);
         }
     }
@@ -608,7 +612,18 @@ public partial class OrchProvider : NavigationCmdletProvider
 
     private static readonly string DefaultCsvName = "ExportedFolders.csv";
 
-    private string? ExportCsvFile(string exportCsv, Encoding? csvEncoding, IEnumerable<Folder> output)
+    // The Path column holds the PARENT path so Import-Csv | New-Item recreates each folder
+    // under its parent (New-Item -Path <parent> -Name <leaf>). folder.FullName is the folder's
+    // own path now, so derive the parent from FullyQualifiedName here.
+    private static string FolderParentPsPath(OrchDriveInfo drive, Folder folder)
+    {
+        int idx = folder.FullyQualifiedName!.LastIndexOf('/');
+        return idx != -1
+            ? drive.NameColon + OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName.Substring(0, idx))
+            : drive.NameColonSeparator;
+    }
+
+    private string? ExportCsvFile(OrchDriveInfo drive, string exportCsv, Encoding? csvEncoding, IEnumerable<Folder> output)
     {
         Encoding encoding = csvEncoding ?? Encoding.Default;
         string[] headers = ["Path", "Name", "Description", "FeedType"];
@@ -621,7 +636,7 @@ public partial class OrchProvider : NavigationCmdletProvider
         foreach (var folder in output.Where(f => f.FolderType != "Personal"))
         {
             string[] line = [
-                OrchestratorPSCmdlet.EscapeCsvValue(folder.Path),
+                OrchestratorPSCmdlet.EscapeCsvValue(FolderParentPsPath(drive, folder)),
                 OrchestratorPSCmdlet.EscapeCsvValue(folder.DisplayName!),
                 OrchestratorPSCmdlet.EscapeCsvValue(folder.Description),
                 OrchestratorPSCmdlet.EscapeCsvValue(folder.FeedType)
@@ -771,7 +786,7 @@ public partial class OrchProvider : NavigationCmdletProvider
 
         if (!string.IsNullOrEmpty(parameters?.ExportCsv))
         {
-            string csvPath = ExportCsvFile(parameters.ExportCsv, parameters.CsvEncoding, csvOutput!);
+            string csvPath = ExportCsvFile(drive, parameters.ExportCsv, parameters.CsvEncoding, csvOutput!);
             WriteWarning($"CSV has been exported as '{csvPath}'.");
         }
     }
@@ -934,8 +949,7 @@ public partial class OrchProvider : NavigationCmdletProvider
                     parentPathId);
                 if (f is not null)
                 {
-                    if (parentPath == drive.NameColon) parentPath = drive.NameColonSeparator;
-                    f.Path = parentPath;
+                    f.FullName = path;
                     WriteItemObject(f, path, true);
                 }
                 drive._dicFolders = null;

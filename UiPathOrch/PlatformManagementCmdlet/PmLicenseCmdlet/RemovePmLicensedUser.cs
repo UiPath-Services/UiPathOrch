@@ -33,6 +33,10 @@ public class RemovePmLicensedUserCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     // Completes from the licensed-users set on each Pm drive. The tooltip
     // surfaces what would be removed (current bundle labels, or "No license"
     // for an empty-bundles row) so the user can see consequences before
@@ -74,7 +78,7 @@ public class RemovePmLicensedUserCmdlet : OrchestratorPSCmdlet
 
         var wpEmail = Email.ConvertToWildcardPatternList();
 
-        var drives = SessionState.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))

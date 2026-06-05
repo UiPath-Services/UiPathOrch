@@ -26,6 +26,10 @@ class NewBusinessRuleCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     protected override void ProcessRecord()
     {
         // Resolve absolute file path against the current PSDrive cwd, not against the .NET cwd.
@@ -40,7 +44,7 @@ class NewBusinessRuleCmdlet : OrchestratorPSCmdlet
         byte[] fileBytes = File.ReadAllBytes(sourcePath);
         string fileName = System.IO.Path.GetFileName(sourcePath);
 
-        var drivesFolders = SessionState.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)

@@ -19,6 +19,10 @@ public class RemoveTaskCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     protected override void ProcessRecord()
     {
         using var cancelHandler = new ConsoleCancelHandler();
@@ -33,7 +37,7 @@ public class RemoveTaskCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        var drivesFolders = SessionState.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
         foreach (var (drive, folder) in drivesFolders)
         {
             foreach (var taskId in Id!.WithCancellation(cancelHandler.Token))

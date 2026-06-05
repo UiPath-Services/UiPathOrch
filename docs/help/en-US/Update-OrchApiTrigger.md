@@ -20,15 +20,15 @@ Updates one or more existing API triggers in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Update-OrchApiTrigger [-Name] <string[]> [-NewName <string>] [-Release <string>]
- [-Description <string>] [-Enabled <string>] [-Method <string>] [-Slug <string>]
- [-CallingMode <string>] [-RunAsCaller <string>] [-RuntimeType <string>]
- [-ResumeOnSameContext <string>] [-StopStrategy <string>]
- [-StopJobAfterSeconds <int>] [-KillJobAfterSeconds <int>] [-AlertPendingJobAfterSeconds <int>]
- [-AlertRunningJobAfterSeconds <int>] [-RemoteControlAccess <string>]
- [-ConsecutiveJobFailuresThreshold <int>]
- [-InputArguments <string>] [-MachineRobots <string[]>] [-Path <string[]>] [-Recurse]
- [-Depth <uint>] [-WhatIf] [-Confirm] [<CommonParameters>]
+Update-OrchApiTrigger [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+ [-Depth <uint>] [-Name] <string[]> [-AlertPendingJobAfterSeconds <int>]
+ [-AlertRunningJobAfterSeconds <int>] [-CallingMode <string>] [-Confirm]
+ [-ConsecutiveJobFailuresThreshold <int>] [-Description <string>] [-Enabled <string>]
+ [-InputArguments <string>] [-KillJobAfterSeconds <int>] [-MachineRobots <string[]>]
+ [-Method <string>] [-NewName <string>] [-Release <string>]
+ [-RemoteControlAccess <string>] [-ResumeOnSameContext <string>] [-RunAsCaller <string>]
+ [-RuntimeType <string>] [-Slug <string>] [-StopJobAfterSeconds <int>]
+ [-StopStrategy <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -389,6 +389,28 @@ Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: true
 Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -LiteralPath
+
+Specifies the target folder or drive by literal path -- wildcard metacharacters (`[`, `]`, `*`, `?`) are treated as literal characters rather than patterns. Accepts the same drive-qualified paths as -Path. Its `PSPath` alias also binds the path of items piped from Get-ChildItem / Get-Item, so you can pipe folders directly. Use -LiteralPath instead of -Path when a folder name contains a wildcard metacharacter.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- PSPath
 ParameterSets:
 - Name: (All)
   Position: Named

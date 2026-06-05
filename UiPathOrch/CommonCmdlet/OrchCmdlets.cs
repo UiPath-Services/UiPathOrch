@@ -35,6 +35,19 @@ public class EncodingArgumentTransformationAttribute : ArgumentTransformationAtt
 
 public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 {
+    // Resolves -Path / -LiteralPath into the path list fed to the Enum* resolvers.
+    // -LiteralPath (a PSPath note-property via [Alias("PSPath")], or hand-typed) is
+    // WildcardPattern-escaped so it resolves literally; the resolver itself strips any
+    // "<module>\<provider>::" qualifier. -Path keeps its wildcard semantics unchanged.
+    internal static string?[]? EffectivePath(string[]? path, string[]? literalPath)
+        => literalPath is null
+            ? path
+            : Array.ConvertAll(literalPath, p => p is null ? null : WildcardPattern.Escape(p));
+
+    // Single-value overload for cmdlets whose -Path / -LiteralPath are scalar (string?).
+    internal static string? EffectivePath(string? path, string? literalPath)
+        => literalPath is null ? path : WildcardPattern.Escape(literalPath);
+
     // Drives this cmdlet is about to operate on -- only their PendingWarning
     // gets flushed in BeginProcessing. The legacy code walked every registered
     // drive, which surfaced unrelated drives' pending warnings during the next

@@ -20,6 +20,10 @@ public abstract class RemoveFolderEntityCmdletBase<TEntity> : OrchestratorPSCmdl
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -39,8 +43,8 @@ public abstract class RemoveFolderEntityCmdletBase<TEntity> : OrchestratorPSCmdl
     protected sealed override void ProcessRecord()
     {
         var drivesFolders = ExcludePersonalWorkspace
-            ? SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth)
-            : SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
+            ? SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth)
+            : SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
         var getName = GetName;
         var getPSPath = GetPSPath;

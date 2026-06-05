@@ -19,6 +19,10 @@ class GetPmSettingCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     //private class UserNameCompleter : OrchArgumentCompleter
     //{
     //    public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -60,7 +64,7 @@ class GetPmSettingCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
         //var wpUserName = UserName.ConvertToWildcardPatternList();
 
         foreach (var drive in drives)

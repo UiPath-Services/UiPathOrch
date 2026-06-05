@@ -31,6 +31,10 @@ public class GetDuUserCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -71,7 +75,7 @@ public class GetDuUserCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesProjects = SessionState.EnumDuFolders(Path, Recurse);
+        var drivesProjects = SessionState.EnumDuFolders(EffectivePath(Path, LiteralPath), Recurse);
         //var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpName = Name.ConvertToWildcardPatternList();
 

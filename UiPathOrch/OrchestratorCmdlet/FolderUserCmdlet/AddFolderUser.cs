@@ -32,6 +32,10 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -150,7 +154,7 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
     // Read all CSV file entries first before processing, to query UserNames in bulk
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
 
         parameters ??= [];
         foreach (var userName in UserName!)

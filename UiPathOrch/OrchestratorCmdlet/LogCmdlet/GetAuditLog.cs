@@ -61,6 +61,10 @@ public class GetAuditLogCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class IdCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -185,7 +189,7 @@ public class GetAuditLogCmdlet : OrchestratorPSCmdlet
         #region UserName
         if (UserName is not null && UserName.Length > 0)
         {
-            var drives = SessionState.EnumOrchDrives(Path);
+            var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
             var wpUserName = UserName.ConvertToWildcardPatternList();
             var userIds = new HashSet<Int64>();
             foreach (var drive in drives)
@@ -304,7 +308,7 @@ public class GetAuditLogCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
         // If no parameters are specified, return the contents of the cache
         bool bOutCache = (

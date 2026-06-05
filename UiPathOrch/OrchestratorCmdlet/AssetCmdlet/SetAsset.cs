@@ -68,6 +68,10 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ParameterSetName = Default, ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     // Cannot be shared because non-existent assets are displayed as "New asset name here"
     private class NameCompleter : OrchArgumentCompleter
     {
@@ -299,7 +303,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
             Value = Value,
             UserName = UserName,
             MachineName = MachineName,
-            Path = Path
+            Path = EffectivePath(Path, LiteralPath)
         };
         parameters.Add(parameter);
     }

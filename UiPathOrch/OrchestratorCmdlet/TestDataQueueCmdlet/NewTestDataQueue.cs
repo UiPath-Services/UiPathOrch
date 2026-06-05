@@ -26,9 +26,13 @@ public class NewTestDataQueueCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)

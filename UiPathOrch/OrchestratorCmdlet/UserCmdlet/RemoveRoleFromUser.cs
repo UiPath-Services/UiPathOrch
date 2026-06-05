@@ -36,6 +36,10 @@ public class RemoveRoleFromUserCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class RolesCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -81,7 +85,7 @@ public class RemoveRoleFromUserCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
         if (UserName?.Length == 0 || string.IsNullOrEmpty(UserName?[0])) UserName = null;
         if (FullName?.Length == 0 || string.IsNullOrEmpty(FullName?[0])) FullName = null;

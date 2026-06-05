@@ -14,6 +14,10 @@ public class GetOrchPSDriveCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Force { get; set; }
 
@@ -54,9 +58,10 @@ public class GetOrchPSDriveCmdlet : OrchestratorPSCmdlet
 
     private void WriteOrchProviderInfo()
     {
+        var effectivePath = EffectivePath(Path, LiteralPath);
         IEnumerable<OrchDriveInfo> drives;
-        if (Path is null) drives = SessionState.EnumAllOrchDrives();
-        else drives = SessionState.EnumOrchDrives(Path);
+        if (effectivePath is null) drives = SessionState.EnumAllOrchDrives();
+        else drives = SessionState.EnumOrchDrives(effectivePath);
 
         foreach (var drive in drives)
         {
@@ -67,9 +72,10 @@ public class GetOrchPSDriveCmdlet : OrchestratorPSCmdlet
 
     private void WriteDuProviderInfo()
     {
+        var effectivePath = EffectivePath(Path, LiteralPath);
         IEnumerable<OrchDuDriveInfo> drives;
-        if (Path is null) drives = SessionState.EnumAllDuDrives();
-        else drives = SessionState.EnumDuDrives(Path);
+        if (effectivePath is null) drives = SessionState.EnumAllDuDrives();
+        else drives = SessionState.EnumDuDrives(effectivePath);
 
         foreach (var drive in drives)
         {
@@ -80,9 +86,10 @@ public class GetOrchPSDriveCmdlet : OrchestratorPSCmdlet
 
     private void WriteTmProviderInfo()
     {
+        var effectivePath = EffectivePath(Path, LiteralPath);
         IEnumerable<OrchTmDriveInfo> drives;
-        if (Path is null) drives = SessionState.EnumAllTmDrives();
-        else drives = SessionState.EnumTmDrives(Path);
+        if (effectivePath is null) drives = SessionState.EnumAllTmDrives();
+        else drives = SessionState.EnumTmDrives(effectivePath);
 
         foreach (var drive in drives)
         {

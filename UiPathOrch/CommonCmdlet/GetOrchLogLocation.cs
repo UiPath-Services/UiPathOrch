@@ -12,12 +12,16 @@ public class GetOrchLogLocationCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     protected override void ProcessRecord()
     {
         string logFolderPath;
         try
         {
-            var drive = SessionState.GetOrchDrive(Path);
+            var drive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath));
             logFolderPath = drive.OrchAPISession.GetLogFolderPath();
         }
         catch

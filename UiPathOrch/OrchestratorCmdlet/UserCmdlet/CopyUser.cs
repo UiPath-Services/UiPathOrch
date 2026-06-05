@@ -36,6 +36,10 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     [Parameter]
     public string? UserMappingCsv { get; set; }
 
@@ -304,7 +308,7 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
         var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
-        var srcDrive = SessionState.GetOrchDrive(Path!) ?? throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
+        var srcDrive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath)!) ?? throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
         using var cancelHandler = new ConsoleCancelHandler();

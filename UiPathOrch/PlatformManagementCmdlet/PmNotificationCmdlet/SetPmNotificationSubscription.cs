@@ -30,6 +30,10 @@ public class SetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private sealed record Row(string Topic, string Mode, bool Subscribed);
 
     // drive -> accumulated (topic, mode, subscribed), in input order.
@@ -50,7 +54,7 @@ public class SetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
 
         _pending ??= [];
 
-        foreach (var drive in SessionState.EnumPmDrives(Path))
+        foreach (var drive in SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath)))
         {
             if (!_pending.TryGetValue(drive, out var list))
             {

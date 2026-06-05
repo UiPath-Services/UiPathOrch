@@ -92,6 +92,10 @@ public abstract class PmRobotAccountWriteCmdletBase : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     // Warn only once per invocation when the deprecated GroupName0..GroupName9
     // CSV columns (see the #region GroupName\d block) are actually supplied.
     private bool _groupNameNDeprecationWarned;
@@ -192,7 +196,7 @@ public abstract class PmRobotAccountWriteCmdletBase : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
 
         // GroupName must not be modified to ensure proper handling during CSV import
         string?[] groupNames = GroupName ?? [];

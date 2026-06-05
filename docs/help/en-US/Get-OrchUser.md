@@ -20,7 +20,7 @@ Gets users from UiPath Orchestrator tenants.
 ### __AllParameterSets
 
 ```
-Get-OrchUser [-Path <string[]>] [[-UserName] <string[]>] [[-FullName] <string[]>]
+Get-OrchUser [-Path <string[]>] [-LiteralPath <string[]>] [[-UserName] <string[]>] [[-FullName] <string[]>]
  [-CsvEncoding <Encoding>] [-ExpandDetails] [-ExportCsv <string>] [-Type <string[]>]
  [<CommonParameters>]
 ```
@@ -116,6 +116,28 @@ Type: System.String[]
 DefaultValue: None
 SupportsWildcards: false
 Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -LiteralPath
+
+Specifies the target folder or drive by literal path -- wildcard metacharacters (`[`, `]`, `*`, `?`) are treated as literal characters rather than patterns. Accepts the same drive-qualified paths as -Path. Its `PSPath` alias also binds the path of items piped from Get-ChildItem / Get-Item, so you can pipe folders directly. Use -LiteralPath instead of -Path when a folder name contains a wildcard metacharacter.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- PSPath
 ParameterSets:
 - Name: (All)
   Position: Named

@@ -20,7 +20,7 @@ Adds dates to the Non-Working Days calendars.
 ### __AllParameterSets
 
 ```
-Add-OrchCalendarDate [-Path <string[]>] [-Name] <string[]> [[-ExcludedDate] <datetime[]>]
+Add-OrchCalendarDate [-Path <string[]>] [-LiteralPath <string[]>] [-Name] <string[]> [[-ExcludedDate] <datetime[]>]
  [-Confirm] [-IncludePastDate] [-WhatIf] [<CommonParameters>]
 ```
 
@@ -92,6 +92,28 @@ Type: System.String[]
 DefaultValue: None
 SupportsWildcards: true
 Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -LiteralPath
+
+Specifies the target folder or drive by literal path -- wildcard metacharacters (`[`, `]`, `*`, `?`) are treated as literal characters rather than patterns. Accepts the same drive-qualified paths as -Path. Its `PSPath` alias also binds the path of items piped from Get-ChildItem / Get-Item, so you can pipe folders directly. Use -LiteralPath instead of -Path when a folder name contains a wildcard metacharacter.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- PSPath
 ParameterSets:
 - Name: (All)
   Position: Named

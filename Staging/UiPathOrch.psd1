@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.7.3'
+ModuleVersion = '1.8.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -483,24 +483,34 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.7.3
+1.8.0
 
-- Robustness: the HTTP layer now retries 429/503/504 with capped backoff
-  (honoring Retry-After) and re-authenticates once on a 401, so transient
-  failures and expired/rotated tokens recover automatically; an auth circuit
-  breaker makes a genuinely broken credential fail fast. A 401 no longer wedges
-  the cache against a token that would re-authenticate.
-- Ctrl+C now interrupts an in-flight request (pagination, copy, Invoke-OrchApi),
-  not only between calls.
-- Identity lookups (Pm users / groups / robot accounts, ...) make about half the
-  requests after the three pagination loops were unified into one.
-- copy -WhatIf is more informative: a recursive -WhatIf previews every subfolder;
-  a root-to-root copy shows tenant-entity counts and warns that folders are
-  skipped without -Recurse; copying a personal workspace with no destination
-  counterpart warns with guidance instead of erroring; a bucket copy names its
-  destination.
-- Fixed: ConvertTo-Json of a tag nested beyond -Depth emitted the
-  "DisplayName=DisplayValue" string instead of the structured object.
+- New: every folder-/drive-scoped cmdlet now has -LiteralPath, a literal
+  (non-wildcard) counterpart to -Path with an [Alias("PSPath")]. It binds the
+  automatic PSPath note-property of Get-ChildItem / Get-Item output, so
+  `dir Orch1:\ -Recurse | Update-OrchProcess * -WhatIf` targets each folder's own
+  path, and `dir | Select PSPath | Export-Csv` round-trips through
+  `Import-Csv | <cmdlet> -LiteralPath`.
+- BREAKING: folder (dir) items no longer carry a `Path` property. A folder now
+  follows the FileSystem-provider convention -- it exposes FullName (its own
+  path) plus the automatic PSPath, and no Path (which previously returned the
+  *parent*). Use FullName / PSPath for the folder's own path, or Split-Path for
+  the parent. Content entities (assets, queues, jobs, ...) are unaffected.
+- BREAKING: Get-OrchProductVersion now returns camelCase property names (cached
+  per organization, local timestamps); New-/Set-PmRobotAccount take -Name as the
+  primary parameter (-UserName is an alias).
+- CSV multi-value columns round-trip by a consistent rule -- comma-joined list
+  columns split on import, identity columns stay single-valued, embedded commas
+  and wildcards escaped both ways. Remove-OrchMachine / -OrchTestCase delete in
+  bulk. ShouldProcess prompts normalized to "Verb Noun".
+- Fixed: names with a single quote no longer break OData queries (the O'Brien
+  problem); New-/Set-PmRobotAccount create all of several comma-separated names.
+- Fixed: Get-Item on a folder now returns a drive-qualified PSPath (it previously
+  dropped the drive name). Get-Item / Get-ChildItem on DU and TM projects now
+  stamp the project's own drive-qualified path instead of an empty or cross-drive
+  value.
+- Fixed: Get-OrchLog's cache no longer accumulates duplicate rows on overlapping
+  fetches.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

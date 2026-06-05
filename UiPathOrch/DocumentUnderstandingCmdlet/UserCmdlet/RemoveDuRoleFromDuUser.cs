@@ -38,6 +38,10 @@ public class RemoveDuRoleFromDuUserCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -90,7 +94,7 @@ public class RemoveDuRoleFromDuUserCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesProjects = SessionState.EnumDuFolders(Path, Recurse);
+        var drivesProjects = SessionState.EnumDuFolders(EffectivePath(Path, LiteralPath), Recurse);
         var wpName = Name.ConvertToWildcardPatternList();
         //var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpRole = Roles.SplitValuesByUnescapedCommasPreservingEscapes().ConvertToWildcardPatternList();

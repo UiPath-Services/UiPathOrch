@@ -19,6 +19,10 @@ public class GetDuClassifierCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -60,7 +64,7 @@ public class GetDuClassifierCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesProjects = SessionState.EnumDuFolders(Path, Recurse);
+        var drivesProjects = SessionState.EnumDuFolders(EffectivePath(Path, LiteralPath), Recurse);
         var wpClassifierName = Name.ConvertToWildcardPatternList();
 
         // Synchronous version

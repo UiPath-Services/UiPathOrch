@@ -17,12 +17,16 @@ public class GetTmRequirementCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
     protected override void ProcessRecord()
     {
-        var drivesProjects = SessionState.EnumTmFolders(Path, Recurse.IsPresent);
+        var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent);
         var wpName = Name.ConvertToWildcardPatternList();
 
         //foreach (var driveProject in drivesProjects)

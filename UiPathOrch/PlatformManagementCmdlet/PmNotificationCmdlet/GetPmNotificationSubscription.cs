@@ -27,6 +27,10 @@ public class GetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter IncludeHidden { get; set; }
 
@@ -45,7 +49,7 @@ public class GetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
         var wpPublisher = Publisher.ConvertToWildcardPatternList();
         var modeFilter = (Mode is { Length: > 0 })
             ? new HashSet<string>(Mode, StringComparer.OrdinalIgnoreCase)

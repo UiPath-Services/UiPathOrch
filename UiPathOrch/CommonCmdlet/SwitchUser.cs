@@ -13,9 +13,13 @@ public class SwitchOrchCurrentUserCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     protected override void ProcessRecord()
     {
-        foreach (var drive in SessionState.EnumOrchDrives(Path))
+        foreach (var drive in SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath)))
         {
             if (ShouldProcess(drive.NameColonSeparator, "Switch CurrentUser"))
             {

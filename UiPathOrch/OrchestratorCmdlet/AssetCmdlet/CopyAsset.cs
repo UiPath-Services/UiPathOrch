@@ -26,6 +26,10 @@ public class CopyAssetCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -37,8 +41,8 @@ public class CopyAssetCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var (srcDrive, srcRootFolder) = SessionState.ResolveToSingleFolder(Path);
-        var srcDrivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var (srcDrive, srcRootFolder) = SessionState.ResolveToSingleFolder(EffectivePath(Path, LiteralPath));
+        var srcDrivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
         var dstFolderCache = new Dictionary<string, Folder?>();

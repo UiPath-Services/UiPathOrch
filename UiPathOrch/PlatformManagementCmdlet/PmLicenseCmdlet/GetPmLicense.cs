@@ -24,6 +24,10 @@ public class GetPmLicense : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter HasCapacity { get; set; }
 
@@ -95,7 +99,7 @@ public class GetPmLicense : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
 
         var wpLicense = License.ConvertToWildcardPatternList();
         var wpCode = Code.ConvertToWildcardPatternList();

@@ -33,7 +33,9 @@ internal static class FolderExtensions
         return relativePath.TrimStart('/').TrimEnd('/');
     }
 
-    public static string GetPSPath(this Folder entity) => Path.Combine(entity?.Path ?? "", entity?.DisplayName ?? "");
+    // Folder no longer carries a Path (parent) member; FullName holds the folder's own
+    // drive-qualified path, stamped at enumeration (GetFolders) and at create/copy/root sites.
+    public static string GetPSPath(this Folder entity) => entity?.FullName ?? "";
 
     public static string GetPSPath(this Entities.Environment entity) => Path.Combine(entity?.Path ?? "", entity?.Name ?? "");
     public static string GetPSPath(this Library entity) => Path.Combine(entity?.Path ?? "", entity?.Id ?? "");
@@ -990,6 +992,17 @@ internal static class SessionStateExtentios
             .OrderBy(d => d.Name);
     }
 
+    // PSPath note-properties (and -LiteralPath via [Alias("PSPath")]) arrive provider-qualified,
+    // e.g. "UiPathOrch\UiPathOrch::Orch1:\X". GetResolvedPSPathFromPSPath does not resolve that
+    // form through the Orch drive, but a drive-qualified Orch path never contains "::", so strip
+    // any provider qualifier down to the drive-qualified form the resolvers expect.
+    internal static string? StripProviderQualifier(string? p)
+    {
+        if (p is null) return null;
+        int i = p.IndexOf("::", StringComparison.Ordinal);
+        return i >= 0 ? p[(i + 2)..] : p;
+    }
+
     // If paths is not specified, return only the current drive.
     // T can be OrchDriveInfo, OrchDuDriveInfo, etc.
     public static List<T> EnumOrchDrivesImpl<T>(this SessionState? sessionState, IEnumerable<string?>? path = null) where T : PSDriveInfo
@@ -1004,7 +1017,7 @@ internal static class SessionStateExtentios
         }
         else
         {
-            var psPaths = path.Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
+            var psPaths = path.Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(StripProviderQualifier(p))).SelectMany(p => p);
             foreach (var p in psPaths)
             {
                 if (p.Drive is T orchDrive)
@@ -1067,7 +1080,7 @@ internal static class SessionStateExtentios
         }
         else
         {
-            var psPaths = path.Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
+            var psPaths = path.Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(StripProviderQualifier(p))).SelectMany(p => p);
             foreach (var p in psPaths)
             {
                 AddOrchDrive(sessionState!, drives, p.Drive);
@@ -1084,7 +1097,7 @@ internal static class SessionStateExtentios
         OrchDriveInfo.SessionState = sessionState;
 
         return paths
-            .Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(p))
+            .Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(StripProviderQualifier(p)))
             .SelectMany(p => p)
             .Where(p => p.Drive is OrchDriveInfo orchDrive)
             .Select(p => p.Drive)
@@ -1107,7 +1120,7 @@ internal static class SessionStateExtentios
         }
         else
         {
-            var psPaths = paths.Where(p => p is not null).Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
+            var psPaths = paths.Where(p => p is not null).Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(StripProviderQualifier(p))).SelectMany(p => p);
             foreach (var pathInfo in psPaths.Where(p => p.Provider.Name == "UiPathOrch"))
             {
                 yield return pathInfo;
@@ -1468,7 +1481,7 @@ internal static class SessionStateExtentios
         }
         else
         {
-            var psPaths = paths.Where(p => p is not null).Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
+            var psPaths = paths.Where(p => p is not null).Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(StripProviderQualifier(p))).SelectMany(p => p);
             foreach (var pathInfo in psPaths.Where(p => p.Provider.Name == "UiPathOrchDu"))
             {
                 yield return pathInfo;
@@ -1549,7 +1562,7 @@ internal static class SessionStateExtentios
         }
         else
         {
-            var psPaths = paths.Where(p => p is not null).Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(p)).SelectMany(p => p);
+            var psPaths = paths.Where(p => p is not null).Select(p => sessionState!.Path.GetResolvedPSPathFromPSPath(StripProviderQualifier(p))).SelectMany(p => p);
             foreach (var pathInfo in psPaths.Where(p => p.Provider.Name == "UiPathOrchTm"))
             {
                 yield return pathInfo;

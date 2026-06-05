@@ -1,8 +1,8 @@
 <#
 .SYNOPSIS
     Reorders parameters in MAML XML <command:syntaxItem> so that
-    Path, Recurse, Depth appear first, followed by the remaining parameters
-    in their original order.
+    Path, LiteralPath, Recurse, Depth appear first, followed by the remaining
+    parameters in their original order.
 
 .DESCRIPTION
     PlatyPS exports parameters in alphabetical order within <command:syntaxItem>.
@@ -29,7 +29,7 @@ param(
 )
 
 # Priority parameters in desired display order
-$PriorityNames = @('Path', 'Recurse', 'Depth')
+$PriorityNames = @('Path', 'LiteralPath', 'Recurse', 'Depth')
 
 foreach ($path in $XmlPath) {
     $resolvedPath = Resolve-Path $path -ErrorAction Stop

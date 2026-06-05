@@ -33,6 +33,10 @@ public class RemoveAssetUserValueCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -117,7 +121,7 @@ public class RemoveAssetUserValueCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
         var wpUserName = UserName.ConvertToWildcardPatternList();
         // When MachineName is not specified, match any (including null — covers user-only UserValues).

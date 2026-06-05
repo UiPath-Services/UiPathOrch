@@ -20,6 +20,10 @@ public class GetFolderUsageCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -51,7 +55,7 @@ public class GetFolderUsageCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         _inputParameters ??= [];
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
         foreach (var (drive, folder) in drivesFolders)
         {
             var param = new InputParameter()

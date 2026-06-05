@@ -73,6 +73,10 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -322,7 +326,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
             JobKey is null &&
             Skip is null && First is null);
 
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
 
         if (bOutCache)
         {

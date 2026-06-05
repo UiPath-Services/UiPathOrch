@@ -30,6 +30,10 @@ public class RemoveUserCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     protected override void ProcessRecord()
     {
         if (UserName is not null && UserName.All(u => string.IsNullOrEmpty(u))) UserName = null;
@@ -41,7 +45,7 @@ public class RemoveUserCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
         var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpFullName = FullName.ConvertToWildcardPatternList();

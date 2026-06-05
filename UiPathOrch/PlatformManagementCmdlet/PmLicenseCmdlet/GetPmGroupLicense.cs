@@ -35,6 +35,10 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public string? ExportCsv { get; set; }
 
@@ -130,7 +134,7 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpUserName = UserName.ConvertToWildcardPatternList();

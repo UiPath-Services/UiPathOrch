@@ -2387,12 +2387,23 @@ Describe 'Tab Completion' {
     }
 
     It 'Update-OrchTrigger -MachineRobots completes without error' {
-        $results = Complete-Parameter 'Update-OrchTrigger -Name * -MachineRobots '
+        # The Update completer yields each existing trigger's MachineRobots binding, or a single
+        # empty-template fallback when the folder has none -- so against a real folder it always
+        # returns at least one candidate. Target an explicit folder: without -Path the completer
+        # resolves the current location, which is not guaranteed to be an Orch folder mid-suite.
+        $results = Complete-Parameter "Update-OrchTrigger -Path $script:SmokeFolder -Name * -MachineRobots "
         $results | Should -Not -Be $null
     }
 
     It 'New-OrchTrigger -MachineRobots completes without error' {
-        $results = Complete-Parameter 'New-OrchTrigger -Name test -ReleaseName test -MachineRobots '
+        # The New completer offers the folder's robot-provisioned users/machines; a pristine test
+        # folder usually has none, so skip when there is nothing to complete (mirrors the
+        # trigger/webhook env-dependent guards above).
+        $results = Complete-Parameter "New-OrchTrigger -Path $script:SmokeFolder -Name test -ReleaseName test -MachineRobots "
+        if (-not $results) {
+            Set-ItResult -Skipped -Because 'No robot-provisioned machine/user in the tenant test folder to complete.'
+            return
+        }
         $results | Should -Not -Be $null
     }
 

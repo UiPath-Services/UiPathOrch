@@ -51,6 +51,10 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -116,7 +120,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
         ulong skip = Skip ?? 0;
         ulong first = First ?? ulong.MaxValue;
 
-        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
         // If no parameters are specified, return the cache contents
@@ -188,7 +192,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
     private void ProcessById()
     {
         // If Path is not bound via pipeline, use the current location
-        var path = Path ?? [SessionState.Path.CurrentLocation.Path];
+        var path = EffectivePath(Path, LiteralPath) ?? [SessionState.Path.CurrentLocation.Path];
         var (drive, folder) = SessionState.ResolveToSingleFolder(path[0]);
 
         // Duplicate check (skip if the same folder + TestSetExecutionId was already processed)

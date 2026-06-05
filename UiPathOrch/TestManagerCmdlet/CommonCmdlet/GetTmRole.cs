@@ -20,6 +20,10 @@ class GetTmRoleCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(TmDriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class TmProjectNameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -56,7 +60,7 @@ class GetTmRoleCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumTmDrives(Path);
+        var drives = SessionState.EnumTmDrives(EffectivePath(Path, LiteralPath));
         //var wpProjectName = Name.ConvertToWildcardPatternList();
 
         foreach (var drive in drives)

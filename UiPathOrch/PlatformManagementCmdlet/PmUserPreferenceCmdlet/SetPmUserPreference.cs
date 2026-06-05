@@ -26,6 +26,10 @@ public class SetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     // drive -> accumulated key/value settings, in input order.
     private Dictionary<OrchDriveInfo, List<Entities.KeyValuePair>>? _pending;
 
@@ -35,7 +39,7 @@ public class SetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
 
         _pending ??= [];
 
-        var drives = SessionState.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
         foreach (var drive in drives)
         {
             if (!_pending.TryGetValue(drive, out var list))

@@ -72,6 +72,10 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -91,11 +95,14 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
     protected abstract void ClearLinkCache(OrchDriveInfo drive, long entityId);
     protected abstract void ClearPerFolderCache(OrchDriveInfo drive, Folder folder);
 
-    private readonly List<(string[]? Name, string? Destination, string[]? Path)> _buffered = new();
+    private readonly List<(string[]? Name, string? Destination, string?[]? Path)> _buffered = new();
 
     protected sealed override void ProcessRecord()
     {
-        _buffered.Add((Name, Destination, Path));
+        // Resolve -Path / -LiteralPath to the effective path list per record so a
+        // pipeline mixing the two binds each row's own source path. -Destination
+        // is unaffected.
+        _buffered.Add((Name, Destination, EffectivePath(Path, LiteralPath)));
     }
 
     protected sealed override void EndProcessing()
@@ -340,7 +347,7 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
                         DisplayName = segment,
                         ParentId = parentId,
                         FullyQualifiedName = childFqn,
-                        Path = current.GetPSPath(),
+                        FullName = System.IO.Path.Combine(current.GetPSPath(), segment),
                     };
                 }
                 else
@@ -350,7 +357,7 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
                         child = drive.OrchAPISession.CreateFolder(segment, null, "Processes", parentId);
                         if (child is not null)
                         {
-                            child.Path = current.GetPSPath();
+                            child.FullName = System.IO.Path.Combine(current.GetPSPath(), segment);
                             drive.AppendFolderToCache(child);
                         }
                     }

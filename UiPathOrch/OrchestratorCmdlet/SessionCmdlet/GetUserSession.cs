@@ -32,6 +32,10 @@ public class GetUserSessionCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private string? MakeFilter()
     {
         var filter = new List<string>();
@@ -80,7 +84,7 @@ public class GetUserSessionCmdlet : OrchestratorPSCmdlet
         ulong first = First ?? ulong.MaxValue;
         string query = "&$expand=Robot($expand=License,User),UpdateInfo" + MakeFilter() + MakeOrderBy();
 
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,

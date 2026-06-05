@@ -82,6 +82,11 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ParameterSetName = Default, ValueFromPipelineByPropertyName = true)]
+    [Parameter(ParameterSetName = Plain, ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -251,7 +256,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
             MachineName = MachineName,
             SecretValue = SecretValue,
             ExternalName = ExternalName,
-            Path = Path
+            Path = EffectivePath(Path, LiteralPath)
         };
         parameters.Add(parameter);
     }

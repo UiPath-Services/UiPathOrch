@@ -35,6 +35,10 @@ public class AddRoleToFolderUserCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -197,8 +201,8 @@ public class AddRoleToFolderUserCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        var drives = SessionState.EnumOrchDrives(Path);
-        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
+        var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
 
         var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpUserName = UserName.ConvertToWildcardPatternList();

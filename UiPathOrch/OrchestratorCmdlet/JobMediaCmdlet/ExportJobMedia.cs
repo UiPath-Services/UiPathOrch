@@ -22,6 +22,10 @@ public class SaveJobMediaCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -81,7 +85,7 @@ public class SaveJobMediaCmdlet : OrchestratorPSCmdlet
         // Materialize once — the same enumerable is iterated three times below
         // (prefetch, count, download). EnumFolders is lazy and would re-walk
         // its drive/folder resolution on each pass otherwise.
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth).ToList();
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth).ToList();
 
         if (Destination is null)
         {

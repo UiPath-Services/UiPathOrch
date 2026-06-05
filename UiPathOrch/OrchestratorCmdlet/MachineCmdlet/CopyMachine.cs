@@ -23,6 +23,10 @@ public class CopyMachineCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     internal static void CopyMachines(
         IWritableHost _this,
         OrchDriveInfo srcDrive,
@@ -155,7 +159,7 @@ public class CopyMachineCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var wpName = Name.ConvertToWildcardPatternList();
-        var srcDrive = SessionState.GetOrchDrive(Path!);
+        var srcDrive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath)!);
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
         using var cancelHandler = new ConsoleCancelHandler();

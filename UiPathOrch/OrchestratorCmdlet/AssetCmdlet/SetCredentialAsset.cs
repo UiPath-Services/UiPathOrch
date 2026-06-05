@@ -90,6 +90,11 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ParameterSetName = Default, ValueFromPipelineByPropertyName = true)]
+    [Parameter(ParameterSetName = Plain, ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     // Cannot be shared because non-existent assets are displayed as "New asset name here"
     private class NameCompleter : OrchArgumentCompleter
     {
@@ -277,7 +282,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
             CredentialUsername = CredentialUsername,
             CredentialPassword = CredentialPassword,
             ExternalName = ExternalName,
-            Path = Path
+            Path = EffectivePath(Path, LiteralPath)
         };
         parameters.Add(parameter);
     }

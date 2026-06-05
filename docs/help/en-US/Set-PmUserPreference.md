@@ -20,8 +20,8 @@ Sets your own organization-level portal preferences (theme, language, ...).
 ### Default (Default)
 
 ```
-Set-PmUserPreference [-Key] <string> [-Value] <string> [-Path <string[]>]
- [-Confirm] [-WhatIf] [<CommonParameters>]
+Set-PmUserPreference [-Path <string[]>] [-LiteralPath <string[]>] [-Key] <string>
+ [-Value] <string> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -113,6 +113,28 @@ Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -LiteralPath
+
+Specifies the target folder or drive by literal path -- wildcard metacharacters (`[`, `]`, `*`, `?`) are treated as literal characters rather than patterns. Accepts the same drive-qualified paths as -Path. Its `PSPath` alias also binds the path of items piped from Get-ChildItem / Get-Item, so you can pipe folders directly. Use -LiteralPath instead of -Path when a folder name contains a wildcard metacharacter.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- PSPath
 ParameterSets:
 - Name: (All)
   Position: Named

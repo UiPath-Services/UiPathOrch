@@ -21,6 +21,10 @@ public class CopyRoleCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     internal static void CopyRoles(
         IWritableHost _this,
         OrchDriveInfo srcDrive, List<WildcardPattern>? wpName,
@@ -87,7 +91,7 @@ public class CopyRoleCmdlet : OrchestratorPSCmdlet
     {
         var wpName = Name.ConvertToWildcardPatternList();
 
-        var srcDrive = SessionState.GetOrchDrive(Path!);
+        var srcDrive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath)!);
         if (srcDrive is null)
             throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
 

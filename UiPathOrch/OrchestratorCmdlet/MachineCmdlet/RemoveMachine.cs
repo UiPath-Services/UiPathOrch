@@ -19,6 +19,10 @@ public class RemoveMachineCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     // drive -> approved machines (deduped by id) confirmed via ShouldProcess.
     private Dictionary<OrchDriveInfo, Dictionary<long, ExtendedMachine>>? _pending;
 
@@ -27,7 +31,7 @@ public class RemoveMachineCmdlet : OrchestratorPSCmdlet
     // so `Remove-OrchMachine *` is a single request instead of one DELETE per match.
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         // -Name is taken literally (no comma-split): one CSV cell / quoted string is one
         // machine name. Select multiple machines via a native -Name a,b,c array or one
         // per CSV row.

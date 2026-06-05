@@ -153,6 +153,14 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    // Literal (non-wildcard) path. [Alias("PSPath")] lets `dir ... | Update-OrchProcess`
+    // and Import-Csv of a dir export bind each item's own path via its PSPath note-property.
+    // Same parameter set as -Path: folder objects expose only PSPath (no Path), content
+    // entities expose only Path, so the two never collide on a pipeline record.
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -314,7 +322,7 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
 
         SpecificPriorityValue ??= ConvertPriorityToSpecificPriorityValue(Priority);

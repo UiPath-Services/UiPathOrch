@@ -24,6 +24,10 @@ public class CopyWebhookCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     internal static void CopyWebhooks(
         IWritableHost _this,
         OrchDriveInfo srcDrive,
@@ -108,7 +112,7 @@ public class CopyWebhookCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var srcDrive = SessionState.GetOrchDrive(Path!) ?? throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
+        var srcDrive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath)!) ?? throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
         var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();

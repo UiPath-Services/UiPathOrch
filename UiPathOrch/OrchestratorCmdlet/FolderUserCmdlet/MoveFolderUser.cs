@@ -35,6 +35,10 @@ public class MoveFolderUserCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     //[Parameter]
     //public SwitchParameter Recurse { get; set; }
 
@@ -93,7 +97,7 @@ public class MoveFolderUserCmdlet : OrchestratorPSCmdlet
         //    return;
         //}
 
-        var srcDrivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path);
+        var srcDrivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath));
         var dstDrivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Destination);
 
         var wpUserName = UserName.ConvertToWildcardPatternList();

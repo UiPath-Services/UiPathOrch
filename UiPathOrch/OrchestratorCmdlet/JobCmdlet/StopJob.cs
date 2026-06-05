@@ -38,6 +38,10 @@ public class StopJobCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -110,7 +114,7 @@ public class StopJobCmdlet : OrchestratorPSCmdlet
         else
         {
             // Input from command line
-            var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth);
+            var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
 
             foreach (var (drive, folder) in drivesFolders)
             {

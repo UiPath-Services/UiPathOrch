@@ -19,6 +19,10 @@ public class EnableLicenseRuntimeCmdletBase<Enable> : OrchestratorPSCmdlet where
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     internal class KeyCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -84,7 +88,7 @@ public class EnableLicenseRuntimeCmdletBase<Enable> : OrchestratorPSCmdlet where
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         var wpRobotType = RobotType.ConvertToWildcardPatternList();
         var wpKey = Key.ConvertToWildcardPatternList();
 

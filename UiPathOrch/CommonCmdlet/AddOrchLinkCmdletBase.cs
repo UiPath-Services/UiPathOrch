@@ -54,6 +54,10 @@ public abstract class AddOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -78,7 +82,7 @@ public abstract class AddOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
     // each input object produces one entry (Name/Link/Path are single-valued
     // per row); in direct mode there's a single entry with multi-valued
     // arrays. Both shapes are resolved identically in EndProcessing.
-    private readonly List<(string[]? Name, string[]? Link, string[]? Path)> _buffered = new();
+    private readonly List<(string[]? Name, string[]? Link, string?[]? Path)> _buffered = new();
 
     // Accumulator group: one entity in one source folder, with the union of
     // every target folder requested for it across all buffered rows.
@@ -96,8 +100,10 @@ public abstract class AddOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
     protected sealed override void ProcessRecord()
     {
         // Buffer only — all the work happens in EndProcessing once the whole
-        // pipeline has been seen, so same-entity rows can be coalesced.
-        _buffered.Add((Name, Link, Path));
+        // pipeline has been seen, so same-entity rows can be coalesced. Resolve
+        // -Path / -LiteralPath to the effective path list here, per record, so a
+        // pipeline mixing the two binds each row's own path.
+        _buffered.Add((Name, Link, EffectivePath(Path, LiteralPath)));
     }
 
     protected sealed override void EndProcessing()

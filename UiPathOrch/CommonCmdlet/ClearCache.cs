@@ -41,6 +41,10 @@ public class ClearCacheCmdlet : PSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -102,8 +106,19 @@ public class ClearCacheCmdlet : PSCmdlet
             return;
         }
 
+        // Fold -Path / -LiteralPath into one effective path list. -LiteralPath
+        // (a PSPath note-property via [Alias("PSPath")], or hand-typed) is
+        // WildcardPattern-escaped so each entry is classified and resolved
+        // literally by the same scope dispatch below; -Path keeps its wildcard
+        // semantics. (This cmdlet derives from PSCmdlet, not OrchestratorPSCmdlet,
+        // so the shared EffectivePath helper isn't in scope — the escape is
+        // inlined here.)
+        var effectivePath = LiteralPath is null
+            ? Path
+            : Array.ConvertAll(LiteralPath, p => WildcardPattern.Escape(p));
+
         // No -Path: dispatch by current location
-        if (Path is null || Path.Length == 0)
+        if (effectivePath is null || effectivePath.Length == 0)
         {
             if (SessionState.Path.CurrentLocation.Drive is OrchDriveInfoBase currentDrive)
             {
@@ -116,7 +131,7 @@ public class ClearCacheCmdlet : PSCmdlet
             return;
         }
 
-        foreach (var pathSpec in Path)
+        foreach (var pathSpec in effectivePath)
         {
             ProcessPathSpec(pathSpec);
         }

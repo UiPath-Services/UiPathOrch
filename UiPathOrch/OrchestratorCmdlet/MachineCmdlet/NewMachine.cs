@@ -58,6 +58,10 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class NewMachineNameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -80,7 +84,7 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         var processedRobotUsers = RobotUsers?.SplitValuesByUnescapedCommasPreservingEscapes();
         // CSV-piped rows surface absent values as [""] (one empty string); normalise to null
         // so we don't pointlessly hit /odata/Robots/.../FindAllAcrossFolders, which 404s on

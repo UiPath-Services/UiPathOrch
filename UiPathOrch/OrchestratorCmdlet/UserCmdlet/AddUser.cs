@@ -325,6 +325,10 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class UserNameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -418,7 +422,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
         // The first element may have been input from CSV, so split it by commas
         Roles = Roles.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();
 
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         var wpType = Type.ConvertToWildcardPatternList();
         var specifiedTypes = Types.SelectByWildcards(t => t.Value, wpType).Select(t => t.Key);
 

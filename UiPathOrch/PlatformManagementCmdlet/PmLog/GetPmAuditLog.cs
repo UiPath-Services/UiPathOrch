@@ -37,6 +37,10 @@ public class GetPmAuditLogCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private string? MakeFilter()
     {
         //List<string> filter = [];
@@ -71,7 +75,7 @@ public class GetPmAuditLogCmdlet : OrchestratorPSCmdlet
         ulong skip = Skip ?? 0;
         ulong first = First ?? ulong.MaxValue;
 
-        var drives = SessionState.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
 
         // If no parameters are specified, return the cache contents
         bool bOutCache = (Skip is null && First is null);

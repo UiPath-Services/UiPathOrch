@@ -25,6 +25,10 @@ public class RemovePersonalWorkspaceCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class NameCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
@@ -93,7 +97,7 @@ public class RemovePersonalWorkspaceCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
         if (Name?.Length == 0 || string.IsNullOrEmpty(Name?[0])) Name = null;
         if (OwnerName?.Length == 0 || string.IsNullOrEmpty(OwnerName?[0])) OwnerName = null;

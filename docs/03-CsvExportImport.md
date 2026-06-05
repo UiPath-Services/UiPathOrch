@@ -105,6 +105,35 @@ Get-OrchJob -Path Orch1:\Shared -Last 7d |
 You can use `[Ctrl+Space]` after `Select-Object` to auto-complete column
 names.
 
+### Targeting folders by path: `-Path` and `-LiteralPath`
+
+Every folder-/drive-scoped cmdlet accepts both `-Path` (wildcards supported)
+and `-LiteralPath` (literal — no wildcard interpretation). `-LiteralPath` has
+`[Alias("PSPath")]`, so it binds from the automatic **`PSPath`** note-property
+that `Get-ChildItem` / `Get-Item` attach to every item. You can therefore pipe
+folders straight into a cmdlet to operate on each folder's *own* path:
+
+```powershell
+# No -Path needed — each folder's PSPath binds to -LiteralPath:
+dir Orch1:\ -Recurse | Update-OrchProcess * -A4R_Enabled False -WhatIf
+```
+
+Folders follow the FileSystem-provider convention: a `dir` item exposes
+`FullName` (its own path) and `PSPath`, **but no `Path` property** (a folder's
+`Path` used to return its *parent*; that property was removed). To round-trip
+through CSV and target each folder itself, export `PSPath`:
+
+```powershell
+# Export folder paths, (optionally edit the CSV,) then re-apply to each folder:
+dir Orch1:\ -Recurse | Select-Object PSPath | Export-Csv C:\temp\dir.csv
+Import-Csv C:\temp\dir.csv | Update-OrchProcess * -A4R_Enabled False -WhatIf
+```
+
+`Import-Csv` restores the `PSPath` column, which binds to `-LiteralPath`. The
+provider-qualified form (`UiPathOrch\UiPathOrch::Orch1:\Finance`) is accepted —
+the drive qualifier is resolved automatically. Prefer `-LiteralPath` over
+`-Path` when a folder name contains a wildcard metacharacter (`[ ] * ?`).
+
 ## Importing from CSV
 
 ### How It Works

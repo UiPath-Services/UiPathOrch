@@ -21,6 +21,10 @@ public class EnableMaintenanceModeCmdletBase<Enable> : OrchestratorPSCmdlet wher
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private static string _propValue = Enable.Value ? "Default" : "Enabled";
 
     internal class MachineNameCompleter : OrchArgumentCompleter
@@ -195,7 +199,7 @@ public class EnableMaintenanceModeCmdletBase<Enable> : OrchestratorPSCmdlet wher
 
     protected override void ProcessRecord()
     {
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
         var wpMachineName = MachineName.ConvertToWildcardPatternList();
         var wpHostMachineName = HostMachineName.ConvertToWildcardPatternList();

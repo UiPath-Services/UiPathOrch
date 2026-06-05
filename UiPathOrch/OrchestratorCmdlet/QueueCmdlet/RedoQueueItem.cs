@@ -29,6 +29,10 @@ public class RedoQueueItemCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private static string MakeFilter(QueueDefinition queue) =>
         $"&$filter=((QueueDefinitionId eq {queue.Id!.Value}) and (Status eq '2') and (ReviewStatus eq '0' or ReviewStatus eq '1'))";
 
@@ -100,7 +104,7 @@ public class RedoQueueItemCmdlet : OrchestratorPSCmdlet
     {
         _csvLines ??= [];
 
-        var drivesFolders = SessionState.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
         var wpName = Name.ConvertToWildcardPatternList();
 
         foreach (var (drive, folder) in drivesFolders)
@@ -157,7 +161,7 @@ public class RedoQueueItemCmdlet : OrchestratorPSCmdlet
     {
         if (_csvLines is null) return;
 
-        var drivesFolders = SessionState.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();

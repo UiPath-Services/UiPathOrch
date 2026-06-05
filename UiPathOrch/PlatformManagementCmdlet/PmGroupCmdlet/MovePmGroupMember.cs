@@ -33,6 +33,10 @@ public class MoveOrchPmGroupMemberCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     // key: groupName
     private Dictionary<(OrchDriveInfo drive, PmGroup group), UpdateGroupCommand>? updates;
 
@@ -43,7 +47,7 @@ public class MoveOrchPmGroupMemberCmdlet : OrchestratorPSCmdlet
         //Type = Type.SplitValuesByUnescapedCommas()?.ToArray();
         var processedUserName = UserName;
         var processedDestination = Destination;
-        var processedPath = Path;
+        var processedPath = EffectivePath(Path, LiteralPath);
 
         var drives = SessionState.EnumPmDrives(processedPath);
         var wpGroupName = new WildcardPattern(GroupName, WildcardOptions.IgnoreCase);

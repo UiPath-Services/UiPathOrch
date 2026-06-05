@@ -29,7 +29,7 @@ internal class FolderComparer : IComparer<Folder?>
         if (y is null) return 1;
 
         // Compare by OrchDirectory
-        int orchDirectoryComparison = string.Compare(x.Path, y.Path, StringComparison.OrdinalIgnoreCase);
+        int orchDirectoryComparison = string.Compare(x.FullName, y.FullName, StringComparison.OrdinalIgnoreCase);
         if (orchDirectoryComparison != 0) return orchDirectoryComparison;
 
         // If OrchDirectory is equal, compare by DisplayName

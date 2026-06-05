@@ -40,6 +40,10 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private static void CacheExistingMemberIds(List<OrchDriveInfo> drives, List<WildcardPattern>? wpGroupName)
     {
         ParallelResults.GroupBy(drives, drive =>
@@ -130,7 +134,7 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
         // Check for duplicate user names ignoring case
         _csvLines ??= new(new ForthItemIgnoreCaseComparer<OrchDriveInfo, PmGroup, string>());
 
-        var drives = SessionState.EnumPmDrives(Path);
+        var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList(); // Type does not support wildcards
         //var objectTypes = DirectoryTypes.Items.FilterByWildcards(t => t.Value, wpType).Select(t => t.Key);

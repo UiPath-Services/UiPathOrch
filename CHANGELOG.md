@@ -6,8 +6,60 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.8.0] - 2026-06-05
+
+### Added
+
+- **`-LiteralPath` on every folder-/drive-scoped cmdlet.** A literal
+  (non-wildcard) counterpart to `-Path`, carrying `[Alias("PSPath")]` so it
+  binds from the automatic `PSPath` note-property that `Get-ChildItem` /
+  `Get-Item` attach to every item. `dir Orch1:\ -Recurse | Update-OrchProcess *
+  -WhatIf` now targets each folder's own path with no `-Path`, and
+  `dir | Select-Object PSPath | Export-Csv` round-trips through
+  `Import-Csv | <cmdlet> -LiteralPath`. The provider-qualified PSPath form
+  (`UiPathOrch\UiPathOrch::Orch1:\X`) is accepted by the path resolvers.
+
+### Changed
+
+- **BREAKING: the `Path` property has been removed from folder (`dir`) items.**
+  A folder previously carried a `Path` that returned its *parent* directory;
+  folders now follow the FileSystem-provider convention — a `dir` item exposes
+  `FullName` (its own path) plus the automatic `PSPath`, and no `Path`. Scripts
+  that read `(dir Orch1:\...).Path` (which returned the parent) should use
+  `FullName` / `PSPath` for the folder's own path, or `Split-Path` for the
+  parent. Content entities (assets, queues, jobs, …) are unaffected — their
+  `Path` still names the containing folder.
+- **BREAKING: `Get-OrchProductVersion` now returns camelCase property names**
+  (matching the API), is cached per organization rather than per drive, and
+  reports timestamps in local time. Scripts reading the previous PascalCase
+  property names must update.
+- **`New-PmRobotAccount` / `Set-PmRobotAccount`: `-Name` is now the primary
+  parameter** (with `-UserName` kept as an alias), so a robot account is
+  addressed by the same `-Name` as the rest of the cmdlet family and a
+  `Get | Set` object pipe round-trips.
+- **CSV multi-value columns now round-trip by a consistent rule.** A column that
+  `-ExportCsv` writes as a single comma-joined cell (list attributes such as
+  roles, group memberships, ExecutorRobots) is split back on import; an
+  identity/selector column (Name, UserName, Path, …) is taken as a single value.
+  Commas and wildcard metacharacters inside a value are escaped on export and
+  restored on import, so they survive the round-trip.
+- **`Remove-OrchMachine` and `Remove-OrchTestCase` delete in bulk.** Wildcard-,
+  comma-, and CSV-specified targets are coalesced into one bulk-delete API call
+  per folder instead of one call per item.
+- **`-WhatIf` / `-Confirm` prompts read consistently** — ShouldProcess action
+  strings are normalized to the `Verb Noun` convention across the module.
+
 ### Fixed
 
+- **`Get-Item` on a folder now returns a drive-qualified `PSPath`.** It
+  previously built `PSPath` from the fully-qualified name without the drive
+  prefix (`UiPathOrch\UiPathOrch::\Autopilot`), so `Get-Item … | <cmdlet>
+  -LiteralPath` lost the drive. It now matches `Get-ChildItem`
+  (`…::Orch1:\Autopilot`).
+- **`Get-Item` / `Get-ChildItem` on DU and TM projects now stamp the project's
+  own drive-qualified path.** They previously emitted the bare shared cache
+  object, so `(Get-Item Du1:\proj).FullName` could be empty or leak another
+  drive's last value; each emit is now a per-drive stamped clone.
 - **`Get-OrchLog`'s cache no longer accumulates duplicate rows when overlapping
   logs are fetched more than once.** Robot-log entries all arrive with `Id == 0`
   from the server, so the per-folder cache deduplicates by *value* — `Log`
@@ -20,6 +72,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   copy. The race the swap guarded against is not reachable for this cache — the
   only writer is `Get-OrchLog`, which fetches folders sequentially, and no
   completer or parallel path writes it.
+- **Names containing a single quote no longer break OData queries** (the
+  "O'Brien" problem). `$filter` string literals are single-quote-escaped and
+  URL-encoded, and OData literals in function-import keys and `robotType` are
+  escaped as well.
+- **`New-PmRobotAccount` / `Set-PmRobotAccount` with several comma-separated
+  names now create or update every one**, not just the first.
+- **A group name or robot name containing a comma or wildcard metacharacter now
+  round-trips** through `New-PmUser` and `New-`/`Set-PmRobotAccount`
+  `-GroupName` / `-ExecutorRobots` CSV export and import; `UnescapeBackticks` no
+  longer drops an escaped backtick.
+- **The internal API-version value is published atomically**, avoiding a torn
+  read under parallel requests.
+- Hardened `Enable-`/`Disable-OrchLicenseRuntime` key escaping and the bucket
+  client's HTTP initialization.
 
 ## [1.7.3] - 2026-06-04
 

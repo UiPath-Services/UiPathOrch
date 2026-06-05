@@ -114,7 +114,13 @@ public class OrchDuProvider : NavigationCmdletProvider
         var project = GetProject(path);
         if (project is not null)
         {
-            WriteItemObject(project, path, true);
+            // Stamp a per-call clone (like GetChildItems / NewItem) so the emitted object's own
+            // Path/FullName are this drive's drive-qualified path. Emitting the bare shared cache
+            // entity would leave FullName empty or leak another drive's last-stamped value.
+            var clone = project.ShallowClone();
+            clone.Path = OrchDuDriveInfo.NameColonSeparator;
+            clone.FullName = OrchDuDriveInfo.NameColonSeparator + project.name;
+            WriteItemObject(clone, clone.FullName, true);
         }
         // Root path or non-existent path: output nothing (no error)
     }

@@ -40,6 +40,10 @@ public class RemoveQueueItemCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     // Enumerate Ids available in the cache
     internal class IdCompleter : OrchArgumentCompleter
     {
@@ -98,7 +102,7 @@ public class RemoveQueueItemCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         #region Resolve the drive, folder, and queue for this line
-        var (drive, folder) = SessionState.ResolveToSingleFolder(Path);
+        var (drive, folder) = SessionState.ResolveToSingleFolder(EffectivePath(Path, LiteralPath));
         var wpName = new string[] { Name! }.ConvertToWildcardPatternList();
 
         var queues = drive.Queues.Get(folder).FilterByWildcards(q => q?.Name, wpName).Take(2).ToList();

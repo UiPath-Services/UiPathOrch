@@ -1285,10 +1285,7 @@ public class DomainUserAssignment
 public class Folder
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? Path { get; set; } // added by UiPathOrch
-
-    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
-    public string? FullName { get; set; } // added by UiPathOrch
+    public string? FullName { get; set; } // added by UiPathOrch (the folder's own drive-qualified path)
 
     public Int64? Id { get; set; }
     public string? Key { get; set; }
@@ -4693,6 +4690,8 @@ public class TmProject
 
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? FullName { get; set; } // added by UiPathOrch
+
+    public TmProject ShallowClone() => (TmProject)MemberwiseClone();
 
     public string? projectPrefix { get; set; }
     public bool? isAuthorizationEnabled { get; set; }

@@ -32,6 +32,10 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     [Parameter(Mandatory = true, Position = 1)]
     [Alias("Uri")]
     public string ApiPath { get; set; } = null!;
@@ -95,8 +99,9 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
 
         // Resolve drive + folder. With no -Path, fall back to the current PowerShell location
         // which must be on a UiPathOrch drive.
+        var effectivePath = EffectivePath(Path, LiteralPath);
         string resolvePath;
-        if (string.IsNullOrEmpty(Path))
+        if (string.IsNullOrEmpty(effectivePath))
         {
             var current = SessionState.Path.CurrentLocation;
             if (current.Drive is not OrchDriveInfo)
@@ -112,7 +117,7 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
         }
         else
         {
-            resolvePath = Path;
+            resolvePath = effectivePath;
         }
 
         OrchDriveInfo drive;

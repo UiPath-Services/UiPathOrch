@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
     Reorders parameters in the SYNTAX code blocks of PlatyPS markdown
-    files so that Path, Recurse, Depth appear first, positional
+    files so that Path, LiteralPath, Recurse, Depth appear first, positional
     parameters follow in position order, and remaining named parameters
     come last in alphabetical order.
 
@@ -14,9 +14,10 @@
 
     Ordering inside each SYNTAX code block:
       1. Path
-      2. Recurse
-      3. Depth
-      4. Other positional parameters, by Position ascending (read from
+      2. LiteralPath
+      3. Recurse
+      4. Depth
+      5. Other positional parameters, by Position ascending (read from
          the PARAMETERS yaml of the same md file)
       5. Other named parameters, alphabetical
       6. [<CommonParameters>] (always last)
@@ -57,7 +58,7 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-$PriorityNames = @('Path', 'Recurse', 'Depth')
+$PriorityNames = @('Path', 'LiteralPath', 'Recurse', 'Depth')
 
 # ---------- token parser ----------
 

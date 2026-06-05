@@ -30,6 +30,10 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -332,7 +336,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
         var wpId = processedId.ConvertToWildcardPatternList();
         var wpVersion = processedVersion.ConvertToWildcardPatternList();
 
-        var (srcDrive, srcRootFolder) = SessionState.ResolveToSingleFeedFolder(Path);
+        var (srcDrive, srcRootFolder) = SessionState.ResolveToSingleFeedFolder(EffectivePath(Path, LiteralPath));
         var srcDrivesFolders = SessionState.EnumPackageFeedFolders([srcRootFolder.GetPSPath()], Recurse.IsPresent);
         var dstDrivesFolders = SessionState.EnumPackageFeedFolders(processedDestination);
 

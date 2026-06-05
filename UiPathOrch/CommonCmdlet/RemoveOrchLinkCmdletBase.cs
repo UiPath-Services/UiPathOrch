@@ -33,6 +33,10 @@ public abstract class RemoveOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -55,7 +59,7 @@ public abstract class RemoveOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
 
     protected sealed override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path, Recurse.IsPresent, Depth).ToList();
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth).ToList();
         var drivesLinks = SessionState.EnumFolders(Link).ToList();
         var wpName = Name.ConvertToWildcardPatternList();
 

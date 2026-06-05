@@ -20,10 +20,14 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     protected override void ProcessRecord()
     {
         // TODO: Shouldn't this exception be thrown from inside GetOrchDrive()?
-        var srcDrive = SessionState.GetPmDrive(Path!) ?? throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
+        var srcDrive = SessionState.GetPmDrive(EffectivePath(Path, LiteralPath)!) ?? throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
 
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
         var wpDisplayName = Name.ConvertToWildcardPatternList();

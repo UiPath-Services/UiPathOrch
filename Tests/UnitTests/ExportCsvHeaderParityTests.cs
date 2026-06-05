@@ -85,6 +85,9 @@ public class ExportCsvHeaderParityTests
             // Folder enumeration: Path is in CSV; Recurse/Depth are runtime,
             // not entity-shape data so they don't belong in a row.
             "Recurse", "Depth",
+            // -LiteralPath is an input-only literal target-path alias ([Alias PSPath]);
+            // like -Path it selects the folder/drive and is never a round-tripped column.
+            "LiteralPath",
             // Update-only rename ergonomic; the new name is the row's Name on
             // re-import, never a separate round-tripped column.
             "NewName",

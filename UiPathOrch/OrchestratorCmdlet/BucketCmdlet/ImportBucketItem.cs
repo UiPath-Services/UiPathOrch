@@ -22,6 +22,10 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
@@ -139,7 +143,7 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
             throw new PSArgumentException("You cannot specify -Recurse and -Name at the same time.");
         }
 
-        var drivesFolders = SessionState.EnumFolders(Path, false, 0, true);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), false, 0, true);
         var wpName = Name.ConvertToWildcardPatternList();
         var sources = ResolveSources();
 

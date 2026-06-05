@@ -43,6 +43,10 @@ public class ImportTestDataQueueItemCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     // Parse a queue's ContentJsonSchema into propertyName -> JSON type
     // ("integer" / "number" / "boolean" / "string"). A "{}" schema (any
     // shape) yields an empty map, so every column is treated as a string.
@@ -146,7 +150,7 @@ public class ImportTestDataQueueItemCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
         var wpName = Name.ConvertToWildcardPatternList();
         var encoding = CsvEncoding ?? Encoding.UTF8;
 

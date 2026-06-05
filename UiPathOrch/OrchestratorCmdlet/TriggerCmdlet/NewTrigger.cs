@@ -139,6 +139,10 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     //[Parameter]
     //public SwitchParameter Recurse { get; set; }
 
@@ -206,7 +210,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        var drivesFolders = SessionState.EnumFolders(Path);
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
         int? specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
 
         ExecutorRobots = ExecutorRobots.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();

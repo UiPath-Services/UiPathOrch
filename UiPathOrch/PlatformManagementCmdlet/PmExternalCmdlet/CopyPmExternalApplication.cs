@@ -22,9 +22,13 @@ public class CopyPmExternalApplicationCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     protected override void ProcessRecord()
     {
-        var srcDrive = SessionState.GetPmDrive(Path);
+        var srcDrive = SessionState.GetPmDrive(EffectivePath(Path, LiteralPath));
         var dstDrives = SessionState.EnumPmDrives(Destination);
         var wpName = Name.ConvertToWildcardPatternList();
 

@@ -22,6 +22,10 @@ public class CopyPmGroupCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
+
     // objectType must be set to "user" or "application"
     private List<string> FindIdentifiers(
         OrchDriveInfo drive,
@@ -77,7 +81,7 @@ public class CopyPmGroupCmdlet : OrchestratorPSCmdlet
     // A reasonable implementation is to query the directory in bulk for each group's members.
     protected override void ProcessRecord()
     {
-        var srcDrive = SessionState.GetPmDrive(Path);
+        var srcDrive = SessionState.GetPmDrive(EffectivePath(Path, LiteralPath));
         var dstDrives = SessionState.EnumPmDrives(Destination);
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
 

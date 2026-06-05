@@ -45,6 +45,10 @@ public class GetAlertCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
 
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string[]? LiteralPath { get; set; }
+
     private class SeverityCompleter : OrchArgumentCompleter
     {
         private static readonly Dictionary<string, string> candidates = new()
@@ -135,7 +139,7 @@ public class GetAlertCmdlet : OrchestratorPSCmdlet
         ulong skip = Skip ?? 0;
         ulong first = First ?? ulong.MaxValue;
 
-        var drives = SessionState.EnumOrchDrives(Path);
+        var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         var query = MakeFilter();
 
         using var results = OrchThreadPool.RunForEach(drives,

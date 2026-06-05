@@ -20,7 +20,7 @@ Creates a new trigger in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-New-OrchTrigger [-Path <string[]>] [-Name] <string[]> [-ReleaseName] <string>
+New-OrchTrigger [-Path <string[]>] [-LiteralPath <string[]>] [-Name] <string[]> [-ReleaseName] <string>
  [-ActivateOnJobComplete <string>] [-AlertPendingExpression <string>]
  [-AlertRunningExpression <string>] [-CalendarName <string>] [-Confirm]
  [-ConsecutiveJobFailuresThreshold <int>] [-Enabled <string>] [-ExecutorRobots <string[]>]
@@ -106,6 +106,28 @@ Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: true
 Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -LiteralPath
+
+Specifies the target folder or drive by literal path -- wildcard metacharacters (`[`, `]`, `*`, `?`) are treated as literal characters rather than patterns. Accepts the same drive-qualified paths as -Path. Its `PSPath` alias also binds the path of items piped from Get-ChildItem / Get-Item, so you can pipe folders directly. Use -LiteralPath instead of -Path when a folder name contains a wildcard metacharacter.
+
+```yaml
+Type: System.String[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- PSPath
 ParameterSets:
 - Name: (All)
   Position: Named
