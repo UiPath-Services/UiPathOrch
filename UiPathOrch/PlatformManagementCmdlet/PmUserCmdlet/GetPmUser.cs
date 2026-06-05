@@ -77,7 +77,7 @@ public class GetPmUserCmdlet : OrchestratorPSCmdlet
                     EscapeCsvValue("user"),
                     EscapeCsvValue(user.bypassBasicAuthRestriction),
                     EscapeCsvValue(user.invitationAccepted),
-                    EscapeCsvValue(groupNames)
+                    EscapeCsvValue(groupNames, true)
                 ];
             }
             else
@@ -91,7 +91,7 @@ public class GetPmUserCmdlet : OrchestratorPSCmdlet
                     EscapeCsvValue("user"),
                     EscapeCsvValue(user.bypassBasicAuthRestriction),
                     EscapeCsvValue(user.invitationAccepted),
-                    EscapeCsvValue(groupNames)
+                    EscapeCsvValue(groupNames, true)
                 ];
             }
             writer.WriteCsvLine(line);

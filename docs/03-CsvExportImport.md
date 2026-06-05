@@ -397,9 +397,6 @@ the source):
 
 - **`New-/Set-PmRobotAccount -GroupName`** - a group name containing a comma does
   not round-trip; the importer uses a plain comma split.
-- **`New-PmUser -GroupName`** - a group name containing a wildcard metacharacter
-  (`*`, `?`, `[`, `]`) does not round-trip; the export does not escape it. A comma
-  does round-trip.
 - A literal backtick inside a value, on the resolving (non-wildcard) import path,
   can be dropped.
 

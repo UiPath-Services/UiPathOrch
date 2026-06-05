@@ -76,4 +76,16 @@ public class CommaSplitTests
         Assert.True(new WildcardPattern(items[1], WildcardOptions.IgnoreCase).IsMatch("Robot*"));         // `* -> literal *
         Assert.False(new WildcardPattern(items[1], WildcardOptions.IgnoreCase).IsMatch("RobotZ"));        // not a wildcard
     }
+
+    // New-PmUser -GroupName literal branch: a backtick-escaped metacharacter must be treated as a
+    // literal group name (not a wildcard) and unescaped before use, so it round-trips with the
+    // WildcardPattern.Escaped export.
+    [Fact]
+    public void Backtick_escaped_metachar_takes_the_literal_path_and_unescapes()
+    {
+        var token = OrchCollectionExtensions.SplitValuesByUnescapedCommasPreservingEscapes(new[] { "Sales`*" }).Single();
+        Assert.Equal("Sales`*", token);                                  // preserving keeps the escape
+        Assert.False(WildcardPattern.ContainsWildcardCharacters(token)); // escaped -> not a wildcard
+        Assert.Equal("Sales*", WildcardPattern.Unescape(token));         // literal name after unescape
+    }
 }

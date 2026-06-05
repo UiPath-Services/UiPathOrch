@@ -91,8 +91,9 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        // Split GroupName specified in CSV by commas
-        var groupNameEnum = GroupName.SplitValuesByUnescapedCommas();
+        // Split GroupName specified in CSV by commas (PreservingEscapes so a backtick-escaped
+        // metacharacter survives to ContainsWildcardCharacters / the literal branch below).
+        var groupNameEnum = GroupName.SplitValuesByUnescapedCommasPreservingEscapes();
 
         _params ??= [];
 
@@ -106,10 +107,10 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
 
             foreach (var groupName in groupNameEnum ?? [])
             {
-                // TODO(csv-escape): a group name containing a wildcard metacharacter (* ? [ ]) does
-                // not round-trip -- the export does not WildcardPattern.Escape group names, and the
-                // literal branch below would create the group with the escaped name verbatim.
-                // (A comma in a group name does round-trip via the `,-escape on export.)
+                // A backtick-escaped metacharacter (`* `? `[) is not a wildcard here: it falls to
+                // the literal branch and is WildcardPattern.Unescape'd to its literal name. An
+                // unescaped wildcard expands against existing groups. Get-PmUser exports group
+                // names WildcardPattern.Escaped (EscapeCsvValue(..., true)), so both round-trip.
                 // If the group name contains wildcards, expand them; otherwise keep it as-is.
                 // If a group with the kept name doesn't exist, create it later.
                 if (WildcardPattern.ContainsWildcardCharacters(groupName))
@@ -122,7 +123,7 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
                 }
                 else
                 {
-                    groupNames.Add(groupName);
+                    groupNames.Add(WildcardPattern.Unescape(groupName));
                 }
             }
 
