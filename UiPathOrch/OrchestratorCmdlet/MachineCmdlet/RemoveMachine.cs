@@ -28,7 +28,10 @@ public class RemoveMachineCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(Path);
-        var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
+        // Split a single comma-joined value (e.g. one CSV cell "a,b,c") into separate
+        // patterns; a normal -Name a,b,c array already arrives split. Backtick-escaped
+        // commas are preserved.
+        var wpName = Name.Split1stValueByUnescapedCommas()?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))

@@ -38,7 +38,9 @@ public class RemoveTestCaseCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
+        // Split a single comma-joined value (e.g. one CSV cell "a,b,c") into separate
+        // patterns; a normal -Name a,b,c array already arrives split.
+        var wpName = Name.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
