@@ -20,7 +20,8 @@ Get-OrchHelp
 - [Cmdlet Reference](02-CmdletReference.md) — cmdlets by area, with examples
 - [CSV Export & Import](03-CsvExportImport.md) — bulk import / export patterns
 - [Migration & Copy Guide](04-MigrationGuide.md) — lift-and-shift between tenants
-- [Other Providers (DU & Test Manager)](05-OtherProvidersGuide.md) — the Document Understanding and Test Manager drives
+- [Incremental-Cache Cmdlets](05-IncrementalCacheCmdlets.md) — drive `Get-OrchJob`, `Get-OrchLog`, `Get-OrchAuditLog`, `Get-OrchQueueItem` and friends efficiently
+- [Other Providers (DU & Test Manager)](60-OtherProvidersGuide.md) — the Document Understanding and Test Manager drives
 
 ## For AI Agents
 

@@ -103,7 +103,8 @@ Guides (each cmdlet's full help is also at `Get-Help <CmdletName> -Online`):
 - [Cmdlet Reference](docs/02-CmdletReference.md) — cmdlets by area, with examples
 - [CSV Export & Import](docs/03-CsvExportImport.md) — bulk import / export patterns
 - [Migration & Copy Guide](docs/04-MigrationGuide.md) — lift-and-shift between tenants
-- [Other Providers (DU & Test Manager)](docs/05-OtherProvidersGuide.md) — the Document Understanding and Test Manager drives
+- [Incremental-Cache Cmdlets](docs/05-IncrementalCacheCmdlets.md) — drive `Get-OrchJob`, `Get-OrchLog`, `Get-OrchAuditLog`, `Get-OrchQueueItem` and friends efficiently
+- [Other Providers (DU & Test Manager)](docs/60-OtherProvidersGuide.md) — the Document Understanding and Test Manager drives
 - [Troubleshooting](docs/90-Troubleshooting.md) — verbose logging, raw API access via `Invoke-OrchApi`
 - [Contributing](docs/99-ContributingGuide.md) — bug reporting, building from source
 

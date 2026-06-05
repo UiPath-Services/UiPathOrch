@@ -1873,9 +1873,15 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 /// <summary>
 /// Per-folder cache backing <c>Get-OrchLog</c>. Bespoke shape — the
 /// Orchestrator API returns <c>Log.Id == 0</c> for every entry (server bug),
-/// so per-id deduplication isn't possible. Entries accumulate into a
-/// <see cref="ConcurrentBag{T}"/> per folder so concurrent <c>Get-OrchLog</c>
-/// invocations on the same folder don't corrupt the collection.
+/// so per-id deduplication isn't possible. Instead, entries accumulate into a
+/// <see cref="HashSet{T}"/> per folder that deduplicates by VALUE:
+/// <see cref="Log"/> overrides <c>Equals</c>/<c>GetHashCode</c> over all fields,
+/// so re-fetching a row already in the cache does not add a duplicate.
+///
+/// <c>HashSet&lt;Log&gt;.Add</c> is not thread-safe, but that is sound here: the
+/// only writer is <c>Get-OrchLog</c>, which fetches folders sequentially (a
+/// single folder's set is never touched by two threads at once), and no
+/// completer or internal parallel path calls <see cref="Fetch"/>.
 ///
 /// This is concrete rather than generic because the only reason this pattern
 /// exists at all is the <c>Log.Id == 0</c> server bug. Other "log" endpoints
@@ -1885,7 +1891,7 @@ public class RobotLogsCache : IFolderCacheClearable
 {
     private readonly OrchDriveInfoBase _drive;
     private readonly object _lock = new();
-    private volatile ConcurrentDictionary<long, ConcurrentBag<Log>>? _cache = null;
+    private volatile ConcurrentDictionary<long, HashSet<Log>>? _cache = null;
 
     public RobotLogsCache(OrchDriveInfoBase drive)
     {
@@ -1894,8 +1900,10 @@ public class RobotLogsCache : IFolderCacheClearable
     }
 
     /// <summary>
-    /// Always hits the API; appends the freshly-fetched logs into this folder's
-    /// bag (after stamping each <c>Log.Path</c>) and returns the new batch.
+    /// Always hits the API; adds the freshly-fetched logs into this folder's
+    /// set (after stamping each <c>Log.Path</c>) and returns the new batch.
+    /// Rows already present are dropped by <see cref="HashSet{T}"/> value
+    /// equality, so the accumulated cache never holds duplicates.
     /// </summary>
     public ReadOnlyCollection<Log> Fetch(Folder folder, string? query, ulong skip, ulong first,
                                           string? orderBy = null, bool orderAscending = false)
@@ -1907,7 +1915,7 @@ public class RobotLogsCache : IFolderCacheClearable
                 _cache ??= new();
             }
         }
-        var folderLogs = _cache.GetOrAdd(folder.Id ?? 0, _ => new ConcurrentBag<Log>());
+        var folderLogs = _cache.GetOrAdd(folder.Id ?? 0, _ => new HashSet<Log>());
 
         var logs = _drive.OrchAPISession.GetRobotLogs(folder.Id ?? 0, query, skip, first, orderBy, orderAscending).ToList();
         string folderPath = folder.GetPSPath();
@@ -1920,13 +1928,13 @@ public class RobotLogsCache : IFolderCacheClearable
     }
 
     /// <summary>
-    /// Returns the accumulated bag for this folder, or <c>null</c> if nothing
+    /// Returns the accumulated set for this folder, or <c>null</c> if nothing
     /// has been fetched yet. Used by <c>Get-OrchLog</c>'s "no filter = display
     /// cache" path.
     /// </summary>
-    public ConcurrentBag<Log>? GetCache(Folder folder)
+    public HashSet<Log>? GetCache(Folder folder)
     {
-        return _cache is not null && _cache.TryGetValue(folder.Id ?? 0, out var bag) ? bag : null;
+        return _cache is not null && _cache.TryGetValue(folder.Id ?? 0, out var set) ? set : null;
     }
 
     public void ClearCache()

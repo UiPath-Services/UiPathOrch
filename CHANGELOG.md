@@ -4,6 +4,23 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- **`Get-OrchLog`'s cache no longer accumulates duplicate rows when overlapping
+  logs are fetched more than once.** Robot-log entries all arrive with `Id == 0`
+  from the server, so the per-folder cache deduplicates by *value* — `Log`
+  overrides `Equals`/`GetHashCode` across every field. A previous thread-safety
+  change had swapped the backing `HashSet<Log>` for a `ConcurrentBag<Log>`,
+  which silently dropped that value-dedup: re-running an overlapping
+  `Get-OrchLog` query (or paging the same window again) re-appended the same
+  rows, inflating the accumulated set that a no-filter `Get-OrchLog` prints. The
+  set-backed store is restored, so identical re-fetches collapse to a single
+  copy. The race the swap guarded against is not reachable for this cache — the
+  only writer is `Get-OrchLog`, which fetches folders sequentially, and no
+  completer or parallel path writes it.
+
 ## [1.7.3] - 2026-06-04
 
 ### Changed
