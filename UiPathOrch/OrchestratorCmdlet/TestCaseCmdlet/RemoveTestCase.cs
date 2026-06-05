@@ -38,8 +38,8 @@ public class RemoveTestCaseCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
-        // Split a single comma-joined value (e.g. one CSV cell "a,b,c") into separate
-        // patterns; a normal -Name a,b,c array already arrives split.
+        // -Name is taken literally (no comma-split): one CSV cell / quoted string is one
+        // test case name. Select multiple via a native -Name a,b,c array or one per row.
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
