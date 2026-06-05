@@ -384,7 +384,9 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
 
         if (targetRobots.Count == 0) return null;
-        return string.Join(',', targetRobots.Select(r => r.Name).Order());
+        // Escape a comma inside a robot name as `, so the comma-joined cell round-trips
+        // (New-OrchTrigger's importer treats `, as an escaped comma, not a delimiter).
+        return string.Join(',', targetRobots.Select(r => r.Name?.Replace(",", "`,")).Order());
     }
 
     internal static string? SerializeMachineRobotSessions(OrchDriveInfo drive, Folder folder, IEnumerable<MachineRobotSession>? machineRobots)
