@@ -361,6 +361,11 @@ internal static class OrchCollectionExtensions
         return input.Replace("``", "`").Replace("`", "");
     }
 
+    // One comma-separated token, where a comma may be backtick-escaped (`,).
+    private static readonly Regex _commaSplitRegex = new(@"((?:[^`]|``|`.)+?)(?:,|$)", RegexOptions.Compiled);
+
+    // Split on unescaped commas and RESOLVE backtick escapes to their literal char.
+    // Use when each result is a literal value (a name, id, role, ...).
     public static IEnumerable<string> SplitByUnescapedCommas(string? input)
     {
         if (string.IsNullOrEmpty(input))
@@ -368,15 +373,26 @@ internal static class OrchCollectionExtensions
             return Enumerable.Empty<string>();
         }
 
-        // Regular expression pattern
-        var pattern = @"((?:[^`]|``|`.)+?)(?:,|$)";
-        var matches = Regex.Matches(input, pattern);
-
-        var result = matches.Cast<Match>()
+        return _commaSplitRegex.Matches(input).Cast<Match>()
             .Select(m => UnescapeBackticks(m.Groups[1].Value.Trim()))
             .Where(s => !string.IsNullOrWhiteSpace(s));
+    }
 
-        return result;
+    // Split on unescaped commas but KEEP the backtick escapes in each token. Use when
+    // the result feeds a WildcardPattern (ConvertToWildcardPatternList): WildcardPattern's
+    // own escape character is the backtick, so stripping `* or `[ here would turn an
+    // intended literal metacharacter into an active wildcard. Let WildcardPattern resolve
+    // the escapes instead.
+    public static IEnumerable<string> SplitByUnescapedCommasPreservingEscapes(string? input)
+    {
+        if (string.IsNullOrEmpty(input))
+        {
+            return Enumerable.Empty<string>();
+        }
+
+        return _commaSplitRegex.Matches(input).Cast<Match>()
+            .Select(m => m.Groups[1].Value.Trim())
+            .Where(s => !string.IsNullOrWhiteSpace(s));
     }
 
     // Since the input may come from CSV, split the first element by commas. Use the remaining elements as-is.
@@ -386,6 +402,15 @@ internal static class OrchCollectionExtensions
     {
         if (source is null) return null;
         return SplitByUnescapedCommas(source.FirstOrDefault()).Concat(source.Skip(1));
+    }
+
+    // Wildcard-feeding counterpart of Split1stValueByUnescapedCommas: splits the first
+    // element on unescaped commas but PRESERVES backtick escapes so a downstream
+    // WildcardPattern can treat `* `[ ... as literals. Remaining elements pass as-is.
+    internal static IEnumerable<string>? Split1stValueByUnescapedCommasPreservingEscapes(this IEnumerable<string>? source)
+    {
+        if (source is null) return null;
+        return SplitByUnescapedCommasPreservingEscapes(source.FirstOrDefault()).Concat(source.Skip(1));
     }
     #endregion
 
