@@ -82,7 +82,7 @@ public abstract class AddOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
     // each input object produces one entry (Name/Link/Path are single-valued
     // per row); in direct mode there's a single entry with multi-valued
     // arrays. Both shapes are resolved identically in EndProcessing.
-    private readonly List<(string[]? Name, string[]? Link, string?[]? Path)> _buffered = new();
+    private readonly List<(string[]? Name, string[]? Link, string[]? Path)> _buffered = new();
 
     // Accumulator group: one entity in one source folder, with the union of
     // every target folder requested for it across all buffered rows.

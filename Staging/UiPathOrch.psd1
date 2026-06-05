@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.8.0'
+ModuleVersion = '1.8.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -483,34 +483,15 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.8.0
+1.8.1
 
-- New: every folder-/drive-scoped cmdlet now has -LiteralPath, a literal
-  (non-wildcard) counterpart to -Path with an [Alias("PSPath")]. It binds the
-  automatic PSPath note-property of Get-ChildItem / Get-Item output, so
-  `dir Orch1:\ -Recurse | Update-OrchProcess * -WhatIf` targets each folder's own
-  path, and `dir | Select PSPath | Export-Csv` round-trips through
-  `Import-Csv | <cmdlet> -LiteralPath`.
-- BREAKING: folder (dir) items no longer carry a `Path` property. A folder now
-  follows the FileSystem-provider convention -- it exposes FullName (its own
-  path) plus the automatic PSPath, and no Path (which previously returned the
-  *parent*). Use FullName / PSPath for the folder's own path, or Split-Path for
-  the parent. Content entities (assets, queues, jobs, ...) are unaffected.
-- BREAKING: Get-OrchProductVersion now returns camelCase property names (cached
-  per organization, local timestamps); New-/Set-PmRobotAccount take -Name as the
-  primary parameter (-UserName is an alias).
-- CSV multi-value columns round-trip by a consistent rule -- comma-joined list
-  columns split on import, identity columns stay single-valued, embedded commas
-  and wildcards escaped both ways. Remove-OrchMachine / -OrchTestCase delete in
-  bulk. ShouldProcess prompts normalized to "Verb Noun".
-- Fixed: names with a single quote no longer break OData queries (the O'Brien
-  problem); New-/Set-PmRobotAccount create all of several comma-separated names.
-- Fixed: Get-Item on a folder now returns a drive-qualified PSPath (it previously
-  dropped the drive name). Get-Item / Get-ChildItem on DU and TM projects now
-  stamp the project's own drive-qualified path instead of an empty or cross-drive
-  value.
-- Fixed: Get-OrchLog's cache no longer accumulates duplicate rows on overlapping
-  fetches.
+Maintenance release on top of 1.8.0 -- see 1.8.0 for the -LiteralPath feature and the
+breaking changes (folder Path property removed, OrchProductVersion camelCase property
+names, New-/Set-PmRobotAccount -Name primary).
+
+- Internal: cleared the nullable-reference-type compiler warnings introduced with
+  -LiteralPath in 1.8.0 (EffectivePath now returns a non-null-element array, which
+  matches the resolver overloads and the capture fields). No behavior change.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

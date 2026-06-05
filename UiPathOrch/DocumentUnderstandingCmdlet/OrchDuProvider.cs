@@ -283,7 +283,9 @@ public class OrchDuProvider : NavigationCmdletProvider
                     var clone = created.ShallowClone();
                     clone.Path = pathPrefix;
                     clone.FullName = pathPrefix + created.name;
-                    WriteItemObject(clone, path, true);
+                    // Emit the canonical stamped FullName (drive-qualified), not the raw
+                    // input path — matches this provider's GetChildItems / Get-Item output.
+                    WriteItemObject(clone, clone.FullName, true);
                 }
             }
             catch (Exception ex)

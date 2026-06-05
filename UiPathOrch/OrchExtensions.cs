@@ -202,7 +202,9 @@ internal static class OrchCollectionExtensions
     // Since WildcardPattern enumeration is used repeatedly, it is better to return it as a List here.
     public static List<WildcardPattern>? ConvertToWildcardPatternList(this IEnumerable<string?>? input)
     {
-        // Is it OK to not call PathTools.UnescapePSText(n)?
+        // Intentionally NOT UnescapePSText'd: the input is a user -Name *wildcard pattern*
+        // consumed directly via WildcardPattern.IsMatch, so a backtick escape is the user's
+        // way of matching a literal '*'/'?'/'['. Unescaping here would discard that intent.
         return input?.Select(n => new WildcardPattern(n, WildcardOptions.IgnoreCase)).ToList();
     }
 

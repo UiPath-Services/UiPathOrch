@@ -39,12 +39,16 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
     // -LiteralPath (a PSPath note-property via [Alias("PSPath")], or hand-typed) is
     // WildcardPattern-escaped so it resolves literally; the resolver itself strips any
     // "<module>\<provider>::" qualifier. -Path keeps its wildcard semantics unchanged.
-    internal static string?[]? EffectivePath(string[]? path, string[]? literalPath)
+    // Returns a non-null-element array: -Path / -LiteralPath elements arrive non-null from
+    // parameter binding, so the result matches both the IEnumerable<string?>? and the
+    // IEnumerable<string>? resolver overloads (and the string[]? capture fields) without warnings.
+    internal static string[]? EffectivePath(string[]? path, string[]? literalPath)
         => literalPath is null
             ? path
-            : Array.ConvertAll(literalPath, p => p is null ? null : WildcardPattern.Escape(p));
+            : Array.ConvertAll(literalPath, p => WildcardPattern.Escape(p));
 
-    // Single-value overload for cmdlets whose -Path / -LiteralPath are scalar (string?).
+    // Scalar overload for cmdlets whose -Path / -LiteralPath (or -SourcePath / -Destination)
+    // are single-valued (string?) — e.g. the Copy-* cmdlets. Same semantics as the array form.
     internal static string? EffectivePath(string? path, string? literalPath)
         => literalPath is null ? path : WildcardPattern.Escape(literalPath);
 

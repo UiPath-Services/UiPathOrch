@@ -111,12 +111,24 @@ Every folder-/drive-scoped cmdlet accepts both `-Path` (wildcards supported)
 and `-LiteralPath` (literal — no wildcard interpretation). `-LiteralPath` has
 `[Alias("PSPath")]`, so it binds from the automatic **`PSPath`** note-property
 that `Get-ChildItem` / `Get-Item` attach to every item. You can therefore pipe
-folders straight into a cmdlet to operate on each folder's *own* path:
+folders straight into a cmdlet to operate on each folder's *own* path.
+
+The pipe earns its place when you first **filter or hand-pick** the folders —
+something a `-Path` wildcard can't express, because path wildcards match each
+segment separately and don't cross the hierarchy:
 
 ```powershell
-# No -Path needed — each folder's PSPath binds to -LiteralPath:
-dir Orch1:\ -Recurse | Update-OrchProcess * -A4R_Enabled False -WhatIf
+# Match a name at ANY depth (a -Path wildcard only matches one level):
+dir Orch1:\ -Recurse | Where-Object DisplayName -like '*Prod*' |
+    Update-OrchProcess * -A4R_Enabled False -WhatIf
+
+# ...or target a subset by a folder property the path can't express:
+dir Orch1:\ -Recurse | Where-Object FeedType -eq FolderHierarchy |
+    Update-OrchProcess * -A4R_Enabled False -WhatIf
 ```
+
+When you just want *every* folder, no pipe is needed — `Update-OrchProcess`
+already recurses on its own: `Update-OrchProcess -Recurse * -A4R_Enabled False -WhatIf`.
 
 Folders follow the FileSystem-provider convention: a `dir` item exposes
 `FullName` (its own path) and `PSPath`, **but no `Path` property** (a folder's
@@ -172,9 +184,9 @@ Copy-OrchAsset -Path Orch1:\Folder -Name Asset#2 -Destination Orch2:\AnotherFold
 Parameters specified on the command line override CSV column values:
 
 ```powershell
-# Import all assets listed in the CSV into the current folder,
-# regardless of the Path column in the CSV
-Import-Csv C:\temp\assets.csv | Set-OrchAsset -Path .
+# Copy every asset listed in the CSV to one destination folder,
+# regardless of the Destination column in the CSV
+Import-Csv C:\temp\assets.csv | Copy-OrchAsset -Destination Orch2:\Shared
 ```
 
 **Tips:**

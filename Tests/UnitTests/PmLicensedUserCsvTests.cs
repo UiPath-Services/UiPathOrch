@@ -106,7 +106,7 @@ public class PmLicensedUserCsvTests
             BindingFlags.NonPublic | BindingFlags.Static);
         Assert.NotNull(field);
         var headers = (string[]?)field!.GetValue(null);
-        Assert.Equal(["Path", "UserName", "License"], headers);
+        Assert.Equal(["Path", "UserName", "License"], headers!);
     }
 
     [Fact]

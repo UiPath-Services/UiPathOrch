@@ -816,8 +816,20 @@ public partial class OrchProvider : NavigationCmdletProvider
         //.Replace("]", "`]");
     }
 
-    // GetChildNames must call WriteItemObject with only the name string value, not the object.
-    // This method is called when Get-ChildItem -Name is executed.
+    // GetChildNames backs `Get-ChildItem -Name` and wildcard resolution (`cd t*`, `rmdir *`).
+    // Per the provider contract it writes ONLY the child's name string as the item (not the
+    // Folder object); the second WriteItemObject argument is the path the engine uses to build
+    // the result's PSPath note-property.
+    //
+    // That path is emitted RAW (unescaped), mirroring the authoritative FileSystem provider,
+    // whose GetChildNames does `WriteItemObject(fsinfo.Name, fsinfo.FullName, ...)` with the
+    // unescaped FullName (PowerShell's FileSystemProvider.cs). Do NOT EscapePSText2 /
+    // WildcardPattern.Escape it here: the PSPath built from this path binds to `-LiteralPath`
+    // (`[Alias("PSPath")]`), and `EffectivePath` re-applies WildcardPattern.Escape on bind — so
+    // a pre-escaped path would be escaped twice (e.g. a folder named `Fin*ce`) and fail to
+    // resolve literally. Left raw, it round-trips: `dir | <cmdlet> -LiteralPath` and
+    // `Get-Item -LiteralPath $f.PSPath` both resolve correctly. (EscapePSText2 in GetChildItems /
+    // GetItem only escapes `* ?` and predates this; matching IT here would be the wrong target.)
     protected override void GetChildNames(string path, ReturnContainers returnContainers)
     {
         OrchDriveInfo drive = GetOrchDriveInfo(path);

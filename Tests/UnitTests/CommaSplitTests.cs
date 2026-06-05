@@ -84,7 +84,7 @@ public class CommaSplitTests
     [Fact]
     public void Backtick_escaped_metachar_takes_the_literal_path_and_unescapes()
     {
-        var token = OrchCollectionExtensions.SplitValuesByUnescapedCommasPreservingEscapes(new[] { "Sales`*" }).Single();
+        var token = OrchCollectionExtensions.SplitValuesByUnescapedCommasPreservingEscapes(new[] { "Sales`*" })!.Single();
         Assert.Equal("Sales`*", token);                                  // preserving keeps the escape
         Assert.False(WildcardPattern.ContainsWildcardCharacters(token)); // escaped -> not a wildcard
         Assert.Equal("Sales*", WildcardPattern.Unescape(token));         // literal name after unescape

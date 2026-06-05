@@ -11,7 +11,7 @@ namespace UnitTests;
 // stays suggested while at least one group is missing it. Verified live on Orch1.
 public class SuggestableLicenseCodesTests
 {
-    private static (IEnumerable<string?>, IEnumerable<string?>?) G(string[] available, string[]? held)
+    private static (IEnumerable<string?>, IEnumerable<string?>?) G(string[] available, string?[]? held)
         => (available, held);
 
     // --- single group: behaves like "available minus held" ---

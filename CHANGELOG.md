@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.8.1] - 2026-06-06
+
+### Fixed
+
+- **`Get-OrchJobMedia` / `Export-OrchJobMedia` now use the shared HTTP pipeline.** The
+  job-media download was the one call bypassing the central send chokepoint, so it missed
+  silent token refresh on a 401, transient (429 / 503 / 504) retry with `Retry-After`
+  backoff, and Ctrl+C cancellation. It now routes through the same path as every other
+  cmdlet.
+- **Internal: cleared the nullable-reference-type compiler warnings introduced with
+  `-LiteralPath` in 1.8.0.** `EffectivePath` now returns a non-null-element array (its
+  `-Path` / `-LiteralPath` inputs are always non-null), so it matches both the
+  `IEnumerable<string?>?` and `IEnumerable<string>?` resolver overloads and the
+  `string[]?` capture fields — the TestSet / TestDataQueue / FolderUser / asset-setter
+  cmdlets now compile warning-free. No behavior change.
+
+### Changed
+
+- Internal cleanups: narrowed the Move / Add-link buffer tuple element types to match
+  `EffectivePath`, aligned the DU `New-Item` output with the provider's `Get-ChildItem`
+  (emit the canonical project path), corrected a stale `ConvertToWildcardPatternList`
+  comment, cleared the remaining test-project nullability warnings, and reworked the
+  `-Path` / `-LiteralPath` example in the CSV guide to show filtering folders the pipe can
+  express but a `-Path` wildcard can't.
+
 ## [1.8.0] - 2026-06-05
 
 ### Added

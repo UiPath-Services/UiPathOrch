@@ -3235,14 +3235,17 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/odata/ExecutionMedia/UiPath.Server.Configuration.OData.DeleteMediaByJobId", folderId, payload);
     }
 
-    // TODO: This endpoint seems to work even without the Authorization header?
+    // Routes through the shared send chokepoint (SendApiRequest -> HttpClient_Send) so this
+    // download gets the same auth-refresh-on-401, transient (429/503/504) retry, and Ctrl+C
+    // cancellation as every other call. (The endpoint may not strictly require the Authorization
+    // header, but sending it is harmless and keeps this on the single retry/cancel path.)
     public async Task<(string? FileName, byte[] FileContent)> DownloadMediaByJobId(Int64 folderId, Int64 jobId)
     {
         string endPoint = _base_url_orchestrator + $"/odata/ExecutionMedia/UiPath.Server.Configuration.OData.DownloadMediaByJobId(jobId={jobId})";
         var request = new HttpRequestMessage(HttpMethod.Get, endPoint);
         request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
 
-        using var response = await _httpClient.SendAsync(request);
+        using var response = SendApiRequest(request);
         EnsureSuccessStatusCode(response);
 
         var contentDisposition = response.Content.Headers.ContentDisposition;

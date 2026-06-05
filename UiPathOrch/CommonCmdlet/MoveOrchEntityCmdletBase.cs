@@ -95,7 +95,7 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
     protected abstract void ClearLinkCache(OrchDriveInfo drive, long entityId);
     protected abstract void ClearPerFolderCache(OrchDriveInfo drive, Folder folder);
 
-    private readonly List<(string[]? Name, string? Destination, string?[]? Path)> _buffered = new();
+    private readonly List<(string[]? Name, string? Destination, string[]? Path)> _buffered = new();
 
     protected sealed override void ProcessRecord()
     {
