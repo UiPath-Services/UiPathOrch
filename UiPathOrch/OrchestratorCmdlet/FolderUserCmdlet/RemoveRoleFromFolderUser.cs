@@ -202,7 +202,7 @@ public class RemoveRoleFromFolderUserCmdlet : OrchestratorPSCmdlet
 
         // The first element may come from CSV input, so split the first element by commas
         //if (Roles is not null && Roles.Length > 0) Roles = Roles[0].Split(',').Concat(Roles.Skip(1)).ToArray();
-        var wpRoles = Roles.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
+        var wpRoles = Roles.Split1stValueByUnescapedCommasPreservingEscapes().ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)

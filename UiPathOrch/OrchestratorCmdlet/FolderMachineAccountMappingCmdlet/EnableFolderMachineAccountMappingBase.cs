@@ -114,8 +114,8 @@ public class EnableFolderMachineAccountMappingCmdletBase<Enable> : OrchestratorP
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Path, Recurse.IsPresent, Depth);
-        var wpName = Name.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
-        var wpUserName = UserName.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
+        var wpName = Name.Split1stValueByUnescapedCommasPreservingEscapes().ConvertToWildcardPatternList();
+        var wpUserName = UserName.Split1stValueByUnescapedCommasPreservingEscapes().ConvertToWildcardPatternList();
 
         string action = Enable.Value ? "Enable" : "Disable";
 

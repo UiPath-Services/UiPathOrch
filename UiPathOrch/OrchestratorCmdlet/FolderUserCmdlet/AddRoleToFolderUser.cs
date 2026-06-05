@@ -206,7 +206,7 @@ public class AddRoleToFolderUserCmdlet : OrchestratorPSCmdlet
 
         // The first element may come from CSV input, so split the first element by commas
         //if (Roles is not null && Roles.Length > 0) Roles = Roles[0].Split(',').Concat(Roles.Skip(1)).ToArray();
-        var wpRoles = Roles.Split1stValueByUnescapedCommas().ConvertToWildcardPatternList();
+        var wpRoles = Roles.Split1stValueByUnescapedCommasPreservingEscapes().ConvertToWildcardPatternList();
 
         // Fetch roles for the target drives asynchronously in bulk
         // ParallelResults3.GroupBy(drives, drive => drive.Roles.Get());
