@@ -16,6 +16,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   (a `LicenseUsage[]` of `Type` / `Used` / `Allowed` / `Percent`, one row per type with
   `Allowed > 0`) and `ExpireDateLocal` / `GracePeriodEndDateLocal` (the epoch dates as
   `DateTime`). The raw `Allowed` / `Used` / `ExpireDate` fields are unchanged.
+- **`Get-OrchLicenseRuntime`'s default table now mirrors the tenant license page.**
+  Columns keep their property names except where the *value* is genuinely transformed to
+  match the *License: &lt;type&gt;* screen, which then carry the web label — `Template`
+  (the machine's `MachineName`, shown only for template machines) and `Robots` (`N/A` for
+  template machines, otherwise `RobotsCount`). `IsLicensed` keeps its name but renders as
+  a colored dot (green = licensed, orange = not). Columns auto-size. Previously the wide
+  raw `MachineName` value pushed the rest of the columns off-screen.
 
 ### Fixed
 

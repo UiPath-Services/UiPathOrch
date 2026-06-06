@@ -3440,7 +3440,25 @@
       <TableControl>
         <TableHeaders>
           <TableColumnHeader>
-            <Label>Key</Label>
+            <Label>HostMachineName</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ServiceUserName</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Template</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Runtimes</Label>
+            <Alignment>right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Robots</Label>
+            <Alignment>right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>ExecutingCount</Label>
+            <Alignment>right</Alignment>
           </TableColumnHeader>
           <TableColumnHeader>
             <Label>IsLicensed</Label>
@@ -3448,38 +3466,36 @@
           <TableColumnHeader>
             <Label>Enabled</Label>
           </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>IsOnline</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Runtimes</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>RobotsCount</Label>
-          </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
           <TableRowEntry>
             <TableColumnItems>
               <TableColumnItem>
-                <PropertyName>Key</PropertyName>
+                <PropertyName>HostMachineName</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>IsLicensed</PropertyName>
+                <PropertyName>ServiceUserName</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>Enabled</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>IsOnline</PropertyName>
+                <ScriptBlock>if ($_.MachineType -eq 'Template') { $_.MachineName }</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Runtimes</PropertyName>
                 <Alignment>right</Alignment>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>RobotsCount</PropertyName>
+                <ScriptBlock>if ($_.MachineType -eq 'Template') { 'N/A' } else { $_.RobotsCount }</ScriptBlock>
                 <Alignment>right</Alignment>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ExecutingCount</PropertyName>
+                <Alignment>right</Alignment>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>$esc = [char]27; $d = [char]0x25CF; if ($_.IsLicensed) { "$($esc)[38;5;40m$d$($esc)[0m" } else { "$($esc)[38;5;208m$d$($esc)[0m" }</ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Enabled</PropertyName>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
