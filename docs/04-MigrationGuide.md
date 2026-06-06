@@ -599,6 +599,14 @@ but the **items inside** them are not — the Orchestrator API does not move que
 transactions during a folder copy. After the folders are in place, copy the
 items separately with `Copy-OrchQueueItem`.
 
+> **⚠ Stop the source queue's processing before you move its items.** Each queue item is
+> a transaction, so if a robot keeps pulling items from the source while you copy them to
+> the destination — or a trigger starts a new job — the same transaction is processed in
+> two places. Before moving: **stop the running jobs** that consume the source queue and
+> **disable the triggers that start them** — `Disable-OrchTrigger` covers both time
+> triggers and queue triggers. Re-enable processing on the destination side once the move
+> is complete.
+
 > **Only `New` items are copied.** Items with any other status (InProgress,
 > Failed, Successful, Retried, Abandoned, Deleted) are silently skipped, because
 > only pending work is meaningful to carry to a fresh tenant. Processing history
@@ -606,16 +614,19 @@ items separately with `Copy-OrchQueueItem`.
 
 The procedure, end to end:
 
-1. **Copy the folders and queue definitions first.** `copy Orch1:\ Orch2:\ -Recurse`
+1. **Stop processing on the source.** Stop the jobs that consume the source queue and
+   disable the time/queue triggers that start them (`Disable-OrchTrigger`), so the same
+   transaction is never processed in two places during the move.
+2. **Copy the folders and queue definitions first.** `copy Orch1:\ Orch2:\ -Recurse`
    brings the folder tree and the queue *definitions* across; or create the destination
    queue with `New-OrchQueue`. The destination queue must already exist before items are
    added.
-2. **Copy the items** with `Copy-OrchQueueItem <source-queue> <destination-folder>`.
+3. **Copy the items** with `Copy-OrchQueueItem <source-queue> <destination-folder>`.
    **Only items whose Status is `New` are copied** — any other status (InProgress,
    Failed, Successful, Retried, Abandoned, Deleted) is silently skipped.
-3. **Optionally move.** Pipe the output into `Remove-OrchQueueItem` to delete the copied
-   items from the source, so each transaction is processed only once (see *Moving items*
-   below).
+4. **Move (delete the copied items from the source).** Pipe the output into
+   `Remove-OrchQueueItem`; this marks the copied items as `Deleted` so they are not
+   processed again (see *Moving items* below).
 
 When the current folder is the source, `-Path` can be omitted. The first
 positional argument is the source queue name (wildcards / comma-separated lists
@@ -675,6 +686,12 @@ the source for you to handle — they are never deleted by the piped `Remove`. T
 common rejection is a **duplicate `Reference`** when the destination enforces unique
 references; re-copying will not fix it, so inspect the warning and decide per item (the
 item may already have been moved).
+
+> **`Remove-OrchQueueItem` marks items as `Deleted`; it does not physically remove them.**
+> The source queue still holds them with Status `Deleted`. That is what makes the move
+> safe and idempotent: `Deleted` items are skipped by processing and by
+> `Copy-OrchQueueItem` (which copies only `New` items), so a moved transaction never runs
+> again, and re-running the move never copies an already-moved item a second time.
 
 See [`Copy-OrchQueueItem`](help/en-US/Copy-OrchQueueItem.md) and
 [`Import-OrchQueueItem`](help/en-US/Import-OrchQueueItem.md) for the full
