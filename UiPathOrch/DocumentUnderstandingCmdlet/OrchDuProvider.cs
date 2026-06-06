@@ -310,6 +310,46 @@ public class OrchDuProvider : NavigationCmdletProvider
         return true;
     }
 
+    // Document Understanding deletes a project through the same undocumented internal app/web
+    // API used to create one (RemoveDuProject), mirroring the Test Manager provider's RemoveItem.
+    // Rename has no known endpoint, so it stays an explicit "not supported" error below rather
+    // than a generic base-class fallthrough.
+    protected override void RemoveItem(string path, bool recurse)
+    {
+        var drives = SessionState.EnumDuDrives([path]);
+        if (drives is null)
+        {
+            return;
+        }
+
+        foreach (var drive in drives)
+        {
+            var project = GetProject(path);
+            if (project is null) continue;
+
+            if (ShouldProcess(path, "Remove Project"))
+            {
+                try
+                {
+                    drive.OrchAPISession.RemoveDuProject(project.id!);
+                    drive.DuProjects.ClearCache();
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(path, ex), "RemoveDuProjectError", ErrorCategory.InvalidOperation, project));
+                    drive.DuProjects.ClearCache();
+                }
+            }
+        }
+    }
+
+    protected override void RenameItem(string path, string newName)
+    {
+        WriteError(new ErrorRecord(
+            new OrchException(path, "Document Understanding projects cannot be renamed with Rename-Item: the DU API exposes no project-rename endpoint. Rename the project from the Document Understanding web app instead."),
+            "RenameDuProjectNotSupported", ErrorCategory.NotImplemented, path));
+    }
+
     protected override string NormalizeRelativePath(string path, string basePath)
     {
         string result = base.NormalizeRelativePath(path, basePath);

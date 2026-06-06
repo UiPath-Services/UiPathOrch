@@ -629,6 +629,20 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
+    // Bucket blob I/O targets pre-signed storage URLs (Azure / S3) sent via the auth-less
+    // bucket-item client, so a non-success here is a STORAGE error, not an Orchestrator-auth
+    // problem. Surface the storage response body for diagnostics (the framework's bare
+    // EnsureSuccessStatusCode() throws an HttpRequestException with no body) but, unlike
+    // EnsureSuccessStatusCode above, do NOT clear the Orchestrator session auth on a 401 —
+    // that 401 comes from storage and is unrelated to the Orchestrator token.
+    private void EnsureBlobSuccess(HttpResponseMessage response)
+    {
+        if (!response.IsSuccessStatusCode)
+        {
+            throw new HttpResponseException(CapErrorBody(GetBody(response)), response);
+        }
+    }
+
     // Upper bound on the response-body text that becomes the exception MESSAGE.
     // The full body stays on HttpResponseException.Response for programmatic use;
     // this only bounds what OrchException.ExtractMessage can echo into
@@ -1932,18 +1946,18 @@ public partial class OrchAPISession : IDisposable
 
     public void RemoveLibrary(string libraryId, string libraryVersion)
     {
-        HttpRequest(HttpMethod.Delete, $"/odata/Libraries('{HttpUtility.UrlEncode(libraryId)}:{libraryVersion}')");
+        HttpRequest(HttpMethod.Delete, $"/odata/Libraries('{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(libraryId))}:{libraryVersion}')");
     }
 
     public void RemovePackage(string processId, string processVersion, string? feedId = null)
     {
         if (!string.IsNullOrEmpty(feedId))
         {
-            HttpRequest(HttpMethod.Delete, $"/odata/Processes('{HttpUtility.UrlEncode(processId)}:{processVersion}')?feedId={feedId}");
+            HttpRequest(HttpMethod.Delete, $"/odata/Processes('{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(processId))}:{processVersion}')?feedId={feedId}");
         }
         else
         {
-            HttpRequest(HttpMethod.Delete, $"/odata/Processes('{HttpUtility.UrlEncode(processId)}:{processVersion}')");
+            HttpRequest(HttpMethod.Delete, $"/odata/Processes('{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(processId))}:{processVersion}')");
         }
     }
 
@@ -2529,7 +2543,7 @@ public partial class OrchAPISession : IDisposable
         // When access.RequiresAuth is true, should the request be sent with the Authorization header retained?
         using var res = HttpClient_Send(req, _httpClientForBucketItem, cancellationToken);
 
-        res.EnsureSuccessStatusCode();
+        EnsureBlobSuccess(res);
 
         using var httpStream = res.Content.ReadAsStream();
         try
@@ -2592,7 +2606,7 @@ public partial class OrchAPISession : IDisposable
         // When access.RequiresAuth is true, should the request be sent with the Authorization header retained?
         using var res = HttpClient_Send(req, _httpClientForBucketItem, cancelToken);
 
-        res.EnsureSuccessStatusCode();
+        EnsureBlobSuccess(res);
     }
 
 
@@ -3383,7 +3397,9 @@ public partial class OrchAPISession : IDisposable
         string url = _base_url_orchestrator + $"/api/TestAutomation/GetAssertionScreenshot?testCaseAssertionId={assertionId}&organizationUnitId={folderId}";
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
-        using var response = HttpClient_Send(request, _httpClient, cancellationToken);
+        // Route through the shared chokepoint (not the raw _httpClient) so the download gets
+        // auth-refresh-on-401, transient retry, and Ctrl+C cancellation like every other call.
+        using var response = SendApiRequest(request, cancellationToken);
         EnsureSuccessStatusCode(response);
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -4333,6 +4349,13 @@ public partial class OrchAPISession : IDisposable
         var body = HttpRequest(HttpMethod.Post, "/du_/api/app/web/projects?api-version=1.4", null, cmd);
     }
 
+    // Undocumented (not in the public DU swagger): the same internal app/web API the DU web
+    // app uses to delete a project. projectId is the DuProject GUID.
+    public void RemoveDuProject(string projectId)
+    {
+        HttpRequest(HttpMethod.Delete, $"/du_/api/app/web/projects/{projectId}?api-version=1.4");
+    }
+
     public DuDocumentType[]? GetDuDocumentTypes(string? projectId)
     {
         var body = HttpRequest<DuGetDocumentTypesResponse>(HttpMethod.Get, $"/du_/api/framework/projects/{projectId}/document-types?api-version=1");
@@ -4419,7 +4442,8 @@ public partial class OrchAPISession : IDisposable
                     if (total == first)
                         break;
                 }
-                if (!(body.paging?.nextPage.GetValueOrDefault() ?? false))
+                skip += (ulong)body.data.Count;
+                if (total == first || !(body.paging?.nextPage.GetValueOrDefault() ?? false))
                     break;
             }
             else
@@ -4452,7 +4476,8 @@ public partial class OrchAPISession : IDisposable
                     if (total == first)
                         break;
                 }
-                if (!body.hasNextPage.GetValueOrDefault())
+                skip += (ulong)body.data.Count;
+                if (total == first || !body.hasNextPage.GetValueOrDefault())
                     break;
             }
             else
@@ -4485,7 +4510,11 @@ public partial class OrchAPISession : IDisposable
                     if (total == first)
                         break;
                 }
-                if (total == first)
+                skip += (ulong)body.Count;
+                // No paging envelope on this endpoint: stop on a short page (or once the
+                // requested cap is reached) so a non-paginated response ends after one fetch
+                // instead of re-fetching the same window forever.
+                if (total == first || body.Count < (int)top)
                     break;
             }
             else
