@@ -2648,7 +2648,23 @@ public partial class OrchAPISession : IDisposable
 
     public HttpTrigger? CreateHttpTrigger(Int64 folderId, HttpTrigger trigger)
     {
+        StripHttpTriggerFieldsForApiVersion(trigger);
         return HttpRequest<HttpTrigger>(HttpMethod.Post, "/odata/HttpTriggers", folderId, trigger);
+    }
+
+    // HttpTrigger create/update is strict: it replies "httpTrigger must not be null"
+    // (HTTP 400 — the body fails to deserialize, so the bound parameter is null) when the
+    // payload carries a field the server's version does not recognise. This is the same
+    // failure mode as ProcessSchedule's "model must not be null"; see
+    // StripProcessScheduleFieldsForApiVersion. RunAsCaller is a recent Cloud-only field —
+    // absent from the on-prem swagger through v20 — that ApiVersion 17 (on-prem 25.10.2)
+    // rejects while ApiVersion 20 (Cloud) accepts (verified live). Strip it below 20.
+    private void StripHttpTriggerFieldsForApiVersion(HttpTrigger trigger)
+    {
+        if (ApiVersion < 20)
+        {
+            trigger.RunAsCaller = null;
+        }
     }
 
     // Confirmed against browser dev-tools capture (yotsuda tenant 2026-05-21):
@@ -2661,6 +2677,7 @@ public partial class OrchAPISession : IDisposable
         {
             throw new ArgumentException("HttpTrigger.Id (GUID string) must be set for PUT.", nameof(trigger));
         }
+        StripHttpTriggerFieldsForApiVersion(trigger);
         HttpRequest(HttpMethod.Put, $"/odata/HttpTriggers({trigger.Id})", folderId, trigger);
     }
 

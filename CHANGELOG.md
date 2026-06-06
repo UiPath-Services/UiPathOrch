@@ -59,6 +59,13 @@ _Nothing yet._
   `BulkOperationResponseDtoOfFailedQueueItem`; it is now silent on success (use
   `-Verbose` for a per-file count). Rejected rows are still returned as `FailedQueueItem`
   and CSV parse problems as `CSVParseError` — both now declared in `[OutputType]`.
+- **`New-OrchApiTrigger` / `Update-OrchApiTrigger` now work below ApiVersion 20.** The
+  create/update payload always carried `RunAsCaller`, a recent Cloud-only HttpTrigger
+  field absent from the on-prem swagger through v20. Strict servers reject the unknown
+  field with `httpTrigger must not be null` (HTTP 400 — the body fails to deserialize), so
+  API-trigger creation failed on on-prem Orchestrator (verified on 25.10.2 / ApiVersion
+  17). `RunAsCaller` is now stripped below ApiVersion 20 — mirroring the existing
+  `ProcessSchedule` version-field handling — while Cloud (ApiVersion 20+) still sends it.
 
 ## [1.8.0] - 2026-06-05
 
