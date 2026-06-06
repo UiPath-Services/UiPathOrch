@@ -3344,6 +3344,45 @@
 -->
 
     <View>
+      <Name>License</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.License</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Path</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>Licensed until</Label>
+                <ScriptBlock>if ($_.ExpireDateLocal) { $_.ExpireDateLocal.ToString('yyyy/MM/dd') } else { '' }</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>Subscription</Label>
+                <ScriptBlock>(@($_.SubscriptionPlan, $_.SubscriptionCode) | Where-Object { $_ }) -join ' / '</ScriptBlock>
+              </ListItem>
+              <ListItem>
+                <Label>User licensing</Label>
+                <PropertyName>UserLicensingEnabled</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Expired</Label>
+                <PropertyName>IsExpired</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Usage</Label>
+                <ScriptBlock>($_.Usage | ForEach-Object { '{0,-16} {1,3} / {2,-3} ({3,3}%)' -f $_.Type, $_.Used, $_.Allowed, $_.Percent }) -join [Environment]::NewLine</ScriptBlock>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <View>
       <Name>LicenseNamedUser</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.LicenseNamedUser</TypeName>

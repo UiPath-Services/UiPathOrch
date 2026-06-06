@@ -69,7 +69,7 @@ each group's member allocations.
 
 | Cmdlet | Answers | Key output fields |
 |--------|---------|-------------------|
-| `Get-OrchLicense` | What the tenant is **allowed vs using** | `Allowed` / `Used` (dictionaries keyed by `Unattended`, `NonProduction`, `Hosting`, `Flow`, `BusinessRule`, …), `SubscriptionCode`/`Plan`, `ExpireDate`, `GracePeriod`, `UserLicensingEnabled`, `IsExpired` |
+| `Get-OrchLicense` | What the tenant is **allowed vs using** | `Usage` (per-type `Used`/`Allowed`/`Percent`, shown by default), the raw `Allowed` / `Used` dicts, `SubscriptionCode`/`Plan`, `ExpireDateLocal`, `GracePeriod`, `UserLicensingEnabled`, `IsExpired` |
 | `Get-OrchLicenseNamedUser -RobotType <t>` | **Named-user** license assignments | `UserName`, `IsLicensed`, `MachinesCount`, `LastLoginDate` |
 | `Get-OrchLicenseRuntime -RobotType <t>` | **Per-machine runtime** slots | `MachineName`, `Runtimes`, `RobotsCount`, `ExecutingCount`, `IsOnline`, `Enabled`, `MachineScope` |
 | `Get-OrchLicenseStats -Last <period>` | **Historical** usage over time | `robotType`, `count`, `timestamp` |
@@ -122,11 +122,23 @@ PS Orch1:\> Get-PmLicenseAllocation | Select-Object @{ N = 'Tenant'; E = { $_.te
 
 **What is this tenant allowed vs using?**
 
+`Get-OrchLicense` prints a per-type usage summary by default (the same "Used of Allowed
+(%)" the license page shows). For scripting, each row is on the `Usage` property:
+
 ```powershell
-PS Orch1:\> $lic = Get-OrchLicense
-PS Orch1:\> $lic.Allowed   # e.g. Unattended = 5
-PS Orch1:\> $lic.Used      # e.g. Unattended = 3
+PS Orch1:\> Get-OrchLicense | Select-Object -ExpandProperty Usage
 ```
+
+```output
+Type           Used Allowed Percent
+----           ---- ------- -------
+Unattended        3       5      60
+TestAutomation    3       5      60
+NonProduction     4       5      80
+```
+
+The raw `Allowed` / `Used` dictionaries remain available, and `ExpireDateLocal` /
+`GracePeriodEndDateLocal` expose the epoch dates as `DateTime`.
 
 **Which machines hold a runtime slot, and are they online?**
 

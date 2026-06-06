@@ -269,6 +269,63 @@ public class License
     public DateTime? CreationTime { get; set; }
     public string? Code { get; set; }
     public bool? UserLicensingEnabled { get; set; }
+
+    // Display / scripting helpers (not serialized). ExpireDate / GracePeriodEndDate are
+    // Unix epoch seconds; *Local expose them as DateTime. Allowed and Used are parallel
+    // dictionaries; Usage projects them into one row per license type with Allowed > 0,
+    // carrying Used / Allowed / Percent — the "Used of Allowed (%)" the Orchestrator
+    // license page shows per runtime type.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public DateTime? ExpireDateLocal =>
+        ExpireDate.HasValue ? DateTimeOffset.FromUnixTimeSeconds(ExpireDate.Value).LocalDateTime : null;
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public DateTime? GracePeriodEndDateLocal =>
+        GracePeriodEndDate.HasValue ? DateTimeOffset.FromUnixTimeSeconds(GracePeriodEndDate.Value).LocalDateTime : null;
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public LicenseUsage[]? Usage
+    {
+        get
+        {
+            if (Allowed is null) return null;
+            var list = new List<LicenseUsage>();
+            foreach (var kv in Allowed)
+            {
+                if (kv.Value <= 0) continue;
+                long used = (Used != null && Used.TryGetValue(kv.Key, out var u)) ? u : 0;
+                list.Add(new LicenseUsage(kv.Key, used, kv.Value));
+            }
+            list.Sort((a, b) =>
+            {
+                int ia = Array.IndexOf(_usageOrder, a.Type);
+                int ib = Array.IndexOf(_usageOrder, b.Type);
+                if (ia < 0) ia = int.MaxValue;
+                if (ib < 0) ib = int.MaxValue;
+                return ia != ib ? ia.CompareTo(ib) : string.CompareOrdinal(a.Type, b.Type);
+            });
+            return list.ToArray();
+        }
+    }
+
+    // The Orchestrator license page's runtime-card order; any other license types
+    // follow these, alphabetically.
+    private static readonly string[] _usageOrder = { "Unattended", "TestAutomation", "NonProduction" };
+}
+
+// Per-license-type usage row projected from License.Allowed / License.Used.
+public class LicenseUsage
+{
+    public LicenseUsage(string type, long used, long allowed)
+    {
+        Type = type;
+        Used = used;
+        Allowed = allowed;
+    }
+    public string Type { get; }
+    public long Used { get; }
+    public long Allowed { get; }
+    public int Percent => Allowed > 0 ? (int)Math.Round(100.0 * Used / Allowed) : 0;
 }
 
 // UpdateSettingsDto

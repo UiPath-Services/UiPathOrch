@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **`Get-OrchLicense` now prints a readable summary by default.** Instead of dumping the
+  raw `Allowed` / `Used` dictionaries and epoch dates, the default view shows
+  `Licensed until`, `Subscription`, and a per-license-type **Usage** table
+  (`Used / Allowed (Percent)`) — the same "Used of Allowed (%)" the Orchestrator license
+  page shows per runtime type. Backing this are new helper properties: `Usage`
+  (a `LicenseUsage[]` of `Type` / `Used` / `Allowed` / `Percent`, one row per type with
+  `Allowed > 0`) and `ExpireDateLocal` / `GracePeriodEndDateLocal` (the epoch dates as
+  `DateTime`). The raw `Allowed` / `Used` / `ExpireDate` fields are unchanged.
+
 ### Fixed
 
 - **`Copy-OrchQueueItem` now rate-limits every batch, not just the first.** The 601 ms
