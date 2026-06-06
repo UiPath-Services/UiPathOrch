@@ -34,7 +34,7 @@ Only items with Status "New" are eligible for copy. Items with any other status 
 
 The cmdlet enforces a rate limit of 601 milliseconds between API calls to avoid overloading the Orchestrator server.
 
-When the server rejects items in a batch, the cmdlet warns for each rejected item (with the server's reason) and **outputs the source queue items it could not copy**, so they can be piped to a CSV and retried — for example `Copy-OrchQueueItem … | Export-Csv failed.csv`. A failed item's Id is enough to retry the copy, because the source items keep their "New" status and can be re-fetched and re-submitted. This mirrors Remove-OrchQueueItem, which likewise outputs the items it could not remove.
+The cmdlet **outputs the source queue items it successfully copied**. Because each queue item is a transaction, copying it to another queue or tenant means it must be removed from the source so it is not processed twice — pipe the output into Remove-OrchQueueItem for a copy-then-delete "move": `Copy-OrchQueueItem TestQueue2 Dept#2 | Remove-OrchQueueItem`. Items the server rejects are NOT included in the output (so the move never deletes an uncopied item); each rejection is reported as a warning carrying the server's reason. The most common rejection is a duplicate Reference when the destination enforces unique references — re-copying will not fix it, so inspect the reason and handle it.
 
 This cmdlet supports ShouldProcess. Use -WhatIf to preview which queue items would be copied, or -Confirm to be prompted before each copy operation.
 
@@ -94,16 +94,15 @@ PS Orch1:\> Copy-OrchQueueItem -Recurse Test* Dept#2
 
 Copies all "New" queue items from all queues matching "Test*" across all folders on Orch1 to the Dept#2 folder.
 
-### Example 6: Capture the items that failed to copy
+### Example 6: Move items (copy, then delete the copied ones from the source)
 
 ```powershell
-PS Orch1:\Shared> Copy-OrchQueueItem TestQueue2 Dept#2 | Export-Csv c:\failed.csv -Encoding utf8BOM
+PS Orch1:\Shared> Copy-OrchQueueItem TestQueue2 Dept#2 | Remove-OrchQueueItem
 ```
 
-The cmdlet returns the source queue items it could not copy (and warns per item with
-the reason). Capture them to a CSV for inspection. Because the source items keep their
-"New" status, you can retry by re-fetching them by `Id` from the source queue and
-re-submitting to the destination.
+Copies the "New" items to Dept#2, then deletes exactly the items that were copied from
+the source TestQueue2 — a transaction-safe move. Items that fail to copy are warned and
+are NOT piped to Remove-OrchQueueItem, so they stay in the source for you to handle.
 
 ## PARAMETERS
 
@@ -299,7 +298,7 @@ You can pipe a destination folder path to this cmdlet via the Destination proper
 
 ### UiPath.PowerShell.Entities.QueueItem
 
-Returns the source QueueItem objects that could NOT be copied, each accompanied by a warning carrying the server's reason. A fully successful copy returns nothing. Pipe the returned items to a CSV and retry them by `Id` — the source items keep their "New" status, so they can be re-fetched and re-submitted.
+Returns the source QueueItem objects that were successfully copied to the destination. Items the server rejects are not returned (each is reported as a warning with the reason). Because each item is a transaction, the returned items are safe to delete from the source — pipe them into Remove-OrchQueueItem for a copy-then-delete move.
 
 ## NOTES
 
@@ -307,7 +306,7 @@ Only queue items with Status "New" are copied. Items with any other status are e
 
 Items are copied in batches of 100 per API call. A rate limit of 601 milliseconds is enforced between API calls to avoid overloading the Orchestrator server.
 
-This is a partial-failure-tolerant operation: items the server rejects are reported as warnings AND returned as output, and the cmdlet continues with the remaining items. Pipe the returned items to a CSV and retry them by `Id` — the source items keep their "New" status. This mirrors Remove-OrchQueueItem, which outputs the items it could not remove.
+This is a partial-failure-tolerant operation: items the server rejects are reported as warnings (with the server's reason) and excluded from the output, and the cmdlet continues with the remaining items. The output is the successfully-copied items, ready to pipe into Remove-OrchQueueItem for a transaction-safe move.
 
 Queue items are folder-scoped entities. You must navigate to a folder on the Orch: drive or use -Path to specify the source folder.
 

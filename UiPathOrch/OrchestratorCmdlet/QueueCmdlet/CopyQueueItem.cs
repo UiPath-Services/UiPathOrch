@@ -143,20 +143,19 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
                             catch (Exception ex)
                             {
                                 // The whole batch failed (the chokepoint already retried any transient
-                                // 429/503/504). The fetch loop advances by skip and the copy does not
-                                // change the source items' status, so this batch is never re-fetched.
-                                // Report it and emit every source item as failed so it can be retried
-                                // (its Id alone is enough to re-copy it).
+                                // 429/503/504). Nothing was confirmed copied, so report the batch and
+                                // emit NOTHING for it — never claim items as copied. (The output is
+                                // meant to feed Remove-OrchQueueItem for a copy-then-delete move, so a
+                                // false "copied" would delete uncopied source items.)
                                 WriteError(new ErrorRecord(new OrchException(dstQueue.GetPSPath(), ex), "CopyQueueItemError", ErrorCategory.InvalidOperation, dstQueue));
-                                WriteObject(srcItems, true);
                                 Thread.Sleep(int.Max(0, (int)(601 - (DateTime.Now - cycleStarted).TotalMilliseconds)));
                                 continue;
                             }
 
-                            // Map the items the server rejected back to their source item via Ordinal
-                            // (1-based) and emit each as a failed source item. Its Id is enough to retry
-                            // the copy (e.g. Get-OrchQueueItem -Id ... | Import-OrchQueueItem); the
-                            // per-item warning carries the reason.
+                            // Items the server rejected this batch, mapped back via Ordinal (1-based).
+                            // Warn with the server's reason — the common cause is a duplicate Reference
+                            // when the destination enforces unique references, which re-copying will not
+                            // fix; inspect the reason and handle it rather than retrying blindly.
                             var failedIds = new HashSet<long>();
                             foreach (var failedDstItem in response?.FailedItems ?? [])
                             {
@@ -172,10 +171,11 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
                                 WriteWarning(warning);
                             }
 
-                            // Emit the source items that failed to copy so they can be piped to a CSV
-                            // and retried.
-                            if (failedIds.Count > 0)
-                                WriteObject(srcItems.Where(i => i.Id.HasValue && failedIds.Contains(i.Id!.Value)), true);
+                            // Output the source items that were SUCCESSFULLY copied (everything not in
+                            // failedIds). They now exist in the destination, so they are safe to delete
+                            // from the source queue — pipe the output into Remove-OrchQueueItem for a
+                            // copy-then-delete "move":  Copy-OrchQueueItem Q Dest | Remove-OrchQueueItem
+                            WriteObject(srcItems.Where(i => i.Id.HasValue && !failedIds.Contains(i.Id!.Value)), true);
 
                             Thread.Sleep(int.Max(0, (int)(601 - (DateTime.Now - cycleStarted).TotalMilliseconds))); // Wait to avoid API call rate limit
                         }

@@ -604,6 +604,19 @@ items separately with `Copy-OrchQueueItem`.
 > only pending work is meaningful to carry to a fresh tenant. Processing history
 > and logs cannot be migrated via API.
 
+The procedure, end to end:
+
+1. **Copy the folders and queue definitions first.** `copy Orch1:\ Orch2:\ -Recurse`
+   brings the folder tree and the queue *definitions* across; or create the destination
+   queue with `New-OrchQueue`. The destination queue must already exist before items are
+   added.
+2. **Copy the items** with `Copy-OrchQueueItem <source-queue> <destination-folder>`.
+   **Only items whose Status is `New` are copied** — any other status (InProgress,
+   Failed, Successful, Retried, Abandoned, Deleted) is silently skipped.
+3. **Optionally move.** Pipe the output into `Remove-OrchQueueItem` to delete the copied
+   items from the source, so each transaction is processed only once (see *Moving items*
+   below).
+
 When the current folder is the source, `-Path` can be omitted. The first
 positional argument is the source queue name (wildcards / comma-separated lists
 allowed), the second is the destination folder:
@@ -645,20 +658,23 @@ Notes:
 - Required permissions: `Queues.View` + `Transactions.View` on the source,
   `Queues.Edit` + `Transactions.Create` on the destination.
 
-#### Handling items that fail to copy
+#### Moving items (copy, then delete the copied ones)
 
-When the server rejects items in a batch, `Copy-OrchQueueItem` warns for each
-rejected item (with the server's reason) and **returns the source queue items it
-could not copy** — just like `Remove-OrchQueueItem` returns the items it could not
-remove. Capture them to a CSV and retry: the source items keep their `New` status,
-so a failed item's `Id` is enough to re-fetch and re-submit it.
+`Copy-OrchQueueItem` returns the source items it **successfully copied**. Each queue
+item is a transaction, so once it has been copied to another queue or tenant it must be
+removed from the source — otherwise it would be processed twice. Pipe the output
+straight into `Remove-OrchQueueItem` for a transaction-safe move:
 
 ```powershell
-# Copy; the items that failed to copy are returned (and warned per item)
-PS Orch1:\Shared> Copy-OrchQueueItem TestQueue2 Dept#2 | Export-Csv c:\failed.csv -Encoding utf8BOM
-
-# Inspect c:\failed.csv, then re-copy the failures by Id from the source queue.
+PS Orch1:\Shared> Copy-OrchQueueItem TestQueue2 Dept#2 | Remove-OrchQueueItem
 ```
+
+Only the items that actually copied are deleted. Items the server rejects are reported
+as warnings (with the reason) and are **not** included in the output, so they stay in
+the source for you to handle — they are never deleted by the piped `Remove`. The most
+common rejection is a **duplicate `Reference`** when the destination enforces unique
+references; re-copying will not fix it, so inspect the warning and decide per item (the
+item may already have been moved).
 
 See [`Copy-OrchQueueItem`](help/en-US/Copy-OrchQueueItem.md) and
 [`Import-OrchQueueItem`](help/en-US/Import-OrchQueueItem.md) for the full

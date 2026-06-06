@@ -6,17 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-### Changed
+### Fixed
 
-- **`Copy-OrchQueueItem` now outputs the queue items it could NOT copy** (instead of
-  the ones it copied), so they can be piped to a CSV and retried — e.g.
-  `Copy-OrchQueueItem … | Export-Csv failed.csv`, then re-copy those items by `Id`.
-  A whole-batch failure emits the entire batch; per-item rejections emit just the
-  rejected items, each with a warning carrying the server's reason. This matches
-  `Remove-OrchQueueItem`, which already outputs the items it could not remove.
-- **Internal: `Copy-OrchQueueItem` now paces each 100-item fetch/add cycle from its
-  own start.** The 601 ms rate-limit pause previously measured from a single
-  pre-loop timestamp and delayed only the first batch. No change to the copied result.
+- **`Copy-OrchQueueItem` now rate-limits every batch, not just the first.** The 601 ms
+  pause was measured from a single timestamp taken before the loop, so only the first
+  100-item batch was delayed; large queues could trip the API rate limit. It is now
+  reset per cycle. The output is unchanged — the successfully-copied source items,
+  ready to pipe into `Remove-OrchQueueItem` for a copy-then-delete "move" (each queue
+  item is a transaction, so an item moved to another queue/tenant must be removed from
+  the source to avoid double-processing).
 
 ## [1.8.1] - 2026-06-06
 
