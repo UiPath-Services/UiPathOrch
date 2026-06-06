@@ -11,6 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // ShouldProcess cannot be properly supported unless this cmdlet only creates empty groups.
 
 [Cmdlet(VerbsCommon.New, "PmGroup", SupportsShouldProcess = true)]
+[OutputType(typeof(PmGroup))]
 public class AddPmGroupCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]

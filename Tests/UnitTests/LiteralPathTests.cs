@@ -23,15 +23,15 @@ public class LiteralPathTests
     [InlineData("Orch1:", "Orch1:")]
     [InlineData("", "")]
     public void StripProviderQualifier_strips_provider_prefix(string input, string expected)
-        => Assert.Equal(expected, SessionStateExtentios.StripProviderQualifier(input));
+        => Assert.Equal(expected, SessionStateExtensions.StripProviderQualifier(input));
 
     [Fact]
     public void StripProviderQualifier_null_returns_null()
-        => Assert.Null(SessionStateExtentios.StripProviderQualifier(null));
+        => Assert.Null(SessionStateExtensions.StripProviderQualifier(null));
 
     [Fact]
     public void StripProviderQualifier_strips_only_to_first_double_colon()
-        => Assert.Equal(@"Orch1:\A", SessionStateExtentios.StripProviderQualifier(@"Mod\Prov::Orch1:\A"));
+        => Assert.Equal(@"Orch1:\A", SessionStateExtensions.StripProviderQualifier(@"Mod\Prov::Orch1:\A"));
 
     // ----- EffectivePath (array overload, string[]? -Path / -LiteralPath) -----
 

@@ -90,14 +90,11 @@ public class GetCredentialAssetCmdlet : OrchestratorPSCmdlet
             if (!string.IsNullOrEmpty(asset.Value))
             {
                 isDescriptionOut = true;
-                var line = new StringBuilder();
-                line.Append($"{EscapeCsvValue(asset.Path, true)},");
-                line.Append($"{EscapeCsvValue(asset.Name, true)},");
-                line.Append($"{EscapeCsvValue(asset.Description)},");
-                line.Append($"{EscapeCsvValue(credentialStore, true)},,,");
-                line.Append($"{EscapeCsvValue(asset.CredentialUsername)},,");
-                line.Append($"{EscapeCsvValue(asset.ExternalName)}");
-                writer.WriteLine(line.ToString());
+                // Shared builder (CsvCredentialHeaders column order, CredentialPassword empty) —
+                // same path Get-OrchAsset -ExportCredentialCsv uses, so the two stay in lockstep.
+                writer.WriteCsvLine(GetAssetCmdlet.BuildCredentialCsvRow(
+                    asset.Path, asset.Name, asset.Description, credentialStore,
+                    null, null, asset.CredentialUsername, asset.ExternalName));
             }
 
             if (asset.UserValues is not null)
@@ -105,25 +102,12 @@ public class GetCredentialAssetCmdlet : OrchestratorPSCmdlet
                 foreach (var userValue in asset.UserValues)
                 {
                     string uvStore = credentialStores.FirstOrDefault(cs => cs.Id == userValue.CredentialStoreId)?.Name ?? "";
+                    string? description = isDescriptionOut ? "" : asset.Description;
+                    isDescriptionOut = true;
 
-                    var line = new StringBuilder();
-                    line.Append($"{EscapeCsvValue(userValue.Path, true)},");
-                    line.Append($"{EscapeCsvValue(asset.Name, true)},");
-                    if (isDescriptionOut)
-                    {
-                        line.Append(",");
-                    }
-                    else
-                    {
-                        isDescriptionOut = true;
-                        line.Append($"{EscapeCsvValue(asset.Description)},");
-                    }
-                    line.Append($"{EscapeCsvValue(uvStore, true)},");
-                    line.Append($"{EscapeCsvValue(userValue.UserName, true)},");
-                    line.Append($"{EscapeCsvValue(userValue.MachineName, true)},");
-                    line.Append($"{EscapeCsvValue(userValue.CredentialUsername)},,");
-                    line.Append($"{EscapeCsvValue(userValue.ExternalName)}");
-                    writer.WriteLine(line.ToString());
+                    writer.WriteCsvLine(GetAssetCmdlet.BuildCredentialCsvRow(
+                        userValue.Path, asset.Name, description, uvStore,
+                        userValue.UserName, userValue.MachineName, userValue.CredentialUsername, userValue.ExternalName));
                 }
             }
         }

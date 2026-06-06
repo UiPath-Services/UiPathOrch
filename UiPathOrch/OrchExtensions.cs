@@ -137,28 +137,6 @@ internal static class FolderExtensions
 
 internal static class OrchCollectionExtensions
 {
-    // The following method has worse performance than == when comparing T& references. It also does not check for null.
-    // Stop using this and compare with == instead.
-    // Be careful not to confuse when to use ==, SafeEquals(), and SafeSequenceEquals().
-    //public static bool SafeEquals<T>(this T? obj1, T obj2) where T : struct
-    //{
-    //    return obj1.Equals(obj2);
-    //}
-
-    // This is useful when comparing reference type values.
-    public static bool SafeEquals<T>(this T? obj1, T? obj2) where T : class
-    {
-        return ReferenceEquals(obj1, obj2) || (obj1 is not null && obj1.Equals(obj2));
-    }
-
-    // Use this when comparing arrays or lists.
-    public static bool SafeSequenceEquals<T>(this IEnumerable<T>? collection1, IEnumerable<T>? collection2)
-    {
-        if (ReferenceEquals(collection1, collection2)) return true;
-        if (collection1 is null && collection2 is null) return true;
-        if (collection1 is null || collection2 is null) return false;
-        return collection1.SequenceEqual(collection2);
-    }
 
     public static void AddIfNotNull<T>(this List<T> list, T? item) where T : class
     {
@@ -435,12 +413,6 @@ internal static class OrchCollectionExtensions
         var jsonString = JsonSerializer.Serialize(obj);
         return JsonSerializer.Deserialize<T>(jsonString)!;
     }
-
-    public static TDst DeepCopyAsSubClass<TSrc, TDst>(TSrc obj)
-    {
-        var jsonString = JsonSerializer.Serialize(obj);
-        return JsonSerializer.Deserialize<TDst>(jsonString)!;
-    }
 }
 
 //internal static class OrchObjectExtensions
@@ -524,14 +496,6 @@ internal static class OrchStringExtensions
         return str.ToNullable<DateTime>(DateTime.TryParse);
     }
 
-    public static T? ToNullable<T>(this T? value) where T : struct, IComparable
-    {
-        if (value.HasValue && value.Value.CompareTo(default(T)) == 0)
-        {
-            return null;
-        }
-        return value;
-    }
 
     public static WildcardPattern? ConvertToWildcardPattern(this string? src)
     {
@@ -965,7 +929,7 @@ internal static class OrchWriterExtensions
 // In contexts where PSCmdlet.SessionState is not accessible, use OrchDriveInfo.SessionState instead.
 // OrchDriveInfo.SessionState is set in OrchProvider.Start(), but there have been situations where this value becomes invalid.
 // This has never been encountered in normal usage, but the current location could not be correctly retrieved when using PowerShell.MCP.
-internal static class SessionStateExtentios
+internal static class SessionStateExtensions
 {
     public static IEnumerable<OrchDriveInfo> EnumAllOrchDrives(this SessionState? sessionState)
     {

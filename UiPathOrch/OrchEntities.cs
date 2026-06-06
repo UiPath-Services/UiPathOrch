@@ -1591,6 +1591,7 @@ public class AuditLogEntity
 // AuditLogDto
 public class AuditLog
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
     public Int64? Id { get; set; }
     public string? ServiceName { get; set; }
@@ -1614,6 +1615,7 @@ public class AuditLog
 // EnvironmentDto
 public class Environment
 {
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
     public Int64? Id { get; set; }
     public string? Name { get; set; }

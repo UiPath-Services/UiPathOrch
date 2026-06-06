@@ -176,7 +176,7 @@ public class OrchDuProvider : NavigationCmdletProvider
         }
         var projects = OrchDuDriveInfo.GetDuProjects();
         var pathPrefix = OrchDuDriveInfo.NameColonSeparator;
-        foreach (var project in projects!)
+        foreach (var project in projects!.OrderBy(p => p.name))
         {
             if (Stopping) return;
             string psPathEscaped = pathPrefix + project.name;
@@ -196,7 +196,7 @@ public class OrchDuProvider : NavigationCmdletProvider
     protected override void GetChildNames(string path, ReturnContainers returnContainers)
     {
         var projects = OrchDuDriveInfo.GetDuProjects();
-        foreach (var project in projects!)
+        foreach (var project in projects!.OrderBy(p => p.name))
         {
             if (Stopping) return;
             string fullPath = OrchDuDriveInfo.NameColonSeparator + project.name;

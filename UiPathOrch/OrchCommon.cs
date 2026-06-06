@@ -33,7 +33,9 @@ public static class PathTools
         return ret;
     }
 
-    // Use this when displaying candidates in a cmdlet completer.
+    // Quotes a completer candidate WITHOUT escaping wildcard metacharacters (unlike
+    // EscapePSText): use when the value binds literally and `* ? [ ]` must stay literal
+    // inside the surrounding single quotes.
     public static string EscapeNonWildcardText(string? input)
     {
         if (string.IsNullOrEmpty(input))
