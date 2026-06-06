@@ -114,6 +114,14 @@ PS C:\> Get-OrchJob -Path Orch1:\Shared -Last Month -Recurse -First 50 -Skip 100
 
 Gets jobs created within the last month from the Shared folder and all its subfolders, skipping the first 100 results and returning the next 50.
 
+### Example 8: Extract a nested property (the robot name) from each job
+
+```powershell
+PS Orch1:\Shared> Get-OrchJob -First 5 | Select-Object Path, EndTime, @{Name='RobotName'; Expression = { $_.Robot.Name }}
+```
+
+`Robot.Name` is a nested property, so it cannot be selected as a plain column — surface it with a calculated property (a script block). To discover which fields (and nested fields) a job exposes, dump one as JSON first: `Get-OrchJob -First 1 | ConvertTo-Json -Depth 5`. `Get-OrchJob` is folder-scoped, so run it from a folder (`cd Orch1:\Shared`) or pass `-Path`; it cannot run at the drive root.
+
 ## PARAMETERS
 
 ### -Path

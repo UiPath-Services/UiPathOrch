@@ -113,6 +113,14 @@ PS Orch1:\> Import-Csv C:\temp\user-updates.csv | Update-OrchUser
 
 Imports user updates from a CSV file. Pipeline input maps CSV columns to parameters via ValueFromPipelineByPropertyName.
 
+### Example 8: Set the client binary update policy to a specific version
+
+```powershell
+PS Orch1:\> Update-OrchUser * -UpdatePolicyType SpecificVersion -UpdatePolicyVersion 23.4.14 -WhatIf
+```
+
+Pins every user's robot/client binary update policy to version 23.4.14. `-UpdatePolicyType` and `-UpdatePolicyVersion` are the two properties the API needs; preview with `-WhatIf`, confirm the wildcard expands as expected, then re-run without it. To target only directory accounts, pipe a filtered set: `Get-OrchUser -Type DirectoryUser | Select-Object UserName | Update-OrchUser -UpdatePolicyType SpecificVersion -UpdatePolicyVersion 23.4.14`. When you are unsure which parameters an Update-* cmdlet needs, perform the operation in the web UI with the browser's Developer Tools open to see the posted JSON fields, and use Ctrl+Space for parameter auto-completion.
+
 ## PARAMETERS
 
 ### -Path

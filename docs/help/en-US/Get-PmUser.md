@@ -94,6 +94,15 @@ PS Orch1:\> Get-PmUser -ExportCsv C:\temp\users.csv -CsvEncoding shift_jis
 
 Exports all users to a CSV file using Shift_JIS encoding for compatibility with Japanese editions of Excel.
 
+### Example 7: List users whose invitation is still pending
+
+```powershell
+PS Orch1:\> Get-PmUser | Where-Object { -not ($_.emailConfirmed -and $_.invitationAccepted) } |
+    Sort-Object creationTime -Descending | Export-Csv C:\temp\pending.csv -Encoding sjis
+```
+
+Lists the organization users whose invitation has not yet been confirmed/accepted — the "Pending" state that the Automation Cloud admin UI cannot filter by — and writes them to a CSV. The filter is on the `emailConfirmed` and `invitationAccepted` properties.
+
 ## PARAMETERS
 
 ### -Path
