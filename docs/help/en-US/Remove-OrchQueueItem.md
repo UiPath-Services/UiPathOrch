@@ -100,6 +100,16 @@ PS Orch1:\Shared> Import-Csv c:RemoveItems.csv | Remove-OrchQueueItem -WhatIf
 
 The Name (queue), Id, and RowVersion columns bind to the parameters of the same name. Supplying RowVersion avoids a per-item lookup; if the column is blank, the cmdlet resolves it automatically. Use this to delete an arbitrary, hand-picked set of items that a single wildcard cannot express.
 
+### Example 6: Retry items that failed to delete
+
+```powershell
+PS Orch1:\Shared> $failed = Remove-OrchQueueItem InvoiceQueue 48291,48292
+# Re-run with the returned failures to retry the delete:
+PS Orch1:\Shared> $failed | Remove-OrchQueueItem
+```
+
+The cmdlet returns the items it could not delete (typically a stale RowVersion from a concurrent change) with their RowVersion **cleared**. Piping them back re-resolves a fresh RowVersion from the server and retries, so the loop converges. You can also persist the failures with `Export-Csv` and retry later from `Import-Csv`.
+
 ## PARAMETERS
 
 ### -Path
@@ -273,7 +283,7 @@ You can pipe queue item IDs to this cmdlet via the Id property.
 
 ### UiPath.PowerShell.Entities.QueueItem
 
-Returns QueueItem objects only for items that failed to delete. If all items are deleted successfully, no output is returned. This allows you to pipe failed items to subsequent retry or investigation commands.
+Returns QueueItem objects only for items that failed to delete (with their RowVersion cleared); a fully successful delete returns nothing. Pipe the returned failures straight back into Remove-OrchQueueItem to retry — the cleared RowVersion forces a fresh re-resolve from the server, which clears the common stale-RowVersion failure (see Example 6).
 
 ## NOTES
 
@@ -281,7 +291,7 @@ The cmdlet uses two-phase processing: item IDs are accumulated during the proces
 
 Each queue item requires a RowVersion (concurrency token) for deletion. The cmdlet resolves RowVersion values in the following order: (1) the -RowVersion parameter if specified, (2) the local cache, (3) the Orchestrator API. Progress bars are displayed during row version resolution and deletion.
 
-If some items fail to delete (e.g., due to a stale RowVersion or concurrent modification), the cmdlet outputs the failed QueueItem objects and continues processing the remaining items.
+If some items fail to delete (e.g., due to a stale RowVersion or concurrent modification), the cmdlet outputs the failed QueueItem objects -- with their RowVersion cleared -- and continues with the remaining items. Pipe those failures back into Remove-OrchQueueItem (directly or via Export-Csv / Import-Csv) to retry: the cleared RowVersion forces a fresh re-resolve from the server, which clears the stale-RowVersion failure.
 
 Queue items are folder-scoped entities. You must navigate to a folder on the Orch: drive or use -Path to specify the target folder.
 
