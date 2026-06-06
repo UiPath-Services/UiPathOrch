@@ -122,6 +122,14 @@ PS Orch1:\Shared> Get-OrchJob -First 5 | Select-Object Path, EndTime, @{Name='Ro
 
 `Robot.Name` is a nested property, so it cannot be selected as a plain column — surface it with a calculated property (a script block). To discover which fields (and nested fields) a job exposes, dump one as JSON first: `Get-OrchJob -First 1 | ConvertTo-Json -Depth 5`. `Get-OrchJob` is folder-scoped, so run it from a folder (`cd Orch1:\Shared`) or pass `-Path`; it cannot run at the drive root.
 
+### Example 9: Audit Unattended robots by their last successful job
+
+```powershell
+PS Orch1:\Shared> Get-OrchJob -Robot (Get-OrchRobot | Where-Object Type -eq Unattended | Select-Object -ExpandProperty Name) -State Successful -OrderBy EndTime | Select-Object @{N='RobotName';E={$_.Robot.Name}}, EndTime
+```
+
+Lists the most recent successful jobs for the Unattended robots, newest first — useful for spotting licensed robots that have not run in a long time. `Get-OrchRobot` supplies the robot names to `-Robot`, and `-OrderBy EndTime` sorts by completion time. Add `-Recurse` to scan every folder.
+
 ## PARAMETERS
 
 ### -Path
