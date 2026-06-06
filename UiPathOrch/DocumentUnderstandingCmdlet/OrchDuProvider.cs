@@ -16,7 +16,7 @@ namespace UiPath.PowerShell.Core;
 [CmdletProvider("UiPathOrchDu", ProviderCapabilities.ShouldProcess)]
 [OutputType(typeof(DuProject), ProviderCmdlet = ProviderCmdlet.GetChildItem)]
 [OutputType(typeof(DuProject), ProviderCmdlet = ProviderCmdlet.GetItem)]
-public class OrchDuProvider : NavigationCmdletProvider
+public class OrchDuProvider : OrchShadowProviderBase
 {
     protected OrchDriveInfo OrchDriveInfo => ((OrchDuDriveInfo)this.PSDriveInfo).ParentDrive;
     protected OrchDuDriveInfo OrchDuDriveInfo => (OrchDuDriveInfo)this.PSDriveInfo;
@@ -142,12 +142,6 @@ public class OrchDuProvider : NavigationCmdletProvider
 
             Process.Start(new ProcessStartInfo(endpoint) { UseShellExecute = true });
         }
-    }
-
-    // TODO: Should we implement something here? But it seems like this has never been called..
-    protected override bool IsValidPath(string path)
-    {
-        return true;
     }
 
     // The ItemExists method apparently does not need to handle wildcards.
@@ -304,12 +298,6 @@ public class OrchDuProvider : NavigationCmdletProvider
 
     #region NavigationCmdletProvider overrides
 
-    protected override bool IsItemContainer(string path)
-    {
-        // This provider only returns containers (it does not return items equivalent to files)
-        return true;
-    }
-
     // Document Understanding deletes a project through the same undocumented internal app/web
     // API used to create one (RemoveDuProject), mirroring the Test Manager provider's RemoveItem.
     // Rename has no known endpoint, so it stays an explicit "not supported" error below rather
@@ -350,35 +338,11 @@ public class OrchDuProvider : NavigationCmdletProvider
             "RenameDuProjectNotSupported", ErrorCategory.NotImplemented, path));
     }
 
-    protected override string NormalizeRelativePath(string path, string basePath)
+    // Canonicalize a DU project name's casing from the passive cache (see base class).
+    protected override string? CanonicalizeProjectName(string name)
     {
-        string result = base.NormalizeRelativePath(path, basePath);
-        if (result.StartsWith(System.IO.Path.DirectorySeparatorChar) && result.Length > 1)
-            result = result[1..];
-
-        // Canonicalize project name casing from cache. Passive read — must
-        // NOT trigger a fetch (NormalizeRelativePath runs on every path
-        // operation, including tab completion).
         var projects = PSDriveInfo is OrchDuDriveInfo drive ? drive.DuProjects.CachedValue : null;
-        if (projects != null && !string.IsNullOrEmpty(result))
-        {
-            var project = projects.FirstOrDefault(p =>
-                string.Equals(p.name, result, StringComparison.OrdinalIgnoreCase));
-            if (project != null)
-                result = project.name;
-        }
-
-        return result ?? "";
-    }
-
-    protected override string MakePath(string parent, string child)
-    {
-        string retNew = base.MakePath(parent, child);
-        if (retNew.EndsWith(System.IO.Path.DirectorySeparatorChar) && retNew.Length > 1 && retNew[retNew.Length - 2] != ':')
-        {
-            retNew = retNew.Substring(0, retNew.Length - 1);
-        }
-        return retNew;
+        return projects?.FirstOrDefault(p => string.Equals(p.name, name, StringComparison.OrdinalIgnoreCase))?.name;
     }
 
     #endregion
