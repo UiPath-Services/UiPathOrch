@@ -784,15 +784,19 @@ Entities requiring `-UserMappingCsv` in Case B (username mapping):
 
 ### Entities Containing Passwords/Secrets
 
-Entities requiring post-processing because passwords are not migrated:
+Entities requiring post-processing because secrets are never returned by the API:
 
 | Entity | Property |
 |---|---|
-| User (OrchUser) | Password |
+| User / Unattended Robot (OrchUser) | UR_Password |
+| Machine — Confidential (OrchMachine) | ClientSecret |
 | Credential Store (OrchCredentialStore) | Secrets in AdditionalConfiguration |
 | Credential Asset (OrchAsset, Credential type) | CredentialPassword |
 | Storage Bucket (OrchBucket) | Password |
 | Webhook (OrchWebhook) | Secret |
+
+See [Credentials & Secrets](07-CredentialsAndSecrets.md) for the full table with the
+re-set cmdlet for each entity, plus details on credential assets.
 
 ### Important Notes
 

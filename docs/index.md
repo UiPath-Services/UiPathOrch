@@ -21,6 +21,8 @@ Get-OrchHelp
 - [CSV Export & Import](03-CsvExportImport.md) — bulk import / export patterns
 - [Migration & Copy Guide](04-MigrationGuide.md) — lift-and-shift between tenants
 - [Incremental-Cache Cmdlets](05-IncrementalCacheCmdlets.md) — drive `Get-OrchJob`, `Get-OrchLog`, `Get-OrchAuditLog`, `Get-OrchQueueItem` and friends efficiently
+- [Licensing Guide](06-LicensingGuide.md) — license cmdlets at the organization (`Pm*`) and tenant (`Orch*`) layers
+- [Credentials & Secrets](07-CredentialsAndSecrets.md) — the write-only-secrets rule and how to re-set each entity's secret
 - [Other Providers (DU & Test Manager)](60-OtherProvidersGuide.md) — the Document Understanding and Test Manager drives
 
 ## For AI Agents
