@@ -763,6 +763,8 @@ Users are tenant-scoped entities. Navigate to the root of an Orch: drive or use 
 
 The cmdlet searches the connected directory service for the specified -UserName. If the user already exists in the tenant, a warning is displayed and the user is skipped.
 
+Directory operations require organization-level sign-in through a **non-confidential** OAuth application. Sign in at your organization URL (`https://cloud.uipath.com/<YourOrg>`) **without** a tenant name; signing in at a tenant-scoped URL (`.../<YourOrg>/<YourTenant>`) leaves the directory service unreachable, so `Add-OrchUser` finds no accounts to add. After signing in, switch to the target tenant's drive to run the cmdlet.
+
 For robot accounts (-Type DirectoryRobot), MayHaveUnattendedSession is forced to true and MayHaveUserSession is forced to false. An UnattendedRobot configuration is always created for robot accounts.
 
 When importing from CSV via pipeline, duplicate entries for the same user on the same drive are merged. Boolean and string settings take the latest non-null value, and roles are accumulated across all rows for the same user.
