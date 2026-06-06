@@ -284,9 +284,13 @@ You can pipe a commit type string to this cmdlet via the CommitType property.
 
 ## OUTPUTS
 
+### UiPath.PowerShell.Entities.BulkOperationResponseDtoOfFailedQueueItem
+
+On a successful bulk add the operation response is returned — check `.Success`. Per-row rejections are surfaced separately as FailedQueueItem (below).
+
 ### UiPath.PowerShell.Entities.FailedQueueItem
 
-For each row the server rejects, a FailedQueueItem (stamped with QueueName and CsvPath, plus the server's reason) is returned, and an error record carries the failure message. A fully successful import returns nothing — use -Verbose for a per-file confirmation.
+For each row the server rejects, a FailedQueueItem (stamped with QueueName and CsvPath, plus the server's reason) is returned, and an error record carries the failure message.
 
 ### UiPath.PowerShell.Commands.CSVParseError
 

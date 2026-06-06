@@ -54,11 +54,11 @@ _Nothing yet._
   ready to pipe into `Remove-OrchQueueItem` for a copy-then-delete "move" (each queue
   item is a transaction, so an item moved to another queue/tenant must be removed from
   the source to avoid double-processing).
-- **`Import-OrchQueueItem` now honors its documented "no output on success" contract.**
-  On a fully successful import the cmdlet used to emit the raw internal
-  `BulkOperationResponseDtoOfFailedQueueItem`; it is now silent on success (use
-  `-Verbose` for a per-file count). Rejected rows are still returned as `FailedQueueItem`
-  and CSV parse problems as `CSVParseError` — both now declared in `[OutputType]`.
+- **`Import-OrchQueueItem`'s output is now accurately documented.** The help claimed
+  "no output on success", but the cmdlet returns the `BulkOperationResponse` (check
+  `.Success`) on a successful add, `FailedQueueItem` objects for rejected rows, and
+  `CSVParseError` objects when the CSV can't be parsed. The OUTPUTS section and
+  `[OutputType]` now declare all three. No behavior change.
 - **`New-OrchApiTrigger` / `Update-OrchApiTrigger` now work below ApiVersion 20.** The
   create/update payload always carried `RunAsCaller`, a recent Cloud-only HttpTrigger
   field absent from the on-prem swagger through v20. Strict servers reject the unknown
