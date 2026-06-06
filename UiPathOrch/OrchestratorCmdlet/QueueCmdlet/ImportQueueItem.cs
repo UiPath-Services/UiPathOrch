@@ -19,7 +19,7 @@ public class CSVParseError(int csvRow, string errorType, string csvField, string
 }
 
 [Cmdlet(VerbsData.Import, "OrchQueueItem", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.FailedQueueItem))]
+[OutputType(typeof(Entities.FailedQueueItem), typeof(CSVParseError))]
 public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -236,7 +236,10 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
                                 {
                                     if (response.Success.GetValueOrDefault())
                                     {
-                                        WriteObject(response);
+                                        // A fully successful import emits nothing on the pipeline (the
+                                        // documented contract). Only rejected rows are surfaced below,
+                                        // as FailedQueueItem; the bulk response is an internal DTO.
+                                        WriteVerbose($"Imported {queueItem.Item2.rowNum} item(s) into '{target}'.");
                                     }
                                     else
                                     {

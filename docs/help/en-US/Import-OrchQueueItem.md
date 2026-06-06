@@ -286,7 +286,11 @@ You can pipe a commit type string to this cmdlet via the CommitType property.
 
 ### UiPath.PowerShell.Entities.FailedQueueItem
 
-Returns FailedQueueItem objects only for items that failed to import. If all items are imported successfully, no output is returned. The response also includes the BulkOperationResponse with summary information.
+For each row the server rejects, a FailedQueueItem (stamped with QueueName and CsvPath, plus the server's reason) is returned, and an error record carries the failure message. A fully successful import returns nothing — use -Verbose for a per-file confirmation.
+
+### UiPath.PowerShell.Commands.CSVParseError
+
+When the CSV itself cannot be parsed (a malformed row, or an invalid Priority value), one CSVParseError per problem is returned and the import is not attempted for that file.
 
 ## NOTES
 
