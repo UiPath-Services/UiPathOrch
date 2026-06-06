@@ -217,6 +217,36 @@ Key points for AI:
 Import-OrchConfig
 ```
 
+### Deployment Edition (Cloud / On-Premises / Automation Suite)
+
+UiPathOrch auto-detects each drive's deployment edition from its `Root` URL. Check it
+with:
+
+```powershell
+Get-OrchPSDrive YourDrive: | Select-Object Name, Edition
+```
+
+`Edition` is one of `Cloud`, `OnPremises`, or `AutomationSuite`, and it determines how
+UiPathOrch builds API URLs. An **Automation Suite** environment behind a custom gateway
+(for example `https://rpa.example.com/<org>/<tenant>`) can occasionally be mis-detected —
+the symptom is a parse error such as `'<' is an invalid start of a value` on the first
+real command after the drive is mounted (the gateway returns an HTML page where JSON was
+expected). If that happens, pin the edition explicitly by adding an `"Edition"` field to
+that drive in `UiPathOrchConfig.json`:
+
+```json
+{
+  "Name": "AS_Default",
+  "Edition": "AutomationSuite",
+  "Root": "https://rpa.example.com/Default/Default",
+  "IdentityUrl": "https://rpa.example.com/identity_",
+  "AppId": "...",
+  "Enabled": true
+}
+```
+
+Then run `Import-OrchConfig` and re-check with `Get-OrchPSDrive`.
+
 ### Upgrading
 
 ```powershell
