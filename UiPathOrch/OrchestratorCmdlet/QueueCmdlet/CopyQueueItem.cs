@@ -86,23 +86,15 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
                     {
                         string query = $"&$filter=((QueueDefinitionId eq {srcQueue.Id}) and (Status eq '0'))";
 
-                        #region Build the comment to append to srcItems
-                        // Let's skip this processing for now..
-                        //string comment = "This item was copied to ";
-                        //if (srcDrive._psDrive.Root != dstDrive._psDrive.Root)
-                        //{
-                        //    comment += $"{dstDrive._psDrive.Root} ";
-                        //}
-                        //comment += $"'{dstFolder.FullyQualifiedName}/{dstQueue.Name}' with UiPathOrch.";
-                        #endregion
-
                         ulong first = 0;
 
                         // In this loop, retrieve srcQueue items 100 at a time and add them to dstQueue 100 at a time.
-                        DateTime getQueueItemsCalled = DateTime.Now;
                         while (true)
                         {
                             cancelHandler.Token.ThrowIfCancellationRequested();
+
+                            // Pace each GetQueueItems -> BulkAdd cycle to >= 601 ms to avoid the API rate limit.
+                            DateTime cycleStarted = DateTime.Now;
 
                             List<QueueItem> srcItems;
                             try // Bulk-retrieve items with Status "New" from srcQueue (up to 100)
@@ -117,67 +109,75 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
                                 break;
                             }
 
+                            // Build the bulk-add payload for this batch. Id/Key are carried (not
+                            // serialized) so a rejected ordinal maps back to its source item.
+                            var payload = new QueueItemData[srcItems.Count];
+                            for (int i = 0; i < srcItems.Count; i++)
+                            {
+                                var srcItem = srcItems[i];
+                                payload[i] = new QueueItemData()
+                                {
+                                    Name = dstQueue.Name,
+                                    Priority = srcItem.Priority,
+                                    SpecificContent = srcItem.SpecificContent,
+                                    DeferDate = srcItem.DeferDate,
+                                    DueDate = srcItem.DueDate,
+                                    RiskSlaDate = srcItem.RiskSlaDate,
+                                    Reference = srcItem.Reference,
+                                    Progress = srcItem.Progress,
+                                    Id = srcItem.Id,  // not serialized; kept to map a failed ordinal back
+                                    Key = srcItem.Key // not serialized; kept to map a failed ordinal back
+                                };
+                            }
+
+                            BulkOperationResponseDtoOfFailedQueueItem? response;
                             try
                             {
-                                #region Bulk-add items to dstQueue; Ids of failed items go into failedSrcItemIds
-                                BulkAddQueueItemsRequest payload = new()
+                                response = dstDrive.OrchAPISession.BulkAddQueueItem(dstFolder.Id ?? 0, new BulkAddQueueItemsRequest
                                 {
                                     queueName = dstQueue.Name,
                                     commitType = "ProcessAllIndependently",
-                                    queueItems = new QueueItemData[srcItems.Count]
-                                };
-
-                                int index = 0;
-                                foreach (var srcItem in srcItems)
-                                {
-                                    payload.queueItems[index++] = new QueueItemData()
-                                    {
-                                        Name = dstQueue.Name,
-                                        Priority = srcItem.Priority,
-                                        SpecificContent = srcItem.SpecificContent,
-                                        DeferDate = srcItem.DeferDate,
-                                        DueDate = srcItem.DueDate,
-                                        RiskSlaDate = srcItem.RiskSlaDate,
-                                        Reference = srcItem.Reference,
-                                        Progress = srcItem.Progress,
-                                        //Source = item.
-                                        //ParentOperationId = item.
-                                        Id = srcItem.Id,  // Not included in the payload, but kept for processing purposes
-                                        Key = srcItem.Key // Not included in the payload, but kept for processing purposes
-                                    };
-                                }
-
-                                var failedItems = dstDrive.OrchAPISession.BulkAddQueueItem(dstFolder.Id ?? 0, payload);
-                                Dictionary<Int64, QueueItem> copiedSrcItems = srcItems.ToDictionary(i => i.Id!.Value);
-                                #endregion
-
-                                #region Output items that failed to copy and display warnings on screen
-                                HashSet<Int64> failedSrcItemIds = [];
-                                foreach (var failedDstItem in failedItems?.FailedItems ?? [])
-                                {
-                                    if (failedDstItem.Ordinal is null) continue;
-                                    var failedPayloadItem = payload.queueItems[failedDstItem.Ordinal.Value - 1]; // Ordinal appears to be 1-based
-                                    if (failedSrcItemIds.Add(failedPayloadItem.Id!.Value))
-                                    {
-                                        string warning = $"'{srcQueue.GetPSPath()}': Add item failed: {failedDstItem.ErrorMessage} Id: {failedPayloadItem.Id} Key: '{failedPayloadItem.Key}'";
-                                        if (!string.IsNullOrEmpty(failedPayloadItem.Reference))
-                                            warning += $" Reference: '{failedPayloadItem.Reference}'.";
-                                        WriteWarning(warning);
-                                        copiedSrcItems.Remove(failedPayloadItem.Id.Value);
-                                    }
-                                }
-                                #endregion
-
-                                // Output the items from srcQueue that were successfully copied
-                                WriteObject(copiedSrcItems.Values, true);
-
+                                    queueItems = payload
+                                });
                             }
                             catch (Exception ex)
                             {
-                                WriteError(new ErrorRecord(new OrchException(dstQueue.GetPSPath(), ex), "GetQueueItemError", ErrorCategory.InvalidOperation, dstQueue));
+                                // The whole batch failed (the chokepoint already retried any transient
+                                // 429/503/504). The fetch loop advances by skip and the copy does not
+                                // change the source items' status, so this batch is never re-fetched.
+                                // Report it and emit every source item as failed so it can be retried
+                                // (its Id alone is enough to re-copy it).
+                                WriteError(new ErrorRecord(new OrchException(dstQueue.GetPSPath(), ex), "CopyQueueItemError", ErrorCategory.InvalidOperation, dstQueue));
+                                WriteObject(srcItems, true);
+                                Thread.Sleep(int.Max(0, (int)(601 - (DateTime.Now - cycleStarted).TotalMilliseconds)));
+                                continue;
                             }
 
-                            Thread.Sleep(int.Max(0, (int)(601 - (DateTime.Now - getQueueItemsCalled).TotalMilliseconds))); // Wait to avoid API call rate limit
+                            // Map the items the server rejected back to their source item via Ordinal
+                            // (1-based) and emit each as a failed source item. Its Id is enough to retry
+                            // the copy (e.g. Get-OrchQueueItem -Id ... | Import-OrchQueueItem); the
+                            // per-item warning carries the reason.
+                            var failedIds = new HashSet<long>();
+                            foreach (var failedDstItem in response?.FailedItems ?? [])
+                            {
+                                if (failedDstItem.Ordinal is null) continue;
+                                int idx = failedDstItem.Ordinal.Value - 1;
+                                if (idx < 0 || idx >= payload.Length) continue;
+                                var failedItem = payload[idx];
+                                if (failedItem.Id.HasValue) failedIds.Add(failedItem.Id.Value);
+
+                                string warning = $"'{srcQueue.GetPSPath()}': Add item failed: {failedDstItem.ErrorMessage} Id: {failedItem.Id} Key: '{failedItem.Key}'";
+                                if (!string.IsNullOrEmpty(failedItem.Reference))
+                                    warning += $" Reference: '{failedItem.Reference}'.";
+                                WriteWarning(warning);
+                            }
+
+                            // Emit the source items that failed to copy so they can be piped to a CSV
+                            // and retried.
+                            if (failedIds.Count > 0)
+                                WriteObject(srcItems.Where(i => i.Id.HasValue && failedIds.Contains(i.Id!.Value)), true);
+
+                            Thread.Sleep(int.Max(0, (int)(601 - (DateTime.Now - cycleStarted).TotalMilliseconds))); // Wait to avoid API call rate limit
                         }
                     }
                 }

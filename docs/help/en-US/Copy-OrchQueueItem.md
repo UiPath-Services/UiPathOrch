@@ -32,7 +32,9 @@ Copies queue items with a Status of "New" from one UiPath Orchestrator queue to 
 
 Only items with Status "New" are eligible for copy. Items with any other status (e.g., InProgress, Failed, Successful) are silently skipped.
 
-The cmdlet enforces a rate limit of 601 milliseconds between API calls to avoid overloading the Orchestrator server. If some items fail to copy, the cmdlet outputs warnings for each failed item while continuing to process the remaining items.
+The cmdlet enforces a rate limit of 601 milliseconds between API calls to avoid overloading the Orchestrator server.
+
+When the server rejects items in a batch, the cmdlet warns for each rejected item (with the server's reason) and **outputs the source queue items it could not copy**, so they can be piped to a CSV and retried — for example `Copy-OrchQueueItem … | Export-Csv failed.csv`. A failed item's Id is enough to retry the copy, because the source items keep their "New" status and can be re-fetched and re-submitted. This mirrors Remove-OrchQueueItem, which likewise outputs the items it could not remove.
 
 This cmdlet supports ShouldProcess. Use -WhatIf to preview which queue items would be copied, or -Confirm to be prompted before each copy operation.
 
@@ -91,6 +93,17 @@ PS Orch1:\> Copy-OrchQueueItem -Recurse Test* Dept#2
 ```
 
 Copies all "New" queue items from all queues matching "Test*" across all folders on Orch1 to the Dept#2 folder.
+
+### Example 6: Capture the items that failed to copy
+
+```powershell
+PS Orch1:\Shared> Copy-OrchQueueItem TestQueue2 Dept#2 | Export-Csv c:\failed.csv -Encoding utf8BOM
+```
+
+The cmdlet returns the source queue items it could not copy (and warns per item with
+the reason). Capture them to a CSV for inspection. Because the source items keep their
+"New" status, you can retry by re-fetching them by `Id` from the source queue and
+re-submitting to the destination.
 
 ## PARAMETERS
 
@@ -286,7 +299,7 @@ You can pipe a destination folder path to this cmdlet via the Destination proper
 
 ### UiPath.PowerShell.Entities.QueueItem
 
-Returns the successfully copied QueueItem objects in the destination queue. If some items fail to copy, warnings are emitted for the failed items and only the successfully copied items are returned.
+Returns the source QueueItem objects that could NOT be copied, each accompanied by a warning carrying the server's reason. A fully successful copy returns nothing. Pipe the returned items to a CSV and retry them by `Id` — the source items keep their "New" status, so they can be re-fetched and re-submitted.
 
 ## NOTES
 
@@ -294,7 +307,7 @@ Only queue items with Status "New" are copied. Items with any other status are e
 
 Items are copied in batches of 100 per API call. A rate limit of 601 milliseconds is enforced between API calls to avoid overloading the Orchestrator server.
 
-If some items in a batch fail, the cmdlet continues processing remaining items and outputs a warning for each failure. This is a partial-failure-tolerant operation.
+This is a partial-failure-tolerant operation: items the server rejects are reported as warnings AND returned as output, and the cmdlet continues with the remaining items. Pipe the returned items to a CSV and retry them by `Id` — the source items keep their "New" status. This mirrors Remove-OrchQueueItem, which outputs the items it could not remove.
 
 Queue items are folder-scoped entities. You must navigate to a folder on the Orch: drive or use -Path to specify the source folder.
 
@@ -303,3 +316,7 @@ Queue items are folder-scoped entities. You must navigate to a folder on the Orc
 [Get-OrchQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchQueueItem.md)
 
 [Copy-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchQueue.md)
+
+[Import-OrchQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchQueueItem.md)
+
+[Migration & Copy Guide - Copying Queue Items](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/04-MigrationGuide.md#copying-queue-items)

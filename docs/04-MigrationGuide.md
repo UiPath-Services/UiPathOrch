@@ -592,6 +592,78 @@ Orchestrator drive:
   copying (see [Case B](#case-b-username-mapping-required) above for generating,
   validating, and using the mapping CSV).
 
+### Copying Queue Items
+
+Queue **definitions** are copied along with their folders by `copy -Recurse`,
+but the **items inside** them are not — the Orchestrator API does not move queue
+transactions during a folder copy. After the folders are in place, copy the
+items separately with `Copy-OrchQueueItem`.
+
+> **Only `New` items are copied.** Items with any other status (InProgress,
+> Failed, Successful, Retried, Abandoned, Deleted) are silently skipped, because
+> only pending work is meaningful to carry to a fresh tenant. Processing history
+> and logs cannot be migrated via API.
+
+When the current folder is the source, `-Path` can be omitted. The first
+positional argument is the source queue name (wildcards / comma-separated lists
+allowed), the second is the destination folder:
+
+```powershell
+# Same tenant, current folder (Shared) -> Dept#2, single queue
+PS Orch1:\Shared> Copy-OrchQueueItem TestQueue2 Dept#2
+
+# All queues matching a wildcard, current folder -> Dept#2
+PS Orch1:\Shared> Copy-OrchQueueItem Test* Dept#2
+```
+
+Use `-Path` to name the source folder explicitly, and a drive-qualified
+`-Destination` to copy across Orchestrator instances:
+
+```powershell
+# Cross-instance: Orch1 Shared -> Orch2 Shared
+Copy-OrchQueueItem -Path Orch1:\Shared TestQueue2 Orch2:\Shared
+
+# All folders on Orch1 -> a single destination folder
+PS Orch1:\> Copy-OrchQueueItem -Recurse Test* Dept#2
+```
+
+Preview first with `-WhatIf`; it lists each queue that would be copied without
+moving any items:
+
+```powershell
+PS Orch1:\Shared> Copy-OrchQueueItem TestQueue2 Dept#2 -WhatIf
+```
+
+Notes:
+
+- The destination queue must already exist (copy the folders first, or create
+  the queue with `New-OrchQueue`). Items are added to the **existing** queue,
+  not appended to a freshly created one.
+- Items are copied in batches of 100 via the `BulkAddQueueItems` API, with a
+  601 ms pause between calls to avoid overloading the server. Large queues take
+  proportionally longer.
+- Required permissions: `Queues.View` + `Transactions.View` on the source,
+  `Queues.Edit` + `Transactions.Create` on the destination.
+
+#### Handling items that fail to copy
+
+When the server rejects items in a batch, `Copy-OrchQueueItem` warns for each
+rejected item (with the server's reason) and **returns the source queue items it
+could not copy** — just like `Remove-OrchQueueItem` returns the items it could not
+remove. Capture them to a CSV and retry: the source items keep their `New` status,
+so a failed item's `Id` is enough to re-fetch and re-submit it.
+
+```powershell
+# Copy; the items that failed to copy are returned (and warned per item)
+PS Orch1:\Shared> Copy-OrchQueueItem TestQueue2 Dept#2 | Export-Csv c:\failed.csv -Encoding utf8BOM
+
+# Inspect c:\failed.csv, then re-copy the failures by Id from the source queue.
+```
+
+See [`Copy-OrchQueueItem`](help/en-US/Copy-OrchQueueItem.md) and
+[`Import-OrchQueueItem`](help/en-US/Import-OrchQueueItem.md) for the full
+parameter reference.
+
 ### Copying via CSV
 
 Export entities to CSV, edit as needed, then import into a Copy cmdlet.
@@ -737,7 +809,8 @@ Copy-OrchAsset -Path "Source:\user1's workspace" * -Destination "Destination:\ne
   migration if needed.
 - **Queue items**: Due to API constraints, queue items are not automatically
   copied when copying folders. Copy them separately using
-  `Copy-OrchQueueItem` (only Status=New items can be copied).
+  `Copy-OrchQueueItem` (only Status=New items can be copied). See
+  [Copying Queue Items](#copying-queue-items) for the procedure and examples.
 - **Logs**: Due to API constraints, logs cannot be copied.
 - **Choosing between Case A and Case B**: If usernames are the same on source
   and destination, use Case A. If usernames differ, always use Case B with
