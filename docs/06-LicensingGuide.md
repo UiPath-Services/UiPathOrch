@@ -146,6 +146,19 @@ The raw `Allowed` / `Used` dictionaries remain available, and `ExpireDateLocal` 
 PS Orch1:\> Get-OrchLicenseRuntime | Select-Object RobotType, MachineName, Runtimes, RobotsCount, IsOnline, Enabled
 ```
 
+**Activate / deactivate a machine's runtime license (the *Active* toggle):**
+
+```powershell
+PS Orch1:\> Disable-OrchLicenseRuntime NonProduction m2 -WhatIf   # preview
+PS Orch1:\> Disable-OrchLicenseRuntime NonProduction m2           # Active -> off
+PS Orch1:\> Enable-OrchLicenseRuntime  NonProduction m2           # Active -> on
+```
+
+`Enable-OrchLicenseRuntime` / `Disable-OrchLicenseRuntime` flip the same `Enabled` flag
+shown by `Get-OrchLicenseRuntime` (the *Active* toggle on the license page). The first
+argument is the `RobotType`, the second the machine `Key`; both accept wildcards and tab
+completion, and `-WhatIf` previews the change.
+
 **Usage trend over the last month:**
 
 ```powershell
