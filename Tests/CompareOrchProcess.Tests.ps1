@@ -59,13 +59,13 @@ AfterAll {
 Describe 'Compare-OrchProcess -Recurse' {
     It 'does not see subfolder processes without -Recurse' {
         if (-not $script:PackageId) { Set-ItResult -Skipped -Because 'no package on test drive'; return }
-        $r = Compare-OrchProcess -Path $script:RootA -DifferencePath $script:RootB
+        $r = Compare-OrchProcess -Name * -Path $script:RootA -DifferencePath $script:RootB
         ($r | Where-Object Name -eq $script:Sub) | Should -BeNullOrEmpty
     }
 
     It 'descends into mirrored subfolders with -Recurse' {
         if (-not $script:PackageId) { Set-ItResult -Skipped -Because 'no package on test drive'; return }
-        $r = Compare-OrchProcess -Path $script:RootA -DifferencePath $script:RootB -Recurse
+        $r = Compare-OrchProcess -Name * -Path $script:RootA -DifferencePath $script:RootB -Recurse
         $sub = $r | Where-Object { $_.Name -eq $script:Sub -and $_.Path -like '*\Sub\*' }
         $sub.SideIndicator | Should -Be '<>'
         ($sub.Differences | Where-Object Property -eq 'Description').DifferenceValue | Should -Be 'd2'
@@ -73,7 +73,7 @@ Describe 'Compare-OrchProcess -Recurse' {
 
     It 'treats the equal top-level process as == under -Recurse -IncludeEqual' {
         if (-not $script:PackageId) { Set-ItResult -Skipped -Because 'no package on test drive'; return }
-        $r = Compare-OrchProcess -Path $script:RootA -DifferencePath $script:RootB -Recurse -IncludeEqual
+        $r = Compare-OrchProcess -Name * -Path $script:RootA -DifferencePath $script:RootB -Recurse -IncludeEqual
         ($r | Where-Object Name -eq $script:Top).SideIndicator | Should -Be '=='
     }
 }

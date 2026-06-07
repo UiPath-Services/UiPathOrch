@@ -45,41 +45,41 @@ AfterAll {
 
 Describe 'Compare-OrchCalendar (tenant-scoped)' {
     It 'reports "==" for a calendar compared to itself (name-match)' {
-        $r = Compare-OrchCalendar "${script:Drive}:" "${script:Drive}:" -Name "${script:Prefix}*" -IncludeEqual
+        $r = Compare-OrchCalendar -Name "${script:Prefix}*" -Path "${script:Drive}:" -DifferencePath "${script:Drive}:" -IncludeEqual
         ($r | Where-Object Name -eq $script:Same).SideIndicator | Should -Be '=='
     }
 
     It 'reports "<=" for a calendar present only on the reference drive' {
-        $r = Compare-OrchCalendar "${script:Drive}:" "${script:Other}:" -Name "${script:Prefix}*"
+        $r = Compare-OrchCalendar -Name "${script:Prefix}*" -Path "${script:Drive}:" -DifferencePath "${script:Other}:"
         ($r | Where-Object Name -eq $script:Same).SideIndicator | Should -Be '<='
     }
 
     It 'reports "=>" for a calendar present only on the difference drive' {
-        $r = Compare-OrchCalendar "${script:Other}:" "${script:Drive}:" -Name "${script:Prefix}*"
+        $r = Compare-OrchCalendar -Name "${script:Prefix}*" -Path "${script:Other}:" -DifferencePath "${script:Drive}:"
         ($r | Where-Object Name -eq $script:Same).SideIndicator | Should -Be '=>'
     }
 
     It 'reports "<>" with an ExcludedDates difference (broadcast)' {
-        $r = Compare-OrchCalendar "${script:Drive}:" -Name $script:Changed `
+        $r = Compare-OrchCalendar -Path "${script:Drive}:" -Name $script:Changed `
             -DifferencePath "${script:Drive}:" -DifferenceName $script:Other2 -Property ExcludedDates
         $r.SideIndicator | Should -Be '<>'
         (($r.Differences | Where-Object Property -eq 'ExcludedDates') | Measure-Object).Count | Should -Be 1
     }
 
     It 'reports "==" for equal dates under different names (broadcast)' {
-        $r = Compare-OrchCalendar "${script:Drive}:" -Name $script:Same `
+        $r = Compare-OrchCalendar -Path "${script:Drive}:" -Name $script:Same `
             -DifferencePath "${script:Drive}:" -DifferenceName $script:Changed -Property ExcludedDates -IncludeEqual
         $r.SideIndicator | Should -Be '=='
     }
 
     It 'errors when the named difference calendar does not exist' {
-        { Compare-OrchCalendar "${script:Drive}:" -Name $script:Same `
+        { Compare-OrchCalendar -Path "${script:Drive}:" -Name $script:Same `
             -DifferencePath "${script:Drive}:" -DifferenceName "${script:Prefix}Nope" -ErrorAction Stop } |
             Should -Throw
     }
 
     It 'warns on an unrecognized -Property name' {
-        Compare-OrchCalendar "${script:Drive}:" "${script:Drive}:" -Name "${script:Prefix}*" `
+        Compare-OrchCalendar -Name "${script:Prefix}*" -Path "${script:Drive}:" -DifferencePath "${script:Drive}:" `
             -Property 'Bogus' -WarningVariable w -WarningAction SilentlyContinue | Out-Null
         ($w -join ' ') | Should -Match 'unrecognized'
     }

@@ -68,7 +68,7 @@ AfterAll {
 
 Describe 'Compare-OrchAsset name-match mode' {
     BeforeAll {
-        $script:Result = Compare-OrchAsset -Path $script:RootA -DifferencePath $script:RootB
+        $script:Result = Compare-OrchAsset -Name * -Path $script:RootA -DifferencePath $script:RootB
     }
 
     It 'reports a changed asset as "<>"' {
@@ -88,7 +88,7 @@ Describe 'Compare-OrchAsset name-match mode' {
     }
 
     It 'emits "==" for equal assets with -IncludeEqual' {
-        $r = Compare-OrchAsset -Path $script:RootA -DifferencePath $script:RootB -IncludeEqual
+        $r = Compare-OrchAsset -Name * -Path $script:RootA -DifferencePath $script:RootB -IncludeEqual
         ($r | Where-Object Name -eq $script:Same).SideIndicator | Should -Be '=='
     }
 
@@ -116,7 +116,7 @@ Describe 'Compare-OrchAsset name-match mode' {
     }
 
     It 'descends into mirrored subfolders with -Recurse' {
-        $r = Compare-OrchAsset -Path $script:RootA -DifferencePath $script:RootB -Recurse
+        $r = Compare-OrchAsset -Name * -Path $script:RootA -DifferencePath $script:RootB -Recurse
         $sub = $r | Where-Object { $_.Name -eq $script:Sub -and $_.Path -like '*\Sub\*' }
         $sub.SideIndicator | Should -Be '<>'
     }
@@ -148,7 +148,7 @@ Describe 'Compare-OrchAsset broadcast mode (-DifferenceName)' {
 
 Describe 'Compare-OrchAsset -Property' {
     It 'warns and ignores an unrecognized property name' {
-        Compare-OrchAsset -Path $script:RootA -DifferencePath $script:RootB `
+        Compare-OrchAsset -Name * -Path $script:RootA -DifferencePath $script:RootB `
             -Property 'Bogus' -WarningVariable w -WarningAction SilentlyContinue | Out-Null
         ($w -join ' ') | Should -Match 'unrecognized'
     }
@@ -156,7 +156,7 @@ Describe 'Compare-OrchAsset -Property' {
     It 'restricts the comparison to the named property' {
         # Changed differs only in Value; comparing on Description alone makes it equal,
         # so it drops out (no -IncludeEqual) leaving only the existence differences.
-        $r = Compare-OrchAsset -Path $script:RootA -DifferencePath $script:RootB -Property 'Description'
+        $r = Compare-OrchAsset -Name * -Path $script:RootA -DifferencePath $script:RootB -Property 'Description'
         ($r | Where-Object Name -eq $script:Changed) | Should -BeNullOrEmpty
         ($r | Where-Object Name -eq $script:OnlyA).SideIndicator | Should -Be '<='
     }

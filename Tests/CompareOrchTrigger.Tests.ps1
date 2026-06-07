@@ -68,13 +68,13 @@ AfterAll {
 Describe 'Compare-OrchTrigger' {
     It 'reports a changed trigger as "<>" with an Enabled difference' {
         if (-not $script:PackageId) { Set-ItResult -Skipped -Because 'no package on test drive'; return }
-        $r = Compare-OrchTrigger -Path $script:RootA -DifferencePath $script:RootB
+        $r = Compare-OrchTrigger -Name * -Path $script:RootA -DifferencePath $script:RootB
         ($r | Where-Object Name -eq $script:Changed).SideIndicator | Should -Be '<>'
     }
 
     It 'suppresses equal triggers by default and shows them with -IncludeEqual' {
         if (-not $script:PackageId) { Set-ItResult -Skipped -Because 'no package on test drive'; return }
-        $r = Compare-OrchTrigger -Path $script:RootA -DifferencePath $script:RootB -IncludeEqual
+        $r = Compare-OrchTrigger -Name * -Path $script:RootA -DifferencePath $script:RootB -IncludeEqual
         ($r | Where-Object Name -eq $script:Same).SideIndicator | Should -Be '=='
     }
 
@@ -95,14 +95,14 @@ Describe 'Compare-OrchTrigger' {
 
     It 'warns on an unrecognized -Property name' {
         if (-not $script:PackageId) { Set-ItResult -Skipped -Because 'no package on test drive'; return }
-        Compare-OrchTrigger -Path $script:RootA -DifferencePath $script:RootB `
+        Compare-OrchTrigger -Name * -Path $script:RootA -DifferencePath $script:RootB `
             -Property 'Bogus' -WarningVariable w -WarningAction SilentlyContinue | Out-Null
         ($w -join ' ') | Should -Match 'unrecognized'
     }
 
     It 'descends into mirrored subfolders with -Recurse' {
         if (-not $script:PackageId) { Set-ItResult -Skipped -Because 'no package on test drive'; return }
-        $r = Compare-OrchTrigger -Path $script:RootA -DifferencePath $script:RootB -Recurse
+        $r = Compare-OrchTrigger -Name * -Path $script:RootA -DifferencePath $script:RootB -Recurse
         $sub = $r | Where-Object { $_.Name -eq $script:SubTrig -and $_.Path -like '*\Sub\*' }
         $sub.SideIndicator | Should -Be '<>'
     }

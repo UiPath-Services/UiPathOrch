@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(OrchComparison))]
 public class CompareFolderMachineCmdlet : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string? Path { get; set; }
 
@@ -24,15 +24,17 @@ public class CompareFolderMachineCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? DifferencePath { get; set; }
 
-    [Parameter]
+    [Parameter(Position = 2)]
+    [ArgumentCompleter(typeof(FolderMachineNameCompleter))]
     public string? DifferenceName { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(FolderMachineNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
     [Parameter]
+    [ArgumentCompleter(typeof(ComparePropertyCompleter))]
     public string[]? Property { get; set; }
 
     [Parameter]

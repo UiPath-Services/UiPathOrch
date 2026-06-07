@@ -43,7 +43,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
 {
     // Reference side. Positional 0 (so `Compare-OrchAsset <ref> <diff>` reads ref-then-diff
     // like Compare-Object), pipeline-bindable, defaults to the current location when omitted.
-    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string? Path { get; set; }
 
@@ -59,12 +59,13 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
     // When set, every reference asset is compared to this single asset in -DifferencePath
     // (broadcast mode). Single by design: comparing many reference assets against many named
     // targets has no well-defined pairing — that's a rename-map job, not this parameter.
-    [Parameter]
+    [Parameter(Position = 2)]
+    [ArgumentCompleter(typeof(AssetNameCompleter))]
     public string? DifferenceName { get; set; }
 
     // Filters the reference assets (and, in name-match mode, the difference assets too, so
     // "=>" rows stay within the same name scope).
-    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(AssetNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
@@ -79,6 +80,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
     // about and ignored — without that warning a typo'd property would silently compare nothing
     // and report every asset as equal.
     [Parameter]
+    [ArgumentCompleter(typeof(ComparePropertyCompleter))]
     public string[]? Property { get; set; }
 
     // Cross-tenant user-name translation for the per-user (UserValues) comparison; same CSV

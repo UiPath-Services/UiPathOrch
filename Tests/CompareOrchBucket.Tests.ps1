@@ -61,7 +61,7 @@ AfterAll {
 
 Describe 'Compare-OrchBucket' {
     BeforeAll {
-        $script:Result = Compare-OrchBucket -Path $script:RootA -DifferencePath $script:RootB
+        $script:Result = Compare-OrchBucket -Name * -Path $script:RootA -DifferencePath $script:RootB
     }
 
     It 'reports a changed bucket as "<>" with a Description difference' {
@@ -77,7 +77,7 @@ Describe 'Compare-OrchBucket' {
 
     It 'suppresses equal buckets by default and shows them with -IncludeEqual' {
         ($script:Result | Where-Object Name -eq $script:Same) | Should -BeNullOrEmpty
-        $r = Compare-OrchBucket -Path $script:RootA -DifferencePath $script:RootB -IncludeEqual
+        $r = Compare-OrchBucket -Name * -Path $script:RootA -DifferencePath $script:RootB -IncludeEqual
         ($r | Where-Object Name -eq $script:Same).SideIndicator | Should -Be '=='
     }
 
@@ -95,7 +95,7 @@ Describe 'Compare-OrchBucket' {
     }
 
     It 'warns on an unrecognized -Property name' {
-        Compare-OrchBucket -Path $script:RootA -DifferencePath $script:RootB `
+        Compare-OrchBucket -Name * -Path $script:RootA -DifferencePath $script:RootB `
             -Property 'Bogus' -WarningVariable w -WarningAction SilentlyContinue | Out-Null
         ($w -join ' ') | Should -Match 'unrecognized'
     }
@@ -105,7 +105,7 @@ Describe 'Compare-OrchBucket' {
     }
 
     It 'descends into mirrored subfolders with -Recurse' {
-        $r = Compare-OrchBucket -Path $script:RootA -DifferencePath $script:RootB -Recurse
+        $r = Compare-OrchBucket -Name * -Path $script:RootA -DifferencePath $script:RootB -Recurse
         $sub = $r | Where-Object { $_.Name -eq $script:SubBkt -and $_.Path -like '*\Sub\*' }
         $sub.SideIndicator | Should -Be '<>'
     }

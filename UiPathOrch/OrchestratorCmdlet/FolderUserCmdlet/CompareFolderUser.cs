@@ -1,4 +1,5 @@
 using System.Management.Automation;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 
@@ -12,7 +13,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(OrchComparison))]
 public class CompareFolderUserCmdlet : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string? Path { get; set; }
 
@@ -24,15 +25,16 @@ public class CompareFolderUserCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string? DifferencePath { get; set; }
 
-    [Parameter]
+    [Parameter(Position = 2)]
     public string? DifferenceName { get; set; }
 
     // Filters by user name (the assignment's match key).
-    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
     [Parameter]
+    [ArgumentCompleter(typeof(ComparePropertyCompleter))]
     public string[]? Property { get; set; }
 
     [Parameter]

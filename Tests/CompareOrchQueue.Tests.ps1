@@ -61,7 +61,7 @@ AfterAll {
 
 Describe 'Compare-OrchQueue' {
     BeforeAll {
-        $script:Result = Compare-OrchQueue -Path $script:RootA -DifferencePath $script:RootB
+        $script:Result = Compare-OrchQueue -Name * -Path $script:RootA -DifferencePath $script:RootB
     }
 
     It 'reports a changed queue as "<>" with a Description difference' {
@@ -77,7 +77,7 @@ Describe 'Compare-OrchQueue' {
 
     It 'suppresses equal queues by default and shows them with -IncludeEqual' {
         ($script:Result | Where-Object Name -eq $script:Same) | Should -BeNullOrEmpty
-        $r = Compare-OrchQueue -Path $script:RootA -DifferencePath $script:RootB -IncludeEqual
+        $r = Compare-OrchQueue -Name * -Path $script:RootA -DifferencePath $script:RootB -IncludeEqual
         ($r | Where-Object Name -eq $script:Same).SideIndicator | Should -Be '=='
     }
 
@@ -96,7 +96,7 @@ Describe 'Compare-OrchQueue' {
     }
 
     It 'warns on an unrecognized -Property name' {
-        Compare-OrchQueue -Path $script:RootA -DifferencePath $script:RootB `
+        Compare-OrchQueue -Name * -Path $script:RootA -DifferencePath $script:RootB `
             -Property 'Bogus' -WarningVariable w -WarningAction SilentlyContinue | Out-Null
         ($w -join ' ') | Should -Match 'unrecognized'
     }
@@ -106,7 +106,7 @@ Describe 'Compare-OrchQueue' {
     }
 
     It 'descends into mirrored subfolders with -Recurse' {
-        $r = Compare-OrchQueue -Path $script:RootA -DifferencePath $script:RootB -Recurse
+        $r = Compare-OrchQueue -Name * -Path $script:RootA -DifferencePath $script:RootB -Recurse
         $sub = $r | Where-Object { $_.Name -eq $script:SubQ -and $_.Path -like '*\Sub\*' }
         $sub.SideIndicator | Should -Be '<>'
         ($sub.Differences | Where-Object Property -eq 'Description').DifferenceValue | Should -Be 'd2'

@@ -15,7 +15,7 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(OrchComparison))]
 public class CompareRoleCmdlet : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string? Path { get; set; }
 
@@ -27,15 +27,17 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string? DifferencePath { get; set; }
 
-    [Parameter]
+    [Parameter(Position = 2)]
+    [ArgumentCompleter(typeof(RoleNameCompleter))]
     public string? DifferenceName { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(RoleNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
     [Parameter]
+    [ArgumentCompleter(typeof(ComparePropertyCompleter))]
     public string[]? Property { get; set; }
 
     [Parameter]

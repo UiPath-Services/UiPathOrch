@@ -304,12 +304,18 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return SessionState.EnumPmDrives(paramPath);
     }
 
-    protected static List<OrchDriveInfo> ResolveOrchDrives(IDictionary fakeBoundParameters)
+    protected static List<OrchDriveInfo> ResolveOrchDrives(IDictionary fakeBoundParameters, string pathParameterName = "Path")
     {
         // Extract path from the parameter. If not specified, target the current directory.
-        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+        var paramPath = GetFakeBoundParameters(fakeBoundParameters, pathParameterName);
         return SessionState.EnumOrchDrives(paramPath);
     }
+
+    // Compare-Orch* completes -DifferenceName against the difference side (-DifferencePath);
+    // every other parameter resolves against -Path (or the current location). No other cmdlet
+    // declares a "DifferenceName" parameter, so this mapping is inert everywhere else.
+    protected static string ComparePathParameterName(string parameterName)
+        => string.Equals(parameterName, "DifferenceName", StringComparison.OrdinalIgnoreCase) ? "DifferencePath" : "Path";
 
     protected static List<OrchDuDriveInfo> ResolveDuDrives(IDictionary fakeBoundParameters)
     {
@@ -320,12 +326,12 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
 
     // Do we not need a ResolveTmDrives()?
 
-    protected static List<(OrchDriveInfo drive, Folder folder)> ResolvePath(CommandAst commandAst, IDictionary fakeBoundParameters, bool includeRoot = false)
+    protected static List<(OrchDriveInfo drive, Folder folder)> ResolvePath(CommandAst commandAst, IDictionary fakeBoundParameters, bool includeRoot = false, string pathParameterName = "Path")
     {
         var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
         var depth = ResolveDepth(fakeBoundParameters);
 
-        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+        var paramPath = GetFakeBoundParameters(fakeBoundParameters, pathParameterName);
         return SessionState.EnumFolders(paramPath, recurse, depth, includeRoot);
     }
 
@@ -789,7 +795,9 @@ internal abstract class FolderScopedCompleter<TEntity> : OrchArgumentCompleter
         string commandName, string parameterName, string wordToComplete,
         CommandAst commandAst, IDictionary fakeBoundParameters)
     {
-        var drivesFolders = ResolveFolders(commandAst, fakeBoundParameters);
+        var drivesFolders = string.Equals(parameterName, "DifferenceName", StringComparison.OrdinalIgnoreCase)
+            ? ResolvePath(commandAst, fakeBoundParameters, false, "DifferencePath")
+            : ResolveFolders(commandAst, fakeBoundParameters);
         var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -827,7 +835,9 @@ public abstract class DriveScopedCompleter<TEntity> : OrchArgumentCompleter
         string commandName, string parameterName, string wordToComplete,
         CommandAst commandAst, IDictionary fakeBoundParameters)
     {
-        var drives = ResolveDrives(fakeBoundParameters);
+        var drives = string.Equals(parameterName, "DifferenceName", StringComparison.OrdinalIgnoreCase)
+            ? ResolveOrchDrives(fakeBoundParameters, "DifferencePath")
+            : ResolveDrives(fakeBoundParameters);
         var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -890,7 +900,7 @@ internal class AssetNameCompleter : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters, false, ComparePathParameterName(parameterName));
 
         // Exclude Names already selected via the parameter
         var wpName = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
@@ -914,6 +924,43 @@ internal class AssetNameCompleter : OrchArgumentCompleter
                 yield return new CompletionResult(PathTools.EscapePSText(asset.Name), asset.Name, CompletionResultType.Text, toolhelp);
             }
         }
+    }
+}
+
+// Completes the -Property parameter of the Compare-Orch* family from each cmdlet's curated
+// comparable-property set (its internal static ValidPropertyNames). Resolved by reflection on
+// the command name, so a new Compare-Orch<Noun> is covered automatically as long as it exposes
+// a static ValidPropertyNames field.
+internal class ComparePropertyCompleter : OrchArgumentCompleter
+{
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
+        string commandName, string parameterName, string wordToComplete,
+        CommandAst commandAst, IDictionary fakeBoundParameters)
+    {
+        var names = GetValidPropertyNames(commandName);
+        if (names is null) yield break;
+
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+        var wpExclude = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
+        foreach (var name in names
+            .Where(n => wp.IsMatch(n))
+            .ExcludeByWildcards(n => n, wpExclude)
+            .OrderBy(n => n, StringComparer.OrdinalIgnoreCase))
+        {
+            yield return new CompletionResult(name, name, CompletionResultType.ParameterValue, name);
+        }
+    }
+
+    private static IEnumerable<string>? GetValidPropertyNames(string commandName)
+    {
+        const string prefix = "Compare-Orch";
+        if (commandName is null || !commandName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return null;
+
+        // "Compare-OrchAsset" -> UiPath.PowerShell.Commands.CompareAssetCmdlet.ValidPropertyNames
+        string noun = commandName.Substring(prefix.Length);
+        var type = typeof(ComparePropertyCompleter).Assembly.GetType($"UiPath.PowerShell.Commands.Compare{noun}Cmdlet");
+        var field = type?.GetField("ValidPropertyNames", BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public);
+        return field?.GetValue(null) as IEnumerable<string>;
     }
 }
 
@@ -1507,7 +1554,7 @@ public abstract class TenantUserDualFieldCompleterBase : OrchArgumentCompleter
         CommandAst commandAst,
         IDictionary fakeBoundParameters)
     {
-        var drives = ResolveOrchDrives(fakeBoundParameters);
+        var drives = ResolveOrchDrives(fakeBoundParameters, ComparePathParameterName(parameterName));
 
         // Exclude self-field values already selected via the parameter
         var wpSelf = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
