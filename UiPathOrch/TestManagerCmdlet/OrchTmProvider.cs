@@ -203,6 +203,15 @@ public class OrchTmProvider : OrchShadowProviderBase
             return;
         }
 
+        // -NewName is a leaf, not a path: reduce ".\Proj2" (etc.) to "Proj2".
+        string? leaf = PathTools.RenameLeaf(newName);
+        if (leaf is null)
+        {
+            WriteError(new ErrorRecord(new OrchException(path, $"'{newName}' is not a valid project name. Supply a leaf name (for example: Rename-Item .\\MyProject MyProject2)."), "RenameTmProjectError", ErrorCategory.InvalidArgument, path));
+            return;
+        }
+        newName = leaf;
+
         foreach (var drive in drives)
         {
             var project = GetProject(path);

@@ -988,6 +988,15 @@ public partial class OrchProvider : NavigationCmdletProvider
             return;
         }
 
+        // -NewName is a leaf, not a path: reduce ".\Shared2" (etc.) to "Shared2".
+        string? leaf = PathTools.RenameLeaf(newName);
+        if (leaf is null)
+        {
+            WriteError(new ErrorRecord(new OrchException(path, $"'{newName}' is not a valid folder name. Supply a leaf name (for example: Rename-Item .\\Shared Shared2)."), "RenameFolderError", ErrorCategory.InvalidArgument, path));
+            return;
+        }
+        newName = leaf;
+
         string target = $"Item: {path} Destination: {System.IO.Path.Combine(System.IO.Path.GetDirectoryName(path) ?? "", newName)}";
         if (ShouldProcess(target, "Rename Folder"))
         {

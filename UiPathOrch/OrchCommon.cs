@@ -50,6 +50,23 @@ public static class PathTools
     // already-escaped value would double the doubling.
     public static string EscapeODataLiteral(string? input) => (input ?? string.Empty).Replace("'", "''");
 
+    // Rename-Item's -NewName is a leaf name, not a path, but PowerShell passes the raw argument
+    // straight to the provider's RenameItem — tab completion commonly yields ".\Foo", which would
+    // otherwise be stored verbatim as the entity's new name (so `ren .\Shared .\Shared2` would
+    // name the folder ".\Shared2"). Reduce it to the leaf (strip a leading "./" / ".\" and any
+    // directory qualifier), matching the FileSystem provider. Returns null for an empty result or
+    // a non-name ("." / ".."), letting the caller raise a clear error. Rename is not a move.
+    public static string? RenameLeaf(string? newName)
+    {
+        if (string.IsNullOrWhiteSpace(newName))
+            return null;
+        string trimmed = newName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+        string leaf = Path.GetFileName(trimmed);
+        if (string.IsNullOrEmpty(leaf) || leaf == "." || leaf == "..")
+            return null;
+        return leaf;
+    }
+
     // Use this when calling WriteItemObject() in the provider's GetChildItems.
     // Characters like [ and ] seem to be handled automatically. * and ? are presumably not expected in file names.
     public static string EscapePSText2(string? input)

@@ -68,6 +68,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `-DifferencePath` (not `-Path`), and `-Name` / `-DifferencePath` use the standard name / drive
   completers.
 
+### Fixed
+
+- **`Rename-Item` no longer stores a path-qualified `-NewName` verbatim.** Renaming an
+  Orchestrator folder (or a Test Manager project) with the form tab completion produces —
+  `Rename-Item .\Shared .\Shared2` — named the item the literal `.\Shared2` instead of
+  `Shared2`. The providers now reduce `-NewName` to its leaf (matching the FileSystem provider)
+  and reject empty / `.` / `..` names with a clear error.
+
 ## [1.8.1] - 2026-06-06
 
 ### Changed
