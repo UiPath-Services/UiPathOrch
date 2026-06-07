@@ -202,6 +202,72 @@ Import-Csv C:\temp\assets.csv | Copy-OrchAsset -Destination Orch2:\Shared
 - Use `Get-Help <CmdletName> -Parameter *` to see all available parameters
   and their types.
 
+### Finding a cmdlet's CSV columns and creating a template
+
+A CSV imports into a cmdlet when its **column headers match the cmdlet's parameter names**.
+Here are three ways to get those headers and a starter file, easiest first.
+
+**1. Export a real example.** For any cmdlet that has `-ExportCsv` (see the `-ExportCsv` table
+under [Exporting to CSV](#exporting-to-csv) above), the quickest template is an actual export — it
+already has the exact headers and real values to copy and edit. Even a single exported row is a
+perfect template: keep the header, replace the values.
+
+```powershell
+Get-OrchQueue -Path Orch1:\Shared -ExportCsv C:\temp\queues.csv   # edit, then Import-Csv | New-OrchQueue
+```
+
+**2. Discover the columns for any import cmdlet.** The importable columns are the parameters that
+bind from the pipeline by property name. This helper lists them — always current, nothing to go
+stale:
+
+```powershell
+function Get-OrchCsvColumn {
+    param([Parameter(Mandatory)][string] $CommandName)
+    (Get-Command $CommandName).Parameters.Values |
+        Where-Object {
+            $_.Attributes | Where-Object {
+                ($_ -is [System.Management.Automation.ParameterAttribute]) -and $_.ValueFromPipelineByPropertyName
+            }
+        } | ForEach-Object Name
+}
+
+Get-OrchCsvColumn New-OrchQueue
+# Name, Description, AcceptAutomaticallyRetry, ... , RetentionAction, RetentionPeriod, Path, LiteralPath
+```
+
+`Get-Help New-OrchQueue -Parameter *` shows the same names with their types and which are
+**required** — the minimum set of columns a row needs.
+
+**3. Generate a header-only template** from those columns, fill in one row per entity, and import:
+
+```powershell
+(Get-OrchCsvColumn New-OrchQueue) -join ',' | Set-Content -Encoding utf8 C:\temp\new-queues.csv
+# open the file, add a row per queue, then preview before committing:
+Import-Csv C:\temp\new-queues.csv | New-OrchQueue -Path Orch1:\Shared -WhatIf
+```
+
+You rarely need every column — keep the ones you set and delete the rest; omitted/empty columns
+fall back to defaults (see the Tips above).
+
+#### How a row targets a folder
+
+Every folder-scoped import cmdlet has **`Path`** (and `LiteralPath`) columns that say which folder
+the row applies to. Put the folder in the `Path` column, **or** omit it and pass `-Path` on the
+command line to apply every row to one folder:
+
+```powershell
+Import-Csv C:\temp\new-queues.csv | New-OrchQueue -Path Orch1:\Shared   # all rows -> Shared
+```
+
+A few verbs add their own columns: `Copy-Orch*` adds **`Destination`** (e.g. `Copy-OrchAsset`:
+`Path, Name, Destination`), `Add-Orch*Link` uses `Path, Name, Link`, and folder creation
+(`New-Item`) uses `Path, Name`.
+
+> **Tip — let completion write the columns for you.** Because the CSV columns *are* the parameter
+> names, you don't have to memorize them: type the cmdlet and press `[Tab]` or `[Ctrl+Space]` to
+> cycle parameter names, and press it again after a value to complete folder paths, entity names,
+> and enum values. See [Completion](00-GettingStarted.md#completion).
+
 ### Bulk Update via CSV
 
 Export existing entities, edit the CSV, and re-import to update in bulk:

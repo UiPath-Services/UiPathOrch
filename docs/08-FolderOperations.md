@@ -45,6 +45,12 @@ PS Orch1:\> ii .                 # open the current folder in the browser
 The drive root (`Orch1:\`) is the tenant; its child items are the top-level folders
 (including each user's personal workspace). Folders nest arbitrarily.
 
+> **Tip — Tab / Ctrl+Space completion.** Folder paths complete as you type: `cd Orch1:\Sh`
+> then `[Tab]`, or `cd ` then `[Ctrl+Space]` to cycle the folders. Cmdlet names, parameter
+> names, and many argument values (entity names, enum values) complete the same way — so you
+> can build a command without memorizing names. Specify `-Path` *before* `-Name` so the name
+> completer knows which folder to look in. See [Completion](00-GettingStarted.md#completion).
+
 ## Listing folders (`Get-ChildItem`)
 
 `dir` / `Get-ChildItem` lists **subfolders** of the target. Use `-Recurse` for the whole
