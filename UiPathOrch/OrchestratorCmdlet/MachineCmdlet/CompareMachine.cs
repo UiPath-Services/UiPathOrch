@@ -21,6 +21,11 @@ public class CompareMachineCmdlet : OrchestratorPSCmdlet
     [Alias("PSPath")]
     public string? LiteralPath { get; set; }
 
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(MachineNameCompleter))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
     [Parameter(Position = 1, Mandatory = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string? DifferencePath { get; set; }
@@ -28,11 +33,6 @@ public class CompareMachineCmdlet : OrchestratorPSCmdlet
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(MachineNameCompleter))]
     public string? DifferenceName { get; set; }
-
-    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(MachineNameCompleter))]
-    [SupportsWildcards]
-    public string[]? Name { get; set; }
 
     [Parameter]
     [ArgumentCompleter(typeof(ComparePropertyCompleter))]

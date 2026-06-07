@@ -21,6 +21,11 @@ public class CompareWebhookCmdlet : OrchestratorPSCmdlet
     [Alias("PSPath")]
     public string? LiteralPath { get; set; }
 
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(WebhookNameCompleter))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
     [Parameter(Position = 1, Mandatory = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string? DifferencePath { get; set; }
@@ -28,11 +33,6 @@ public class CompareWebhookCmdlet : OrchestratorPSCmdlet
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(WebhookNameCompleter))]
     public string? DifferenceName { get; set; }
-
-    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(WebhookNameCompleter))]
-    [SupportsWildcards]
-    public string[]? Name { get; set; }
 
     [Parameter]
     [ArgumentCompleter(typeof(ComparePropertyCompleter))]

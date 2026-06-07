@@ -21,17 +21,17 @@ public class CompareFolderUserCmdlet : OrchestratorPSCmdlet
     [Alias("PSPath")]
     public string? LiteralPath { get; set; }
 
+    // Filters by user name (the assignment's match key).
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
     [Parameter(Position = 1, Mandatory = true)]
     [SupportsWildcards]
     public string? DifferencePath { get; set; }
 
     [Parameter(Position = 2)]
     public string? DifferenceName { get; set; }
-
-    // Filters by user name (the assignment's match key).
-    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [SupportsWildcards]
-    public string[]? Name { get; set; }
 
     [Parameter]
     [ArgumentCompleter(typeof(ComparePropertyCompleter))]

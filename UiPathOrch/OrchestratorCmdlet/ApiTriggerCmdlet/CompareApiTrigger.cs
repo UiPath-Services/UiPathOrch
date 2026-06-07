@@ -20,6 +20,11 @@ public class CompareApiTriggerCmdlet : OrchestratorPSCmdlet
     [Alias("PSPath")]
     public string? LiteralPath { get; set; }
 
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(ApiTriggerNameCompleter))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
     [Parameter(Position = 1, Mandatory = true)]
     [SupportsWildcards]
     public string? DifferencePath { get; set; }
@@ -27,11 +32,6 @@ public class CompareApiTriggerCmdlet : OrchestratorPSCmdlet
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(ApiTriggerNameCompleter))]
     public string? DifferenceName { get; set; }
-
-    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ApiTriggerNameCompleter))]
-    [SupportsWildcards]
-    public string[]? Name { get; set; }
 
     [Parameter]
     [ArgumentCompleter(typeof(ComparePropertyCompleter))]

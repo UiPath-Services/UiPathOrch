@@ -21,6 +21,11 @@ public class CompareEventTriggerCmdlet : OrchestratorPSCmdlet
     [Alias("PSPath")]
     public string? LiteralPath { get; set; }
 
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(EventTriggerNameCompleter))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
     [Parameter(Position = 1, Mandatory = true)]
     [SupportsWildcards]
     public string? DifferencePath { get; set; }
@@ -28,11 +33,6 @@ public class CompareEventTriggerCmdlet : OrchestratorPSCmdlet
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(EventTriggerNameCompleter))]
     public string? DifferenceName { get; set; }
-
-    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(EventTriggerNameCompleter))]
-    [SupportsWildcards]
-    public string[]? Name { get; set; }
 
     [Parameter]
     [ArgumentCompleter(typeof(ComparePropertyCompleter))]

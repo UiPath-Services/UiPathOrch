@@ -51,6 +51,13 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
     [Alias("PSPath")]
     public string? LiteralPath { get; set; }
 
+    // Filters the reference assets (and, in name-match mode, the difference assets too, so
+    // "=>" rows stay within the same name scope).
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(AssetNameCompleter))]
+    [SupportsWildcards]
+    public string[]? Name { get; set; }
+
     // Difference side. Mandatory single folder; positional 1.
     [Parameter(Position = 1, Mandatory = true)]
     [SupportsWildcards]
@@ -62,13 +69,6 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(AssetNameCompleter))]
     public string? DifferenceName { get; set; }
-
-    // Filters the reference assets (and, in name-match mode, the difference assets too, so
-    // "=>" rows stay within the same name scope).
-    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(AssetNameCompleter))]
-    [SupportsWildcards]
-    public string[]? Name { get; set; }
 
     [Parameter]
     [ArgumentCompleter(typeof(AssetValueTypeCompleter))]
