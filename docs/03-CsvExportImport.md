@@ -513,32 +513,39 @@ dir Orch1:\ -Recurse | Where-Object DisplayName -like '*_old' |
     Export-Csv C:\temp\folders.csv
 ```
 
-Open the file, keep the rows you want, and set each `Destination`.
+Keep the rows you want (the `Destination` column is only needed when rows go to *different*
+targets).
 
-**Apply each row with `ForEach-Object`:**
+**Delete, or move/copy everything into one folder** — pipe just the `PSPath` *values*:
 
 ```powershell
-# Move
-Import-Csv C:\temp\folders.csv |
-    ForEach-Object { Move-Item -LiteralPath $_.PSPath -Destination $_.Destination -WhatIf }
+# Delete
+Import-Csv C:\temp\folders.csv | Select-Object -ExpandProperty PSPath |
+    Remove-Item -Recurse -Force -WhatIf
 
-# Copy a folder subtree (across tenants too — e.g. a Destination on Orch2:)
+# Move (or Copy-Item -Recurse) every listed folder into one destination
+Import-Csv C:\temp\folders.csv | Select-Object -ExpandProperty PSPath |
+    Move-Item -Destination Orch1:\Archive -WhatIf
+```
+
+**Per-row destinations** — when each row goes somewhere different, loop with `ForEach-Object` and
+bind `-LiteralPath` yourself:
+
+```powershell
 Import-Csv C:\temp\folders.csv |
     ForEach-Object { Copy-Item -LiteralPath $_.PSPath -Destination $_.Destination -Recurse -WhatIf }
-
-# Delete (-Force skips the per-folder confirmation)
-Import-Csv C:\temp\folders.csv |
-    ForEach-Object { Remove-Item -LiteralPath $_.PSPath -Recurse -Force -WhatIf }
 ```
 
 Drop `-WhatIf` once the preview lists exactly what you intend.
 
-> **Why `ForEach-Object` and not a plain pipe?** Unlike the `*-Orch*` cmdlets, the built-in
-> `Rename`/`Move`/`Copy`/`Remove-Item` take `-Path` **by value** from the pipeline, so piping CSV
-> rows straight in binds each whole row object to `-Path` and fails with *"a drive with the name
-> '@{PSPath=…' does not exist"*. `ForEach-Object` lets you bind the row's `PSPath` to `-LiteralPath`
-> explicitly. (`New-Item` is the exception — its `-Path` is by-property-name, so
-> [creating folders](#creating-folders-in-bulk-via-csv) can pipe directly.)
+> **Why not pipe the CSV rows straight in?** `-LiteralPath` *does* have a `PSPath` alias, but these
+> built-in cmdlets also have a `-Path` that takes pipeline input **by value**, and by-value binding
+> is tried first — so a whole row object lands on `-Path` and fails with *"a drive with the name
+> '@{PSPath=…' does not exist"* before the `PSPath`→`-LiteralPath` (by-property-name) binding is
+> considered. So either pipe the `PSPath` **strings** (`Select-Object -ExpandProperty PSPath`) so
+> `-Path` binds them by value, or pass `-LiteralPath` yourself inside `ForEach-Object`. (`New-Item`'s
+> `-Path` is by-property-name only, so [creating folders](#creating-folders-in-bulk-via-csv) can pipe
+> rows directly.)
 
 ## Known limitations: commas and wildcards in multi-value cells
 
