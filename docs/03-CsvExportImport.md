@@ -480,51 +480,42 @@ Whole folders (with their contents) are copied, moved, and deleted with the buil
 `Move-Item`, and `Remove-Item` (see [Folder Operations](08-FolderOperations.md)). Drive a bulk run
 from a CSV of folder paths.
 
-**Create the list.** Export the candidate folders — each folder's own path is the `PSPath` column
-(press `[Ctrl+Space]` after `Select-Object` to complete the name) — then open the CSV and keep just
-the rows you want:
+The natural workflow is **export every folder, edit the CSV, then import line by line.**
 
-```powershell
-dir Orch1:\ | Select-Object PSPath | Export-Csv C:\temp\folders.csv   # add -Recurse to also list nested folders
-```
+1. **Export all folders** (`-Recurse`) so you can see the whole tree and pick from it. `PSPath` is
+   each folder's own path (press `[Ctrl+Space]` after `Select-Object` to complete the name):
+   ```powershell
+   dir Orch1:\ -Recurse | Select-Object PSPath | Export-Csv C:\temp\folders.csv
+   ```
+2. **Edit the CSV** — delete the rows you don't want. For a move or copy, add a `Destination`
+   column and set each row's target folder.
+3. **Import line by line** with `ForEach-Object`, binding `PSPath` to `-LiteralPath`:
+   ```powershell
+   # Delete each listed folder (and everything in it)
+   Import-Csv C:\temp\folders.csv |
+       ForEach-Object { Remove-Item -LiteralPath $_.PSPath -Recurse -Force -WhatIf }
 
-Each listed folder is acted on **as a whole — with its contents and subfolders** — so keep the
-folders you want as *units*: don't keep both a folder and one nested inside it.
+   # Move each listed folder (with its contents) to its row's Destination
+   Import-Csv C:\temp\folders.csv |
+       ForEach-Object { Move-Item -LiteralPath $_.PSPath -Destination $_.Destination -WhatIf }
 
-**Delete, or move/copy into one folder** — pipe straight in; each row's `PSPath` binds to
-`-LiteralPath` through its alias:
+   # Copy each listed folder (and its assets/queues/…) into its row's Destination
+   Import-Csv C:\temp\folders.csv |
+       ForEach-Object { Copy-Item -LiteralPath $_.PSPath -Destination $_.Destination -WhatIf }
+   ```
+   Drop `-WhatIf` once the preview is right.
 
-```powershell
-# Delete each listed folder (and everything in it)
-Import-Csv C:\temp\folders.csv | Remove-Item -Recurse -Force -WhatIf
+Because every folder is its own row, **`Copy-Item` here takes no `-Recurse`** — each row copies one
+folder and its entities, and the subfolders arrive as their own rows (`-Recurse` would copy them
+twice). `dir -Recurse` lists parents before children, so setting each `Destination` to the row's
+target parent rebuilds the tree in order. (To clone a whole subtree in one shot, copy its root
+directly instead — `Copy-Item Orch1:\Src Orch2:\ -Recurse`; see
+[Folder Operations](08-FolderOperations.md) and the [Migration & Copy Guide](04-MigrationGuide.md).)
 
-# Move each listed folder (with its contents) under one folder
-Import-Csv C:\temp\folders.csv | Move-Item -Destination Orch1:\Archive -WhatIf
-
-# Copy each listed folder, with its contents, into one folder
-Import-Csv C:\temp\folders.csv | Copy-Item -Destination Orch2:\ -Recurse -WhatIf
-```
-
-`Copy-Item` needs `-Recurse` to include a folder's contents; `Move-Item` and `Remove-Item` already
-act on the whole folder. To clone an entire tenant or a deep subtree in one shot, copy the root
-directly — `Copy-Item Orch1:\ Orch2:\ -Recurse` — instead of a per-folder list (see
-[Folder Operations](08-FolderOperations.md) and the [Migration & Copy Guide](04-MigrationGuide.md)).
-
-**Per-row destinations** — to send each folder somewhere different, **add a `Destination` column**
-to the CSV (type each target folder), then bind both columns with `ForEach-Object`:
-
-```powershell
-Import-Csv C:\temp\folders.csv |
-    ForEach-Object { Copy-Item -LiteralPath $_.PSPath -Destination $_.Destination -Recurse -WhatIf }
-```
-
-Drop `-WhatIf` once the preview lists exactly what you intend.
-
-> **Why pipe directly in one case but use `ForEach-Object` in the other?** A `PSPath`-only row
-> binds cleanly — `PSPath` maps to `-LiteralPath` (its alias). But once the row carries a second
-> column (`Destination`), PowerShell binds the whole row object to `-Path` **by value** instead and
-> fails with *"a drive with the name '@{PSPath=…' does not exist"*; binding `-LiteralPath` yourself
-> in `ForEach-Object` avoids that.
+> For a delete, or a move to a single destination, a `PSPath`-only CSV can also pipe straight in —
+> `Import-Csv folders.csv | Remove-Item -Recurse -Force` — since `PSPath` binds to `-LiteralPath` via
+> its alias. Once the CSV has a second column (`Destination`), use `ForEach-Object` as above,
+> because the multi-column row would otherwise bind to `-Path` by value.
 
 ### Renaming Folders in Bulk via CSV
 
