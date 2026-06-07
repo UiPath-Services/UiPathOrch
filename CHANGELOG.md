@@ -6,7 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-_Nothing yet._
+### Added
+
+- **`Compare-OrchAsset` — diff assets between two folders or tenants.** A read-only
+  comparison cmdlet for migration verification: confirm that assets copied between folders or
+  Orchestrator instances landed with the same values. Assets are matched by Name (not the
+  tenant-local Id) and only migration-relevant properties are compared (ValueType, ValueScope,
+  Value, Description, CredentialUsername, ExternalName, AllowDirectApiAccess, Tags, and
+  per-user UserValues); volatile fields like Id, Key, and timestamps are ignored so they don't
+  drown out real differences. Each result is an `OrchComparison` record with a Compare-Object
+  style `SideIndicator` — `<=` (reference only), `=>` (difference only), `==` (equal, with
+  `-IncludeEqual`), plus `<>` for "present on both sides but differing", which carries a
+  per-property `Differences` breakdown on a single row. The reference side is given like any
+  other asset cmdlet (`-Path` / pipeline / `-Name` wildcards / `-Recurse`); the difference side
+  is `-DifferencePath` (mandatory). With `-DifferenceName` it switches to broadcast mode,
+  comparing every reference asset to one named target even when the names differ (e.g.
+  `ApiKey_Old` vs `ApiKey_New`, or a set of assets against one golden asset). `-UserMappingCsv`
+  (the same CSV as `Copy-OrchAsset`) translates reference user names before comparing per-user
+  values across tenants. `-Property` restricts the comparison and warns on unrecognized names.
+- **`Compare-OrchProcess`, `Compare-OrchQueue`, `Compare-OrchRole` — the rest of the compare
+  family.** Same model as `Compare-OrchAsset` (match by Name, `SideIndicator` with `<>` for
+  differing-both, name-match vs `-DifferenceName` broadcast, `-IncludeEqual`, `-Property`).
+  `Compare-OrchProcess` and `Compare-OrchQueue` are folder-scoped (with `-Recurse`) and compare
+  the migration-relevant release/queue settings — for queues that includes the JSON schemas and
+  the retry/retention configuration. `Compare-OrchRole` is tenant-scoped (the reference and
+  difference are drives, not folders) and compares the role shape plus its granted-permission
+  matrix, normalized to an order-independent set so a single `Permissions` difference captures
+  any grant, revoke, or scope change.
 
 ## [1.8.1] - 2026-06-06
 

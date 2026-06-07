@@ -226,6 +226,69 @@ public class ObjKeyComparer : IComparer<string>
     }
 }
 
+// Property-level diff engine shared by the Compare-Orch* family. Each cmdlet supplies a
+// comparator list — (display name, value extractor) pairs over a curated, migration-relevant
+// subset of the entity's properties. Volatile tenant-local fields (Id, Key, timestamps,
+// CreatorUserId, ...) are deliberately NOT in those lists: they always differ across tenants
+// and would drown the real diff. This is what makes Compare-Orch* useful versus a bare
+// Get-Orch* | Compare-Object, which would flag every entity as different on Id alone.
+public static class EntityComparison
+{
+    public const string ReferenceOnly = "<=";
+    public const string DifferenceOnly = "=>";
+    public const string Different = "<>";
+    public const string Equal = "==";
+
+    // Returns the comparators whose extracted values differ between reference and difference.
+    // When "only" is non-empty, restricts the comparison to those property names (the
+    // -Property parameter, mirroring Compare-Object -Property), case-insensitively.
+    public static List<PropertyDifference> DiffProperties<T>(
+        T reference,
+        T difference,
+        IReadOnlyList<(string Name, Func<T, object?> Get)> comparators,
+        IReadOnlyCollection<string>? only)
+    {
+        var diffs = new List<PropertyDifference>();
+        foreach (var (name, get) in comparators)
+        {
+            if (only is { Count: > 0 } && !only.Contains(name, StringComparer.OrdinalIgnoreCase))
+                continue;
+
+            var rv = get(reference);
+            var dv = get(difference);
+            if (!ValueEquals(rv, dv))
+            {
+                diffs.Add(new PropertyDifference
+                {
+                    Property = name,
+                    ReferenceValue = rv,
+                    DifferenceValue = dv,
+                });
+            }
+        }
+        return diffs;
+    }
+
+    // Order-independent normalized form of an entity's Tags, shared by the Compare-Orch*
+    // family so tag set equality (not list order) drives the comparison.
+    public static string? NormalizeTags(Tag[]? tags)
+        => tags is null || tags.Length == 0
+            ? null
+            : string.Join(";", tags.Select(t => $"{t.Name}={t.Value}").OrderBy(s => s, StringComparer.Ordinal));
+
+    // Equality used for a single compared property. null and "" are treated as equal for
+    // string-valued extractors (an absent Description vs an empty one is not a real drift);
+    // non-string values fall back to object Equals (so bool? false vs null IS a difference).
+    public static bool ValueEquals(object? a, object? b)
+    {
+        if (a is null && b is null) return true;
+        if ((a is null || a is string) && (b is null || b is string))
+            return string.Equals((string?)a ?? "", (string?)b ?? "", StringComparison.Ordinal);
+        if (a is null || b is null) return false;
+        return a.Equals(b);
+    }
+}
+
 // Comparer that allows List<string> to be used as a dictionary key.
 // Keys must be sorted in lexicographic order.
 public class ListStringComparer : IEqualityComparer<List<string>>

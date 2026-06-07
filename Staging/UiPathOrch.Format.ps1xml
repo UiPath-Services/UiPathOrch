@@ -41,6 +41,63 @@
     </View>
 
     <!--
+      Compare-Orch* family output. One row per entity: SideIndicator (<=, =>, <>, ==),
+      Name, the reference-side Path and the difference-side DifferencePath (each single-sided
+      — a "<=" row has no DifferencePath, a "=>" row has no Path), and a compact rendering of
+      the per-property Differences (only populated on "<>" rows). ReferenceObject/
+      DifferenceObject are intentionally omitted here — they're for downstream piping.
+    -->
+    <View>
+      <Name>UiPath.PowerShell.Entities.OrchComparison</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.OrchComparison</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Side</Label>
+            <Width>4</Width>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Path</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>DifferencePath</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Differences</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>SideIndicator</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>Path</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>DifferencePath</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.Differences) { ($_.Differences | ForEach-Object { $_.ToString() }) -join '; ' } else { '' }
+                </ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
       Get-/Set-/Copy-PmUserPreference emit one record per preference key for the
       connected user; group the rows under a "User: <Path><UserName>" header and show
       just Key and Value, since Path/User are surfaced by GroupBy.

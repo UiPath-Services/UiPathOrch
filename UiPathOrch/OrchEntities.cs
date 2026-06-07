@@ -2353,6 +2353,42 @@ public class Tag
     // object. The CSV/string form lives in OrchExtensions.FormatTag instead.
 }
 
+// Output shape shared by the whole Compare-Orch* family. One record per entity, in the
+// spirit of Compare-Object's SideIndicator, but with the "present on both sides yet the
+// values differ" case folded into a single "<>" row carrying the per-property breakdown
+// (Compare-Object instead emits two rows). SideIndicator values:
+//   "<="  reference only (in -Path, missing from -DifferencePath)
+//   "=>"  difference only (in -DifferencePath, missing from -Path)
+//   "<>"  present on both sides, one or more compared properties differ
+//   "=="  equal (emitted only with -IncludeEqual)
+// ReferenceObject / DifferenceObject carry the underlying entities for downstream piping;
+// they're omitted from the default table view. Path and DifferencePath are each strictly
+// single-sided — Path is the reference-side location (null on a "=>" row), DifferencePath the
+// difference-side location (null on a "<=" row) — so one column never mixes the two drives.
+public class OrchComparison
+{
+    public string? SideIndicator { get; set; }
+    public string? Name { get; set; }
+    public string? Path { get; set; }
+    public string? DifferencePath { get; set; }
+    public List<PropertyDifference>? Differences { get; set; }
+    public object? ReferenceObject { get; set; }
+    public object? DifferenceObject { get; set; }
+}
+
+// One differing property within an "<>" OrchComparison row. ToString() renders the
+// "Prop: 'ref' => 'diff'" form used by the default table view's Differences column.
+public class PropertyDifference
+{
+    public string? Property { get; set; }
+    public object? ReferenceValue { get; set; }
+    public object? DifferenceValue { get; set; }
+
+    public override string ToString() => $"{Property}: {Format(ReferenceValue)} => {Format(DifferenceValue)}";
+
+    private static string Format(object? value) => value is null ? "(null)" : $"'{value}'";
+}
+
 // AssetDto
 public class Asset
 {

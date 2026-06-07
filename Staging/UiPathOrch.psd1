@@ -123,6 +123,7 @@ CmdletsToExport = @(
 'New-OrchProcess',
 'Update-OrchProcess',
 'Copy-OrchProcess',
+'Compare-OrchProcess',
 'Remove-OrchProcess',
 'Edit-OrchProcess',
 'Update-OrchProcessVersion',
@@ -189,6 +190,7 @@ CmdletsToExport = @(
 'Set-OrchRole',
 'Remove-OrchRole',
 'Copy-OrchRole',
+'Compare-OrchRole',
 
 'Get-OrchCalendar',
 'Remove-OrchCalendar',
@@ -234,6 +236,7 @@ CmdletsToExport = @(
 'Get-OrchAsset',
 'Set-OrchAsset',
 'Copy-OrchAsset',
+'Compare-OrchAsset',
 'Move-OrchAsset',
 'Remove-OrchAsset',
 
@@ -289,6 +292,7 @@ CmdletsToExport = @(
 'New-OrchQueue',
 'Update-OrchQueue',
 'Copy-OrchQueue',
+'Compare-OrchQueue',
 'Move-OrchQueue',
 'Remove-OrchQueue',
 
