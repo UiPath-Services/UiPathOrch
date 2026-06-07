@@ -5,15 +5,13 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-// Compare roles between two Orchestrator instances (or the same one) and report the
-// differences. Roles are tenant-level, so the reference (-Path) and difference (-DifferencePath)
-// are drives, not folders, and there is no -Recurse. Matches by Name and compares the role
-// shape plus its granted-permission matrix (normalized to an order-independent set of granted
-// "Scope:Permission" entries). See Compare-OrchAsset for the shared model (SideIndicator,
-// name-match vs broadcast).
-[Cmdlet(VerbsData.Compare, "OrchRole")]
+// Compare credential stores between two Orchestrator instances. Credential stores are
+// tenant-level, so the reference (-Path) and difference (-DifferencePath) are drives, not
+// folders. Matches by Name and compares the store type and connection configuration. Secrets
+// are not stored here and are never compared.
+[Cmdlet(VerbsData.Compare, "OrchCredentialStore")]
 [OutputType(typeof(OrchComparison))]
-public class CompareRoleCmdlet : OrchestratorPSCmdlet
+public class CompareCredentialStoreCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -31,7 +29,7 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
     public string? DifferenceName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(RoleNameCompleter))]
+    [ArgumentCompleter(typeof(CredentialStoreNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -41,14 +39,12 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter IncludeEqual { get; set; }
 
-    private static readonly (string Name, Func<Role, object?> Get)[] Comparators =
+    private static readonly (string Name, Func<CredentialStore, object?> Get)[] Comparators =
     [
-        ("DisplayName", r => r.DisplayName),
-        ("Type", r => r.Type),
-        ("Groups", r => r.Groups),
-        ("IsStatic", r => r.IsStatic),
-        ("IsEditable", r => r.IsEditable),
-        ("Permissions", r => NormalizePermissions(r.Permissions)),
+        ("Type", c => c.Type),
+        ("ProxyType", c => c.ProxyType),
+        ("HostName", c => c.HostName),
+        ("AdditionalConfiguration", c => c.AdditionalConfiguration),
     ];
 
     internal static readonly HashSet<string> ValidPropertyNames =
@@ -67,7 +63,7 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
 
-        TenantCompare.Run<Role>(
+        TenantCompare.Run<CredentialStore>(
             SessionState,
             EffectivePath(Path, LiteralPath),
             DifferencePath,
@@ -75,22 +71,11 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
             Name.ConvertToWildcardPatternList(),
             IncludeEqual.IsPresent,
             only,
-            drive => drive.Roles.Get(),
-            r => r?.Name,
+            drive => drive.CredentialStores.Get(),
+            c => c?.Name,
             Comparators,
-            "GetRoleError",
+            "GetCredentialStoreError",
             WriteObject,
             WriteError);
     }
-
-    // Order-independent normalized form of the granted-permission matrix: only granted
-    // permissions, as a sorted set of "Scope:Permission" entries. Captures grant/revoke and
-    // scope drift without depending on permission list order.
-    internal static string? NormalizePermissions(List<Permission>? permissions)
-        => permissions is null || permissions.Count == 0
-            ? null
-            : string.Join(";", permissions
-                .Where(p => p.IsGranted == true)
-                .Select(p => $"{p.Scope}:{p.Name}")
-                .OrderBy(s => s, StringComparer.Ordinal));
 }

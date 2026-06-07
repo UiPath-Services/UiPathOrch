@@ -5,18 +5,15 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-// Compare roles between two Orchestrator instances (or the same one) and report the
-// differences. Roles are tenant-level, so the reference (-Path) and difference (-DifferencePath)
-// are drives, not folders, and there is no -Recurse. Matches by Name and compares the role
-// shape plus its granted-permission matrix (normalized to an order-independent set of granted
-// "Scope:Permission" entries). See Compare-OrchAsset for the shared model (SideIndicator,
-// name-match vs broadcast).
-[Cmdlet(VerbsData.Compare, "OrchRole")]
+// Compare time/queue triggers (process schedules) between two folders or Orchestrator
+// instances. Matches by Name and compares the schedule and execution settings. See
+// Compare-OrchAsset for the shared model (SideIndicator, name-match vs broadcast).
+[Cmdlet(VerbsData.Compare, "OrchTrigger")]
 [OutputType(typeof(OrchComparison))]
-public class CompareRoleCmdlet : OrchestratorPSCmdlet
+public class CompareTriggerCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter))]
+    [SupportsWildcards]
     public string? Path { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -24,14 +21,14 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
     public string? LiteralPath { get; set; }
 
     [Parameter(Position = 1, Mandatory = true)]
-    [ArgumentCompleter(typeof(DriveCompleter))]
+    [SupportsWildcards]
     public string? DifferencePath { get; set; }
 
     [Parameter]
     public string? DifferenceName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(RoleNameCompleter))]
+    [ArgumentCompleter(typeof(TriggerNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -39,16 +36,33 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
     public string[]? Property { get; set; }
 
     [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    [Parameter]
+    public uint Depth { get; set; }
+
+    [Parameter]
     public SwitchParameter IncludeEqual { get; set; }
 
-    private static readonly (string Name, Func<Role, object?> Get)[] Comparators =
+    private static readonly (string Name, Func<ProcessSchedule, object?> Get)[] Comparators =
     [
-        ("DisplayName", r => r.DisplayName),
-        ("Type", r => r.Type),
-        ("Groups", r => r.Groups),
-        ("IsStatic", r => r.IsStatic),
-        ("IsEditable", r => r.IsEditable),
-        ("Permissions", r => NormalizePermissions(r.Permissions)),
+        ("Enabled", t => t.Enabled),
+        ("ReleaseName", t => t.ReleaseName),
+        ("EntryPointPath", t => t.EntryPointPath),
+        ("JobPriority", t => t.JobPriority),
+        ("SpecificPriorityValue", t => t.SpecificPriorityValue),
+        ("RuntimeType", t => t.RuntimeType),
+        ("StartProcessCron", t => t.StartProcessCron),
+        ("StartStrategy", t => t.StartStrategy),
+        ("StopStrategy", t => t.StopStrategy),
+        ("TimeZoneId", t => t.TimeZoneId),
+        ("UseCalendar", t => t.UseCalendar),
+        ("CalendarName", t => t.CalendarName),
+        ("InputArguments", t => t.InputArguments),
+        ("QueueDefinitionName", t => t.QueueDefinitionName),
+        ("ActivateOnJobComplete", t => t.ActivateOnJobComplete),
+        ("Description", t => t.Description),
+        ("Tags", t => EntityComparison.NormalizeTags(t.Tags)),
     ];
 
     internal static readonly HashSet<string> ValidPropertyNames =
@@ -67,30 +81,20 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
 
-        TenantCompare.Run<Role>(
+        FolderCompare.Run<ProcessSchedule>(
             SessionState,
             EffectivePath(Path, LiteralPath),
             DifferencePath,
             DifferenceName,
             Name.ConvertToWildcardPatternList(),
-            IncludeEqual.IsPresent,
+            Recurse.IsPresent, Depth, IncludeEqual.IsPresent,
             only,
-            drive => drive.Roles.Get(),
-            r => r?.Name,
+            (drive, folder) => drive.GetTriggers(folder),
+            t => t?.Name,
+            t => t!.GetPSPath(),
             Comparators,
-            "GetRoleError",
+            "GetTriggerError",
             WriteObject,
             WriteError);
     }
-
-    // Order-independent normalized form of the granted-permission matrix: only granted
-    // permissions, as a sorted set of "Scope:Permission" entries. Captures grant/revoke and
-    // scope drift without depending on permission list order.
-    internal static string? NormalizePermissions(List<Permission>? permissions)
-        => permissions is null || permissions.Count == 0
-            ? null
-            : string.Join(";", permissions
-                .Where(p => p.IsGranted == true)
-                .Select(p => $"{p.Scope}:{p.Name}")
-                .OrderBy(s => s, StringComparer.Ordinal));
 }

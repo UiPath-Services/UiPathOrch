@@ -33,6 +33,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   difference are drives, not folders) and compares the role shape plus its granted-permission
   matrix, normalized to an order-independent set so a single `Permissions` difference captures
   any grant, revoke, or scope change.
+- **`Compare-OrchTrigger`, `Compare-OrchBucket`, `Compare-OrchMachine`,
+  `Compare-OrchCredentialStore`, `Compare-OrchCalendar`, `Compare-OrchWebhook` — more of the
+  compare family.** Same model and options as the rest. Trigger and Bucket are folder-scoped
+  (with `-Recurse`): triggers compare the schedule (cron, calendar, target process/queue by
+  name) and execution settings; buckets compare the storage configuration. Machine,
+  CredentialStore, Calendar, and Webhook are tenant-scoped (the reference and difference are
+  drives): machines compare type and runtime slot capacity; credential stores compare type and
+  connection config (never secrets); calendars compare time zone and the excluded-date set
+  (order-independent); webhooks compare endpoint, enablement, and the subscribed-event set
+  (order-independent, never the signing secret). The tenant-scoped cmdlets share a new
+  TenantCompare helper.
 
 ## [1.8.1] - 2026-06-06
 

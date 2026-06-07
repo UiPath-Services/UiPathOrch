@@ -198,3 +198,137 @@ internal static class FolderCompare
             .FirstOrDefault(f => string.Compare(f.FullyQualifiedName, strDstFolder, StringComparison.OrdinalIgnoreCase) == 0);
     }
 }
+
+// Tenant-scoped counterpart of FolderCompare for entities that live at the drive level rather
+// than in folders (Role, Machine, CredentialStore, Calendar, Webhook, ...). The reference
+// (-Path) and difference (-DifferencePath) resolve to whole drives; there is no folder
+// mirroring and no -Recurse. The output Path/DifferencePath are built from the drive root and
+// the entity name, since tenant-level Get accessors don't always populate the entity's Path.
+internal static class TenantCompare
+{
+    internal static void Run<T>(
+        SessionState? sessionState,
+        string? referencePath,
+        string? differencePath,
+        string? differenceName,
+        List<WildcardPattern>? wpName,
+        bool includeEqual,
+        IReadOnlyCollection<string>? only,
+        Func<OrchDriveInfo, IEnumerable<T>> getEntities,
+        Func<T?, string?> getName,
+        IReadOnlyList<(string Name, Func<T, object?> Get)> comparators,
+        string errorId,
+        Action<object> writeObject,
+        Action<ErrorRecord> writeError) where T : class
+    {
+        var srcDrive = sessionState.GetOrchDrive(referencePath);
+        var dstDrive = sessionState.GetOrchDrive(differencePath);
+
+        List<T> refs;
+        try { refs = getEntities(srcDrive).FilterByWildcards(getName, wpName).ToList(); }
+        catch (Exception ex) { writeError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), errorId, ErrorCategory.InvalidOperation, srcDrive)); return; }
+
+        // Broadcast mode: every reference entity vs the single named target.
+        if (!string.IsNullOrEmpty(differenceName))
+        {
+            T? target;
+            try { target = getEntities(dstDrive).FirstOrDefault(e => string.Equals(getName(e), differenceName, StringComparison.OrdinalIgnoreCase)); }
+            catch (Exception ex) { writeError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, ex), errorId, ErrorCategory.InvalidOperation, dstDrive)); return; }
+            if (target is null)
+            {
+                writeError(new ErrorRecord(
+                    new OrchException(dstDrive.NameColonSeparator, $"DifferenceName '{differenceName}' was not found in '{dstDrive.NameColonSeparator}'."),
+                    "DifferenceNameNotFound", ErrorCategory.ObjectNotFound, differenceName));
+                return;
+            }
+            foreach (var r in refs)
+            {
+                if (r is null) continue;
+                Emit(r, target, srcDrive, dstDrive, getName, only, includeEqual, comparators, writeObject);
+            }
+            return;
+        }
+
+        // Name-match mode.
+        List<T> diffs;
+        try { diffs = getEntities(dstDrive).FilterByWildcards(getName, wpName).ToList(); }
+        catch (Exception ex) { writeError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, ex), errorId, ErrorCategory.InvalidOperation, dstDrive)); return; }
+
+        var diffByName = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);
+        foreach (var e in diffs)
+            if (getName(e) is { } n) diffByName[n] = e;
+
+        var matched = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var r in refs)
+        {
+            if (r is null) continue;
+            if (getName(r) is { } name && diffByName.TryGetValue(name, out var d))
+            {
+                matched.Add(name);
+                Emit(r, d, srcDrive, dstDrive, getName, only, includeEqual, comparators, writeObject);
+            }
+            else
+            {
+                EmitOnly(r, srcDrive, getName, EntityComparison.ReferenceOnly, writeObject);
+            }
+        }
+        foreach (var kv in diffByName)
+        {
+            if (matched.Contains(kv.Key)) continue;
+            EmitOnly(kv.Value, dstDrive, getName, EntityComparison.DifferenceOnly, writeObject);
+        }
+    }
+
+    private static string TenantPath<T>(OrchDriveInfo drive, T entity, Func<T?, string?> getName)
+        => System.IO.Path.Combine(drive.NameColonSeparator, getName(entity) ?? "");
+
+    private static void Emit<T>(
+        T reference, T difference, OrchDriveInfo srcDrive, OrchDriveInfo dstDrive, Func<T?, string?> getName,
+        IReadOnlyCollection<string>? only, bool includeEqual,
+        IReadOnlyList<(string Name, Func<T, object?> Get)> comparators, Action<object> writeObject)
+    {
+        var diffs = EntityComparison.DiffProperties(reference, difference, comparators, only);
+        if (diffs.Count == 0)
+        {
+            if (includeEqual)
+            {
+                writeObject(new OrchComparison
+                {
+                    SideIndicator = EntityComparison.Equal,
+                    Name = getName(reference),
+                    Path = TenantPath(srcDrive, reference, getName),
+                    DifferencePath = TenantPath(dstDrive, difference, getName),
+                    ReferenceObject = reference,
+                    DifferenceObject = difference,
+                });
+            }
+            return;
+        }
+
+        writeObject(new OrchComparison
+        {
+            SideIndicator = EntityComparison.Different,
+            Name = getName(reference),
+            Path = TenantPath(srcDrive, reference, getName),
+            DifferencePath = TenantPath(dstDrive, difference, getName),
+            Differences = diffs,
+            ReferenceObject = reference,
+            DifferenceObject = difference,
+        });
+    }
+
+    private static void EmitOnly<T>(T entity, OrchDriveInfo drive, Func<T?, string?> getName, string side, Action<object> writeObject)
+    {
+        bool isReference = side == EntityComparison.ReferenceOnly;
+        var p = TenantPath(drive, entity, getName);
+        writeObject(new OrchComparison
+        {
+            SideIndicator = side,
+            Name = getName(entity),
+            Path = isReference ? p : null,
+            DifferencePath = isReference ? null : p,
+            ReferenceObject = isReference ? entity : null,
+            DifferenceObject = isReference ? null : entity,
+        });
+    }
+}

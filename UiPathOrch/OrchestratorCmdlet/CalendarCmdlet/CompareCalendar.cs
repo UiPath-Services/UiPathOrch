@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
@@ -5,15 +6,12 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-// Compare roles between two Orchestrator instances (or the same one) and report the
-// differences. Roles are tenant-level, so the reference (-Path) and difference (-DifferencePath)
-// are drives, not folders, and there is no -Recurse. Matches by Name and compares the role
-// shape plus its granted-permission matrix (normalized to an order-independent set of granted
-// "Scope:Permission" entries). See Compare-OrchAsset for the shared model (SideIndicator,
-// name-match vs broadcast).
-[Cmdlet(VerbsData.Compare, "OrchRole")]
+// Compare calendars between two Orchestrator instances. Calendars are tenant-level, so the
+// reference (-Path) and difference (-DifferencePath) are drives, not folders. Matches by Name
+// and compares the time zone and the set of excluded dates (order-independent).
+[Cmdlet(VerbsData.Compare, "OrchCalendar")]
 [OutputType(typeof(OrchComparison))]
-public class CompareRoleCmdlet : OrchestratorPSCmdlet
+public class CompareCalendarCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -31,7 +29,7 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
     public string? DifferenceName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(RoleNameCompleter))]
+    [ArgumentCompleter(typeof(CalendarNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -41,14 +39,10 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter IncludeEqual { get; set; }
 
-    private static readonly (string Name, Func<Role, object?> Get)[] Comparators =
+    private static readonly (string Name, Func<ExtendedCalendar, object?> Get)[] Comparators =
     [
-        ("DisplayName", r => r.DisplayName),
-        ("Type", r => r.Type),
-        ("Groups", r => r.Groups),
-        ("IsStatic", r => r.IsStatic),
-        ("IsEditable", r => r.IsEditable),
-        ("Permissions", r => NormalizePermissions(r.Permissions)),
+        ("TimeZoneId", c => c.TimeZoneId),
+        ("ExcludedDates", c => NormalizeDates(c.ExcludedDates)),
     ];
 
     internal static readonly HashSet<string> ValidPropertyNames =
@@ -67,7 +61,7 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
 
-        TenantCompare.Run<Role>(
+        TenantCompare.Run<ExtendedCalendar>(
             SessionState,
             EffectivePath(Path, LiteralPath),
             DifferencePath,
@@ -75,22 +69,17 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
             Name.ConvertToWildcardPatternList(),
             IncludeEqual.IsPresent,
             only,
-            drive => drive.Roles.Get(),
-            r => r?.Name,
+            drive => drive.Calendars.Get(),
+            c => c?.Name,
             Comparators,
-            "GetRoleError",
+            "GetCalendarError",
             WriteObject,
             WriteError);
     }
 
-    // Order-independent normalized form of the granted-permission matrix: only granted
-    // permissions, as a sorted set of "Scope:Permission" entries. Captures grant/revoke and
-    // scope drift without depending on permission list order.
-    internal static string? NormalizePermissions(List<Permission>? permissions)
-        => permissions is null || permissions.Count == 0
+    // Order-independent normalized form of the excluded dates: sorted yyyy-MM-dd set.
+    internal static string? NormalizeDates(DateTime[]? dates)
+        => dates is null || dates.Length == 0
             ? null
-            : string.Join(";", permissions
-                .Where(p => p.IsGranted == true)
-                .Select(p => $"{p.Scope}:{p.Name}")
-                .OrderBy(s => s, StringComparer.Ordinal));
+            : string.Join(";", dates.Select(d => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)).OrderBy(s => s, StringComparer.Ordinal));
 }

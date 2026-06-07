@@ -195,6 +195,7 @@ CmdletsToExport = @(
 'Get-OrchCalendar',
 'Remove-OrchCalendar',
 'Copy-OrchCalendar',
+'Compare-OrchCalendar',
 
 'Get-OrchCalendarDate',
 'Add-OrchCalendarDate',
@@ -218,6 +219,7 @@ CmdletsToExport = @(
 'New-OrchMachine',
 'Remove-OrchMachine',
 'Copy-OrchMachine',
+'Compare-OrchMachine',
 'Get-OrchMachineClientSecretId',
 'Add-OrchMachineClientSecret',
 'Remove-OrchMachineClientSecret',
@@ -250,6 +252,7 @@ CmdletsToExport = @(
 
 'Get-OrchCredentialStore',
 'Copy-OrchCredentialStore',
+'Compare-OrchCredentialStore',
 'Update-OrchCredentialStore',
 'Remove-OrchCredentialStore',
 
@@ -271,6 +274,7 @@ CmdletsToExport = @(
 'Update-OrchTrigger',
 'Remove-OrchTrigger',
 'Copy-OrchTrigger',
+'Compare-OrchTrigger',
 'Enable-OrchTrigger',
 'Disable-OrchTrigger',
 'Test-OrchTrigger',
@@ -339,6 +343,7 @@ CmdletsToExport = @(
 'Get-OrchBucket',
 'New-OrchBucket',
 'Copy-OrchBucket',
+'Compare-OrchBucket',
 'Move-OrchBucket',
 'Update-OrchBucket',
 'Remove-OrchBucket',
@@ -351,6 +356,7 @@ CmdletsToExport = @(
 'Get-OrchWebhook',
 'New-OrchWebhook',
 'Copy-OrchWebhook',
+'Compare-OrchWebhook',
 'Update-OrchWebhook',
 'Remove-OrchWebhook',
 'Enable-OrchWebhook',
