@@ -866,22 +866,14 @@ public partial class OrchProvider : NavigationCmdletProvider
     // Always returning true seems to reduce accidental rmdir operations due to user error.
     protected override bool HasChildItems(string path)
     {
-        var drive = GetOrchDriveInfo(path);
-        if (drive is null)
-        {
-            return false;
-        }
-        return true;
-
-        //if (path == drive.NameColonSeparator)
-        //    return true;
-
-        //string orchPath = OrchDriveInfo.PSPathToOrchPath(path);
-        //string orchPathStart = orchPath + "/";
-
-        ////bool ret = OrchDriveInfo!.FoldersCache.GetViewBetween(start, end).Any();
-        //bool ret = drive.GetFolders().Any(f => f.FullyQualifiedName!.StartsWith(orchPathStart));
-        //return ret;
+        // Always report "no children" so the Remove-Item engine does NOT raise its generic
+        // "...has children and the Recurse parameter was not specified" prompt. That prompt used
+        // to fire for EVERY folder (this returned true unconditionally), including empty ones,
+        // and its wording was misleading. RemoveItem instead shows a content-aware confirmation
+        // (subfolders + contained resources), mirroring the Orchestrator web delete dialog.
+        // Recursive listing is unaffected: GetChildItems(recurse) walks the folder cache itself
+        // and does not consult HasChildItems.
+        return false;
     }
 
     public class NewItem_DynamicParameters
@@ -1064,6 +1056,20 @@ public partial class OrchProvider : NavigationCmdletProvider
 
         if (ShouldProcess(path, "Remove Folder"))
         {
+            // Content-aware confirmation, like the Orchestrator web delete dialog ("this folder
+            // contains N assets, M processes... really delete?"). Skipped for -Force / -Recurse
+            // (explicit opt-out) and for empty folders (no prompt at all). Counting only runs on
+            // this interactive path, so scripts using -Recurse / -Force incur no extra API calls.
+            if (!Force && !recurse)
+            {
+                string? summary = DescribeFolderContents(drive, folder);
+                if (summary is not null &&
+                    !ShouldContinue(summary + " Are you sure you want to continue?", "Confirm folder deletion"))
+                {
+                    return;
+                }
+            }
+
             try
             {
                 // For personal workspace folders, disable the owner's workspace first
@@ -1099,6 +1105,39 @@ public partial class OrchProvider : NavigationCmdletProvider
                 WriteError(errorRecord);
             }
         }
+    }
+
+    // Best-effort one-line summary of a folder's contents for the deletion confirmation, in the
+    // spirit of the Orchestrator web delete dialog. Returns null when the folder is empty (no
+    // subfolders and no counted resources) so the caller skips the prompt. Counts are best-effort:
+    // a resource type that can't be read (permissions, unsupported API version) is skipped rather
+    // than blocking deletion. Only the folder's direct resources are counted; deleting the folder
+    // also removes everything in its subfolders.
+    private string? DescribeFolderContents(OrchDriveInfo drive, Folder folder)
+    {
+        var parts = new List<string>();
+
+        string prefix = (folder.FullyQualifiedName ?? string.Empty) + "/";
+        int subfolders = drive.GetFolders().Count(f =>
+            f.FullyQualifiedName is not null &&
+            f.FullyQualifiedName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+        if (subfolders > 0) parts.Add($"{subfolders} subfolder(s)");
+
+        void Count(string label, Func<int> counter)
+        {
+            try { int n = counter(); if (n > 0) parts.Add($"{n} {label}"); }
+            catch { /* best-effort: a resource type we can't read shouldn't block deletion */ }
+        }
+
+        Count("process(es)", () => drive.Releases.Get(folder).Count);
+        Count("asset(s)", () => drive.Assets.Get(folder).Count);
+        Count("queue(s)", () => drive.Queues.Get(folder).Count);
+        Count("bucket(s)", () => drive.Buckets.Get(folder).Count);
+        Count("trigger(s)", () => drive.Triggers.Get(folder).Count);
+
+        if (parts.Count == 0) return null;
+        return $"The folder '{folder.GetPSPath()}' is not empty - it contains {string.Join(", ", parts)}. " +
+               "Deleting it permanently removes the folder and all of its contents.";
     }
 
     #endregion
