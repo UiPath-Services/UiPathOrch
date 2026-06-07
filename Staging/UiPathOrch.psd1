@@ -312,6 +312,7 @@ CmdletsToExport = @(
 'Remove-OrchQueueItem',
 
 'Get-OrchTestSet',
+'Compare-OrchTestSet',
 'Get-OrchTestSetDetail',
 'New-OrchTestSet',
 'Copy-OrchTestSet',
@@ -327,6 +328,7 @@ CmdletsToExport = @(
 'Stop-OrchTestSetExecution',
 
 'Get-OrchTestSetSchedule',
+'Compare-OrchTestSetSchedule',
 'New-OrchTestSetSchedule',
 'Update-OrchTestSetSchedule',
 'Copy-OrchTestSetSchedule',
@@ -335,6 +337,7 @@ CmdletsToExport = @(
 'Disable-OrchTestSetSchedule',
 
 'Get-OrchTestDataQueue',
+'Compare-OrchTestDataQueue',
 'New-OrchTestDataQueue',
 'Copy-OrchTestDataQueue',
 'Remove-OrchTestDataQueue',
@@ -380,6 +383,7 @@ CmdletsToExport = @(
 'Get-OrchUpdateSetting',
 
 'Get-OrchActionCatalog',
+'Compare-OrchActionCatalog',
 'New-OrchActionCatalog',
 'Copy-OrchActionCatalog',
 'Remove-OrchActionCatalog',
