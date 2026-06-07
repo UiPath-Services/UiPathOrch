@@ -69,7 +69,12 @@ public class CompareCalendarCmdlet : OrchestratorPSCmdlet
             Name.ConvertToWildcardPatternList(),
             IncludeEqual.IsPresent,
             only,
-            drive => drive.Calendars.Get(),
+            // The list accessor (drive.Calendars.Get()) returns only Name/Id -- TimeZoneId and
+            // ExcludedDates are populated only by the per-calendar detail fetch, so enrich each
+            // calendar with CalendarsDetailed before comparing.
+            drive => drive.Calendars.Get()
+                .Where(c => c?.Id is not null)
+                .Select(c => drive.CalendarsDetailed.Get(c!.Id!.Value)),
             c => c?.Name,
             Comparators,
             "GetCalendarError",
