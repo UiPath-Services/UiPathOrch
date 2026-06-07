@@ -17,7 +17,7 @@ Get-OrchHelp
 ## For Users
 
 - [Getting Started](00-GettingStarted.md) — install, OAuth setup, first connection
-- [Folder Provider](08-FolderProviderGuide.md) — navigate and manage folders: `cd` / `dir`, `New-Item`, `Rename`/`Move`/`Copy`/`Remove-Item`, and `Set-ItemProperty -Name Description`
+- [Folder Operations](08-FolderOperations.md) — navigate and manage folders: `cd` / `dir`, `New-Item`, `Rename`/`Move`/`Copy`/`Remove-Item`, and `Set-ItemProperty -Name Description`
 - [Cmdlet Reference](02-CmdletReference.md) — cmdlets by area, with examples
 - [CSV Export & Import](03-CsvExportImport.md) — bulk import / export patterns
 - [Migration & Copy Guide](04-MigrationGuide.md) — lift-and-shift between tenants

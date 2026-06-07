@@ -186,8 +186,8 @@ NOTE
 
 SEE ALSO
     Get-OrchHelp
-    Folder Provider Guide (cd, New-Item, Move/Copy, Set-ItemProperty Description):
-    https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/08-FolderProviderGuide.md
+    Folder Operations (cd, New-Item, Move/Copy, Set-ItemProperty Description):
+    https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/08-FolderOperations.md
     https://marketplace.uipath.com/listings/uipathorch
     https://www.powershellgallery.com/packages/UiPathOrch
 

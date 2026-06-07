@@ -1,16 +1,18 @@
 ---
-title: Folder Provider (drives & folders)
+title: Folder Operations
 nav_order: 8
-permalink: /folder-provider/
+permalink: /folder-operations/
 ---
 
-# UiPathOrch Module - Folder Provider Guide
+# UiPathOrch Module - Folder Operations
 
-`UiPathOrch` is a PowerShell *navigation provider*: each connected tenant is a drive
-(`Orch1:`, `Orch2:`, …) and the tenant's **folders are the provider's items**. That means
-you navigate and manage folders with the same built-in cmdlets you use for the file system —
+Manage Orchestrator **folders** the way you manage the file system. Each connected tenant is a
+PowerShell drive (`Orch1:`, `Orch2:`, …) whose items are the tenant's folders, so you create,
+rename, move, copy, delete, and describe them with PowerShell's built-in cmdlets —
 `Set-Location`, `Get-ChildItem`, `New-Item`, `Rename-Item`, `Move-Item`, `Copy-Item`,
-`Remove-Item`, and `Get`/`Set`/`Clear-ItemProperty` — instead of folder-specific cmdlets.
+`Remove-Item`, and `Get`/`Set`/`Clear-ItemProperty` — instead of folder-specific verbs. (This
+works because the module ships a PowerShell *navigation provider*, but you rarely need to think
+about that term.)
 
 Folder *contents* (processes, assets, queues, triggers, …) are managed with the `*-Orch*`
 cmdlets documented in the [Cmdlet Reference](02-CmdletReference.md); this guide is about the
