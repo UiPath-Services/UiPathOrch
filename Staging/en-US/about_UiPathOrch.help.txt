@@ -84,6 +84,25 @@ NAVIGATING PSDRIVE
     folder. Folder-level entities (processes, jobs, assets, queues,
     triggers) appear in each folder.
 
+MANAGING FOLDERS
+    Folders are the provider's items, so the standard *-Item cmdlets work:
+
+        New-Item Orch1:\Shared\Sub -ItemType Directory   Create a folder
+        Rename-Item Orch1:\Shared\Sub NewName            Rename in place
+        Move-Item Orch1:\A\Sub Orch1:\B                  Move under another folder
+        Copy-Item Orch1:\A Orch1:\B -Recurse             Copy a folder subtree
+        Remove-Item Orch1:\Shared\Sub                    Delete (prompts if not empty)
+
+    Set, read, or clear a folder's Description with the *-ItemProperty
+    cmdlets (DisplayName is read-only here; change it with Rename-Item):
+
+        Set-ItemProperty Orch1:\Shared -Name Description -Value 'Team folder'
+        Get-ItemProperty Orch1:\Shared -Name Description
+        Clear-ItemProperty Orch1:\Shared -Name Description
+
+    Rename-Item renames in place and does not move: a -NewName containing a
+    path (for example ..\Other) is rejected -- use Move-Item to move.
+
 FOLDER SCOPE PARAMETERS
     Most cmdlets accept these parameters to target specific folders:
 
@@ -167,6 +186,8 @@ NOTE
 
 SEE ALSO
     Get-OrchHelp
+    Folder Provider Guide (cd, New-Item, Move/Copy, Set-ItemProperty Description):
+    https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/08-FolderProviderGuide.md
     https://marketplace.uipath.com/listings/uipathorch
     https://www.powershellgallery.com/packages/UiPathOrch
 
