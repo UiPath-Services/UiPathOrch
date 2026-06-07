@@ -36,7 +36,7 @@ cmdlets documented in the [Cmdlet Reference](02-CmdletReference.md); this guide 
 
 ```powershell
 PS C:\> Import-OrchConfig
-PS C:\> Set-Location Orch1:\      # cd into a tenant's root
+PS C:\> Set-Location Orch1:\     # cd into a tenant's root
 PS Orch1:\> cd Shared            # into a subfolder
 PS Orch1:\Shared> cd ..          # back to parent
 PS Orch1:\> ii .                 # open the current folder in the browser
@@ -75,9 +75,9 @@ Folder paths accept wildcards, both for navigation and for the `-Path` parameter
 folder-scoped `*-Orch*` cmdlets share:
 
 ```powershell
-Get-ChildItem Orch1:\Shar*            # folders matching Shar*
-Get-OrchAsset -Path Shared*           # assets in every folder matching Shared*
-Get-OrchProcess -Path Dept#* -Recurse # processes under each matching folder, recursively
+Get-ChildItem Orch1:\Shar*             # folders matching Shar*
+Get-OrchAsset -Path Shared*            # assets in every folder matching Shared*
+Get-OrchProcess -Path Dept#* -Recurse  # processes under each matching folder, recursively
 ```
 
 Wildcards resolve against the folders that actually exist, so `Shared*` may match several
@@ -188,9 +188,9 @@ with `Rename-Item` (above); the **Description** is set with the property cmdlets
 
 ```powershell
 Set-ItemProperty Orch1:\Shared -Name Description -Value 'Shared automation assets'
-Get-ItemProperty  Orch1:\Shared -Name Description       # read it back
-Get-ItemProperty  Orch1:\Shared                         # Description + DisplayName
-Clear-ItemProperty Orch1:\Shared -Name Description      # clear it (also: -Value '')
+Get-ItemProperty Orch1:\Shared -Name Description    # read it back
+Get-ItemProperty Orch1:\Shared                      # Description + DisplayName
+Clear-ItemProperty Orch1:\Shared -Name Description  # clear it (also: -Value '')
 ```
 
 The Description also shows in the `Description` column of `dir`:
@@ -230,6 +230,9 @@ Clear-OrchCache
 | Set a folder's description | `Set-ItemProperty Orch1:\A -Name Description -Value '…'` |
 | Read a folder's description | `Get-ItemProperty Orch1:\A -Name Description` |
 | Open folder in browser | `ii .` |
+
+To copy, move, rename, or delete **many** folders at once from a list, see
+[Copying, Moving, and Deleting Folders in Bulk via CSV](03-CsvExportImport.md#copying-moving-and-deleting-folders-in-bulk-via-csv).
 
 See also: [Migration & Copy Guide](04-MigrationGuide.md) ·
 [Other Providers (DU & Test Manager)](60-OtherProvidersGuide.md) · `Get-Help about_UiPathOrch`.

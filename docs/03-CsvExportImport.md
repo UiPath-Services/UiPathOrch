@@ -476,19 +476,69 @@ another organization directly (no CSV needed).
 
 ### Renaming Folders in Bulk via CSV
 
-`dir -ExportCsv` exports folders with a `Name` column, but `Rename-Item`
-expects a `NewName` parameter. Rename the column before importing:
+Build a CSV of each folder's `PSPath` (its own path) and a `NewName`, then rename through
+`ForEach-Object`:
 
-1. Export folders:
+1. Export folder paths, seeding `NewName` with the current name:
    ```powershell
-   dir -Recurse -ExportCsv C:\temp\folders.csv
+   dir Orch1:\ -Recurse | Select-Object PSPath, @{ n='NewName'; e={ $_.Name } } |
+       Export-Csv C:\temp\rename.csv
    ```
-2. Open the CSV and rename the `Name` column header to `NewName`.
-3. Edit the `NewName` values to the desired new names.
-4. Import and rename:
+2. Edit the `NewName` column to the desired names (leaf names only — rename does not move).
+3. Apply — each row's `PSPath` is the folder to rename:
    ```powershell
-   Import-Csv C:\temp\folders.csv | Rename-Item
+   Import-Csv C:\temp\rename.csv |
+       ForEach-Object { Rename-Item -LiteralPath $_.PSPath -NewName $_.NewName -WhatIf }
    ```
+
+Drop `-WhatIf` once the preview is right. `ForEach-Object` is required here — see the note in the
+next section.
+
+### Copying, Moving, and Deleting Folders in Bulk via CSV
+
+Whole folders (with their contents) are copied, moved, and deleted with the built-in `Copy-Item`,
+`Move-Item`, and `Remove-Item` (see [Folder Operations](08-FolderOperations.md)). Drive a bulk run
+from a CSV of folder paths.
+
+**Create the CSV from `dir`.** Every folder carries a `PSPath` — its own path; export that, plus a
+`Destination` column for copy/move:
+
+```powershell
+# Delete list — just PSPath; keep the rows you want removed
+dir Orch1:\ -Recurse | Select-Object PSPath | Export-Csv C:\temp\folders.csv
+
+# Copy / Move list — add a Destination (here: every *_old folder goes under Archive)
+dir Orch1:\ -Recurse | Where-Object DisplayName -like '*_old' |
+    Select-Object PSPath, @{ n='Destination'; e={ 'Orch1:\Archive' } } |
+    Export-Csv C:\temp\folders.csv
+```
+
+Open the file, keep the rows you want, and set each `Destination`.
+
+**Apply each row with `ForEach-Object`:**
+
+```powershell
+# Move
+Import-Csv C:\temp\folders.csv |
+    ForEach-Object { Move-Item -LiteralPath $_.PSPath -Destination $_.Destination -WhatIf }
+
+# Copy a folder subtree (across tenants too — e.g. a Destination on Orch2:)
+Import-Csv C:\temp\folders.csv |
+    ForEach-Object { Copy-Item -LiteralPath $_.PSPath -Destination $_.Destination -Recurse -WhatIf }
+
+# Delete (-Force skips the per-folder confirmation)
+Import-Csv C:\temp\folders.csv |
+    ForEach-Object { Remove-Item -LiteralPath $_.PSPath -Recurse -Force -WhatIf }
+```
+
+Drop `-WhatIf` once the preview lists exactly what you intend.
+
+> **Why `ForEach-Object` and not a plain pipe?** Unlike the `*-Orch*` cmdlets, the built-in
+> `Rename`/`Move`/`Copy`/`Remove-Item` take `-Path` **by value** from the pipeline, so piping CSV
+> rows straight in binds each whole row object to `-Path` and fails with *"a drive with the name
+> '@{PSPath=…' does not exist"*. `ForEach-Object` lets you bind the row's `PSPath` to `-LiteralPath`
+> explicitly. (`New-Item` is the exception — its `-Path` is by-property-name, so
+> [creating folders](#creating-folders-in-bulk-via-csv) can pipe directly.)
 
 ## Known limitations: commas and wildcards in multi-value cells
 
