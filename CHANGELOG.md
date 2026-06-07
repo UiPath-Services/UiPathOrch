@@ -67,14 +67,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   cmdlet's comparable-property set, `-DifferenceName` completes entity names resolved against
   `-DifferencePath` (not `-Path`), and `-Name` / `-DifferencePath` use the standard name / drive
   completers.
+- **Set a folder's Description with `Set-ItemProperty`.** The Orchestrator drive provider now
+  implements the property cmdlets for folders: `Set-ItemProperty <folder> -Name Description -Value
+  '…'` updates the description (a folder's DisplayName is changed with `Rename-Item`, the only other
+  editable field), `Get-ItemProperty <folder> [-Name Description]` reads it (and DisplayName), and
+  `Clear-ItemProperty <folder> -Name Description` clears it. Backed by the existing folder PUT, which
+  accepts changes to DisplayName and Description only.
 
 ### Fixed
 
-- **`Rename-Item` no longer stores a path-qualified `-NewName` verbatim.** Renaming an
-  Orchestrator folder (or a Test Manager project) with the form tab completion produces —
-  `Rename-Item .\Shared .\Shared2` — named the item the literal `.\Shared2` instead of
-  `Shared2`. The providers now reduce `-NewName` to its leaf (matching the FileSystem provider)
-  and reject empty / `.` / `..` names with a clear error.
+- **`Rename-Item` handles `-NewName` like the FileSystem provider.** Renaming an Orchestrator
+  folder (or a Test Manager project) with the form tab completion produces —
+  `Rename-Item .\Shared .\Shared2` — named the item the literal `.\Shared2` instead of `Shared2`.
+  The providers now strip a leading `.\` / `./`, allow a same-directory full path, and otherwise
+  require a bare leaf — a `-NewName` that points elsewhere (e.g. `..\Shared2`, `sub\Shared2`) is
+  rejected with a clear error rather than silently renamed in place, because Rename-Item renames
+  in place and does not move (use `Move-Item` for that).
 - **`Remove-Item` on a folder confirms based on the folder's actual contents.** Previously every
   folder deletion prompted "...has children and the Recurse parameter was not specified", even for
   empty folders (the provider reported children unconditionally). Now: an empty folder deletes

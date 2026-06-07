@@ -50,21 +50,44 @@ public static class PathTools
     // already-escaped value would double the doubling.
     public static string EscapeODataLiteral(string? input) => (input ?? string.Empty).Replace("'", "''");
 
-    // Rename-Item's -NewName is a leaf name, not a path, but PowerShell passes the raw argument
-    // straight to the provider's RenameItem — tab completion commonly yields ".\Foo", which would
-    // otherwise be stored verbatim as the entity's new name (so `ren .\Shared .\Shared2` would
-    // name the folder ".\Shared2"). Reduce it to the leaf (strip a leading "./" / ".\" and any
-    // directory qualifier), matching the FileSystem provider. Returns null for an empty result or
-    // a non-name ("." / ".."), letting the caller raise a clear error. Rename is not a move.
-    public static string? RenameLeaf(string? newName)
+    // Normalize Rename-Item's -NewName, matching the FileSystem provider. PowerShell passes the raw
+    // argument straight to RenameItem; tab completion commonly yields ".\Foo" (which would otherwise
+    // be stored verbatim, so `ren .\Shared .\Shared2` would name the folder ".\Shared2"). Strip a
+    // leading "./" / ".\"; allow a fully-qualified new name only when it stays in the same directory
+    // as the source; otherwise the name must be a bare leaf. `path` is the source item's path (for
+    // the same-directory check). Returns null when the new name is empty, "."/".." or still carries
+    // directory information (e.g. `ren .\sub3 ..\sub5`) — Rename-Item renames in place, not moves —
+    // so the caller can raise a clear error.
+    public static string? RenameLeaf(string? path, string? newName)
     {
         if (string.IsNullOrWhiteSpace(newName))
             return null;
-        string trimmed = newName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
-        string leaf = Path.GetFileName(trimmed);
-        if (string.IsNullOrEmpty(leaf) || leaf == "." || leaf == "..")
+
+        newName = newName.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+        // Strip a leading "./" or ".\" — what tab completion adds (`ren .\Foo .\Bar`).
+        if (newName.StartsWith(".\\", StringComparison.Ordinal) || newName.StartsWith("./", StringComparison.Ordinal))
+        {
+            newName = newName.Substring(2);
+        }
+        // Allow a fully-qualified new name only when it stays in the SAME directory as the source
+        // (`ren X\foo X\bar` -> bar). Anything pointing elsewhere is rejected below.
+        else if (!string.IsNullOrEmpty(path) &&
+                 string.Equals(Path.GetDirectoryName(path), Path.GetDirectoryName(newName), StringComparison.OrdinalIgnoreCase))
+        {
+            newName = Path.GetFileName(newName);
+        }
+
+        // The result must be a bare leaf. A name that still carries directory information
+        // (e.g. `..\sub5`, `sub\x`, a different folder's path) is rejected: Rename-Item renames
+        // in place, it does not move. Caller turns null into a clear error.
+        if (string.IsNullOrEmpty(newName) || newName == "." || newName == ".." ||
+            !string.Equals(Path.GetFileName(newName), newName, StringComparison.Ordinal))
+        {
             return null;
-        return leaf;
+        }
+
+        return newName;
     }
 
     // Use this when calling WriteItemObject() in the provider's GetChildItems.
