@@ -10,13 +10,6 @@ _Nothing yet._
 
 ## [1.8.1] - 2026-06-06
 
-### Added
-
-- **Document Understanding projects can be deleted with `Remove-Item`.** `Remove-Item
-  <DuDrive>:\<project>` (and `del` / `rmdir`) now removes a DU project, mirroring the Test
-  Manager drive. `Rename-Item` remains an explicit "not supported" error — the service has
-  no rename endpoint.
-
 ### Changed
 
 - **`Get-OrchLicense` now prints a readable summary by default.** Instead of dumping the
@@ -34,12 +27,9 @@ _Nothing yet._
   template machines, otherwise `RobotsCount`). `IsLicensed` keeps its name but renders as
   a colored dot (green = licensed, orange = not). Columns auto-size. Previously the wide
   raw `MachineName` value pushed the rest of the columns off-screen.
-- Internal cleanups: narrowed the Move / Add-link buffer tuple element types to match
-  `EffectivePath`, aligned the DU `New-Item` output with the provider's `Get-ChildItem`
-  (emit the canonical project path), corrected a stale `ConvertToWildcardPatternList`
-  comment, cleared the remaining test-project nullability warnings, and reworked the
-  `-Path` / `-LiteralPath` example in the CSV guide to show filtering folders the pipe can
-  express but a `-Path` wildcard can't.
+- **`New-Item` on a Document Understanding drive emits the canonical project path.** The
+  created project is now returned with its drive-qualified `FullName`, matching the
+  provider's `Get-ChildItem` / `Get-Item` output.
 
 ### Fixed
 
@@ -57,12 +47,6 @@ _Nothing yet._
   Orchestrator session.** Blob I/O now surfaces the storage error on its own instead of
   treating a storage 401 as an Orchestrator auth failure, which had cleared the cached
   token.
-- **Internal: cleared the nullable-reference-type compiler warnings introduced with
-  `-LiteralPath` in 1.8.0.** `EffectivePath` now returns a non-null-element array (its
-  `-Path` / `-LiteralPath` inputs are always non-null), so it matches both the
-  `IEnumerable<string?>?` and `IEnumerable<string>?` resolver overloads and the
-  `string[]?` capture fields — the TestSet / TestDataQueue / FolderUser / asset-setter
-  cmdlets now compile warning-free. No behavior change.
 - **`Copy-OrchQueueItem` now rate-limits every batch, not just the first.** The 601 ms
   pause was measured from a single timestamp taken before the loop, so only the first
   100-item batch was delayed; large queues could trip the API rate limit. It is now
