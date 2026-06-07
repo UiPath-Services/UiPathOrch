@@ -480,42 +480,38 @@ Whole folders (with their contents) are copied, moved, and deleted with the buil
 `Move-Item`, and `Remove-Item` (see [Folder Operations](08-FolderOperations.md)). Drive a bulk run
 from a CSV of folder paths.
 
-The natural workflow is **export every folder, edit the CSV, then import line by line.**
+The natural workflow is **export every folder, edit the CSV, then import.**
 
-1. **Export all folders** (`-Recurse`) so you can see the whole tree and pick from it. `PSPath` is
-   each folder's own path (press `[Ctrl+Space]` after `Select-Object` to complete the name):
+1. **Export every folder** (`-Recurse`) so you can see the whole tree and pick from it. `PSPath`
+   is each folder's own path (press `[Ctrl+Space]` after `Select-Object` to complete the name):
    ```powershell
    dir Orch1:\ -Recurse | Select-Object PSPath | Export-Csv C:\temp\folders.csv
    ```
-2. **Edit the CSV** — delete the rows you don't want. For a move or copy, add a `Destination`
-   column and set each row's target folder.
-3. **Import line by line** with `ForEach-Object`, binding `PSPath` to `-LiteralPath`:
+2. **Edit the CSV**: keep only the rows (folders) you want, and rename the `PSPath` column header
+   to **`LiteralPath`** so it matches the cmdlets' parameter.
+3. **Import.** Each row's `LiteralPath` binds by name, so the rows flow straight in — no
+   `ForEach-Object` — and the destination goes on the command line:
    ```powershell
    # Delete each listed folder (and everything in it)
-   Import-Csv C:\temp\folders.csv |
-       ForEach-Object { Remove-Item -LiteralPath $_.PSPath -Recurse -Force -WhatIf }
+   Import-Csv C:\temp\folders.csv | Remove-Item -Recurse -Force -WhatIf
 
-   # Move each listed folder (with its contents) to its row's Destination
-   Import-Csv C:\temp\folders.csv |
-       ForEach-Object { Move-Item -LiteralPath $_.PSPath -Destination $_.Destination -WhatIf }
+   # Move each listed folder under one folder
+   Import-Csv C:\temp\folders.csv | Move-Item -Destination Orch1:\Archive -WhatIf
 
-   # Copy each listed folder (and its assets/queues/…) into its row's Destination
-   Import-Csv C:\temp\folders.csv |
-       ForEach-Object { Copy-Item -LiteralPath $_.PSPath -Destination $_.Destination -WhatIf }
+   # Copy each listed folder (with its assets, queues, …) into one folder
+   Import-Csv C:\temp\folders.csv | Copy-Item -Destination Orch2:\Imported -WhatIf
    ```
    Drop `-WhatIf` once the preview is right.
 
-Because every folder is its own row, **`Copy-Item` here takes no `-Recurse`** — each row copies one
-folder and its entities, and the subfolders arrive as their own rows (`-Recurse` would copy them
-twice). `dir -Recurse` lists parents before children, so setting each `Destination` to the row's
-target parent rebuilds the tree in order. (To clone a whole subtree in one shot, copy its root
-directly instead — `Copy-Item Orch1:\Src Orch2:\ -Recurse`; see
-[Folder Operations](08-FolderOperations.md) and the [Migration & Copy Guide](04-MigrationGuide.md).)
+Keep the CSV to that single `LiteralPath` column and pass the destination on the command line.
+A second column (e.g. `Destination`) would make PowerShell bind the whole row to `-Path` **by
+value** and fail with *"a drive with the name '@{LiteralPath=…' does not exist"*. (Leaving the
+header as `PSPath` works too — it's an alias of `-LiteralPath` — but `LiteralPath` reads as
+"column name = parameter name".)
 
-> For a delete, or a move to a single destination, a `PSPath`-only CSV can also pipe straight in —
-> `Import-Csv folders.csv | Remove-Item -Recurse -Force` — since `PSPath` binds to `-LiteralPath` via
-> its alias. Once the CSV has a second column (`Destination`), use `ForEach-Object` as above,
-> because the multi-column row would otherwise bind to `-Path` by value.
+`Copy-Item` copies each listed folder and its entities, but not its subfolders — those come in as
+their own rows. To clone a whole subtree (folders and all) in one shot, copy its root directly
+instead: `Copy-Item Orch1:\Src Orch2:\ -Recurse` (see the [Migration & Copy Guide](04-MigrationGuide.md)).
 
 ### Renaming Folders in Bulk via CSV
 
