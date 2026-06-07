@@ -516,9 +516,11 @@ alias of `-LiteralPath`), but `LiteralPath` reads as "column name = parameter na
 #### Sending each folder somewhere different (a `Destination` column)
 
 To move or copy each folder to **its own** target, add a second column — `Destination` — to the CSV
-and fill in each row's target folder. With two columns a plain pipe would bind the whole row to
-`-Path` by value (the *"a drive with the name '@{LiteralPath=…' does not exist"* error), so loop
-with `ForEach-Object` and bind the columns yourself:
+and fill in each row's target folder. Here you **do** need `ForEach-Object`: even with the columns
+named correctly, `Move-Item` / `Copy-Item` accept `-Path` *by value* from the pipeline (unlike the
+`*-Orch*` cmdlets, whose `-Path` is by property name), and that by-value binding is tried first — so
+a plain pipe binds the whole row to `-Path` and fails with *"a drive with the name '@{LiteralPath=…'
+does not exist"*. Loop and bind the columns yourself:
 
 ```powershell
 # folders.csv columns: LiteralPath, Destination
