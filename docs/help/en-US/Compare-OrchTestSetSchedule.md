@@ -1,64 +1,63 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchFolderUser.md
+HelpUri: https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchTestSetSchedule.md
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 06/07/2026
 PlatyPS schema version: 2024-05-01
-title: Compare-OrchFolderUser
+title: Compare-OrchTestSetSchedule
 ---
 
-# Compare-OrchFolderUser
+# Compare-OrchTestSetSchedule
 
 ## SYNOPSIS
 
-Compares folder user assignments between two folders or Orchestrator instances and reports the differences.
+Compares test set schedules between two folders or Orchestrator instances and reports the differences.
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Compare-OrchFolderUser [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
- [-IncludeEqual] [<CommonParameters>]
+Compare-OrchTestSetSchedule [-Name] <string[]> [-DifferencePath] <string>
+ [[-DifferenceName] <string>] [-Path <string>] [-LiteralPath <string>] [-Property <string[]>]
+ [-Recurse] [-Depth <uint>] [-IncludeEqual] [<CommonParameters>]
 ```
 
 ## ALIASES
 
 ## DESCRIPTION
 
-Compares the user assignments of a reference folder (-Path, or the current folder) against those of a difference folder (-DifferencePath). The primary use is access-migration verification: confirm the right users have the right roles in each folder after a copy between folders or tenants.
+Compares test set schedules between a reference location (-Path, or the current folder) and a difference location (-DifferencePath), resolved over Orchestrator drives and folders. The primary use is migration verification.
 
-Assignments are matched by user name and these properties are compared: the user Type and the assigned Roles (compared as an order-independent set of role names). Only directly-assigned (not inherited) assignments are compared, so an inherited role from a parent folder is not counted as a folder-level assignment.
+Schedules are matched by Name (not the tenant-local Id) and these properties are compared: Enabled, TestSetName (the target test set, by name), CronExpression, TimeZoneId, and CalendarName. The numeric TestSetId / CalendarId are tenant-local and are not compared; the target test set and calendar are compared by name instead.
 
-Each result is an OrchComparison record with a SideIndicator: "<=" assigned only on the reference side, "=>" assigned only on the difference side, "<>" assigned on both sides but with a different role set or type (with a per-property Differences breakdown), and "==" identical (only with -IncludeEqual). Without -DifferenceName each reference user is compared to the same-named user in the corresponding difference folder (mirrored relative path with -Recurse). With -DifferenceName, every reference user is compared to that single named user.
+Each result is an OrchComparison record with a SideIndicator: "<=" reference only, "=>" difference only, "<>" present on both sides but differing (with a per-property Differences breakdown), and "==" equal (only with -IncludeEqual). Without -DifferenceName each reference schedule is compared to the same-named schedule in the corresponding difference folder (mirrored relative path with -Recurse). With -DifferenceName, every reference schedule is compared to that single named schedule.
 
-Primary Endpoint: GET /odata/Folders/UiPath.Server.Configuration.OData.GetUsersForFolder
+Primary Endpoint: GET /odata/TestSetSchedules
 
-OAuth required scopes: OR.Folders or OR.Folders.Read (both sides)
+OAuth required scopes: OR.TestSetSchedules or OR.TestSetSchedules.Read (both sides)
 
-Required permissions: Subfolders.View, Units.View (both sides)
+Required permissions: TestSetSchedules.View (both sides)
 
 ## EXAMPLES
 
-### Example 1: Verify folder access migrated to another tenant
+### Example 1: Verify test schedules migrated to another tenant
 
 ```powershell
-PS C:\> Compare-OrchFolderUser Orch1:\Finance Orch2:\Finance
+PS C:\> Compare-OrchTestSetSchedule * Orch2:\Finance -Path Orch1:\Finance
 ```
 
-Compares the user assignments of Finance on Orch1 against Finance on Orch2, showing only the differences (missing users, extra users, or changed role sets).
+Compares every test set schedule in Finance on Orch1 against the same-named schedule in Finance on Orch2, showing only the differences (for example a changed cron).
 
-### Example 2: Audit role drift across a whole tree
+### Example 2: Compare a whole tree
 
 ```powershell
-PS C:\> Compare-OrchFolderUser -Path Orch1:\Shared -DifferencePath Orch2:\Shared -Recurse |
-    Where-Object SideIndicator -eq '<>' | Select-Object Name -ExpandProperty Differences
+PS C:\> Compare-OrchTestSetSchedule * Orch2:\Shared -Path Orch1:\Shared -Recurse
 ```
 
-Walks Shared and all subfolders, lists only the users whose role set differs, and expands the per-property differences.
+Walks Shared and all subfolders and reports the differing schedules.
 
 ## PARAMETERS
 
@@ -85,7 +84,7 @@ HelpMessage: ''
 
 ### -DifferenceName
 
-Selects broadcast mode: every reference user is compared to this single named user in -DifferencePath, even when the names differ.
+Selects broadcast mode: every reference schedule is compared to this single named schedule in -DifferencePath, even when the names differ.
 
 ```yaml
 Type: System.String
@@ -127,7 +126,7 @@ HelpMessage: ''
 
 ### -IncludeEqual
 
-Also emits "==" rows for assignments that match on every compared property. Off by default.
+Also emits "==" rows for schedules that match on every compared property. Off by default.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -170,7 +169,7 @@ HelpMessage: ''
 
 ### -Name
 
-Filters by user name (the assignment's match key); supports wildcards. In name-match mode the same filter is applied to the difference side.
+Filters the reference schedules by name; supports wildcards. In name-match mode the same filter is applied to the difference side.
 
 ```yaml
 Type: System.String[]
@@ -212,7 +211,7 @@ HelpMessage: ''
 
 ### -Property
 
-Restricts the comparison to the named properties. Valid names: Type, Roles. Unrecognized names are warned about and ignored.
+Restricts the comparison to the named properties. Valid names: Enabled, TestSetName, CronExpression, TimeZoneId, CalendarName. Unrecognized names are warned about and ignored.
 
 ```yaml
 Type: System.String[]
@@ -273,14 +272,14 @@ You can pipe entity names to this cmdlet (the Name property).
 
 ### UiPath.PowerShell.Entities.OrchComparison
 
-Returns one comparison record per folder user, with SideIndicator, Name, the single-sided Path and DifferencePath, the per-property Differences (on "<>" rows), and the underlying ReferenceObject / DifferenceObject.
+Returns one comparison record per schedule, with SideIndicator, Name, the single-sided Path and DifferencePath, the per-property Differences (on "<>" rows), and the underlying ReferenceObject / DifferenceObject.
 
 ## NOTES
 
-Only directly-assigned (not inherited) folder assignments are compared. Assignments are matched by user name, case-insensitively. This cmdlet is read-only and does not support -WhatIf / -Confirm.
+Schedules are matched by Name, case-insensitively. The target test set and calendar are compared by name (the numeric ids are tenant-local). This cmdlet is read-only and does not support -WhatIf / -Confirm.
 
 ## RELATED LINKS
 
-- [Get-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderUser.md)
-- [Copy-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchFolderUser.md)
+- [Get-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSetSchedule.md)
+- [Compare-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchTestSet.md)
 - [Compare-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchAsset.md)

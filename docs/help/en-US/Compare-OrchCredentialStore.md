@@ -1,7 +1,7 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchCredentialStore.md'
+HelpUri: https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchCredentialStore.md
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 06/07/2026
@@ -20,9 +20,9 @@ Compares credential stores between two Orchestrator instances and reports the di
 ### __AllParameterSets
 
 ```
-Compare-OrchCredentialStore [[-Path] <string>] [-DifferencePath] <string> [-LiteralPath <string>]
- [-DifferenceName <string>] [-Name <string[]>] [-Property <string[]>] [-IncludeEqual]
- [<CommonParameters>]
+Compare-OrchCredentialStore [-Name] <string[]> [-DifferencePath] <string>
+ [[-DifferenceName] <string>] [-Path <string>] [-LiteralPath <string>] [-Property <string[]>]
+ [-IncludeEqual] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -61,9 +61,30 @@ Adds "==" rows for stores that match on every compared property.
 
 ## PARAMETERS
 
-### -Path
+### -DifferenceName
 
-Specifies the reference (left) Orchestrator drive. If not specified, the current drive is used.
+Selects broadcast mode: every reference store is compared to this single named store in -DifferencePath, even when the names differ.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 2
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -DifferencePath
+
+Specifies the difference (right) Orchestrator drive. Mandatory. Can be the same instance as -Path (for comparing two stores via -DifferenceName) or a different instance.
 
 ```yaml
 Type: System.String
@@ -72,10 +93,31 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 0
+  Position: 1
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -IncludeEqual
+
+Also emits "==" rows for stores that match on every compared property. Off by default.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
+  ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
@@ -104,48 +146,6 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -DifferencePath
-
-Specifies the difference (right) Orchestrator drive. Mandatory. Can be the same instance as -Path (for comparing two stores via -DifferenceName) or a different instance.
-
-```yaml
-Type: System.String
-DefaultValue: None
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: 1
-  IsRequired: true
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -DifferenceName
-
-Selects broadcast mode: every reference store is compared to this single named store in -DifferencePath, even when the names differ.
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -Name
 
 Filters the reference stores by name; supports wildcards. In name-match mode the same filter is applied to the difference side.
@@ -154,6 +154,27 @@ Filters the reference stores by name; supports wildcards. In name-match mode the
 Type: System.String[]
 DefaultValue: None
 SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Path
+
+Specifies the reference (left) Orchestrator drive. If not specified, the current drive is used.
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
@@ -188,27 +209,6 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -IncludeEqual
-
-Also emits "==" rows for stores that match on every compared property. Off by default.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### CommonParameters
 
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
@@ -220,11 +220,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-You can pipe the reference drive via the Path property.
+You can pipe the reference path to this cmdlet (the Path property).
 
 ### System.String[]
 
-You can pipe credential store names via the Name property.
+You can pipe entity names to this cmdlet (the Name property).
 
 ## OUTPUTS
 
@@ -238,6 +238,5 @@ Credential stores are matched by Name, case-insensitively. Secrets held by the s
 
 ## RELATED LINKS
 
-[Get-OrchCredentialStore](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchCredentialStore.md)
-
-[Compare-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchAsset.md)
+- [Get-OrchCredentialStore](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchCredentialStore.md)
+- [Compare-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchAsset.md)

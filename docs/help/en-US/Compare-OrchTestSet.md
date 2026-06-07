@@ -1,26 +1,26 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchFolderUser.md
+HelpUri: https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchTestSet.md
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 06/07/2026
 PlatyPS schema version: 2024-05-01
-title: Compare-OrchFolderUser
+title: Compare-OrchTestSet
 ---
 
-# Compare-OrchFolderUser
+# Compare-OrchTestSet
 
 ## SYNOPSIS
 
-Compares folder user assignments between two folders or Orchestrator instances and reports the differences.
+Compares test sets between two folders or Orchestrator instances and reports the differences.
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Compare-OrchFolderUser [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
+Compare-OrchTestSet [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
  [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
  [-IncludeEqual] [<CommonParameters>]
 ```
@@ -29,36 +29,35 @@ Compare-OrchFolderUser [-Name] <string[]> [-DifferencePath] <string> [[-Differen
 
 ## DESCRIPTION
 
-Compares the user assignments of a reference folder (-Path, or the current folder) against those of a difference folder (-DifferencePath). The primary use is access-migration verification: confirm the right users have the right roles in each folder after a copy between folders or tenants.
+Compares test sets between a reference location (-Path, or the current folder) and a difference location (-DifferencePath), resolved over Orchestrator drives and folders. The primary use is migration verification.
 
-Assignments are matched by user name and these properties are compared: the user Type and the assigned Roles (compared as an order-independent set of role names). Only directly-assigned (not inherited) assignments are compared, so an inherited role from a parent folder is not counted as a folder-level assignment.
+Test sets are matched by Name (not the tenant-local Id) and these properties are compared: Description, SourceType, Enabled, EnableCoverage, and TestCaseCount. Volatile fields (Id, Key, timestamps) are ignored.
 
-Each result is an OrchComparison record with a SideIndicator: "<=" assigned only on the reference side, "=>" assigned only on the difference side, "<>" assigned on both sides but with a different role set or type (with a per-property Differences breakdown), and "==" identical (only with -IncludeEqual). Without -DifferenceName each reference user is compared to the same-named user in the corresponding difference folder (mirrored relative path with -Recurse). With -DifferenceName, every reference user is compared to that single named user.
+Each result is an OrchComparison record with a SideIndicator: "<=" reference only, "=>" difference only, "<>" present on both sides but differing (with a per-property Differences breakdown), and "==" equal (only with -IncludeEqual). Without -DifferenceName each reference test set is compared to the same-named test set in the corresponding difference folder (mirrored relative path with -Recurse). With -DifferenceName, every reference test set is compared to that single named test set.
 
-Primary Endpoint: GET /odata/Folders/UiPath.Server.Configuration.OData.GetUsersForFolder
+Primary Endpoint: GET /odata/TestSets
 
-OAuth required scopes: OR.Folders or OR.Folders.Read (both sides)
+OAuth required scopes: OR.TestSets or OR.TestSets.Read (both sides)
 
-Required permissions: Subfolders.View, Units.View (both sides)
+Required permissions: TestSets.View (both sides)
 
 ## EXAMPLES
 
-### Example 1: Verify folder access migrated to another tenant
+### Example 1: Verify test sets migrated to another tenant
 
 ```powershell
-PS C:\> Compare-OrchFolderUser Orch1:\Finance Orch2:\Finance
+PS C:\> Compare-OrchTestSet * Orch2:\Finance -Path Orch1:\Finance
 ```
 
-Compares the user assignments of Finance on Orch1 against Finance on Orch2, showing only the differences (missing users, extra users, or changed role sets).
+Compares every test set in Finance on Orch1 against the same-named test set in Finance on Orch2, showing only the differences.
 
-### Example 2: Audit role drift across a whole tree
+### Example 2: Compare a whole tree
 
 ```powershell
-PS C:\> Compare-OrchFolderUser -Path Orch1:\Shared -DifferencePath Orch2:\Shared -Recurse |
-    Where-Object SideIndicator -eq '<>' | Select-Object Name -ExpandProperty Differences
+PS C:\> Compare-OrchTestSet * Orch2:\Shared -Path Orch1:\Shared -Recurse
 ```
 
-Walks Shared and all subfolders, lists only the users whose role set differs, and expands the per-property differences.
+Walks Shared and all subfolders and reports the differing test sets.
 
 ## PARAMETERS
 
@@ -85,7 +84,7 @@ HelpMessage: ''
 
 ### -DifferenceName
 
-Selects broadcast mode: every reference user is compared to this single named user in -DifferencePath, even when the names differ.
+Selects broadcast mode: every reference test set is compared to this single named test set in -DifferencePath, even when the names differ.
 
 ```yaml
 Type: System.String
@@ -127,7 +126,7 @@ HelpMessage: ''
 
 ### -IncludeEqual
 
-Also emits "==" rows for assignments that match on every compared property. Off by default.
+Also emits "==" rows for test sets that match on every compared property. Off by default.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -170,7 +169,7 @@ HelpMessage: ''
 
 ### -Name
 
-Filters by user name (the assignment's match key); supports wildcards. In name-match mode the same filter is applied to the difference side.
+Filters the reference test sets by name; supports wildcards. In name-match mode the same filter is applied to the difference side.
 
 ```yaml
 Type: System.String[]
@@ -212,7 +211,7 @@ HelpMessage: ''
 
 ### -Property
 
-Restricts the comparison to the named properties. Valid names: Type, Roles. Unrecognized names are warned about and ignored.
+Restricts the comparison to the named properties. Valid names: Description, SourceType, Enabled, EnableCoverage, TestCaseCount. Unrecognized names are warned about and ignored.
 
 ```yaml
 Type: System.String[]
@@ -273,14 +272,14 @@ You can pipe entity names to this cmdlet (the Name property).
 
 ### UiPath.PowerShell.Entities.OrchComparison
 
-Returns one comparison record per folder user, with SideIndicator, Name, the single-sided Path and DifferencePath, the per-property Differences (on "<>" rows), and the underlying ReferenceObject / DifferenceObject.
+Returns one comparison record per test set, with SideIndicator, Name, the single-sided Path and DifferencePath, the per-property Differences (on "<>" rows), and the underlying ReferenceObject / DifferenceObject.
 
 ## NOTES
 
-Only directly-assigned (not inherited) folder assignments are compared. Assignments are matched by user name, case-insensitively. This cmdlet is read-only and does not support -WhatIf / -Confirm.
+Test sets are matched by Name, case-insensitively. This cmdlet is read-only and does not support -WhatIf / -Confirm.
 
 ## RELATED LINKS
 
-- [Get-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderUser.md)
-- [Copy-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchFolderUser.md)
+- [Get-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestSet.md)
+- [Compare-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchTestSetSchedule.md)
 - [Compare-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchAsset.md)

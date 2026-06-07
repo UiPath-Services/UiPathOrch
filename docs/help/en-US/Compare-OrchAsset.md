@@ -1,7 +1,7 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchAsset.md'
+HelpUri: https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchAsset.md
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 06/07/2026
@@ -20,10 +20,9 @@ Compares assets between two folders or Orchestrator instances and reports the di
 ### __AllParameterSets
 
 ```
-Compare-OrchAsset [[-Path] <string>] [-DifferencePath] <string> [-LiteralPath <string>]
- [-DifferenceName <string>] [-Name <string[]>] [-ValueType <string[]>] [-Property <string[]>]
- [-UserMappingCsv <string>] [-Recurse] [-Depth <uint>] [-IncludeEqual]
- [<CommonParameters>]
+Compare-OrchAsset [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
+ [-Path <string>] [-LiteralPath <string>] [-ValueType <string[]>] [-Property <string[]>]
+ [-UserMappingCsv <string>] [-Recurse] [-Depth <uint>] [-IncludeEqual] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -112,9 +111,51 @@ Compares across tenants and translates reference per-user value owners to their 
 
 ## PARAMETERS
 
-### -Path
+### -Depth
 
-Specifies the reference (left) folder. If not specified, the current folder is used. Accepts a single string. Also binds the path of assets piped in by property name.
+Specifies the depth for recursion into the reference folders. A depth of 0 targets only the reference folder. When -Depth is specified, -Recurse is implied.
+
+```yaml
+Type: System.UInt32
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -DifferenceName
+
+Selects broadcast mode. When set, every reference asset is compared to this single named asset in -DifferencePath, even when the names differ. Single by design; comparing many reference assets against many named targets has no well-defined pairing.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 2
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -DifferencePath
+
+Specifies the difference (right) folder. This is a mandatory parameter. Can be a folder on the same Orchestrator instance (e.g., Orch1:\Production) or on a different instance (e.g., Orch2:\Shared) for cross-instance comparison.
 
 ```yaml
 Type: System.String
@@ -123,10 +164,31 @@ SupportsWildcards: true
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 0
+  Position: 1
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -IncludeEqual
+
+Also emits "==" rows for assets that match on every compared property. Off by default; only differences are surfaced.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
+  ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
@@ -155,54 +217,33 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -DifferencePath
-
-Specifies the difference (right) folder. This is a mandatory parameter. Can be a folder on the same Orchestrator instance (e.g., Orch1:\Production) or on a different instance (e.g., Orch2:\Shared) for cross-instance comparison.
-
-```yaml
-Type: System.String
-DefaultValue: None
-SupportsWildcards: true
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: 1
-  IsRequired: true
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -DifferenceName
-
-Selects broadcast mode. When set, every reference asset is compared to this single named asset in -DifferencePath, even when the names differ. Single by design; comparing many reference assets against many named targets has no well-defined pairing.
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -Name
 
 Filters the reference assets by name; supports wildcards. In name-match mode the same filter is applied to the difference side so that "=>" rows stay within the same name scope. Tab completion lists assets from the current folder.
 
 ```yaml
 Type: System.String[]
+DefaultValue: None
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Path
+
+Specifies the reference (left) folder. If not specified, the current folder is used. Accepts a single string. Also binds the path of assets piped in by property name.
+
+```yaml
+Type: System.String
 DefaultValue: None
 SupportsWildcards: true
 Aliases: []
@@ -218,27 +259,6 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -ValueType
-
-Filters the assets to compare by value type (Text, Bool, Integer, Credential, Secret); supports wildcards.
-
-```yaml
-Type: System.String[]
-DefaultValue: None
-SupportsWildcards: true
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -Property
 
 Restricts the comparison to the named properties. Valid names: ValueType, ValueScope, Value, Description, CredentialUsername, ExternalName, AllowDirectApiAccess, Tags, UserValues. Unrecognized names are warned about and ignored.
@@ -246,27 +266,6 @@ Restricts the comparison to the named properties. Valid names: ValueType, ValueS
 ```yaml
 Type: System.String[]
 DefaultValue: None
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -UserMappingCsv
-
-Specifies the path to a user mapping CSV (SourceUserName,DestinationUserName) used to translate reference per-user value owners to their difference-side user names before comparing UserValues. The same CSV consumed by Copy-OrchAsset. No effect within one tenant/organization. Requires a filesystem path (not an Orch: drive path). Use New-OrchUserMappingCsv to generate it.
-
-```yaml
-Type: System.String
-DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -302,13 +301,13 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Depth
+### -UserMappingCsv
 
-Specifies the depth for recursion into the reference folders. A depth of 0 targets only the reference folder. When -Depth is specified, -Recurse is implied.
+Specifies the path to a user mapping CSV (SourceUserName,DestinationUserName) used to translate reference per-user value owners to their difference-side user names before comparing UserValues. The same CSV consumed by Copy-OrchAsset. No effect within one tenant/organization. Requires a filesystem path (not an Orch: drive path). Use New-OrchUserMappingCsv to generate it.
 
 ```yaml
-Type: System.UInt32
-DefaultValue: None
+Type: System.String
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
@@ -323,14 +322,14 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -IncludeEqual
+### -ValueType
 
-Also emits "==" rows for assets that match on every compared property. Off by default; only differences are surfaced.
+Filters the assets to compare by value type (Text, Bool, Integer, Credential, Secret); supports wildcards.
 
 ```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
-SupportsWildcards: false
+Type: System.String[]
+DefaultValue: None
+SupportsWildcards: true
 Aliases: []
 ParameterSets:
 - Name: (All)
@@ -355,11 +354,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-You can pipe the reference path via the Path property (for example, the output of Get-OrchAsset).
+You can pipe the reference path to this cmdlet (the Path property).
 
 ### System.String[]
 
-You can pipe asset names via the Name property.
+You can pipe entity names to this cmdlet (the Name property).
 
 ## OUTPUTS
 
@@ -379,10 +378,7 @@ This cmdlet is read-only and does not support -WhatIf / -Confirm.
 
 ## RELATED LINKS
 
-[Get-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAsset.md)
-
-[Copy-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchAsset.md)
-
-[Set-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchAsset.md)
-
-[New-OrchUserMappingCsv](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchUserMappingCsv.md)
+- [Get-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAsset.md)
+- [Copy-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchAsset.md)
+- [Set-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchAsset.md)
+- [New-OrchUserMappingCsv](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-OrchUserMappingCsv.md)

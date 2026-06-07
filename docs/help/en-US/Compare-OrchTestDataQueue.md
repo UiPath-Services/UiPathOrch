@@ -1,26 +1,26 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchFolderUser.md
+HelpUri: https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchTestDataQueue.md
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 06/07/2026
 PlatyPS schema version: 2024-05-01
-title: Compare-OrchFolderUser
+title: Compare-OrchTestDataQueue
 ---
 
-# Compare-OrchFolderUser
+# Compare-OrchTestDataQueue
 
 ## SYNOPSIS
 
-Compares folder user assignments between two folders or Orchestrator instances and reports the differences.
+Compares test data queues between two folders or Orchestrator instances and reports the differences.
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Compare-OrchFolderUser [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
+Compare-OrchTestDataQueue [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
  [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
  [-IncludeEqual] [<CommonParameters>]
 ```
@@ -29,36 +29,35 @@ Compare-OrchFolderUser [-Name] <string[]> [-DifferencePath] <string> [[-Differen
 
 ## DESCRIPTION
 
-Compares the user assignments of a reference folder (-Path, or the current folder) against those of a difference folder (-DifferencePath). The primary use is access-migration verification: confirm the right users have the right roles in each folder after a copy between folders or tenants.
+Compares test data queues between a reference location (-Path, or the current folder) and a difference location (-DifferencePath), resolved over Orchestrator drives and folders. The primary use is migration verification.
 
-Assignments are matched by user name and these properties are compared: the user Type and the assigned Roles (compared as an order-independent set of role names). Only directly-assigned (not inherited) assignments are compared, so an inherited role from a parent folder is not counted as a folder-level assignment.
+Test data queues are matched by Name (not the tenant-local Id) and these properties are compared: Description and the content JSON schema (ContentJsonSchema). Item counts (ItemsCount, ConsumedItemsCount) are runtime state and are not compared.
 
-Each result is an OrchComparison record with a SideIndicator: "<=" assigned only on the reference side, "=>" assigned only on the difference side, "<>" assigned on both sides but with a different role set or type (with a per-property Differences breakdown), and "==" identical (only with -IncludeEqual). Without -DifferenceName each reference user is compared to the same-named user in the corresponding difference folder (mirrored relative path with -Recurse). With -DifferenceName, every reference user is compared to that single named user.
+Each result is an OrchComparison record with a SideIndicator: "<=" reference only, "=>" difference only, "<>" present on both sides but differing (with a per-property Differences breakdown), and "==" equal (only with -IncludeEqual). Without -DifferenceName each reference queue is compared to the same-named queue in the corresponding difference folder (mirrored relative path with -Recurse). With -DifferenceName, every reference queue is compared to that single named queue.
 
-Primary Endpoint: GET /odata/Folders/UiPath.Server.Configuration.OData.GetUsersForFolder
+Primary Endpoint: GET /odata/TestDataQueues
 
-OAuth required scopes: OR.Folders or OR.Folders.Read (both sides)
+OAuth required scopes: OR.TestDataQueues or OR.TestDataQueues.Read (both sides)
 
-Required permissions: Subfolders.View, Units.View (both sides)
+Required permissions: TestDataQueues.View (both sides)
 
 ## EXAMPLES
 
-### Example 1: Verify folder access migrated to another tenant
+### Example 1: Verify test data queues migrated to another tenant
 
 ```powershell
-PS C:\> Compare-OrchFolderUser Orch1:\Finance Orch2:\Finance
+PS C:\> Compare-OrchTestDataQueue * Orch2:\Finance -Path Orch1:\Finance
 ```
 
-Compares the user assignments of Finance on Orch1 against Finance on Orch2, showing only the differences (missing users, extra users, or changed role sets).
+Compares every test data queue in Finance on Orch1 against the same-named queue in Finance on Orch2, showing only the differences (for example a changed content schema).
 
-### Example 2: Audit role drift across a whole tree
+### Example 2: Check only the content schema
 
 ```powershell
-PS C:\> Compare-OrchFolderUser -Path Orch1:\Shared -DifferencePath Orch2:\Shared -Recurse |
-    Where-Object SideIndicator -eq '<>' | Select-Object Name -ExpandProperty Differences
+PS C:\> Compare-OrchTestDataQueue * Orch2:\Finance -Path Orch1:\Finance -Property ContentJsonSchema
 ```
 
-Walks Shared and all subfolders, lists only the users whose role set differs, and expands the per-property differences.
+Restricts the comparison to the content JSON schema.
 
 ## PARAMETERS
 
@@ -85,7 +84,7 @@ HelpMessage: ''
 
 ### -DifferenceName
 
-Selects broadcast mode: every reference user is compared to this single named user in -DifferencePath, even when the names differ.
+Selects broadcast mode: every reference queue is compared to this single named queue in -DifferencePath, even when the names differ.
 
 ```yaml
 Type: System.String
@@ -127,7 +126,7 @@ HelpMessage: ''
 
 ### -IncludeEqual
 
-Also emits "==" rows for assignments that match on every compared property. Off by default.
+Also emits "==" rows for queues that match on every compared property. Off by default.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -170,7 +169,7 @@ HelpMessage: ''
 
 ### -Name
 
-Filters by user name (the assignment's match key); supports wildcards. In name-match mode the same filter is applied to the difference side.
+Filters the reference test data queues by name; supports wildcards. In name-match mode the same filter is applied to the difference side.
 
 ```yaml
 Type: System.String[]
@@ -212,7 +211,7 @@ HelpMessage: ''
 
 ### -Property
 
-Restricts the comparison to the named properties. Valid names: Type, Roles. Unrecognized names are warned about and ignored.
+Restricts the comparison to the named properties. Valid names: Description, ContentJsonSchema. Unrecognized names are warned about and ignored.
 
 ```yaml
 Type: System.String[]
@@ -273,14 +272,13 @@ You can pipe entity names to this cmdlet (the Name property).
 
 ### UiPath.PowerShell.Entities.OrchComparison
 
-Returns one comparison record per folder user, with SideIndicator, Name, the single-sided Path and DifferencePath, the per-property Differences (on "<>" rows), and the underlying ReferenceObject / DifferenceObject.
+Returns one comparison record per test data queue, with SideIndicator, Name, the single-sided Path and DifferencePath, the per-property Differences (on "<>" rows), and the underlying ReferenceObject / DifferenceObject.
 
 ## NOTES
 
-Only directly-assigned (not inherited) folder assignments are compared. Assignments are matched by user name, case-insensitively. This cmdlet is read-only and does not support -WhatIf / -Confirm.
+Test data queues are matched by Name, case-insensitively. Item counts are runtime state and are not compared. This cmdlet is read-only and does not support -WhatIf / -Confirm.
 
 ## RELATED LINKS
 
-- [Get-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderUser.md)
-- [Copy-OrchFolderUser](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchFolderUser.md)
+- [Get-OrchTestDataQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTestDataQueue.md)
 - [Compare-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchAsset.md)

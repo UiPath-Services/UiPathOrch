@@ -1,7 +1,7 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchFolderMachine.md'
+HelpUri: https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchFolderMachine.md
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 06/07/2026
@@ -20,10 +20,9 @@ Compares folder machine assignments between two folders or Orchestrator instance
 ### __AllParameterSets
 
 ```
-Compare-OrchFolderMachine [[-Path] <string>] [-DifferencePath] <string> [-LiteralPath <string>]
- [-DifferenceName <string>] [-Name <string[]>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
- [-IncludeEqual]
- [<CommonParameters>]
+Compare-OrchFolderMachine [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
+ [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
+ [-IncludeEqual] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -62,9 +61,51 @@ Walks Shared and all subfolders and reports every machine assignment, including 
 
 ## PARAMETERS
 
-### -Path
+### -Depth
 
-Specifies the reference (left) folder. If not specified, the current folder is used.
+Specifies the depth for recursion into the reference folders. A depth of 0 targets only the reference folder. When -Depth is specified, -Recurse is implied.
+
+```yaml
+Type: System.UInt32
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -DifferenceName
+
+Selects broadcast mode: every reference machine is compared to this single named machine in -DifferencePath, even when the names differ.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 2
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -DifferencePath
+
+Specifies the difference (right) folder. Mandatory. Can be on the same instance or a different instance.
 
 ```yaml
 Type: System.String
@@ -73,10 +114,31 @@ SupportsWildcards: true
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 0
+  Position: 1
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -IncludeEqual
+
+Also emits "==" rows for assignments that match on every compared property. Off by default.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
+  ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
@@ -105,54 +167,33 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -DifferencePath
-
-Specifies the difference (right) folder. Mandatory. Can be on the same instance or a different instance.
-
-```yaml
-Type: System.String
-DefaultValue: None
-SupportsWildcards: true
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: 1
-  IsRequired: true
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -DifferenceName
-
-Selects broadcast mode: every reference machine is compared to this single named machine in -DifferencePath, even when the names differ.
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -Name
 
 Filters by machine name; supports wildcards. In name-match mode the same filter is applied to the difference side.
 
 ```yaml
 Type: System.String[]
+DefaultValue: None
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Path
+
+Specifies the reference (left) folder. If not specified, the current folder is used.
+
+```yaml
+Type: System.String
 DefaultValue: None
 SupportsWildcards: true
 Aliases: []
@@ -210,48 +251,6 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Depth
-
-Specifies the depth for recursion into the reference folders. A depth of 0 targets only the reference folder. When -Depth is specified, -Recurse is implied.
-
-```yaml
-Type: System.UInt32
-DefaultValue: None
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -IncludeEqual
-
-Also emits "==" rows for assignments that match on every compared property. Off by default.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### CommonParameters
 
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
@@ -263,11 +262,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-You can pipe the reference path via the Path property.
+You can pipe the reference path to this cmdlet (the Path property).
 
 ### System.String[]
 
-You can pipe machine names via the Name property.
+You can pipe entity names to this cmdlet (the Name property).
 
 ## OUTPUTS
 
@@ -281,8 +280,6 @@ Assignments are matched by machine name, case-insensitively. This cmdlet is read
 
 ## RELATED LINKS
 
-[Get-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderMachine.md)
-
-[Compare-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchMachine.md)
-
-[Compare-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchAsset.md)
+- [Get-OrchFolderMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchFolderMachine.md)
+- [Compare-OrchMachine](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchMachine.md)
+- [Compare-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchAsset.md)

@@ -53,6 +53,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   tenant-scoped and compares type/status/license and the assigned tenant-role set; pass
   `-UserMappingCsv` to translate reference user names to their difference-side equivalents
   before matching (TenantCompare gained optional reference-name remapping for this).
+- **`Compare-OrchTestSet`, `Compare-OrchTestDataQueue`, `Compare-OrchTestSetSchedule`,
+  `Compare-OrchActionCatalog` — more of the compare family.** All folder-scoped. Test sets
+  compare description / source type / enablement / coverage / test-case count; test data queues
+  compare the content JSON schema (item counts are runtime state and excluded); test set
+  schedules compare cron, time zone, and the target test set and calendar (by name); action
+  catalogs compare encryption, retention, and tags.
+- **Compare-Orch\* parameter surface and tab-completion.** Across the whole family `-Name` is
+  Position 0 and mandatory, `-DifferencePath` Position 1, `-DifferenceName` Position 2, and
+  `-Path` / `-LiteralPath` are named (default: current location) — matching the module's
+  Get/Copy convention and giving a predictable positional completer chain. Compare a whole
+  folder with `-Name *`. Tab-completion is wired on the parameters: `-Property` completes each
+  cmdlet's comparable-property set, `-DifferenceName` completes entity names resolved against
+  `-DifferencePath` (not `-Path`), and `-Name` / `-DifferencePath` use the standard name / drive
+  completers.
 
 ## [1.8.1] - 2026-06-06
 

@@ -1,7 +1,7 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchTrigger.md'
+HelpUri: https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchTrigger.md
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 06/07/2026
@@ -20,10 +20,9 @@ Compares time/queue triggers (process schedules) between two folders or Orchestr
 ### __AllParameterSets
 
 ```
-Compare-OrchTrigger [[-Path] <string>] [-DifferencePath] <string> [-LiteralPath <string>]
- [-DifferenceName <string>] [-Name <string[]>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
- [-IncludeEqual]
- [<CommonParameters>]
+Compare-OrchTrigger [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
+ [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
+ [-IncludeEqual] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -63,9 +62,51 @@ Walks Shared and all subfolders and lists only the triggers whose settings (for 
 
 ## PARAMETERS
 
-### -Path
+### -Depth
 
-Specifies the reference (left) folder. If not specified, the current folder is used.
+Specifies the depth for recursion into the reference folders. A depth of 0 targets only the reference folder. When -Depth is specified, -Recurse is implied.
+
+```yaml
+Type: System.UInt32
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -DifferenceName
+
+Selects broadcast mode: every reference trigger is compared to this single named trigger in -DifferencePath, even when the names differ.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 2
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -DifferencePath
+
+Specifies the difference (right) folder. Mandatory. Can be on the same instance or a different instance.
 
 ```yaml
 Type: System.String
@@ -74,10 +115,31 @@ SupportsWildcards: true
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 0
+  Position: 1
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -IncludeEqual
+
+Also emits "==" rows for triggers that match on every compared property. Off by default.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: true
+  ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []
@@ -106,54 +168,33 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -DifferencePath
-
-Specifies the difference (right) folder. Mandatory. Can be on the same instance or a different instance.
-
-```yaml
-Type: System.String
-DefaultValue: None
-SupportsWildcards: true
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: 1
-  IsRequired: true
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -DifferenceName
-
-Selects broadcast mode: every reference trigger is compared to this single named trigger in -DifferencePath, even when the names differ.
-
-```yaml
-Type: System.String
-DefaultValue: ''
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### -Name
 
 Filters the reference triggers by name; supports wildcards. In name-match mode the same filter is applied to the difference side.
 
 ```yaml
 Type: System.String[]
+DefaultValue: None
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Path
+
+Specifies the reference (left) folder. If not specified, the current folder is used.
+
+```yaml
+Type: System.String
 DefaultValue: None
 SupportsWildcards: true
 Aliases: []
@@ -211,48 +252,6 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Depth
-
-Specifies the depth for recursion into the reference folders. A depth of 0 targets only the reference folder. When -Depth is specified, -Recurse is implied.
-
-```yaml
-Type: System.UInt32
-DefaultValue: None
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
-### -IncludeEqual
-
-Also emits "==" rows for triggers that match on every compared property. Off by default.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
-
 ### CommonParameters
 
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
@@ -264,11 +263,11 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String
 
-You can pipe the reference path via the Path property.
+You can pipe the reference path to this cmdlet (the Path property).
 
 ### System.String[]
 
-You can pipe trigger names via the Name property.
+You can pipe entity names to this cmdlet (the Name property).
 
 ## OUTPUTS
 
@@ -282,8 +281,6 @@ Full, bidirectional diffs come from the -Path / -DifferencePath form. Driving th
 
 ## RELATED LINKS
 
-[Get-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTrigger.md)
-
-[Copy-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchTrigger.md)
-
-[Compare-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchAsset.md)
+- [Get-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTrigger.md)
+- [Copy-OrchTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchTrigger.md)
+- [Compare-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchAsset.md)
