@@ -516,20 +516,19 @@ dir Orch1:\ -Recurse | Where-Object DisplayName -like '*_old' |
 Keep the rows you want (the `Destination` column is only needed when rows go to *different*
 targets).
 
-**Delete, or move/copy everything into one folder** — pipe just the `PSPath` *values*:
+**Delete, or move/copy everything into one folder** — a `PSPath`-only CSV pipes straight in; each
+row's `PSPath` binds to `-LiteralPath` through its alias:
 
 ```powershell
 # Delete
-Import-Csv C:\temp\folders.csv | Select-Object -ExpandProperty PSPath |
-    Remove-Item -Recurse -Force -WhatIf
+Import-Csv C:\temp\folders.csv | Remove-Item -Recurse -Force -WhatIf
 
 # Move (or Copy-Item -Recurse) every listed folder into one destination
-Import-Csv C:\temp\folders.csv | Select-Object -ExpandProperty PSPath |
-    Move-Item -Destination Orch1:\Archive -WhatIf
+Import-Csv C:\temp\folders.csv | Move-Item -Destination Orch1:\Archive -WhatIf
 ```
 
-**Per-row destinations** — when each row goes somewhere different, loop with `ForEach-Object` and
-bind `-LiteralPath` yourself:
+**Per-row destinations** — once the CSV also carries a `Destination` column, loop with
+`ForEach-Object` and bind `-LiteralPath` yourself:
 
 ```powershell
 Import-Csv C:\temp\folders.csv |
@@ -538,14 +537,12 @@ Import-Csv C:\temp\folders.csv |
 
 Drop `-WhatIf` once the preview lists exactly what you intend.
 
-> **Why not pipe the CSV rows straight in?** `-LiteralPath` *does* have a `PSPath` alias, but these
-> built-in cmdlets also have a `-Path` that takes pipeline input **by value**, and by-value binding
-> is tried first — so a whole row object lands on `-Path` and fails with *"a drive with the name
-> '@{PSPath=…' does not exist"* before the `PSPath`→`-LiteralPath` (by-property-name) binding is
-> considered. So either pipe the `PSPath` **strings** (`Select-Object -ExpandProperty PSPath`) so
-> `-Path` binds them by value, or pass `-LiteralPath` yourself inside `ForEach-Object`. (`New-Item`'s
-> `-Path` is by-property-name only, so [creating folders](#creating-folders-in-bulk-via-csv) can pipe
-> rows directly.)
+> **Why `ForEach-Object` only for per-row destinations?** A `PSPath`-only row binds cleanly —
+> `PSPath` maps to `-LiteralPath` (its alias). But once the row carries a second column
+> (`Destination`), PowerShell binds the whole row object to `-Path` **by value** instead and fails
+> with *"a drive with the name '@{PSPath=…' does not exist"*; binding `-LiteralPath` yourself in
+> `ForEach-Object` avoids that. (`Rename-Item` is the same — its CSV always has a second column,
+> `NewName`, so it uses `ForEach-Object` too.)
 
 ## Known limitations: commas and wildcards in multi-value cells
 
