@@ -79,8 +79,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   every folder deletion prompted "...has children and the Recurse parameter was not specified"
   even for empty folders (the provider reported children unconditionally). Empty folders now
   delete without a prompt; a non-empty folder shows a content-aware confirmation listing the
-  subfolders and contained resources (processes, assets, queues, buckets, triggers) that will be
-  removed — like the Orchestrator web delete dialog. `-Recurse` or `-Force` skips the prompt;
+  subfolders and the count of each contained resource type (processes, triggers, assets, buckets,
+  queues, action catalogs) that will be removed — like the Orchestrator web delete dialog.
+  `-Recurse` or `-Force` skips the prompt;
   the counts are only gathered on the interactive path, so scripts incur no extra API calls.
 
 ## [1.8.1] - 2026-06-06

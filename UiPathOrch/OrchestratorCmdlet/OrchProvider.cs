@@ -1115,28 +1115,35 @@ public partial class OrchProvider : NavigationCmdletProvider
     // also removes everything in its subfolders.
     private string? DescribeFolderContents(OrchDriveInfo drive, Folder folder)
     {
-        var parts = new List<string>();
+        int SafeCount(Func<int> counter)
+        {
+            try { return counter(); }
+            catch { return 0; /* best-effort: a resource type we can't read shouldn't block deletion */ }
+        }
 
         string prefix = (folder.FullyQualifiedName ?? string.Empty) + "/";
         int subfolders = drive.GetFolders().Count(f =>
             f.FullyQualifiedName is not null &&
             f.FullyQualifiedName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
-        if (subfolders > 0) parts.Add($"{subfolders} subfolder(s)");
 
-        void Count(string label, Func<int> counter)
-        {
-            try { int n = counter(); if (n > 0) parts.Add($"{n} {label}"); }
-            catch { /* best-effort: a resource type we can't read shouldn't block deletion */ }
-        }
+        int processes = SafeCount(() => drive.Releases.Get(folder).Count);
+        int triggers = SafeCount(() => drive.Triggers.Get(folder).Count);
+        int assets = SafeCount(() => drive.Assets.Get(folder).Count);
+        int buckets = SafeCount(() => drive.Buckets.Get(folder).Count);
+        int queues = SafeCount(() => drive.Queues.Get(folder).Count);
+        int actionCatalogs = SafeCount(() => drive.ActionCatalogs.Get(folder).Count);
 
-        Count("process(es)", () => drive.Releases.Get(folder).Count);
-        Count("asset(s)", () => drive.Assets.Get(folder).Count);
-        Count("queue(s)", () => drive.Queues.Get(folder).Count);
-        Count("bucket(s)", () => drive.Buckets.Get(folder).Count);
-        Count("trigger(s)", () => drive.Triggers.Get(folder).Count);
+        if (subfolders + processes + triggers + assets + buckets + queues + actionCatalogs == 0)
+            return null;
 
-        if (parts.Count == 0) return null;
-        return $"The folder '{folder.GetPSPath()}' is not empty - it contains {string.Join(", ", parts)}. " +
+        // Fixed inventory in the requested order (processes, triggers, assets, buckets, queues,
+        // action catalogs), every count shown; subfolders last so a subfolder-only folder is not
+        // presented as all-zeros.
+        string counts =
+            $"Processes: {processes}, Triggers: {triggers}, Assets: {assets}, " +
+            $"Buckets: {buckets}, Queues: {queues}, Action Catalogs: {actionCatalogs}, " +
+            $"Subfolders: {subfolders}";
+        return $"The folder '{folder.GetPSPath()}' is not empty ({counts}). " +
                "Deleting it permanently removes the folder and all of its contents.";
     }
 
