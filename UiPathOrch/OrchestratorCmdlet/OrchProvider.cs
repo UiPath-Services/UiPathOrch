@@ -842,10 +842,17 @@ public partial class OrchProvider : NavigationCmdletProvider
 
         if (ocPath == "")
         {
-            foreach (var folder in drive.GetFolders().Where(f => !f.ParentId.HasValue))// || f.FolderType == "Personal"))
+            // Direct children of the drive root = folders at depth 1. Filter by depth (the same
+            // basis as GetChildItems) rather than by ParentId: regular top-level folders carry
+            // the tenant root folder's Id as their ParentId (it is NOT null), so the old
+            // "!ParentId.HasValue" test matched only personal workspaces and made wildcard
+            // globbing (e.g. Orch1:\Shar*, Orch1:\*, and -Path Shared* which resolves through it)
+            // return nothing for every regular folder.
+            foreach (var folder in drive.GetFolders().Where(f =>
+                f.FullyQualifiedName is not null && FolderDepth(f.FullyQualifiedName) == 1))
             {
                 if (Stopping) return;
-                string fullPath = drive.NameColon + OrchDriveInfo.OrchProviderPathToPSPath(folder.DisplayName!);
+                string fullPath = drive.NameColon + OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName!);
                 WriteItemObject(folder.DisplayName!, fullPath, true);
             }
         }
@@ -866,14 +873,32 @@ public partial class OrchProvider : NavigationCmdletProvider
     // Always returning true seems to reduce accidental rmdir operations due to user error.
     protected override bool HasChildItems(string path)
     {
-        // Always report "no children" so the Remove-Item engine does NOT raise its generic
-        // "...has children and the Recurse parameter was not specified" prompt. That prompt used
-        // to fire for EVERY folder (this returned true unconditionally), including empty ones,
-        // and its wording was misleading. RemoveItem instead shows a content-aware confirmation
-        // (subfolders + contained resources), mirroring the Orchestrator web delete dialog.
-        // Recursive listing is unaffected: GetChildItems(recurse) walks the folder cache itself
-        // and does not consult HasChildItems.
-        return false;
+        // Report whether the folder actually has SUBFOLDERS. This must be accurate, not a constant:
+        //  * PowerShell's wildcard path globber (Resolve-Path Orch1:\Shar*, Get-ChildItem Orch1:\*,
+        //    and -Path <wildcard> which resolves through it) only enumerates a container's children
+        //    when HasChildItems(container) is true — returning false here breaks all wildcard
+        //    resolution.
+        //  * Remove-Item's generic "...has children and the Recurse parameter was not specified"
+        //    prompt is also driven by this; returning true unconditionally (the old behavior) made
+        //    that prompt fire for empty folders too. With an accurate value, empty folders delete
+        //    without that prompt, and RemoveItem adds its own content-aware confirmation.
+        var drive = GetOrchDriveInfo(path);
+        if (drive is null)
+            return false;
+
+        return HasSubfolders(drive, OrchDriveInfo.PSPathToOrchPath(path));
+    }
+
+    // True if the folder at the given fully-qualified Orchestrator path has any direct subfolder.
+    // "" is the drive root, whose direct children are the depth-1 folders.
+    private static bool HasSubfolders(OrchDriveInfo drive, string fqn)
+    {
+        uint childDepth = FolderDepth(fqn) + 1;
+        string start = fqn + "/";
+        return drive.GetFolders().Any(f =>
+            f.FullyQualifiedName is not null &&
+            FolderDepth(f.FullyQualifiedName) == childDepth &&
+            (fqn.Length == 0 || (f.FullyQualifiedName + "/").StartsWith(start, StringComparison.OrdinalIgnoreCase)));
     }
 
     public class NewItem_DynamicParameters
@@ -1060,7 +1085,12 @@ public partial class OrchProvider : NavigationCmdletProvider
             // contains N assets, M processes... really delete?"). Skipped for -Force / -Recurse
             // (explicit opt-out) and for empty folders (no prompt at all). Counting only runs on
             // this interactive path, so scripts using -Recurse / -Force incur no extra API calls.
-            if (!Force && !recurse)
+            // A folder that has subfolders already triggered PowerShell's generic "...has children
+            // and the Recurse parameter was not specified" prompt (HasChildItems is true for it),
+            // so don't ask again here. A folder with no subfolders leaves the engine silent, so warn
+            // about the resources it contains (like the Orchestrator web delete dialog) before they
+            // are removed without notice. -Force / -Recurse opt out.
+            if (!Force && !recurse && !HasSubfolders(drive, folder.FullyQualifiedName ?? string.Empty))
             {
                 string? summary = DescribeFolderContents(drive, folder);
                 if (summary is not null &&
@@ -1113,6 +1143,13 @@ public partial class OrchProvider : NavigationCmdletProvider
     // a resource type that can't be read (permissions, unsupported API version) is skipped rather
     // than blocking deletion. Only the folder's direct resources are counted; deleting the folder
     // also removes everything in its subfolders.
+    // Best-effort summary of a folder's contained RESOURCES for the deletion confirmation, in the
+    // spirit of the Orchestrator web delete dialog. Subfolders are intentionally not counted here:
+    // this is only consulted for folders with no subfolders (folders that have subfolders take
+    // PowerShell's own "...has children..." prompt instead), so subfolders would always be zero.
+    // Returns null when the folder holds none of the counted resources, so the caller skips the
+    // prompt. Counts are best-effort: a resource type that can't be read (permissions, unsupported
+    // API version) is skipped rather than blocking deletion.
     private string? DescribeFolderContents(OrchDriveInfo drive, Folder folder)
     {
         int SafeCount(Func<int> counter)
@@ -1121,11 +1158,6 @@ public partial class OrchProvider : NavigationCmdletProvider
             catch { return 0; /* best-effort: a resource type we can't read shouldn't block deletion */ }
         }
 
-        string prefix = (folder.FullyQualifiedName ?? string.Empty) + "/";
-        int subfolders = drive.GetFolders().Count(f =>
-            f.FullyQualifiedName is not null &&
-            f.FullyQualifiedName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
-
         int processes = SafeCount(() => drive.Releases.Get(folder).Count);
         int triggers = SafeCount(() => drive.Triggers.Get(folder).Count);
         int assets = SafeCount(() => drive.Assets.Get(folder).Count);
@@ -1133,16 +1165,14 @@ public partial class OrchProvider : NavigationCmdletProvider
         int queues = SafeCount(() => drive.Queues.Get(folder).Count);
         int actionCatalogs = SafeCount(() => drive.ActionCatalogs.Get(folder).Count);
 
-        if (subfolders + processes + triggers + assets + buckets + queues + actionCatalogs == 0)
+        if (processes + triggers + assets + buckets + queues + actionCatalogs == 0)
             return null;
 
-        // Fixed inventory in the requested order (processes, triggers, assets, buckets, queues,
-        // action catalogs), every count shown; subfolders last so a subfolder-only folder is not
-        // presented as all-zeros.
+        // Fixed inventory in the requested order: processes, triggers, assets, buckets, queues,
+        // action catalogs. Every count is shown, including zeros.
         string counts =
             $"Processes: {processes}, Triggers: {triggers}, Assets: {assets}, " +
-            $"Buckets: {buckets}, Queues: {queues}, Action Catalogs: {actionCatalogs}, " +
-            $"Subfolders: {subfolders}";
+            $"Buckets: {buckets}, Queues: {queues}, Action Catalogs: {actionCatalogs}";
         return $"The folder '{folder.GetPSPath()}' is not empty ({counts}). " +
                "Deleting it permanently removes the folder and all of its contents.";
     }
