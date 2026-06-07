@@ -219,7 +219,11 @@ internal static class TenantCompare
         IReadOnlyList<(string Name, Func<T, object?> Get)> comparators,
         string errorId,
         Action<object> writeObject,
-        Action<ErrorRecord> writeError) where T : class
+        Action<ErrorRecord> writeError,
+        // Optional: maps a reference entity's name to its difference-side equivalent before
+        // matching (Compare-OrchUser's -UserMappingCsv, where the match key itself is renamed
+        // across tenants). The emitted Name keeps the original reference value.
+        Func<string?, string?>? referenceNameMap = null) where T : class
     {
         var srcDrive = sessionState.GetOrchDrive(referencePath);
         var dstDrive = sessionState.GetOrchDrive(differencePath);
@@ -262,9 +266,11 @@ internal static class TenantCompare
         foreach (var r in refs)
         {
             if (r is null) continue;
-            if (getName(r) is { } name && diffByName.TryGetValue(name, out var d))
+            var refName = getName(r);
+            var matchKey = referenceNameMap is null ? refName : (referenceNameMap(refName) ?? refName);
+            if (matchKey is { } key && diffByName.TryGetValue(key, out var d))
             {
-                matched.Add(name);
+                matched.Add(key);
                 Emit(r, d, srcDrive, dstDrive, getName, only, includeEqual, comparators, writeObject);
             }
             else

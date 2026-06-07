@@ -133,6 +133,7 @@ CmdletsToExport = @(
 'Get-OrchRobot',
 
 'Get-OrchUser',
+'Compare-OrchUser',
 'Get-OrchUserDetail',
 'Get-OrchUserPrivilege',
 'Add-OrchUser',
@@ -206,6 +207,7 @@ CmdletsToExport = @(
 'Get-OrchFolderUsage',
 
 'Get-OrchFolderUser',
+'Compare-OrchFolderUser',
 'Add-OrchFolderUser',
 'Copy-OrchFolderUser',
 'Move-OrchFolderUser',
@@ -225,6 +227,7 @@ CmdletsToExport = @(
 'Remove-OrchMachineClientSecret',
 
 'Get-OrchFolderMachine',
+'Compare-OrchFolderMachine',
 'Add-OrchFolderMachine',
 'Copy-OrchFolderMachine',
 'Remove-OrchFolderMachine',
@@ -284,10 +287,12 @@ CmdletsToExport = @(
 'Update-OrchApiTrigger',
 'Remove-OrchApiTrigger',
 'Copy-OrchApiTrigger',
+'Compare-OrchApiTrigger',
 'Enable-OrchApiTrigger',
 'Disable-OrchApiTrigger',
 
 'Get-OrchEventTrigger',
+'Compare-OrchEventTrigger',
 'Remove-OrchEventTrigger',
 'Enable-OrchEventTrigger',
 'Disable-OrchEventTrigger',

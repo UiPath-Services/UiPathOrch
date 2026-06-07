@@ -44,6 +44,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   (order-independent); webhooks compare endpoint, enablement, and the subscribed-event set
   (order-independent, never the signing secret). The tenant-scoped cmdlets share a new
   TenantCompare helper.
+- **`Compare-OrchFolderUser`, `Compare-OrchFolderMachine`, `Compare-OrchUser`,
+  `Compare-OrchApiTrigger`, `Compare-OrchEventTrigger` — more of the compare family.**
+  FolderUser/FolderMachine are folder-scoped and compare per-folder access: who is assigned
+  with which roles (order-independent role set), and which machines are assigned with what
+  type/scope/slot allocation. ApiTrigger/EventTrigger are folder-scoped and complete the
+  trigger family (HTTP invocation settings; connector/operation/filter settings). User is
+  tenant-scoped and compares type/status/license and the assigned tenant-role set; pass
+  `-UserMappingCsv` to translate reference user names to their difference-side equivalents
+  before matching (TenantCompare gained optional reference-name remapping for this).
 
 ## [1.8.1] - 2026-06-06
 

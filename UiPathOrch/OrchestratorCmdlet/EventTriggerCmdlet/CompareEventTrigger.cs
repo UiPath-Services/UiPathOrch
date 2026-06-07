@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
@@ -6,15 +5,16 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-// Compare calendars between two Orchestrator instances. Calendars are tenant-level, so the
-// reference (-Path) and difference (-DifferencePath) are drives, not folders. Matches by Name
-// and compares the time zone and the set of excluded dates (order-independent).
-[Cmdlet(VerbsData.Compare, "OrchCalendar")]
+// Compare event (connector) triggers between two folders or Orchestrator instances. Matches by
+// Name and compares the connector/operation/filter settings and execution config. Connection
+// and event ids are tenant-local and are not compared (ConnectorKey/Operation/ObjectName are).
+// See Compare-OrchAsset for the shared model.
+[Cmdlet(VerbsData.Compare, "OrchEventTrigger")]
 [OutputType(typeof(OrchComparison))]
-public class CompareCalendarCmdlet : OrchestratorPSCmdlet
+public class CompareEventTriggerCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(DriveCompleter))]
+    [SupportsWildcards]
     public string? Path { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -22,14 +22,14 @@ public class CompareCalendarCmdlet : OrchestratorPSCmdlet
     public string? LiteralPath { get; set; }
 
     [Parameter(Position = 1, Mandatory = true)]
-    [ArgumentCompleter(typeof(DriveCompleter))]
+    [SupportsWildcards]
     public string? DifferencePath { get; set; }
 
     [Parameter]
     public string? DifferenceName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(CalendarNameCompleter))]
+    [ArgumentCompleter(typeof(EventTriggerNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -37,12 +37,27 @@ public class CompareCalendarCmdlet : OrchestratorPSCmdlet
     public string[]? Property { get; set; }
 
     [Parameter]
+    public SwitchParameter Recurse { get; set; }
+
+    [Parameter]
+    public uint Depth { get; set; }
+
+    [Parameter]
     public SwitchParameter IncludeEqual { get; set; }
 
-    private static readonly (string Name, Func<ExtendedCalendar, object?> Get)[] Comparators =
+    private static readonly (string Name, Func<ApiTrigger, object?> Get)[] Comparators =
     [
-        ("TimeZoneId", c => c.TimeZoneId),
-        ("ExcludedDates", c => NormalizeDates(c.ExcludedDates)),
+        ("Enabled", t => t.Enabled),
+        ("ApiTriggerType", t => t.ApiTriggerType),
+        ("ConnectorKey", t => t.ConnectorKey),
+        ("Operation", t => t.Operation),
+        ("ObjectName", t => t.ObjectName),
+        ("FilterExpression", t => t.FilterExpression),
+        ("JobPriority", t => t.JobPriority),
+        ("RuntimeType", t => t.RuntimeType),
+        ("InputArguments", t => t.InputArguments),
+        ("Description", t => t.Description),
+        ("Tags", t => EntityComparison.NormalizeTags(t.Tags)),
     ];
 
     internal static readonly HashSet<string> ValidPropertyNames =
@@ -61,31 +76,20 @@ public class CompareCalendarCmdlet : OrchestratorPSCmdlet
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
 
-        TenantCompare.Run<ExtendedCalendar>(
+        FolderCompare.Run<ApiTrigger>(
             SessionState,
             EffectivePath(Path, LiteralPath),
             DifferencePath,
             DifferenceName,
             Name.ConvertToWildcardPatternList(),
-            IncludeEqual.IsPresent,
+            Recurse.IsPresent, Depth, IncludeEqual.IsPresent,
             only,
-            // The list accessor (drive.Calendars.Get()) returns only Name/Id -- TimeZoneId and
-            // ExcludedDates are populated only by the per-calendar detail fetch, so enrich each
-            // calendar with CalendarsDetailed before comparing.
-            drive => drive.Calendars.Get()
-                .Where(c => c?.Id is not null)
-                .Select(c => drive.CalendarsDetailed.Get(c!.Id!.Value))
-                .OfType<ExtendedCalendar>(),
-            c => c?.Name,
+            (drive, folder) => drive.EventTriggers.Get(folder),
+            t => t?.Name,
+            t => t!.GetPSPath(),
             Comparators,
-            "GetCalendarError",
+            "GetEventTriggerError",
             WriteObject,
             WriteError);
     }
-
-    // Order-independent normalized form of the excluded dates: sorted yyyy-MM-dd set.
-    internal static string? NormalizeDates(DateTime[]? dates)
-        => dates is null || dates.Length == 0
-            ? null
-            : string.Join(";", dates.Select(d => d.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)).OrderBy(s => s, StringComparer.Ordinal));
 }
