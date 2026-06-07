@@ -75,13 +75,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `Rename-Item .\Shared .\Shared2` — named the item the literal `.\Shared2` instead of
   `Shared2`. The providers now reduce `-NewName` to its leaf (matching the FileSystem provider)
   and reject empty / `.` / `..` names with a clear error.
-- **Wildcard folder paths now resolve.** `Get-OrchAsset -Path Shared*` (and any folder-scoped
-  cmdlet, plus `Get-ChildItem Orch1:\Shar*`, `Resolve-Path`, tab completion) silently matched
-  nothing for regular folders. `GetChildNames` listed only folders with a null parent — i.e. just
-  personal workspaces — because regular top-level folders carry the tenant root folder's Id as
-  their `ParentId`; it now lists by depth, consistent with `GetChildItems`. `HasChildItems` also
-  now reports a folder's real subfolder state instead of a constant (PowerShell's globber only
-  enumerates a container's children when `HasChildItems` is true).
 - **`Remove-Item` on a folder confirms based on the folder's actual contents.** Previously every
   folder deletion prompted "...has children and the Recurse parameter was not specified", even for
   empty folders (the provider reported children unconditionally). Now: an empty folder deletes

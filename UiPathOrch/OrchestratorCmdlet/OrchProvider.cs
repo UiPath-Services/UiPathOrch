@@ -842,12 +842,10 @@ public partial class OrchProvider : NavigationCmdletProvider
 
         if (ocPath == "")
         {
-            // Direct children of the drive root = folders at depth 1. Filter by depth (the same
-            // basis as GetChildItems) rather than by ParentId: regular top-level folders carry
-            // the tenant root folder's Id as their ParentId (it is NOT null), so the old
-            // "!ParentId.HasValue" test matched only personal workspaces and made wildcard
-            // globbing (e.g. Orch1:\Shar*, Orch1:\*, and -Path Shared* which resolves through it)
-            // return nothing for every regular folder.
+            // Direct children of the drive root = folders at depth 1, filtered the same way as
+            // GetChildItems (by depth) so the two enumeration methods stay consistent. The
+            // equivalent "!ParentId.HasValue" test also works here (GetFolders() masks every
+            // top-level folder's ParentId to null), but matching GetChildItems is clearer.
             foreach (var folder in drive.GetFolders().Where(f =>
                 f.FullyQualifiedName is not null && FolderDepth(f.FullyQualifiedName) == 1))
             {
@@ -1233,13 +1231,28 @@ public partial class OrchProvider : NavigationCmdletProvider
             {
                 string ocPath = OrchDriveInfo.PSPathToOrchPath(path);
                 srcFolder = drive.GetFolder(ocPath);
+                if (srcFolder is null)
+                {
+                    WriteError(new ErrorRecord(new OrchException(path, $"{drive.NameColon} does not have folder '{path}'."), "MoveItemError", ErrorCategory.ObjectNotFound, path));
+                    return;
+                }
 
+                // The destination is the folder that becomes the new parent. It must already exist
+                // (Move-Item does not create it). Resolve it on the source drive — cross-drive moves
+                // aren't a single API call, so a different-drive destination won't resolve here and
+                // surfaces as this clear error rather than an NRE.
                 string ocDestination = OrchDriveInfo.PSPathToOrchPath(destination);
-                Int64? dstId = drive.GetFolder(ocDestination)!.Id ?? null;
+                Folder dstFolder = drive.GetFolder(ocDestination);
+                if (dstFolder is null)
+                {
+                    WriteError(new ErrorRecord(new OrchException(destination, $"{drive.NameColon} does not have destination folder '{destination}'."), "MoveItemError", ErrorCategory.ObjectNotFound, destination));
+                    return;
+                }
 
-                drive.OrchAPISession.MoveFolder(srcFolder?.Id ?? 0, dstId);
+                drive.OrchAPISession.MoveFolder(srcFolder.Id ?? 0, dstFolder.Id);
                 drive._dicFolders = null;
                 drive._dicFoldersForEnumFolders = null;
+                drive.ClearFolderCache(srcFolder);
             }
             catch (Exception ex)
             {
