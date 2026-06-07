@@ -474,50 +474,21 @@ another organization directly (no CSV needed).
    Import-Csv C:\temp\folders.csv | New-Item
    ```
 
-### Renaming Folders in Bulk via CSV
-
-Build a CSV of each folder's `PSPath` (its own path) and a `NewName`, then rename through
-`ForEach-Object`:
-
-1. Export folder paths, seeding `NewName` with the current name:
-   ```powershell
-   dir Orch1:\ -Recurse | Select-Object PSPath, @{ n='NewName'; e={ $_.Name } } |
-       Export-Csv C:\temp\rename.csv
-   ```
-2. Edit the `NewName` column to the desired names (leaf names only — rename does not move).
-3. Apply — each row's `PSPath` is the folder to rename:
-   ```powershell
-   Import-Csv C:\temp\rename.csv |
-       ForEach-Object { Rename-Item -LiteralPath $_.PSPath -NewName $_.NewName -WhatIf }
-   ```
-
-Drop `-WhatIf` once the preview is right. `ForEach-Object` is required here — see the note in the
-next section.
-
 ### Copying, Moving, and Deleting Folders in Bulk via CSV
 
 Whole folders (with their contents) are copied, moved, and deleted with the built-in `Copy-Item`,
 `Move-Item`, and `Remove-Item` (see [Folder Operations](08-FolderOperations.md)). Drive a bulk run
 from a CSV of folder paths.
 
-**Create the CSV from `dir`.** Every folder carries a `PSPath` — its own path; export that, plus a
-`Destination` column for copy/move:
+**Create the list.** Export each folder's own path — the `PSPath` column (press `[Ctrl+Space]`
+after `Select-Object` to complete the name), then open the CSV and keep just the rows you want:
 
 ```powershell
-# Delete list — just PSPath; keep the rows you want removed
 dir Orch1:\ -Recurse | Select-Object PSPath | Export-Csv C:\temp\folders.csv
-
-# Copy / Move list — add a Destination (here: every *_old folder goes under Archive)
-dir Orch1:\ -Recurse | Where-Object DisplayName -like '*_old' |
-    Select-Object PSPath, @{ n='Destination'; e={ 'Orch1:\Archive' } } |
-    Export-Csv C:\temp\folders.csv
 ```
 
-Keep the rows you want (the `Destination` column is only needed when rows go to *different*
-targets).
-
-**Delete, or move/copy everything into one folder** — a `PSPath`-only CSV pipes straight in; each
-row's `PSPath` binds to `-LiteralPath` through its alias:
+**Delete, or move/copy everything into one folder** — pipe straight in; each row's `PSPath` binds
+to `-LiteralPath` through its alias:
 
 ```powershell
 # Delete
@@ -525,10 +496,11 @@ Import-Csv C:\temp\folders.csv | Remove-Item -Recurse -Force -WhatIf
 
 # Move (or Copy-Item -Recurse) every listed folder into one destination
 Import-Csv C:\temp\folders.csv | Move-Item -Destination Orch1:\Archive -WhatIf
+Import-Csv C:\temp\folders.csv | Copy-Item -Destination Orch2:\ -Recurse -WhatIf
 ```
 
-**Per-row destinations** — once the CSV also carries a `Destination` column, loop with
-`ForEach-Object` and bind `-LiteralPath` yourself:
+**Per-row destinations** — to send each folder somewhere different, **add a `Destination` column**
+to the CSV (type each target folder), then bind both columns with `ForEach-Object`:
 
 ```powershell
 Import-Csv C:\temp\folders.csv |
@@ -537,12 +509,30 @@ Import-Csv C:\temp\folders.csv |
 
 Drop `-WhatIf` once the preview lists exactly what you intend.
 
-> **Why `ForEach-Object` only for per-row destinations?** A `PSPath`-only row binds cleanly —
-> `PSPath` maps to `-LiteralPath` (its alias). But once the row carries a second column
-> (`Destination`), PowerShell binds the whole row object to `-Path` **by value** instead and fails
-> with *"a drive with the name '@{PSPath=…' does not exist"*; binding `-LiteralPath` yourself in
-> `ForEach-Object` avoids that. (`Rename-Item` is the same — its CSV always has a second column,
-> `NewName`, so it uses `ForEach-Object` too.)
+> **Why pipe directly in one case but use `ForEach-Object` in the other?** A `PSPath`-only row
+> binds cleanly — `PSPath` maps to `-LiteralPath` (its alias). But once the row carries a second
+> column (`Destination`), PowerShell binds the whole row object to `-Path` **by value** instead and
+> fails with *"a drive with the name '@{PSPath=…' does not exist"*; binding `-LiteralPath` yourself
+> in `ForEach-Object` avoids that.
+
+### Renaming Folders in Bulk via CSV
+
+Same idea, with a `NewName` column (rename has a second column, so it always uses
+`ForEach-Object`):
+
+1. Export the folder paths and open the CSV:
+   ```powershell
+   dir Orch1:\ -Recurse | Select-Object PSPath | Export-Csv C:\temp\rename.csv
+   ```
+2. **Add a `NewName` column** and type each new name (leaf names only — rename does not move);
+   keep just the rows you want.
+3. Apply — `PSPath` is the folder to rename, `NewName` the new name:
+   ```powershell
+   Import-Csv C:\temp\rename.csv |
+       ForEach-Object { Rename-Item -LiteralPath $_.PSPath -NewName $_.NewName -WhatIf }
+   ```
+
+Drop `-WhatIf` once the preview is right.
 
 ## Known limitations: commas and wildcards in multi-value cells
 
