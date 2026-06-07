@@ -480,24 +480,35 @@ Whole folders (with their contents) are copied, moved, and deleted with the buil
 `Move-Item`, and `Remove-Item` (see [Folder Operations](08-FolderOperations.md)). Drive a bulk run
 from a CSV of folder paths.
 
-**Create the list.** Export each folder's own path — the `PSPath` column (press `[Ctrl+Space]`
-after `Select-Object` to complete the name), then open the CSV and keep just the rows you want:
+**Create the list.** Export the candidate folders — each folder's own path is the `PSPath` column
+(press `[Ctrl+Space]` after `Select-Object` to complete the name) — then open the CSV and keep just
+the rows you want:
 
 ```powershell
-dir Orch1:\ -Recurse | Select-Object PSPath | Export-Csv C:\temp\folders.csv
+dir Orch1:\ | Select-Object PSPath | Export-Csv C:\temp\folders.csv   # add -Recurse to also list nested folders
 ```
 
-**Delete, or move/copy everything into one folder** — pipe straight in; each row's `PSPath` binds
-to `-LiteralPath` through its alias:
+Each listed folder is acted on **as a whole — with its contents and subfolders** — so keep the
+folders you want as *units*: don't keep both a folder and one nested inside it.
+
+**Delete, or move/copy into one folder** — pipe straight in; each row's `PSPath` binds to
+`-LiteralPath` through its alias:
 
 ```powershell
-# Delete
+# Delete each listed folder (and everything in it)
 Import-Csv C:\temp\folders.csv | Remove-Item -Recurse -Force -WhatIf
 
-# Move (or Copy-Item -Recurse) every listed folder into one destination
+# Move each listed folder (with its contents) under one folder
 Import-Csv C:\temp\folders.csv | Move-Item -Destination Orch1:\Archive -WhatIf
+
+# Copy each listed folder, with its contents, into one folder
 Import-Csv C:\temp\folders.csv | Copy-Item -Destination Orch2:\ -Recurse -WhatIf
 ```
+
+`Copy-Item` needs `-Recurse` to include a folder's contents; `Move-Item` and `Remove-Item` already
+act on the whole folder. To clone an entire tenant or a deep subtree in one shot, copy the root
+directly — `Copy-Item Orch1:\ Orch2:\ -Recurse` — instead of a per-folder list (see
+[Folder Operations](08-FolderOperations.md) and the [Migration & Copy Guide](04-MigrationGuide.md)).
 
 **Per-row destinations** — to send each folder somewhere different, **add a `Destination` column**
 to the CSV (type each target folder), then bind both columns with `ForEach-Object`:
