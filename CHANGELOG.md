@@ -10,6 +10,13 @@ _Nothing yet._
 
 ## [1.8.1] - 2026-06-06
 
+### Added
+
+- **Document Understanding projects can be deleted with `Remove-Item`.** `Remove-Item
+  <DuDrive>:\<project>` (and `del` / `rmdir`) now removes a DU project, mirroring the Test
+  Manager drive. `Rename-Item` remains an explicit "not supported" error — the service has
+  no rename endpoint.
+
 ### Changed
 
 - **`Get-OrchLicense` now prints a readable summary by default.** Instead of dumping the
@@ -36,11 +43,20 @@ _Nothing yet._
 
 ### Fixed
 
-- **`Get-OrchJobMedia` / `Export-OrchJobMedia` now use the shared HTTP pipeline.** The
-  job-media download was the one call bypassing the central send chokepoint, so it missed
-  silent token refresh on a 401, transient (429 / 503 / 504) retry with `Retry-After`
-  backoff, and Ctrl+C cancellation. It now routes through the same path as every other
-  cmdlet.
+- **`Get-OrchJobMedia` / `Export-OrchJobMedia` and `Get-OrchTestCaseAssertion` now use the
+  shared HTTP pipeline.** The job-media and assertion-screenshot downloads were bypassing
+  the central send chokepoint, so they missed silent token refresh on a 401, transient
+  (429 / 503 / 504) retry with `Retry-After` backoff, and Ctrl+C cancellation. They now
+  route through the same path as every other cmdlet.
+- **Test Manager listings now page correctly.** The Test Manager paginated reads did not
+  advance their offset, so a list longer than one page re-fetched the first page (returning
+  duplicates and missing the later entries), and one non-paginated path could loop. They
+  now advance per page and stop on the final page, returning complete, de-duplicated
+  results.
+- **An external-storage 401 during bucket file upload/download no longer drops your
+  Orchestrator session.** Blob I/O now surfaces the storage error on its own instead of
+  treating a storage 401 as an Orchestrator auth failure, which had cleared the cached
+  token.
 - **Internal: cleared the nullable-reference-type compiler warnings introduced with
   `-LiteralPath` in 1.8.0.** `EffectivePath` now returns a non-null-element array (its
   `-Path` / `-LiteralPath` inputs are always non-null), so it matches both the
