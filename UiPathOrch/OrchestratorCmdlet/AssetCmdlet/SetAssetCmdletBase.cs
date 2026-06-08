@@ -218,6 +218,210 @@ public abstract class SetCredentialLikeAssetCmdletBase<TParam> : SetAssetCmdletB
         return isDirty ? asset : null;
     }
 
+    protected void BuildAssetDataFromParameterSets()
+    {
+        // For performance, retrieve all Assets for the target folders in advance
+        RetrieveAllAssets();
+
+        foreach (var param in parameters)
+        {
+            ApplyDefaultParameterSetValues(param);
+
+            // expand Asset Name
+            List<WildcardPattern> wpName = param.Name!.ConvertToWildcardPatternList();
+
+            // expand UserName and MachineName
+            List<WildcardPattern> wpUserName = null;
+            List<WildcardPattern> wpMachineName = null;
+            WildcardPattern wpCredentialStore = null;
+
+            if (param.UserName is not null && param.UserName.Any(un => !string.IsNullOrEmpty(un)))
+                wpUserName = param.UserName.ConvertToWildcardPatternList();
+
+            if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
+                wpMachineName = param.MachineName.ConvertToWildcardPatternList();
+
+            if (!string.IsNullOrEmpty(param.CredentialStore))
+                wpCredentialStore = new WildcardPattern(param.CredentialStore, WildcardOptions.IgnoreCase);
+
+            var drivesFolders = SessionState.EnumFolders(param.Path);
+            foreach (var (drive, folder) in drivesFolders)
+            {
+                string targetFolder = $"{folder.GetPSPath()}";
+
+                long credentialStoreId = FindCredentialStoreId(targetFolder, drive, wpCredentialStore)?.Id ?? 0;
+
+                IEnumerable<User> specifiedUsers = null;
+                IEnumerable<ExtendedMachine?> specifiedMachines = null;
+
+                // expand UserName
+                if (wpUserName is not null)
+                {
+                    // See SetAsset.cs UserName expansion — the same scope-tightening fix.
+                    var assignedUserIds = drive.FolderUsersWithInherited.Get(folder)
+                        .Where(ur => ur?.UserEntity?.Id is not null)
+                        .Select(ur => ur.UserEntity!.Id!.Value)
+                        .ToHashSet();
+                    var tenantUsers = drive.Users.Get()
+                        .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
+                    // Match both UserName and EmailAddress; see SetAsset.cs.
+                    specifiedUsers = tenantUsers.FilterByWildcardsAny(
+                        [u => u?.UserName, u => u?.EmailAddress],
+                        wpUserName);
+                    if (!specifiedUsers.Any())
+                    {
+                        string strUserNames = string.Join(", ", param.UserName!);
+                        Exception e = new Exception($"UserName '{strUserNames}' is not assigned to the folder '{folder.GetPSPath()}'.");
+                        var errorRecord = new ErrorRecord(new OrchException(targetFolder, e), "SetAssetError", ErrorCategory.InvalidOperation, targetFolder);
+                        WriteError(errorRecord);
+                        continue;
+                    }
+                }
+
+                // expand MachineName
+                if (wpMachineName is not null)
+                {
+                    // See SetAsset.cs MachineName expansion — the same scope-tightening fix.
+                    var assignedIds = drive.FolderMachinesAssigned.Get(folder)
+                        .Where(m => m?.Id is not null)
+                        .Select(m => m.Id!.Value)
+                        .ToHashSet();
+                    var tenantMachines = drive.Machines.Get()
+                        .Where(m => m?.Id is not null && assignedIds.Contains(m.Id!.Value));
+                    specifiedMachines = tenantMachines.FilterByWildcards(m => m?.Name, wpMachineName);
+                    if (!specifiedMachines.Any())
+                    {
+                        string strMachineNames = string.Join(", ", param.MachineName!);
+                        Exception e = new Exception($"MachineName '{strMachineNames}' is not assigned to the folder '{folder.GetPSPath()}'.");
+                        var errorRecord = new ErrorRecord(new OrchException(targetFolder, e), "SetAssetError", ErrorCategory.InvalidOperation, targetFolder);
+                        WriteError(errorRecord);
+                        continue;
+                    }
+                }
+                if (specifiedMachines is null || !specifiedMachines.Any())
+                {
+                    // For processing convenience, insert a single null element
+                    specifiedMachines = [null];
+                }
+
+                var existingAssets = drive.Assets.Get(folder).Where(a => a.ValueType == ValueType);
+
+                foreach (var name in param.Name!)
+                {
+                    var matchingAssets = existingAssets.FilterByWildcards(n => n?.Name, wpName);
+                    if (matchingAssets.Any())
+                    {
+                        // Update existing assets
+                        foreach (var matchingAsset in matchingAssets)
+                        {
+                            var asset = UpdateAssetInMemory(drive, folder, matchingAsset.Name!, param, specifiedUsers!, specifiedMachines, credentialStoreId);
+                            if (asset is not null)
+                                pendingAssets.TryAdd((asset.Name!, asset.Path!), asset);
+                        }
+                    }
+                    else
+                    {
+                        // Create a new asset
+                        var asset = UpdateAssetInMemory(drive, folder, name, param, specifiedUsers!, specifiedMachines, credentialStoreId);
+                        if (asset is not null)
+                            pendingAssets.TryAdd((asset.Name!, asset.Path!), asset);
+                    }
+                }
+            }
+        }
+    }
+
+    protected override void EndProcessing()
+    {
+        BuildAssetDataFromParameterSets();
+
+        // Apply the merged Description (resolved across all input rows) to each pending asset.
+        // See MergeDescription / _resolvedDescriptions for the priority rule.
+        foreach (var asset in pendingAssets.Values)
+        {
+            if (_resolvedDescriptions.TryGetValue((asset.Name!, asset.Path!), out var resolved)
+                && asset.Description != resolved)
+            {
+                asset.Description = resolved;
+            }
+        }
+
+        List<(OrchDriveInfo drive, Int64 id)> folderIdsThatShouldRemoveCache = [];
+
+        using var reporter = new ProgressReporter(this, 1, pendingAssets.Count, ProgressActivity);
+
+        // Process the grouped parameter sets
+        try
+        {
+            int index = 0;
+            foreach (var asset in pendingAssets.Values)
+            {
+                NormalizeBeforeFlush(asset);
+
+                var drivesFolders = SessionState.EnumFolders([WildcardPattern.Escape(asset.Path!)]);
+                var (drive, folder) = drivesFolders[0];
+
+                var target = asset.GetPSPath();
+
+                reporter.WriteProgress(++index);
+
+                var existingAssets = drive.Assets.Get(folder);
+                var existingAsset = existingAssets.FirstOrDefault(a => a.Name == asset.Name);
+
+                try
+                {
+                    if (existingAsset is null) // Add a new asset
+                    {
+                        if (!asset.HasDefaultValue.GetValueOrDefault() && (asset.UserValues is null || !asset.UserValues.Any()))
+                        {
+                            continue;
+                        }
+                        if (ShouldProcess(target, $"Add {ValueType}Asset"))
+                        {
+                            Asset createdAsset = drive.OrchAPISession.AddAsset(folder.Id ?? 0, asset);
+                            createdAsset!.Path = folder.GetPSPath();
+                            WriteObject(createdAsset);
+
+                            folderIdsThatShouldRemoveCache.Add((drive, folder.Id ?? 0));
+                        }
+                    }
+                    else
+                    {
+                        // Delete the asset
+                        if (!asset.HasDefaultValue.GetValueOrDefault() && (asset.UserValues is null || !asset.UserValues.Any()))
+                        {
+                            if (ShouldProcess(target, $"Remove {ValueType}Asset"))
+                            {
+                                drive.OrchAPISession.RemoveAsset(folder.Id ?? 0, asset.Id ?? 0);
+                            }
+                        }
+                        else // Update the asset
+                        {
+                            if (ShouldProcess(target, $"Update {ValueType}Asset"))
+                            {
+                                drive.OrchAPISession.PutAsset(folder.Id ?? 0, asset);
+                            }
+                        }
+
+                        folderIdsThatShouldRemoveCache.Add((drive, folder.Id ?? 0));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var errorRecord = new ErrorRecord(new OrchException(target, ex), "SetAssetError", ErrorCategory.InvalidOperation, target);
+                    WriteError(errorRecord);
+                }
+            }
+        }
+        finally
+        {
+            foreach (var cache in folderIdsThatShouldRemoveCache)
+            {
+                cache.drive.Assets.ClearCache(cache.id);
+            }
+        }
+    }
+
     // ---- value-field hooks (Credential vs Secret) ----
 
     // "Credential" or "Secret"; stamped on freshly created Asset / AssetUserValue instances.
@@ -243,4 +447,16 @@ public abstract class SetCredentialLikeAssetCmdletBase<TParam> : SetAssetCmdletB
 
     // Apply the row's value to a single per-robot UserValue. Returns true if it changed anything.
     protected abstract bool ApplyPerRobotValue(AssetUserValue userValue, TParam param);
+
+    // Extract the secure value from the Default parameter set (PSCredential for Credential,
+    // SecureString for Secret) into the row before expansion.
+    protected abstract void ApplyDefaultParameterSetValues(TParam param);
+
+    // Progress-bar activity text shown while flushing ("Updating credential assets").
+    protected abstract string ProgressActivity { get; }
+
+    // Per-type normalization applied to each pending asset just before the API flush
+    // (Credential nulls an empty username and drops the store link when the password is blank;
+    // Secret deliberately preserves the store link copied from the existing asset).
+    protected abstract void NormalizeBeforeFlush(Asset asset);
 }

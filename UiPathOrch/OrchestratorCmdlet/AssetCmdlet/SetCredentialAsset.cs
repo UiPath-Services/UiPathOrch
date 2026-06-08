@@ -344,218 +344,26 @@ public class SetCredentialAssetCmdlet : SetCredentialLikeAssetCmdletBase<SetCred
         return isDirty;
     }
 
-    protected void BuildAssetDataFromParameterSets()
+    protected override void ApplyDefaultParameterSetValues(SetCredentialAssetCommandParameter param)
     {
-        // For performance, retrieve all Assets for the target folders in advance
-        RetrieveAllAssets();
-
-        foreach (var param in parameters)
+        if (ParameterSetName == Default)
         {
-            if (ParameterSetName == Default)
-            {
-                param.CredentialUsername = Credential!.UserName;
-                param.CredentialPassword = ConvertToUnsecureString(Credential!.Password);
-            }
-
-            // expand Asset Name
-            List<WildcardPattern> wpName = param.Name!.ConvertToWildcardPatternList();
-
-            // expand UserName and MachineName
-            List<WildcardPattern> wpUserName = null;
-            List<WildcardPattern> wpMachineName = null;
-            WildcardPattern wpCredentialStore = null;
-
-            if (param.UserName is not null && param.UserName.Any(un => !string.IsNullOrEmpty(un)))
-                wpUserName = param.UserName.ConvertToWildcardPatternList();
-
-            if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
-                wpMachineName = param.MachineName.ConvertToWildcardPatternList();
-
-            if (!string.IsNullOrEmpty(param.CredentialStore))
-                wpCredentialStore = new WildcardPattern(param.CredentialStore, WildcardOptions.IgnoreCase);
-
-            var drivesFolders = SessionState.EnumFolders(param.Path);
-            foreach (var (drive, folder) in drivesFolders)
-            {
-                string targetFolder = $"{folder.GetPSPath()}";
-
-                long credentialStoreId = FindCredentialStoreId(targetFolder, drive, wpCredentialStore)?.Id ?? 0;
-
-                IEnumerable<User> specifiedUsers = null;
-                IEnumerable<ExtendedMachine?> specifiedMachines = null;
-
-                // expand UserName
-                if (wpUserName is not null)
-                {
-                    // See SetAsset.cs UserName expansion — the same scope-tightening fix.
-                    var assignedUserIds = drive.FolderUsersWithInherited.Get(folder)
-                        .Where(ur => ur?.UserEntity?.Id is not null)
-                        .Select(ur => ur.UserEntity!.Id!.Value)
-                        .ToHashSet();
-                    var tenantUsers = drive.Users.Get()
-                        .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
-                    // Match both UserName and EmailAddress; see SetAsset.cs.
-                    specifiedUsers = tenantUsers.FilterByWildcardsAny(
-                        [u => u?.UserName, u => u?.EmailAddress],
-                        wpUserName);
-                    if (!specifiedUsers.Any())
-                    {
-                        string strUserNames = string.Join(", ", param.UserName!);
-                        Exception e = new Exception($"UserName '{strUserNames}' is not assigned to the folder '{folder.GetPSPath()}'.");
-                        var errorRecord = new ErrorRecord(new OrchException(targetFolder, e), "SetAssetError", ErrorCategory.InvalidOperation, targetFolder);
-                        WriteError(errorRecord);
-                        continue;
-                    }
-                }
-
-                // expand MachineName
-                if (wpMachineName is not null)
-                {
-                    // See SetAsset.cs MachineName expansion — the same scope-tightening fix.
-                    var assignedIds = drive.FolderMachinesAssigned.Get(folder)
-                        .Where(m => m?.Id is not null)
-                        .Select(m => m.Id!.Value)
-                        .ToHashSet();
-                    var tenantMachines = drive.Machines.Get()
-                        .Where(m => m?.Id is not null && assignedIds.Contains(m.Id!.Value));
-                    specifiedMachines = tenantMachines.FilterByWildcards(m => m?.Name, wpMachineName);
-                    if (!specifiedMachines.Any())
-                    {
-                        string strMachineNames = string.Join(", ", param.MachineName!);
-                        Exception e = new Exception($"MachineName '{strMachineNames}' is not assigned to the folder '{folder.GetPSPath()}'.");
-                        var errorRecord = new ErrorRecord(new OrchException(targetFolder, e), "SetAssetError", ErrorCategory.InvalidOperation, targetFolder);
-                        WriteError(errorRecord);
-                        continue;
-                    }
-                }
-                if (specifiedMachines is null || !specifiedMachines.Any())
-                {
-                    // For processing convenience, insert a single null element
-                    specifiedMachines = [null];
-                }
-
-                var existingAssets = drive.Assets.Get(folder).Where(a => a.ValueType == "Credential");
-
-                foreach (var name in param.Name!)
-                {
-                    var matchingAssets = existingAssets.FilterByWildcards(n => n?.Name, wpName);
-                    if (matchingAssets.Any())
-                    {
-                        // Update existing assets
-                        foreach (var matchingAsset in matchingAssets)
-                        {
-                            var asset = UpdateAssetInMemory(drive, folder, matchingAsset.Name!, param, specifiedUsers!, specifiedMachines, credentialStoreId);
-                            if (asset is not null)
-                                pendingAssets.TryAdd((asset.Name!, asset.Path!), asset);
-                        }
-                    }
-                    else
-                    {
-                        // Create a new asset
-                        var asset = UpdateAssetInMemory(drive, folder, name, param, specifiedUsers!, specifiedMachines, credentialStoreId);
-                        if (asset is not null)
-                            pendingAssets.TryAdd((asset.Name!, asset.Path!), asset);
-                    }
-                }
-            }
+            param.CredentialUsername = Credential!.UserName;
+            param.CredentialPassword = ConvertToUnsecureString(Credential!.Password);
         }
     }
 
-    protected override void EndProcessing()
+    protected override string ProgressActivity => "Updating credential assets";
+
+    protected override void NormalizeBeforeFlush(Asset asset)
     {
-        BuildAssetDataFromParameterSets();
-
-        // Apply the merged Description (resolved across all input rows) to each pending asset.
-        // See MergeDescription / _resolvedDescriptions for the priority rule.
-        foreach (var asset in pendingAssets.Values)
+        if (asset.CredentialUsername == "")
         {
-            if (_resolvedDescriptions.TryGetValue((asset.Name!, asset.Path!), out var resolved)
-                && asset.Description != resolved)
-            {
-                asset.Description = resolved;
-            }
+            asset.CredentialUsername = null;
         }
-
-        List<(OrchDriveInfo drive, Int64 id)> folderIdsThatShouldRemoveCache = [];
-
-        using var reporter = new ProgressReporter(this, 1, pendingAssets.Count, "Updating credential assets");
-
-        // Process the grouped parameter sets
-        try
+        if (string.IsNullOrEmpty(asset.CredentialPassword))
         {
-            int index = 0;
-            foreach (var asset in pendingAssets.Values)
-            {
-                if (asset.CredentialUsername == "")
-                {
-                    asset.CredentialUsername = null;
-                }
-                if (string.IsNullOrEmpty(asset.CredentialPassword))
-                {
-                    asset.CredentialStoreId = null;
-                }
-
-                var drivesFolders = SessionState.EnumFolders([WildcardPattern.Escape(asset.Path!)]);
-                var (drive, folder) = drivesFolders[0];
-
-                var target = asset.GetPSPath();
-
-                reporter.WriteProgress(++index);
-
-                var existingAssets = drive.Assets.Get(folder);
-                var existingAsset = existingAssets.FirstOrDefault(a => a.Name == asset.Name);
-
-                try
-                {
-                    if (existingAsset is null) // Add a new asset
-                    {
-                        if (!asset.HasDefaultValue.GetValueOrDefault() && (asset.UserValues is null || !asset.UserValues.Any()))
-                        {
-                            continue;
-                        }
-                        if (ShouldProcess(target, "Add CredentialAsset"))
-                        {
-                            Asset createdAsset = drive.OrchAPISession.AddAsset(folder.Id ?? 0, asset);
-                            createdAsset!.Path = folder.GetPSPath();
-                            WriteObject(createdAsset);
-
-                            folderIdsThatShouldRemoveCache.Add((drive, folder.Id ?? 0));
-                        }
-                    }
-                    else
-                    {
-                        // Delete the asset
-                        if (!asset.HasDefaultValue.GetValueOrDefault() && (asset.UserValues is null || !asset.UserValues.Any()))
-                        {
-                            if (ShouldProcess(target, "Remove CredentialAsset"))
-                            {
-                                drive.OrchAPISession.RemoveAsset(folder.Id ?? 0, asset.Id ?? 0);
-                            }
-                        }
-                        else // Update the asset
-                        {
-                            if (ShouldProcess(target, "Update CredentialAsset"))
-                            {
-                                drive.OrchAPISession.PutAsset(folder.Id ?? 0, asset);
-                            }
-                        }
-
-                        folderIdsThatShouldRemoveCache.Add((drive, folder.Id ?? 0));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    var errorRecord = new ErrorRecord(new OrchException(target, ex), "SetAssetError", ErrorCategory.InvalidOperation, target);
-                    WriteError(errorRecord);
-                }
-            }
-        }
-        finally
-        {
-            foreach (var cache in folderIdsThatShouldRemoveCache)
-            {
-                cache.drive.Assets.ClearCache(cache.id);
-            }
+            asset.CredentialStoreId = null;
         }
     }
 }
