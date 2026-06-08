@@ -23,16 +23,11 @@ class SetSecretAssetCommandParameter
 
 [Cmdlet(VerbsCommon.Set, "OrchSecretAsset", DefaultParameterSetName = Default, SupportsShouldProcess = true)]
 [OutputType(typeof(Asset))]
-public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
+public class SetSecretAssetCmdlet : SetAssetCmdletBase
 {
     private readonly List<SetSecretAssetCommandParameter> parameters = [];
-    private readonly Dictionary<(string name, string path), Asset> pendingAssets = [];
 
-    // See OrchExtensions.MergeNonEmptyValue for the merge spec.
-    private readonly Dictionary<(string name, string path), string> _resolvedDescriptions = [];
-
-    private void MergeDescription(string name, string folderPath, string? rowDescription)
-        => _resolvedDescriptions.MergeNonEmptyValue((name, folderPath), rowDescription);
+    // _resolvedDescriptions / MergeDescription / pendingAssets are inherited from SetAssetCmdletBase.
 
     private const string Default = "DefaultParameterSet";
     private const string Plain = "SpecifyPlainSecretParameterSet";

@@ -23,21 +23,11 @@ class SetCredentialAssetCommandParameter
 
 [Cmdlet(VerbsCommon.Set, "OrchCredentialAsset", DefaultParameterSetName = Default, SupportsShouldProcess = true)]
 [OutputType(typeof(UiPath.PowerShell.Entities.Asset))]
-public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
+public class SetCredentialAssetCmdlet : SetAssetCmdletBase
 {
     private readonly List<SetCredentialAssetCommandParameter> parameters = [];
-    private readonly Dictionary<(string name, string path), Asset> pendingAssets = [];
 
-    // Merged Description per asset across all input rows. The merged result is applied to each
-    // pendingAssets entry in EndProcessing, before POST. The shared OrchExtensions.MergeNonEmptyValue
-    // helper documents the priority rule (non-empty > "" > null, last-writer-wins among non-empty);
-    // this lets a single direct call (`-Description ""`) clear the field while a CSV roundtrip —
-    // where the exporter writes Description on the first row only and emits empty cells
-    // thereafter — is preserved (the lone non-empty 'A' wins over the empty cells).
-    private readonly Dictionary<(string name, string path), string> _resolvedDescriptions = [];
-
-    private void MergeDescription(string name, string folderPath, string? rowDescription)
-        => _resolvedDescriptions.MergeNonEmptyValue((name, folderPath), rowDescription);
+    // _resolvedDescriptions / MergeDescription / pendingAssets are inherited from SetAssetCmdletBase.
 
     private const string Default = "DefaultParameterSet";
     private const string Plain = "SpecifyPlainPasswordParameterSet";
