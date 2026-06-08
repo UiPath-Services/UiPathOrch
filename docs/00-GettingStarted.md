@@ -1,6 +1,6 @@
 ---
 title: Getting Started
-nav_order: 2
+nav_order: 0
 permalink: /getting-started/
 ---
 
@@ -58,14 +58,9 @@ Then open any Markdown file:
 mdp <path to .md file>
 ```
 
-To register as an MCP server (once):
-
-```powershell
-Register-MdpToClaudeCode       # Claude Code
-Register-MdpToClaudeDesktop    # Claude Desktop
-```
-
-If the MCP server is available, use `show_markdown` instead of `mdp`.
+To drive UiPathOrch from an AI assistant — and to register MarkdownPointer as an MCP
+`show_markdown` tool so the AI can render these docs for you — see
+[AI Integration (PowerShell.MCP)](01-AIIntegration.md).
 
 ## Installation
 

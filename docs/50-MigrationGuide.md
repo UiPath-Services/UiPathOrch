@@ -1,6 +1,6 @@
 ---
 title: Migration & Copy
-nav_order: 6
+nav_order: 50
 permalink: /migration/
 ---
 
@@ -795,7 +795,7 @@ Entities requiring post-processing because secrets are never returned by the API
 | Storage Bucket (OrchBucket) | Password |
 | Webhook (OrchWebhook) | Secret |
 
-See [Credentials & Secrets](07-CredentialsAndSecrets.md) for the full table with the
+See [Credentials & Secrets](08-CredentialsAndSecrets.md) for the full table with the
 re-set cmdlet for each entity, plus details on credential assets.
 
 ### Important Notes

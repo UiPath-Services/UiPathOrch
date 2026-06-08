@@ -1,3 +1,9 @@
+---
+title: Licensing
+nav_order: 7
+permalink: /licensing/
+---
+
 # Licensing Guide
 
 UiPath licensing is exposed by UiPathOrch through **two families of cmdlets that work at
@@ -176,22 +182,33 @@ PS Orch1:\> Remove-PmUserLicense -Email ytsuda@gmail.com -License ATTUNU
 
 ## How the layers fit together
 
+```mermaid
+flowchart TB
+  subgraph ORG["Organization layer · Pm* cmdlets (whole org)"]
+    direction TB
+    C["Get-PmLicenseContract<br/>what the org bought:<br/>subscription, products, ML keys"]
+    B["Get-PmLicense<br/>Named-User bundle seats:<br/>total → allocated → inUse"]
+    A["Get-PmLicenseAllocation<br/>org pool split per tenant:<br/>runtime robots, units, services"]
+    UG["Get-PmUserLicense /<br/>Get-PmGroupLicense<br/>assigned to users / groups"]
+    C --> B --> UG
+    C --> A
+  end
+  subgraph TEN["Tenant layer · Orch* cmdlets (current drive)"]
+    direction TB
+    L["Get-OrchLicense<br/>Allowed vs Used per type"]
+    N["Get-OrchLicenseNamedUser<br/>named-user assignments here"]
+    R["Get-OrchLicenseRuntime<br/>per-machine runtime slots"]
+    S["Get-OrchLicenseStats<br/>usage history over time"]
+  end
+  UG -->|consumed when users sign in| N
+  A -->|runtime slots per tenant| R
+  N --> L
+  R --> L
+  L -.-> S
 ```
-Get-PmLicenseContract      ← what the organization bought (subscription, products, ML keys)
-        │
-Get-PmLicense              ← Named-User bundle seats:  total → allocated → inUse
-Get-PmLicenseAllocation    ← org pool split per tenant (runtime robots, units, services)
-        │ (assigned to people / groups)
-Get-PmUserLicense / Get-PmGroupLicense
-        │
-        ▼  (consumed inside each tenant)
-Get-OrchLicense            ← this tenant: Allowed vs Used per license type
-Get-OrchLicenseNamedUser   ← named-user assignments in this tenant
-Get-OrchLicenseRuntime     ← per-machine runtime slots in this tenant
-Get-OrchLicenseStats       ← this tenant's usage history
-```
+
 
 ## See also
 
 - [Getting Started](00-GettingStarted.md) — signing in (organization vs tenant)
-- [CSV Export & Import](03-CsvExportImport.md) — `-ExportCsv` on the `Pm*` license cmdlets
+- [CSV Export & Import](05-CsvExportImport.md) — `-ExportCsv` on the `Pm*` license cmdlets

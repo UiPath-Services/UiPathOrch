@@ -1,6 +1,6 @@
 ---
 title: Folder Operations
-nav_order: 8
+nav_order: 3
 permalink: /folder-operations/
 ---
 
@@ -15,7 +15,7 @@ works because the module ships a PowerShell *navigation provider*, but you rarel
 about that term.)
 
 Folder *contents* (processes, assets, queues, triggers, …) are managed with the `*-Orch*`
-cmdlets documented in the [Cmdlet Reference](02-CmdletReference.md); this guide is about the
+cmdlets documented in the [Cmdlet Reference](04-CmdletReference.md); this guide is about the
 **folder tree itself**.
 
 - [Drives and navigation](#drives-and-navigation)
@@ -134,7 +134,7 @@ operation — see below).
 
 `Copy-Item` copies a folder, its folder-scoped entities (processes, assets, queues, …), and —
 with `-Recurse` — all of its subfolders. This is the building block of cross-tenant migration
-(see the [Migration & Copy Guide](04-MigrationGuide.md)):
+(see the [Migration & Copy Guide](50-MigrationGuide.md)):
 
 ```powershell
 Copy-Item Orch1:\Finance Orch2:\ -Recurse          # Finance subtree -> Orch2, with contents
@@ -232,7 +232,7 @@ Clear-OrchCache
 | Open folder in browser | `ii .` |
 
 To copy, move, rename, or delete **many** folders at once from a list, see
-[Copying, Moving, and Deleting Folders in Bulk via CSV](03-CsvExportImport.md#copying-moving-and-deleting-folders-in-bulk-via-csv).
+[Copying, Moving, and Deleting Folders in Bulk via CSV](05-CsvExportImport.md#copying-moving-and-deleting-folders-in-bulk-via-csv).
 
-See also: [Migration & Copy Guide](04-MigrationGuide.md) ·
+See also: [Migration & Copy Guide](50-MigrationGuide.md) ·
 [Other Providers (DU & Test Manager)](60-OtherProvidersGuide.md) · `Get-Help about_UiPathOrch`.

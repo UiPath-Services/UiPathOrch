@@ -318,4 +318,4 @@ Queue items are folder-scoped entities. You must navigate to a folder on the Orc
 
 [Import-OrchQueueItem](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchQueueItem.md)
 
-[Migration & Copy Guide - Copying Queue Items](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/04-MigrationGuide.md#copying-queue-items)
+[Migration & Copy Guide - Copying Queue Items](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/50-MigrationGuide.md#copying-queue-items)

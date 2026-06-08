@@ -187,7 +187,7 @@ NOTE
 SEE ALSO
     Get-OrchHelp
     Folder Operations (cd, New-Item, Move/Copy, Set-ItemProperty Description):
-    https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/08-FolderOperations.md
+    https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/03-FolderOperations.md
     https://marketplace.uipath.com/listings/uipathorch
     https://www.powershellgallery.com/packages/UiPathOrch
 

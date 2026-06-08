@@ -1,10 +1,10 @@
 ---
-title: Incremental-Cache Cmdlets
-nav_order: 7
-permalink: /incremental-cache/
+title: Logs, Jobs & Queues
+nav_order: 6
+permalink: /logs-jobs-queues/
 ---
 
-# Working Efficiently with Incremental-Cache Cmdlets
+# Querying Logs, Jobs, Queues & Other High-Volume Data Efficiently
 
 - [Why this matters](#why-this-matters)
 - [What these cmdlets are](#what-these-cmdlets-are)
@@ -20,7 +20,7 @@ permalink: /incremental-cache/
 
 Most `Get-Orch*` cmdlets download **all** entities in scope on first call and
 serve every later call from a complete local snapshot (see
-[Performance & Cache Management](01-Essentials.md#performance--cache-management)).
+[Performance & Cache Management](02-Essentials.md#performance--cache-management)).
 A folder-entity cmdlet caches every entity in the target folder; a tenant-entity
 cmdlet caches every entity in the target tenant — in both cases the cache is the
 *complete* set for that scope.
@@ -267,7 +267,7 @@ caches — untouched, so a follow-up filtered query re-fetches only what you
 cleared. (At the drive root, `-Path .` resolves to the tenant scope instead.)
 
 Run a filtered query afterward to repopulate. As a general rule
-([Essentials](01-Essentials.md#critical-ai-execution-rules)), always
+([Essentials](02-Essentials.md#critical-ai-execution-rules)), always
 `Clear-OrchCache` before retrying after an error.
 
 ## Gotchas
@@ -305,6 +305,6 @@ Run a filtered query afterward to repopulate. As a general rule
 
 ---
 
-See also: [Essential Guide for AI](01-Essentials.md) ·
-[Cmdlet Reference](02-CmdletReference.md) ·
+See also: [Essential Guide for AI](02-Essentials.md) ·
+[Cmdlet Reference](04-CmdletReference.md) ·
 [Troubleshooting](90-Troubleshooting.md)

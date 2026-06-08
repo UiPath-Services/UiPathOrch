@@ -18,7 +18,7 @@ UiPathOrch exports cmdlets across four API surfaces:
 
 Use the **search box** at the top of the page to jump straight to a cmdlet, or browse the alphabetical list in the sidebar.
 
-For a categorized walkthrough grouped by topic (User Management, Job Management, Triggers, etc.), see the [topic-organized cmdlet reference on GitHub](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/02-CmdletReference.md).
+For a categorized walkthrough grouped by topic (User Management, Job Management, Triggers, etc.), see the [topic-organized cmdlet reference on GitHub](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/04-CmdletReference.md).
 
 From a PowerShell session:
 

@@ -122,7 +122,7 @@ PS C:\> Get-DuUser -Path Orch1Du:\Invoices | Select-Object displayName, type, ro
 
 Access can be changed with `Add-DuUser` (assign a directory user/group a DU role on a
 project) and `Remove-DuRoleFromDuUser`. See the cmdlet table in
-[Cmdlet Reference §24](02-CmdletReference.md) and `Get-Help <Cmdlet>` for parameters.
+[Cmdlet Reference §24](04-CmdletReference.md) and `Get-Help <Cmdlet>` for parameters.
 
 ## Test Manager (`…Tm:`)
 
@@ -148,7 +148,7 @@ PS C:\> Get-TmProjectPermission -Path Orch1Tm:\ACME
 
 Test Manager artifacts can be removed with `Remove-TmRequirement`, `Remove-TmTestCase`,
 and `Remove-TmTestSet` (all support `-WhatIf`). The Test Manager surface is read-mostly
-today; see [Cmdlet Reference §25](02-CmdletReference.md).
+today; see [Cmdlet Reference §25](04-CmdletReference.md).
 
 ## What's Shared with the Orchestrator Provider
 

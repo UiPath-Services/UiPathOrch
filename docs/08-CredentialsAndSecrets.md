@@ -1,3 +1,9 @@
+---
+title: Credentials & Secrets
+nav_order: 8
+permalink: /credentials-secrets/
+---
+
 # Credentials & Secrets
 
 ## The write-only rule
@@ -50,16 +56,15 @@ A credential asset stores a username plus a password, and has:
   (Orchestrator database, CyberArk, Azure Key Vault, …). List stores with
   `Get-OrchCredentialStore`.
 
-### Re-setting credential passwords after a copy
+### Re-setting secrets after a copy (CSV round-trip)
 
-`Get-OrchAsset` exports a credential-shaped CSV with `-ExportCredentialCsv`; fill in the
-`CredentialPassword` column and pipe it back through `Set-OrchCredentialAsset`:
-
-```powershell
-PS C:\> Get-OrchAsset -Path Orch1:\Shared -Recurse -ExportCredentialCsv C:\temp\cred-assets.csv
-# Edit the CredentialPassword column in C:\temp\cred-assets.csv, then:
-PS C:\> Import-Csv C:\temp\cred-assets.csv | Set-OrchCredentialAsset
-```
+The convenient pattern for the **CSV-resettable** entities — credential assets and secret assets — is
+to export a CSV on the **destination** tenant, type the secret into its column, and import it back.
+The exact commands (`-ExportCredentialCsv` → `Set-OrchCredentialAsset`, and `-ExportCsv` →
+`Set-OrchSecretAsset`) are in [CSV Export & Import](05-CsvExportImport.md). For a user's
+Unattended-Robot password, use `Update-OrchUser -UR_Password`. Entities without a pipeline re-set
+cmdlet (buckets, webhooks, credential stores) must be re-set in the web UI or recreated — see the
+table above.
 
 ### Folder-copy caveat
 
@@ -69,7 +74,9 @@ to copy. Re-set the passwords on the destination with the CSV workflow above.
 
 ## See also
 
-- [Migration & Copy Guide](04-MigrationGuide.md) — post-processing for entities that hold
+- [CSV Export & Import](05-CsvExportImport.md) — the export/import mechanics for re-setting asset
+  secrets in bulk.
+- [Migration & Copy Guide](50-MigrationGuide.md) — post-processing for entities that hold
   passwords, in the context of a full tenant migration.
 - [Getting Started](00-GettingStarted.md#setting-permissions) — non-confidential app
   sign-in (required for many directory and credential operations).

@@ -1,6 +1,6 @@
 ---
 title: Essentials for AI
-nav_order: 3
+nav_order: 2
 permalink: /essentials/
 ---
 
@@ -343,7 +343,7 @@ Get-OrchFolderUser               # Folder access assignments
 ### Best Practice Approach
 1. **ALWAYS start with**: Get-Help [CmdletName] -Examples
 2. **Check cmdlet help BEFORE** creating custom procedures
-3. **Use 01-Essentials.md** only for:
+3. **Use 02-Essentials.md** only for:
    - Environment verification (Get-OrchPSDrive)
    - Error handling protocols
    - Safety procedures (-WhatIf usage)

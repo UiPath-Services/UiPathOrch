@@ -83,7 +83,9 @@ Use `-CsvEncoding` to specify the encoding.
 `Get-OrchAsset -ExportCredentialCsv` exports credential assets with a
 `CredentialPassword` column. The Orchestrator API cannot retrieve passwords,
 so this column is exported empty. You must manually enter the passwords in
-the CSV before importing with `Set-OrchCredentialAsset`.
+the CSV before importing with `Set-OrchCredentialAsset`. See
+[Credentials & Secrets](08-CredentialsAndSecrets.md) for the full list of
+secret-bearing entities and which of them can be re-set this way.
 
 ```powershell
 Get-OrchAsset -Path Orch1:\ -Recurse -ExportCredentialCsv C:\temp\creds.csv
@@ -123,6 +125,7 @@ dir Orch1:\ -Recurse | Where-Object DisplayName -like '*Prod*' |
     Update-OrchProcess * -A4R_Enabled False -WhatIf
 
 # ...or target a subset by a folder property the path can't express:
+# Disable Healing Agent (Agent for Robots setting) on all processes in the matching folders
 dir Orch1:\ -Recurse | Where-Object FeedType -eq FolderHierarchy |
     Update-OrchProcess * -A4R_Enabled False -WhatIf
 ```
@@ -138,6 +141,8 @@ through CSV and target each folder itself, export `PSPath`:
 ```powershell
 # Export folder paths, (optionally edit the CSV,) then re-apply to each folder:
 dir Orch1:\ -Recurse | Select-Object PSPath | Export-Csv C:\temp\dir.csv
+
+# Disable Healing Agent (Agent for Robots setting) on all processes in the listed folders
 Import-Csv C:\temp\dir.csv | Update-OrchProcess * -A4R_Enabled False -WhatIf
 ```
 
@@ -477,7 +482,7 @@ another organization directly (no CSV needed).
 ### Copying, Moving, and Deleting Folders in Bulk via CSV
 
 Whole folders (with their contents) are copied, moved, and deleted with the built-in `Copy-Item`,
-`Move-Item`, and `Remove-Item` (see [Folder Operations](08-FolderOperations.md)). Drive a bulk run
+`Move-Item`, and `Remove-Item` (see [Folder Operations](03-FolderOperations.md)). Drive a bulk run
 from a CSV of folder paths.
 
 The natural workflow is **export every folder, edit the CSV, then import.** Name the path column
@@ -514,7 +519,7 @@ Notes:
   `-Recurse` requirement.
 - **`Copy-Item`** copies each listed folder and its entities, but not its subfolders — those come
   in as their own rows. To clone a whole subtree in one shot, copy its root directly instead:
-  `Copy-Item Orch1:\Src Orch2:\ -Recurse` (see the [Migration & Copy Guide](04-MigrationGuide.md)).
+  `Copy-Item Orch1:\Src Orch2:\ -Recurse` (see the [Migration & Copy Guide](50-MigrationGuide.md)).
 - **Why `Path`, not `LiteralPath`?** `-Path` binds both by value *and* by property name, so a
   `Path` column binds it by name and can sit beside a `Destination`/`NewName` column. `-LiteralPath`
   is by-property-name only, so a two-column row instead binds the whole row object to `-Path` *by
@@ -540,6 +545,33 @@ Same workflow, with a `NewName` column:
    ```
 
 Drop `-WhatIf` once the preview is right.
+
+### Setting Folder Descriptions in Bulk via CSV
+
+A folder's editable text is its **DisplayName** (changed with `Rename-Item`) and its **Description**
+(set with `Set-ItemProperty -Name Description`; see
+[Folder Operations](03-FolderOperations.md#folder-description-set-itemproperty)). To revise many
+descriptions at once, export them, edit the CSV, then re-apply:
+
+1. **Export** each folder's path and current description:
+   ```powershell
+   dir Orch1:\ -Recurse | Select-Object PSPath, Description | Export-Csv C:\temp\folder-desc.csv
+   ```
+2. **Edit the CSV**: rename the `PSPath` header to **`Path`** and the `Description` header to
+   **`Value`** (so they match `Set-ItemProperty`'s parameters), then edit the `Value` column and
+   keep just the rows you want to change.
+3. **Apply** — the rows pipe straight in; `-Name Description` (constant for every row) names the
+   property to set:
+   ```powershell
+   Import-Csv C:\temp\folder-desc.csv | Set-ItemProperty -Name Description -WhatIf
+   ```
+   Drop `-WhatIf` once the preview is right.
+
+Each row's `Path` binds the folder and `Value` its new description; only `Description` is settable
+this way (to rename folders in bulk, use the [Renaming](#renaming-folders-in-bulk-via-csv) recipe
+above). As with the other folder cmdlets, `-Path` treats `[ ] * ?` as wildcards — for a folder whose
+name contains one of those, loop and bind `-LiteralPath` instead:
+`Import-Csv … | ForEach-Object { Set-ItemProperty -LiteralPath $_.Path -Name Description -Value $_.Value }`.
 
 ## Known limitations: commas and wildcards in multi-value cells
 

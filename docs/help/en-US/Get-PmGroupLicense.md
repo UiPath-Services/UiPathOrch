@@ -277,4 +277,4 @@ The -UserName filter only takes effect when -ExpandAllocation is specified. With
 
 [Remove-PmGroupLicenseAllocation](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-PmGroupLicenseAllocation.md)
 
-[CSV Export & Import Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/03-CsvExportImport.md)
+[CSV Export & Import Guide](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/05-CsvExportImport.md)
