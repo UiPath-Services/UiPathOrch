@@ -32,6 +32,7 @@ public class CompareCredentialStoreCmdlet : OrchestratorPSCmdlet
 
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(CredentialStoreNameCompleter))]
+    [SupportsWildcards]
     public string? DifferenceName { get; set; }
 
     [Parameter]
@@ -59,6 +60,12 @@ public class CompareCredentialStoreCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(dp)) yield return n;
         if (MyInvocation.BoundParameters.TryGetValue("LiteralPath", out var lp))
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
+    }
+
+    protected override void BeginProcessing()
+    {
+        base.BeginProcessing();
+        CompareParameterHelper.WarnSecretNotCompared(this, "credential-store secrets (AdditionalConfiguration)");
     }
 
     protected override void ProcessRecord()

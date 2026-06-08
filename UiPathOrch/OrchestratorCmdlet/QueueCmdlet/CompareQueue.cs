@@ -32,6 +32,7 @@ public class CompareQueueCmdlet : OrchestratorPSCmdlet
 
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(QueueNameCompleter))]
+    [SupportsWildcards]
     public string? DifferenceName { get; set; }
 
     [Parameter]

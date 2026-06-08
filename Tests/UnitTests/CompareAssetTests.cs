@@ -205,3 +205,56 @@ public class CompareAssetMetadataTests
         Assert.Contains("USERVALUES", CompareAssetCmdlet.ValidPropertyNames);
     }
 }
+
+// The -DifferenceName broadcast-target resolver shared by every Compare-Orch* cmdlet: a
+// (possibly wildcard) name must resolve to exactly one entity, else NotFound / Ambiguous.
+public class ResolveBroadcastTargetTests
+{
+    private static List<Asset> Assets(params string[] names) =>
+        names.Select(n => new Asset { Name = n }).ToList();
+
+    [Fact]
+    public void ExactName_ResolvesToSingle()
+    {
+        var (status, target, names) = CompareParameterHelper.ResolveBroadcastTarget(Assets("a", "b", "c"), "b", a => a.Name);
+        Assert.Equal(CompareParameterHelper.BroadcastMatch.Single, status);
+        Assert.Equal("b", target!.Name);
+        Assert.Equal(["b"], names);
+    }
+
+    [Fact]
+    public void Wildcard_MatchingOne_ResolvesToSingle()
+    {
+        var (status, target, _) = CompareParameterHelper.ResolveBroadcastTarget(Assets("alpha", "beta", "gamma"), "al*", a => a.Name);
+        Assert.Equal(CompareParameterHelper.BroadcastMatch.Single, status);
+        Assert.Equal("alpha", target!.Name);
+    }
+
+    [Fact]
+    public void Wildcard_MatchingMany_IsAmbiguousAndListsNames()
+    {
+        var (status, target, names) = CompareParameterHelper.ResolveBroadcastTarget(Assets("prod1", "prod2", "dev"), "prod*", a => a.Name);
+        Assert.Equal(CompareParameterHelper.BroadcastMatch.Ambiguous, status);
+        Assert.Null(target);
+        Assert.Equal(2, names.Count);
+        Assert.Contains("prod1", names);
+        Assert.Contains("prod2", names);
+    }
+
+    [Fact]
+    public void NoMatch_IsNotFound()
+    {
+        var (status, target, names) = CompareParameterHelper.ResolveBroadcastTarget(Assets("a", "b"), "zzz*", a => a.Name);
+        Assert.Equal(CompareParameterHelper.BroadcastMatch.NotFound, status);
+        Assert.Null(target);
+        Assert.Empty(names);
+    }
+
+    [Fact]
+    public void Matching_IsCaseInsensitive()
+    {
+        var (status, target, _) = CompareParameterHelper.ResolveBroadcastTarget(Assets("MyAsset"), "myasset", a => a.Name);
+        Assert.Equal(CompareParameterHelper.BroadcastMatch.Single, status);
+        Assert.Equal("MyAsset", target!.Name);
+    }
+}

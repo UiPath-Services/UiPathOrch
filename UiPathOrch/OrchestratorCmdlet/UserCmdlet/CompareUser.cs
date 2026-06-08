@@ -33,6 +33,7 @@ public class CompareUserCmdlet : OrchestratorPSCmdlet
 
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(TenantUserUserNameCompleter))]
+    [SupportsWildcards]
     public string? DifferenceName { get; set; }
 
     [Parameter]
@@ -68,6 +69,12 @@ public class CompareUserCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(dp)) yield return n;
         if (MyInvocation.BoundParameters.TryGetValue("LiteralPath", out var lp))
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
+    }
+
+    protected override void BeginProcessing()
+    {
+        base.BeginProcessing();
+        CompareParameterHelper.WarnSecretNotCompared(this, "the Unattended-Robot password (UR_Password)");
     }
 
     protected override void ProcessRecord()

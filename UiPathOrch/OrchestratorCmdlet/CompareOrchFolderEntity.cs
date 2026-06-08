@@ -33,6 +33,34 @@ internal static class CompareParameterHelper
         }
         return only;
     }
+
+    // One-time warning for Compare-Orch* on secret-bearing entities: secret fields are
+    // write-only (the API never returns them), so the comparison cannot detect their drift.
+    internal static void WarnSecretNotCompared(Cmdlet host, string secretNoun)
+        => host.WriteWarning(
+            $"Secret values are write-only (never returned by the API) and are NOT compared: " +
+            $"{secretNoun}. This comparison cannot detect secret drift.");
+
+    internal enum BroadcastMatch { Single, NotFound, Ambiguous }
+
+    // Resolve a (possibly wildcard) -DifferenceName to exactly ONE entity from the candidate set.
+    // Pure (no drive) so it is unit-testable; the caller fetches the candidates and writes the
+    // entity-specific NotFound / Ambiguous error. Names carries the matched name(s) for the
+    // ambiguous-error message. Matching is case-insensitive; a literal name (no wildcard
+    // metacharacters) matches exactly.
+    internal static (BroadcastMatch Status, T? Target, List<string> Names) ResolveBroadcastTarget<T>(
+        IReadOnlyList<T> candidates, string pattern, Func<T, string?> getName) where T : class
+    {
+        var wp = new WildcardPattern(pattern, WildcardOptions.IgnoreCase);
+        var matches = candidates.Where(e => getName(e) is { } n && wp.IsMatch(n)).ToList();
+        var names = matches.Select(getName).Where(n => n is not null).Select(n => n!).ToList();
+        return matches.Count switch
+        {
+            0 => (BroadcastMatch.NotFound, null, names),
+            1 => (BroadcastMatch.Single, matches[0], names),
+            _ => (BroadcastMatch.Ambiguous, null, names),
+        };
+    }
 }
 
 internal static class FolderCompare
@@ -62,24 +90,30 @@ internal static class FolderCompare
         // Broadcast mode: every reference entity vs the single named target.
         if (!string.IsNullOrEmpty(differenceName))
         {
-            T? target;
-            try
-            {
-                target = getEntities(dstDrive, dstRootFolder)
-                    .FirstOrDefault(e => string.Equals(getName(e), differenceName, StringComparison.OrdinalIgnoreCase));
-            }
+            // -DifferenceName may be a wildcard, but must resolve to exactly one entity.
+            List<T> candidates;
+            try { candidates = getEntities(dstDrive, dstRootFolder).ToList(); }
             catch (Exception ex)
             {
                 writeError(new ErrorRecord(new OrchException(dstRootFolder.GetPSPath(), ex), errorId, ErrorCategory.InvalidOperation, dstRootFolder));
                 return;
             }
-            if (target is null)
+            var (status, matchedTarget, names) = CompareParameterHelper.ResolveBroadcastTarget(candidates, differenceName, getName);
+            if (status == CompareParameterHelper.BroadcastMatch.NotFound)
             {
                 writeError(new ErrorRecord(
                     new OrchException(dstRootFolder.GetPSPath(), $"DifferenceName '{differenceName}' was not found in '{dstRootFolder.GetPSPath()}'."),
                     "DifferenceNameNotFound", ErrorCategory.ObjectNotFound, differenceName));
                 return;
             }
+            if (status == CompareParameterHelper.BroadcastMatch.Ambiguous)
+            {
+                writeError(new ErrorRecord(
+                    new OrchException(dstRootFolder.GetPSPath(), $"DifferenceName '{differenceName}' matched {names.Count} entities in '{dstRootFolder.GetPSPath()}' ({string.Join(", ", names)}); it must resolve to a single name."),
+                    "DifferenceNameAmbiguous", ErrorCategory.InvalidArgument, differenceName));
+                return;
+            }
+            T target = matchedTarget!;
 
             foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancel.Token))
             {
@@ -153,6 +187,7 @@ internal static class FolderCompare
                 {
                     SideIndicator = EntityComparison.Equal,
                     Name = getName(reference),
+                    DifferenceName = getName(difference),
                     Path = getPSPath(reference),
                     DifferencePath = getPSPath(difference),
                     ReferenceObject = reference,
@@ -166,6 +201,7 @@ internal static class FolderCompare
         {
             SideIndicator = EntityComparison.Different,
             Name = getName(reference),
+            DifferenceName = getName(difference),
             Path = getPSPath(reference),
             DifferencePath = getPSPath(difference),
             Differences = diffs,
@@ -181,6 +217,7 @@ internal static class FolderCompare
         {
             SideIndicator = side,
             Name = getName(entity),
+            DifferenceName = isReference ? null : getName(entity),
             Path = isReference ? getPSPath(entity) : null,
             DifferencePath = isReference ? null : getPSPath(entity),
             ReferenceObject = isReference ? entity : null,
@@ -235,16 +272,26 @@ internal static class TenantCompare
         // Broadcast mode: every reference entity vs the single named target.
         if (!string.IsNullOrEmpty(differenceName))
         {
-            T? target;
-            try { target = getEntities(dstDrive).FirstOrDefault(e => string.Equals(getName(e), differenceName, StringComparison.OrdinalIgnoreCase)); }
+            // -DifferenceName may be a wildcard, but must resolve to exactly one entity.
+            List<T> candidates;
+            try { candidates = getEntities(dstDrive).ToList(); }
             catch (Exception ex) { writeError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, ex), errorId, ErrorCategory.InvalidOperation, dstDrive)); return; }
-            if (target is null)
+            var (status, matchedTarget, names) = CompareParameterHelper.ResolveBroadcastTarget(candidates, differenceName, getName);
+            if (status == CompareParameterHelper.BroadcastMatch.NotFound)
             {
                 writeError(new ErrorRecord(
                     new OrchException(dstDrive.NameColonSeparator, $"DifferenceName '{differenceName}' was not found in '{dstDrive.NameColonSeparator}'."),
                     "DifferenceNameNotFound", ErrorCategory.ObjectNotFound, differenceName));
                 return;
             }
+            if (status == CompareParameterHelper.BroadcastMatch.Ambiguous)
+            {
+                writeError(new ErrorRecord(
+                    new OrchException(dstDrive.NameColonSeparator, $"DifferenceName '{differenceName}' matched {names.Count} entities in '{dstDrive.NameColonSeparator}' ({string.Join(", ", names)}); it must resolve to a single name."),
+                    "DifferenceNameAmbiguous", ErrorCategory.InvalidArgument, differenceName));
+                return;
+            }
+            T target = matchedTarget!;
             foreach (var r in refs)
             {
                 if (r is null) continue;
@@ -302,6 +349,7 @@ internal static class TenantCompare
                 {
                     SideIndicator = EntityComparison.Equal,
                     Name = getName(reference),
+                    DifferenceName = getName(difference),
                     Path = TenantPath(srcDrive, reference, getName),
                     DifferencePath = TenantPath(dstDrive, difference, getName),
                     ReferenceObject = reference,
@@ -315,6 +363,7 @@ internal static class TenantCompare
         {
             SideIndicator = EntityComparison.Different,
             Name = getName(reference),
+            DifferenceName = getName(difference),
             Path = TenantPath(srcDrive, reference, getName),
             DifferencePath = TenantPath(dstDrive, difference, getName),
             Differences = diffs,
@@ -331,6 +380,7 @@ internal static class TenantCompare
         {
             SideIndicator = side,
             Name = getName(entity),
+            DifferenceName = isReference ? null : getName(entity),
             Path = isReference ? p : null,
             DifferencePath = isReference ? null : p,
             ReferenceObject = isReference ? entity : null,

@@ -31,6 +31,7 @@ public class CompareFolderUserCmdlet : OrchestratorPSCmdlet
     public string? DifferencePath { get; set; }
 
     [Parameter(Position = 2)]
+    [SupportsWildcards]
     public string? DifferenceName { get; set; }
 
     [Parameter]

@@ -108,6 +108,14 @@ Describe 'Compare-OrchAsset name-match mode' {
         ($script:Result | Where-Object Name -eq $script:OnlyB).Path           | Should -BeNullOrEmpty
     }
 
+    It 'sets DifferenceName to the difference-side name (empty on a "<=" row)' {
+        # name-match: DifferenceName mirrors Name on "<>"; the difference-only "=>" carries it too;
+        # the reference-only "<=" has no difference side, so DifferenceName is empty.
+        ($script:Result | Where-Object Name -eq $script:Changed).DifferenceName | Should -Be $script:Changed
+        ($script:Result | Where-Object Name -eq $script:OnlyB).DifferenceName   | Should -Be $script:OnlyB
+        ($script:Result | Where-Object Name -eq $script:OnlyA).DifferenceName   | Should -BeNullOrEmpty
+    }
+
     It 'honors a -Name filter on both sides' {
         $r = Compare-OrchAsset -Path $script:RootA -DifferencePath $script:RootB -Name "${script:Prefix}Only*"
         ($r | Where-Object Name -eq $script:OnlyA).SideIndicator | Should -Be '<='
@@ -144,6 +152,26 @@ Describe 'Compare-OrchAsset broadcast mode (-DifferenceName)' {
             -DifferencePath $script:RootB -DifferenceName "${script:Prefix}Nope" -ErrorAction Stop } |
             Should -Throw
     }
+
+    It 'reports the target name in DifferenceName' {
+        $r = Compare-OrchAsset -Path $script:RootA -Name $script:OnlyA `
+            -DifferencePath $script:RootB -DifferenceName $script:Same
+        $r.Name           | Should -Be $script:OnlyA
+        $r.DifferenceName | Should -Be $script:Same
+    }
+
+    It 'accepts a wildcard -DifferenceName that resolves to exactly one asset' {
+        $r = Compare-OrchAsset -Path $script:RootA -Name $script:OnlyA `
+            -DifferencePath $script:RootB -DifferenceName "${script:Prefix}Sam*"
+        $r.DifferenceName | Should -Be $script:Same
+    }
+
+    It 'errors when a wildcard -DifferenceName matches more than one asset' {
+        # Prefix* matches Same, Changed and OnlyB on side B -> ambiguous.
+        { Compare-OrchAsset -Path $script:RootA -Name $script:OnlyA `
+            -DifferencePath $script:RootB -DifferenceName "${script:Prefix}*" -ErrorAction Stop } |
+            Should -Throw
+    }
 }
 
 Describe 'Compare-OrchAsset -Property' {
@@ -159,5 +187,28 @@ Describe 'Compare-OrchAsset -Property' {
         $r = Compare-OrchAsset -Name * -Path $script:RootA -DifferencePath $script:RootB -Property 'Description'
         ($r | Where-Object Name -eq $script:Changed) | Should -BeNullOrEmpty
         ($r | Where-Object Name -eq $script:OnlyA).SideIndicator | Should -Be '<='
+    }
+}
+
+Describe 'Compare-OrchAsset secret warning' {
+    It 'warns that Credential/Secret values are not compared when one is in scope' {
+        $cn = "${script:Prefix}Cred"
+        Set-OrchCredentialAsset -Path $script:RootA -Name $cn -CredentialUsername 'u' -CredentialPassword 'p'
+        Set-OrchCredentialAsset -Path $script:RootB -Name $cn -CredentialUsername 'u' -CredentialPassword 'p'
+        try {
+            Compare-OrchAsset -Name $cn -Path $script:RootA -DifferencePath $script:RootB `
+                -WarningVariable w -WarningAction SilentlyContinue | Out-Null
+            ($w -join ' ') | Should -Match 'secret'
+        }
+        finally {
+            Remove-OrchAsset -Name $cn -Path $script:RootA -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-OrchAsset -Name $cn -Path $script:RootB -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
+    It 'does not warn for a Text-only comparison' {
+        Compare-OrchAsset -Name $script:Changed -Path $script:RootA -DifferencePath $script:RootB `
+            -ValueType Text -WarningVariable w -WarningAction SilentlyContinue | Out-Null
+        $w | Should -BeNullOrEmpty
     }
 }

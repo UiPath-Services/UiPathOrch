@@ -31,6 +31,7 @@ public class CompareApiTriggerCmdlet : OrchestratorPSCmdlet
 
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(ApiTriggerNameCompleter))]
+    [SupportsWildcards]
     public string? DifferenceName { get; set; }
 
     [Parameter]

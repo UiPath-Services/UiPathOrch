@@ -31,6 +31,7 @@ public class CompareFolderMachineCmdlet : OrchestratorPSCmdlet
 
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(FolderMachineNameCompleter))]
+    [SupportsWildcards]
     public string? DifferenceName { get; set; }
 
     [Parameter]

@@ -41,10 +41,13 @@
     </View>
 
     <!--
-      Compare-Orch* family output. One row per entity: SideIndicator (<=, =>, <>, ==),
-      Name, the reference-side Path and the difference-side DifferencePath (each single-sided
-      — a "<=" row has no DifferencePath, a "=>" row has no Path), and a compact rendering of
-      the per-property Differences (only populated on "<>" rows). ReferenceObject/
+      Compare-Orch* family output. Rendered as a LIST (not a table) so the per-property
+      Differences are never truncated. One record per entity: SideIndicator (<=, =>, <>, ==), the
+      reference-side Name/Path and the difference-side DifferenceName/DifferencePath. The
+      difference-side columns are empty on a "<=" (reference-only) row, and Path is empty on a
+      "=>" (difference-only) row; DifferenceName equals Name except in -DifferenceName broadcast
+      mode, where the reference and the single target are matched across names. Differences is a
+      compact rendering of the per-property diffs (only populated on "<>" rows). ReferenceObject/
       DifferenceObject are intentionally omitted here — they're for downstream piping.
     -->
     <View>
@@ -52,49 +55,40 @@
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.OrchComparison</TypeName>
       </ViewSelectedBy>
-      <TableControl>
-        <TableHeaders>
-          <TableColumnHeader>
-            <Label>Side</Label>
-            <Width>4</Width>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Name</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Path</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>DifferencePath</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Differences</Label>
-          </TableColumnHeader>
-        </TableHeaders>
-        <TableRowEntries>
-          <TableRowEntry>
-            <TableColumnItems>
-              <TableColumnItem>
+      <GroupBy>
+        <Label>Path</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem>
+                <Label>SideIndicator</Label>
                 <PropertyName>SideIndicator</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
+              </ListItem>
+              <ListItem>
+                <Label>Name</Label>
                 <PropertyName>Name</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>Path</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
+              </ListItem>
+              <ListItem>
+                <Label>DifferencePath</Label>
                 <PropertyName>DifferencePath</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
+              </ListItem>
+              <ListItem>
+                <Label>DifferenceName</Label>
+                <PropertyName>DifferenceName</PropertyName>
+              </ListItem>
+              <ListItem>
+                <Label>Differences</Label>
                 <ScriptBlock>
-                  if ($_.Differences) { ($_.Differences | ForEach-Object { $_.ToString() }) -join '; ' } else { '' }
+                  if ($_.Differences) { ($_.Differences | ForEach-Object { $_.ToString() }) -join "`n" } else { '' }
                 </ScriptBlock>
-              </TableColumnItem>
-            </TableColumnItems>
-          </TableRowEntry>
-        </TableRowEntries>
-      </TableControl>
+              </ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
     </View>
 
     <!--

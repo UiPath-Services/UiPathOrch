@@ -78,6 +78,33 @@ Describe 'Compare-OrchCalendar (tenant-scoped)' {
             Should -Throw
     }
 
+    It 'sets DifferenceName to the difference-side name (empty on a "<=" row)' {
+        $eq = Compare-OrchCalendar -Name "${script:Prefix}*" -Path "${script:Drive}:" -DifferencePath "${script:Drive}:" -IncludeEqual
+        ($eq | Where-Object Name -eq $script:Same).DifferenceName | Should -Be $script:Same
+        $lt = Compare-OrchCalendar -Name "${script:Prefix}*" -Path "${script:Drive}:" -DifferencePath "${script:Other}:"
+        ($lt | Where-Object Name -eq $script:Same).DifferenceName | Should -BeNullOrEmpty
+    }
+
+    It 'reports the target name in DifferenceName (broadcast)' {
+        $r = Compare-OrchCalendar -Path "${script:Drive}:" -Name $script:Same `
+            -DifferencePath "${script:Drive}:" -DifferenceName $script:Other2 -Property ExcludedDates
+        $r.Name           | Should -Be $script:Same
+        $r.DifferenceName | Should -Be $script:Other2
+    }
+
+    It 'accepts a wildcard -DifferenceName that resolves to exactly one calendar' {
+        $r = Compare-OrchCalendar -Path "${script:Drive}:" -Name $script:Same `
+            -DifferencePath "${script:Drive}:" -DifferenceName "${script:Prefix}Other*" -Property ExcludedDates
+        $r.DifferenceName | Should -Be $script:Other2
+    }
+
+    It 'errors when a wildcard -DifferenceName matches more than one calendar' {
+        # Prefix* matches Same, Changed and Other -> ambiguous.
+        { Compare-OrchCalendar -Path "${script:Drive}:" -Name $script:Same `
+            -DifferencePath "${script:Drive}:" -DifferenceName "${script:Prefix}*" -ErrorAction Stop } |
+            Should -Throw
+    }
+
     It 'warns on an unrecognized -Property name' {
         Compare-OrchCalendar -Name "${script:Prefix}*" -Path "${script:Drive}:" -DifferencePath "${script:Drive}:" `
             -Property 'Bogus' -WarningVariable w -WarningAction SilentlyContinue | Out-Null

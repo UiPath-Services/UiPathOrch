@@ -68,6 +68,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
     // targets has no well-defined pairing — that's a rename-map job, not this parameter.
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(AssetNameCompleter))]
+    [SupportsWildcards]
     public string? DifferenceName { get; set; }
 
     [Parameter]
@@ -158,6 +159,21 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
+    // Set once we've actually seen a Credential/Secret asset, so the "secrets not compared"
+    // warning fires only when such an asset is genuinely in scope — not on plain Text/Integer
+    // comparisons.
+    private bool _secretWarned;
+    private void WarnIfSecretAsset(Asset? a)
+    {
+        if (_secretWarned || a is null) return;
+        if (string.Equals(a.ValueType, "Credential", StringComparison.OrdinalIgnoreCase) ||
+            string.Equals(a.ValueType, "Secret", StringComparison.OrdinalIgnoreCase))
+        {
+            _secretWarned = true;
+            CompareParameterHelper.WarnSecretNotCompared(this, "Credential and Secret asset values (passwords / secret text)");
+        }
+    }
+
     protected override void ProcessRecord()
     {
         var effPath = EffectivePath(Path, LiteralPath);
@@ -208,27 +224,33 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
         HashSet<string>? only, bool compareUserValues, Dictionary<string, string>? userMapping,
         ConsoleCancelHandler cancelHandler)
     {
-        Asset? target;
-        try
-        {
-            target = dstDrive.Assets.Get(dstRootFolder)
-                .FirstOrDefault(a => string.Equals(a?.Name, DifferenceName, StringComparison.OrdinalIgnoreCase));
-        }
+        // -DifferenceName may be a wildcard, but the broadcast target must resolve to exactly one
+        // asset (there is no well-defined pairing against several named targets).
+        List<Asset> candidates;
+        try { candidates = dstDrive.Assets.Get(dstRootFolder).Where(a => a is not null).Select(a => a!).ToList(); }
         catch (Exception ex)
         {
             WriteError(new ErrorRecord(new OrchException(dstRootFolder.GetPSPath(), ex), "GetAssetError", ErrorCategory.InvalidOperation, dstRootFolder));
             return;
         }
-
-        // An explicitly named target that doesn't exist is almost always a typo, so stop with
-        // one clear error rather than flooding every reference asset with a "<=" row.
-        if (target is null)
+        var (status, matchedTarget, names) = CompareParameterHelper.ResolveBroadcastTarget(candidates, DifferenceName!, a => a.Name);
+        // A named target that doesn't exist is almost always a typo, so stop with one clear error
+        // rather than flooding every reference asset with a "<=" row.
+        if (status == CompareParameterHelper.BroadcastMatch.NotFound)
         {
             WriteError(new ErrorRecord(
                 new OrchException(dstRootFolder.GetPSPath(), $"DifferenceName '{DifferenceName}' was not found in '{dstRootFolder.GetPSPath()}'."),
                 "DifferenceNameNotFound", ErrorCategory.ObjectNotFound, DifferenceName));
             return;
         }
+        if (status == CompareParameterHelper.BroadcastMatch.Ambiguous)
+        {
+            WriteError(new ErrorRecord(
+                new OrchException(dstRootFolder.GetPSPath(), $"DifferenceName '{DifferenceName}' matched {names.Count} assets in '{dstRootFolder.GetPSPath()}' ({string.Join(", ", names)}); it must resolve to a single name."),
+                "DifferenceNameAmbiguous", ErrorCategory.InvalidArgument, DifferenceName));
+            return;
+        }
+        Asset target = matchedTarget!;
 
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
@@ -326,6 +348,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
 
     private void EmitComparison(Asset reference, Asset difference, HashSet<string>? only, bool compareUserValues, Dictionary<string, string>? userMapping)
     {
+        WarnIfSecretAsset(reference); WarnIfSecretAsset(difference);
         var diffs = ComputeAssetDifferences(reference, difference, only, compareUserValues, userMapping);
 
         if (diffs.Count == 0)
@@ -336,6 +359,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
                 {
                     SideIndicator = EntityComparison.Equal,
                     Name = reference.Name,
+                    DifferenceName = difference.Name,
                     Path = reference.GetPSPath(),
                     DifferencePath = difference.GetPSPath(),
                     ReferenceObject = reference,
@@ -349,6 +373,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
         {
             SideIndicator = EntityComparison.Different,
             Name = reference.Name,
+            DifferenceName = difference.Name,
             Path = reference.GetPSPath(),
             DifferencePath = difference.GetPSPath(),
             Differences = diffs,
@@ -360,10 +385,12 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
     private void EmitOnly(Asset asset, string side)
     {
         bool isReference = side == EntityComparison.ReferenceOnly;
+        WarnIfSecretAsset(asset);
         WriteObject(new OrchComparison
         {
             SideIndicator = side,
             Name = asset.Name,
+            DifferenceName = isReference ? null : asset.Name,
             Path = isReference ? asset.GetPSPath() : null,
             DifferencePath = isReference ? null : asset.GetPSPath(),
             ReferenceObject = isReference ? asset : null,

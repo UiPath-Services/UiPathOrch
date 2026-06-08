@@ -32,6 +32,7 @@ public class CompareBucketCmdlet : OrchestratorPSCmdlet
 
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]
+    [SupportsWildcards]
     public string? DifferenceName { get; set; }
 
     [Parameter]
@@ -68,6 +69,12 @@ public class CompareBucketCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(dp)) yield return n;
         if (MyInvocation.BoundParameters.TryGetValue("LiteralPath", out var lp))
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
+    }
+
+    protected override void BeginProcessing()
+    {
+        base.BeginProcessing();
+        CompareParameterHelper.WarnSecretNotCompared(this, "the bucket's storage credential (access key)");
     }
 
     protected override void ProcessRecord()

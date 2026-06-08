@@ -2378,6 +2378,7 @@ public class OrchComparison
 {
     public string? SideIndicator { get; set; }
     public string? Name { get; set; }
+    public string? DifferenceName { get; set; }
     public string? Path { get; set; }
     public string? DifferencePath { get; set; }
     public List<PropertyDifference>? Differences { get; set; }

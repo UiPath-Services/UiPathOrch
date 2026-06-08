@@ -32,6 +32,7 @@ public class CompareMachineCmdlet : OrchestratorPSCmdlet
 
     [Parameter(Position = 2)]
     [ArgumentCompleter(typeof(MachineNameCompleter))]
+    [SupportsWildcards]
     public string? DifferenceName { get; set; }
 
     [Parameter]
@@ -67,6 +68,12 @@ public class CompareMachineCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(dp)) yield return n;
         if (MyInvocation.BoundParameters.TryGetValue("LiteralPath", out var lp))
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
+    }
+
+    protected override void BeginProcessing()
+    {
+        base.BeginProcessing();
+        CompareParameterHelper.WarnSecretNotCompared(this, "a confidential machine's client secret (ClientSecret)");
     }
 
     protected override void ProcessRecord()
