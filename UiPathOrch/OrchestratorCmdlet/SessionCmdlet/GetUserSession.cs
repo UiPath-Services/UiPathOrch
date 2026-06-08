@@ -22,6 +22,9 @@ public class GetUserSessionCmdlet : OrchestratorPSCmdlet
     public string[]? OrderBy { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
+    public SwitchParameter OrderAscending { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     public ulong? Skip { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -50,7 +53,7 @@ public class GetUserSessionCmdlet : OrchestratorPSCmdlet
         #endregion
 
         #region Type
-        if (Type is not null)
+        if (Type is not null && Type.Length > 0)
         {
             int[] t = Array.ConvertAll(Type, t => UserSessionTypeItems.Items.ResolveKeyOrThrow(t, nameof(Type)));
             IEnumerable<string> f = t.Select(i => $"(Robot/Type eq '{i}')");
@@ -67,15 +70,23 @@ public class GetUserSessionCmdlet : OrchestratorPSCmdlet
         return null;
     }
 
-    private string? MakeOrderBy()
+    private string? MakeOrderBy() => BuildSessionOrderByClause(OrderBy, OrderAscending.IsPresent);
+
+    // OData $orderby for the session list. Pure/static so the asc-vs-desc and
+    // multi-field formatting is unit-testable. The direction is applied per
+    // field -- OData "A,B desc" leaves A at its default, so each field carries
+    // its own direction. Default is descending for parity with the other
+    // Get-Orch* list cmdlets (Job/QueueItem/Log); -OrderAscending flips it.
+    // Throws (via ResolveKeyOrThrow) on an OrderBy value outside the lookup.
+    internal static string? BuildSessionOrderByClause(string[]? orderBy, bool ascending)
     {
-        if (OrderBy is not null && OrderBy.Length > 0)
-        {
-            IEnumerable<string> o1 = OrderBy.Select(o => UserSessionOrderableItems.Items.ResolveKeyOrThrow(o, nameof(OrderBy)));
-            string o2 = string.Join(",", o1);
-            return $"&$orderby={o2} asc";
-        }
-        return null;
+        if (orderBy is null || orderBy.Length == 0)
+            return null;
+
+        string dir = ascending ? "asc" : "desc";
+        IEnumerable<string> fields = orderBy.Select(
+            o => $"{UserSessionOrderableItems.Items.ResolveKeyOrThrow(o, "OrderBy")} {dir}");
+        return $"&$orderby={string.Join(",", fields)}";
     }
 
     protected override void ProcessRecord()
