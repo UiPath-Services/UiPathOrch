@@ -1107,7 +1107,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             OrchAPISession.GetPmLicensedGroups,
             e =>
             {
-                e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
+                e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items.GetValueOrDefault(b, b)).ToArray();
             }
         );
 
@@ -1115,7 +1115,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             OrchAPISession.GetPmLicensedUsers,
             e =>
             {
-                e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
+                e.userBundleLicenseNames = e.userBundleLicenses?.Select(b => AvailableUserBundlesItems.Items.GetValueOrDefault(b, b)).ToArray();
             }
         );
 

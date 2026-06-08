@@ -65,7 +65,7 @@ public class RemovePmGroupLicenseCmdlet : OrchestratorPSCmdlet
                     var availableUserBundles = drive.GetPmUserLicenseGroupsAvailableLicenses(group.id, group.name!);
 
                     foreach (var bundle in group.userBundleLicenses
-                        .Select(bundle => (bundle, AvailableUserBundlesItems.Items[bundle]))
+                        .Select(bundle => (bundle, AvailableUserBundlesItems.Items.GetValueOrDefault(bundle, bundle)))
                         .ExcludeByWildcards(b => b.Item2, wpLicense)
                         .OrderBy(b => b.Item2))
                     {
@@ -144,7 +144,7 @@ public class RemovePmGroupLicenseCmdlet : OrchestratorPSCmdlet
                     var ret = drive.OrchAPISession.PutPmLicenseGroup(cmd);
                     if (ret is not null)
                     {
-                        ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
+                        ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items.GetValueOrDefault(b, b)).ToArray();
                         // UpdateLicensedGroupResponse is a fresh per-call
                         // response (not a shared cache singleton), so set the
                         // drive-local labels directly — no ShallowClone needed.

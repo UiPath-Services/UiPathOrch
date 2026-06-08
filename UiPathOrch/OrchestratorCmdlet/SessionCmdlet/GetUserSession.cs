@@ -43,7 +43,7 @@ public class GetUserSessionCmdlet : OrchestratorPSCmdlet
         #region State
         if (State is not null && State.Length > 0)
         {
-            int[] status = Array.ConvertAll(State, status => UserSessionStateItems.Items[status]);
+            int[] status = Array.ConvertAll(State, status => UserSessionStateItems.Items.ResolveKeyOrThrow(status, nameof(State)));
             IEnumerable<string> f = status.Select(i => $"(State eq '{i}')");
             filter.Add($"({string.Join(" or ", f)})");
         }
@@ -52,7 +52,7 @@ public class GetUserSessionCmdlet : OrchestratorPSCmdlet
         #region Type
         if (Type is not null)
         {
-            int[] t = Array.ConvertAll(Type, t => UserSessionTypeItems.Items[t]);
+            int[] t = Array.ConvertAll(Type, t => UserSessionTypeItems.Items.ResolveKeyOrThrow(t, nameof(Type)));
             IEnumerable<string> f = t.Select(i => $"(Robot/Type eq '{i}')");
             filter.Add($"({string.Join(" or ", f)})");
         }
@@ -71,7 +71,7 @@ public class GetUserSessionCmdlet : OrchestratorPSCmdlet
     {
         if (OrderBy is not null && OrderBy.Length > 0)
         {
-            IEnumerable<string> o1 = OrderBy.Select(o => UserSessionOrderableItems.Items[o]);
+            IEnumerable<string> o1 = OrderBy.Select(o => UserSessionOrderableItems.Items.ResolveKeyOrThrow(o, nameof(OrderBy)));
             string o2 = string.Join(",", o1);
             return $"&$orderby={o2} asc";
         }

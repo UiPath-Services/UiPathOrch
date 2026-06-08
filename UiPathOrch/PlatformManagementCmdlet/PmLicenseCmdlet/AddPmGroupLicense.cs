@@ -305,7 +305,7 @@ public class AddPmGroupLicenseCmdlet : OrchestratorPSCmdlet
                     var ret = drive.OrchAPISession.PutPmLicenseGroup(cmd);
                     if (ret is not null)
                     {
-                        ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items[b]).ToArray();
+                        ret.userBundleLicenseNames = ret.userBundleCodes?.Select(b => AvailableUserBundlesItems.Items.GetValueOrDefault(b, b)).ToArray();
                         // UpdateLicensedGroupResponse is a fresh per-call
                         // response (not a shared cache singleton), so set the
                         // drive-local labels directly — no ShallowClone needed.
