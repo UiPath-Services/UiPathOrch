@@ -255,157 +255,54 @@ public class SetSecretAssetCmdlet : SetCredentialLikeAssetCmdletBase<SetSecretAs
         parameters.Add(parameter);
     }
 
-    private Asset? UpdateAssetInMemory(OrchDriveInfo drive, Folder folder, string name, SetSecretAssetCommandParameter param,
-        IEnumerable<User>? specifiedUsers,
-        IEnumerable<ExtendedMachine?> specifiedMachines,
-        Int64 credentialStoreId)
+    protected override string ValueType => "Secret";
+
+    protected override bool HasCreateValue(SetSecretAssetCommandParameter param)
+        => !string.IsNullOrEmpty(param.SecretValue) || !string.IsNullOrEmpty(param.ExternalName);
+
+    // Secret has no per-type seeding for a new asset.
+    protected override void InitializeNewAsset(Asset asset) { }
+
+    protected override bool ApplyGlobalValue(Asset asset, SetSecretAssetCommandParameter param)
     {
-        string target = System.IO.Path.Combine(folder.GetPSPath(), param.Name?[0] ?? "");
-        bool isDirty = false;
-
-        pendingAssets.TryGetValue((name, folder.GetPSPath()), out var asset);
-        if (asset is null)
+        if (!string.IsNullOrEmpty(param.ExternalName))
         {
-            var assets = drive.Assets.Get(folder);
-            asset = assets.FirstOrDefault(a => a.Name == name);
-            if (asset is null)
-            {
-                if (string.IsNullOrEmpty(param.SecretValue) && string.IsNullOrEmpty(param.ExternalName))
-                    return null;
-
-                isDirty = true;
-                // Description is intentionally omitted here; it's resolved across all input
-                // rows via MergeDescription and applied in EndProcessing before POST.
-                asset = new Asset
-                {
-                    Name = name,
-                    ValueScope = "Global",
-                    ValueType = "Secret",
-                    CanBeDeleted = true,
-                    HasDefaultValue = false,
-                    Path = folder.GetPSPath(),
-                };
-            }
-            else
-            {
-                asset = OrchCollectionExtensions.DeepCopy(asset);
-                asset.Path = folder.GetPSPath();
-            }
+            asset.ExternalName = param.ExternalName;
+            asset.SecretValue = null;
+            asset.HasDefaultValue = true;
+            return true;
         }
-
-        // Description is merged across all input rows in MergeDescription (priority:
-        // non-empty > "" > null) and applied to the asset in EndProcessing. We mark dirty
-        // whenever the user supplied a Description on this row, so the asset reaches POST
-        // even when Description is the only change.
-        MergeDescription(name, folder.GetPSPath(), param.Description);
-        if (param.Description is not null) isDirty = true;
-
-        if (asset.CredentialStoreId != credentialStoreId && credentialStoreId != 0)
+        if (!string.IsNullOrEmpty(param.SecretValue))
         {
-            isDirty = true;
-            asset.CredentialStoreId = credentialStoreId;
-            if (asset.UserValues is not null)
-            {
-                foreach (var userValue in asset.UserValues)
-                {
-                    userValue.CredentialStoreId = credentialStoreId;
-                }
-            }
+            asset.SecretValue = param.SecretValue;
+            asset.HasDefaultValue = true;
+            return true;
         }
+        return false;
+    }
 
-        if (specifiedUsers is null)
+    // Both empty = "not specified" (e.g., CSV round-trip from Get-OrchSecretAsset).
+    protected override bool IsPerRobotValueEmpty(SetSecretAssetCommandParameter param)
+        => string.IsNullOrEmpty(param.SecretValue) && string.IsNullOrEmpty(param.ExternalName);
+
+    // Secret leaves an existing per-robot entry untouched on an empty row (do not clobber an
+    // existing secret with empty or delete the UserValue; use Remove-OrchAsset to drop one).
+    protected override bool AllowPerRobotRemoval => false;
+
+    protected override bool ApplyPerRobotValue(AssetUserValue userValue, SetSecretAssetCommandParameter param)
+    {
+        if (!string.IsNullOrEmpty(param.ExternalName))
         {
-            if (specifiedMachines is not null && specifiedMachines.Any(m => m is not null))
-            {
-                string strMachineNames = string.Join(", ", param.MachineName!);
-                var errorRecord = new ErrorRecord(new OrchException(target, $"UserName is not specified. MachineName '{strMachineNames}' ignored."), "SetAssetError", ErrorCategory.InvalidOperation, target);
-                WriteError(errorRecord);
-            }
-
-            if (!string.IsNullOrEmpty(param.ExternalName))
-            {
-                isDirty = true;
-                asset.ExternalName = param.ExternalName;
-                asset.SecretValue = null;
-                asset.HasDefaultValue = true;
-            }
-            else if (!string.IsNullOrEmpty(param.SecretValue))
-            {
-                isDirty = true;
-                asset.SecretValue = param.SecretValue;
-                asset.HasDefaultValue = true;
-            }
+            userValue.ExternalName = param.ExternalName;
+            userValue.SecretValue = null;
+            return true;
         }
-        else
+        if (!string.IsNullOrEmpty(param.SecretValue))
         {
-            if (credentialStoreId != 0 && asset.UserValues is not null)
-            {
-                foreach (var uv in asset.UserValues)
-                {
-                    if (uv.CredentialStoreId != credentialStoreId)
-                    {
-                        isDirty = true;
-                        uv.CredentialStoreId = credentialStoreId;
-                    }
-                }
-            }
-
-            var uvDict = (asset.UserValues ?? []).ToDictionary(uv => (uv.UserId, uv.MachineId));
-
-            foreach (var user in specifiedUsers)
-            {
-                foreach (var machine in specifiedMachines!)
-                {
-                    var key = (user.Id, machine?.Id);
-                    uvDict.TryGetValue(key, out var userValue);
-
-                    // Both empty = "not specified" (e.g., CSV round-trip from Get-OrchSecretAsset).
-                    // Skip silently so we do not clobber an existing secret with empty or delete
-                    // the UserValue entry. To remove a UserValue, use Remove-OrchAsset.
-                    if (string.IsNullOrEmpty(param.SecretValue) && string.IsNullOrEmpty(param.ExternalName))
-                    {
-                        continue;
-                    }
-                    if (userValue is null)
-                    {
-                        isDirty = true;
-                        userValue = new AssetUserValue
-                        {
-                            ValueType = "Secret",
-                            UserId = user.Id,
-                            UserName = user.UserName,
-                            MachineId = machine?.Id,
-                            MachineName = machine?.Name,
-                            CredentialStoreId = asset.CredentialStoreId
-                        };
-                        uvDict[key] = userValue;
-                        asset.ValueScope = "PerRobot";
-                    }
-
-                    if (!string.IsNullOrEmpty(param.ExternalName))
-                    {
-                        isDirty = true;
-                        userValue.ExternalName = param.ExternalName;
-                        userValue.SecretValue = null;
-                    }
-                    else if (!string.IsNullOrEmpty(param.SecretValue))
-                    {
-                        isDirty = true;
-                        userValue.SecretValue = param.SecretValue;
-                    }
-                }
-            }
-
-            if (uvDict.Count > 0)
-                asset.UserValues = uvDict.Values.ToList();
-            else
-            {
-                asset.ValueScope = "Global";
-                asset.UserValues = null;
-            }
+            userValue.SecretValue = param.SecretValue;
+            return true;
         }
-
-        return isDirty ? asset : null;
+        return false;
     }
 
     protected void BuildAssetDataFromParameterSets()

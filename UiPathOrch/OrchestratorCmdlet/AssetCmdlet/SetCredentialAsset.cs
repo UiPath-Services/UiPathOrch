@@ -276,195 +276,72 @@ public class SetCredentialAssetCmdlet : SetCredentialLikeAssetCmdletBase<SetCred
         parameters.Add(parameter);
     }
 
-    private Asset? UpdateAssetInMemory(OrchDriveInfo drive, Folder folder, string name, SetCredentialAssetCommandParameter param,
-        IEnumerable<User>? specifiedUsers,
-        IEnumerable<ExtendedMachine?> specifiedMachines,
-        Int64 credentialStoreId)
+    protected override string ValueType => "Credential";
+
+    protected override bool HasCreateValue(SetCredentialAssetCommandParameter param)
+        => !string.IsNullOrEmpty(param.CredentialPassword) || !string.IsNullOrEmpty(param.ExternalName);
+
+    protected override void InitializeNewAsset(Asset asset)
+        => asset.CredentialUsername = "";
+
+    protected override bool ApplyGlobalValue(Asset asset, SetCredentialAssetCommandParameter param)
     {
-        string target = System.IO.Path.Combine(folder.GetPSPath(), param.Name?[0] ?? "");
+        if (!string.IsNullOrEmpty(param.ExternalName))
+        {
+            asset.ExternalName = param.ExternalName;
+            asset.CredentialUsername = null;
+            asset.CredentialPassword = null;
+            asset.HasDefaultValue = true;
+            return true;
+        }
+
         bool isDirty = false;
-
-        pendingAssets.TryGetValue((name, folder.GetPSPath()), out var asset);
-        if (asset is null)
+        if (!string.IsNullOrEmpty(param.CredentialUsername) && asset.CredentialUsername != param.CredentialUsername)
         {
-            var assets = drive.Assets.Get(folder);
-            asset = assets.FirstOrDefault(a => a.Name == name);
-            if (asset is null)
-            {
-                if (string.IsNullOrEmpty(param.CredentialPassword) && string.IsNullOrEmpty(param.ExternalName))
-                    return null;
-
-                isDirty = true;
-                // Create a new asset in memory. Description is intentionally omitted here;
-                // it's resolved across all input rows via MergeDescription and applied in
-                // EndProcessing before POST.
-                asset = new Asset
-                {
-                    Name = name,
-                    ValueScope = "Global",
-                    ValueType = "Credential",
-                    CredentialUsername = "",
-                    CanBeDeleted = true,
-                    HasDefaultValue = false,
-                    Path = folder.GetPSPath(),
-                };
-            }
-            else
-            {
-                asset = OrchCollectionExtensions.DeepCopy(asset);
-                asset.Path = folder.GetPSPath();
-            }
-        }
-
-        // Description is merged across all input rows in MergeDescription (priority:
-        // non-empty > "" > null) and applied to the asset in EndProcessing. We mark dirty
-        // whenever the user supplied a Description on this row, so the asset reaches POST
-        // even when Description is the only change.
-        MergeDescription(name, folder.GetPSPath(), param.Description);
-        if (param.Description is not null) isDirty = true;
-
-        if (asset.CredentialStoreId != credentialStoreId && credentialStoreId != 0)
-        {
+            asset.CredentialUsername = param.CredentialUsername;
             isDirty = true;
-            asset.CredentialStoreId = credentialStoreId;
-            if (asset.UserValues is not null)
-            {
-                foreach (var userValue in asset.UserValues)
-                {
-                    userValue.CredentialStoreId = credentialStoreId;
-                }
-            }
         }
 
-        // At this point, Description and CredentialStoreId have been updated in memory
-        // However, CredentialStoreId for UserValues has not been updated yet
-
-        // When CredentialPassword is not specified, do not update the Credential
-        // (When CredentialPassword is set to '', continue subsequent processing to delete the asset)
-
-        // Update Global value
-        if (specifiedUsers is null)
+        // Only update password when a non-empty value is explicitly specified.
+        // Empty string "" means "not specified" (e.g., from CSV export where passwords are masked).
+        if (!string.IsNullOrEmpty(param.CredentialPassword))
         {
-            if (specifiedMachines is not null && specifiedMachines.Any(m => m is not null))
-            {
-                // Warning that machines will be ignored
-                string strMachineNames = string.Join(", ", param.MachineName!);
-                var errorRecord = new ErrorRecord(new OrchException(target, $"UserName is not specified. MachineName '{strMachineNames}' ignored."), "SetAssetError", ErrorCategory.InvalidOperation, target);
-                WriteError(errorRecord);
-            }
-
-            if (!string.IsNullOrEmpty(param.ExternalName))
-            {
-                isDirty = true;
-                asset.ExternalName = param.ExternalName;
-                asset.CredentialUsername = null;
-                asset.CredentialPassword = null;
-                asset.HasDefaultValue = true;
-            }
-            else
-            {
-                if (!string.IsNullOrEmpty(param.CredentialUsername) && asset.CredentialUsername != param.CredentialUsername)
-                {
-                    isDirty = true;
-                    asset.CredentialUsername = param.CredentialUsername;
-                }
-
-                // Only update password when a non-empty value is explicitly specified.
-                // Empty string "" means "not specified" (e.g., from CSV export where passwords are masked).
-                if (!string.IsNullOrEmpty(param.CredentialPassword))
-                {
-                    isDirty = true;
-                    asset.CredentialPassword = param.CredentialPassword;
-                    asset.HasDefaultValue = true;
-                }
-            }
+            asset.CredentialPassword = param.CredentialPassword;
+            asset.HasDefaultValue = true;
+            isDirty = true;
         }
-        else // Update PerRobot value
+        return isDirty;
+    }
+
+    // Empty-row trigger: no username and password/externalName explicitly blanked.
+    protected override bool IsPerRobotValueEmpty(SetCredentialAssetCommandParameter param)
+        => string.IsNullOrEmpty(param.CredentialUsername) && (param.CredentialPassword == "" || param.ExternalName == "");
+
+    // Credential clears the per-robot entry on an empty row.
+    protected override bool AllowPerRobotRemoval => true;
+
+    protected override bool ApplyPerRobotValue(AssetUserValue userValue, SetCredentialAssetCommandParameter param)
+    {
+        if (!string.IsNullOrEmpty(param.ExternalName))
         {
-            // If CredentialStore is specified, update the CredentialStoreId for all UserValues
-            if (credentialStoreId != 0 && asset.UserValues is not null)
-            {
-                foreach (var uv in asset.UserValues)
-                {
-                    if (uv.CredentialStoreId != credentialStoreId)
-                    {
-                        isDirty = true;
-                        uv.CredentialStoreId = credentialStoreId;
-                    }
-                }
-            }
-
-            // Use Dictionary for O(1) lookup by (UserId, MachineId)
-            var uvDict = (asset.UserValues ?? []).ToDictionary(uv => (uv.UserId, uv.MachineId));
-
-            foreach (var user in specifiedUsers)
-            {
-                foreach (var machine in specifiedMachines!)
-                {
-                    var key = (user.Id, machine?.Id);
-                    uvDict.TryGetValue(key, out var userValue);
-
-                    if (string.IsNullOrEmpty(param.CredentialUsername) && (param.CredentialPassword == "" || param.ExternalName == ""))
-                    {
-                        if (userValue is not null)
-                        {
-                            isDirty = true;
-                            uvDict.Remove(key);
-                        }
-                        continue;
-                    }
-                    if (userValue is null)
-                    {
-                        isDirty = true;
-                        userValue = new AssetUserValue
-                        {
-                            ValueType = "Credential",
-                            UserId = user.Id,
-                            UserName = user.UserName,
-                            MachineId = machine?.Id,
-                            MachineName = machine?.Name,
-                            CredentialStoreId = asset.CredentialStoreId
-                        };
-                        uvDict[key] = userValue;
-                        asset.ValueScope = "PerRobot";
-                    }
-
-                    if (!string.IsNullOrEmpty(param.ExternalName))
-                    {
-                        isDirty = true;
-                        userValue.ExternalName = param.ExternalName;
-                        userValue.CredentialUsername = null;
-                        userValue.CredentialPassword = null;
-                    }
-                    else
-                    {
-                        if (userValue.CredentialUsername != param.CredentialUsername && !string.IsNullOrEmpty(param.CredentialUsername))
-                        {
-                            isDirty = true;
-                            userValue.CredentialUsername = param.CredentialUsername;
-                        }
-                        if (!string.IsNullOrEmpty(param.CredentialPassword))
-                        {
-                            isDirty = true;
-                            userValue.CredentialPassword = param.CredentialPassword;
-                        }
-                    }
-                }
-            }
-
-            // Write back to asset.UserValues
-            if (uvDict.Count > 0)
-                asset.UserValues = uvDict.Values.ToList();
-            else
-            {
-                asset.ValueScope = "Global";
-                asset.UserValues = null;
-            }
+            userValue.ExternalName = param.ExternalName;
+            userValue.CredentialUsername = null;
+            userValue.CredentialPassword = null;
+            return true;
         }
-        if (isDirty)
-            return asset;
-        else
-            return null;
+
+        bool isDirty = false;
+        if (userValue.CredentialUsername != param.CredentialUsername && !string.IsNullOrEmpty(param.CredentialUsername))
+        {
+            userValue.CredentialUsername = param.CredentialUsername;
+            isDirty = true;
+        }
+        if (!string.IsNullOrEmpty(param.CredentialPassword))
+        {
+            userValue.CredentialPassword = param.CredentialPassword;
+            isDirty = true;
+        }
+        return isDirty;
     }
 
     protected void BuildAssetDataFromParameterSets()
