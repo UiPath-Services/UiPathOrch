@@ -308,6 +308,21 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
         return ret;
     }
 
+    // Ordering for the no-filter cache-output path. Extracted as a pure,
+    // testable function. The default arm is the regression guard: -OrderBy is
+    // offered via LogOrderableItems but is a completer, not a ValidateSet, so an
+    // unlisted value previously matched neither case and the switch fell through
+    // with no output, silently dropping every cached log. "TimeStamp" (the
+    // default) and any other unlisted value fall back to TimeStamp ordering,
+    // descending unless -OrderAscending.
+    internal static IEnumerable<Log> OrderRobotLogsForOutput(
+        IEnumerable<Log> items, string? orderBy, bool ascending) =>
+        orderBy switch
+        {
+            "Level" => ascending ? items.OrderBy(l => l.Level)     : items.OrderByDescending(l => l.Level),
+            _       => ascending ? items.OrderBy(l => l.TimeStamp) : items.OrderByDescending(l => l.TimeStamp),
+        };
+
     protected override void ProcessRecord()
     {
         ulong first = First ?? ulong.MaxValue;
@@ -336,21 +351,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
             {
                 var logs = drive.RobotLogs.GetCache(folder);
                 if (logs is null) continue;
-                switch (orderBy)
-                {
-                    case "TimeStamp":
-                        if (OrderAscending.IsPresent)
-                            WriteObject(logs.OrderBy(l => l.TimeStamp), true);
-                        else
-                            WriteObject(logs.OrderByDescending(l => l.TimeStamp), true);
-                        break;
-                    case "Level":
-                        if (OrderAscending.IsPresent)
-                            WriteObject(logs.OrderBy(l => l.Level), true);
-                        else
-                            WriteObject(logs.OrderByDescending(l => l.Level), true);
-                        break;
-                }
+                WriteObject(OrderRobotLogsForOutput(logs, orderBy, OrderAscending.IsPresent), true);
             }
             return;
         }
