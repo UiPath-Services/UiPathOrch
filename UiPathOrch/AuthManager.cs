@@ -39,8 +39,13 @@ internal class OrchestratorAuthManager
     /// Open PKCE authentication in an InPrivate browser
     internal bool UseInPrivate { get; set; }
 
-    private string? _access_token;
-    private string? _refresh_token;
+    // volatile: these are read lock-free from threads other than the one that
+    // wrote them -- the AccessToken/ParseJwtPayload/partition-id readers and the
+    // parallel fan-out cmdlets -- while the writers hold the session's _authLock.
+    // volatile gives the readers acquire semantics so they cannot observe a
+    // torn/stale reference for a cached token shared across drives.
+    private volatile string? _access_token;
+    private volatile string? _refresh_token;
 
     // Lifetime (seconds) reported by the last token response's `expires_in`.
     // 0 when unknown — PAT and user/password flows never call GetAccessToken, so

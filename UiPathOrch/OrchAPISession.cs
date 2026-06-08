@@ -323,7 +323,11 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    private DateTime _expiryTime; // Holds the exact time when the token expires
+    // Token-expiry instant, stored as ticks so it can be published with
+    // Volatile.Read/Write for the lock-free fast-path check in EnsureAuthenticated
+    // (DateTime cannot be declared volatile). Writes happen under _authLock; the
+    // outer fast-path read is lock-free and re-checked under the lock.
+    private long _expiryTimeTicks; // ticks of the exact time when the token expires
     private readonly OrchestratorAuthManager _authManager;
 
     internal OrchestratorAuthManager AuthManager
@@ -551,7 +555,7 @@ public partial class OrchAPISession : IDisposable
                     }
 
                     _isAuthenticated = true;
-                    _expiryTime = ComputeTokenExpiry(DateTime.Now);
+                    Volatile.Write(ref _expiryTimeTicks, ComputeTokenExpiry(DateTime.Now).Ticks);
 
                     if (ApiVersion is null && _drive is not null &&
                         (_drive._psDrive.Scope?.Contains("OR.Settings") ?? false))
@@ -578,15 +582,15 @@ public partial class OrchAPISession : IDisposable
 
         // Refresh the token if we are past 5 minutes before expiry
         DateTime now = DateTime.Now;
-        if (now > _expiryTime.AddMinutes(-5))
+        if (now > new DateTime(Volatile.Read(ref _expiryTimeTicks)).AddMinutes(-5))
         {
             lock (_authLock)
             {
-                if (now > _expiryTime.AddMinutes(-5))
+                if (now > new DateTime(Volatile.Read(ref _expiryTimeTicks)).AddMinutes(-5))
                 {
                     if (SetToken(RenewAccessToken()))
                     {
-                        _expiryTime = ComputeTokenExpiry(now);
+                        Volatile.Write(ref _expiryTimeTicks, ComputeTokenExpiry(now).Ticks);
                     }
                     else
                     {
