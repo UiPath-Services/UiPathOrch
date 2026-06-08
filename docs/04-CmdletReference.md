@@ -79,6 +79,7 @@ Tenant-level user accounts, authentication, sessions, and personal workspaces.
 | Get-OrchUserDetail | Get per-user detailed information |
 | Add-OrchUser | Add a user to the tenant |
 | Copy-OrchUser | Copy users to another tenant |
+| Compare-OrchUser | Diff users between two tenants |
 | Update-OrchUser | Update user properties |
 | Remove-OrchUser | Remove a user from the tenant |
 
@@ -119,6 +120,7 @@ Tenant-level roles and permission assignment.
 |--------|-------------|
 | Get-OrchRole | List roles (use -ExpandPermission for details) |
 | Copy-OrchRole | Copy roles to another tenant |
+| Compare-OrchRole | Diff roles (and their permissions) between two tenants |
 | Set-OrchRole | Update role permissions |
 | Remove-OrchRole | Remove a role |
 | Add-OrchRoleToFolderUser | Add a role to a folder user assignment |
@@ -137,6 +139,7 @@ Folders are navigated using cd/dir (Set-Location/Get-ChildItem).
 | Get-OrchFolderUser | List folder user assignments |
 | Add-OrchFolderUser | Assign a user to a folder with roles |
 | Copy-OrchFolderUser | Copy folder user assignments to another tenant |
+| Compare-OrchFolderUser | Diff folder user assignments between two folders/tenants |
 | Move-OrchFolderUser | Move a user assignment to another folder |
 | Remove-OrchFolderUser | Remove a user from a folder |
 | Find-OrchFolderNoUserAssigned | Find folders with no users assigned |
@@ -148,6 +151,7 @@ Folders are navigated using cd/dir (Set-Location/Get-ChildItem).
 | Get-OrchFolderMachine | List folder machine assignments |
 | Add-OrchFolderMachine | Assign a machine to a folder |
 | Copy-OrchFolderMachine | Copy folder machine assignments |
+| Compare-OrchFolderMachine | Diff folder machine assignments between two folders/tenants |
 | Remove-OrchFolderMachine | Remove a machine from a folder |
 
 ### Folder Machine Settings
@@ -198,6 +202,7 @@ Processes (package deployments to folders).
 | Get-OrchProcessDetail | Get per-process detailed information |
 | New-OrchProcess | Create a process from a package |
 | Copy-OrchProcess | Copy processes to another tenant/folder |
+| Compare-OrchProcess | Diff processes between two folders/tenants |
 | Edit-OrchProcess | Edit process properties interactively |
 | Update-OrchProcess | Update process properties |
 | Update-OrchProcessVersion | Update a process to a specific package version |
@@ -242,6 +247,7 @@ Time triggers, API triggers, and event triggers.
 | Get-OrchTriggerDetail | Get per-trigger detailed information |
 | New-OrchTrigger | Create a time trigger |
 | Copy-OrchTrigger | Copy triggers to another tenant/folder |
+| Compare-OrchTrigger | Diff time triggers between two folders/tenants |
 | Update-OrchTrigger | Update trigger properties |
 | Enable-OrchTrigger | Enable a disabled trigger |
 | Disable-OrchTrigger | Disable a trigger |
@@ -256,6 +262,7 @@ Time triggers, API triggers, and event triggers.
 | New-OrchApiTrigger | Create an API trigger |
 | Update-OrchApiTrigger | Update API trigger properties |
 | Copy-OrchApiTrigger | Copy API triggers |
+| Compare-OrchApiTrigger | Diff API triggers between two folders/tenants |
 | Enable-OrchApiTrigger | Enable an API trigger |
 | Disable-OrchApiTrigger | Disable an API trigger |
 | Remove-OrchApiTrigger | Remove an API trigger |
@@ -265,6 +272,7 @@ Time triggers, API triggers, and event triggers.
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchEventTrigger | List event triggers |
+| Compare-OrchEventTrigger | Diff event triggers between two folders/tenants |
 | Enable-OrchEventTrigger | Enable an event trigger |
 | Disable-OrchEventTrigger | Disable an event trigger |
 | Remove-OrchEventTrigger | Remove an event trigger |
@@ -279,6 +287,8 @@ Assets (key-value configuration), credential stores, and asset links.
 |--------|-------------|
 | Get-OrchAsset | List assets |
 | Copy-OrchAsset | Copy assets to another tenant/folder |
+| Compare-OrchAsset | Diff assets between two folders/tenants |
+| Move-OrchAsset | Move an asset to another folder |
 | Set-OrchAsset | Update asset values |
 | Remove-OrchAsset | Remove an asset |
 | Remove-OrchAssetUserValue | Remove per-robot (UserValue) entries from assets |
@@ -303,6 +313,7 @@ Assets (key-value configuration), credential stores, and asset links.
 |--------|-------------|
 | Get-OrchCredentialStore | List credential stores |
 | Copy-OrchCredentialStore | Copy credential stores |
+| Compare-OrchCredentialStore | Diff credential stores between two tenants |
 | Update-OrchCredentialStore | Update credential store properties |
 | Remove-OrchCredentialStore | Remove a credential store |
 
@@ -325,6 +336,8 @@ Queues and queue items for work distribution.
 | Get-OrchQueue | List queues |
 | New-OrchQueue | Create a queue |
 | Copy-OrchQueue | Copy queues to another tenant/folder |
+| Compare-OrchQueue | Diff queues between two folders/tenants |
+| Move-OrchQueue | Move a queue to another folder |
 | Update-OrchQueue | Update queue properties |
 | Remove-OrchQueue | Remove a queue |
 
@@ -357,6 +370,8 @@ Cloud/local storage buckets and their contents.
 | New-OrchBucket | Create a storage bucket |
 | Update-OrchBucket | Update storage bucket properties |
 | Copy-OrchBucket | Copy buckets to another tenant/folder |
+| Compare-OrchBucket | Diff storage buckets between two folders/tenants |
+| Move-OrchBucket | Move a storage bucket to another folder |
 | Remove-OrchBucket | Remove a storage bucket |
 | Get-OrchBucketItem | List files in a storage bucket |
 | Import-OrchBucketItem | Upload a file to a storage bucket |
@@ -380,6 +395,7 @@ Machine templates, sessions, and client secrets.
 | Get-OrchMachine | List machine templates |
 | New-OrchMachine | Create a machine template |
 | Copy-OrchMachine | Copy machines to another tenant |
+| Compare-OrchMachine | Diff machines between two tenants |
 | Update-OrchMachine | Update machine properties |
 | Remove-OrchMachine | Remove a machine template |
 | Get-OrchMachineSession | Get active machine sessions |
@@ -397,6 +413,7 @@ Machine templates, sessions, and client secrets.
 | Get-OrchCalendar | List calendars |
 | Get-OrchCalendarDate | List a calendar's excluded dates |
 | Copy-OrchCalendar | Copy calendars to another tenant |
+| Compare-OrchCalendar | Diff calendars between two tenants |
 | Remove-OrchCalendar | Remove a calendar |
 | Add-OrchCalendarDate | Add dates to a calendar |
 | Remove-OrchCalendarDate | Remove dates from a calendar |
@@ -409,6 +426,7 @@ Machine templates, sessions, and client secrets.
 | New-OrchWebhook | Create a webhook |
 | Update-OrchWebhook | Update an existing webhook |
 | Copy-OrchWebhook | Copy webhooks to another tenant |
+| Compare-OrchWebhook | Diff webhooks between two tenants |
 | Enable-OrchWebhook | Enable a disabled webhook |
 | Disable-OrchWebhook | Disable a webhook |
 | Get-OrchWebhookEventType | List the event types webhooks can subscribe to |
@@ -426,6 +444,7 @@ Long-running, human-in-the-loop workflows. Action catalogs define the form templ
 | Get-OrchActionCatalog | List action catalogs |
 | New-OrchActionCatalog | Create an action catalog |
 | Copy-OrchActionCatalog | Copy action catalogs |
+| Compare-OrchActionCatalog | Diff action catalogs between two folders/tenants |
 | Remove-OrchActionCatalog | Remove an action catalog |
 
 ### Tasks
@@ -458,6 +477,7 @@ Test automation management (Orchestrator-side).
 | Get-OrchTestSetDetail | Get test sets with their Packages and TestCases arrays populated |
 | New-OrchTestSet | Create a test set |
 | Copy-OrchTestSet | Copy test sets to another tenant/folder |
+| Compare-OrchTestSet | Diff test sets between two folders/tenants |
 | Start-OrchTestSet | Execute a test set |
 | Get-OrchTestSetExecution | Get test set execution results |
 | Stop-OrchTestSetExecution | Stop a running test set execution |
@@ -471,6 +491,7 @@ Test automation management (Orchestrator-side).
 | New-OrchTestSetSchedule | Create a test set schedule |
 | Update-OrchTestSetSchedule | Update existing test set schedules |
 | Copy-OrchTestSetSchedule | Copy test set schedules |
+| Compare-OrchTestSetSchedule | Diff test set schedules between two folders/tenants |
 | Enable-OrchTestSetSchedule | Enable a test set schedule |
 | Disable-OrchTestSetSchedule | Disable a test set schedule |
 | Remove-OrchTestSetSchedule | Remove a test set schedule |
@@ -482,6 +503,7 @@ Test automation management (Orchestrator-side).
 | Get-OrchTestDataQueue | List test data queues |
 | New-OrchTestDataQueue | Create a test data queue |
 | Copy-OrchTestDataQueue | Copy test data queues |
+| Compare-OrchTestDataQueue | Diff test data queues between two folders/tenants |
 | Get-OrchTestDataQueueItem | Get items in a test data queue |
 | Import-OrchTestDataQueueItem | Bulk-add items from a CSV (web "Upload Items" format) |
 | Format-OrchTestDataQueueItem | Format test data queue items as one table per queue, expanding ContentJson |
