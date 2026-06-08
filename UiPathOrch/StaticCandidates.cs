@@ -230,7 +230,10 @@ internal class LogOrderableItems : IStaticCandidates
 
 internal class QueueItemOrderableItems : IStaticCandidates
 {
-    public static string[] Items { get; } = ["DueDate", "DeferDate", "StartProcessing", "EndProcessing"];
+    // "Id" is listed first because it is the default ordering: Get-OrchQueueItem
+    // defaults -OrderBy to "Id", matching what the Orchestrator web UI sends for
+    // QueueItems by default ($orderby=Id desc). The four date fields follow.
+    public static string[] Items { get; } = ["Id", "DueDate", "DeferDate", "StartProcessing", "EndProcessing"];
 }
 
 internal class PmUserTypeItems : IStaticCandidates

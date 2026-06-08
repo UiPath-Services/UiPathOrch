@@ -284,6 +284,24 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
         return $"&$filter={ret}";
     }
 
+    // Ordering for the no-filter cache-output path. Extracted as a pure,
+    // testable function. The default arm is the regression guard: -OrderBy
+    // defaults to "Id" (the Orchestrator web UI default for QueueItems,
+    // $orderby=Id desc). Previously the cache path switched only on the four
+    // date fields, so the default "Id" matched no case and every item was
+    // silently dropped. "Id" and any other unlisted value now order on the
+    // monotonic Id, descending unless -OrderAscending.
+    internal static IEnumerable<Entities.QueueItem> OrderQueueItemsForOutput(
+        IEnumerable<Entities.QueueItem> items, string? orderBy, bool ascending) =>
+        orderBy switch
+        {
+            "DueDate"         => ascending ? items.OrderBy(i => i.DueDate)         : items.OrderByDescending(i => i.DueDate),
+            "DeferDate"       => ascending ? items.OrderBy(i => i.DeferDate)       : items.OrderByDescending(i => i.DeferDate),
+            "StartProcessing" => ascending ? items.OrderBy(i => i.StartProcessing) : items.OrderByDescending(i => i.StartProcessing),
+            "EndProcessing"   => ascending ? items.OrderBy(i => i.EndProcessing)   : items.OrderByDescending(i => i.EndProcessing),
+            _                 => ascending ? items.OrderBy(i => i.Id)              : items.OrderByDescending(i => i.Id),
+        };
+
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
@@ -325,33 +343,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
                     var queueName = queueGroup.Key;
                     if (wpName is not null && !wpName.Any(wp => wp.IsMatch(queueName))) continue;
 
-                    switch (OrderBy)
-                    {
-                        case "DueDate":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(queueGroup.OrderBy(i => i.DueDate), true);
-                            else
-                                WriteObject(queueGroup.OrderByDescending(i => i.DueDate), true);
-                            break;
-                        case "DeferDate":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(queueGroup.OrderBy(i => i.DeferDate), true);
-                            else
-                                WriteObject(queueGroup.OrderByDescending(i => i.DeferDate), true);
-                            break;
-                        case "StartProcessing":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(queueGroup.OrderBy(i => i.StartProcessing), true);
-                            else
-                                WriteObject(queueGroup.OrderByDescending(i => i.StartProcessing), true);
-                            break;
-                        case "EndProcessing":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(queueGroup.OrderBy(i => i.EndProcessing), true);
-                            else
-                                WriteObject(queueGroup.OrderByDescending(i => i.EndProcessing), true);
-                            break;
-                    }
+                    WriteObject(OrderQueueItemsForOutput(queueGroup, OrderBy, OrderAscending.IsPresent), true);
                 }
             }
             return;
