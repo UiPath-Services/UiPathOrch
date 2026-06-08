@@ -48,3 +48,36 @@ Update-TypeData -TypeName UiPath.PowerShell.Entities.QueueItem `
 # underlying property.
 Update-TypeData -TypeName UiPath.PowerShell.Entities.Job `
     -MemberName ProcessName -MemberType ScriptProperty -Force -Value { $this.ReleaseName }
+
+# Argument completers for the folder property cmdlets on Orchestrator drives. A folder exposes
+# exactly one settable property -- Description -- so:
+#   Set/Get/Clear-ItemProperty <Orch folder> -Name <Tab>            -> Description
+#   Set-ItemProperty <Orch folder> -Name Description -Value <Tab>   -> the folder's current Description
+# These register on the BUILT-IN cmdlets (global), so for any non-Orchestrator path we return
+# nothing: PowerShell then falls back to its existing/native completion, leaving FileSystem,
+# Registry, and every other provider completely unaffected (an empty result restores the default).
+Register-ArgumentCompleter -CommandName Set-ItemProperty,Get-ItemProperty,Clear-ItemProperty -ParameterName Name -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+    $path = $fakeBoundParameters['LiteralPath']; if (-not $path) { $path = $fakeBoundParameters['Path'] }
+    if (-not $path) { return }
+    if ($path -match '^\s*([^:\\/]+):') { $drive = $Matches[1] } else { $drive = (Get-Location).Drive.Name }
+    if ($drive -notin (Get-PSDrive -PSProvider UiPathOrch -ErrorAction SilentlyContinue).Name) { return }
+    if ('Description' -like "$wordToComplete*") {
+        [System.Management.Automation.CompletionResult]::new(
+            'Description', 'Description', 'ParameterValue', "The folder's Description (its only settable property)")
+    }
+}
+
+Register-ArgumentCompleter -CommandName Set-ItemProperty -ParameterName Value -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+    $path = $fakeBoundParameters['LiteralPath']; if (-not $path) { $path = $fakeBoundParameters['Path'] }
+    if (-not $path) { return }
+    if ($path -match '^\s*([^:\\/]+):') { $drive = $Matches[1] } else { $drive = (Get-Location).Drive.Name }
+    if ($drive -notin (Get-PSDrive -PSProvider UiPathOrch -ErrorAction SilentlyContinue).Name) { return }
+    if ("$($fakeBoundParameters['Name'])" -ne 'Description') { return }
+    $desc = (Get-Item -LiteralPath $path -ErrorAction SilentlyContinue).Description
+    if ([string]::IsNullOrEmpty($desc)) { return }
+    # Offer the current value (single-quoted, doubled inner quotes) so it can be edited in place.
+    $literal = "'" + ($desc -replace "'", "''") + "'"
+    [System.Management.Automation.CompletionResult]::new($literal, $desc, 'ParameterValue', $desc)
+}

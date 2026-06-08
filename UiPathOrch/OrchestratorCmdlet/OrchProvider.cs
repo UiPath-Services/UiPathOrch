@@ -1356,6 +1356,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
 
         if (!found) return;
 
+        if (string.Equals(folder.FolderType, "Personal", StringComparison.OrdinalIgnoreCase))
+        {
+            WriteError(new ErrorRecord(
+                new OrchException(path, "A personal workspace folder's Description cannot be set — Orchestrator does not allow editing a personal workspace through the folder API."),
+                "PersonalWorkspaceNotEditable", ErrorCategory.InvalidOperation, path));
+            return;
+        }
+
         if (ShouldProcess(path, "Set Description"))
         {
             try
@@ -1401,6 +1409,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
         }
 
         if (!clearDescription) return;
+
+        if (string.Equals(folder.FolderType, "Personal", StringComparison.OrdinalIgnoreCase))
+        {
+            WriteError(new ErrorRecord(
+                new OrchException(path, "A personal workspace folder's Description cannot be cleared — Orchestrator does not allow editing a personal workspace through the folder API."),
+                "PersonalWorkspaceNotEditable", ErrorCategory.InvalidOperation, path));
+            return;
+        }
 
         if (ShouldProcess(path, "Clear Description"))
         {
