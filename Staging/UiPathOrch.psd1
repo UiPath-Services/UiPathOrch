@@ -502,15 +502,16 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.8.1
+1.9.0
 
-Maintenance release on top of 1.8.0 -- see 1.8.0 for the -LiteralPath feature and the
-breaking changes (folder Path property removed, OrchProductVersion camelCase property
-names, New-/Set-PmRobotAccount -Name primary).
+New: the Compare-Orch* family (19 cmdlets) diffs entities between two folders or tenants for
+migration verification -- match by Name, a Compare-Object-style SideIndicator (<= / => / == / <>)
+with a per-property breakdown, name-match or -DifferenceName broadcast (wildcard), and a
+secret-not-compared warning. Set a folder's Description with Set-ItemProperty (with -Name / -Value
+tab-completion).
 
-- Internal: cleared the nullable-reference-type compiler warnings introduced with
-  -LiteralPath in 1.8.0 (EffectivePath now returns a non-null-element array, which
-  matches the resolver overloads and the capture fields). No behavior change.
+Fixed: Rename-Item -NewName handling, content-aware Remove-Item folder confirmation, and a
+Move-Item NullReferenceException on a non-existent destination.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
