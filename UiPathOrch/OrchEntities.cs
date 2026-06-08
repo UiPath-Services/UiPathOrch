@@ -1344,6 +1344,15 @@ public class Folder
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? FullName { get; set; } // added by UiPathOrch (the folder's own drive-qualified path)
 
+    // NOTE: deliberately NO `Name` property here. Folder-scoped *-Orch* cmdlets (Get-OrchAsset, ...)
+    // declare -Name as ValueFromPipelineByPropertyName, so `dir | Get-Orch*` is meant to bind ONLY
+    // PSPath -> -LiteralPath (alias PSPath) to scope to each piped folder. A Folder.Name (even a
+    // computed `=> DisplayName`) would also bind to -Name and filter results to entities named like
+    // the folder -- e.g. `Get-Item F | Get-OrchAsset` returns 0 instead of the folder's assets
+    // (verified 2026-06-08, then reverted). An ETS AliasProperty wouldn't help: ETS members bind too.
+    // For Where/Sort/Select use DisplayName (or the engine-added PSChildName). FullName above is safe
+    // only because no cmdlet has a -FullName pipeline parameter to collide with.
+
     public Int64? Id { get; set; }
     public string? Key { get; set; }
     public string? DisplayName { get; set; }
