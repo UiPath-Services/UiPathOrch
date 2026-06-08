@@ -295,11 +295,11 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
         IEnumerable<Entities.QueueItem> items, string? orderBy, bool ascending) =>
         orderBy switch
         {
-            "DueDate"         => ascending ? items.OrderBy(i => i.DueDate)         : items.OrderByDescending(i => i.DueDate),
-            "DeferDate"       => ascending ? items.OrderBy(i => i.DeferDate)       : items.OrderByDescending(i => i.DeferDate),
+            "DueDate" => ascending ? items.OrderBy(i => i.DueDate) : items.OrderByDescending(i => i.DueDate),
+            "DeferDate" => ascending ? items.OrderBy(i => i.DeferDate) : items.OrderByDescending(i => i.DeferDate),
             "StartProcessing" => ascending ? items.OrderBy(i => i.StartProcessing) : items.OrderByDescending(i => i.StartProcessing),
-            "EndProcessing"   => ascending ? items.OrderBy(i => i.EndProcessing)   : items.OrderByDescending(i => i.EndProcessing),
-            _                 => ascending ? items.OrderBy(i => i.Id)              : items.OrderByDescending(i => i.Id),
+            "EndProcessing" => ascending ? items.OrderBy(i => i.EndProcessing) : items.OrderByDescending(i => i.EndProcessing),
+            _ => ascending ? items.OrderBy(i => i.Id) : items.OrderByDescending(i => i.Id),
         };
 
     protected override void ProcessRecord()

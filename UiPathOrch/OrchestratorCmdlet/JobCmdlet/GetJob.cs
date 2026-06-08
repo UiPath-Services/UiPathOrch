@@ -335,13 +335,13 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
         IEnumerable<Entities.Job> items, string? orderBy, bool ascending) =>
         orderBy switch
         {
-            "Release/Name"          => ascending ? items.OrderBy(j => j.ReleaseName)           : items.OrderByDescending(j => j.ReleaseName),
-            "State"                 => ascending ? items.OrderBy(j => j.State)                 : items.OrderByDescending(j => j.State),
+            "Release/Name" => ascending ? items.OrderBy(j => j.ReleaseName) : items.OrderByDescending(j => j.ReleaseName),
+            "State" => ascending ? items.OrderBy(j => j.State) : items.OrderByDescending(j => j.State),
             "SpecificPriorityValue" => ascending ? items.OrderBy(j => j.SpecificPriorityValue) : items.OrderByDescending(j => j.SpecificPriorityValue),
-            "StartTime"             => ascending ? items.OrderBy(j => j.StartTime)             : items.OrderByDescending(j => j.StartTime),
-            "EndTime"               => ascending ? items.OrderBy(j => j.EndTime)               : items.OrderByDescending(j => j.EndTime),
-            "SourceType"            => ascending ? items.OrderBy(j => j.SourceType)            : items.OrderByDescending(j => j.SourceType),
-            _                       => ascending ? items.OrderBy(j => j.CreationTime)          : items.OrderByDescending(j => j.CreationTime),
+            "StartTime" => ascending ? items.OrderBy(j => j.StartTime) : items.OrderByDescending(j => j.StartTime),
+            "EndTime" => ascending ? items.OrderBy(j => j.EndTime) : items.OrderByDescending(j => j.EndTime),
+            "SourceType" => ascending ? items.OrderBy(j => j.SourceType) : items.OrderByDescending(j => j.SourceType),
+            _ => ascending ? items.OrderBy(j => j.CreationTime) : items.OrderByDescending(j => j.CreationTime),
         };
 
     protected override void ProcessRecord()

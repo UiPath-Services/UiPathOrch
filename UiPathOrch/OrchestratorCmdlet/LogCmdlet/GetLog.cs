@@ -319,8 +319,8 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
         IEnumerable<Log> items, string? orderBy, bool ascending) =>
         orderBy switch
         {
-            "Level" => ascending ? items.OrderBy(l => l.Level)     : items.OrderByDescending(l => l.Level),
-            _       => ascending ? items.OrderBy(l => l.TimeStamp) : items.OrderByDescending(l => l.TimeStamp),
+            "Level" => ascending ? items.OrderBy(l => l.Level) : items.OrderByDescending(l => l.Level),
+            _ => ascending ? items.OrderBy(l => l.TimeStamp) : items.OrderByDescending(l => l.TimeStamp),
         };
 
     protected override void ProcessRecord()
