@@ -70,7 +70,9 @@ public class GetUserSessionCmdlet : OrchestratorPSCmdlet
         return null;
     }
 
-    private string? MakeOrderBy() => BuildSessionOrderByClause(OrderBy, OrderDescending.IsPresent);
+    // internal (not private) so the -OrderDescending wiring is unit-testable
+    // end to end: parameter -> MakeOrderBy -> BuildSessionOrderByClause.
+    internal string? MakeOrderBy() => BuildSessionOrderByClause(OrderBy, OrderDescending.IsPresent);
 
     // OData $orderby for the session list. Pure/static so the asc-vs-desc and
     // multi-field formatting is unit-testable. The direction is applied per
