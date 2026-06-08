@@ -4,75 +4,50 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.9.0] - 2026-06-08
 
 ### Added
 
-- **`Compare-OrchAsset` — diff assets between two folders or tenants.** A read-only
-  comparison cmdlet for migration verification: confirm that assets copied between folders or
-  Orchestrator instances landed with the same values. Assets are matched by Name (not the
-  tenant-local Id) and only migration-relevant properties are compared (ValueType, ValueScope,
-  Value, Description, CredentialUsername, ExternalName, AllowDirectApiAccess, Tags, and
-  per-user UserValues); volatile fields like Id, Key, and timestamps are ignored so they don't
-  drown out real differences. Each result is an `OrchComparison` record with a Compare-Object
-  style `SideIndicator` — `<=` (reference only), `=>` (difference only), `==` (equal, with
-  `-IncludeEqual`), plus `<>` for "present on both sides but differing", which carries a
-  per-property `Differences` breakdown on a single row. The reference side is given like any
-  other asset cmdlet (`-Path` / pipeline / `-Name` wildcards / `-Recurse`); the difference side
-  is `-DifferencePath` (mandatory). With `-DifferenceName` it switches to broadcast mode,
-  comparing every reference asset to one named target even when the names differ (e.g.
-  `ApiKey_Old` vs `ApiKey_New`, or a set of assets against one golden asset). `-UserMappingCsv`
-  (the same CSV as `Copy-OrchAsset`) translates reference user names before comparing per-user
-  values across tenants. `-Property` restricts the comparison and warns on unrecognized names.
-- **`Compare-OrchProcess`, `Compare-OrchQueue`, `Compare-OrchRole` — the rest of the compare
-  family.** Same model as `Compare-OrchAsset` (match by Name, `SideIndicator` with `<>` for
-  differing-both, name-match vs `-DifferenceName` broadcast, `-IncludeEqual`, `-Property`).
-  `Compare-OrchProcess` and `Compare-OrchQueue` are folder-scoped (with `-Recurse`) and compare
-  the migration-relevant release/queue settings — for queues that includes the JSON schemas and
-  the retry/retention configuration. `Compare-OrchRole` is tenant-scoped (the reference and
-  difference are drives, not folders) and compares the role shape plus its granted-permission
-  matrix, normalized to an order-independent set so a single `Permissions` difference captures
-  any grant, revoke, or scope change.
-- **`Compare-OrchTrigger`, `Compare-OrchBucket`, `Compare-OrchMachine`,
-  `Compare-OrchCredentialStore`, `Compare-OrchCalendar`, `Compare-OrchWebhook` — more of the
-  compare family.** Same model and options as the rest. Trigger and Bucket are folder-scoped
-  (with `-Recurse`): triggers compare the schedule (cron, calendar, target process/queue by
-  name) and execution settings; buckets compare the storage configuration. Machine,
-  CredentialStore, Calendar, and Webhook are tenant-scoped (the reference and difference are
-  drives): machines compare type and runtime slot capacity; credential stores compare type and
-  connection config (never secrets); calendars compare time zone and the excluded-date set
-  (order-independent); webhooks compare endpoint, enablement, and the subscribed-event set
-  (order-independent, never the signing secret). The tenant-scoped cmdlets share a new
-  TenantCompare helper.
-- **`Compare-OrchFolderUser`, `Compare-OrchFolderMachine`, `Compare-OrchUser`,
-  `Compare-OrchApiTrigger`, `Compare-OrchEventTrigger` — more of the compare family.**
-  FolderUser/FolderMachine are folder-scoped and compare per-folder access: who is assigned
-  with which roles (order-independent role set), and which machines are assigned with what
-  type/scope/slot allocation. ApiTrigger/EventTrigger are folder-scoped and complete the
-  trigger family (HTTP invocation settings; connector/operation/filter settings). User is
-  tenant-scoped and compares type/status/license and the assigned tenant-role set; pass
-  `-UserMappingCsv` to translate reference user names to their difference-side equivalents
-  before matching (TenantCompare gained optional reference-name remapping for this).
-- **`Compare-OrchTestSet`, `Compare-OrchTestDataQueue`, `Compare-OrchTestSetSchedule`,
-  `Compare-OrchActionCatalog` — more of the compare family.** All folder-scoped. Test sets
-  compare description / source type / enablement / coverage / test-case count; test data queues
-  compare the content JSON schema (item counts are runtime state and excluded); test set
-  schedules compare cron, time zone, and the target test set and calendar (by name); action
-  catalogs compare encryption, retention, and tags.
-- **Compare-Orch\* parameter surface and tab-completion.** Across the whole family `-Name` is
-  Position 0 and mandatory, `-DifferencePath` Position 1, `-DifferenceName` Position 2, and
-  `-Path` / `-LiteralPath` are named (default: current location) — matching the module's
-  Get/Copy convention and giving a predictable positional completer chain. Compare a whole
-  folder with `-Name *`. Tab-completion is wired on the parameters: `-Property` completes each
-  cmdlet's comparable-property set, `-DifferenceName` completes entity names resolved against
-  `-DifferencePath` (not `-Path`), and `-Name` / `-DifferencePath` use the standard name / drive
-  completers.
+- **`Compare-Orch*` — a read-only family that diffs entities between two folders or tenants for
+  migration verification.** Entities are matched by Name (not the tenant-local Id), and only
+  migration-relevant properties are compared (volatile Id / Key / timestamps are ignored). The
+  cmdlets:
+  - **Folder-scoped** (support `-Recurse`): `Compare-OrchAsset`, `Compare-OrchProcess`,
+    `Compare-OrchQueue`, `Compare-OrchTrigger`, `Compare-OrchApiTrigger`, `Compare-OrchEventTrigger`,
+    `Compare-OrchBucket`, `Compare-OrchFolderUser`, `Compare-OrchFolderMachine`,
+    `Compare-OrchTestSet`, `Compare-OrchTestDataQueue`, `Compare-OrchTestSetSchedule`,
+    `Compare-OrchActionCatalog`.
+  - **Tenant-scoped** (reference and difference are drives): `Compare-OrchRole`, `Compare-OrchUser`,
+    `Compare-OrchMachine`, `Compare-OrchCredentialStore`, `Compare-OrchCalendar`,
+    `Compare-OrchWebhook`.
+
+  Each result is an `OrchComparison` with a Compare-Object `SideIndicator` — `<=` reference-only,
+  `=>` difference-only, `==` equal (with `-IncludeEqual`), `<>` differing (carries a per-property
+  `Differences` breakdown) — shown as a list grouped by `Path`, each row reporting `Name` and the
+  difference-side `DifferenceName`. Uniform parameters: `-Name` (pos 0, mandatory, wildcards — `*` =
+  whole folder), `-DifferencePath` (pos 1, mandatory), `-DifferenceName` (pos 2) for broadcast mode
+  (compare every reference entity to one target even under a different name; a wildcard must resolve
+  to one), named `-Path` / `-LiteralPath`, `-Property` (restrict; warns on unknown names),
+  `-IncludeEqual` — all with tab-completion. `-UserMappingCsv` (Asset and User) maps reference user
+  names across tenants. Secret-bearing comparisons warn that write-only values are never compared
+  (Credential/Secret assets, bucket keys, machine/webhook secrets, credential-store config).
+  Compared per entity: **Asset** value/scope/type, description, credential username, tags, per-user
+  values; **Process**/**Queue** release/queue settings (queues add JSON schema + retry/retention);
+  **Role** permission set; **Trigger**/**ApiTrigger**/**EventTrigger** schedule/invocation/connector
+  settings; **Bucket** storage; **FolderUser**/**FolderMachine** per-folder assignments; **Machine**
+  type/slots; **CredentialStore** type/connection; **Calendar** time zone/excluded dates;
+  **Webhook** endpoint/enablement/events; **TestSet** source/enablement/coverage/case-count;
+  **TestDataQueue** content schema; **TestSetSchedule** cron/zone/target; **ActionCatalog**
+  encryption/retention/tags.
 - **Set a folder's Description with `Set-ItemProperty`.** The Orchestrator drive provider now
   implements the property cmdlets for folders: `Set-ItemProperty <folder> -Name Description -Value
   '…'` updates the description (a folder's DisplayName is changed with `Rename-Item`, the only other
   editable field), `Get-ItemProperty <folder> [-Name Description]` reads it (and DisplayName), and
   `Clear-ItemProperty <folder> -Name Description` clears it. Backed by the existing folder PUT, which
-  accepts changes to DisplayName and Description only.
+  accepts changes to DisplayName and Description only. Tab-completion is wired for these on
+  Orchestrator-drive paths: `-Name` completes `Description` and `-Value` completes the folder's
+  current description so it can be edited in place (completion for every other provider is
+  untouched).
 
 ### Fixed
 
@@ -92,6 +67,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   catalogs) that will be removed — like the Orchestrator web delete dialog. `-Recurse` or `-Force`
   skips the resource prompt, and the counts are gathered only on the interactive path, so scripts
   incur no extra API calls.
+- **`Move-Item` on a folder fails cleanly for a non-existent destination.** Moving a folder under a
+  destination that doesn't exist threw a `NullReferenceException` (the destination lookup wasn't
+  null-guarded); it now writes a clear ObjectNotFound error, and the moved folder's per-folder cache
+  is invalidated to match `Remove-Item`.
+
+### Documentation
+
+- Reorganized the `docs/` guides so the number reflects reading order — Folder Operations and a new
+  **AI Integration** guide now follow Getting Started, Migration moved to `50-`,
+  and the incremental-cache guide was renamed **Logs, Jobs & Queues**. Consolidated Credentials &
+  Secrets (CSV mechanics now link to the CSV guide), redrew the Licensing layer diagram in mermaid,
+  and added bulk-CSV recipes for copying / moving / deleting / renaming folders and setting folder
+  descriptions.
 
 ## [1.8.1] - 2026-06-06
 
