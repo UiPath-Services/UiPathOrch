@@ -9,7 +9,7 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-class SetSecretAssetCommandParameter
+public class SetSecretAssetCommandParameter : ISetAssetRow
 {
     public string[]? Name { set; get; }
     public string? Description { set; get; }
@@ -23,11 +23,10 @@ class SetSecretAssetCommandParameter
 
 [Cmdlet(VerbsCommon.Set, "OrchSecretAsset", DefaultParameterSetName = Default, SupportsShouldProcess = true)]
 [OutputType(typeof(Asset))]
-public class SetSecretAssetCmdlet : SetAssetCmdletBase
+public class SetSecretAssetCmdlet : SetCredentialLikeAssetCmdletBase<SetSecretAssetCommandParameter>
 {
-    private readonly List<SetSecretAssetCommandParameter> parameters = [];
-
-    // _resolvedDescriptions / MergeDescription / pendingAssets are inherited from SetAssetCmdletBase.
+    // parameters / RetrieveAllAssets are inherited from SetCredentialLikeAssetCmdletBase;
+    // _resolvedDescriptions / MergeDescription / pendingAssets from SetAssetCmdletBase.
 
     private const string Default = "DefaultParameterSet";
     private const string Plain = "SpecifyPlainSecretParameterSet";
@@ -254,19 +253,6 @@ public class SetSecretAssetCmdlet : SetAssetCmdletBase
             Path = EffectivePath(Path, LiteralPath)
         };
         parameters.Add(parameter);
-    }
-
-    protected void RetrieveAllAssets()
-    {
-        ParallelResults.GroupBy(parameters, param =>
-        {
-            var drivesFolders = SessionState.EnumFolders(param.Path);
-            return ParallelResults.GroupBy(drivesFolders, driveFolder =>
-            {
-                var (drive, folder) = driveFolder;
-                return drive.Assets.Get(folder);
-            }).SelectMany(g => g);
-        }).ToList();
     }
 
     private Asset? UpdateAssetInMemory(OrchDriveInfo drive, Folder folder, string name, SetSecretAssetCommandParameter param,

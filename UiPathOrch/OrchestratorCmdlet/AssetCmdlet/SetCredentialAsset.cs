@@ -8,7 +8,7 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-class SetCredentialAssetCommandParameter
+public class SetCredentialAssetCommandParameter : ISetAssetRow
 {
     public string[]? Name { set; get; }
     public string? Description { set; get; }
@@ -23,11 +23,10 @@ class SetCredentialAssetCommandParameter
 
 [Cmdlet(VerbsCommon.Set, "OrchCredentialAsset", DefaultParameterSetName = Default, SupportsShouldProcess = true)]
 [OutputType(typeof(UiPath.PowerShell.Entities.Asset))]
-public class SetCredentialAssetCmdlet : SetAssetCmdletBase
+public class SetCredentialAssetCmdlet : SetCredentialLikeAssetCmdletBase<SetCredentialAssetCommandParameter>
 {
-    private readonly List<SetCredentialAssetCommandParameter> parameters = [];
-
-    // _resolvedDescriptions / MergeDescription / pendingAssets are inherited from SetAssetCmdletBase.
+    // parameters / RetrieveAllAssets are inherited from SetCredentialLikeAssetCmdletBase;
+    // _resolvedDescriptions / MergeDescription / pendingAssets from SetAssetCmdletBase.
 
     private const string Default = "DefaultParameterSet";
     private const string Plain = "SpecifyPlainPasswordParameterSet";
@@ -275,22 +274,6 @@ public class SetCredentialAssetCmdlet : SetAssetCmdletBase
             Path = EffectivePath(Path, LiteralPath)
         };
         parameters.Add(parameter);
-    }
-
-    protected void RetrieveAllAssets()
-    {
-        // Retrieve Assets for the target folders asynchronously in bulk
-        ParallelResults.GroupBy(parameters, param =>
-        {
-            var drivesFolders = SessionState.EnumFolders(param.Path);
-
-            // Since the path is already resolved, only one folder should be expanded, but iterate just in case
-            return ParallelResults.GroupBy(drivesFolders, driveFolder =>
-            {
-                var (drive, folder) = driveFolder;
-                return drive.Assets.Get(folder);
-            }).SelectMany(g => g);
-        }).ToList();
     }
 
     private Asset? UpdateAssetInMemory(OrchDriveInfo drive, Folder folder, string name, SetCredentialAssetCommandParameter param,
