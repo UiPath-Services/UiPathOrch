@@ -22,7 +22,7 @@ public class GetUserSessionCmdlet : OrchestratorPSCmdlet
     public string[]? OrderBy { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    public SwitchParameter OrderAscending { get; set; }
+    public SwitchParameter OrderDescending { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public ulong? Skip { get; set; }
@@ -70,20 +70,21 @@ public class GetUserSessionCmdlet : OrchestratorPSCmdlet
         return null;
     }
 
-    private string? MakeOrderBy() => BuildSessionOrderByClause(OrderBy, OrderAscending.IsPresent);
+    private string? MakeOrderBy() => BuildSessionOrderByClause(OrderBy, OrderDescending.IsPresent);
 
     // OData $orderby for the session list. Pure/static so the asc-vs-desc and
     // multi-field formatting is unit-testable. The direction is applied per
     // field -- OData "A,B desc" leaves A at its default, so each field carries
-    // its own direction. Default is descending for parity with the other
-    // Get-Orch* list cmdlets (Job/QueueItem/Log); -OrderAscending flips it.
-    // Throws (via ResolveKeyOrThrow) on an OrderBy value outside the lookup.
-    internal static string? BuildSessionOrderByClause(string[]? orderBy, bool ascending)
+    // its own direction. Default is ascending -- the natural order for the
+    // categorical session fields (User / Domain / Hostname / Type / Version);
+    // -OrderDescending flips it. Throws (via ResolveKeyOrThrow) on an OrderBy
+    // value outside the lookup.
+    internal static string? BuildSessionOrderByClause(string[]? orderBy, bool descending)
     {
         if (orderBy is null || orderBy.Length == 0)
             return null;
 
-        string dir = ascending ? "asc" : "desc";
+        string dir = descending ? "desc" : "asc";
         IEnumerable<string> fields = orderBy.Select(
             o => $"{UserSessionOrderableItems.Items.ResolveKeyOrThrow(o, "OrderBy")} {dir}");
         return $"&$orderby={string.Join(",", fields)}";
