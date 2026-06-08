@@ -324,6 +324,26 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
         return "&$filter=(" + ret + ")";
     }
 
+    // Ordering for the no-filter cache-output path. Extracted as a pure,
+    // testable function. The default arm is the regression guard: -OrderBy is
+    // offered via JobOrderableItems but is a completer, not a ValidateSet, so an
+    // unlisted value previously matched no case and the switch fell through with
+    // no output, silently dropping every cached job. "CreationTime" (the
+    // default) and any other unlisted value fall back to CreationTime ordering,
+    // descending unless -OrderAscending.
+    internal static IEnumerable<Entities.Job> OrderJobsForOutput(
+        IEnumerable<Entities.Job> items, string? orderBy, bool ascending) =>
+        orderBy switch
+        {
+            "Release/Name"          => ascending ? items.OrderBy(j => j.ReleaseName)           : items.OrderByDescending(j => j.ReleaseName),
+            "State"                 => ascending ? items.OrderBy(j => j.State)                 : items.OrderByDescending(j => j.State),
+            "SpecificPriorityValue" => ascending ? items.OrderBy(j => j.SpecificPriorityValue) : items.OrderByDescending(j => j.SpecificPriorityValue),
+            "StartTime"             => ascending ? items.OrderBy(j => j.StartTime)             : items.OrderByDescending(j => j.StartTime),
+            "EndTime"               => ascending ? items.OrderBy(j => j.EndTime)               : items.OrderByDescending(j => j.EndTime),
+            "SourceType"            => ascending ? items.OrderBy(j => j.SourceType)            : items.OrderByDescending(j => j.SourceType),
+            _                       => ascending ? items.OrderBy(j => j.CreationTime)          : items.OrderByDescending(j => j.CreationTime),
+        };
+
     protected override void ProcessRecord()
     {
         ulong skip = Skip ?? 0;
@@ -362,51 +382,7 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
                 var jobs = drive.Jobs.GetCache(folder);
                 if (jobs is not null)
                 {
-                    switch (orderBy)
-                    {
-                        case "CreationTime":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(jobs.Values.OrderBy(j => j.CreationTime), true);
-                            else
-                                WriteObject(jobs.Values.OrderByDescending(j => j.CreationTime), true);
-                            break;
-                        case "Release/Name":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(jobs.Values.OrderBy(j => j.ReleaseName), true);
-                            else
-                                WriteObject(jobs.Values.OrderByDescending(j => j.ReleaseName), true);
-                            break;
-                        case "State":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(jobs.Values.OrderBy(j => j.State), true);
-                            else
-                                WriteObject(jobs.Values.OrderByDescending(j => j.State), true);
-                            break;
-                        case "SpecificPriorityValue":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(jobs.Values.OrderBy(j => j.SpecificPriorityValue), true);
-                            else
-                                WriteObject(jobs.Values.OrderByDescending(j => j.SpecificPriorityValue), true);
-                            break;
-                        case "StartTime":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(jobs.Values.OrderBy(j => j.StartTime), true);
-                            else
-                                WriteObject(jobs.Values.OrderByDescending(j => j.StartTime), true);
-                            break;
-                        case "EndTime":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(jobs.Values.OrderBy(j => j.EndTime), true);
-                            else
-                                WriteObject(jobs.Values.OrderByDescending(j => j.EndTime), true);
-                            break;
-                        case "SourceType":
-                            if (OrderAscending.IsPresent)
-                                WriteObject(jobs.Values.OrderBy(j => j.SourceType), true);
-                            else
-                                WriteObject(jobs.Values.OrderByDescending(j => j.SourceType), true);
-                            break;
-                    }
+                    WriteObject(OrderJobsForOutput(jobs.Values, orderBy, OrderAscending.IsPresent), true);
                 }
             }
             return;
