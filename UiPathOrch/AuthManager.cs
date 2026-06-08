@@ -195,19 +195,27 @@ internal class OrchestratorAuthManager
 
     public string? RenewAccessToken()
     {
-        if (_isConfidentialApp)
+        // The refresh_token grant is only valid for the interactive external-app
+        // (PKCE) flow -- the one mode that actually returns a refresh token.
+        // Confidential app (client_credentials), PAT, and on-prem user/password
+        // have no refresh token; renewing them with a refresh_token grant sends
+        // refresh_token=null and fails (on-prem user/password broke at the 1h
+        // expiry fallback this way). Renew those by re-running the initial token
+        // request: RequestToken re-applies a PAT, re-runs client_credentials, or
+        // re-authenticates user/password against /api/Account/Authenticate.
+        // Keep the confidential-app branch explicit so it always re-requests via
+        // client_credentials regardless of whether a refresh token is present.
+        if (_isConfidentialApp || string.IsNullOrEmpty(_refresh_token))
         {
-            return RequestToken(); // no need to pass drive name for confidential app
+            return RequestToken();
         }
-        else
+
+        (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
         {
-            (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
-            {
-                { "grant_type", "refresh_token" },
-                { "client_id", _drive._psDrive.AppId! },
-                { "refresh_token", _refresh_token! }
-            });
-        }
+            { "grant_type", "refresh_token" },
+            { "client_id", _drive._psDrive.AppId! },
+            { "refresh_token", _refresh_token! }
+        });
 
         return _access_token;
     }
