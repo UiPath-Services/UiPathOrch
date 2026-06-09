@@ -33,6 +33,50 @@ public class EncodingArgumentTransformationAttribute : ArgumentTransformationAtt
     }
 }
 
+// Lets a producer's Tag[] property bind to a string[] -Tags parameter via ValueFromPipelineByPropertyName.
+// Without it PowerShell coerces each Tag through its (default) ToString() to the type name
+// "UiPath.PowerShell.Entities.Tag", which ConvertToTags then turns into a garbage tag -- so
+// `Get-Orch* | New-/Update-Orch*` silently overwrote tags. Map each Tag to the same "Name=Value" form
+// the CSV path uses (OrchStringExtensions.FormatTag); pass strings (manual or CSV input) through unchanged.
+// Tag deliberately has no ToString() override (it would make ConvertTo-Json emit this string for
+// deep-nested tags -- see OrchStringExtensions.FormatTag), so the conversion lives here at the binding edge.
+public class TagArgumentTransformationAttribute : ArgumentTransformationAttribute
+{
+    public override object Transform(EngineIntrinsics engineIntrinsics, object inputData)
+    {
+        object? data = inputData is PSObject pso ? pso.BaseObject : inputData;
+        if (data is null) return null!;
+        IEnumerable<object?> items = data is System.Collections.IEnumerable seq && data is not string
+            ? seq.Cast<object?>()
+            : [data];
+        return items.Select(raw =>
+        {
+            object? o = raw is PSObject p ? p.BaseObject : raw;
+            return o is Tag tag ? OrchStringExtensions.FormatTag(tag) : o?.ToString();
+        }).ToArray();
+    }
+}
+
+// Same idea for Webhook -Events: a producer's WebhookEvent[] binds as the wire event-type name
+// instead of coercing to the type name (which the resolver matched to nothing -> the webhook lost
+// all its event subscriptions on update).
+public class WebhookEventArgumentTransformationAttribute : ArgumentTransformationAttribute
+{
+    public override object Transform(EngineIntrinsics engineIntrinsics, object inputData)
+    {
+        object? data = inputData is PSObject pso ? pso.BaseObject : inputData;
+        if (data is null) return null!;
+        IEnumerable<object?> items = data is System.Collections.IEnumerable seq && data is not string
+            ? seq.Cast<object?>()
+            : [data];
+        return items.Select(raw =>
+        {
+            object? o = raw is PSObject p ? p.BaseObject : raw;
+            return o is WebhookEvent ev ? ev.EventType : o?.ToString();
+        }).ToArray();
+    }
+}
+
 public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 {
     // Resolves -Path / -LiteralPath into the path list fed to the Enum* resolvers.

@@ -80,6 +80,7 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TagsCompleter))]
+    [TagArgumentTransformation]
     public string[]? Tags { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

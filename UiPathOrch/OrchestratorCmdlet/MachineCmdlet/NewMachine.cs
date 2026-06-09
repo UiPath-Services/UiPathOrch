@@ -52,6 +52,7 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
     public string[]? RobotUsers { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
+    [TagArgumentTransformation]
     public string[]? Tags { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

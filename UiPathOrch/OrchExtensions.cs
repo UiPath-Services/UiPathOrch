@@ -866,7 +866,7 @@ internal static class OrchStringExtensions
     // Tag.ToString(): an override there made ConvertTo-Json emit this string for any Tag
     // nested beyond -Depth (e.g. `Get-OrchAsset | ConvertTo-Json` of several tagged items)
     // instead of the structured object.
-    private static string? FormatTag(Tag t)
+    internal static string? FormatTag(Tag t)
     {
         if (string.IsNullOrEmpty(t.DisplayName)) return null;
         if (string.IsNullOrEmpty(t.Value)) return t.DisplayName;

@@ -143,6 +143,7 @@ public class NewProcessCmdlet : OrchestratorPSCmdlet
     #endregion
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
+    [TagArgumentTransformation]
     public string[]? Tags { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

@@ -21,6 +21,7 @@ class UpdateBusinessRuleCmdlet : OrchestratorPSCmdlet
     public string? Description { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
+    [TagArgumentTransformation]
     public string[]? Tags { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

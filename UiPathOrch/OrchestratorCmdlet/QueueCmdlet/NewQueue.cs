@@ -84,6 +84,7 @@ public class NewQueueCmdlet : OrchestratorPSCmdlet
     public string? StaleRetentionBucket { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
+    [TagArgumentTransformation]
     public string[]? Tags { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

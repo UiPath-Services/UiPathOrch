@@ -59,6 +59,7 @@ public class NewWebhookCmdlet : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     [ArgumentCompleter(typeof(WebhookEventTypeNameCompleter))]
+    [WebhookEventArgumentTransformation]
     public new string[]? Events { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
