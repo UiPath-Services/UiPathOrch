@@ -177,7 +177,7 @@ public class DateTimeArrayJsonConverter : JsonConverter<DateTime[]>
 
         foreach (var dateTime in value)
         {
-            writer.WriteStringValue(dateTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
+            writer.WriteStringValue(dateTime.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ", System.Globalization.CultureInfo.InvariantCulture));
             //writer.WriteStringValue(dateTime.ToString("yyyy-MM-ddTHH:mm:ssZ"));
         }
 

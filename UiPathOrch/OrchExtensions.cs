@@ -153,10 +153,18 @@ internal static class OrchCollectionExtensions
     public static void AddTimeRange(this List<string> filter, string field, DateTime? after, DateTime? before)
     {
         if (after is not null)
-            filter.Add($"({field} ge {after.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"({field} ge {after.Value.ToODataUtc()})");
         if (before is not null)
-            filter.Add($"({field} lt {before.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"({field} lt {before.Value.ToODataUtc()})");
     }
+
+    // Invariant ISO-8601 UTC timestamp for OData $filter conditions and JSON bodies. Formats with
+    // InvariantCulture so the ':' time separator and the digits never follow the host locale -- a
+    // bare ToString()/interpolation uses CurrentCulture, which malforms the wire value under locales
+    // whose TimeSeparator is not ':' or that use non-ASCII digits (e.g. ar-SA, fa-IR), making the API
+    // reject the filter or return wrong rows.
+    public static string ToODataUtc(this DateTime dt)
+        => dt.ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ss.fffZ", System.Globalization.CultureInfo.InvariantCulture);
 
     public static string? CreateOrFilter<T>(this IEnumerable<T> param, Func<T, string> converter)
     {

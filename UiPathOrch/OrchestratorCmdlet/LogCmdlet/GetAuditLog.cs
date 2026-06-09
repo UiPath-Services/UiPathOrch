@@ -154,21 +154,21 @@ public class GetAuditLogCmdlet : OrchestratorPSCmdlet
                 "3years" => DateTime.UtcNow.AddYears(-3),
                 _ => throw new ArgumentException("Invalid Last parameter. Valid values are 'Hour', 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'.")
             };
-            filter.Add($"(ExecutionTime%20ge%20{last:yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(ExecutionTime%20ge%20{last.ToODataUtc()})");
         }
         #endregion
 
         #region ExecutionTimeAfter
         if (ExecutionTimeAfter is not null)
         {
-            filter.Add($"(ExecutionTime%20ge%20{ExecutionTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(ExecutionTime%20ge%20{ExecutionTimeAfter.Value.ToODataUtc()})");
         }
         #endregion
 
         #region ExecutionTimeBefore
         if (ExecutionTimeBefore is not null)
         {
-            filter.Add($"(ExecutionTime%20lt%20{ExecutionTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(ExecutionTime%20lt%20{ExecutionTimeBefore.Value.ToODataUtc()})");
         }
         #endregion
 

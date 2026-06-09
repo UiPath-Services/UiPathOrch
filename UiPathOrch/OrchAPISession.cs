@@ -569,7 +569,7 @@ public partial class OrchAPISession : IDisposable
                         try
                         {
                             var activitySettings = _drive.ActivitySettings.Get();
-                            if (double.TryParse(activitySettings?.ApiVersion, out var version))
+                            if (double.TryParse(activitySettings?.ApiVersion, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var version))
                             {
                                 ApiVersion = version;
                             }

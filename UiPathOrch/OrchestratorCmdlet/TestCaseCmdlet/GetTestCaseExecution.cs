@@ -87,15 +87,15 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
                 "3years" => DateTime.UtcNow.AddYears(-3),
                 _ => throw new ArgumentException("Invalid Last parameter. Valid values are 'Hour', 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'.")
             };
-            filter.Add($"(StartTime ge {last:yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(StartTime ge {last.ToODataUtc()})");
         }
         if (StartTimeAfter is not null)
         {
-            filter.Add($"(StartTime ge {StartTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(StartTime ge {StartTimeAfter.Value.ToODataUtc()})");
         }
         if (StartTimeBefore is not null)
         {
-            filter.Add($"(StartTime lt {StartTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(StartTime lt {StartTimeBefore.Value.ToODataUtc()})");
         }
         string? ret = filter.CreateAndFilter(f => f);
         if (ret is null) return null;

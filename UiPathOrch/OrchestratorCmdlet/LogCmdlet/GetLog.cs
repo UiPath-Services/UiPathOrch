@@ -250,7 +250,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
                 "3years" => DateTime.UtcNow.AddYears(-3),
                 _ => throw new ArgumentException("Invalid Last parameter. Valid values are 'Hour', 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'.")
             };
-            filter.Add($"(TimeStamp ge {last:yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(TimeStamp ge {last.ToODataUtc()})");
         }
         #endregion
 
@@ -268,14 +268,14 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
         #region TimeStampAfter
         if (TimeStampAfter is not null)
         {
-            filter.Add($"(TimeStamp ge {TimeStampAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(TimeStamp ge {TimeStampAfter.Value.ToODataUtc()})");
         }
         #endregion
 
         #region TimeStampBefore
         if (TimeStampBefore is not null)
         {
-            filter.Add($"(TimeStamp lt {TimeStampBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(TimeStamp lt {TimeStampBefore.Value.ToODataUtc()})");
         }
         #endregion
 

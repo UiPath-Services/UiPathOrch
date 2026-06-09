@@ -193,7 +193,7 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
                 "3years" => DateTime.UtcNow.AddYears(-3),
                 _ => throw new ArgumentException("Invalid Last parameter. Valid values are 'Hour', 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'.")
             };
-            filter.Add($"(CreationTime ge {last:yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(CreationTime ge {last.ToODataUtc()})");
         }
         #endregion
 
@@ -205,7 +205,7 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
         #region Priority
         if (Priority is not null)
         {
-            var priority = Priority.ToLower();
+            var priority = Priority.ToLowerInvariant();
             switch (priority)
             {
                 case "critical":

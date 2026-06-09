@@ -1,6 +1,8 @@
+using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
 using UiPath.PowerShell.Commands;
+using UiPath.PowerShell.Core;
 using Xunit;
 
 namespace UnitTests;
@@ -70,5 +72,28 @@ public class ExportCsvCultureTests
         // result must be the plain ASCII upper either way.
         Assert.Equal("TRUE", WithCulture("tr-TR", () => OrchestratorPSCmdlet.EscapeCsvValue((bool?)true)));
         Assert.Equal("FALSE", WithCulture("tr-TR", () => OrchestratorPSCmdlet.EscapeCsvValue((bool?)false)));
+    }
+
+    [Fact]
+    public void ToODataUtc_IsInvariantIso_NotLocaleTimeSeparator()
+    {
+        // Every OData $filter timestamp (Get-OrchJob/Log/AuditLog/Alert/TestSet/TestCaseExecution and
+        // AddTimeRange) routes through ToODataUtc and must use ':' regardless of host locale. fi-FI
+        // uses '.' as its time separator, so a CurrentCulture format would yield "12.00.00".
+        var dt = new DateTime(2026, 5, 30, 12, 0, 0, DateTimeKind.Utc);
+        Assert.Equal("2026-05-30T12:00:00.000Z", WithCulture("fi-FI", () => dt.ToODataUtc()));
+    }
+
+    [Fact]
+    public void AddTimeRange_EmitsInvariantTimestamps()
+    {
+        var after = new DateTime(2026, 5, 30, 12, 0, 0, DateTimeKind.Utc);
+        var filter = WithCulture("fi-FI", () =>
+        {
+            var f = new List<string>();
+            f.AddTimeRange("CreationTime", after, null);
+            return f;
+        });
+        Assert.Equal("(CreationTime ge 2026-05-30T12:00:00.000Z)", filter[0]);
     }
 }

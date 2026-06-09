@@ -56,4 +56,16 @@ public class JsonConverterCultureTests
         Assert.Single(arr!);
         Assert.Equal(new DateTime(2026, 5, 30, 12, 0, 0, DateTimeKind.Utc), arr![0].ToUniversalTime());
     }
+
+    [Fact]
+    public void DateTimeArray_WritesInvariantIsoUnderForeignCulture()
+    {
+        // The Write path (Calendar excluded dates -> API JSON body) previously used a
+        // CurrentCulture ToString; fi-FI's '.' time separator would have yielded "12.00.00".
+        var opts = new JsonSerializerOptions();
+        opts.Converters.Add(new DateTimeArrayJsonConverter());
+        var dt = new DateTime(2026, 5, 30, 12, 0, 0, DateTimeKind.Utc);
+        var json = WithCulture("fi-FI", () => JsonSerializer.Serialize(new[] { dt }, opts));
+        Assert.Equal("[\"2026-05-30T12:00:00.000Z\"]", json);
+    }
 }

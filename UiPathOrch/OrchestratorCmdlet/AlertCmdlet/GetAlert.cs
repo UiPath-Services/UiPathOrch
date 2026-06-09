@@ -96,7 +96,7 @@ public class GetAlertCmdlet : OrchestratorPSCmdlet
                 "3years" => DateTime.UtcNow.AddYears(-3),
                 _ => throw new ArgumentException("Invalid Last parameter. Valid values are 'Hour', 'Day', 'Week', 'Month', '3Months', '6Months', 'Year', '3Years'.")
             };
-            filter.Add($"(CreationTime%20ge%20{last:yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(CreationTime%20ge%20{last.ToODataUtc()})");
         }
         #endregion
 
@@ -110,14 +110,14 @@ public class GetAlertCmdlet : OrchestratorPSCmdlet
         #region CreationTimeAfter
         if (CreationTimeAfter is not null)
         {
-            filter.Add($"(CreationTime ge {CreationTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(CreationTime ge {CreationTimeAfter.Value.ToODataUtc()})");
         }
         #endregion
 
         #region CreationTimeBefore
         if (CreationTimeBefore is not null)
         {
-            filter.Add($"(CreationTime%20lt%20{CreationTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+            filter.Add($"(CreationTime%20lt%20{CreationTimeBefore.Value.ToODataUtc()})");
         }
         #endregion
 
