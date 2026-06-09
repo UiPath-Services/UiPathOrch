@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.9.0'
+ModuleVersion = '1.9.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -502,16 +502,17 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.9.0
+1.9.1
 
-New: the Compare-Orch* family (19 cmdlets) diffs entities between two folders or tenants for
-migration verification -- match by Name, a Compare-Object-style SideIndicator (<= / => / == / <>)
-with a per-property breakdown, name-match or -DifferenceName broadcast (wildcard), and a
-secret-not-compared warning. Set a folder's Description with Set-ItemProperty (with -Name / -Value
-tab-completion).
+Fixed: on-premises username/password and PAT drives no longer break when the access token expires --
+renewal now re-runs the initial request (re-authenticate / re-apply) instead of sending an empty
+refresh_token grant. Get-OrchUserSession rejects invalid -State / -Type / -OrderBy with a clear
+error instead of a KeyNotFound crash. Get-OrchQueueItem's no-filter cache output no longer drops
+every item under the default -OrderBy Id. Move-Item on a folder rejects cross-drive and
+self/descendant moves with a clear error. Concurrency hardening for token/expiry publication, the
+async log writer lock, and the rate-limiter refill.
 
-Fixed: Rename-Item -NewName handling, content-aware Remove-Item folder confirmation, and a
-Move-Item NullReferenceException on a non-existent destination.
+Added: Get-OrchUserSession -OrderDescending (ascending stays the default).
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

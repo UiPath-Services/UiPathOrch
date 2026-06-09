@@ -4,6 +4,36 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.9.1] - 2026-06-09
+
+### Added
+
+- `Get-OrchUserSession -OrderDescending` to reverse the sort direction (ascending stays the default).
+
+### Fixed
+
+- **On-premises username/password and PAT drives: token renewal no longer breaks after expiry.**
+  These modes have no refresh token, but renewal always sent a `refresh_token` grant with an empty
+  token, which failed once the token passed its expiry fallback and left the drive unusable until
+  re-import. Renewal now re-runs the initial request instead — username/password re-authenticates via
+  `/api/Account/Authenticate`, PAT re-applies the stored token, confidential apps re-request via
+  `client_credentials`. The interactive (PKCE) refresh-token flow is unchanged.
+- `Get-OrchUserSession`: invalid `-State` / `-Type` / `-OrderBy` values now raise a clear error
+  instead of a `KeyNotFound` crash; unknown API status codes pass through unchanged.
+- `Get-OrchQueueItem`: the no-filter cache-output path no longer drops every item under the default
+  `-OrderBy Id` (it previously emitted nothing when re-displaying already-cached items).
+- `Move-Item` on a folder now rejects cross-drive and self/descendant moves with a clear error,
+  instead of a confusing "not found" or a silent move into a same-named folder on the wrong drive.
+- Concurrency hardening: token and expiry fields are published with memory barriers (`volatile`);
+  the async log writer uses a dedicated lock instead of `lock(this)`; the rate-limiter token refill
+  is serialized so overlapping timer callbacks cannot exceed the cap.
+
+### Changed
+
+- Internal: shared OData time-range filter helper for `Get-OrchJob` / `Get-OrchQueueItem`;
+  cache-output sort extracted into pure, unit-tested functions; new unit tests (cross-tenant
+  folder-name rebasing, Move-Item guards, OData time filters); CI pins PlatyPS to 1.0.1.
+
 ## [1.9.0] - 2026-06-08
 
 ### Added
