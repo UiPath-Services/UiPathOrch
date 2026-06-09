@@ -1123,7 +1123,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     postingRelease.OrganizationUnitId = null;
                     postingRelease.TargetFramework = null;
                     postingRelease.Arguments = null;
-                    postingRelease.AutoUpdate = null;
+                    // AutoUpdate (package auto-update policy) is a real settable field, not a
+                    // folder/server-derived one -- preserve the source value instead of wiping it.
                     postingRelease.ResourceOverwrites = [];
 
                     if (srcRetention is not null)
@@ -2437,6 +2438,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     Description = srcQueue.Description,
                     MaxNumberOfRetries = srcQueue.MaxNumberOfRetries,
                     AcceptAutomaticallyRetry = srcQueue.AcceptAutomaticallyRetry,
+                    RetryAbandonedItems = srcQueue.RetryAbandonedItems,
                     EnforceUniqueReference = srcQueue.EnforceUniqueReference,
                     Encrypted = srcQueue.Encrypted,
                     ProcessScheduleId = srcQueue.ProcessScheduleId,
@@ -2451,7 +2453,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     RetentionBucketId = FindDstBucket(_this,
                             srcDrive, srcFolder, srcQueue.RetentionBucketId,
                             dstDrive, newFolder, "Copy Process", msg)?.Id,
-                    StaleRetentionAction = srcQueue.RetentionAction ?? "Delete",
+                    StaleRetentionAction = srcQueue.StaleRetentionAction ?? "Delete",
                     StaleRetentionPeriod = srcQueue.StaleRetentionPeriod ?? 180,
                     StaleRetentionBucketId = FindDstBucket(_this,
                             srcDrive, srcFolder, srcQueue.StaleRetentionBucketId,
