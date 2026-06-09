@@ -128,17 +128,50 @@ internal class OrchestratorAuthManager
         }
     }
 
+    // ---- Auth-flow selection (extracted for unit testing; see AuthFlowSelectionTests) ----
+    // The credential shape on the PSDrive determines which identity flow runs. These two static
+    // decisions are the single source of truth used by RequestToken / RenewAccessToken below, so
+    // the routing can be exhaustively tested without driving live token endpoints (the module
+    // deliberately avoids HTTP mocking -- cf. the ParseTokens / IsTokenApplied tests).
+    internal enum AuthFlow
+    {
+        PatReapply,        // re-apply the stored Personal Access Token (no token-endpoint call)
+        ClientCredentials, // confidential app: grant_type=client_credentials
+        Pkce,              // interactive external app: authorization_code via the browser
+        UserPassword,      // on-premises: POST /api/Account/Authenticate
+        RefreshToken,      // grant_type=refresh_token (only the PKCE flow ever obtains one)
+    }
+
+    // Flow used by the INITIAL token request. Mirrors RequestToken's dispatch order: a stored PAT
+    // wins, then a confidential app, then interactive PKCE, otherwise on-prem user/password.
+    internal static AuthFlow SelectInitialFlow(bool hasAccessToken, bool isConfidentialApp, bool isUserPassword)
+    {
+        if (hasAccessToken) return AuthFlow.PatReapply;
+        if (isConfidentialApp) return AuthFlow.ClientCredentials;
+        if (!isUserPassword) return AuthFlow.Pkce;
+        return AuthFlow.UserPassword;
+    }
+
+    // Flow used to RENEW an expiring token. The refresh_token grant is valid only for the
+    // interactive (PKCE) flow -- the one mode that obtains a refresh token. Confidential app, PAT,
+    // and on-prem user/password have none, so they renew by re-running the initial request.
+    // (1.9.1 fix: previously every non-confidential mode sent a refresh_token grant, posting
+    // refresh_token=null and breaking user/password + PAT drives at the expiry fallback.)
+    internal static AuthFlow SelectRenewalFlow(bool hasAccessToken, bool isConfidentialApp, bool isUserPassword, bool hasRefreshToken)
+        => (isConfidentialApp || !hasRefreshToken)
+            ? SelectInitialFlow(hasAccessToken, isConfidentialApp, isUserPassword)
+            : AuthFlow.RefreshToken;
+
     public string RequestToken()
     {
-        if (!string.IsNullOrEmpty(_drive._psDrive.AccessToken))
+        switch (SelectInitialFlow(!string.IsNullOrEmpty(_drive._psDrive.AccessToken), _isConfidentialApp, _isUserPassword))
         {
-            _access_token = _drive._psDrive.AccessToken;
-            return _access_token;
-        }
+            case AuthFlow.PatReapply:
+                // SelectInitialFlow only returns PatReapply when AccessToken is non-empty.
+                _access_token = _drive._psDrive.AccessToken;
+                return _access_token!;
 
-        if (_isConfidentialApp)
-        {
-            {
+            case AuthFlow.ClientCredentials:
                 (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
                 {
                     { "grant_type", "client_credentials" },
@@ -147,49 +180,50 @@ internal class OrchestratorAuthManager
                     { "scope", _drive._psDrive.Scope! }
                 });
                 return _access_token;
-            }
-        }
-        else if (!_isUserPassword)
-        {
-            string codeVerifier = RandomString(80);
-            string authorizationCode = GetAuthorizationCode(codeVerifier);
 
-            // GetAuthorizationCode performs the token exchange inline so the success page
-            // can display the authenticated user's name. Skip the redundant exchange when
-            // it already succeeded.
-            if (string.IsNullOrEmpty(_access_token))
-            {
-                (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
+            case AuthFlow.Pkce:
                 {
-                    { "grant_type", "authorization_code" },
-                    { "code", authorizationCode },
-                    { "redirect_uri", _drive._psDrive.RedirectUrl! },
-                    { "client_id", _drive._psDrive.AppId! },
-                    { "code_verifier", codeVerifier }
-                });
-            }
-            return _access_token!;
-        }
-        else // user/pass auth
-        {
-            LogAuthSettings();
+                    string codeVerifier = RandomString(80);
+                    string authorizationCode = GetAuthorizationCode(codeVerifier);
 
-            LoginModel payload = new()
-            {
-                tenancyName = OnpremiseTenancy,
-                usernameOrEmailAddress = _drive._psDrive.Username,
-                password = _drive._psDrive.Password
-            };
+                    // GetAuthorizationCode performs the token exchange inline so the success page
+                    // can display the authenticated user's name. Skip the redundant exchange when
+                    // it already succeeded.
+                    if (string.IsNullOrEmpty(_access_token))
+                    {
+                        (_access_token, _refresh_token) = GetAccessToken(new Dictionary<string, string>
+                        {
+                            { "grant_type", "authorization_code" },
+                            { "code", authorizationCode },
+                            { "redirect_uri", _drive._psDrive.RedirectUrl! },
+                            { "client_id", _drive._psDrive.AppId! },
+                            { "code_verifier", codeVerifier }
+                        });
+                    }
+                    return _access_token!;
+                }
 
-            string url = BaseUrl + "/api/Account/Authenticate";
-            var request = new HttpRequestMessage(HttpMethod.Post, url);
-            string strPayload = JsonSerializer.Serialize(payload);
-            request.Content = new StringContent(strPayload, Encoding.UTF8, @"application/json");
+            default: // AuthFlow.UserPassword
+                {
+                    LogAuthSettings();
 
-            using var cts = new ConsoleCancelHandler();
-            using var response = SendWithLogging(request, cts.Token);
-            var body = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
-            return JsonSerializer.Deserialize<AjaxResponse>(body)?.result ?? "";
+                    LoginModel payload = new()
+                    {
+                        tenancyName = OnpremiseTenancy,
+                        usernameOrEmailAddress = _drive._psDrive.Username,
+                        password = _drive._psDrive.Password
+                    };
+
+                    string url = BaseUrl + "/api/Account/Authenticate";
+                    var request = new HttpRequestMessage(HttpMethod.Post, url);
+                    string strPayload = JsonSerializer.Serialize(payload);
+                    request.Content = new StringContent(strPayload, Encoding.UTF8, @"application/json");
+
+                    using var cts = new ConsoleCancelHandler();
+                    using var response = SendWithLogging(request, cts.Token);
+                    var body = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
+                    return JsonSerializer.Deserialize<AjaxResponse>(body)?.result ?? "";
+                }
         }
     }
 
@@ -205,7 +239,10 @@ internal class OrchestratorAuthManager
         // re-authenticates user/password against /api/Account/Authenticate.
         // Keep the confidential-app branch explicit so it always re-requests via
         // client_credentials regardless of whether a refresh token is present.
-        if (_isConfidentialApp || string.IsNullOrEmpty(_refresh_token))
+        if (SelectRenewalFlow(
+                !string.IsNullOrEmpty(_drive._psDrive.AccessToken),
+                _isConfidentialApp, _isUserPassword,
+                !string.IsNullOrEmpty(_refresh_token)) != AuthFlow.RefreshToken)
         {
             return RequestToken();
         }
