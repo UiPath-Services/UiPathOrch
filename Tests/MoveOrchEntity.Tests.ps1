@@ -151,7 +151,15 @@ Describe 'Move-OrchQueue' {
 
         (Get-OrchQueue -Path $script:srcRoot -Name $qn -ErrorAction SilentlyContinue) | Should -BeNullOrEmpty
         (Get-OrchQueue -Path $script:dstRoot -Name $qn -ErrorAction SilentlyContinue) | Should -Not -BeNullOrEmpty
-        $after = (Invoke-OrchApi -Path $script:dstRoot -ApiPath "/odata/QueueItems?`$filter=QueueDefinitionId eq $($q.Id)&`$count=true" -Raw | ConvertFrom-Json).'@odata.count'
+        # The dst folder-scoped QueueItems projection is updated asynchronously after the move
+        # (the server re-stamps each item's folder association), so the count can momentarily read
+        # 0 right after the share. Poll until it settles instead of reading once.
+        $after = 0
+        foreach ($i in 1..5) {
+            $after = (Invoke-OrchApi -Path $script:dstRoot -ApiPath "/odata/QueueItems?`$filter=QueueDefinitionId eq $($q.Id)&`$count=true" -Raw | ConvertFrom-Json).'@odata.count'
+            if ($after -ge $before) { break }
+            Start-Sleep -Seconds 2
+        }
         $after | Should -Be $before
 
         Get-OrchQueue -Path $script:dstRoot -Name $qn -ErrorAction SilentlyContinue | Remove-OrchQueue -Confirm:$false -ErrorAction SilentlyContinue
