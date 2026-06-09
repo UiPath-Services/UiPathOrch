@@ -397,9 +397,13 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
                 }
                 if (allJobs is not null)
                 {
-                    IEnumerable<object> result = allJobs;
-                    if (skip > 0) result = result.Skip((int)skip);
-                    if (first < ulong.MaxValue) result = result.Take((int)first);
+                    // Each robot batch was $orderby-sorted server-side independently; re-sort the merged
+                    // list so -First/-Skip slice the global order, not the per-batch concatenation. Clamp
+                    // the ulong Skip/First to int before LINQ Skip/Take so a huge -First cannot overflow to
+                    // a negative count (which would silently drop all output).
+                    IEnumerable<object> result = OrderJobsForOutput(allJobs.Cast<Entities.Job>(), orderBy, OrderAscending.IsPresent);
+                    if (skip > 0) result = result.Skip((int)Math.Min(skip, int.MaxValue));
+                    if (first < ulong.MaxValue) result = result.Take((int)Math.Min(first, int.MaxValue));
                     WriteObject(result, true);
                 }
             }

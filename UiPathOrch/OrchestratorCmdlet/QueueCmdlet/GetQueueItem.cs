@@ -370,7 +370,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
                 reporterQueue.WriteProgress(++indexQueue);
 
                 int first = First ?? int.MaxValue; // first is reset per queue
-                int skip = Skip ?? 0;
+                int skip = Math.Max(0, Skip ?? 0); // negative -Skip is meaningless; treat as 0 (it was otherwise cast to a huge $skip on the non-batched path)
 
                 int intReporterItemTotal = isBatched ? 0 : (int)first;
                 using ProgressReporter reporterItem = new(this, 3, intReporterItemTotal, "Item  ");
@@ -421,7 +421,9 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
 
                 if (allItems is not null)
                 {
-                    IEnumerable<object> result = allItems;
+                    // Each robot/reviewer batch was $orderby-sorted server-side independently; re-sort the
+                    // merged list so -First/-Skip slice the global order, not the per-batch concatenation.
+                    IEnumerable<object> result = OrderQueueItemsForOutput(allItems.Cast<Entities.QueueItem>(), OrderBy, OrderAscending.IsPresent);
                     if (skip > 0) result = result.Skip(skip);
                     if (first < int.MaxValue) result = result.Take(first);
                     WriteObject(result, true);

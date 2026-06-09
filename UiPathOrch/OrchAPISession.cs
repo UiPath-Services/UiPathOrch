@@ -3898,7 +3898,7 @@ public partial class OrchAPISession : IDisposable
 
     public PmDirectoryEntityInfo[]? SearchPmDirectory(string partitionGlobalId, string userName)
     {
-        return GetEnumerableWithoutPagingIdentity<PmDirectoryEntityInfo>($"/api/Directory/Search/{partitionGlobalId}", null, $"&startsWith={userName}");
+        return GetEnumerableWithoutPagingIdentity<PmDirectoryEntityInfo>($"/api/Directory/Search/{partitionGlobalId}", null, $"&startsWith={Uri.EscapeDataString(userName)}");
         //+ "&sourceFilter=localUsers"
         //+ "&sourceFilter=localGroups"
         //+ "&sourceFilter=directoryUsers"

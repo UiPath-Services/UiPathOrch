@@ -190,7 +190,7 @@ public class MemberConverter : JsonConverter<PmGroupMember>
 {
     public override PmGroupMember? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        var jsonDoc = JsonDocument.ParseValue(ref reader);
+        using var jsonDoc = JsonDocument.ParseValue(ref reader);
         var root = jsonDoc.RootElement;
 
         var objectType = root.GetProperty("objectType").GetString();
