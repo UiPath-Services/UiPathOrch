@@ -83,14 +83,22 @@ public class GetProcessCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
+            // Ctrl+C between folders: let the cancellation propagate (outside the try) so the
+            // pipeline stops AS CANCELLED, rather than returning partial results that look like a
+            // complete listing -- and without emitting one "operation was canceled" error per
+            // remaining folder.
+            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 var releases = drive.Releases.Get(folder);
                 var targetReleases = releases
                     .FilterByWildcards(r => r?.Name, wpName)
                     .OrderBy(r => r.Name);
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 WriteObject(targetReleases, true);
+            }
+            catch (OperationCanceledException) when (cancelHandler.Token.IsCancellationRequested)
+            {
+                throw; // Ctrl+C surfaced mid-fetch: propagate the stop, don't swallow it as a per-folder error
             }
             catch (Exception ex)
             {
