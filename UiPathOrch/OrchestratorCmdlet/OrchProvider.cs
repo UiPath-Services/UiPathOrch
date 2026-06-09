@@ -1225,6 +1225,18 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
             return;
         }
 
+        // Move-Item is a single same-drive operation (MoveFolder is one API call) — unlike
+        // Copy-Item, which supports cross-drive transfers. If the destination explicitly names a
+        // different drive, reject it: otherwise PSPathToOrchPath strips the drive qualifier and the
+        // destination is silently reinterpreted on the source drive — a no-such-folder error at
+        // best, a move into a same-named folder on the wrong drive at worst.
+        var dstDrive = ExtractOrchDriveInfo(destination);
+        if (dstDrive is not null && !string.Equals(dstDrive.Name, drive.Name, StringComparison.OrdinalIgnoreCase))
+        {
+            WriteError(new ErrorRecord(new OrchException(destination, $"Cannot move across drives: '{path}' is on {drive.NameColon} but destination '{destination}' is on {dstDrive.NameColon}. Move-Item works within a single drive; use Copy-Item for cross-drive transfers."), "MoveItemError", ErrorCategory.InvalidArgument, destination));
+            return;
+        }
+
         if (ShouldProcess(path, "Move Folder"))
         {
             Folder srcFolder = null;
@@ -1247,6 +1259,22 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
                 if (dstFolder is null)
                 {
                     WriteError(new ErrorRecord(new OrchException(destination, $"{drive.NameColon} does not have destination folder '{destination}'."), "MoveItemError", ErrorCategory.ObjectNotFound, destination));
+                    return;
+                }
+
+                // Reject moving a folder into itself or one of its own descendants — either would
+                // create a cycle (the moved subtree would become its own ancestor). Compared by
+                // fully-qualified name with a '/' boundary so a sibling like "Foo2" is not mistaken
+                // for a descendant of "Foo".
+                string srcFqn = srcFolder.FullyQualifiedName;
+                string dstFqn = dstFolder.FullyQualifiedName;
+                bool intoSelfOrDescendant = srcFolder == dstFolder
+                    || (!string.IsNullOrEmpty(srcFqn) && dstFqn is not null
+                        && (string.Equals(dstFqn, srcFqn, StringComparison.OrdinalIgnoreCase)
+                            || dstFqn.StartsWith(srcFqn + "/", StringComparison.OrdinalIgnoreCase)));
+                if (intoSelfOrDescendant)
+                {
+                    WriteError(new ErrorRecord(new OrchException(destination, $"Cannot move folder '{path}' into itself or one of its descendants."), "MoveItemError", ErrorCategory.InvalidOperation, destination));
                     return;
                 }
 
