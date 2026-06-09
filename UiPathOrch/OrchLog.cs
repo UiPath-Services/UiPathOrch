@@ -324,8 +324,10 @@ public partial class OrchAPISession : IDisposable
     }
 
 
-    // New async log system
-    private AsyncLogWriter? _asyncLogWriter;
+    // New async log system. volatile is required for the double-checked locking below to be correct
+    // on weak memory models (e.g. ARM64): without it the lock-free reads could observe a non-null
+    // reference to a not-yet-fully-constructed AsyncLogWriter.
+    private volatile AsyncLogWriter? _asyncLogWriter;
     private readonly object _asyncLogWriterLock = new();
 
     private AsyncLogWriter GetAsyncLogWriter()
