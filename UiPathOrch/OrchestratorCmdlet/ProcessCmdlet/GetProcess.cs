@@ -96,6 +96,14 @@ public class GetProcessCmdlet : OrchestratorPSCmdlet
                     .OrderBy(r => r.Name);
                 WriteObject(targetReleases, true);
             }
+            catch (OperationCanceledException)
+            {
+                // Ctrl+C while drive.Releases.Get(folder) is in flight (the data call observes the
+                // cancel and throws): propagate a single stop instead of a per-folder error here PLUS
+                // the loop's next ThrowIfCancellationRequested propagation -- which surfaced as two
+                // "operation was canceled" messages.
+                throw;
+            }
             catch (Exception ex)
             {
                 WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetProcessError", ErrorCategory.InvalidOperation, folder));
