@@ -1944,7 +1944,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     /// cousin). Returns null when the relationship has no expressible dst equivalent
     /// (e.g., disjoint top-level subtrees).
     /// </summary>
-    private static string? ComputeDstFqn(string srcLinkFqn, string srcAnchorFqn, string dstAnchorFqn)
+    internal static string? ComputeDstFqn(string srcLinkFqn, string srcAnchorFqn, string dstAnchorFqn)
     {
         // Identical → dst equivalent is dstAnchor itself
         if (string.Equals(srcLinkFqn, srcAnchorFqn, StringComparison.OrdinalIgnoreCase))
@@ -1989,7 +1989,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
     /// <summary>Strips <paramref name="upSteps"/> trailing "/segment" pieces from
     /// <paramref name="fqn"/>. Returns null if the path can't go that high.</summary>
-    private static string? WalkUp(string fqn, int upSteps)
+    internal static string? WalkUp(string fqn, int upSteps)
     {
         for (int i = 0; i < upSteps; i++)
         {
