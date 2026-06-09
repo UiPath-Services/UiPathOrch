@@ -1231,7 +1231,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
         // destination is silently reinterpreted on the source drive — a no-such-folder error at
         // best, a move into a same-named folder on the wrong drive at worst.
         var dstDrive = ExtractOrchDriveInfo(destination);
-        if (dstDrive is not null && !string.Equals(dstDrive.Name, drive.Name, StringComparison.OrdinalIgnoreCase))
+        if (dstDrive is not null && IsCrossDriveMovePure(drive.Name, dstDrive.Name))
         {
             WriteError(new ErrorRecord(new OrchException(destination, $"Cannot move across drives: '{path}' is on {drive.NameColon} but destination '{destination}' is on {dstDrive.NameColon}. Move-Item works within a single drive; use Copy-Item for cross-drive transfers."), "MoveItemError", ErrorCategory.InvalidArgument, destination));
             return;
@@ -1263,15 +1263,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
                 }
 
                 // Reject moving a folder into itself or one of its own descendants — either would
-                // create a cycle (the moved subtree would become its own ancestor). Compared by
-                // fully-qualified name with a '/' boundary so a sibling like "Foo2" is not mistaken
-                // for a descendant of "Foo".
-                string srcFqn = srcFolder.FullyQualifiedName;
-                string dstFqn = dstFolder.FullyQualifiedName;
+                // create a cycle (the moved subtree would become its own ancestor).
                 bool intoSelfOrDescendant = srcFolder == dstFolder
-                    || (!string.IsNullOrEmpty(srcFqn) && dstFqn is not null
-                        && (string.Equals(dstFqn, srcFqn, StringComparison.OrdinalIgnoreCase)
-                            || dstFqn.StartsWith(srcFqn + "/", StringComparison.OrdinalIgnoreCase)));
+                    || IsMoveIntoSelfOrDescendantPure(srcFolder.FullyQualifiedName, dstFolder.FullyQualifiedName);
                 if (intoSelfOrDescendant)
                 {
                     WriteError(new ErrorRecord(new OrchException(destination, $"Cannot move folder '{path}' into itself or one of its descendants."), "MoveItemError", ErrorCategory.InvalidOperation, destination));
@@ -1295,6 +1289,23 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
             }
         }
     }
+
+    // Pure cross-drive test for MoveItem (extracted so it is unit-testable without a live drive).
+    // Move-Item is single-drive, unlike Copy-Item: a move is cross-drive only when the destination
+    // explicitly names a drive different from the source. A null/empty destination drive name
+    // (unqualified path / unknown drive) is treated as same-drive and resolved on the source drive.
+    internal static bool IsCrossDriveMovePure(string srcDriveName, string? dstDriveName)
+        => !string.IsNullOrEmpty(dstDriveName)
+            && !string.Equals(dstDriveName, srcDriveName, StringComparison.OrdinalIgnoreCase);
+
+    // Pure self/descendant test for MoveItem (extracted so it is unit-testable). True when the
+    // destination folder is the source folder itself or one of its descendants, compared by
+    // fully-qualified name with a '/' boundary so a sibling like "Foo2" is not mistaken for a
+    // descendant of "Foo". A null/empty source FQN (e.g. root) is never a match here.
+    internal static bool IsMoveIntoSelfOrDescendantPure(string? srcFqn, string? dstFqn)
+        => !string.IsNullOrEmpty(srcFqn) && dstFqn is not null
+            && (string.Equals(dstFqn, srcFqn, StringComparison.OrdinalIgnoreCase)
+                || dstFqn.StartsWith(srcFqn + "/", StringComparison.OrdinalIgnoreCase));
 
     #endregion
 
