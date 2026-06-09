@@ -46,6 +46,18 @@ public class ExportCsvCultureTests
     }
 
     [Fact]
+    public void DateTime_DateOnly_Unspecified_IsInvariantIso()
+    {
+        // The shape Get-OrchCalendarDate -ExportCsv emits: an excluded date is midnight with
+        // Kind=Unspecified. It must export as invariant ISO (no Z) so it round-trips across locales.
+        // The export previously used the current-culture ToShortDateString() and corrupted / swapped
+        // day-month cross-host; it now routes through this EscapeCsvValue(DateTime?) overload.
+        var dt = new DateTime(2026, 6, 9, 0, 0, 0, DateTimeKind.Unspecified);
+        var s = WithCulture("de-DE", () => OrchestratorPSCmdlet.EscapeCsvValue((DateTime?)dt));
+        Assert.Equal("2026-06-09T00:00:00", s);
+    }
+
+    [Fact]
     public void DateTime_Null_IsEmpty()
     {
         Assert.Equal("", OrchestratorPSCmdlet.EscapeCsvValue((DateTime?)null));

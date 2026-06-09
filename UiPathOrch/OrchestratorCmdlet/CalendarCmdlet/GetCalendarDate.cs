@@ -140,7 +140,10 @@ public class GetCalendarDateCmdlet : OrchestratorPSCmdlet
         string[] line = [
             EscapeCsvValue(output.Path, true),
             EscapeCsvValue(output.Name, true),
-            EscapeCsvValue(output.ExcludedDate?.ToShortDateString())
+            // Route the date through the invariant DateTime? overload (ISO-8601), NOT ToShortDateString
+            // (current-culture) -- otherwise an excluded date exported on one locale fails to re-import
+            // (or silently swaps day/month) on another. Matches every other DateTime CSV column.
+            EscapeCsvValue(output.ExcludedDate)
         ];
         writer.WriteCsvLine(line);
     }
