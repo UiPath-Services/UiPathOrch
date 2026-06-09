@@ -65,6 +65,10 @@ public class GetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
                     if (s is not null && !string.IsNullOrEmpty(s.key)) settings.Add(s);
                 }
             }
+            catch (OperationCanceledException)
+            {
+                throw; // Ctrl+C: propagate the stop instead of one canceled-error per drive
+            }
             catch (Exception ex)
             {
                 WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmUserPreferenceError", ErrorCategory.InvalidOperation, drive));

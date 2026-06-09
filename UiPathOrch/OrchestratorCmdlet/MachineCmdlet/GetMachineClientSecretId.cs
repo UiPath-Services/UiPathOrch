@@ -183,6 +183,10 @@ public class GetMachineClientSecretIdCmdlet : OrchestratorPSCmdlet
                         WriteObject(output);
                     }
                 }
+                catch (OperationCanceledException)
+                {
+                    throw; // Ctrl+C: propagate the stop instead of one canceled-error per machine
+                }
                 catch (Exception ex)
                 {
                     WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetMachineClientSecretsError", ErrorCategory.InvalidOperation, drive));

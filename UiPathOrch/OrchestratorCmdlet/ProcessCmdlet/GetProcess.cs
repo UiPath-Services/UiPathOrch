@@ -96,10 +96,6 @@ public class GetProcessCmdlet : OrchestratorPSCmdlet
                     .OrderBy(r => r.Name);
                 WriteObject(targetReleases, true);
             }
-            catch (OperationCanceledException) when (cancelHandler.Token.IsCancellationRequested)
-            {
-                throw; // Ctrl+C surfaced mid-fetch: propagate the stop, don't swallow it as a per-folder error
-            }
             catch (Exception ex)
             {
                 WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetProcessError", ErrorCategory.InvalidOperation, folder));

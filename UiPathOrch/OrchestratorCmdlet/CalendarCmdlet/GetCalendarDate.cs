@@ -123,6 +123,10 @@ public class GetCalendarDateCmdlet : OrchestratorPSCmdlet
                     }
                 }
             }
+            catch (OperationCanceledException)
+            {
+                throw; // Ctrl+C: propagate the stop instead of one canceled-error per drive
+            }
             catch (Exception ex)
             {
                 caller.WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetCalendarDateError", ErrorCategory.InvalidOperation, drive));

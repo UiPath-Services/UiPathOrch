@@ -158,6 +158,10 @@ public class GetPmRobotAccountCmdlet : OrchestratorPSCmdlet
                     WriteObject(robotAccounts.Select(r => { var c = r!.ShallowClone(); c.Path = drive.NameColonSeparator; return c; }), true);
                 }
             }
+            catch (OperationCanceledException)
+            {
+                throw; // Ctrl+C: propagate the stop instead of one canceled-error per drive
+            }
             catch (OrchException ex)
             {
                 // Parallel fetch failure — already wrapped with Path + Target.
