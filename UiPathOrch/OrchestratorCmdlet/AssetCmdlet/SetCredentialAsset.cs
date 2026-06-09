@@ -8,7 +8,7 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-public class SetCredentialAssetCommandParameter : ISetAssetRow
+class SetCredentialAssetCommandParameter
 {
     public string[]? Name { set; get; }
     public string? Description { set; get; }
@@ -23,10 +23,21 @@ public class SetCredentialAssetCommandParameter : ISetAssetRow
 
 [Cmdlet(VerbsCommon.Set, "OrchCredentialAsset", DefaultParameterSetName = Default, SupportsShouldProcess = true)]
 [OutputType(typeof(UiPath.PowerShell.Entities.Asset))]
-public class SetCredentialAssetCmdlet : SetCredentialLikeAssetCmdletBase<SetCredentialAssetCommandParameter>
+public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
 {
-    // parameters / RetrieveAllAssets are inherited from SetCredentialLikeAssetCmdletBase;
-    // _resolvedDescriptions / MergeDescription / pendingAssets from SetAssetCmdletBase.
+    private readonly List<SetCredentialAssetCommandParameter> parameters = [];
+    private readonly Dictionary<(string name, string path), Asset> pendingAssets = [];
+
+    // Merged Description per asset across all input rows. The merged result is applied to each
+    // pendingAssets entry in EndProcessing, before POST. The shared OrchExtensions.MergeNonEmptyValue
+    // helper documents the priority rule (non-empty > "" > null, last-writer-wins among non-empty);
+    // this lets a single direct call (`-Description ""`) clear the field while a CSV roundtrip —
+    // where the exporter writes Description on the first row only and emits empty cells
+    // thereafter — is preserved (the lone non-empty 'A' wins over the empty cells).
+    private readonly Dictionary<(string name, string path), string> _resolvedDescriptions = [];
+
+    private void MergeDescription(string name, string folderPath, string? rowDescription)
+        => _resolvedDescriptions.MergeNonEmptyValue((name, folderPath), rowDescription);
 
     private const string Default = "DefaultParameterSet";
     private const string Plain = "SpecifyPlainPasswordParameterSet";
@@ -276,94 +287,425 @@ public class SetCredentialAssetCmdlet : SetCredentialLikeAssetCmdletBase<SetCred
         parameters.Add(parameter);
     }
 
-    protected override string ValueType => "Credential";
-
-    protected override bool HasCreateValue(SetCredentialAssetCommandParameter param)
-        => !string.IsNullOrEmpty(param.CredentialPassword) || !string.IsNullOrEmpty(param.ExternalName);
-
-    protected override void InitializeNewAsset(Asset asset)
-        => asset.CredentialUsername = "";
-
-    protected override bool ApplyGlobalValue(Asset asset, SetCredentialAssetCommandParameter param)
+    protected void RetrieveAllAssets()
     {
-        if (!string.IsNullOrEmpty(param.ExternalName))
+        // Retrieve Assets for the target folders asynchronously in bulk
+        ParallelResults.GroupBy(parameters, param =>
         {
-            asset.ExternalName = param.ExternalName;
-            asset.CredentialUsername = null;
-            asset.CredentialPassword = null;
-            asset.HasDefaultValue = true;
-            return true;
-        }
+            var drivesFolders = SessionState.EnumFolders(param.Path);
 
+            // Since the path is already resolved, only one folder should be expanded, but iterate just in case
+            return ParallelResults.GroupBy(drivesFolders, driveFolder =>
+            {
+                var (drive, folder) = driveFolder;
+                return drive.Assets.Get(folder);
+            }).SelectMany(g => g);
+        }).ToList();
+    }
+
+    private Asset? UpdateAssetInMemory(OrchDriveInfo drive, Folder folder, string name, SetCredentialAssetCommandParameter param,
+        IEnumerable<User>? specifiedUsers,
+        IEnumerable<ExtendedMachine?> specifiedMachines,
+        Int64 credentialStoreId)
+    {
+        string target = System.IO.Path.Combine(folder.GetPSPath(), param.Name?[0] ?? "");
         bool isDirty = false;
-        if (!string.IsNullOrEmpty(param.CredentialUsername) && asset.CredentialUsername != param.CredentialUsername)
+
+        pendingAssets.TryGetValue((name, folder.GetPSPath()), out var asset);
+        if (asset is null)
         {
-            asset.CredentialUsername = param.CredentialUsername;
-            isDirty = true;
+            var assets = drive.Assets.Get(folder);
+            asset = assets.FirstOrDefault(a => a.Name == name);
+            if (asset is null)
+            {
+                if (string.IsNullOrEmpty(param.CredentialPassword) && string.IsNullOrEmpty(param.ExternalName))
+                    return null;
+
+                isDirty = true;
+                // Create a new asset in memory. Description is intentionally omitted here;
+                // it's resolved across all input rows via MergeDescription and applied in
+                // EndProcessing before POST.
+                asset = new Asset
+                {
+                    Name = name,
+                    ValueScope = "Global",
+                    ValueType = "Credential",
+                    CredentialUsername = "",
+                    CanBeDeleted = true,
+                    HasDefaultValue = false,
+                    Path = folder.GetPSPath(),
+                };
+            }
+            else
+            {
+                asset = OrchCollectionExtensions.DeepCopy(asset);
+                asset.Path = folder.GetPSPath();
+            }
         }
 
-        // Only update password when a non-empty value is explicitly specified.
-        // Empty string "" means "not specified" (e.g., from CSV export where passwords are masked).
-        if (!string.IsNullOrEmpty(param.CredentialPassword))
+        // Description is merged across all input rows in MergeDescription (priority:
+        // non-empty > "" > null) and applied to the asset in EndProcessing. We mark dirty
+        // whenever the user supplied a Description on this row, so the asset reaches POST
+        // even when Description is the only change.
+        MergeDescription(name, folder.GetPSPath(), param.Description);
+        if (param.Description is not null) isDirty = true;
+
+        if (asset.CredentialStoreId != credentialStoreId && credentialStoreId != 0)
         {
-            asset.CredentialPassword = param.CredentialPassword;
-            asset.HasDefaultValue = true;
             isDirty = true;
+            asset.CredentialStoreId = credentialStoreId;
+            if (asset.UserValues is not null)
+            {
+                foreach (var userValue in asset.UserValues)
+                {
+                    userValue.CredentialStoreId = credentialStoreId;
+                }
+            }
         }
-        return isDirty;
+
+        // At this point, Description and CredentialStoreId have been updated in memory
+        // However, CredentialStoreId for UserValues has not been updated yet
+
+        // When CredentialPassword is not specified, do not update the Credential
+        // (When CredentialPassword is set to '', continue subsequent processing to delete the asset)
+
+        // Update Global value
+        if (specifiedUsers is null)
+        {
+            if (specifiedMachines is not null && specifiedMachines.Any(m => m is not null))
+            {
+                // Warning that machines will be ignored
+                string strMachineNames = string.Join(", ", param.MachineName!);
+                var errorRecord = new ErrorRecord(new OrchException(target, $"UserName is not specified. MachineName '{strMachineNames}' ignored."), "SetAssetError", ErrorCategory.InvalidOperation, target);
+                WriteError(errorRecord);
+            }
+
+            if (!string.IsNullOrEmpty(param.ExternalName))
+            {
+                isDirty = true;
+                asset.ExternalName = param.ExternalName;
+                asset.CredentialUsername = null;
+                asset.CredentialPassword = null;
+                asset.HasDefaultValue = true;
+            }
+            else
+            {
+                if (!string.IsNullOrEmpty(param.CredentialUsername) && asset.CredentialUsername != param.CredentialUsername)
+                {
+                    isDirty = true;
+                    asset.CredentialUsername = param.CredentialUsername;
+                }
+
+                // Only update password when a non-empty value is explicitly specified.
+                // Empty string "" means "not specified" (e.g., from CSV export where passwords are masked).
+                if (!string.IsNullOrEmpty(param.CredentialPassword))
+                {
+                    isDirty = true;
+                    asset.CredentialPassword = param.CredentialPassword;
+                    asset.HasDefaultValue = true;
+                }
+            }
+        }
+        else // Update PerRobot value
+        {
+            // If CredentialStore is specified, update the CredentialStoreId for all UserValues
+            if (credentialStoreId != 0 && asset.UserValues is not null)
+            {
+                foreach (var uv in asset.UserValues)
+                {
+                    if (uv.CredentialStoreId != credentialStoreId)
+                    {
+                        isDirty = true;
+                        uv.CredentialStoreId = credentialStoreId;
+                    }
+                }
+            }
+
+            // Use Dictionary for O(1) lookup by (UserId, MachineId)
+            var uvDict = (asset.UserValues ?? []).ToDictionary(uv => (uv.UserId, uv.MachineId));
+
+            foreach (var user in specifiedUsers)
+            {
+                foreach (var machine in specifiedMachines!)
+                {
+                    var key = (user.Id, machine?.Id);
+                    uvDict.TryGetValue(key, out var userValue);
+
+                    if (string.IsNullOrEmpty(param.CredentialUsername) && (param.CredentialPassword == "" || param.ExternalName == ""))
+                    {
+                        if (userValue is not null)
+                        {
+                            isDirty = true;
+                            uvDict.Remove(key);
+                        }
+                        continue;
+                    }
+                    if (userValue is null)
+                    {
+                        isDirty = true;
+                        userValue = new AssetUserValue
+                        {
+                            ValueType = "Credential",
+                            UserId = user.Id,
+                            UserName = user.UserName,
+                            MachineId = machine?.Id,
+                            MachineName = machine?.Name,
+                            CredentialStoreId = asset.CredentialStoreId
+                        };
+                        uvDict[key] = userValue;
+                        asset.ValueScope = "PerRobot";
+                    }
+
+                    if (!string.IsNullOrEmpty(param.ExternalName))
+                    {
+                        isDirty = true;
+                        userValue.ExternalName = param.ExternalName;
+                        userValue.CredentialUsername = null;
+                        userValue.CredentialPassword = null;
+                    }
+                    else
+                    {
+                        if (userValue.CredentialUsername != param.CredentialUsername && !string.IsNullOrEmpty(param.CredentialUsername))
+                        {
+                            isDirty = true;
+                            userValue.CredentialUsername = param.CredentialUsername;
+                        }
+                        if (!string.IsNullOrEmpty(param.CredentialPassword))
+                        {
+                            isDirty = true;
+                            userValue.CredentialPassword = param.CredentialPassword;
+                        }
+                    }
+                }
+            }
+
+            // Write back to asset.UserValues
+            if (uvDict.Count > 0)
+                asset.UserValues = uvDict.Values.ToList();
+            else
+            {
+                asset.ValueScope = "Global";
+                asset.UserValues = null;
+            }
+        }
+        if (isDirty)
+            return asset;
+        else
+            return null;
     }
 
-    // Empty-row trigger: no username and password/externalName explicitly blanked.
-    protected override bool IsPerRobotValueEmpty(SetCredentialAssetCommandParameter param)
-        => string.IsNullOrEmpty(param.CredentialUsername) && (param.CredentialPassword == "" || param.ExternalName == "");
-
-    // Credential clears the per-robot entry on an empty row.
-    protected override bool AllowPerRobotRemoval => true;
-
-    protected override bool ApplyPerRobotValue(AssetUserValue userValue, SetCredentialAssetCommandParameter param)
+    protected void BuildAssetDataFromParameterSets()
     {
-        if (!string.IsNullOrEmpty(param.ExternalName))
-        {
-            userValue.ExternalName = param.ExternalName;
-            userValue.CredentialUsername = null;
-            userValue.CredentialPassword = null;
-            return true;
-        }
+        // For performance, retrieve all Assets for the target folders in advance
+        RetrieveAllAssets();
 
-        bool isDirty = false;
-        if (userValue.CredentialUsername != param.CredentialUsername && !string.IsNullOrEmpty(param.CredentialUsername))
+        foreach (var param in parameters)
         {
-            userValue.CredentialUsername = param.CredentialUsername;
-            isDirty = true;
+            if (ParameterSetName == Default)
+            {
+                param.CredentialUsername = Credential!.UserName;
+                param.CredentialPassword = ConvertToUnsecureString(Credential!.Password);
+            }
+
+            // expand Asset Name
+            List<WildcardPattern> wpName = param.Name!.ConvertToWildcardPatternList();
+
+            // expand UserName and MachineName
+            List<WildcardPattern> wpUserName = null;
+            List<WildcardPattern> wpMachineName = null;
+            WildcardPattern wpCredentialStore = null;
+
+            if (param.UserName is not null && param.UserName.Any(un => !string.IsNullOrEmpty(un)))
+                wpUserName = param.UserName.ConvertToWildcardPatternList();
+
+            if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
+                wpMachineName = param.MachineName.ConvertToWildcardPatternList();
+
+            if (!string.IsNullOrEmpty(param.CredentialStore))
+                wpCredentialStore = new WildcardPattern(param.CredentialStore, WildcardOptions.IgnoreCase);
+
+            var drivesFolders = SessionState.EnumFolders(param.Path);
+            foreach (var (drive, folder) in drivesFolders)
+            {
+                string targetFolder = $"{folder.GetPSPath()}";
+
+                long credentialStoreId = FindCredentialStoreId(targetFolder, drive, wpCredentialStore)?.Id ?? 0;
+
+                IEnumerable<User> specifiedUsers = null;
+                IEnumerable<ExtendedMachine?> specifiedMachines = null;
+
+                // expand UserName
+                if (wpUserName is not null)
+                {
+                    // See SetAsset.cs UserName expansion — the same scope-tightening fix.
+                    var assignedUserIds = drive.FolderUsersWithInherited.Get(folder)
+                        .Where(ur => ur?.UserEntity?.Id is not null)
+                        .Select(ur => ur.UserEntity!.Id!.Value)
+                        .ToHashSet();
+                    var tenantUsers = drive.Users.Get()
+                        .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
+                    // Match both UserName and EmailAddress; see SetAsset.cs.
+                    specifiedUsers = tenantUsers.FilterByWildcardsAny(
+                        [u => u?.UserName, u => u?.EmailAddress],
+                        wpUserName);
+                    if (!specifiedUsers.Any())
+                    {
+                        string strUserNames = string.Join(", ", param.UserName!);
+                        Exception e = new Exception($"UserName '{strUserNames}' is not assigned to the folder '{folder.GetPSPath()}'.");
+                        var errorRecord = new ErrorRecord(new OrchException(targetFolder, e), "SetAssetError", ErrorCategory.InvalidOperation, targetFolder);
+                        WriteError(errorRecord);
+                        continue;
+                    }
+                }
+
+                // expand MachineName
+                if (wpMachineName is not null)
+                {
+                    // See SetAsset.cs MachineName expansion — the same scope-tightening fix.
+                    var assignedIds = drive.FolderMachinesAssigned.Get(folder)
+                        .Where(m => m?.Id is not null)
+                        .Select(m => m.Id!.Value)
+                        .ToHashSet();
+                    var tenantMachines = drive.Machines.Get()
+                        .Where(m => m?.Id is not null && assignedIds.Contains(m.Id!.Value));
+                    specifiedMachines = tenantMachines.FilterByWildcards(m => m?.Name, wpMachineName);
+                    if (!specifiedMachines.Any())
+                    {
+                        string strMachineNames = string.Join(", ", param.MachineName!);
+                        Exception e = new Exception($"MachineName '{strMachineNames}' is not assigned to the folder '{folder.GetPSPath()}'.");
+                        var errorRecord = new ErrorRecord(new OrchException(targetFolder, e), "SetAssetError", ErrorCategory.InvalidOperation, targetFolder);
+                        WriteError(errorRecord);
+                        continue;
+                    }
+                }
+                if (specifiedMachines is null || !specifiedMachines.Any())
+                {
+                    // For processing convenience, insert a single null element
+                    specifiedMachines = [null];
+                }
+
+                var existingAssets = drive.Assets.Get(folder).Where(a => a.ValueType == "Credential");
+
+                foreach (var name in param.Name!)
+                {
+                    var matchingAssets = existingAssets.FilterByWildcards(n => n?.Name, wpName);
+                    if (matchingAssets.Any())
+                    {
+                        // Update existing assets
+                        foreach (var matchingAsset in matchingAssets)
+                        {
+                            var asset = UpdateAssetInMemory(drive, folder, matchingAsset.Name!, param, specifiedUsers!, specifiedMachines, credentialStoreId);
+                            if (asset is not null)
+                                pendingAssets.TryAdd((asset.Name!, asset.Path!), asset);
+                        }
+                    }
+                    else
+                    {
+                        // Create a new asset
+                        var asset = UpdateAssetInMemory(drive, folder, name, param, specifiedUsers!, specifiedMachines, credentialStoreId);
+                        if (asset is not null)
+                            pendingAssets.TryAdd((asset.Name!, asset.Path!), asset);
+                    }
+                }
+            }
         }
-        if (!string.IsNullOrEmpty(param.CredentialPassword))
-        {
-            userValue.CredentialPassword = param.CredentialPassword;
-            isDirty = true;
-        }
-        return isDirty;
     }
 
-    protected override void ApplyDefaultParameterSetValues(SetCredentialAssetCommandParameter param)
+    protected override void EndProcessing()
     {
-        if (ParameterSetName == Default)
-        {
-            param.CredentialUsername = Credential!.UserName;
-            param.CredentialPassword = ConvertToUnsecureString(Credential!.Password);
-        }
-    }
+        BuildAssetDataFromParameterSets();
 
-    protected override string ProgressActivity => "Updating credential assets";
-
-    protected override void NormalizeBeforeFlush(Asset asset)
-    {
-        if (asset.CredentialUsername == "")
+        // Apply the merged Description (resolved across all input rows) to each pending asset.
+        // See MergeDescription / _resolvedDescriptions for the priority rule.
+        foreach (var asset in pendingAssets.Values)
         {
-            asset.CredentialUsername = null;
+            if (_resolvedDescriptions.TryGetValue((asset.Name!, asset.Path!), out var resolved)
+                && asset.Description != resolved)
+            {
+                asset.Description = resolved;
+            }
         }
-        if (string.IsNullOrEmpty(asset.CredentialPassword))
+
+        List<(OrchDriveInfo drive, Int64 id)> folderIdsThatShouldRemoveCache = [];
+
+        using var reporter = new ProgressReporter(this, 1, pendingAssets.Count, "Updating credential assets");
+
+        // Process the grouped parameter sets
+        try
         {
-            asset.CredentialStoreId = null;
+            int index = 0;
+            foreach (var asset in pendingAssets.Values)
+            {
+                if (asset.CredentialUsername == "")
+                {
+                    asset.CredentialUsername = null;
+                }
+                if (string.IsNullOrEmpty(asset.CredentialPassword))
+                {
+                    asset.CredentialStoreId = null;
+                }
+
+                var drivesFolders = SessionState.EnumFolders([WildcardPattern.Escape(asset.Path!)]);
+                var (drive, folder) = drivesFolders[0];
+
+                var target = asset.GetPSPath();
+
+                reporter.WriteProgress(++index);
+
+                var existingAssets = drive.Assets.Get(folder);
+                var existingAsset = existingAssets.FirstOrDefault(a => a.Name == asset.Name);
+
+                try
+                {
+                    if (existingAsset is null) // Add a new asset
+                    {
+                        if (!asset.HasDefaultValue.GetValueOrDefault() && (asset.UserValues is null || !asset.UserValues.Any()))
+                        {
+                            continue;
+                        }
+                        if (ShouldProcess(target, "Add CredentialAsset"))
+                        {
+                            Asset createdAsset = drive.OrchAPISession.AddAsset(folder.Id ?? 0, asset);
+                            createdAsset!.Path = folder.GetPSPath();
+                            WriteObject(createdAsset);
+
+                            folderIdsThatShouldRemoveCache.Add((drive, folder.Id ?? 0));
+                        }
+                    }
+                    else
+                    {
+                        // Delete the asset
+                        if (!asset.HasDefaultValue.GetValueOrDefault() && (asset.UserValues is null || !asset.UserValues.Any()))
+                        {
+                            if (ShouldProcess(target, "Remove CredentialAsset"))
+                            {
+                                drive.OrchAPISession.RemoveAsset(folder.Id ?? 0, asset.Id ?? 0);
+                            }
+                        }
+                        else // Update the asset
+                        {
+                            if (ShouldProcess(target, "Update CredentialAsset"))
+                            {
+                                drive.OrchAPISession.PutAsset(folder.Id ?? 0, asset);
+                            }
+                        }
+
+                        folderIdsThatShouldRemoveCache.Add((drive, folder.Id ?? 0));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    var errorRecord = new ErrorRecord(new OrchException(target, ex), "SetAssetError", ErrorCategory.InvalidOperation, target);
+                    WriteError(errorRecord);
+                }
+            }
+        }
+        finally
+        {
+            foreach (var cache in folderIdsThatShouldRemoveCache)
+            {
+                cache.drive.Assets.ClearCache(cache.id);
+            }
         }
     }
 }
