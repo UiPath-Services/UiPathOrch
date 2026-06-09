@@ -197,61 +197,10 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
         }
         #endregion
 
-        #region CreationTimeAfter
-        if (CreationTimeAfter is not null)
-        {
-            filter.Add($"(CreationTime ge {CreationTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-        #endregion
-
-        #region CreationTimeBefore
-        if (CreationTimeBefore is not null)
-        {
-            filter.Add($"(CreationTime lt {CreationTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-        #endregion
-
-        #region StartTimeAfter
-        if (StartTimeAfter is not null)
-        {
-            filter.Add($"(StartTime ge {StartTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-        #endregion
-
-        #region StartTimeBefore
-        if (StartTimeBefore is not null)
-        {
-            filter.Add($"(StartTime lt {StartTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-        #endregion
-
-        #region EndTimeAfter
-        if (EndTimeAfter is not null)
-        {
-            filter.Add($"(EndTime ge {EndTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-        #endregion
-
-        #region EndTimeBefore
-        if (EndTimeBefore is not null)
-        {
-            filter.Add($"(EndTime lt {EndTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-        #endregion
-
-        #region ResumeTimeAfter
-        if (ResumeTimeAfter is not null)
-        {
-            filter.Add($"(ResumeTime ge {ResumeTimeAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-        #endregion
-
-        #region ResumeTimeBefore
-        if (ResumeTimeBefore is not null)
-        {
-            filter.Add($"(ResumeTime lt {ResumeTimeBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-        #endregion
+        filter.AddTimeRange("CreationTime", CreationTimeAfter, CreationTimeBefore);
+        filter.AddTimeRange("StartTime", StartTimeAfter, StartTimeBefore);
+        filter.AddTimeRange("EndTime", EndTimeAfter, EndTimeBefore);
+        filter.AddTimeRange("ResumeTime", ResumeTimeAfter, ResumeTimeBefore);
 
         #region Priority
         if (Priority is not null)

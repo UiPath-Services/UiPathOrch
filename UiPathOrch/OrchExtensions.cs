@@ -146,6 +146,18 @@ internal static class OrchCollectionExtensions
         }
     }
 
+    // Append OData time-range conditions for a field, matching the exact shape Get-OrchJob and
+    // Get-OrchQueueItem build by hand: "(Field ge <utc>)" / "(Field lt <utc>)" with the timestamp
+    // in UTC, millisecond precision and a trailing Z. 'after' is inclusive (ge), 'before' is
+    // exclusive (lt); either or both may be null (nothing is added for a null bound).
+    public static void AddTimeRange(this List<string> filter, string field, DateTime? after, DateTime? before)
+    {
+        if (after is not null)
+            filter.Add($"({field} ge {after.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+        if (before is not null)
+            filter.Add($"({field} lt {before.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
+    }
+
     public static string? CreateOrFilter<T>(this IEnumerable<T> param, Func<T, string> converter)
     {
         if (param is null || !param.Any()) return null;

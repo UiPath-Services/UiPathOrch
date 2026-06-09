@@ -231,45 +231,10 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
             filter.AddIfNotNull(reviewerIdBatch.CreateOrFilter(r => $"ReviewerUserId eq {r}"));
         }
 
-        if (DueDateAfter is not null)
-        {
-            filter.Add($"(DueDate ge {DueDateAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-
-        if (DueDateBefore is not null)
-        {
-            filter.Add($"(DueDate lt {DueDateBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-
-        if (DeferDateAfter is not null)
-        {
-            filter.Add($"(DeferDate ge {DeferDateAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-
-        if (DeferDateBefore is not null)
-        {
-            filter.Add($"(DeferDate lt {DeferDateBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-
-        if (StartProcessingAfter is not null)
-        {
-            filter.Add($"(StartProcessing ge {StartProcessingAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-
-        if (StartProcessingBefore is not null)
-        {
-            filter.Add($"(StartProcessing lt {StartProcessingBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-
-        if (EndProcessingAfter is not null)
-        {
-            filter.Add($"(EndProcessing ge {EndProcessingAfter.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
-
-        if (EndProcessingBefore is not null)
-        {
-            filter.Add($"(EndProcessing lt {EndProcessingBefore.Value.ToUniversalTime():yyyy-MM-ddTHH:mm:ss.fffZ})");
-        }
+        filter.AddTimeRange("DueDate", DueDateAfter, DueDateBefore);
+        filter.AddTimeRange("DeferDate", DeferDateAfter, DeferDateBefore);
+        filter.AddTimeRange("StartProcessing", StartProcessingAfter, StartProcessingBefore);
+        filter.AddTimeRange("EndProcessing", EndProcessingAfter, EndProcessingBefore);
 
         //filter.Add("Id gt 18288985"); // It seems Id can also be used in queries.
         // OData filter values use raw spaces and single quotes in the
