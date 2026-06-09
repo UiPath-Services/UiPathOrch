@@ -974,8 +974,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
 
                 if (!string.IsNullOrEmpty(dynamicParameters?.FeedType) && (dynamicParameters.FeedType != "Processes" && dynamicParameters.FeedType != "FolderHierarchy"))
                 {
-                    WriteError(new ErrorRecord(new OrchException($"{path} ({dynamicParameters.FeedType})", "FeedType must be 'Processes' or 'FolderHierarchy'."), "NewFolderError", ErrorCategory.InvalidOperation, path));
-                    //dynamicParameters.FeedType = null;
+                    WriteError(new ErrorRecord(new OrchException($"{path} ({dynamicParameters.FeedType})", "FeedType must be 'Processes' or 'FolderHierarchy'."), "NewFolderError", ErrorCategory.InvalidArgument, path));
+                    return; // don't fall through to CreateFolder with an invalid FeedType (was a confusing double error)
                 }
 
                 Folder f = drive.OrchAPISession.CreateFolder(displayName,
