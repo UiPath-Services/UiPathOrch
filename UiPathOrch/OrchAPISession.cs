@@ -26,6 +26,7 @@ public class RateLimiter : IDisposable
     private readonly SemaphoreSlim rateLimitSemaphore;
     private readonly int maxRequestsPerSecond;
     private readonly Timer refillTimer; // Keep a reference to the timer so it is not garbage collected
+    private readonly object refillLock = new();
 
     public RateLimiter(int maxRequestsPerSecond)
     {
@@ -38,8 +39,13 @@ public class RateLimiter : IDisposable
 
     private void RefillRateLimitTokens(object state)
     {
+        // Serialize refills. System.Threading.Timer can fire overlapping callbacks if one is delayed
+        // (thread-pool starvation); without this lock two refills could each read CurrentCount and
+        // Release up to max, pushing the semaphore past its cap and throwing SemaphoreFullException.
+        // Consumers only Wait() (never Release), so the timer is the sole releaser — locking makes the
+        // read-then-release atomic and keeps the count within [0, maxRequestsPerSecond].
+        lock (refillLock)
         {
-            // Calculate the number of tokens to release
             int tokensToRelease = maxRequestsPerSecond - rateLimitSemaphore.CurrentCount;
             if (tokensToRelease > 0)
             {

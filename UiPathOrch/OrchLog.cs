@@ -326,12 +326,16 @@ public partial class OrchAPISession : IDisposable
 
     // New async log system
     private AsyncLogWriter? _asyncLogWriter;
+    private readonly object _asyncLogWriterLock = new();
 
     private AsyncLogWriter GetAsyncLogWriter()
     {
         if (_asyncLogWriter == null)
         {
-            lock (this)
+            // Dedicated lock, not lock(this): external callers can lock the OrchLog instance, and
+            // sharing that monitor risks a deadlock. The double-check keeps the already-initialized
+            // path lock-free.
+            lock (_asyncLogWriterLock)
             {
                 _asyncLogWriter ??= new AsyncLogWriter(GetLogFilePath());
             }
