@@ -506,7 +506,15 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
             return;
         }
 
-        string orchPath = OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(path));
+        // Resolve the path literally, exactly like every other single-item resolution site
+        // (InvokeDefaultAction/GetProperty/SetProperty/Rename/Move all use PSPathToOrchPath(path)
+        // with no Unescape). A WildcardPattern.Unescape here corrupted folder names that contain
+        // a literal backtick: -LiteralPath 'Orch1:\Foo`bar' was unescaped to 'Foobar' and GetItem
+        // found nothing, while Get-ItemProperty on the same path worked. -Path wildcard expansion
+        // is the engine's job (via ItemExists/GetChildNames), so a concrete path reaching GetItem
+        // is already either literal (-LiteralPath) or a resolved raw child name — never an escaped
+        // pattern that needs unescaping here.
+        string orchPath = OrchDriveInfo.PSPathToOrchPath(path);
         Folder f = drive.GetFolder(orchPath);
         if (f is not null)
         {
