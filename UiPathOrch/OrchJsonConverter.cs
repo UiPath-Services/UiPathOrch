@@ -193,7 +193,10 @@ public class MemberConverter : JsonConverter<PmGroupMember>
         using var jsonDoc = JsonDocument.ParseValue(ref reader);
         var root = jsonDoc.RootElement;
 
-        var objectType = root.GetProperty("objectType").GetString();
+        // objectType is optional on the wire (string? on the DTO) and the directory model is
+        // extensible, so a member that omits it or carries a kind we don't model yet must not abort
+        // the whole group / bulk-resolve read. Skip that one element (return null) instead of throwing.
+        string? objectType = root.TryGetProperty("objectType", out var ot) ? ot.GetString() : null;
 
         return objectType switch
         {
@@ -201,7 +204,7 @@ public class MemberConverter : JsonConverter<PmGroupMember>
             "DirectoryGroup" => JsonSerializer.Deserialize<DirectoryGroup>(root.GetRawText(), options),
             "DirectoryRobotUser" => JsonSerializer.Deserialize<DirectoryRobotUser>(root.GetRawText(), options),
             "DirectoryApplication" => JsonSerializer.Deserialize<DirectoryApplication>(root.GetRawText(), options),
-            _ => throw new NotSupportedException($"Unknown objectType: {objectType}")
+            _ => null
         };
     }
 

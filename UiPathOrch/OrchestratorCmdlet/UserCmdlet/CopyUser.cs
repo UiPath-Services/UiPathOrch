@@ -57,7 +57,7 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
         srcDrive.UsersDetailed.ClearCache();
 
         var srcUsers = srcDrive.Users.Get()
-            .FilterByWildcards(user => user?.UserName, wpUserName)
+            .FilterByWildcardsAny([user => user?.UserName, user => user?.EmailAddress], wpUserName)
             .FilterByWildcards(user => user?.FullName, wpFullName)
             .FilterByWildcards(user => user?.Type, wpType)
             .OrderBy(user => user.UserName)

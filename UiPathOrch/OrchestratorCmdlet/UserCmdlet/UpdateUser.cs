@@ -178,7 +178,11 @@ public class UpdateUserCmdlet : OrchestratorPSCmdlet
             // redundant, since the match never depended on the individual name.)
             {
                 var users = drive.Users.Get();
-                var targetUsers = users.SelectByWildcards(u => u?.UserName, wpUserName).OrderBy(u => u.UserName);
+                // Match UserName OR EmailAddress, like Get-/Remove-OrchUser: an Azure AD B2B guest's
+                // tenant UserName differs from its canonical EmailAddress, so -UserName user@contoso.com
+                // must still resolve. (SelectByWildcardsAny keeps the empty -> empty "must specify a
+                // name" semantics of the former SelectByWildcards.)
+                var targetUsers = users.SelectByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], wpUserName).OrderBy(u => u.UserName);
 
                 foreach (var user in targetUsers.WithCancellation(cancelHandler.Token))
                 {

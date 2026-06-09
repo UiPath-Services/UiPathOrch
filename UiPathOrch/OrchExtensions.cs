@@ -318,6 +318,21 @@ internal static class OrchCollectionExtensions
         return source.SelectByWildcards(selector, wpPatterns);
     }
 
+    // Multi-selector SelectByWildcards: keep an item if any pattern matches any selector's projection.
+    // Like SelectByWildcards (and unlike FilterByWildcardsAny), returns EMPTY when patterns is
+    // null/empty -- so an action cmdlet given no -UserName is a no-op rather than apply-to-all. Used
+    // where both the UserName (tenant) and EmailAddress (canonical) forms must match an Azure AD B2B
+    // guest, the same way Get-/Remove-OrchUser do via FilterByWildcardsAny.
+    public static IEnumerable<T> SelectByWildcardsAny<T>(
+        this IEnumerable<T> source,
+        IReadOnlyList<Func<T?, string?>> selectors,
+        IReadOnlyList<WildcardPattern>? patterns)
+    {
+        if (patterns is null || patterns.Count == 0) return [];
+        return source.Where(item =>
+            patterns.Any(pattern => selectors.Any(sel => pattern.IsMatch(sel(item)))));
+    }
+
     public static IEnumerable<T> ExcludeByClassValues<T, TKey>(
         this IEnumerable<T> source,
         Func<T?, TKey?> selector,
