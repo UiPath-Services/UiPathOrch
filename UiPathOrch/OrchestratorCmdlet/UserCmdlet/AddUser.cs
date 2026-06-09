@@ -613,7 +613,12 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
                 postingUser.AssignBoolIfNotNull(line.MayHaveUnattendedSession, (u, v) => u.MayHaveUnattendedSession = v);
                 postingUser.AssignBoolIfNotNull(line.MayHavePersonalWorkspace, (u, v) => u.MayHavePersonalWorkspace = v);
 
-                postingUser.AssignBoolIfNotNull(IsExternalLicensed, (u, v) => u.IsExternalLicensed = v);
+                // Use the per-row CsvLine value (like the other capability flags above), NOT the
+                // bare cmdlet parameter: in CSV/pipeline batch mode the parameter holds only the
+                // last row's value, so reading it here applied one row's IsExternalLicensed to every
+                // user. line.IsExternalLicensed is per-row and (via the CsvLine ctor) non-null, so it
+                // is sent consistently with MayHave*/RestrictToPersonalWorkspace.
+                postingUser.AssignBoolIfNotNull(line.IsExternalLicensed, (u, v) => u.IsExternalLicensed = v);
                 postingUser.AssignBoolIfNotNull(line.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
 
                 postingUser.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
