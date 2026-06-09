@@ -110,7 +110,7 @@ jobs:
         # module ships with bare auto-generated stubs only.
         shell: pwsh
         run: |
-          Install-Module Microsoft.PowerShell.PlatyPS -Scope CurrentUser -Force -AllowClobber
+          Install-Module Microsoft.PowerShell.PlatyPS -RequiredVersion 1.0.1 -Scope CurrentUser -Force -AllowClobber
           ./PlatyPS/Build-Help.ps1 -SkipDeploy
 
       - name: Assemble module directory
