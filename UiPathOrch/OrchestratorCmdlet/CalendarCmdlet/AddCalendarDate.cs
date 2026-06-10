@@ -171,8 +171,12 @@ public class AddCalendarDateCmdlet : OrchestratorPSCmdlet
                 var extendedCalendar = drive.CalendarsDetailed.Get(calendar.Id!.Value); // Get ExcludedDates from the existing calendar
                 if (extendedCalendar!.ExcludedDates is not null)
                 {
-                    //excludedDates?.AddRange(extendedCalendar.ExcludedDates.Select(d => d.ToUniversalTime()));
-                    excludedDates?.AddRange(extendedCalendar.ExcludedDates);
+                    // The existing ExcludedDates are read back as local time (DateTimeArrayJsonConverter),
+                    // while the user's input was stamped UTC above. Normalize the existing dates to UTC
+                    // too, so Distinct() and the no-op guard below see the same calendar day as one
+                    // instant -- otherwise re-adding a date that is already excluded looks "new" and
+                    // issues a needless PUT carrying a duplicated date.
+                    excludedDates?.AddRange(extendedCalendar.ExcludedDates.Select(d => d.ToUniversalTime()));
                 }
 
                 #region Skip the API call if the date list has not changed from the original

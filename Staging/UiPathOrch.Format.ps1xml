@@ -355,90 +355,13 @@
       </TableControl>
     </View>
 
+    <!-- Get-OrchAssetLink / -BucketLink / -QueueLink all emit EntityLink, so a single view keyed on
+         the real type drives all three (the former per-noun *Link type names never existed -> the
+         custom table never applied and the cmdlets fell back to a raw property dump). -->
     <View>
-      <Name>AssetLink</Name>
+      <Name>EntityLink</Name>
       <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.AssetLink</TypeName>
-      </ViewSelectedBy>
-      <GroupBy>
-        <Label>Directory</Label>
-        <PropertyName>Path</PropertyName>
-      </GroupBy>
-      <TableControl>
-        <TableHeaders>
-          <TableColumnHeader>
-            <Label>LinkFolderId</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Name</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Link</Label>
-          </TableColumnHeader>
-        </TableHeaders>
-        <TableRowEntries>
-          <TableRowEntry>
-            <TableColumnItems>
-              <TableColumnItem>
-                <PropertyName>LinkFolderId</PropertyName>
-                <Alignment>right</Alignment>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>Name</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>Link</PropertyName>
-              </TableColumnItem>
-            </TableColumnItems>
-          </TableRowEntry>
-        </TableRowEntries>
-      </TableControl>
-    </View>
-
-    <View>
-      <Name>BucketLink</Name>
-      <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.BucketLink</TypeName>
-      </ViewSelectedBy>
-      <GroupBy>
-        <Label>Directory</Label>
-        <PropertyName>Path</PropertyName>
-      </GroupBy>
-      <TableControl>
-        <TableHeaders>
-          <TableColumnHeader>
-            <Label>LinkFolderId</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Name</Label>
-          </TableColumnHeader>
-          <TableColumnHeader>
-            <Label>Link</Label>
-          </TableColumnHeader>
-        </TableHeaders>
-        <TableRowEntries>
-          <TableRowEntry>
-            <TableColumnItems>
-              <TableColumnItem>
-                <PropertyName>LinkFolderId</PropertyName>
-                <Alignment>right</Alignment>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>Name</PropertyName>
-              </TableColumnItem>
-              <TableColumnItem>
-                <PropertyName>Link</PropertyName>
-              </TableColumnItem>
-            </TableColumnItems>
-          </TableRowEntry>
-        </TableRowEntries>
-      </TableControl>
-    </View>
-
-    <View>
-      <Name>QueueLink</Name>
-      <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.QueueLink</TypeName>
+        <TypeName>UiPath.PowerShell.Entities.EntityLink</TypeName>
       </ViewSelectedBy>
       <GroupBy>
         <Label>Directory</Label>
@@ -4055,7 +3978,7 @@
                 <PropertyName>Description</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
-                <PropertyName>FolderCount</PropertyName>
+                <PropertyName>FoldersCount</PropertyName>
                 <Alignment>right</Alignment>
               </TableColumnItem>
               <TableColumnItem>

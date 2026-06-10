@@ -30,6 +30,7 @@ BeforeAll {
     $script:src = "$($script:d)\$($script:tag)_src"
     $script:dst = "$($script:d)\$($script:tag)_dst"
     $script:wh = "$($script:tag)_wh"
+    $script:cal = "$($script:tag)_cal"
 
     if ($script:hasDrive) {
         New-Item -Path $script:src -ItemType Directory -ErrorAction SilentlyContinue | Out-Null
@@ -46,6 +47,7 @@ BeforeAll {
 AfterAll {
     if ($script:hasDrive) {
         Remove-OrchWebhook -Path $script:d -Name $script:wh -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchCalendar -Path $script:d -Name $script:cal -Confirm:$false -ErrorAction SilentlyContinue
         Remove-Item -Path $script:src -Recurse -Force -ErrorAction SilentlyContinue
         Remove-Item -Path $script:dst -Recurse -Force -ErrorAction SilentlyContinue
         Clear-OrchCache -Path $script:d -ErrorAction SilentlyContinue | Out-Null
@@ -117,5 +119,24 @@ Describe 'Regression: post-1.9.1 fixes (fail on v1.9.1, pass on HEAD)' {
         Copy-OrchQueue -Path $script:src -Name $q -Destination $script:dst -Confirm:$false
         Clear-OrchCache -Path $script:d -ErrorAction SilentlyContinue | Out-Null
         (Get-OrchQueue -Path $script:dst -Name $q).RetryAbandonedItems | Should -Be $true
+    }
+
+    It 'D1 Add-OrchCalendarDate re-adding an already-excluded date is a no-op (no duplicate)' {
+        if (-not (script:Require)) { return }
+        $when = (Get-Date).Date.AddDays(30)
+        # Add-OrchCalendarDate upserts: first call creates the calendar with this date.
+        Add-OrchCalendarDate -Path $script:d -Name $script:cal -ExcludedDate $when -Confirm:$false
+        Clear-OrchCache -Path $script:d -ErrorAction SilentlyContinue | Out-Null
+        $before = @(Get-OrchCalendarDate -Path $script:d -Name $script:cal).Count
+
+        # Re-add the SAME date. Pre-fix: existing dates come back local-kind while the input is UTC,
+        # so Distinct()/the no-op guard treat the same day as two instants -> a needless PUT carrying a
+        # duplicated date. HEAD: the existing dates are normalized to UTC, so it is a true no-op.
+        Add-OrchCalendarDate -Path $script:d -Name $script:cal -ExcludedDate $when -Confirm:$false
+        Clear-OrchCache -Path $script:d -ErrorAction SilentlyContinue | Out-Null
+        $after = @(Get-OrchCalendarDate -Path $script:d -Name $script:cal).Count
+
+        $before | Should -Be 1          # guard: the date was actually added
+        $after | Should -Be $before     # no duplicate after re-add
     }
 }
