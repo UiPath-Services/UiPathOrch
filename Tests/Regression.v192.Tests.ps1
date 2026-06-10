@@ -139,4 +139,18 @@ Describe 'Regression: post-1.9.1 fixes (fail on v1.9.1, pass on HEAD)' {
         $before | Should -Be 1          # guard: the date was actually added
         $after | Should -Be $before     # no duplicate after re-add
     }
+
+    It 'A Get-OrchApiTrigger fills Release.Name from ReleaseKey (the triggers endpoint rejects expand=Release)' {
+        if (-not (script:Require)) { return }
+        if (-not (Get-Item "$($script:d)\TestFixture_Base" -ErrorAction SilentlyContinue)) {
+            Set-ItResult -Skipped -Because 'TestFixture_Base not imported (Tests\Import-Fixture.ps1 -TargetDrive Orch2)'
+            return
+        }
+        $t = Get-OrchApiTrigger -Path "$($script:d)\TestFixture_Base" -Recurse -ErrorAction SilentlyContinue |
+            Where-Object { $_.ReleaseKey } | Select-Object -First 1
+        if (-not $t) { Set-ItResult -Skipped -Because 'fixture has no API trigger bound to a release'; return }
+        # expand=Release is rejected by the endpoint, so Release.Name is resolved client-side from
+        # ReleaseKey; a trigger that carries a ReleaseKey must therefore show a non-empty Release.Name.
+        $t.Release.Name | Should -Not -BeNullOrEmpty
+    }
 }
