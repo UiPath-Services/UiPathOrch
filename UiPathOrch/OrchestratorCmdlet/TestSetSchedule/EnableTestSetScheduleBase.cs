@@ -72,32 +72,30 @@ public class EnableTestSetScheduleCmdletBase<Enable> : OrchestratorPSCmdlet wher
         var wpName = Name.ConvertToWildcardPatternList();
 
         string action = $"{(Enable.Value ? "Enable" : "Disable")} TestSetSchedule";
+        string errorId = $"{(Enable.Value ? "Enable" : "Disable")}TestSetScheduleError";
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
+            List<Int64> toChange;
             try
             {
                 var schedules = drive.TestSetSchedules.Get(folder);
 
+                // Only act on schedules whose current state differs from the target. The fetched
+                // objects already carry .Enabled, so this filter is free, matches what the completer
+                // offers, and skips a needless SetEnabled call on an already-in-state schedule.
+                toChange = [];
                 foreach (var schedule in schedules
                     .FilterByWildcards(ts => ts?.Name, wpName)
+                    .Where(ts => ts.Enabled.GetValueOrDefault() != Enable.Value)
                     .OrderBy(ts => ts.Name).WithCancellation(cancelHandler.Token))
                 {
-                    var target = schedule.GetPSPath();
-
-                    if (ShouldProcess(target, action))
+                    // ShouldProcess stays per schedule (so -Confirm / -WhatIf are per-item); only the
+                    // API call is batched below.
+                    if (ShouldProcess(schedule.GetPSPath(), action))
                     {
-                        try
-                        {
-                            drive.OrchAPISession.EnableTestSetSchedules(folder.Id ?? 0, Enable.Value, [schedule.Id ?? 0]);
-                            drive.TestSetSchedules.ClearCache(folder);
-                        }
-                        catch (Exception ex)
-                        {
-                            string errorId = $"{(Enable.Value ? "Enable" : "Disable")}TestSetScheduleError";
-                            WriteError(new ErrorRecord(new OrchException(target, ex), errorId, ErrorCategory.InvalidOperation, schedule));
-                        }
+                        toChange.Add(schedule.Id ?? 0);
                     }
                 }
             }
@@ -108,6 +106,24 @@ public class EnableTestSetScheduleCmdletBase<Enable> : OrchestratorPSCmdlet wher
             catch (Exception ex)
             {
                 WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetTestSetScheduleError", ErrorCategory.InvalidOperation, folder));
+                continue;
+            }
+
+            if (toChange.Count == 0)
+            {
+                continue;
+            }
+
+            // SetEnabled takes a list, so issue ONE batched call per folder instead of one request
+            // per schedule.
+            try
+            {
+                drive.OrchAPISession.EnableTestSetSchedules(folder.Id ?? 0, Enable.Value, toChange);
+                drive.TestSetSchedules.ClearCache(folder);
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), errorId, ErrorCategory.InvalidOperation, folder));
             }
         }
     }
