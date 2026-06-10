@@ -853,7 +853,7 @@ internal static class OrchStringExtensions
     // Used inside Add-OrchHoge, Update-OrchHoge, etc.
     public static IEnumerable<Tag> ConvertToTags(this string[]? keyValues)
     {
-        foreach (var keyValue in keyValues?.SelectMany(elem => elem.Split(',')) ?? [])
+        foreach (var keyValue in keyValues?.SelectMany(OrchCollectionExtensions.SplitByUnescapedCommas) ?? [])
         {
             if (string.IsNullOrEmpty(keyValue)) continue;
             string[] parts = keyValue.Split('=', 2);
@@ -884,9 +884,15 @@ internal static class OrchStringExtensions
     internal static string? FormatTag(Tag t)
     {
         if (string.IsNullOrEmpty(t.DisplayName)) return null;
-        if (string.IsNullOrEmpty(t.Value)) return t.DisplayName;
-        return $"{t.DisplayName}={t.DisplayValue}";
+        if (string.IsNullOrEmpty(t.Value)) return EscapeTagToken(t.DisplayName);
+        return $"{EscapeTagToken(t.DisplayName)}={EscapeTagToken(t.DisplayValue)}";
     }
+
+    // Inverse of SplitByUnescapedCommas' unescaping: escape backticks first, then commas, so a tag
+    // whose name/value contains ',' (or '`') round-trips through ConvertToTags instead of being
+    // mis-split on the comma. ('=' inside a value is safe -- ConvertToTags splits on the first '='.)
+    private static string? EscapeTagToken(string? s) =>
+        s?.Replace("`", "``").Replace(",", "`,");
 
     // obsoleted: Use ConvertToTags() instead
     //public static Tag[]? DeserializeFromJson(this string? jsonText)

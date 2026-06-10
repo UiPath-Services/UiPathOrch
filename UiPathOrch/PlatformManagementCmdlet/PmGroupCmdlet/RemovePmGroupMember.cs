@@ -62,11 +62,9 @@ public class RemovePmGroupMemberCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
 
-        // Split GroupName specified in CSV by commas
-        var groupName = GroupName!
-            .SelectMany(g => g.Split(',', StringSplitOptions.RemoveEmptyEntries))
-            .Select(g => g.Trim())
-            .ToArray();
+        // Split GroupName specified in CSV by commas, honoring backtick-escaped commas -- a group's
+        // display name can contain a comma (e.g. "Finance, EMEA"); matches the other CSV cmdlets.
+        var groupName = GroupName.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();
         var wpGroupName = groupName.ConvertToWildcardPatternList();
 
         // Split Type specified in CSV by commas

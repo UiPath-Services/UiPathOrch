@@ -161,10 +161,10 @@ public class UpdateUserCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
-        // Split Roles specified in CSV by commas
-        var processedRoles = Roles?
-             .SelectMany(name => name.Split(',', StringSplitOptions.RemoveEmptyEntries))
-             .Select(name => name.Trim());
+        // Split Roles specified in CSV by commas, honoring backtick-escaped commas in a role name --
+        // matches Add-OrchUser and the rest of the Roles cmdlets (a raw Split corrupts a role whose
+        // name contains a comma and ignores an explicit `, escape).
+        var processedRoles = Roles.SplitValuesByUnescapedCommasPreservingEscapes();
 
         var wpUserName = UserName!.ConvertToWildcardPatternList();
         var wpRoles = processedRoles.ConvertToWildcardPatternList();
