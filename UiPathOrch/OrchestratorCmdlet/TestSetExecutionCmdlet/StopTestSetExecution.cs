@@ -78,6 +78,10 @@ public class StopTestExecutionCmdlet : OrchestratorPSCmdlet
                     try
                     {
                         drive.OrchAPISession.CancelTestSetExecutions(folder.Id ?? 0, id);
+                        // Surgically drop just this execution's now-stale cache entry (its status moved
+                        // to Cancelling/Cancelled) so a later Get-OrchTestSetExecution re-fetches it
+                        // fresh, without clearing the rest of the folder's accumulated cache.
+                        drive.TestSetExecutions.GetCache(folder)?.TryRemove(id, out _);
                     }
                     catch (Exception ex)
                     {
