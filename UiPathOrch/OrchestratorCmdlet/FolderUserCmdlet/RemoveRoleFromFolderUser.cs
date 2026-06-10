@@ -213,7 +213,11 @@ public class RemoveRoleFromFolderUserCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var tenantRoles = drive.Roles.Get().Where(role => role.Type != "Tenant").FilterByWildcards(role => role?.DisplayName, wpRoles);
+                // Match -Roles on role.Name (the field this cmdlet's RolesCompleter emits, and what
+                // Add-OrchRoleToFolderUser matches on) so a tab-completed value resolves and Add/Remove
+                // are symmetric. (Was role.DisplayName, which silently missed roles whose DisplayName
+                // differs from Name.)
+                var tenantRoles = drive.Roles.Get().Where(role => role.Type != "Tenant").FilterByWildcards(role => role?.Name, wpRoles);
                 try
                 {
                     // Extract the users to be edited

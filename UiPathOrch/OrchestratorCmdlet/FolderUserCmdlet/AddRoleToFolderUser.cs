@@ -174,16 +174,18 @@ public class AddRoleToFolderUserCmdlet : OrchestratorPSCmdlet
                     foreach (var folderUser in folderUsersFiltered)
                     {
                         var assignedRoles = folderUser.Roles!.Select(r => r.Name);
-                        notAssignedRoles.AddRange(tenantRoles?.ExcludeByClassValues(tr => tr?.DisplayName, assignedRoles) ?? []);
+                        notAssignedRoles.AddRange(tenantRoles?.ExcludeByClassValues(tr => tr?.Name, assignedRoles) ?? []);
                     }
 
                     foreach (var role in notAssignedRoles
-                        .Where(tr => wp.IsMatch(tr.DisplayName))
-                        .ExcludeByWildcards(tr => tr?.DisplayName, wpRoles)
-                        .OrderBy(r => r.DisplayName))
+                        .Where(tr => wp.IsMatch(tr.Name))
+                        .ExcludeByWildcards(tr => tr?.Name, wpRoles)
+                        .OrderBy(r => r.Name))
                     {
                         string tiphelp = $"{role.GetPSPath()} ({role.Type})";
-                        yield return new CompletionResult(PathTools.EscapePSText(role.DisplayName), role.DisplayName, CompletionResultType.ParameterValue, tiphelp);
+                        // Complete role.Name -- the field -Roles is matched on in ProcessRecord; emitting
+                        // DisplayName here would offer values the filter can't find when the two differ.
+                        yield return new CompletionResult(PathTools.EscapePSText(role.Name), role.Name, CompletionResultType.ParameterValue, tiphelp);
                     }
                 }
             }
