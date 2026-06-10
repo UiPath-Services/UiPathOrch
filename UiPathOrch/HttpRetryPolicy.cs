@@ -27,17 +27,22 @@ internal static class HttpRetryPolicy
     }
 
     // Decide what to do after receiving `status`.
+    //   isIdempotent     — whether the request method is safe to replay (GET/PUT/DELETE/PATCH). A POST
+    //                       create/add is not, so it must not be retried on 503/504 (the write may have
+    //                       committed server-side before the gateway gave up -> duplicate). 429 is
+    //                       retried regardless of method (it means the request was rejected unprocessed).
     //   reauthUsed       — whether the one-shot 401 re-auth has already been spent.
     //   transientAttempt — how many transient (429/5xx) retries have already happened.
-    internal static Action Decide(HttpStatusCode status, bool reauthUsed, int transientAttempt)
+    internal static Action Decide(HttpStatusCode status, bool isIdempotent, bool reauthUsed, int transientAttempt)
     {
         if (status == HttpStatusCode.Unauthorized)
         {
             return reauthUsed ? Action.Return : Action.Reauth;
         }
-        if (IsTransient(status))
+        if (IsTransient(status) && transientAttempt < MaxTransientRetries
+            && (status == HttpStatusCode.TooManyRequests || isIdempotent))
         {
-            return transientAttempt < MaxTransientRetries ? Action.Backoff : Action.Return;
+            return Action.Backoff;
         }
         return Action.Return;
     }

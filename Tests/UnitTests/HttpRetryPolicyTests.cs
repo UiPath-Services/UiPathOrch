@@ -16,10 +16,10 @@ public class HttpRetryPolicyTests
     public void Unauthorized_triggers_a_single_reauth()
     {
         Assert.Equal(HttpRetryPolicy.Action.Reauth,
-            HttpRetryPolicy.Decide(HttpStatusCode.Unauthorized, reauthUsed: false, transientAttempt: 0));
+            HttpRetryPolicy.Decide(HttpStatusCode.Unauthorized, isIdempotent: true, reauthUsed: false, transientAttempt: 0));
         // Once the one-shot re-auth is spent, a still-401 returns to the caller.
         Assert.Equal(HttpRetryPolicy.Action.Return,
-            HttpRetryPolicy.Decide(HttpStatusCode.Unauthorized, reauthUsed: true, transientAttempt: 0));
+            HttpRetryPolicy.Decide(HttpStatusCode.Unauthorized, isIdempotent: true, reauthUsed: true, transientAttempt: 0));
     }
 
     [Theory]
@@ -32,11 +32,11 @@ public class HttpRetryPolicyTests
         for (int attempt = 0; attempt < HttpRetryPolicy.MaxTransientRetries; attempt++)
         {
             Assert.Equal(HttpRetryPolicy.Action.Backoff,
-                HttpRetryPolicy.Decide(status, reauthUsed: false, transientAttempt: attempt));
+                HttpRetryPolicy.Decide(status, isIdempotent: true, reauthUsed: false, transientAttempt: attempt));
         }
         // At the budget, stop retrying and return the response.
         Assert.Equal(HttpRetryPolicy.Action.Return,
-            HttpRetryPolicy.Decide(status, reauthUsed: false, transientAttempt: HttpRetryPolicy.MaxTransientRetries));
+            HttpRetryPolicy.Decide(status, isIdempotent: true, reauthUsed: false, transientAttempt: HttpRetryPolicy.MaxTransientRetries));
     }
 
     [Theory]
@@ -51,7 +51,7 @@ public class HttpRetryPolicyTests
     {
         Assert.False(HttpRetryPolicy.IsTransient(status));
         Assert.Equal(HttpRetryPolicy.Action.Return,
-            HttpRetryPolicy.Decide(status, reauthUsed: false, transientAttempt: 0));
+            HttpRetryPolicy.Decide(status, isIdempotent: true, reauthUsed: false, transientAttempt: 0));
     }
 
     [Fact]
@@ -88,5 +88,34 @@ public class HttpRetryPolicyTests
         // HTTP-date already in the past -> zero, never negative
         Assert.Equal(TimeSpan.Zero,
             HttpRetryPolicy.ResolveRetryAfter(new RetryConditionHeaderValue(now.AddSeconds(-10)), now));
+    }
+
+    // C1 regression: a 503/504 can arrive after a non-idempotent POST (create/add) already committed
+    // server-side, so retrying would duplicate it. Such requests must NOT back off on 503/504.
+    [Theory]
+    [InlineData(HttpStatusCode.ServiceUnavailable)] // 503
+    [InlineData(HttpStatusCode.GatewayTimeout)]     // 504
+    public void Non_idempotent_request_is_not_retried_on_5xx(HttpStatusCode status)
+    {
+        Assert.Equal(HttpRetryPolicy.Action.Return,
+            HttpRetryPolicy.Decide(status, isIdempotent: false, reauthUsed: false, transientAttempt: 0));
+    }
+
+    // 429 means the request was rejected unprocessed, so it is safe to retry even a POST.
+    [Fact]
+    public void Non_idempotent_request_still_retries_on_429()
+    {
+        Assert.Equal(HttpRetryPolicy.Action.Backoff,
+            HttpRetryPolicy.Decide(HttpStatusCode.TooManyRequests, isIdempotent: false, reauthUsed: false, transientAttempt: 0));
+    }
+
+    // Idempotent methods (GET/PUT/DELETE/PATCH) re-apply safely, so they keep retrying 503/504.
+    [Theory]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    [InlineData(HttpStatusCode.GatewayTimeout)]
+    public void Idempotent_request_still_retries_on_5xx(HttpStatusCode status)
+    {
+        Assert.Equal(HttpRetryPolicy.Action.Backoff,
+            HttpRetryPolicy.Decide(status, isIdempotent: true, reauthUsed: false, transientAttempt: 0));
     }
 }

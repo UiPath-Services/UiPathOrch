@@ -158,7 +158,21 @@ public class GetApiTriggerCmdlet : OrchestratorPSCmdlet
                 }
                 else
                 {
-                    WriteObject(filtered, true);
+                    foreach (var t in filtered)
+                    {
+                        // The triggers endpoint rejects $expand=Release, so Release is null and the
+                        // default table's Release column would be blank. Fill it from the same
+                        // ReleaseKey->name lookup the CSV path uses (cached per run).
+                        if (t.Release is null && !string.IsNullOrEmpty(t.ReleaseKey))
+                        {
+                            var releaseName = ResolveReleaseName(result.Source.drive, result.Source.folder, t.ReleaseKey);
+                            if (releaseName is not null)
+                            {
+                                t.Release = new TriggerRelease { Name = releaseName };
+                            }
+                        }
+                        WriteObject(t);
+                    }
                 }
             }
             catch (OrchException ex)

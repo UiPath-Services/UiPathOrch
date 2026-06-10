@@ -151,7 +151,11 @@ public partial class OrchAPISession : IDisposable
 
             HttpResponseMessage response = SendOnce(attempt, null, ct);
 
-            HttpRetryPolicy.Action action = HttpRetryPolicy.Decide(response.StatusCode, reauthUsed, transientAttempt);
+            // 503/504 may arrive after a write already committed server-side, so a non-idempotent
+            // POST (create/add) must not be retried on them (429 stays retryable -- it means the
+            // request was rejected unprocessed). PATCH/PUT/DELETE/GET re-apply safely.
+            bool isIdempotent = message.Method != HttpMethod.Post;
+            HttpRetryPolicy.Action action = HttpRetryPolicy.Decide(response.StatusCode, isIdempotent, reauthUsed, transientAttempt);
 
             if (action == HttpRetryPolicy.Action.Reauth)
             {
@@ -2070,7 +2074,10 @@ public partial class OrchAPISession : IDisposable
         }
 
         // Await the result of ReadAsByteArrayAsync
-        var responseBytes = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+        // Make the body transfer (the actual download, since the send used ResponseHeadersRead)
+        // interruptible by Ctrl+C, not just the header phase.
+        using var cancel = new ConsoleCancelHandler();
+        var responseBytes = response.Content.ReadAsByteArrayAsync(cancel.Token).GetAwaiter().GetResult();
         return (ret, responseBytes);
     }
 
@@ -2107,7 +2114,10 @@ public partial class OrchAPISession : IDisposable
             }
         }
 
-        var responseBytes = response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult();
+        // Make the body transfer (the actual download, since the send used ResponseHeadersRead)
+        // interruptible by Ctrl+C, not just the header phase.
+        using var cancel = new ConsoleCancelHandler();
+        var responseBytes = response.Content.ReadAsByteArrayAsync(cancel.Token).GetAwaiter().GetResult();
         return (ret, responseBytes);
     }
 
@@ -2648,6 +2658,9 @@ public partial class OrchAPISession : IDisposable
     public IEnumerable<HttpTrigger> GetHttpTriggers(Int64 folderId)
     {
         EnsureVersionSupport(14);
+        // NB: the triggers endpoint rejects $expand=Release ("Invalid OData query options"), so the
+        // Release nav prop comes back null -- Get-OrchApiTrigger fills Release.Name client-side from
+        // ReleaseKey instead (see ResolveReleaseName).
         return GetEnumerable<HttpTrigger>("/odata/HttpTriggers", folderId);
     }
 
@@ -2713,6 +2726,7 @@ public partial class OrchAPISession : IDisposable
     public IEnumerable<ApiTrigger> GetEventTriggers(Int64 folderId)
     {
         EnsureVersionSupport(14); // The exact number has not been confirmed.
+        // NB: $expand=Release is rejected here too; Get-OrchEventTrigger fills Release.Name client-side.
         return GetEnumerable<ApiTrigger>("/odata/ApiTriggers", folderId);
     }
 
@@ -3310,8 +3324,9 @@ public partial class OrchAPISession : IDisposable
             }
         }
 
-        // Await the result of ReadAsByteArrayAsync
-        var responseBytes = await response.Content.ReadAsByteArrayAsync();
+        // Make the body transfer (the actual download) interruptible by Ctrl+C, not just the header phase.
+        using var cancel = new ConsoleCancelHandler();
+        var responseBytes = await response.Content.ReadAsByteArrayAsync(cancel.Token);
         return (ret, responseBytes);
     }
 
