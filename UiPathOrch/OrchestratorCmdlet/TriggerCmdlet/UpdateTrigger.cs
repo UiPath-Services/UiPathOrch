@@ -201,6 +201,11 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
         int? specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
 
+        // CSV export joins ExecutorRobots into one comma-separated cell; split it (honoring escaped
+        // commas) to match New-OrchTrigger, otherwise a multi-robot cell binds as a single wildcard
+        // and the executor-robot assignment is lost on re-import via Update-OrchTrigger.
+        ExecutorRobots = ExecutorRobots.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();
+
         var utcStopProcessDate = StopProcessDate?.ToUniversalTime();
 
         using var cancelHandler = new ConsoleCancelHandler();

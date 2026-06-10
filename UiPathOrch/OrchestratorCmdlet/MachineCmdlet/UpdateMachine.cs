@@ -161,17 +161,35 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
 
                 if (RobotUsers is not null)
                 {
-                    var robots = drive.AllRobotsAcrossFolders.Get();
-                    var wpRobotUsers = RobotUsers.ConvertToWildcardPatternList();
-                    var targetRobots = robots.FilterByWildcards(r => r?.User?.FullName, wpRobotUsers);
-                    patch.RobotUsers = targetRobots
-                        .Select(r => new RobotUser()
-                        {
-                            UserName = r.Username,
-                            RobotId = r.Id
-                        })
-                        .OrderBy(r => r.UserName)
-                        .ToList();
+                    // CSV export joins robot users into one comma-separated cell, so split it (honoring
+                    // backtick-escaped commas) to match New-OrchMachine -- otherwise a multi-user cell
+                    // "Alice,Bob" bound as a single wildcard and matched no robot on re-import.
+                    var processedRobotUsers = RobotUsers.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();
+                    if (processedRobotUsers is not null && processedRobotUsers.All(string.IsNullOrWhiteSpace))
+                    {
+                        processedRobotUsers = null;
+                    }
+
+                    if (processedRobotUsers is null)
+                    {
+                        // -RobotUsers supplied but empty (e.g. an empty CSV cell) clears the assignment;
+                        // do NOT fall through to FilterByWildcards, whose empty-pattern set matches ALL.
+                        patch.RobotUsers = [];
+                    }
+                    else
+                    {
+                        var robots = drive.AllRobotsAcrossFolders.Get();
+                        var wpRobotUsers = processedRobotUsers.ConvertToWildcardPatternList();
+                        var targetRobots = robots.FilterByWildcards(r => r?.User?.FullName, wpRobotUsers);
+                        patch.RobotUsers = targetRobots
+                            .Select(r => new RobotUser()
+                            {
+                                UserName = r.Username,
+                                RobotId = r.Id
+                            })
+                            .OrderBy(r => r.UserName)
+                            .ToList();
+                    }
                     dirty = true;
                 }
 

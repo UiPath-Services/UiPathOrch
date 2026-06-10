@@ -63,8 +63,9 @@ public class RemoveDuRoleFromDuUserCmdlet : OrchestratorPSCmdlet
             // Filter to roles assigned to users with this name
             //var wpUserName = GetFakeBoundParameters(fakeBoundParameters, "UserName").ConvertToWildcardPatternList();
 
-            // Exclude already-selected Role values from completion candidates
-            var wpRole = CreateSelfExclusionList(commandAst, "Role", wordToComplete);
+            // Exclude already-selected Roles values from completion candidates (parameter is -Roles;
+            // "Role" matched no parameter, so the self-exclusion silently never fired).
+            var wpRole = CreateSelfExclusionList(commandAst, "Roles", wordToComplete);
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
