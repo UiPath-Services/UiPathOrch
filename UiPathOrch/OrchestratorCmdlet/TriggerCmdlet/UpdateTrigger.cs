@@ -130,6 +130,7 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(ExecutorRobotsCompleter))]
+    [RobotExecutorArgumentTransformation]
     public string[]? ExecutorRobots { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

@@ -77,6 +77,47 @@ public class WebhookEventArgumentTransformationAttribute : ArgumentTransformatio
     }
 }
 
+// A producer's RobotUser[] (Machine.RobotUsers) binds to the string[] -RobotUsers parameter as the
+// robot's stable Id -- always present for classic AND modern robots, unlike UserName (null for modern).
+// New-/Update-OrchMachine already fetch AllRobotsAcrossFolders and now match -RobotUsers on User.FullName
+// OR Id, so a `Get-OrchMachine | Update-OrchMachine` object-pipe re-resolves the same robots instead of
+// coercing each RobotUser to a garbage type-name string (which wiped the assignment).
+public class RobotUserArgumentTransformationAttribute : ArgumentTransformationAttribute
+{
+    public override object Transform(EngineIntrinsics engineIntrinsics, object inputData)
+    {
+        object? data = inputData is PSObject pso ? pso.BaseObject : inputData;
+        if (data is null) return null!;
+        IEnumerable<object?> items = data is System.Collections.IEnumerable seq && data is not string
+            ? seq.Cast<object?>()
+            : [data];
+        return items.Select(raw =>
+        {
+            object? o = raw is PSObject p ? p.BaseObject : raw;
+            return o is RobotUser ru ? ru.RobotId?.ToString() : o?.ToString();
+        }).ToArray();
+    }
+}
+
+// Same idea for trigger -ExecutorRobots: a producer's RobotExecutor[] binds as the robot Name (what
+// DeserializeExecutorRobots and the CSV form expect) instead of coercing to the type name.
+public class RobotExecutorArgumentTransformationAttribute : ArgumentTransformationAttribute
+{
+    public override object Transform(EngineIntrinsics engineIntrinsics, object inputData)
+    {
+        object? data = inputData is PSObject pso ? pso.BaseObject : inputData;
+        if (data is null) return null!;
+        IEnumerable<object?> items = data is System.Collections.IEnumerable seq && data is not string
+            ? seq.Cast<object?>()
+            : [data];
+        return items.Select(raw =>
+        {
+            object? o = raw is PSObject p ? p.BaseObject : raw;
+            return o is RobotExecutor re ? re.Name : o?.ToString();
+        }).ToArray();
+    }
+}
+
 public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 {
     // Resolves -Path / -LiteralPath into the path list fed to the Enum* resolvers.

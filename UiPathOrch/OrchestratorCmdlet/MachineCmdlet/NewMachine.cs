@@ -49,6 +49,7 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(MachineRobotUsersCompleter))]
     [SupportsWildcards]
+    [RobotUserArgumentTransformation]
     public string[]? RobotUsers { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -119,7 +120,9 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
                     {
                         var robots = drive.AllRobotsAcrossFolders.Get();
                         var wpRobotUsers = processedRobotUsers.ConvertToWildcardPatternList();
-                        var targetRobots = robots.FilterByWildcards(r => r?.User?.FullName, wpRobotUsers);
+                        // Match on User.FullName (the CSV / manual form) OR Id (the object-pipe form a
+                        // piped RobotUser is transformed to), so Get-OrchMachine | New-OrchMachine works.
+                        var targetRobots = robots.FilterByWildcardsAny([r => r?.User?.FullName, r => r?.Id?.ToString()], wpRobotUsers);
                         lstRobotUsers = targetRobots
                             .Select(r => new RobotUser()
                             {

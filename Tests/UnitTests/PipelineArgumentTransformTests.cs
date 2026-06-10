@@ -53,4 +53,46 @@ public class PipelineArgumentTransformTests
         var result = (string?[])attr.Transform(null!, new[] { "task.created" });
         Assert.Equal(new[] { "task.created" }, result);
     }
+
+    [Fact]
+    public void RobotUserTransform_ConvertsToRobotId_includingModernRobotsWithNullUserName()
+    {
+        var attr = new RobotUserArgumentTransformationAttribute();
+        var rus = new[]
+        {
+            new RobotUser { UserName = "domain\\alice", RobotId = 12345 },
+            new RobotUser { UserName = null, RobotId = 67890 }, // modern robot: UserName null, Id present
+        };
+        var result = (string?[])attr.Transform(null!, rus);
+        Assert.Equal(new[] { "12345", "67890" }, result);
+    }
+
+    [Fact]
+    public void RobotUserTransform_PassesStringsThrough()
+    {
+        var attr = new RobotUserArgumentTransformationAttribute();
+        var result = (string?[])attr.Transform(null!, new[] { "John Doe", "Jane Smith" });
+        Assert.Equal(new[] { "John Doe", "Jane Smith" }, result);
+    }
+
+    [Fact]
+    public void RobotExecutorTransform_ConvertsToName()
+    {
+        var attr = new RobotExecutorArgumentTransformationAttribute();
+        var res = new[]
+        {
+            new RobotExecutor { Name = "robotA", Id = 1 },
+            new RobotExecutor { Name = "robotB", Id = 2 },
+        };
+        var result = (string?[])attr.Transform(null!, res);
+        Assert.Equal(new[] { "robotA", "robotB" }, result);
+    }
+
+    [Fact]
+    public void RobotExecutorTransform_PassesStringsThrough()
+    {
+        var attr = new RobotExecutorArgumentTransformationAttribute();
+        var result = (string?[])attr.Transform(null!, new[] { "robotA" });
+        Assert.Equal(new[] { "robotA" }, result);
+    }
 }
