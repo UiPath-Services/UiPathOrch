@@ -4,6 +4,93 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.9.2] - 2026-06-10
+
+### Fixed
+
+#### Pipe-to-update data loss (an entity piped into New-/Update-Orch*)
+
+- **`Get-Orch* | New-/Update-Orch*` no longer corrupts or wipes a field when the whole entity is piped
+  in.** A producer's rich property (`Tag[]`, `WebhookEvent[]`, `RobotUser[]`, `RobotExecutor[]`) bound
+  to a string-array parameter by coercing each object through its default `ToString()` to a type-name
+  string, so the cmdlet matched nothing and overwrote/wiped the field on save:
+  - `-Tags` (New-/Update-OrchProcess, -Queue, -Bucket, -Machine, -BusinessRule): tags were replaced
+    with garbage.
+  - Webhook `-Events`: `Get-OrchWebhook | Update-OrchWebhook` wiped the event subscriptions.
+  - Machine `-RobotUsers` and Trigger `-ExecutorRobots`: the robot assignment was wiped.
+  These now bind via argument transformations to the value the cmdlet matches on (tag `Name=Value`,
+  event type, robot Id / name), so piping an entity preserves its assignments. The matching also
+  accepts the robot Id so a piped RobotUser round-trips even for modern robots (whose UserName is null).
+
+#### CSV import / round-trip
+
+- Multi-value robot columns round-trip through `Import-Csv | Update-OrchMachine` (`-RobotUsers`) and
+  `Update-OrchTrigger` (`-ExecutorRobots`): the comma-joined cell is now split (matching the New-
+  cmdlets) instead of being treated as one wildcard that matched no robot.
+- Backtick-escaped commas are honored in `-Tags`, `Update-OrchUser -Roles`, and
+  `Remove-OrchPmGroupMember -GroupName`, so a value that legitimately contains a comma is no longer
+  mis-split.
+- `Add-OrchUser` applies `IsExternalLicensed` per row in a CSV/pipeline batch.
+
+#### Locale / culture
+
+- OData `$filter` timestamps and JSON date bodies are written culture-invariantly (ISO-8601), so a
+  non-US locale (e.g. one using `.` as the time separator) no longer produces a malformed `$filter`
+  or JSON body.
+- `Get-OrchCalendarDate -ExportCsv` writes excluded dates as invariant ISO-8601 so the CSV round-trips
+  across locales.
+- `Add-OrchCalendarDate` no longer issues a duplicate-creating PUT when re-adding an already-excluded
+  date at a non-UTC offset (a `DateTime` Kind mismatch had defeated the de-duplication).
+
+#### Entity copy fidelity
+
+- `Copy-OrchQueue` preserves `RetryAbandonedItems` and copies the correct stale-retention action;
+  `Copy-OrchProcess` keeps the package `AutoUpdate` policy.
+
+#### Provider / cmdlets
+
+- `Get-Item -LiteralPath` resolves a backtick-named folder literally instead of unescaping it.
+- `New-Item` stops after an invalid `-FeedType` instead of creating the folder anyway.
+- `Ctrl+C` stops the list cmdlets (`Get-OrchProcess` and the rest) cleanly with a single stop instead
+  of flooding errors.
+- `Get-OrchPmGroup` tolerates a member with an unknown or absent `objectType` (one odd member no longer
+  aborts the whole group read).
+- Large package / library / execution-media downloads are interruptible with `Ctrl+C`.
+- `Update-OrchUser` / `Copy-OrchUser` match `-UserName` by UserName **or** EmailAddress (Azure AD B2B
+  guests whose tenant UserName differs from their email).
+- `Add-OrchRoleToFolderUser` / `Remove-OrchRoleFromFolderUser` match and tab-complete `-Roles`
+  consistently on the role name, so a completed value always resolves and Add/Remove are symmetric.
+- The directory-search query is URL-escaped; the package/library upload response no longer throws on an
+  empty result array.
+
+#### HTTP
+
+- A non-idempotent `POST` (e.g. add queue item, create) is no longer retried on `503` / `504` (which
+  could duplicate a write that already committed); `429` still retries for all methods.
+
+#### Cache freshness
+
+- `Update-OrchProcessVersion` / `Reset-OrchProcessVersion` invalidate the detailed-release cache, so a
+  following `Get-OrchProcessDetail` shows the new version.
+- `Stop-OrchTestSetExecution` drops just the cancelled execution's stale cache entry.
+
+#### Display
+
+- `Get-OrchAssetLink` / `-BucketLink` / `-QueueLink` use a single `EntityLink` view (the per-noun view
+  names never matched the emitted type, so the table was a raw property dump). `Get-OrchApiTrigger` /
+  `Get-OrchEventTrigger` now populate the `Release` column. `Get-OrchTaskCatalog` shows the
+  `FoldersCount` column (was a typo).
+
+### Performance
+
+- `Enable-OrchTestSetSchedule` / `Disable-OrchTestSetSchedule` skip schedules already in the target
+  state and issue one batched `SetEnabled` call per folder instead of one request per schedule.
+
+### Tests
+
+- Added auth-flow-selection unit tests and a regression suite (C# unit + live Pester) that reproduces
+  the post-1.9.1 fixes (failing on the v1.9.1 build, passing on this release).
+
 ## [1.9.1] - 2026-06-09
 
 ### Added

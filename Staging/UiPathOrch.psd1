@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.9.1'
+ModuleVersion = '1.9.2'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -502,17 +502,28 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.9.1
+1.9.2
 
-Fixed: on-premises username/password and PAT drives no longer break when the access token expires --
-renewal now re-runs the initial request (re-authenticate / re-apply) instead of sending an empty
-refresh_token grant. Get-OrchUserSession rejects invalid -State / -Type / -OrderBy with a clear
-error instead of a KeyNotFound crash. Get-OrchQueueItem's no-filter cache output no longer drops
-every item under the default -OrderBy Id. Move-Item on a folder rejects cross-drive and
-self/descendant moves with a clear error. Concurrency hardening for token/expiry publication, the
-async log writer lock, and the rate-limiter refill.
+Fixed (pipe-to-update data loss): Get-Orch* | New-/Update-Orch* no longer corrupts or wipes a field
+when the whole entity is piped in. A producer's Tag[] / WebhookEvent[] / RobotUser[] / RobotExecutor[]
+bound to the string parameter by coercing each object to a garbage type-name string, so the cmdlet
+overwrote the field on save. -Tags, Webhook -Events, Machine -RobotUsers and Trigger -ExecutorRobots
+now bind correctly. Multi-value robot columns also round-trip through Import-Csv | Update-OrchMachine /
+Update-OrchTrigger. Entity copy keeps queue RetryAbandonedItems / stale-retention action and process
+AutoUpdate.
 
-Added: Get-OrchUserSession -OrderDescending (ascending stays the default).
+Fixed (locale): OData $filter and JSON timestamps, and Calendar excluded-date CSV export, are now
+culture-invariant (ISO-8601). Add-OrchCalendarDate no longer duplicates an already-excluded date at a
+non-UTC offset.
+
+Fixed (other): Get-Item resolves backtick-named folders literally; New-Item stops after an invalid
+-FeedType; Ctrl+C stops list cmdlets cleanly; Add-OrchUser applies per-row IsExternalLicensed;
+Get-OrchPmGroup tolerates an unknown/absent member objectType; large downloads are Ctrl+C-cancellable;
+a non-idempotent POST is not retried on 503/504; backtick-escaped commas survive in -Tags / -Roles /
+-GroupName; Add/Remove-OrchRoleFromFolderUser match and complete -Roles consistently on role name;
+Update-/Reset-OrchProcessVersion and Stop-OrchTestSetExecution invalidate their stale cache entries.
+
+Performance: Enable/Disable-OrchTestSetSchedule skips no-op calls and batches per folder.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
