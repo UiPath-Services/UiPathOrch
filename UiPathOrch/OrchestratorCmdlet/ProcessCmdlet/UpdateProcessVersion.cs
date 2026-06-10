@@ -216,6 +216,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                                 {
                                     drive.OrchAPISession.UpdateReleaseToLatestVersion(folder.Id ?? 0, id);
                                     drive.Releases.ClearCache(folder);
+                                    drive.ReleasesDetailed.ClearCache(folder);
                                 }
                                 catch (Exception ex)
                                 {
@@ -231,6 +232,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                                 {
                                     drive.OrchAPISession.UpdateReleaseToSpecificVersion(folder.Id ?? 0, id, Version);
                                     drive.Releases.ClearCache(folder);
+                                    drive.ReleasesDetailed.ClearCache(folder);
                                 }
                                 catch (Exception ex)
                                 {
@@ -260,6 +262,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                                 {
                                     drive.OrchAPISession.UpdateReleaseToLatestVersion(folder.Id ?? 0, release.Id ?? 0);
                                     drive.Releases.ClearCache(folder);
+                                    drive.ReleasesDetailed.ClearCache(folder);
                                 }
                                 catch (Exception ex)
                                 {
@@ -282,6 +285,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                                 {
                                     drive.OrchAPISession.UpdateReleaseToSpecificVersion(folder.Id ?? 0, release.Id ?? 0, toVersion);
                                     drive.Releases.ClearCache(folder);
+                                    drive.ReleasesDetailed.ClearCache(folder);
                                 }
                                 catch (Exception ex)
                                 {

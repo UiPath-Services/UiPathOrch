@@ -93,6 +93,7 @@ public class ResetProcessVersionCmdlet : OrchestratorPSCmdlet
                         {
                             drive.OrchAPISession.RollbackReleaseVersion(folder.Id!.Value, release.Id!.Value);
                             drive.Releases.ClearCache(folder);
+                            drive.ReleasesDetailed.ClearCache(folder);
                         }
                         catch (Exception ex)
                         {
