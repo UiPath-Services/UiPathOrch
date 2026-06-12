@@ -223,8 +223,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
 
     private void WarningPSDriveConfig(PSDrive drive)
     {
-        // Only output Scope warnings when no password is set
-        if (string.IsNullOrEmpty(drive.Password))
+        // Only output Scope warnings when no password is set. PAT drives are
+        // also exempt: a personal access token's scopes are fixed server-side
+        // when the token is created, so the config Scope cannot change what
+        // the token is authorized to do — a "fix your Scope" warning would be
+        // misleading. (Scope on a PAT drive remains meaningful only as the
+        // opt-in declaration that mounts the Du*/Tm* companion drives.)
+        if (string.IsNullOrEmpty(drive.Password) && string.IsNullOrEmpty(drive.AccessToken))
         {
             if (string.IsNullOrWhiteSpace(drive.Scope))
             {

@@ -567,8 +567,14 @@ public partial class OrchAPISession : IDisposable
                     _isAuthenticated = true;
                     Volatile.Write(ref _expiryTimeTicks, ComputeTokenExpiry(DateTime.Now).Ticks);
 
+                    // The Scope gate is an optimization that skips a doomed call when
+                    // the OAuth request is known not to include OR.Settings. A PAT is
+                    // opaque — its scopes cannot be known client-side — so for PAT
+                    // drives always attempt the fetch; the catch below already falls
+                    // back gracefully when the token lacks the scope.
                     if (ApiVersion is null && _drive is not null &&
-                        (_drive._psDrive.Scope?.Contains("OR.Settings") ?? false))
+                        ((_drive._psDrive.Scope?.Contains("OR.Settings") ?? false)
+                         || !string.IsNullOrEmpty(_drive._psDrive.AccessToken)))
                     {
                         try
                         {
