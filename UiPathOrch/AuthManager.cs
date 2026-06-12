@@ -436,9 +436,16 @@ internal class OrchestratorAuthManager
                 endPoint = BaseUrl + "/identity/connect/authorize";
             }
 
+            // The scope value contains literal spaces (space-delimited scopes plus
+            // " offline_access"), so it must be URL-encoded like redirect_uri.
+            // Windows browsers normalized raw spaces to %20, masking the omission;
+            // on macOS the launch path splits the URL at the first raw space, so
+            // everything after the scope value (including redirect_uri) was lost
+            // and Identity rejected the request with "Invalid redirect_uri".
+            string encodedScope = WebUtility.UrlEncode($"{_drive._psDrive.Scope} offline_access");
             string authUrl = !string.IsNullOrEmpty(codeVerifier)
-                ? $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256{acrValues}"
-                : $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={_drive._psDrive.Scope} offline_access&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}{acrValues}";
+                ? $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={encodedScope}&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256{acrValues}"
+                : $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={encodedScope}&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}{acrValues}";
 
             using var listener = new HttpListener();
             try
