@@ -73,12 +73,22 @@
     // 個人用アクセストークンは、Orchestrator の設定ページで
     // 作成できます。この構成を使用する場合には
     // OAuth 外部アプリケーションを作成する必要はありません。
+    //
+    // 重要: トークンのスコープは、サーバー側での作成時に確定します。
+    // 作成時には最低限、次のスコープを選択してください:
+    //   OR.Folders.Read   (フォルダーツリーの取得)
+    //   OR.Settings.Read  (API バージョンの検出)
+    //   OR.Users.Read     (個人用ワークスペースへのアクセス)
+    // 加えて、操作したい対象のスコープ (OR.Assets、OR.Queues など) も
+    // 選択してください。
+    // この設定例に "Scope" が無いのは意図的です。"Scope" を書いても
+    // トークンの権限は変わりません。Du*/Tm* ドライブを有効にする場合に
+    // 限り宣言してください (例: "Scope": "Du.Digitization TM.TestCases")。
     {
       "Name": "Orch1",
       "Description": "個人用アクセストークンを使用した設定。",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": true
     },
 

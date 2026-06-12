@@ -87,12 +87,22 @@
     // Ein persönliches Zugriffstoken kann auf der Seite „Einstellungen“
     // von Orchestrator erstellt werden. Bei Verwendung dieser Konfiguration
     // ist es nicht erforderlich, eine externe OAuth-Anwendung zu erstellen.
+    //
+    // WICHTIG: Die Scopes eines Tokens werden serverseitig bei der
+    // Erstellung festgelegt. Wählen Sie bei der Erstellung mindestens:
+    //   OR.Folders.Read   (Ordnerstruktur)
+    //   OR.Settings.Read  (Erkennung der API-Version)
+    //   OR.Users.Read     (Zugriff auf den persönlichen Arbeitsbereich)
+    // sowie die Scopes für alles, was Sie verwalten möchten (OR.Assets,
+    // OR.Queues, ...). "Scope" fehlt in diesem Beispiel absichtlich --
+    // es kann die Berechtigungen des Tokens nicht ändern. Deklarieren
+    // Sie es nur, um die Du*/Tm*-Laufwerke zu aktivieren
+    // (z. B. "Scope": "Du.Digitization TM.TestCases").
     {
       "Name": "Orch1",
       "Description": "Diese Konfiguration enthält ein persönliches Zugriffstoken.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": true
     },
 

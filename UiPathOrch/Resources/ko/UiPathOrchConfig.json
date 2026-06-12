@@ -76,12 +76,22 @@
     // 개인 액세스 토큰은 Orchestrator의 환경 설정 페이지에서
     // 생성할 수 있습니다. 이 구성을 사용하는 경우에는
     // OAuth 외부 애플리케이션을 생성할 필요가 없습니다.
+    //
+    // 중요: 토큰의 스코프는 서버에서 토큰을 생성할 때 확정됩니다.
+    // 토큰 생성 시 최소한 다음 스코프를 선택하세요:
+    //   OR.Folders.Read   (폴더 트리 조회)
+    //   OR.Settings.Read  (API 버전 감지)
+    //   OR.Users.Read     (개인 작업 영역 액세스)
+    // 또한 관리하려는 대상의 스코프(OR.Assets, OR.Queues 등)도
+    // 선택하세요. 이 예시에 "Scope"가 없는 것은 의도적입니다.
+    // "Scope"를 지정해도 토큰의 권한은 변경되지 않습니다. Du*/Tm*
+    // 드라이브를 활성화할 때만 선언하세요
+    // (예: "Scope": "Du.Digitization TM.TestCases").
     {
       "Name": "Orch1",
       "Description": "이 구성에는 개인 액세스 토큰이 포함되어 있습니다.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": true
     },
 

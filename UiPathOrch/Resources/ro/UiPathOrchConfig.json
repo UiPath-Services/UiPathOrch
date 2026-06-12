@@ -85,12 +85,21 @@
     // Un token de acces personal poate fi creat în pagina de setări
     // a Orchestratorului. Atunci când se utilizează această configurație,
     // nu este necesar să se creeze o aplicație externă OAuth.
+    //
+    // IMPORTANT: Domeniile (scopes) unui token sunt fixate pe server la
+    // crearea tokenului. La creare, selectați cel puțin:
+    //   OR.Folders.Read   (arborele de foldere)
+    //   OR.Settings.Read  (detectarea versiunii API)
+    //   OR.Users.Read     (accesul la spațiul de lucru personal)
+    // plus domeniile pentru tot ce administrați (OR.Assets, OR.Queues, ...).
+    // "Scope" este omis intenționat din acest exemplu -- nu poate
+    // modifica permisiunile tokenului. Declarați-l doar pentru a activa
+    // unitățile Du*/Tm* (de ex. "Scope": "Du.Digitization TM.TestCases").
     {
       "Name": "Orch1",
       "Description": "Această configurație include un token de acces personal.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": true
     },
 

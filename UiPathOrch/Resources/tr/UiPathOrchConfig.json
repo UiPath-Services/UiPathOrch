@@ -81,12 +81,22 @@
     // Kişisel erişim belirteci Orchestrator’ın Tercihler sayfasında
     // oluşturulabilir. Bu yapılandırma kullanıldığında
     // harici bir OAuth uygulaması oluşturmanız gerekmez.
+    //
+    // ÖNEMLİ: Bir belirtecin kapsamları, belirteç oluşturulurken sunucu
+    // tarafında sabitlenir. Oluştururken en azından şunları seçin:
+    //   OR.Folders.Read   (klasör ağacı)
+    //   OR.Settings.Read  (API sürümü algılama)
+    //   OR.Users.Read     (kişisel çalışma alanı erişimi)
+    // ve yönettiğiniz öğelerin kapsamlarını da ekleyin (OR.Assets,
+    // OR.Queues, ...). "Scope" bu örnekte bilerek atlanmıştır --
+    // belirtecin yetkilerini değiştiremez. Yalnızca Du*/Tm* sürücülerini
+    // etkinleştirmek için bildirin
+    // (örn. "Scope": "Du.Digitization TM.TestCases").
     {
       "Name": "Orch1",
       "Description": "Bu yapılandırma kişisel erişim belirteci içerir.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": true
     },
 

@@ -80,12 +80,21 @@
     // A personal access token can be created on the Orchestrator's
     // Preferences page. When using this configuration, it is not
     // necessary to create an OAuth external application.
+    //
+    // IMPORTANT: A token's scopes are fixed on the server when the token
+    // is created. When creating it, select at least:
+    //   OR.Folders.Read   (folder tree)
+    //   OR.Settings.Read  (API version detection)
+    //   OR.Users.Read     (personal workspace access)
+    // plus the scopes for whatever you manage (OR.Assets, OR.Queues, ...).
+    // "Scope" is intentionally omitted from this sample -- it cannot
+    // change what the token is allowed to do. Declare it only to enable
+    // the Du*/Tm* drives (e.g. "Scope": "Du.Digitization TM.TestCases").
     {
       "Name": "Orch1",
       "Description": "This configuration includes personal access token.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": true
     },
 

@@ -85,12 +85,22 @@
     // Préférences d'Orchestrator. Lors de l'utilisation de cette
     // configuration, il n'est pas nécessaire de créer une application
     // externe OAuth.
+    //
+    // IMPORTANT : les scopes d'un jeton sont fixés côté serveur lors de
+    // sa création. Lors de la création, sélectionnez au minimum :
+    //   OR.Folders.Read   (arborescence des dossiers)
+    //   OR.Settings.Read  (détection de la version de l'API)
+    //   OR.Users.Read     (accès à l'espace de travail personnel)
+    // ainsi que les scopes correspondant à ce que vous gérez (OR.Assets,
+    // OR.Queues, ...). "Scope" est volontairement omis de cet exemple --
+    // il ne peut pas modifier les autorisations du jeton. Ne le déclarez
+    // que pour activer les lecteurs Du*/Tm*
+    // (p. ex. "Scope": "Du.Digitization TM.TestCases").
     {
       "Name": "Orch1",
       "Description": "Cette configuration inclut un jeton d'accès personnel.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AccessToken": "YOUR_PERSONAL_ACCESS_TOKEN",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
       "Enabled": true
     },
 
