@@ -32,7 +32,7 @@ Gets credential-type assets only. Text, Bool, Integer, and Secret assets are fil
 
 The cmdlet returns Asset objects. The CredentialUsername field is populated from the server, but CredentialPassword is always masked (empty). When a credential is backed by an external credential store, the ExternalName field contains the vault reference.
 
-The -ExportCsv parameter writes the results as CSV with columns suitable for round-trip editing and re-import with Set-OrchCredentialAsset. The CSV uses the same column layout as Get-OrchAsset -ExportCredentialCsv.
+The -ExportCsv parameter writes the results as CSV with columns suitable for round-trip editing and re-import with Set-OrchCredentialAsset. The CSV uses the same column layout as the deprecated `Get-OrchAsset -ExportCredentialCsv`, which this parameter replaces.
 
 For PerRobot-only access, pipe the Asset objects and use `$_.UserValues`. For a flattened stream including the Global row, use -ExpandUserValues.
 

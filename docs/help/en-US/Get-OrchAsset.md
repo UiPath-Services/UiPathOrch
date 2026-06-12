@@ -35,6 +35,8 @@ Assets have four value types: Text, Bool, Integer, and Credential. Each asset ha
 
 This cmdlet supports filtering by asset name and value type, expanding user-specific values for per-robot assets, and exporting results to CSV files. When -ExpandUserValues is specified, per-robot assets output AssetUserValue objects instead of Asset objects, showing each user/machine assignment as a separate row.
 
+> **Deprecated:** `-ExportCredentialCsv` is deprecated and will be removed in a future major release. Use `Get-OrchCredentialAsset -ExportCsv` instead — each asset type's CSV export pairs with its own cmdlet family (`Get-OrchCredentialAsset -ExportCsv` imports via `Set-OrchCredentialAsset`, `Get-OrchSecretAsset -ExportCsv` via `Set-OrchSecretAsset`). The on-disk CSV format is unchanged, so files exported here keep importing into `Set-OrchCredentialAsset`.
+
 The -Name, -ValueType, and -Path parameters support tab completion. Press [Ctrl+Space] or [Tab] to see available values. The -Name and -ValueType completions are dynamically populated from actual data in the target folders. Multiple values can be specified using comma-separated text that includes wildcards.
 
 When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
@@ -95,13 +97,13 @@ PS Orch1:\Shared> Get-OrchAsset -ExportCsv C:\temp\assets.csv
 
 Exports all assets in the current folder to a CSV file. The CSV uses UTF-8 with BOM encoding for Excel compatibility and converts internal IDs to human-readable names. The exported CSV can be used with Set-OrchAsset for import.
 
-### Example 7: Export credential assets to CSV
+### Example 7 (deprecated): Export credential assets to CSV
 
 ```powershell
 PS Orch1:\Shared> Get-OrchAsset -ExportCredentialCsv C:\temp\credentials.csv
 ```
 
-Exports credential assets to a CSV file including credential store, username, and machine assignment columns. The exported CSV can be used with Set-OrchCredentialAsset for import.
+Exports credential assets to a CSV file including credential store, username, and machine assignment columns. The exported CSV can be used with Set-OrchCredentialAsset for import. This parameter is deprecated; use `Get-OrchCredentialAsset -ExportCsv C:\temp\credentials.csv` instead, which produces the same CSV.
 
 ## PARAMETERS
 
@@ -236,7 +238,7 @@ HelpMessage: ''
 
 ### -ExportCredentialCsv
 
-Exports credential assets to the specified CSV file path. The CSV includes credential store name (resolved from CredentialStoreId), username, and machine assignment columns. Can be used with Set-OrchCredentialAsset for import. Requires a filesystem path (not an Orch: drive path).
+**Deprecated.** Use `Get-OrchCredentialAsset -ExportCsv` instead; the on-disk CSV format is unchanged, so exported files keep importing into `Set-OrchCredentialAsset`. Exports credential assets to the specified CSV file path. The CSV includes credential store name (resolved from CredentialStoreId), username, and machine assignment columns. Requires a filesystem path (not an Orch: drive path).
 
 ```yaml
 Type: System.String
