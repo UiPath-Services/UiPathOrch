@@ -47,7 +47,6 @@ public class GetTriggerCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         // Detail path: triggered by either the deprecated -ExpandDetails switch
         // or by -ExportCsv (the CSV row shape includes detail fields, so the
@@ -69,7 +68,7 @@ public class GetTriggerCmdlet : OrchestratorPSCmdlet
             using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetTriggerDetailCmdlet.CsvHeaders);
 
             var driveFolderList = drivesFolders.ToList();
-            GetTriggerDetailCmdlet.EmitDetailedTriggers(this, driveFolderList, wpName, writer);
+            GetTriggerDetailCmdlet.EmitDetailedTriggers(this, driveFolderList, Name, writer);
 
             if (!string.IsNullOrEmpty(ExportCsv))
             {
@@ -94,7 +93,7 @@ public class GetTriggerCmdlet : OrchestratorPSCmdlet
                 if (entities is null) continue;
 
                 var targetEntities = entities
-                        .FilterByWildcards(s => s?.Name, wpName)
+                        .FilterByNames(s => s?.Name, Name)
                         .OrderBy(s => s.Name);
 
                 WriteObject(targetEntities, true);

@@ -47,7 +47,6 @@ public class GetProcessCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         // Detail path: triggered by either the deprecated -ExpandDetails switch
         // or by -ExportCsv (the CSV row shape includes detail fields, so the
@@ -70,7 +69,7 @@ public class GetProcessCmdlet : OrchestratorPSCmdlet
 
             // EnumFolders returns the same shape used by Get-OrchProcessDetail's helper.
             var driveFolderList = drivesFolders.ToList();
-            GetProcessDetailCmdlet.EmitDetailedReleases(this, driveFolderList, wpName, writer);
+            GetProcessDetailCmdlet.EmitDetailedReleases(this, driveFolderList, Name, writer);
 
             if (!string.IsNullOrEmpty(ExportCsv))
             {
@@ -92,7 +91,7 @@ public class GetProcessCmdlet : OrchestratorPSCmdlet
             {
                 var releases = drive.Releases.Get(folder);
                 var targetReleases = releases
-                    .FilterByWildcards(r => r?.Name, wpName)
+                    .FilterByNames(r => r?.Name, Name)
                     .OrderBy(r => r.Name);
                 WriteObject(targetReleases, true);
             }

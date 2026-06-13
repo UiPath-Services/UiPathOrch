@@ -79,12 +79,10 @@ public class GetTriggerDetailCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        EmitDetailedTriggers(this, drivesFolders, wpName, writer);
+        EmitDetailedTriggers(this, drivesFolders, Name, writer);
 
         if (!string.IsNullOrEmpty(ExportCsv))
         {
@@ -102,7 +100,7 @@ public class GetTriggerDetailCmdlet : OrchestratorPSCmdlet
     internal static void EmitDetailedTriggers(
         OrchestratorPSCmdlet caller,
         IEnumerable<(OrchDriveInfo drive, Folder folder)> drivesFolders,
-        List<WildcardPattern>? nameWildcards,
+        string[]? name,
         StreamWriter? writer)
     {
         using var results = OrchThreadPool.RunForEach(drivesFolders,
@@ -122,7 +120,7 @@ public class GetTriggerDetailCmdlet : OrchestratorPSCmdlet
                 var (drive, folder) = result.Source;
 
                 var targetEntities = entities
-                        .FilterByWildcards(s => s?.Name, nameWildcards)
+                        .FilterByNames(s => s?.Name, name)
                         .OrderBy(s => s.Name);
 
                 foreach (var entity in targetEntities)
