@@ -125,7 +125,6 @@ public class RemoveMachineClientSecretCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
-        var wpName = Name.ConvertToWildcardPatternList();
         var wpSecretId = SecretId.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -148,7 +147,7 @@ public class RemoveMachineClientSecretCmdlet : OrchestratorPSCmdlet
 
             var targetMachines = machines
                 .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot")
-                .FilterByWildcards(m => m?.Name, wpName)
+                .FilterByNames(m => m?.Name, Name)
                 .OrderBy(m => m.Name);
 
             foreach (var m in targetMachines.WithCancellation(cancelHandler.Token))

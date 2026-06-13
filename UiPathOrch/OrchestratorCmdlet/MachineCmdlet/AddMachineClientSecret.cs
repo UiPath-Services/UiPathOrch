@@ -72,15 +72,13 @@ public class AddMachineClientSecretCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
-        var wpName = Name.ConvertToWildcardPatternList();
-
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
             var machines = drive.Machines.Get();
             var targetMachines = machines
                 .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot")
-                .FilterByWildcards(m => m?.Name, wpName)
+                .FilterByNames(m => m?.Name, Name)
                 .OrderBy(m => m.Name);
 
             foreach (var m in targetMachines.WithCancellation(cancelHandler.Token))
