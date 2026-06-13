@@ -42,8 +42,6 @@ public class CopyApiTriggerCmdlet : OrchestratorPSCmdlet
         // If source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
-        var wpName = Name.ConvertToWildcardPatternList();
-
         using var reporterApiTriggers = new ProgressReporter(this, 900, Int32.MaxValue, "Copying API triggers...");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
@@ -52,7 +50,7 @@ public class CopyApiTriggerCmdlet : OrchestratorPSCmdlet
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicHttpTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.ApiTriggers.Get(srcFolder).FilterByWildcards(e => e?.Name, wpName);
+                var srcEntities = srcDrive.ApiTriggers.Get(srcFolder).FilterByNames(e => e?.Name, Name);
                 if (!srcEntities.Any()) continue;
             }
             catch (Exception ex)
@@ -71,7 +69,7 @@ public class CopyApiTriggerCmdlet : OrchestratorPSCmdlet
             try
             {
                 Core.OrchProvider.CopyApiTriggers(this,
-                    srcDrive, srcFolder, wpName!,
+                    srcDrive, srcFolder, Name,
                     dstDrive, dstFolder, reporterApiTriggers,
                     false, cancelHandler.Token);
                 dstDrive.ApiTriggers.ClearCache(dstFolder);

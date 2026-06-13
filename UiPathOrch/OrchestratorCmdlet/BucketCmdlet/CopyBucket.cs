@@ -43,8 +43,6 @@ public class CopyBucketCmdlet : OrchestratorPSCmdlet
         // If source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
-        var wpName = Name.ConvertToWildcardPatternList();
-
         using var reporterBuckets = new ProgressReporter(this, 1000, Int32.MaxValue, "Copying buckets...");
         using var cancelHandler = new ConsoleCancelHandler();
 
@@ -54,7 +52,7 @@ public class CopyBucketCmdlet : OrchestratorPSCmdlet
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicBuckets?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.Buckets.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName);
+                var srcEntities = srcDrive.Buckets.Get(srcFolder).FilterByNames(b => b?.Name, Name);
                 if (!srcEntities.Any()) continue;
             }
             catch (Exception ex)
@@ -69,7 +67,7 @@ public class CopyBucketCmdlet : OrchestratorPSCmdlet
             try
             {
                 Core.OrchProvider.CopyBuckets(this,
-                    srcDrive, srcFolder, wpName,
+                    srcDrive, srcFolder, Name,
                     dstDrive, dstFolder, reporterBuckets,
                     false, cancelHandler.Token);
                 dstDrive.Buckets.ClearCache(dstFolder);

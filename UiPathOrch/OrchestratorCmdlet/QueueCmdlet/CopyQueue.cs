@@ -42,8 +42,6 @@ public class CopyQueueCmdlet : OrchestratorPSCmdlet
         // If the source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
-        var wpName = Name.ConvertToWildcardPatternList();
-
         srcDrive.QueueLinks.ClearCache();
 
         // Since the cache is cleared just before copying, there is no point in retrieving it here
@@ -57,7 +55,7 @@ public class CopyQueueCmdlet : OrchestratorPSCmdlet
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicQueueDefinitions?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.Queues.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName);
+                var srcEntities = srcDrive.Queues.Get(srcFolder).FilterByNames(b => b?.Name, Name);
                 if (!srcEntities.Any()) continue;
             }
             catch (Exception ex)
@@ -72,7 +70,7 @@ public class CopyQueueCmdlet : OrchestratorPSCmdlet
             try
             {
                 Core.OrchProvider.CopyQueues(this,
-                    srcDrive, srcFolder, wpName,
+                    srcDrive, srcFolder, Name,
                     dstDrive, dstFolder, reporterQueues,
                     false, cancelHandler.Token);
                 dstDrive.Queues.ClearCache(dstFolder);

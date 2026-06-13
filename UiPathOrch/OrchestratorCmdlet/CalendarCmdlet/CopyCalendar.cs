@@ -31,7 +31,7 @@ public class CopyCalendarCmdlet : OrchestratorPSCmdlet
     internal static void CopyCalendars(
         IWritableHost _this,
         OrchDriveInfo srcDrive,
-        List<WildcardPattern>? wpName,
+        string[]? name,
         IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -59,7 +59,7 @@ public class CopyCalendarCmdlet : OrchestratorPSCmdlet
         foreach (var dstDrive in dstDrives)
         {
             foreach (var srcCalendar in srcCalendars
-                .FilterByWildcards(c => c?.Name, wpName)
+                .FilterByNames(c => c?.Name, name)
                 .OrderBy(c => c.Name))
             {
                 string item = srcCalendar.GetPSPath();
@@ -105,9 +105,7 @@ public class CopyCalendarCmdlet : OrchestratorPSCmdlet
     {
         var srcDrive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath)!);
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
-        var wpName = Name.ConvertToWildcardPatternList();
-
         using var cancelHandler = new ConsoleCancelHandler();
-        CopyCalendars(this, srcDrive, wpName, dstDrives, false, cancelHandler.Token);
+        CopyCalendars(this, srcDrive, Name, dstDrives, false, cancelHandler.Token);
     }
 }

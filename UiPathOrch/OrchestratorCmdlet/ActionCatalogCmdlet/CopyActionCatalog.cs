@@ -42,8 +42,6 @@ public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
         // If source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
-        var wpName = Name.ConvertToWildcardPatternList();
-
         using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, "Copying action catalogs...");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
@@ -52,7 +50,7 @@ public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicTaskCatalog?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.ActionCatalogs.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName);
+                var srcEntities = srcDrive.ActionCatalogs.Get(srcFolder).FilterByNames(b => b?.Name, Name);
                 if (!srcEntities.Any()) continue;
             }
             catch (Exception ex)
@@ -67,7 +65,7 @@ public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
             try
             {
                 Core.OrchProvider.CopyActionCatalogs(this,
-                    srcDrive, srcFolder, wpName,
+                    srcDrive, srcFolder, Name,
                     dstDrive, dstFolder, reporterActionCatalogs,
                     false, cancelHandler.Token);
                 dstDrive.ActionCatalogs.ClearCache(dstFolder);

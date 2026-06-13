@@ -42,8 +42,6 @@ public class CopyProcessCmdlet : OrchestratorPSCmdlet
         // If source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
-        var wpName = Name.ConvertToWildcardPatternList();
-
         using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, "Copying processes...");
         using var cancelHandler = new ConsoleCancelHandler();
 
@@ -53,7 +51,7 @@ public class CopyProcessCmdlet : OrchestratorPSCmdlet
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicReleases?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.Releases.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName);
+                var srcEntities = srcDrive.Releases.Get(srcFolder).FilterByNames(b => b?.Name, Name);
                 if (!srcEntities.Any()) continue;
             }
             catch (Exception ex)
@@ -68,7 +66,7 @@ public class CopyProcessCmdlet : OrchestratorPSCmdlet
             try
             {
                 Core.OrchProvider.CopyProcesses(this,
-                    srcDrive, srcFolder, wpName,
+                    srcDrive, srcFolder, Name,
                     dstDrive, dstFolder, reporterProcesses,
                     false, cancelHandler.Token);
                 dstDrive.Releases.ClearCache(dstFolder);

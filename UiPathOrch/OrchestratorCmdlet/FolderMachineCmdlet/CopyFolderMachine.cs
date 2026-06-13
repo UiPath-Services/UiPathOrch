@@ -41,8 +41,6 @@ public class CopyFolderMachineCmdlet : OrchestratorPSCmdlet
         // Do nothing if source and destination are the same
         if (srcRootFolder == dstRootFolder) return;
 
-        var wpName = Name.ConvertToWildcardPatternList();
-
         using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, "Copying folder machines...");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
@@ -53,7 +51,7 @@ public class CopyFolderMachineCmdlet : OrchestratorPSCmdlet
                 //srcDrive._dicMachinesAssigned?.TryRemove(srcFolder.Id ?? 0, out _);
                 var srcEntities = srcDrive.FolderMachinesAssigned.Get(srcFolder)
                     .Where(e => e.IsAssignedToFolder.GetValueOrDefault())
-                    .FilterByWildcards(e => e?.Name, wpName);
+                    .FilterByNames(e => e?.Name, Name);
                 if (!srcEntities.Any()) continue;
             }
             catch (Exception ex)
@@ -68,7 +66,7 @@ public class CopyFolderMachineCmdlet : OrchestratorPSCmdlet
             try
             {
                 Core.OrchProvider.CopyFolderMachines(this,
-                    srcDrive, srcFolder, wpName,
+                    srcDrive, srcFolder, Name,
                     dstDrive, dstFolder, reporter,
                     false, cancelHandler.Token);
                 dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);

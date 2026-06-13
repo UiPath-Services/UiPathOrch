@@ -42,8 +42,6 @@ public class CopyTriggerCmdlet : OrchestratorPSCmdlet
         // If source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
-        var wpName = Name.ConvertToWildcardPatternList();
-
         using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, "Copying triggers...");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
@@ -52,7 +50,7 @@ public class CopyTriggerCmdlet : OrchestratorPSCmdlet
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicTriggers?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.GetTriggers(srcFolder).FilterByWildcards(e => e?.Name, wpName);
+                var srcEntities = srcDrive.GetTriggers(srcFolder).FilterByNames(e => e?.Name, Name);
                 if (!srcEntities.Any()) continue;
             }
             catch (Exception ex)
@@ -70,7 +68,7 @@ public class CopyTriggerCmdlet : OrchestratorPSCmdlet
             try
             {
                 Core.OrchProvider.CopyTriggers(this,
-                    srcDrive, srcFolder, wpName!,
+                    srcDrive, srcFolder, Name,
                     dstDrive, dstFolder, reporterTriggers,
                     false, cancelHandler.Token);
                 dstDrive.Triggers.ClearCache(dstFolder);
