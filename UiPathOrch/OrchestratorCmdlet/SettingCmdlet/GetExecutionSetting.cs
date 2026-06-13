@@ -109,7 +109,6 @@ public class GetExecutionSettingCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         var wpScope = Scope.ConvertToWildcardPatternList();
-        var wpDisplayName = DisplayName.ConvertToWildcardPatternList();
 
         var specifiedScopes = scopeList.FilterByWildcards(s => s.Value, wpScope);
 
@@ -140,7 +139,7 @@ public class GetExecutionSettingCmdlet : OrchestratorPSCmdlet
                     if (entities!.TryGetValue(scope.Key, out var settingArray))
                     {
                         WriteObject(settingArray!
-                            .FilterByWildcards(r => r?.DisplayName, wpDisplayName)
+                            .FilterByNames(r => r?.DisplayName, DisplayName)
                             .OrderBy(r => r.DisplayName),
                             true);
                     }

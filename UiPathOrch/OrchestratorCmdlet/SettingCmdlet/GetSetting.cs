@@ -60,8 +60,6 @@ public class GetSettingCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
-        var wpName = Name.ConvertToWildcardPatternList();
-
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
@@ -76,7 +74,7 @@ public class GetSettingCmdlet : OrchestratorPSCmdlet
                 if (entities is null) continue;
 
                 WriteObject(entities
-                    .FilterByWildcards(e => e?.Name, wpName)
+                    .FilterByNames(e => e?.Name, Name)
                     .OrderBy(e => e.Name),
                     true);
             }
