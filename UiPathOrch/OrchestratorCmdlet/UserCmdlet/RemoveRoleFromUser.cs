@@ -96,8 +96,6 @@ public class RemoveRoleFromUserCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        var wpUserName = UserName.ConvertToWildcardPatternList();
-        var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
         // The first element may have been input from CSV, so split it by commas
@@ -113,8 +111,8 @@ public class RemoveRoleFromUserCmdlet : OrchestratorPSCmdlet
             {
                 users = drive.Users.Get()
                     // Match both UserName and EmailAddress; see GetUserCmdlet.
-                    .FilterByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], wpUserName)
-                    .FilterByWildcards(u => u?.FullName, wpFullName)
+                    .FilterByNamesAny([u => u?.UserName, u => u?.EmailAddress], UserName)
+                    .FilterByNames(u => u?.FullName, FullName)
                     .FilterByWildcards(u => u?.Type, wpType)
                     .OrderBy(u => u.UserName)
                     .ToList();

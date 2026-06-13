@@ -47,7 +47,6 @@ public class RemoveUserCmdlet : OrchestratorPSCmdlet
 
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
-        var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -59,7 +58,7 @@ public class RemoveUserCmdlet : OrchestratorPSCmdlet
                 var targetUsers = users
                     // Match both UserName (tenant form) and EmailAddress (canonical);
                     // see GetUserCmdlet for the rationale.
-                    .FilterByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], wpUserName)
+                    .FilterByNamesAny([u => u?.UserName, u => u?.EmailAddress], UserName)
                     .FilterByNames(u => u?.FullName, FullName)
                     .FilterByWildcards(u => u?.Type, wpType)
                     .ToList();

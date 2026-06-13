@@ -262,6 +262,19 @@ public class FilterByNamesFamilyTests
     }
 
     [Fact]
+    public void FilterByNamesAny_SecondSelectorBracketLiteral_MatchedLiterally()
+    {
+        // The literal-first guarantee must hold on EITHER selector. Here the bracket-bearing
+        // value is on the second selector (EmailAddress) — Remove-/Copy-OrchUser must still
+        // delete/copy exactly that piped user, not wildcard-expand "x[1]@..." to nothing.
+        var users = new[] { new U("dave", "x[1]@corp.com"), new U("erin", "x1@corp.com") };
+        var result = users.FilterByNamesAny(new Func<U?, string?>[] { u => u?.UserName, u => u?.Email },
+            new[] { "x[1]@corp.com" }).ToArray();
+        Assert.Single(result);
+        Assert.Equal("dave", result[0].UserName);
+    }
+
+    [Fact]
     public void SelectByNames_EmptyNames_ReturnsEmpty()
     {
         // Action-cmdlet semantics: no -Name => no-op (unlike FilterByNames which returns all).
