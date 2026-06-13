@@ -222,6 +222,66 @@ public class FilterByNamesTests
     }
 }
 
+// The *Any (multi-selector) and Select* (empty => none) members of the FilterByNames family,
+// used by dual-identity cmdlets (User: UserName OR EmailAddress) and action cmdlets respectively.
+public class FilterByNamesFamilyTests
+{
+    private sealed record U(string? UserName, string? Email);
+
+    private static readonly U[] Users =
+    [
+        new("alice", "alice@corp.com"),
+        new("bob#ext#@t.onmicrosoft.com", "bob@corp.com"),
+        new("carol [x]", "carol@corp.com"),
+    ];
+
+    private static readonly Func<U?, string?>[] UserSelectors =
+        [u => u?.UserName, u => u?.Email];
+
+    [Fact]
+    public void FilterByNamesAny_MatchesViaEitherSelector()
+    {
+        // Matched by EmailAddress even though UserName is the mangled B2B form.
+        var result = Users.FilterByNamesAny(UserSelectors, new[] { "bob@corp.com" }).ToArray();
+        Assert.Single(result);
+        Assert.Equal("bob#ext#@t.onmicrosoft.com", result[0].UserName);
+    }
+
+    [Fact]
+    public void FilterByNamesAny_LiteralBracketUserName_MatchedLiterally()
+    {
+        var result = Users.FilterByNamesAny(UserSelectors, new[] { "carol [x]" }).ToArray();
+        Assert.Single(result);
+        Assert.Equal("carol [x]", result[0].UserName);
+    }
+
+    [Fact]
+    public void FilterByNamesAny_NullNames_ReturnsAll()
+    {
+        Assert.Equal(Users, Users.FilterByNamesAny(UserSelectors, null).ToArray());
+    }
+
+    [Fact]
+    public void SelectByNames_EmptyNames_ReturnsEmpty()
+    {
+        // Action-cmdlet semantics: no -Name => no-op (unlike FilterByNames which returns all).
+        Assert.Empty(new[] { "Apple", "Banana" }.SelectByNames(s => s, Array.Empty<string>()));
+    }
+
+    [Fact]
+    public void SelectByNames_LiteralBracketName_MatchedLiterally()
+    {
+        var source = new[] { "Sales E", "Sales [EU]" };
+        Assert.Equal(new[] { "Sales [EU]" }, source.SelectByNames(s => s, new[] { "Sales [EU]" }).ToArray());
+    }
+
+    [Fact]
+    public void SelectByNamesAny_NullNames_ReturnsEmpty()
+    {
+        Assert.Empty(Users.SelectByNamesAny(UserSelectors, null));
+    }
+}
+
 public class SelectByWildcardsTests
 {
     private static readonly string[] Fruits = ["Apple", "Apricot", "Banana", "Cherry"];

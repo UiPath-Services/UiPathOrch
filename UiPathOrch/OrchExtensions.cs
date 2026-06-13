@@ -234,35 +234,37 @@ internal static class OrchCollectionExtensions
         return source.Where(item => patterns.Any(pattern => pattern.IsMatch(selector(item))));
     }
 
-    // Literal-first name matching for destructive cmdlets (Remove-* / Move-* / *-Link). A piped
-    // entity's Name can contain PowerShell wildcard metacharacters — e.g. a role literally named
-    // "Sales [EU]" or a folder "test [test]". Treating that as a -Name wildcard either throws on an
-    // invalid pattern or, worse, matches a DIFFERENT entity and acts on the wrong one. This keys on
-    // Name (cross-tenant-stable), never the tenant-local Id, so `Get-X -Path A | Remove-X -Path B`
-    // stays correct across drives.
+    // === Literal-first name matching (FilterByNames family) ===========================
+    // A piped entity's Name can contain PowerShell wildcard metacharacters — e.g. a role
+    // literally named "Sales [EU]" or a folder "test [test]". Binding that piped Name to a
+    // [SupportsWildcards] -Name and re-interpreting it as a wildcard either throws on an invalid
+    // pattern or, worse, matches a DIFFERENT entity and acts on the wrong one. These matchers key
+    // on the Name (cross-tenant-stable), never the tenant-local Id, so `Get-X -Path A | <verb>-X
+    // -Path B` stays correct across drives.
     //
-    // Per requested name: if any source entity matches it literally (case-insensitive), select
-    // those (literal); otherwise treat the name as a wildcard (an invalid pattern matches nothing
-    // instead of throwing). So `Get-X | Remove-X` acts on exactly the piped entities, while an
-    // interactive `-Name 'foo*'` (no literal hit) still wildcard-expands. Mirrors FilterByWildcards:
-    // null/empty names => all source; result keeps source order with no duplicates. The only
-    // behavior change vs a pure wildcard is the pathological case of an entity LITERALLY named with
-    // metacharacters while the same string is also meant as a wildcard — there literal wins (the
-    // safer, narrower choice for a destructive op).
-    public static IEnumerable<T> FilterByNames<T>(
-        this IEnumerable<T> source,
-        Func<T?, string?> selector,
-        string[]? names)
+    // Per requested name: if any source entity matches it literally (case-insensitive), it is a
+    // literal selector; otherwise it is a wildcard (an invalid pattern matches nothing instead of
+    // throwing). So `Get-X | <verb>-X` acts on exactly the piped entities, while an interactive
+    // `-Name 'foo*'` (no literal hit) still wildcard-expands. The only behavior change vs a pure
+    // wildcard is the pathological case of an entity LITERALLY named with metacharacters while the
+    // same string is also meant as a wildcard — there literal wins (the safer, narrower choice).
+    //
+    // Filter* return the whole source when names is null/empty; Select* return empty (the action-
+    // cmdlet "no -Name => no-op" semantics, mirroring SelectByWildcards). *Any take several
+    // selectors (e.g. a User's UserName and EmailAddress) and match if any projection matches.
+    // Results keep source order with no duplicates.
+    private static Func<T, bool> BuildNameMatcher<T>(
+        ICollection<T> list,
+        IReadOnlyList<Func<T?, string?>> selectors,
+        string[] names)
     {
-        if (names is null || names.Length == 0) return source;
-
-        var list = source as ICollection<T> ?? source.ToList();
         var literals = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var wildcards = new List<WildcardPattern>();
         foreach (var name in names)
         {
             if (name is null) continue;
-            bool hasLiteral = list.Any(item => string.Equals(selector(item), name, StringComparison.OrdinalIgnoreCase));
+            bool hasLiteral = list.Any(item => selectors.Any(sel =>
+                string.Equals(sel(item), name, StringComparison.OrdinalIgnoreCase)));
             if (hasLiteral)
             {
                 literals.Add(name);
@@ -282,12 +284,55 @@ internal static class OrchCollectionExtensions
             }
         }
 
-        return list.Where(item =>
+        return item => selectors.Any(sel =>
         {
-            var name = selector(item);
-            if (name is null) return false;
-            return literals.Contains(name) || wildcards.Any(p => p.IsMatch(name));
+            var name = sel(item);
+            return name is not null && (literals.Contains(name) || wildcards.Any(p => p.IsMatch(name)));
         });
+    }
+
+    // null/empty names => all source.
+    public static IEnumerable<T> FilterByNames<T>(
+        this IEnumerable<T> source,
+        Func<T?, string?> selector,
+        string[]? names)
+    {
+        if (names is null || names.Length == 0) return source;
+        var list = source as ICollection<T> ?? source.ToList();
+        return list.Where(BuildNameMatcher(list, [selector], names));
+    }
+
+    // Multi-selector FilterByNames (e.g. UserName OR EmailAddress). null/empty names => all source.
+    public static IEnumerable<T> FilterByNamesAny<T>(
+        this IEnumerable<T> source,
+        IReadOnlyList<Func<T?, string?>> selectors,
+        string[]? names)
+    {
+        if (names is null || names.Length == 0) return source;
+        var list = source as ICollection<T> ?? source.ToList();
+        return list.Where(BuildNameMatcher(list, selectors, names));
+    }
+
+    // null/empty names => empty (action-cmdlet no-op semantics).
+    public static IEnumerable<T> SelectByNames<T>(
+        this IEnumerable<T> source,
+        Func<T?, string?> selector,
+        string[]? names)
+    {
+        if (names is null || names.Length == 0) return [];
+        var list = source as ICollection<T> ?? source.ToList();
+        return list.Where(BuildNameMatcher(list, [selector], names));
+    }
+
+    // Multi-selector SelectByNames. null/empty names => empty.
+    public static IEnumerable<T> SelectByNamesAny<T>(
+        this IEnumerable<T> source,
+        IReadOnlyList<Func<T?, string?>> selectors,
+        string[]? names)
+    {
+        if (names is null || names.Length == 0) return [];
+        var list = source as ICollection<T> ?? source.ToList();
+        return list.Where(BuildNameMatcher(list, selectors, names));
     }
 
     /// <summary>
