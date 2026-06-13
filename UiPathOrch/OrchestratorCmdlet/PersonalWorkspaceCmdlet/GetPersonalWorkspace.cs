@@ -59,7 +59,6 @@ public class GetPersonalWorkspaceCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
-        var wpName = Name.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
@@ -75,7 +74,7 @@ public class GetPersonalWorkspaceCmdlet : OrchestratorPSCmdlet
                 if (wss is null) continue;
 
                 WriteObject(wss
-                    .FilterByWildcards(ws => ws?.Name, wpName)
+                    .FilterByNames(ws => ws?.Name, Name)
                     .OrderBy(ws => ws.Name),
                     true);
             }

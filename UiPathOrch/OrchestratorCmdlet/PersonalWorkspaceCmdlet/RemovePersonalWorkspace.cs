@@ -108,9 +108,6 @@ public class RemovePersonalWorkspaceCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        var wpName = Name.ConvertToWildcardPatternList();
-        var wpOwnerName = OwnerName.ConvertToWildcardPatternList();
-
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
@@ -128,8 +125,8 @@ public class RemovePersonalWorkspaceCmdlet : OrchestratorPSCmdlet
 
                 foreach (var ws in wss
                     .Where(ws => ws is not null && ws.Id is not null)
-                    .FilterByWildcards(ws => ws!.Name, wpName)
-                    .FilterByWildcards(ws => ws!.OwnerName, wpOwnerName)
+                    .FilterByNames(ws => ws!.Name, Name)
+                    .FilterByNames(ws => ws!.OwnerName, OwnerName)
                     .OrderBy(ws => ws.OwnerName))
                 {
                     if (ShouldProcess(ws.GetPSPath(), "Remove PersonalWorkspace"))
