@@ -191,7 +191,7 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
                                 RobotId = r.Id
                             })
                             .OrderBy(r => r.UserName)
-                            .ToList();
+                            .ToArray();
                     }
                     dirty = true;
                 }

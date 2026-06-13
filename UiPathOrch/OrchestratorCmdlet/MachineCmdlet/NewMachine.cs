@@ -152,7 +152,7 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
                             TestAutomationSlots = TestAutomationSlots,
                             AutomationType = AutomationType,
                             TargetFramework = TargetFramework,
-                            RobotUsers = lstRobotUsers
+                            RobotUsers = lstRobotUsers?.ToArray()
                         };
 
                         machine.AssignTags(Tags, (m, v) => m.Tags = v);

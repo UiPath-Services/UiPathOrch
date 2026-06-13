@@ -732,35 +732,15 @@ public class UpdateInfo
 
 }
 
-public class ExtendedMachine
+// ExtendedMachineDto = MachineDto + UpdateInfo (swagger allOf). Inherit the shared MachineDto
+// surface from Machine instead of re-declaring it: the old hand-copied field list had drifted
+// stale, missing HostingSlots / AppTestSlots / PerformanceTestSlots / ServerlessLicensingModel
+// that Machine already carries. Only Path (UiPathOrch-added) and UpdateInfo are extra here.
+public class ExtendedMachine : Machine
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
-    public long? Id { get; set; }
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? Type { get; set; }
-    public string? LicenseKey { get; set; } // Guid
-    public string? ClientSecret { get; set; }
-    public string? Scope { get; set; }
-    public int? NonProductionSlots { get; set; }
-    public int? UnattendedSlots { get; set; }
-    public int? HeadlessSlots { get; set; }
-    public int? TestAutomationSlots { get; set; }
-    public int? AutomationCloudSlots { get; set; }
-    public int? AutomationCloudTestAutomationSlots { get; set; }
-    public string? Key { get; set; }
-    public string? EndpointDetectionStatus { get; set; }
-    public MachinesRobotVersion[]? RobotVersions { get; set; }
-    public List<RobotUser>? RobotUsers { get; set; }
-    public string? AutomationType { get; set; }
-    public string? TargetFramework { get; set; }
-    public UpdatePolicy? UpdatePolicy { get; set; }
-    public Tag[]? Tags { get; set; }
-    public MaintenanceWindow? MaintenanceWindow { get; set; }
-    public MachineVpnSettings? VpnSettings { get; set; }
     public UpdateInfo? UpdateInfo { get; set; }
-
 }
 
 // CreatedMachine // added by UiPathOrch
@@ -1404,6 +1384,8 @@ public class Machine
     public int? TestAutomationSlots { get; set; } // integer with format int32
     public int? HostingSlots { get; set; } // added in V19.0
     public int? AppTestSlots { get; set; } // added in V19.0
+    public int? PerformanceTestSlots { get; set; } // added in V20.0
+    public int? AgentSlots { get; set; } // returned by live API (not in v20.0 swagger yet)
     public int? AutomationCloudSlots { get; set; } // integer with format int32
     public int? AutomationCloudTestAutomationSlots { get; set; } // integer with format int32
 
@@ -1430,6 +1412,11 @@ public class Machine
     public Tag[]? Tags { get; set; } // Array of TagDto
     public MaintenanceWindow? MaintenanceWindow { get; set; } // Reference to MaintenanceWindowDto
     public MachineVpnSettings? VpnSettings { get; set; } // Reference to MachineVpnSettingsDto
+
+    // TODO: MachineSettings — the live /odata/Machines API returns this field, but it is absent from
+    // the v20.0 swagger, null on every accessible machine, and declared without a $Type in OData
+    // $metadata (so its shape is unverified). Add a typed property once a non-null sample or a
+    // swagger definition reveals the actual structure.
 }
 
 // SimpleReleaseDto

@@ -129,7 +129,7 @@ public class CopyMachineCmdlet : OrchestratorPSCmdlet
                                         }
                                     }
                                 }
-                                newMachine.RobotUsers = robotUsers;
+                                newMachine.RobotUsers = robotUsers.ToArray();
                             }
 
                             var addedMachine = dstDrive.OrchAPISession.AddMachine(newMachine);
