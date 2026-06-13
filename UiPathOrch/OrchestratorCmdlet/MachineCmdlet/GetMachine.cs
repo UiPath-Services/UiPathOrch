@@ -100,8 +100,6 @@ public class GetMachineCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
-        var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
-
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
@@ -121,7 +119,7 @@ public class GetMachineCmdlet : OrchestratorPSCmdlet
                 var drive = result.Source;
 
                 var filteredMachines = machines
-                        .FilterByWildcards(m => m?.Name, wpName)
+                        .FilterByNames(m => m?.Name, Name)
                         .OrderBy(m => m.Name);
 
                 if (writer is not null)

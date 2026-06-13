@@ -24,8 +24,6 @@ public class GetWebhookEventTypeCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
-        var wpName = Name?.Select(n => new WildcardPattern(PathTools.UnescapePSText(n), WildcardOptions.IgnoreCase)).ToList();
-
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
@@ -40,7 +38,7 @@ public class GetWebhookEventTypeCmdlet : OrchestratorPSCmdlet
                 if (eventTypes is null) continue;
 
                 WriteObject(eventTypes
-                    .FilterByWildcards(e => e?.Name, wpName)
+                    .FilterByNames(e => e?.Name, Name)
                     .OrderBy(e => e.Group).ThenBy(e => e.Name),
                     true);
             }
