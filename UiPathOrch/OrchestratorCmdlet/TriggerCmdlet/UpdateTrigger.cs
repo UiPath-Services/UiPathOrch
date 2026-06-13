@@ -199,7 +199,6 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
         int? specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
 
         // CSV export joins ExecutorRobots into one comma-separated cell; split it (honoring escaped
@@ -223,7 +222,7 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
             }
             if (triggers is null) continue;
 
-            var targetTriggers = triggers.SelectByWildcards(t => t?.Name, wpName).OrderBy(t => t.Name);
+            var targetTriggers = triggers.SelectByNames(t => t?.Name, Name).OrderBy(t => t.Name);
 
             foreach (var trigger in targetTriggers.WithCancellation(cancelHandler.Token))
             {

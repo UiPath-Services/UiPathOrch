@@ -324,7 +324,6 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         SpecificPriorityValue ??= ConvertPriorityToSpecificPriorityValue(Priority);
 
@@ -343,7 +342,7 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
             }
             if (processes is null) continue;
 
-            var targetProcesses = processes.SelectByWildcards(p => p?.Name, wpName).OrderBy(p => p.Name);
+            var targetProcesses = processes.SelectByNames(p => p?.Name, Name).OrderBy(p => p.Name);
 
             // ReleasesDetailed.Get() must be called before entering the iteration loop.
             // (Calling it inside the loop would break the iteration.)
