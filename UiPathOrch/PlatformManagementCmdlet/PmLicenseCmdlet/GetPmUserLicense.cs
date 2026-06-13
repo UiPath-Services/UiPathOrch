@@ -167,8 +167,6 @@ public class GetPmUserLicenseCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
 
-        var wpName = Name.ConvertToWildcardPatternList();
-        var wpEmail = Email.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
@@ -191,8 +189,8 @@ public class GetPmUserLicenseCmdlet : OrchestratorPSCmdlet
                 if (entities is null) continue;
 
                 var targetEntities = entities
-                    .FilterByWildcards(u => u?.name, wpName)
-                    .FilterByWildcards(u => u?.email, wpEmail)
+                    .FilterByNames(u => u?.name, Name)
+                    .FilterByNames(u => u?.email, Email)
                     .OrderBy(u => u?.name);
 
                 if (writer is null)

@@ -136,8 +136,6 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
-        var wpGroupName = GroupName.ConvertToWildcardPatternList();
-        var wpUserName = UserName.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
@@ -158,7 +156,7 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
                 drive => drive.NameColonSeparator,
                 drive => (object)drive,
                 drive => drive.PmLicensedGroups.Get()
-                    .FilterByWildcards(g => g?.name, wpGroupName)
+                    .FilterByNames(g => g?.name, GroupName)
                     .OrderBy(g => g?.name)
                     .Select(group => (drive, group)),
                 t => t.group.GetPSPath(t.drive.NameColonSeparator),
@@ -175,7 +173,7 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
 
                     var (drive, group) = task.Source;
                     var targetEntities = entities
-                        .FilterByWildcards(u => u?.name, wpUserName)
+                        .FilterByNames(u => u?.name, UserName)
                         .OrderBy(u => u?.name);
 
                     string pathGroupName = System.IO.Path.Combine(drive.NameColonSeparator, group?.name ?? "");
@@ -213,7 +211,7 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
                     if (fetched is null) continue;
                     var drive = poolResult.Source;
                     var targetGroups = fetched
-                        .FilterByWildcards(g => g?.name, wpGroupName)
+                        .FilterByNames(g => g?.name, GroupName)
                         .OrderBy(g => g?.name);
 
                     if (writer is null)
