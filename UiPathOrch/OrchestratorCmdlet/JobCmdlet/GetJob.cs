@@ -160,9 +160,8 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
         #region ReleaseName
         if (ReleaseName is not null && ReleaseName.Length > 0 && !ReleaseName.Any(p => p == "*"))
         {
-            var wpProcess = ReleaseName.ConvertToWildcardPatternList();
             var releases = drive.Releases.Get(folder);
-            var targetReleases = releases.SelectByWildcards(r => r?.Name, wpProcess);
+            var targetReleases = releases.SelectByNames(r => r?.Name, ReleaseName);
             if (!targetReleases.Any()) return "null";
             var processes = new List<string>();
             var visitedProcessIds = new HashSet<Int64>();
