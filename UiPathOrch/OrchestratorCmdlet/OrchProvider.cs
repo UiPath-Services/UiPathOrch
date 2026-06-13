@@ -140,7 +140,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
     protected (OrchDriveInfo?, Folder?) ExtractOrchDriveAndFolder(string path)
     {
         string driveName = OrchDriveInfo.ExtractDriveName(path);
-        OrchDriveInfo drive = SessionState.Drive.Get(driveName) as OrchDriveInfo;
+        OrchDriveInfo? drive = SessionState.Drive.Get(driveName) as OrchDriveInfo;
         if (drive is null)
         {
             return (null, null);
@@ -237,7 +237,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
             }
             else
             {
-                string lowerScope = drive.Scope?.ToLower() ?? "";
+                string lowerScope = drive.Scope?.ToLowerInvariant() ?? "";
 
                 if (lowerScope.Contains("or."))
                 {
@@ -764,18 +764,18 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
                 string psPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName!);
                 string psPathEscaped = drive.NameColon + PathTools.EscapePSText2(psPath);
 
+                // A folder with the same name as a personal workspace may exist; suppress
+                // duplicate names on BOTH paths so `dir` output and an exported CSV stay
+                // consistent (duplicate CSV rows would also collide on Import-Csv | New-Item).
+                if (!dupCheck.Add(psPathEscaped))
+                {
+                    WriteWarning($"The folder name '{folder.GetPSPath()}' (Id = {folder.Id}) is duplicated. This folder won't be listed.");
+                    continue;
+                }
+
                 if (string.IsNullOrEmpty(parameters?.ExportCsv))
                 {
-                    // A folder with the same name as a personal workspace may exist; to keep
-                    // tab-completion and dir output predictable, suppress duplicate names.
-                    if (dupCheck.Add(psPathEscaped))
-                    {
-                        WriteItemObject(folder, psPathEscaped, true);
-                    }
-                    else
-                    {
-                        WriteWarning($"The folder name '{folder.GetPSPath()}' (Id = {folder.Id}) is duplicated. This folder won't be listed.");
-                    }
+                    WriteItemObject(folder, psPathEscaped, true);
                 }
                 else
                 {
@@ -799,8 +799,14 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
 
         if (!string.IsNullOrEmpty(parameters?.ExportCsv))
         {
-            string csvPath = ExportCsvFile(drive, parameters.ExportCsv, parameters.CsvEncoding, csvOutput!);
-            WriteWarning($"CSV has been exported as '{csvPath}'.");
+            // csvOutput stays null when nothing matched (e.g. an empty folder). Export a
+            // header-only CSV in that case instead of NRE-ing inside ExportCsvFile's Where().
+            string? csvPath = ExportCsvFile(drive, parameters.ExportCsv, parameters.CsvEncoding,
+                csvOutput ?? Enumerable.Empty<Folder>());
+            if (csvPath is not null)
+            {
+                WriteWarning($"CSV has been exported as '{csvPath}'.");
+            }
         }
     }
 
@@ -845,7 +851,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
     // GetItem only escapes `* ?` and predates this; matching IT here would be the wrong target.)
     protected override void GetChildNames(string path, ReturnContainers returnContainers)
     {
-        OrchDriveInfo drive = GetOrchDriveInfo(path);
+        OrchDriveInfo? drive = GetOrchDriveInfo(path);
         if (drive is null)
         {
             return;
@@ -1149,12 +1155,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
         }
     }
 
-    // Best-effort one-line summary of a folder's contents for the deletion confirmation, in the
-    // spirit of the Orchestrator web delete dialog. Returns null when the folder is empty (no
-    // subfolders and no counted resources) so the caller skips the prompt. Counts are best-effort:
-    // a resource type that can't be read (permissions, unsupported API version) is skipped rather
-    // than blocking deletion. Only the folder's direct resources are counted; deleting the folder
-    // also removes everything in its subfolders.
     // Best-effort summary of a folder's contained RESOURCES for the deletion confirmation, in the
     // spirit of the Orchestrator web delete dialog. Subfolders are intentionally not counted here:
     // this is only consulted for folders with no subfolders (folders that have subfolders take
