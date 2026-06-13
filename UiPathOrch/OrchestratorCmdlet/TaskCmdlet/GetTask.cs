@@ -39,7 +39,6 @@ public class GetTaskCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpTitle = Title.ConvertToWildcardPatternList();
         var wpStatus = Status.ConvertToWildcardPatternList();
         var wpPriority = Priority.ConvertToWildcardPatternList();
 
@@ -57,7 +56,7 @@ public class GetTaskCmdlet : OrchestratorPSCmdlet
                 if (tasks is null) continue;
 
                 WriteObject(tasks
-                    .FilterByWildcards(t => t?.Title, wpTitle)
+                    .FilterByNames(t => t?.Title, Title)
                     .FilterByWildcards(t => t?.Status, wpStatus)
                     .FilterByWildcards(t => t?.Priority, wpPriority)
                     .OrderByDescending(t => t.CreationTime),

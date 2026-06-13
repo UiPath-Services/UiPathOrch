@@ -39,7 +39,6 @@ class GetTmTestExecutionResultCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         // First retrieve TmTestExecutions to build a list of (drive, project, testExecution)
         var testExecutionsList = new List<(OrchTmDriveInfo drive, Entities.TmProject project, Entities.TmTestExecution testExecution)>();
@@ -48,7 +47,7 @@ class GetTmTestExecutionResultCmdlet : OrchestratorPSCmdlet
             try
             {
                 var testExecutions = drive.TmTestExecutions.Get(project);
-                foreach (var te in testExecutions.FilterByWildcards(te => te?.name, wpName))
+                foreach (var te in testExecutions.FilterByNames(te => te?.name, Name))
                 {
                     testExecutionsList.Add((drive, project, te));
                 }
@@ -87,7 +86,7 @@ class GetTmTestExecutionResultCmdlet : OrchestratorPSCmdlet
         //    try
         //    {
         //        var testExecutions = drive.TmTestExecutions.Get(project);
-        //        foreach (var testExecution in testExecutions.FilterByWildcards(te => te?.name, wpName))
+        //        foreach (var testExecution in testExecutions.FilterByNames(te => te?.name, Name))
         //        {
         //            var results = drive.TmTestExecutionResults.Fetch(project, testExecution.id!);
         //            WriteObject(results, true);

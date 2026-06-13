@@ -69,7 +69,6 @@ public class GetRoleCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
-        var wpName = Name.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
@@ -80,7 +79,7 @@ public class GetRoleCmdlet : OrchestratorPSCmdlet
                 drive => drive.NameColonSeparator,
                 drive => drive,
                 drive => drive.Roles.Get()
-                    .FilterByWildcards(role => role?.Name, wpName)
+                    .FilterByNames(role => role?.Name, Name)
                     .OrderByDescending(role => role.Type)
                     .ThenBy(role => role.Name)
                     .ToList());
@@ -111,7 +110,7 @@ public class GetRoleCmdlet : OrchestratorPSCmdlet
             {
                 var output = new List<OrchRolePermissionExpanded>();
                 foreach (var role in drive.Roles.Get()
-                    .FilterByWildcards(role => role?.Name, wpName)
+                    .FilterByNames(role => role?.Name, Name)
                     .OrderByDescending(role => role.Type)
                     .ThenBy(role => role.Name))
                 {
