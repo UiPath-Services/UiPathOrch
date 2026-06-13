@@ -182,7 +182,6 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(DifferencePath);
 
-        var wpName = Name.ConvertToWildcardPatternList();
         var wpValueType = ValueType.ConvertToWildcardPatternList();
 
         HashSet<string>? only = null;
@@ -207,11 +206,11 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
 
         if (!string.IsNullOrEmpty(DifferenceName))
         {
-            CompareBroadcast(srcDrive, srcDrivesFolders, dstDrive, dstRootFolder, wpName, wpValueType, only, compareUserValues, userMapping, cancelHandler);
+            CompareBroadcast(srcDrive, srcDrivesFolders, dstDrive, dstRootFolder, Name, wpValueType, only, compareUserValues, userMapping, cancelHandler);
         }
         else
         {
-            CompareByName(srcDrive, srcRootFolder, srcDrivesFolders, dstDrive, dstRootFolder, wpName, wpValueType, only, compareUserValues, userMapping, cancelHandler);
+            CompareByName(srcDrive, srcRootFolder, srcDrivesFolders, dstDrive, dstRootFolder, Name, wpValueType, only, compareUserValues, userMapping, cancelHandler);
         }
     }
 
@@ -220,7 +219,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
         OrchDriveInfo srcDrive,
         List<(OrchDriveInfo drive, Folder folder)> srcDrivesFolders,
         OrchDriveInfo dstDrive, Folder dstRootFolder,
-        List<WildcardPattern>? wpName, List<WildcardPattern>? wpValueType,
+        string[]? nameFilter, List<WildcardPattern>? wpValueType,
         HashSet<string>? only, bool compareUserValues, Dictionary<string, string>? userMapping,
         ConsoleCancelHandler cancelHandler)
     {
@@ -259,7 +258,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
             {
                 refAssets = srcDrive.Assets.Get(srcFolder)
                     .FilterByWildcards(a => a?.ValueType, wpValueType)
-                    .FilterByWildcards(a => a?.Name, wpName);
+                    .FilterByNames(a => a?.Name, nameFilter);
             }
             catch (Exception ex)
             {
@@ -280,7 +279,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
         OrchDriveInfo srcDrive, Folder srcRootFolder,
         List<(OrchDriveInfo drive, Folder folder)> srcDrivesFolders,
         OrchDriveInfo dstDrive, Folder dstRootFolder,
-        List<WildcardPattern>? wpName, List<WildcardPattern>? wpValueType,
+        string[]? nameFilter, List<WildcardPattern>? wpValueType,
         HashSet<string>? only, bool compareUserValues, Dictionary<string, string>? userMapping,
         ConsoleCancelHandler cancelHandler)
     {
@@ -291,7 +290,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
             {
                 refAssets = srcDrive.Assets.Get(srcFolder)
                     .FilterByWildcards(a => a?.ValueType, wpValueType)
-                    .FilterByWildcards(a => a?.Name, wpName)
+                    .FilterByNames(a => a?.Name, nameFilter)
                     .ToList();
             }
             catch (Exception ex)
@@ -311,7 +310,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
                 {
                     foreach (var a in dstDrive.Assets.Get(dstFolder)
                         .FilterByWildcards(x => x?.ValueType, wpValueType)
-                        .FilterByWildcards(x => x?.Name, wpName))
+                        .FilterByNames(x => x?.Name, nameFilter))
                     {
                         if (a?.Name is { } n) diffByName[n] = a;
                     }

@@ -85,7 +85,7 @@ public class CompareMachineCmdlet : OrchestratorPSCmdlet
             EffectivePath(Path, LiteralPath),
             DifferencePath,
             DifferenceName,
-            Name.ConvertToWildcardPatternList(),
+            Name,
             IncludeEqual.IsPresent,
             only,
             drive => drive.Machines.Get(),

@@ -77,7 +77,7 @@ public class CompareTestSetScheduleCmdlet : OrchestratorPSCmdlet
             EffectivePath(Path, LiteralPath),
             DifferencePath,
             DifferenceName,
-            Name.ConvertToWildcardPatternList(),
+            Name,
             Recurse.IsPresent, Depth, IncludeEqual.IsPresent,
             only,
             (drive, folder) => drive.TestSetSchedules.Get(folder),

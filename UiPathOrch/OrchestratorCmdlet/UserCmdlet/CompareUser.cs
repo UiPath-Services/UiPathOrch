@@ -99,7 +99,7 @@ public class CompareUserCmdlet : OrchestratorPSCmdlet
             EffectivePath(Path, LiteralPath),
             DifferencePath,
             DifferenceName,
-            Name.ConvertToWildcardPatternList(),
+            Name,
             IncludeEqual.IsPresent,
             only,
             drive => drive.Users.Get(),

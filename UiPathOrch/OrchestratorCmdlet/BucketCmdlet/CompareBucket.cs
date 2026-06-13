@@ -86,7 +86,7 @@ public class CompareBucketCmdlet : OrchestratorPSCmdlet
             EffectivePath(Path, LiteralPath),
             DifferencePath,
             DifferenceName,
-            Name.ConvertToWildcardPatternList(),
+            Name,
             Recurse.IsPresent, Depth, IncludeEqual.IsPresent,
             only,
             (drive, folder) => drive.Buckets.Get(folder),

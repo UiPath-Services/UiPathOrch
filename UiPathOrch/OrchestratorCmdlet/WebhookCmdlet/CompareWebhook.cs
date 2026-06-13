@@ -79,7 +79,7 @@ public class CompareWebhookCmdlet : OrchestratorPSCmdlet
             EffectivePath(Path, LiteralPath),
             DifferencePath,
             DifferenceName,
-            Name.ConvertToWildcardPatternList(),
+            Name,
             IncludeEqual.IsPresent,
             only,
             drive => drive.Webhooks.Get(),

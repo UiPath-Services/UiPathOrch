@@ -69,7 +69,7 @@ public class CompareCalendarCmdlet : OrchestratorPSCmdlet
             EffectivePath(Path, LiteralPath),
             DifferencePath,
             DifferenceName,
-            Name.ConvertToWildcardPatternList(),
+            Name,
             IncludeEqual.IsPresent,
             only,
             // The list accessor (drive.Calendars.Get()) returns only Name/Id -- TimeZoneId and

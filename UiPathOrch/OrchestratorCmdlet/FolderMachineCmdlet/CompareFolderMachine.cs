@@ -80,7 +80,7 @@ public class CompareFolderMachineCmdlet : OrchestratorPSCmdlet
             EffectivePath(Path, LiteralPath),
             DifferencePath,
             DifferenceName,
-            Name.ConvertToWildcardPatternList(),
+            Name,
             Recurse.IsPresent, Depth, IncludeEqual.IsPresent,
             only,
             (drive, folder) => drive.FolderMachinesAssigned.Get(folder),
