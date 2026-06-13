@@ -62,8 +62,6 @@ public class GetClassicEnvironmentCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-
         using var results = OrchThreadPool.RunForEach(
             drivesFolders.Where(df => df.folder.ProvisionType == "Manual"),
             df => df.folder.GetPSPath(),
@@ -79,7 +77,7 @@ public class GetClassicEnvironmentCmdlet : OrchestratorPSCmdlet
                 if (env is null) continue;
 
                 WriteObject(env
-                    .FilterByWildcards(s => s?.Name, wpName)
+                    .FilterByNames(s => s?.Name, Name)
                     .OrderBy(s => s.Name),
                     true);
             }

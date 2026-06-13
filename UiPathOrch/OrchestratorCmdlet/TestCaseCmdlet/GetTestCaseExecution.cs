@@ -121,7 +121,6 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
         ulong first = First ?? ulong.MaxValue;
 
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         // If no parameters are specified, return the cache contents
         bool bOutCache = (
@@ -142,7 +141,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
                 if (cached is not null)
                 {
                     WriteObject(cached
-                        .FilterByWildcards(e => e?.EntryPointPath, wpName)
+                        .FilterByNames(e => e?.EntryPointPath, Name)
                         .OrderBy(e => e.TestSetExecutionId)
                         .ThenBy(e => e.EntryPointPath),
                         true);
@@ -172,7 +171,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
                 var entities = drive.GetTestCaseExecutions(folder, filter, skip, first);
 
                 WriteObject(entities
-                    .FilterByWildcards(e => e?.EntryPointPath, wpName)
+                    .FilterByNames(e => e?.EntryPointPath, Name)
                     .OrderBy(e => e.TestSetExecutionId)
                     .ThenBy(e => e.EntryPointPath),
                     true);
@@ -202,7 +201,6 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
             return; // Already processed
         }
 
-        var wpName = Name.ConvertToWildcardPatternList();
 
         try
         {
@@ -210,7 +208,7 @@ public class GetTestCaseExecutionCmdlet : OrchestratorPSCmdlet
             var entities = drive.GetTestCaseExecutions(folder, filter, 0, ulong.MaxValue);
 
             WriteObject(entities
-                .FilterByWildcards(e => e?.EntryPointPath, wpName)
+                .FilterByNames(e => e?.EntryPointPath, Name)
                 .OrderBy(e => e.EntryPointPath),
                 true);
         }
