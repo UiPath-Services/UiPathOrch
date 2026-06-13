@@ -132,9 +132,6 @@ public class RemoveFolderUserCmdlet : OrchestratorPSCmdlet
 
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
 
-        var wpUserName = UserName.ConvertToWildcardPatternList();
-        var wpFullName = FullName.ConvertToWildcardPatternList();
-
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
@@ -147,8 +144,8 @@ public class RemoveFolderUserCmdlet : OrchestratorPSCmdlet
                 var filteredUsers = folderUsers
                     // -UserName matches tenant UserName OR EmailAddress (B2B);
                     // see FilterFolderUsersByUserName.
-                    .FilterFolderUsersByUserName(drive, wpUserName)
-                    .FilterByWildcards(fu => fu?.UserEntity?.FullName, wpFullName);
+                    .FilterFolderUsersByUserName(drive, UserName)
+                    .FilterByNames(fu => fu?.UserEntity?.FullName, FullName);
 
                 if (NoMatchWarning.IsPresent && !filteredUsers.Any())
                 {

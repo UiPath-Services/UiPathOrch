@@ -181,8 +181,6 @@ public class GetFolderUserCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpUserName = UserName.ConvertToWildcardPatternList();
-        var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
@@ -211,8 +209,8 @@ public class GetFolderUserCmdlet : OrchestratorPSCmdlet
                     // Match -UserName against tenant UserName OR EmailAddress
                     // (B2B aware); UserEntity itself lacks EmailAddress, so we
                     // resolve via drive.Users.Get() inside the helper.
-                    .FilterFolderUsersByUserName(drive, wpUserName)
-                    .FilterByWildcards(u => u?.UserEntity?.FullName, wpFullName)
+                    .FilterFolderUsersByUserName(drive, UserName)
+                    .FilterByNames(u => u?.UserEntity?.FullName, FullName)
                     .FilterByWildcards(u => u?.UserEntity?.Type, wpType)
                     .OrderBy(u => u.UserEntity!.Type!)
                     .ThenBy(u => u.UserEntity!.UserName!)

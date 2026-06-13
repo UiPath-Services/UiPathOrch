@@ -206,8 +206,6 @@ public class AddRoleToFolderUserCmdlet : OrchestratorPSCmdlet
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
 
-        var wpFullName = FullName.ConvertToWildcardPatternList();
-        var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
         // The first element may come from CSV input, so split the first element by commas
@@ -236,10 +234,10 @@ public class AddRoleToFolderUserCmdlet : OrchestratorPSCmdlet
 
                 // Extract the users to be edited
                 List<UserRoles> editingUsers = existingUsers!
-                    .FilterByWildcards(eu => eu?.UserEntity?.FullName, wpFullName)
+                    .FilterByNames(eu => eu?.UserEntity?.FullName, FullName)
                     // -UserName matches tenant UserName OR EmailAddress (B2B);
                     // see FilterFolderUsersByUserName.
-                    .FilterFolderUsersByUserName(drive, wpUserName)
+                    .FilterFolderUsersByUserName(drive, UserName)
                     .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
                     .ToList();
 

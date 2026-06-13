@@ -97,7 +97,6 @@ public class CopyFolderUserCmdlet : OrchestratorPSCmdlet
         // Do nothing if source and destination are the same
         if (srcRootFolder == dstRootFolder) return;
 
-        var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
         using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, "Copying folder users...");
@@ -112,7 +111,7 @@ public class CopyFolderUserCmdlet : OrchestratorPSCmdlet
                 var srcEntities = srcDrive.FolderUsersWithNoInherited.Get(srcFolder)
                     // -UserName matches tenant UserName OR EmailAddress (B2B);
                     // see FilterFolderUsersByUserName.
-                    .FilterFolderUsersByUserName(srcDrive, wpUserName)
+                    .FilterFolderUsersByUserName(srcDrive, UserName)
                     .FilterByWildcards(u => u?.UserEntity?.Type, wpType);
                 if (!srcEntities.Any()) continue;
             }
@@ -128,7 +127,7 @@ public class CopyFolderUserCmdlet : OrchestratorPSCmdlet
             try
             {
                 Core.OrchProvider.CopyFolderUsers(this,
-                    srcDrive, srcFolder, wpUserName, wpType,
+                    srcDrive, srcFolder, UserName, wpType,
                     dstDrive, dstFolder, reporter,
                     false, cancelHandler.Token, userMapping);
                 dstDrive.FolderUsersWithInherited.ClearCache();

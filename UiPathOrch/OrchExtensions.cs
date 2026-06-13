@@ -362,25 +362,27 @@ internal static class OrchCollectionExtensions
     }
 
     /// <summary>
-    /// Filter a Folder <c>UserRoles</c> list by <c>-UserName</c> wildcards.
+    /// Filter a Folder <c>UserRoles</c> list by <c>-UserName</c> (literal-first).
     /// Matching considers both <c>UserName</c> (tenant form) and
     /// <c>EmailAddress</c> (canonical) by indirecting through
     /// <c>drive.Users.Get()</c> — the Folder users API returns
     /// <c>UserEntity</c> without an <c>EmailAddress</c> field, so direct
     /// Folder-level matching can't honor Azure AD B2B guest aliases.
     /// A folder user whose <c>UserEntity.Id</c> has no matching tenant
-    /// user is excluded. Returns the source unchanged when patterns is
-    /// null/empty (= no UserName filter applied).
+    /// user is excluded. Returns the source unchanged when userNames is
+    /// null/empty (= no UserName filter applied). Uses <c>FilterByNamesAny</c>
+    /// so a piped user whose name carries wildcard metacharacters matches
+    /// itself instead of being re-interpreted as a wildcard.
     /// </summary>
     public static IEnumerable<UserRoles> FilterFolderUsersByUserName(
         this IEnumerable<UserRoles> source,
         OrchDriveInfo drive,
-        IReadOnlyList<WildcardPattern>? wpUserName)
+        string[]? userNames)
     {
-        if (wpUserName is null || wpUserName.Count == 0) return source;
+        if (userNames is null || userNames.Length == 0) return source;
         var matchedIds = drive.Users.Get()
-            .Where(u => u.Id is not null &&
-                wpUserName.Any(p => p.IsMatch(u.UserName ?? "") || p.IsMatch(u.EmailAddress ?? "")))
+            .Where(u => u.Id is not null)
+            .FilterByNamesAny([u => u?.UserName, u => u?.EmailAddress], userNames)
             .Select(u => u.Id!.Value)
             .ToHashSet();
         return source.Where(fu =>

@@ -518,7 +518,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyFolderUsers(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpUserName, List<WildcardPattern>? wpType,
+        OrchDriveInfo srcDrive, Folder srcFolder, string[]? userNames, List<WildcardPattern>? wpType,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken,
         Dictionary<string, string>? userMapping = null)
@@ -527,7 +527,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         var srcFolderUsers = srcDrive.FolderUsersWithNoInherited.Get(srcFolder)
             // -UserName matches tenant UserName OR EmailAddress (B2B).
-            .FilterFolderUsersByUserName(srcDrive, wpUserName).ToList();
+            .FilterFolderUsersByUserName(srcDrive, userNames).ToList();
         if (srcFolderUsers.Count == 0)
         {
             return;
@@ -535,7 +535,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         // Get already-assigned users
         var dstFolderUsers = dstDrive.FolderUsersWithNoInherited.Get(newFolder)
-            .FilterFolderUsersByUserName(dstDrive, wpUserName)
+            .FilterFolderUsersByUserName(dstDrive, userNames)
             .FilterByWildcards(u => u?.UserEntity?.Type, wpType).ToList();
 
         string targetFolder = newFolder.GetPSPath();
