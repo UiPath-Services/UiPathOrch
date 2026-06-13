@@ -131,13 +131,11 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
-        var wpName = Name.ConvertToWildcardPatternList();
-
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
             var existingMachines = drive.Machines.Get();
-            var targetMachines = existingMachines.FilterByWildcards(m => m?.Name, wpName);
+            var targetMachines = existingMachines.SelectByNames(m => m?.Name, Name);
 
             foreach (var machine in targetMachines.OrderBy(m => m.Name).WithCancellation(cancelHandler.Token))
             {
