@@ -53,8 +53,6 @@ public class GetUserCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
-        var wpUserName = UserName.ConvertToWildcardPatternList();
-        var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
         // Detail path: triggered by either the deprecated -ExpandDetails switch
@@ -76,7 +74,7 @@ public class GetUserCmdlet : OrchestratorPSCmdlet
             var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
             using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, GetUserDetailCmdlet.CsvHeaders);
 
-            GetUserDetailCmdlet.EmitDetailedUsers(this, drives, wpUserName, wpFullName, wpType, writer);
+            GetUserDetailCmdlet.EmitDetailedUsers(this, drives, UserName, FullName, wpType, writer);
 
             if (!string.IsNullOrEmpty(ExportCsv))
             {
@@ -93,12 +91,12 @@ public class GetUserCmdlet : OrchestratorPSCmdlet
             {
                 var users = drive.Users.Get();
                 var targetUsers = users
-                    .FilterByWildcards(u => u?.FullName, wpFullName)
+                    .FilterByNames(u => u?.FullName, FullName)
                     // Match both UserName (tenant form) and EmailAddress (canonical) —
                     // Azure AD B2B guest users have a mangled tenant UserName that
                     // differs from their EmailAddress, and callers should be able to
                     // pass either form.
-                    .FilterByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], wpUserName)
+                    .FilterByNamesAny([u => u?.UserName, u => u?.EmailAddress], UserName)
                     .FilterByWildcards(u => u?.Type, wpType)
                     .OrderBy(u => u.UserName)
                     .ToList();
