@@ -61,7 +61,6 @@ public abstract class RemoveOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth).ToList();
         var drivesLinks = SessionState.EnumFolders(Link).ToList();
-        var wpName = Name.ConvertToWildcardPatternList();
 
         // Parallel prefetch warms the per-folder entity cache so the foreach
         // below hits the cache instead of issuing serial round-trips.
@@ -96,7 +95,7 @@ public abstract class RemoveOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
             if (sameDriveLinks.Count == 0) continue;
 
             foreach (var entity in entities
-                .FilterByWildcards(e => GetEntityName(e), wpName)
+                .FilterByNames(e => GetEntityName(e), Name)
                 .OrderBy(e => GetEntityName(e)).WithCancellation(cancelHandler.Token))
             {
                 // Batch all targets for this (folder, entity) into a single API call.

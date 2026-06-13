@@ -202,7 +202,6 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
             }
 
             var srcDrivesFolders = SessionState.EnumFolders(paths, Recurse.IsPresent, Depth).ToList();
-            var wpName = names.ConvertToWildcardPatternList();
 
             foreach (var (drive, folder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
             {
@@ -219,7 +218,7 @@ public abstract class MoveOrchEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
                     continue;
                 }
 
-                var matched = entities.FilterByWildcards(e => GetEntityName(e), wpName)
+                var matched = entities.FilterByNames(e => GetEntityName(e), names)
                     .OrderBy(e => GetEntityName(e)).ToList();
                 if (matched.Count == 0) continue;
 

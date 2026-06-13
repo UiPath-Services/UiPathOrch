@@ -131,6 +131,97 @@ public class FilterByWildcardsTests
     }
 }
 
+// FilterByNames is the literal-first matcher behind the destructive cmdlets
+// (Remove-*/Move-*/*-Link). It keys on Name (cross-tenant-stable) and treats a
+// requested name as literal when an entity is named exactly that, falling back to
+// wildcard only when there is no literal hit. These cover the gap it closes: a piped
+// entity whose Name contains wildcard metacharacters ("Sales [EU]") must match itself,
+// not be re-interpreted as a wildcard (which over-matched or threw before).
+public class FilterByNamesTests
+{
+    private static readonly string[] Fruits = ["Apple", "Apricot", "Banana", "Blueberry", "Cherry"];
+
+    [Fact]
+    public void NullNames_ReturnsSourceUnchanged()
+    {
+        string[]? names = null;
+        Assert.Equal(Fruits, Fruits.FilterByNames(s => s, names).ToArray());
+    }
+
+    [Fact]
+    public void EmptyNames_ReturnsSourceUnchanged()
+    {
+        Assert.Equal(Fruits, Fruits.FilterByNames(s => s, Array.Empty<string>()).ToArray());
+    }
+
+    [Fact]
+    public void LiteralName_MatchesExactlyNotPrefix()
+    {
+        var result = Fruits.FilterByNames(s => s, new[] { "Apple" }).ToArray();
+        Assert.Equal(new[] { "Apple" }, result); // not Apricot
+    }
+
+    [Fact]
+    public void CaseInsensitiveLiteral()
+    {
+        Assert.Equal(new[] { "Apple" }, Fruits.FilterByNames(s => s, new[] { "apple" }).ToArray());
+    }
+
+    [Fact]
+    public void NameWithMetacharacters_MatchedLiterallyWhenItExists()
+    {
+        // The core fix: a piped entity literally named with wildcard metacharacters
+        // must match itself, not be re-interpreted as a wildcard.
+        var source = new[] { "Sales E", "Sales U", "Sales [EU]" };
+        var result = source.FilterByNames(s => s, new[] { "Sales [EU]" }).ToArray();
+        Assert.Equal(new[] { "Sales [EU]" }, result); // not "Sales E" / "Sales U"
+    }
+
+    [Fact]
+    public void WildcardIntent_ExpandsWhenNoLiteralMatch()
+    {
+        var result = Fruits.FilterByNames(s => s, new[] { "B*" }).ToArray();
+        Assert.Equal(new[] { "Banana", "Blueberry" }, result);
+    }
+
+    [Fact]
+    public void InvalidPatternWithNoLiteralMatch_NoThrowNoMatch()
+    {
+        // "Z[" is an invalid wildcard pattern AND matches no entity literally. It must
+        // not throw (that would abort the whole removal); it yields nothing.
+        var result = Fruits.FilterByNames(s => s, new[] { "Z[" }).ToArray();
+        Assert.Empty(result);
+    }
+
+    [Fact]
+    public void LiteralMetacharName_ShadowsWildcardIntent_LiteralWins()
+    {
+        // Pathological case: an entity literally named "B*" exists while other entities
+        // would also match "B*" as a wildcard. Literal wins — the narrower, safer choice
+        // for a destructive op. (Only addressable with an explicit literal/wildcard split.)
+        var source = new[] { "B*", "Banana", "Blueberry" };
+        var result = source.FilterByNames(s => s, new[] { "B*" }).ToArray();
+        Assert.Equal(new[] { "B*" }, result);
+    }
+
+    [Fact]
+    public void MixedLiteralAndWildcard_NoDuplicates_SourceOrder()
+    {
+        // "A*" (no literal "A*") expands to Apple/Apricot; "Apple" literal also selects
+        // Apple. Apple appears once and results stay in source order.
+        var result = Fruits.FilterByNames(s => s, new[] { "A*", "Apple" }).ToArray();
+        Assert.Equal(new[] { "Apple", "Apricot" }, result);
+    }
+
+    [Fact]
+    public void NullSelectorEntries_FilteredOut()
+    {
+        var input = new[] { "Apple", null!, "Banana" };
+        var result = input.FilterByNames(s => s, new[] { "*" }).ToArray();
+        Assert.Equal(new[] { "Apple", "Banana" }, result);
+    }
+}
+
 public class SelectByWildcardsTests
 {
     private static readonly string[] Fruits = ["Apple", "Apricot", "Banana", "Cherry"];

@@ -234,6 +234,62 @@ internal static class OrchCollectionExtensions
         return source.Where(item => patterns.Any(pattern => pattern.IsMatch(selector(item))));
     }
 
+    // Literal-first name matching for destructive cmdlets (Remove-* / Move-* / *-Link). A piped
+    // entity's Name can contain PowerShell wildcard metacharacters — e.g. a role literally named
+    // "Sales [EU]" or a folder "test [test]". Treating that as a -Name wildcard either throws on an
+    // invalid pattern or, worse, matches a DIFFERENT entity and acts on the wrong one. This keys on
+    // Name (cross-tenant-stable), never the tenant-local Id, so `Get-X -Path A | Remove-X -Path B`
+    // stays correct across drives.
+    //
+    // Per requested name: if any source entity matches it literally (case-insensitive), select
+    // those (literal); otherwise treat the name as a wildcard (an invalid pattern matches nothing
+    // instead of throwing). So `Get-X | Remove-X` acts on exactly the piped entities, while an
+    // interactive `-Name 'foo*'` (no literal hit) still wildcard-expands. Mirrors FilterByWildcards:
+    // null/empty names => all source; result keeps source order with no duplicates. The only
+    // behavior change vs a pure wildcard is the pathological case of an entity LITERALLY named with
+    // metacharacters while the same string is also meant as a wildcard — there literal wins (the
+    // safer, narrower choice for a destructive op).
+    public static IEnumerable<T> FilterByNames<T>(
+        this IEnumerable<T> source,
+        Func<T?, string?> selector,
+        string[]? names)
+    {
+        if (names is null || names.Length == 0) return source;
+
+        var list = source as ICollection<T> ?? source.ToList();
+        var literals = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var wildcards = new List<WildcardPattern>();
+        foreach (var name in names)
+        {
+            if (name is null) continue;
+            bool hasLiteral = list.Any(item => string.Equals(selector(item), name, StringComparison.OrdinalIgnoreCase));
+            if (hasLiteral)
+            {
+                literals.Add(name);
+            }
+            else
+            {
+                try
+                {
+                    var wp = new WildcardPattern(name, WildcardOptions.IgnoreCase);
+                    wp.IsMatch(string.Empty); // WildcardPattern compiles lazily on first IsMatch, so
+                                              // force it now: an invalid pattern throws here (and is
+                                              // skipped) instead of mid-enumeration where it would
+                                              // abort the whole operation.
+                    wildcards.Add(wp);
+                }
+                catch { /* invalid pattern with no literal match => contributes no matches */ }
+            }
+        }
+
+        return list.Where(item =>
+        {
+            var name = selector(item);
+            if (name is null) return false;
+            return literals.Contains(name) || wildcards.Any(p => p.IsMatch(name));
+        });
+    }
+
     /// <summary>
     /// Multi-selector variant: keep an item if any pattern matches the
     /// projection of any selector. Useful when an entity has several

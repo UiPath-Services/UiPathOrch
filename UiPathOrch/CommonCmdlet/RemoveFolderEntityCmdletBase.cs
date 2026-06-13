@@ -45,7 +45,6 @@ public abstract class RemoveFolderEntityCmdletBase<TEntity> : OrchestratorPSCmdl
         var drivesFolders = ExcludePersonalWorkspace
             ? SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth)
             : SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
         var getName = GetName;
         var getPSPath = GetPSPath;
         var preFilter = PreFilter;
@@ -60,7 +59,7 @@ public abstract class RemoveFolderEntityCmdletBase<TEntity> : OrchestratorPSCmdl
                 if (preFilter is not null) entities = preFilter(entities);
 
                 foreach (var entity in entities
-                    .FilterByWildcards(getName, wpName)
+                    .FilterByNames(getName, Name)
                     .OrderBy(getName).WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(getPSPath(entity), $"Remove {EntityNoun}"))
