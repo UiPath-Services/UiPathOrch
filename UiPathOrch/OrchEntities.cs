@@ -732,6 +732,15 @@ public class UpdateInfo
 
 }
 
+// TODO: CloudTemplateDto is a sibling MachineDto subtype (allOf[MachineDto] + externalPoolKey +
+// hosting) that /odata/Machines can return polymorphically — response rows carry an @odata.type
+// discriminator. It is intentionally not modeled here: in every accessible tenant all rows came back
+// as @odata.type ExtendedMachineDto with no CloudTemplate instance to sample, the v20.0 swagger wires
+// CloudTemplateDto to no endpoint, and GetMachines deserializes every row to ExtendedMachine anyway.
+// If a tenant ever returns CloudTemplate rows, their externalPoolKey/hosting would be silently
+// dropped — model CloudTemplate (or a polymorphic @odata.type-dispatched subtype) once one can be
+// sampled to verify the field shape/casing.
+
 // ExtendedMachineDto = MachineDto + UpdateInfo (swagger allOf). Inherit the shared MachineDto
 // surface from Machine instead of re-declaring it: the old hand-copied field list had drifted
 // stale, missing HostingSlots / AppTestSlots / PerformanceTestSlots / ServerlessLicensingModel
