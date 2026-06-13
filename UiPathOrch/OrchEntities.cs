@@ -1148,33 +1148,14 @@ public class MaintenanceWindow
 }
 
 // MachineFolderDto
-public class MachineFolder
+// MachineFolderDto = MachineDto + folder-assignment flags + UpdateInfo (swagger allOf). Inherit
+// the shared MachineDto surface from Machine instead of re-declaring it (the old hand-copied list
+// had drifted stale, missing the slot/serverless fields Machine now carries). Only Path
+// (UiPathOrch-added), the folder-assignment flags, and UpdateInfo are extra here.
+public class MachineFolder : Machine
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
-    public string? LicenseKey { get; set; }
-    public string? Name { get; set; }
-    public string? Description { get; set; }
-    public string? Type { get; set; }
-    public string? Scope { get; set; }
-    public int? NonProductionSlots { get; set; }
-    public int? UnattendedSlots { get; set; }
-    public int? HeadlessSlots { get; set; }
-    public int? TestAutomationSlots { get; set; }
-    public int? AutomationCloudSlots { get; set; }
-    public int? AutomationCloudTestAutomationSlots { get; set; }
-    public string? Key { get; set; }
-    public string? EndpointDetectionStatus { get; set; }
-    public MachinesRobotVersion[]? RobotVersions { get; set; }
-    public RobotUser[]? RobotUsers { get; set; }
-    public string? AutomationType { get; set; }
-    public string? TargetFramework { get; set; }
-    public UpdatePolicy? UpdatePolicy { get; set; }
-    public string? ClientSecret { get; set; }
-    public Tag[]? Tags { get; set; }
-    public MaintenanceWindow? MaintenanceWindow { get; set; }
-    public MachineVpnSettings? VpnSettings { get; set; }
-    public Int64? Id { get; set; }
     public bool? IsAssignedToFolder { get; set; }
     public bool? HasMachineRobots { get; set; }
     public bool? IsInherited { get; set; }
