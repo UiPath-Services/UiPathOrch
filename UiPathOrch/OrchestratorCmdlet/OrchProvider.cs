@@ -137,24 +137,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
         return SessionState.Drive.Get(driveName) as OrchDriveInfo;
     }
 
-    protected (OrchDriveInfo?, Folder?) ExtractOrchDriveAndFolder(string path)
-    {
-        string driveName = OrchDriveInfo.ExtractDriveName(path);
-        OrchDriveInfo? drive = SessionState.Drive.Get(driveName) as OrchDriveInfo;
-        if (drive is null)
-        {
-            return (null, null);
-        }
-        int colonIndex = path.IndexOf(':');
-        if (colonIndex == -1)
-        {
-            throw new ArgumentException($"Invalid path format: '{path}'. Expected a drive-qualified path (e.g., 'DriveName:\\Path').", nameof(path));
-        }
-        string orchPath = OrchDriveInfo.PSPathToOrchPath(path.Substring(colonIndex + 1));
-        Folder folder = drive.GetFolder(orchPath);
-        return (drive, folder);
-    }
-
     #endregion CmdletProvider overrides
 
     #region DriveCmdletProvider overrides
@@ -575,9 +557,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
     // The ItemExists method does not seem to need to handle wildcards.
     protected override bool ItemExists(string path)
     {
-        //var (drive, folder) = ExtractOrchDriveAndFolder(path);
-        //return folder is not null;
-
         if (path is null)
         {
             return false;
