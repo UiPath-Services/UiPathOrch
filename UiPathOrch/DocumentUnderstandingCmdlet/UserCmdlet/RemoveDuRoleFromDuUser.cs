@@ -96,7 +96,6 @@ public class RemoveDuRoleFromDuUserCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumDuFolders(EffectivePath(Path, LiteralPath), Recurse);
-        var wpName = Name.ConvertToWildcardPatternList();
         //var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpRole = Roles.SplitValuesByUnescapedCommasPreservingEscapes().ConvertToWildcardPatternList();
 
@@ -116,7 +115,7 @@ public class RemoveDuRoleFromDuUserCmdlet : OrchestratorPSCmdlet
                 var (drive, project) = result.Source;
 
                 foreach (var user in entities
-                    .FilterByWildcards(u => u?.Name, wpName)
+                    .FilterByNames(u => u?.Name, Name)
                     //.FilterByWildcards(u => u?.UserName, wpUserName)
                     .OrderBy(u => u.Name))
                 {

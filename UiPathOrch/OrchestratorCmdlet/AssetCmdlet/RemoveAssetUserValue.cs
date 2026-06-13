@@ -122,8 +122,6 @@ public class RemoveAssetUserValueCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-        var wpUserName = UserName.ConvertToWildcardPatternList();
         // When MachineName is not specified, match any (including null — covers user-only UserValues).
         var wpMachineName = MachineName is not null && MachineName.Length > 0
             ? MachineName.ConvertToWildcardPatternList()
@@ -134,7 +132,7 @@ public class RemoveAssetUserValueCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
         {
-            var assets = drive.Assets.Get(folder).FilterByWildcards(a => a?.Name, wpName).ToList();
+            var assets = drive.Assets.Get(folder).FilterByNames(a => a?.Name, Name).ToList();
 
             // Resolve -UserName patterns to a set of tenant User IDs, matching against
             // both UserName (tenant form) and EmailAddress (canonical). The asset's
@@ -143,11 +141,11 @@ public class RemoveAssetUserValueCmdlet : OrchestratorPSCmdlet
             // the caller's target. UserValues carry the stable UserId, so we filter
             // by Id below.
             HashSet<long>? matchedUserIds = null;
-            if (wpUserName is not null && wpUserName.Count > 0)
+            if (UserName is not null && UserName.Length > 0)
             {
                 matchedUserIds = drive.Users.Get()
-                    .Where(u => u.Id is not null &&
-                        wpUserName.Any(p => p.IsMatch(u.UserName ?? "") || p.IsMatch(u.EmailAddress ?? "")))
+                    .Where(u => u.Id is not null)
+                    .FilterByNamesAny([u => u?.UserName, u => u?.EmailAddress], UserName)
                     .Select(u => u.Id!.Value)
                     .ToHashSet();
             }
