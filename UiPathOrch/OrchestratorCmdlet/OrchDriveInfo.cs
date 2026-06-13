@@ -1494,7 +1494,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             });
 
         Calendars = new(this,
-            () => OrchAPISession.GetCalendars() ?? [],
+            OrchAPISession.GetCalendars,
             calendar => calendar.Path = NameColonSeparator);
 
         CalendarsDetailed = new(this,
@@ -1736,19 +1736,19 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         FaultedJobs = new ListCachePerFolder<Job>(
             this,
             folderId => OrchAPISession.GetJobs(folderId,
-                "&$filter=(State%20eq%20%27Faulted%27)", 0, ulong.MaxValue, null, false),
+                "&$filter=(State eq 'Faulted')", 0, ulong.MaxValue, null, false),
             (job, folderPath) => job.Path = folderPath
         );
         SuspendedJobs = new ListCachePerFolder<Job>(
             this,
             folderId => OrchAPISession.GetJobs(folderId,
-                "&$filter=(State%20eq%20%27Suspended%27)", 0, ulong.MaxValue, null, false),
+                "&$filter=(State eq 'Suspended')", 0, ulong.MaxValue, null, false),
             (job, folderPath) => job.Path = folderPath
         );
         StoppableJobs = new ListCachePerFolder<Job>(
             this,
             folderId => OrchAPISession.GetJobs(folderId,
-                "&$filter=((ProcessType%20eq%20%27Process%27)%20and%20((State%20eq%20%27Pending%27)%20or%20(State%20eq%20%27Running%27)%20or%20(State%20eq%20%27Stopping%27)%20or%20(State%20eq%20%27Suspended%27)%20or%20(State%20eq%20%27Resumed%27)))",
+                "&$filter=((ProcessType eq 'Process') and ((State eq 'Pending') or (State eq 'Running') or (State eq 'Stopping') or (State eq 'Suspended') or (State eq 'Resumed')))",
                 0, ulong.MaxValue, null, false),
             (job, folderPath) => job.Path = folderPath
         );
@@ -1957,26 +1957,5 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             return GetFolders().FirstOrDefault(f => f!.Id == folder.ParentId, RootFolder)!;
         }
         return RootFolder!;
-    }
-
-    public Folder? GetParentFolder(string orchPath)
-    {
-        int slashIndex = orchPath.LastIndexOf('/');
-        if (slashIndex == -1)
-        {
-            return RootFolder!;
-        }
-
-        string parentPath = orchPath.Substring(0, slashIndex);
-        return GetFolders().FirstOrDefault(f => f.FullyQualifiedName == parentPath);
-    }
-
-    public Folder? GetCurrentFolder()
-    {
-        if (string.IsNullOrEmpty(CurrentLocation) || CurrentLocation == Path.DirectorySeparatorChar + "")
-        {
-            return null;
-        }
-        return GetFolder(OrchDriveInfo.PSPathToOrchPath(CurrentLocation))!;
     }
 }

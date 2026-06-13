@@ -43,7 +43,7 @@ public class StopTestExecutionCmdlet : OrchestratorPSCmdlet
 
             var results = ParallelResults.GroupBy(drivesFolders, df =>
             {
-                return df.drive.TestSetExecutions.Fetch(df.folder, "&$filter=(((Status%20eq%20%270%27)%20or%20(Status%20eq%20%271%27)))");
+                return df.drive.TestSetExecutions.Fetch(df.folder, "&$filter=(((Status eq '0') or (Status eq '1')))");
             });
 
             foreach (var result in results)

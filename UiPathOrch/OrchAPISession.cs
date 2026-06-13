@@ -1237,7 +1237,7 @@ public partial class OrchAPISession : IDisposable
         // Spaces in OData query values must be percent-encoded; some Orchestrator
         // builds reject the raw space.
         string direction = orderAscending ? "asc" : "desc";
-        string order = $"&$orderby={orderBy}%20{direction}";
+        string order = $"&$orderby={orderBy} {direction}";
 
         // Trailing "&orderby=Id desc" was a non-$-prefixed duplicate that strict
         // Orchestrator builds reject as "Invalid OData query options". The
@@ -1284,12 +1284,12 @@ public partial class OrchAPISession : IDisposable
     public IEnumerable<ExtendedRobot> FindAllRobotsAcrossFolders()
     {
         return GetEnumerable<ExtendedRobot>($"/odata/Robots/UiPath.Server.Configuration.OData.FindAllAcrossFolders", null,
-            "&$filter=Type%20eq%20%272%27%20and%20ProvisionType%20eq%20%271%27&$expand=User");
+            "&$filter=Type eq '2' and ProvisionType eq '1'&$expand=User");
     }
 
     public IEnumerable<SimpleUser> GetReviewers(Int64 folderId)
     {
-        return GetEnumerable<SimpleUser>("/odata/QueueItems/UiPath.Server.Configuration.OData.GetReviewers()", folderId, "&$filter=(Type%20eq%20%27DirectoryUser%27)");
+        return GetEnumerable<SimpleUser>("/odata/QueueItems/UiPath.Server.Configuration.OData.GetReviewers()", folderId, "&$filter=(Type eq 'DirectoryUser')");
     }
 
     public BulkOperationResponseDtoOfFailedQueueItem? BulkAddQueueItem(Int64 folderId, BulkAddQueueItemsRequest payload)
@@ -2133,7 +2133,7 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<Release> ListReleases(Int64 folderId)
     {
-        return GetEnumerable<Release>("/odata/Releases/UiPath.Server.Configuration.OData.ListReleases", folderId, "&$filter=ProcessType%20eq%20%271%27");
+        return GetEnumerable<Release>("/odata/Releases/UiPath.Server.Configuration.OData.ListReleases", folderId, "&$filter=ProcessType eq '1'");
     }
 
     public IEnumerable<Release> GetReleases(Int64 folderId, string? query = null)
@@ -3489,7 +3489,7 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<TestSet> GetTestSets(Int64 folderId)
     {
-        return GetEnumerable<TestSet>("/odata/TestSets", folderId, "&$filter=(SourceType%20eq%20%27User%27)&$expand=Environment");
+        return GetEnumerable<TestSet>("/odata/TestSets", folderId, "&$filter=(SourceType eq 'User')&$expand=Environment");
     }
 
     public TestSet? GetTestSetForEdit(Int64 folderId, Int64 testSetId)
@@ -3604,7 +3604,7 @@ public partial class OrchAPISession : IDisposable
     public IEnumerable<TestDataQueueItem> GetTestDataQueueItems(Int64 folderId, TestDataQueue testDataQueue)
     {
         EnsureVersionSupport(14);
-        return GetEnumerable<TestDataQueueItem>("/odata/TestDataQueueItems", folderId, $"&$filter=(TestDataQueueId%20eq%20{testDataQueue.Id})");
+        return GetEnumerable<TestDataQueueItem>("/odata/TestDataQueueItems", folderId, $"&$filter=(TestDataQueueId eq {testDataQueue.Id})");
     }
 
     public void AddTestDataQueueItems(Int64 folderId, string testDataQueueName, string itemJsonArray)
@@ -3646,7 +3646,7 @@ public partial class OrchAPISession : IDisposable
 
     #region Calendar
 
-    public IEnumerable<ExtendedCalendar>? GetCalendars()
+    public IEnumerable<ExtendedCalendar> GetCalendars()
     {
         return GetEnumerable<ExtendedCalendar>($"/odata/Calendars");
     }
