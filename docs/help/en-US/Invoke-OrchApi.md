@@ -4,7 +4,7 @@ external help file: UiPathOrch.dll-Help.xml
 HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Invoke-OrchApi.md'
 Locale: en-US
 Module Name: UiPathOrch
-ms.date: 05/02/2026
+ms.date: 06/13/2026
 PlatyPS schema version: 2024-05-01
 title: Invoke-OrchApi
 ---
@@ -20,9 +20,9 @@ Invokes an arbitrary Orchestrator, Identity Server, or Portal API endpoint using
 ### __AllParameterSets
 
 ```
-Invoke-OrchApi [[-Path] <string>] [-LiteralPath <string>] [-ApiPath] <string> [-Body <Object>] [-Confirm]
- [-ContentType <string>] [-Headers <IDictionary>] [-Identity] [-InFile <string>]
- [-Method <string>] [-OutFile <string>] [-Portal] [-Raw]
+Invoke-OrchApi [-ApiPath] <string> [-Body <Object>] [-Confirm] [-ContentType <string>]
+ [-Headers <IDictionary>] [-Identity] [-InFile <string>] [-LiteralPath <string>]
+ [-Method <string>] [-OutFile <string>] [-Path <string>] [-Portal] [-Raw]
  [-ResponseHeadersVariable <string>] [-SkipFolderContext] [-SkipHttpErrorCheck]
  [-StatusCodeVariable <string>] [-WhatIf] [<CommonParameters>]
 ```
@@ -152,7 +152,7 @@ Aliases:
 - Uri
 ParameterSets:
 - Name: (All)
-  Position: 1
+  Position: 0
   IsRequired: true
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
@@ -342,7 +342,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: 0
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true
@@ -364,7 +364,7 @@ Aliases:
 - PSPath
 ParameterSets:
 - Name: (All)
-  Position: 0
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true

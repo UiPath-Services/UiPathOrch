@@ -29,14 +29,7 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
     // group results by Path. See UiPathOrch.Format.ps1xml.
     internal const string OutputTypeName = "UiPathOrch.ApiResponseItem";
 
-    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    public string? Path { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [Alias("PSPath")]
-    public string? LiteralPath { get; set; }
-
-    [Parameter(Mandatory = true, Position = 1)]
+    [Parameter(Mandatory = true, Position = 0)]
     [Alias("Uri")]
     public string ApiPath { get; set; } = null!;
 
@@ -78,6 +71,13 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
 
     [Parameter]
     public SwitchParameter Raw { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public string? Path { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("PSPath")]
+    public string? LiteralPath { get; set; }
 
     protected override void ProcessRecord()
     {
