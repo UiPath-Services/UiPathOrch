@@ -137,7 +137,6 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
@@ -153,7 +152,7 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
             }
             if (queues is null) continue;
 
-            var targetQueues = queues.SelectByWildcards(p => p?.Name, wpName).OrderBy(q => q.Name);
+            var targetQueues = queues.SelectByNames(p => p?.Name, Name).OrderBy(q => q.Name);
 
             foreach (var queue in targetQueues.WithCancellation(cancelHandler.Token))
             {
