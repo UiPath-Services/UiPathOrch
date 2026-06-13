@@ -40,7 +40,6 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
         var (drive, srcRootFolder) = SessionState.ResolveToSingleFolder(EffectivePath(Path, LiteralPath));
 
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
         var wpFullPath = FullPath.ConvertToWildcardPatternList();
 
         if (Destination is null)
@@ -84,7 +83,7 @@ public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
                 var (_, folder) = result.Source;
 
                 foreach (var bucket in entities
-                    .FilterByWildcards(e => e?.Name, wpName)
+                    .FilterByNames(e => e?.Name, Name)
                     .OrderBy(e => e.Name))
                 {
                     if (seenBuckets.TryGetValue(bucket.Id ?? 0, out var firstFolderPath))

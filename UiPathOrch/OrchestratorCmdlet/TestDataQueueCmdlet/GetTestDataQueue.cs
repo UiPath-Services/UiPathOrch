@@ -65,7 +65,6 @@ public class GetTestDataQueueCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
@@ -84,7 +83,7 @@ public class GetTestDataQueueCmdlet : OrchestratorPSCmdlet
                 if (entities is null) continue;
 
                 var filtered = entities
-                    .FilterByWildcards(ts => ts?.Name, wpName)
+                    .FilterByNames(ts => ts?.Name, Name)
                     .OrderBy(ts => ts.Name);
 
                 if (writer is not null) { WriteCsvContent(writer, filtered); }

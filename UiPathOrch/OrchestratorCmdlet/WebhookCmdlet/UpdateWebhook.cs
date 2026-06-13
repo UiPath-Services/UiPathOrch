@@ -58,7 +58,6 @@ public class UpdateWebhookCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
-        var wpName = Name.ConvertToWildcardPatternList();
         bool subscribeAllBound = MyInvocation.BoundParameters.ContainsKey(nameof(SubscribeToAllEvents));
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -83,7 +82,7 @@ public class UpdateWebhookCmdlet : OrchestratorPSCmdlet
             }
 
             foreach (var webhook in webhooks
-                .FilterByWildcards(e => e?.Name, wpName)
+                .FilterByNames(e => e?.Name, Name)
                 .OrderBy(e => e.Name).WithCancellation(cancelHandler.Token))
             {
                 // Build a PATCH payload with only the properties that need updating.

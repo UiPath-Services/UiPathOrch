@@ -89,7 +89,6 @@ public class GetPmRobotAccountCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
-        var wpName = Name.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
@@ -113,7 +112,7 @@ public class GetPmRobotAccountCmdlet : OrchestratorPSCmdlet
 
                 var robotAccounts = fetched?
                     .Where(r => r is not null)
-                    .FilterByWildcards(r => r?.name!, wpName)
+                    .FilterByNames(r => r?.name!, Name)
                     .OrderBy(r => r?.name);
 
                 if (robotAccounts is null) continue;

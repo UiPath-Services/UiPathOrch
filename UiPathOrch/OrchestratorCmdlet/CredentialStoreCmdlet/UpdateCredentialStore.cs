@@ -39,7 +39,6 @@ public class UpdateCredentialStoreCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
-        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
@@ -60,7 +59,7 @@ public class UpdateCredentialStoreCmdlet : OrchestratorPSCmdlet
             }
 
             foreach (var store in stores
-                .FilterByWildcards(s => s?.Name, wpName)
+                .FilterByNames(s => s?.Name, Name)
                 .OrderBy(s => s.Name).WithCancellation(cancelHandler.Token))
             {
                 string target = store.GetPSPath();

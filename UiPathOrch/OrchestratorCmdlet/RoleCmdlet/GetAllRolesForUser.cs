@@ -36,13 +36,12 @@ class GetAllRolesForUserCmdlet : OrchestratorPSCmdlet
     //protected override void ProcessRecord()
     //{
     //    var drives = OrchDriveInfo.EnumOrchDrives(Path);
-    //    var wpUserName = UserName.ConvertToWildcardPatternList();
-
+    //
     //    foreach (var drive in drives) {
     //        var users = drive.GetUsers();
 
     //        foreach (var user in users
-    //            .FilterByWildcards(u => u?.UserName, wpUserName)
+    //            .FilterByNames(u => u?.UserName, UserName)
     //            //.FilterByWildcards(u => u?.Type, wpType)
     //            .OrderBy(u => u.UserName))
     //        {

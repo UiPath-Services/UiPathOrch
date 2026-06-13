@@ -36,7 +36,6 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
     {
         var srcDrive = SessionState.GetPmDrive(EffectivePath(Path, LiteralPath));
         var dstDrives = SessionState.EnumPmDrives(Destination);
-        var wpEmail = Email.ConvertToWildcardPatternList();
 
         var userMapping = dstDrives.Count == 1
             ? SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrives[0], UserMappingCsv)
@@ -49,7 +48,7 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
             var srcAllUsers = srcDrive.PmUsers.Get();
 
             var srcUsers = srcDrive.PmUsers.Get()
-                .FilterByWildcards(u => u?.email, wpEmail)
+                .FilterByNames(u => u?.email, Email)
                 .OrderBy(u => u.name);
 
             foreach (var srcUser in srcUsers)

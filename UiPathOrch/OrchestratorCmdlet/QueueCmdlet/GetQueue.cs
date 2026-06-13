@@ -154,7 +154,6 @@ public class GetQueueCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
@@ -173,7 +172,7 @@ public class GetQueueCmdlet : OrchestratorPSCmdlet
                 if (queues is null) continue;
 
                 Output(writer, queues
-                    .FilterByWildcards(q => q?.Name, wpName)
+                    .FilterByNames(q => q?.Name, Name)
                     .OrderBy(q => q.Name));
             }
             catch (OrchException ex)

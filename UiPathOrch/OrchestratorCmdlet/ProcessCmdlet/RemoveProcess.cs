@@ -29,14 +29,13 @@ public class RemoveProcessCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
             try
             {
-                foreach (var proc in drive.Releases.Get(folder).FilterByWildcards(p => p?.Name, wpName).WithCancellation(cancelHandler.Token))
+                foreach (var proc in drive.Releases.Get(folder).FilterByNames(p => p?.Name, Name).WithCancellation(cancelHandler.Token))
                 {
                     string target = proc.GetPSPath();
                     if (ShouldProcess(target, "Remove Process"))

@@ -108,7 +108,6 @@ public class GetPmUserCmdlet : OrchestratorPSCmdlet
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
-        var wpEmail = Email.ConvertToWildcardPatternList();
 
         // Fetch the user list in parallel; per-org caches serialize
         // same-partition fetches internally. Filtering, the secondary
@@ -130,7 +129,7 @@ public class GetPmUserCmdlet : OrchestratorPSCmdlet
 
                 var drive = result.Source;
                 var targetUsers = entities
-                    .FilterByWildcards(u => u?.email, wpEmail)
+                    .FilterByNames(u => u?.email, Email)
                     .OrderBy(u => u.email);
 
                 if (writer is not null)

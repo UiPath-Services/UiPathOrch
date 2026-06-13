@@ -27,7 +27,6 @@ class GetTmDefectCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         foreach (var driveProject in drivesProjects)
         {
@@ -56,7 +55,7 @@ class GetTmDefectCmdlet : OrchestratorPSCmdlet
         //        if (entity is null) continue;
 
         //        WriteObject(entity
-        //            .FilterByWildcards(e => e.name!, wpName)
+        //            .FilterByNames(e => e.name!, Name)
         //            .OrderBy(e => e.objKey!, ObjKeyComparer.Instance),
         //            true);
         //    }

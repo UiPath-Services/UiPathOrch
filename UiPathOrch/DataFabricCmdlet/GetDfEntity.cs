@@ -35,7 +35,6 @@ class GetDfEntityCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth, includeRoot: true);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
@@ -51,7 +50,7 @@ class GetDfEntityCmdlet : OrchestratorPSCmdlet
                 if (entities is null) continue;
 
                 WriteObject(entities
-                    .FilterByWildcards(e => e?.name, wpName)
+                    .FilterByNames(e => e?.name, Name)
                     .OrderBy(e => e.name),
                     enumerateCollection: true);
             }

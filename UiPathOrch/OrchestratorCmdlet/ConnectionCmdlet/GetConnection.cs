@@ -40,7 +40,6 @@ class GetConnectionCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
@@ -56,7 +55,7 @@ class GetConnectionCmdlet : OrchestratorPSCmdlet
                 if (connections is null) continue;
 
                 WriteObject(connections
-                    .FilterByWildcards(s => s?.name, wpName)
+                    .FilterByNames(s => s?.name, Name)
                     .OrderBy(s => s.name),
                     true);
             }

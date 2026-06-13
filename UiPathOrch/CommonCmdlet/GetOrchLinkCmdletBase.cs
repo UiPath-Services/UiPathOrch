@@ -95,7 +95,6 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth)
             .OrderBy(df => df.folder.GetPSPath())
             .ToList();
-        var wpName = Name.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
@@ -107,7 +106,7 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
             df => df.folder.GetPSPath(),
             df => (object)df.folder,
             df => GetEntities(df.drive, df.folder)
-                .FilterByWildcards(e => GetEntityName(e), wpName)
+                .FilterByNames(e => GetEntityName(e), Name)
                 .OrderBy(e => GetEntityName(e))
                 .Select(e => (df.drive, df.folder, entity: e)),
             t => t.folder.GetPSPath(),

@@ -37,7 +37,6 @@ public class GetBucketItemCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
         var wpFullPath = FullPath.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,
@@ -56,7 +55,7 @@ public class GetBucketItemCmdlet : OrchestratorPSCmdlet
                 var (drive, folder) = result.Source;
 
                 foreach (var bucket in entities
-                    .FilterByWildcards(e => e?.Name, wpName)
+                    .FilterByNames(e => e?.Name, Name)
                     .OrderBy(e => e.Name))
                 {
                     try

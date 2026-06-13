@@ -27,7 +27,6 @@ public class RemoveTmTestCaseCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var driveProject in drivesProjects.WithCancellation(cancelHandler.Token))
@@ -39,7 +38,7 @@ public class RemoveTmTestCaseCmdlet : OrchestratorPSCmdlet
                 var entities = drive.TmTestCases.Get(project);
 
                 foreach (var testCase in entities
-                    .FilterByWildcards(e => e?.name, wpName)
+                    .FilterByNames(e => e?.name, Name)
                     .OrderBy(e => e.name).WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(testCase.GetPSPath(), "Remove TmTestCase"))

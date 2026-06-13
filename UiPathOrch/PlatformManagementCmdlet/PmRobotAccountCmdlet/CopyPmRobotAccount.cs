@@ -30,7 +30,6 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
         var srcDrive = SessionState.GetPmDrive(EffectivePath(Path, LiteralPath)!) ?? throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
 
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
-        var wpDisplayName = Name.ConvertToWildcardPatternList();
 
         srcDrive.PmRobotAccounts.ClearCache();
 
@@ -41,7 +40,7 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
             var srcRobots = srcDrive.PmRobotAccounts.Get();
             var targetRobots = srcRobots
                 .Where(r => r is not null)
-                .FilterByWildcards(r => r!.displayName!, wpDisplayName)
+                .FilterByNames(r => r!.displayName!, Name)
                 .OrderBy(r => r!.displayName)
                 .ToList();
 

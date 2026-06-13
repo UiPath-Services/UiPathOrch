@@ -27,7 +27,6 @@ public class RemoveTmRequirementCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var driveProject in drivesProjects.WithCancellation(cancelHandler.Token))
@@ -39,7 +38,7 @@ public class RemoveTmRequirementCmdlet : OrchestratorPSCmdlet
                 var requirements = drive.TmRequirements.Get(project);
 
                 foreach (var requirement in requirements
-                    .FilterByWildcards(e => e?.name, wpName)
+                    .FilterByNames(e => e?.name, Name)
                     .OrderBy(e => e.objKey!, ObjKeyComparer.Instance).WithCancellation(cancelHandler.Token))
                 {
                     var target = requirement.GetPSPath();

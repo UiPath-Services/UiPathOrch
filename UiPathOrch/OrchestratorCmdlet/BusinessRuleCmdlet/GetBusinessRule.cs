@@ -32,7 +32,6 @@ class GetBusinessRuleCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
@@ -48,7 +47,7 @@ class GetBusinessRuleCmdlet : OrchestratorPSCmdlet
                 if (rules is null) continue;
 
                 WriteObject(rules
-                    .FilterByWildcards(r => r?.Name, wpName)
+                    .FilterByNames(r => r?.Name, Name)
                     .OrderBy(r => r.Name),
                     true);
             }

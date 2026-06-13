@@ -65,7 +65,6 @@ public class GetActionCatalogCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
@@ -84,7 +83,7 @@ public class GetActionCatalogCmdlet : OrchestratorPSCmdlet
                 if (entities is null) continue;
 
                 var filtered = entities
-                    .FilterByWildcards(s => s?.Name, wpName)
+                    .FilterByNames(s => s?.Name, Name)
                     .OrderBy(s => s.Name);
 
                 if (writer is not null) { WriteCsvContent(writer, filtered); }
