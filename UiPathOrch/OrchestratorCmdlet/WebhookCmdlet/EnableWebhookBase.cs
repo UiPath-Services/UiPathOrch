@@ -58,9 +58,6 @@ public class EnableWebhookCmdletBase<Enable> : OrchestratorPSCmdlet where Enable
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
-        var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
-        //var wpName = Name.ConvertToWildcardPatternList();
-
         string action = $"{(Enable.Value ? "Enable" : "Disable")} Webhook";
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -74,7 +71,7 @@ public class EnableWebhookCmdletBase<Enable> : OrchestratorPSCmdlet where Enable
                     .Where(e => Enable.Value
                         ? !e.Enabled.GetValueOrDefault()
                         : e.Enabled.GetValueOrDefault())
-                    .FilterByWildcards(e => e?.Name, wpName)
+                    .FilterByNames(e => e?.Name, Name)
                     .OrderBy(e => e.Name).WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(webhook.GetPSPath(), action))

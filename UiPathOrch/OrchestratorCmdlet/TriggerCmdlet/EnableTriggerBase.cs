@@ -63,8 +63,6 @@ public class EnableTriggerCmdletBase<Enable> : OrchestratorPSCmdlet where Enable
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-
         string action = $"{(Enable.Value ? "Enable" : "Disable")} Trigger";
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -78,7 +76,7 @@ public class EnableTriggerCmdletBase<Enable> : OrchestratorPSCmdlet where Enable
                     .Where(t => Enable.Value
                         ? !t.Enabled.GetValueOrDefault()
                         : t.Enabled.GetValueOrDefault())
-                    .FilterByWildcards(t => t?.Name, wpName)
+                    .FilterByNames(t => t?.Name, Name)
                     .OrderBy(t => t.Name).WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(trigger.GetPSPath(), action))

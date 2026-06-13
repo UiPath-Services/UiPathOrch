@@ -57,8 +57,6 @@ public class EnableFolderMachineInheritCmdletBase<EnableInherit> : OrchestratorP
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
-        var wpName = Name.ConvertToWildcardPatternList();
-
         string action = $"{(EnableInherit.Value ? "Enable" : "Disable")} FolderMachineInherit";
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,
@@ -81,7 +79,7 @@ public class EnableFolderMachineInheritCmdletBase<EnableInherit> : OrchestratorP
                     .Where(m => EnableInherit.Value
                         ? !m.PropagateToSubFolders.GetValueOrDefault()
                         : m.PropagateToSubFolders.GetValueOrDefault())
-                    .FilterByWildcards(m => m?.Name, wpName)
+                    .FilterByNames(m => m?.Name, Name)
                     .OrderBy(m => m.Name))
                 {
                     if (ShouldProcess(machine.GetPSPath(), action))

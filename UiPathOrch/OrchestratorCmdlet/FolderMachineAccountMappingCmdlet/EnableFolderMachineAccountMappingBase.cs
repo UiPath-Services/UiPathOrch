@@ -118,9 +118,6 @@ public class EnableFolderMachineAccountMappingCmdletBase<Enable> : OrchestratorP
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-        var wpUserName = UserName.ConvertToWildcardPatternList();
-
         string action = Enable.Value ? "Enable" : "Disable";
 
         foreach (var (drive, folder) in drivesFolders)
@@ -129,7 +126,7 @@ public class EnableFolderMachineAccountMappingCmdletBase<Enable> : OrchestratorP
             {
                 var folderMachines = drive.FolderMachinesAssigned.Get(folder)
                     .Where(m => !m.PropagateToSubFolders.GetValueOrDefault())
-                    .FilterByWildcards(m => m?.Name, wpName)
+                    .FilterByNames(m => m?.Name, Name)
                     .OrderBy(m => m.Name);
 
                 foreach (var folderMachine in folderMachines)
@@ -142,7 +139,7 @@ public class EnableFolderMachineAccountMappingCmdletBase<Enable> : OrchestratorP
                             .Where(fr => Enable.Value
                                 ? machinesRobots.All(mr => mr.RobotId != fr.Id)
                                 : !machinesRobots.All(mr => mr.RobotId != fr.Id))
-                            .FilterByWildcards(fr => fr!.User?.UserName, wpUserName)
+                            .FilterByNames(fr => fr!.User?.UserName, UserName)
                             .ToList();
 
                         List<ExtendedRobot> enablingRobots = [];
