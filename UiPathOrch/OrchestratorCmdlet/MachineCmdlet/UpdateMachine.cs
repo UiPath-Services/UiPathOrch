@@ -48,7 +48,6 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(MachineRobotUsersCompleter))]
-    [SupportsWildcards]
     [RobotUserArgumentTransformation]
     public string[]? RobotUsers { get; set; }
 
@@ -178,10 +177,12 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
                     else
                     {
                         var robots = drive.AllRobotsAcrossFolders.Get();
-                        var wpRobotUsers = processedRobotUsers.ConvertToWildcardPatternList();
-                        // Match on User.FullName (the CSV / manual form) OR Id (the object-pipe form a
-                        // piped RobotUser is transformed to), so Get-OrchMachine | Update-OrchMachine works.
-                        var targetRobots = robots.FilterByWildcardsAny([r => r?.User?.FullName, r => r?.Id?.ToString()], wpRobotUsers);
+                        // Match -RobotUsers exactly by robot FullName (the CSV / manual form) OR numeric
+                        // Id (the object-pipe form a piped RobotUser is transformed to) — no wildcards,
+                        // so Get-OrchMachine | Update-OrchMachine works.
+                        var targetRobots = robots.Where(r =>
+                            (r.User?.FullName is { } fn && processedRobotUsers!.Contains(fn, StringComparer.OrdinalIgnoreCase))
+                            || (r.Id?.ToString() is { } id && processedRobotUsers!.Contains(id, StringComparer.OrdinalIgnoreCase)));
                         patch.RobotUsers = targetRobots
                             .Select(r => new RobotUser()
                             {

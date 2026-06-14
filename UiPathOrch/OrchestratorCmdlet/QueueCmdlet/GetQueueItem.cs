@@ -190,14 +190,14 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
     {
         if (Robot is null || Robot.Length == 0) return null;
         var robots = drive.RobotsFromFolder.Get(folder);
-        return robots.SelectByWildcards(r => r?.Name, Robot).Select(r => r.Id).ToList();
+        return robots.SelectByNames(r => r?.Name, Robot).Select(r => r.Id).ToList();
     }
 
     private IReadOnlyList<long?>? ResolveReviewerIds(OrchDriveInfo drive, Folder folder)
     {
         if (Reviewer is null || Reviewer.Length == 0) return null;
         var reviewers = drive.Reviewers.Get(folder);
-        return reviewers.SelectByWildcards(r => r?.UserName, Reviewer).Select(r => r.Id).ToList();
+        return reviewers.SelectByNames(r => r?.UserName, Reviewer).Select(r => r.Id).ToList();
     }
 
     private string MakeFilter(OrchDriveInfo drive, Folder folder, QueueDefinition queue,

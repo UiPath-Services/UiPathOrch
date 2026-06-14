@@ -148,9 +148,8 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
     {
         if (Robot is null || Robot.Length == 0 || Robot.Any(r => r == "*"))
             return null; // No robot filter (target all robots)
-        var wpRobot = Robot.ConvertToWildcardPatternList();
         var robots = drive.Robots.Get();
-        return robots.SelectByWildcards(r => r?.Name, wpRobot).Select(r => r.Id).ToList();
+        return robots.SelectByNames(r => r?.Name, Robot).Select(r => r.Id).ToList();
     }
 
     private string? MakeFilter(OrchDriveInfo drive, Folder folder, IReadOnlyList<long?>? robotIdBatch = null)
