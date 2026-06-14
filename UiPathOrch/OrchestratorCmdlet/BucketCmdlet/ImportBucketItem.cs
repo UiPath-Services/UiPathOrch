@@ -143,7 +143,8 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
             throw new PSArgumentException("You cannot specify -Recurse and -Name at the same time.");
         }
 
-        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), false, 0, true);        var sources = ResolveSources();
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), false, 0, true);
+        var sources = ResolveSources();
 
         using var cancelHandler = new ConsoleCancelHandler();
 
