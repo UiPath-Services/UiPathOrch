@@ -270,8 +270,6 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-
         // 'DeferDate' is rejected by some Orchestrator builds with
         // "Invalid OData query options: The property 'DeferDate' cannot be
         // used in the $orderby query option." Use Id, which is universally
@@ -306,7 +304,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
                     .OrderBy(g => g.Key))
                 {
                     var queueName = queueGroup.Key;
-                    if (wpName is not null && !wpName.Any(wp => wp.IsMatch(queueName))) continue;
+                    if (Name is { Length: > 0 } && !new[] { queueName }.FilterByNames(n => n, Name).Any()) continue;
 
                     WriteObject(OrderQueueItemsForOutput(queueGroup, OrderBy, OrderAscending.IsPresent), true);
                 }
@@ -360,7 +358,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
             bool isBatched = robotBatches.Count > 1 || reviewerBatches.Count > 1;
 
             var targetQueues = queues
-                .FilterByWildcards(q => q?.Name, wpName)
+                .FilterByNames(q => q?.Name, Name)
                 .OrderBy(q => q.Name).ToList();
             using ProgressReporter reporterQueue = new(this, 2, targetQueues.Count, "Queue ");
             int indexQueue = 0;

@@ -588,11 +588,6 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
-            // expand UserName and MachineName
-            List<WildcardPattern> wpMachineName = null;
-
-            if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
-                wpMachineName = param.MachineName.ConvertToWildcardPatternList();
 
             var drivesFolders = SessionState.EnumFolders(param.Path);
             foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
@@ -634,7 +629,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                 }
 
                 // expand MachineName
-                if (wpMachineName is not null)
+                if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
                 {
                     // Restrict the candidate set to machines actually assigned to this folder
                     // so that asset per-machine values cannot reference machines outside the
@@ -645,7 +640,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                         .ToHashSet();
                     var tenantMachines = drive.Machines.Get()
                         .Where(m => m?.Id is not null && assignedIds.Contains(m.Id!.Value));
-                    specifiedMachines = tenantMachines.FilterByWildcards(m => m?.Name, wpMachineName);
+                    specifiedMachines = tenantMachines.FilterByNames(m => m?.Name, param.MachineName);
                     if (!specifiedMachines.Any())
                     {
                         string strMachineNames = string.Join(", ", param.MachineName!);

@@ -507,12 +507,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
                 param.CredentialPassword = ConvertToUnsecureString(Credential!.Password);
             }
 
-            // expand UserName and MachineName
-            List<WildcardPattern> wpMachineName = null;
             WildcardPattern wpCredentialStore = null;
-
-            if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
-                wpMachineName = param.MachineName.ConvertToWildcardPatternList();
 
             if (!string.IsNullOrEmpty(param.CredentialStore))
                 wpCredentialStore = new WildcardPattern(param.CredentialStore, WildcardOptions.IgnoreCase);
@@ -552,7 +547,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
                 }
 
                 // expand MachineName
-                if (wpMachineName is not null)
+                if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
                 {
                     // See SetAsset.cs MachineName expansion — the same scope-tightening fix.
                     var assignedIds = drive.FolderMachinesAssigned.Get(folder)
@@ -561,7 +556,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
                         .ToHashSet();
                     var tenantMachines = drive.Machines.Get()
                         .Where(m => m?.Id is not null && assignedIds.Contains(m.Id!.Value));
-                    specifiedMachines = tenantMachines.FilterByWildcards(m => m?.Name, wpMachineName);
+                    specifiedMachines = tenantMachines.FilterByNames(m => m?.Name, param.MachineName);
                     if (!specifiedMachines.Any())
                     {
                         string strMachineNames = string.Join(", ", param.MachineName!);
