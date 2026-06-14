@@ -1562,26 +1562,15 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<UserRoles>($"/odata/Folders/UiPath.Server.Configuration.OData.GetUsersForFolder(key={folderId},includeInherited={includeInherited.ToString().ToLower()})", null, "&includeAlertsEnabled=true");
     }
 
-    private class FolderAssignDomainUserRequest
-    {
-        public DomainUserAssignment? assignment { set; get; }
-    }
-
     public void AssignDomainUser(DomainUserAssignment user)
     {
-        FolderAssignDomainUserRequest request = new()
-        {
-            assignment = user
-        };
+        var request = new { assignment = user };
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignDomainUser", null, request);
     }
 
     public void AssignDirectoryUser(DomainUserAssignment user)
     {
-        FolderAssignDomainUserRequest request = new()
-        {
-            assignment = user
-        };
+        var request = new { assignment = user };
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignDirectoryUser", null, request);
     }
 
@@ -1627,18 +1616,10 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<MachineFolder>($"/odata/Folders/UiPath.Server.Configuration.OData.GetMachinesForFolder(key={folderId})", null, query);
     }
 
-    // FolderMachineInheritDto
-    private class FolderMachineInherit(long? machineId, long? folderId, bool? inheritEnabled)
-    {
-        public Int64? MachineId { get; set; } = machineId;
-        public Int64? FolderId { get; set; } = folderId;
-        public bool? InheritEnabled { get; set; } = inheritEnabled;
-    }
-
     // Verified on ApiVersion = 15
     public void SetFolderMachineInherit(Int64 folderId, Int64 machineId, bool enabled)
     {
-        FolderMachineInherit payload = new(machineId, folderId, enabled);
+        var payload = new { MachineId = machineId, FolderId = folderId, InheritEnabled = enabled };
         // Returns ""
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.ToggleFolderMachineInherit", folderId, payload);
     }
@@ -3301,17 +3282,9 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    private class BulkDeleteTestCases
-    {
-        public List<Int64>? testCaseDefinitionIds { get; set; }
-    }
-
     public void RemoveTestCases(Int64 folderId, IEnumerable<Int64> testCaseIds)
     {
-        BulkDeleteTestCases payload = new()
-        {
-            testCaseDefinitionIds = testCaseIds.ToList()
-        };
+        var payload = new { testCaseDefinitionIds = testCaseIds.ToList() };
         HttpRequest(HttpMethod.Post, "/odata/TestCaseDefinitions/UiPath.Server.Configuration.OData.BulkDelete", folderId, payload);
     }
 
@@ -3393,20 +3366,9 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Delete, $"/odata/TestSetSchedules({testSetScheduleId})", folderId);
     }
 
-    // TestSetSchedulesEnabledRequest
-    private class TestSetSchedulesEnabledRequest
-    {
-        public bool? enabled { get; set; }
-        public IEnumerable<Int64>? testSetScheduleIds { get; set; }
-    }
-
     public void EnableTestSetSchedules(Int64 folderId, bool enabled, IEnumerable<Int64> testSetScheduleIds)
     {
-        TestSetSchedulesEnabledRequest payload = new()
-        {
-            enabled = enabled,
-            testSetScheduleIds = testSetScheduleIds
-        };
+        var payload = new { enabled, testSetScheduleIds };
 
         HttpRequest(HttpMethod.Post, "/odata/TestSetSchedules/UiPath.Server.Configuration.OData.SetEnabled", folderId, payload);
     }
@@ -3923,19 +3885,11 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerablePortal<NuLicensedGroup>("/api/license/accountant/UserLicense/group/page");
     }
 
-    private class RemovePmLicensedGroupCommand
-    {
-        public string? id { get; set; }
-    }
-
     // This is an undocumented API.
     public void RemovePmLicensedGroup(string? groupId)
     {
         if (groupId is null) return;
-        var removeGroup = new RemovePmLicensedGroupCommand
-        {
-            id = groupId
-        };
+        var removeGroup = new { id = groupId };
         // nothing returns
         HttpRequestPortal(HttpMethod.Delete, "/api/license/accountant/UserLicense/group", null, removeGroup);
     }
@@ -3981,11 +3935,6 @@ public partial class OrchAPISession : IDisposable
         HttpRequestPortal(HttpMethod.Put, "/portal_/api/license/accountant/UserLicense", null, command);
     }
 
-    private class RemovePmLicensedUserCommand
-    {
-        public string[]? userIds { get; set; }
-    }
-
     // This is an undocumented API.
     // Drops the listed users from the licensed-users set entirely (cleans up the
     // "No license" rows left behind by an empty-licenseCodes PutPmLicenseUser).
@@ -3996,7 +3945,7 @@ public partial class OrchAPISession : IDisposable
     public void RemovePmLicensedUser(string[] userIds)
     {
         if (userIds is null || userIds.Length == 0) return;
-        var cmd = new RemovePmLicensedUserCommand { userIds = userIds };
+        var cmd = new { userIds };
         HttpRequestPortal(HttpMethod.Delete, "/portal_/api/license/accountant/UserLicense", null, cmd);
     }
 
@@ -4026,18 +3975,10 @@ public partial class OrchAPISession : IDisposable
         return JsonSerializer.Deserialize<PmGroup>(body, jsoMemberConverter);
     }
 
-    private class RemovePmGroupsInfo
-    {
-        public string[]? groupIDs { get; set; }
-    }
-
     public void RemovePmGroup(string partitionGlobalId, string? groupId)
     {
         if (groupId is null) return;
-        var removeGroup = new RemovePmGroupsInfo
-        {
-            groupIDs = [groupId]
-        };
+        var removeGroup = new { groupIDs = new[] { groupId } };
         // nothing returns
         HttpRequestIdentity(HttpMethod.Delete, $"/api/Group/{partitionGlobalId}", null, removeGroup);
     }
@@ -4058,17 +3999,9 @@ public partial class OrchAPISession : IDisposable
         return HttpRequestIdentity<PmRobotAccount>(HttpMethod.Put, $"/api/RobotAccount/{robotId}", null, cmd);
     }
 
-    private class DeletePmRobotPosting
-    {
-        public string[]? robotAccountIDs { get; set; }
-    }
-
     public void RemovePmRobot(string partitionGlobalId, string robotId)
     {
-        var payload = new DeletePmRobotPosting()
-        {
-            robotAccountIDs = [robotId]
-        };
+        var payload = new { robotAccountIDs = new[] { robotId } };
         HttpRequestIdentity(HttpMethod.Delete, $"/api/RobotAccount/{partitionGlobalId}", null, payload);
     }
 
