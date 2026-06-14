@@ -41,7 +41,7 @@ public class OrchTmDriveInfo : OrchDriveInfoBase
             // Caches need to be initialized after ParentDrive is set.
             // TmProjects is per-tenant — Path/FullName stamping in the
             // initializer is safe (no cross-drive sharing).
-            TmProjects = new(this, () => OrchAPISession.GetTmProjects() ?? [], e =>
+            TmProjects = new(this, OrchAPISession.GetTmProjects, e =>
             {
                 e.Path = NameColonSeparator;
                 e.FullName = NameColonSeparator + e.projectPrefix;

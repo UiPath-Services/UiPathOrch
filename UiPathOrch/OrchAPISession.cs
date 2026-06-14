@@ -2743,7 +2743,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<AuditLog>("/odata/AuditLogs", null, query, skip, first);
     }
 
-    public IEnumerable<AuditLogEntity>? GetAuditLogDetails(Int64 auditLogId)
+    public IEnumerable<AuditLogEntity> GetAuditLogDetails(Int64 auditLogId)
     {
         return GetEnumerable<AuditLogEntity>($"/odata/AuditLogs/UiPath.Server.Configuration.OData.GetAuditLogDetails(auditLogId={auditLogId})");
     }
@@ -3695,7 +3695,7 @@ public partial class OrchAPISession : IDisposable
     // entityType: "user", "group", or "application"
     // Passing "robot" causes an error.
     // No "PM.xxx" scope needed
-    public Dictionary<string, PmGroupMember>? PmBulkResolveByName(string partitionGlobalId, string entityType, IEnumerable<string> names)
+    public Dictionary<string, PmGroupMember> PmBulkResolveByName(string partitionGlobalId, string entityType, IEnumerable<string> names)
     {
         var postData = new BulkResolveByNameCommand()
         {
@@ -3704,7 +3704,7 @@ public partial class OrchAPISession : IDisposable
         };
 
         string body = HttpRequestIdentity(HttpMethod.Post, $"/api/Directory/BulkResolveByName/{partitionGlobalId}", null, postData);
-        return JsonSerializer.Deserialize<Dictionary<string, PmGroupMember>>(body, jsoMemberConverter);
+        return JsonSerializer.Deserialize<Dictionary<string, PmGroupMember>>(body, jsoMemberConverter) ?? [];
     }
 
     public PmDirectoryEntityInfo[]? SearchPmDirectory(string partitionGlobalId, string userName)
@@ -4331,7 +4331,7 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    public IEnumerable<TmProject>? GetTmProjects()
+    public IEnumerable<TmProject> GetTmProjects()
     {
         return GetEnumerableTm<TmProject>("/testmanager_/api/v2/projects");
     }
@@ -4395,7 +4395,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerableTm<TmTestExecutionResult>($"/testmanager_/api/v2/{projectId}/testcaselogs/testexecution/{testExecutionId}/paged");
     }
 
-    public IEnumerable<TmRole>? GetTmRoles()
+    public IEnumerable<TmRole> GetTmRoles()
     {
         return GetEnumerableTm3<TmRole>("/testmanager_/api/v2/roles");
     }
