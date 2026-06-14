@@ -42,11 +42,9 @@ public class OrchDuDriveInfo : OrchDriveInfoBase
             // per-emit ShallowClone() copy (per-org caches are shared across
             // drives, so drive-local Path on the cached singleton would be
             // raced/wrong, matching the PM* 1.4.2 fix rationale).
-            DuRoles = new(this, partitionGlobalId =>
-                OrchAPISession.GetDuRoles(partitionGlobalId) ?? []);
+            DuRoles = new(this, partitionGlobalId => OrchAPISession.GetDuRoles(partitionGlobalId));
 
-            DuUsers = new(this, (partitionGlobalId, key) =>
-                OrchAPISession.GetDuUsers(partitionGlobalId, key.TenantKey, key.ProjectId) ?? []);
+            DuUsers = new(this, (partitionGlobalId, key) => OrchAPISession.GetDuUsers(partitionGlobalId, key.TenantKey, key.ProjectId));
 
             // Per-tenant: Path/FullName stamped in the initializer, because
             // DuProject is consumed AS INPUT by other cmdlets (e.g.,
@@ -59,17 +57,14 @@ public class OrchDuDriveInfo : OrchDriveInfoBase
             // sharing, so init-time stamping is safe (unlike DuRoles /
             // DuUsers which are per-org and must clone+stamp on emit).
             DuProjects = new(this,
-                () => (OrchAPISession.GetDuProjects() ?? []).OrderBy(p => p.name),
+                () => OrchAPISession.GetDuProjects().OrderBy(p => p.name),
                 p => { p.Path = NameColonSeparator; p.FullName = NameColonSeparator + p.name; });
 
-            DuDocumentTypes = new(this, project =>
-                OrchAPISession.GetDuDocumentTypes(project.id!) ?? []);
+            DuDocumentTypes = new(this, project => OrchAPISession.GetDuDocumentTypes(project.id!));
 
-            DuClassifiers = new(this, project =>
-                OrchAPISession.GetDuClassifiers(project.id!) ?? []);
+            DuClassifiers = new(this, project => OrchAPISession.GetDuClassifiers(project.id!));
 
-            DuExtractors = new(this, project =>
-                OrchAPISession.GetDuExtractors(project.id!) ?? []);
+            DuExtractors = new(this, project => OrchAPISession.GetDuExtractors(project.id!));
         }
     }
 

@@ -382,9 +382,9 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         var trigger = TriggersDetailed.Get(folder, schedule.Id!.Value);
         if (trigger is not null && trigger.ExecutorRobots is null)
         {
-            trigger.ExecutorRobots = OrchAPISession.GetRobotIdsForSchedule(folder.Id ?? 0, schedule.Id!.Value)?
+            trigger.ExecutorRobots = OrchAPISession.GetRobotIdsForSchedule(folder.Id ?? 0, schedule.Id!.Value)
                 .Select(id => new RobotExecutor() { Id = id })
-                .ToArray() ?? [];
+                .ToArray();
         }
         return trigger;
     }

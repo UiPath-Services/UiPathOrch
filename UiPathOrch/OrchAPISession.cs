@@ -54,15 +54,9 @@ public class RateLimiter : IDisposable
         }
     }
 
-    public void Wait()
-    {
-        rateLimitSemaphore.Wait();
-    }
+    public void Wait() => rateLimitSemaphore.Wait();
 
-    public async Task WaitAsync(CancellationToken cancellationToken = default)
-    {
-        await rateLimitSemaphore.WaitAsync(cancellationToken);
-    }
+    public async Task WaitAsync(CancellationToken cancellationToken = default) => await rateLimitSemaphore.WaitAsync(cancellationToken);
 
     public void Dispose()
     {
@@ -533,13 +527,11 @@ public partial class OrchAPISession : IDisposable
     // lifetime avoids a too-late refresh (and the resulting 401 surfaced to the
     // caller) when the IdP issues tokens shorter than 1h, e.g. on Automation
     // Suite / on-premises Identity policies.
-    private DateTime ComputeTokenExpiry(DateTime from)
-        => ComputeTokenExpiry(from, _authManager.ExpiresInSeconds);
+    private DateTime ComputeTokenExpiry(DateTime from) => ComputeTokenExpiry(from, _authManager.ExpiresInSeconds);
 
     // Pure expiry decision, separated for unit testing: use the IdP-reported
     // lifetime when positive, else the conservative 1h fallback.
-    internal static DateTime ComputeTokenExpiry(DateTime from, int expiresInSeconds)
-        => expiresInSeconds > 0 ? from.AddSeconds(expiresInSeconds) : from.AddHours(1);
+    internal static DateTime ComputeTokenExpiry(DateTime from, int expiresInSeconds) => expiresInSeconds > 0 ? from.AddSeconds(expiresInSeconds) : from.AddHours(1);
 
     internal void EnsureAuthenticated()
     {
@@ -873,10 +865,7 @@ public partial class OrchAPISession : IDisposable
         return body?.value;
     }
 
-    private T[]? GetEnumerableWithoutPagingIdentity<T>(string endPoint, Int64? folderId = null, string? query = null)
-    {
-        return GetEnumerableWithoutPagingImpl<T[]>(_base_url_identity, endPoint, folderId, query);
-    }
+    private T[]? GetEnumerableWithoutPagingIdentity<T>(string endPoint, Int64? folderId = null, string? query = null) => GetEnumerableWithoutPagingImpl<T[]>(_base_url_identity, endPoint, folderId, query);
 
     public string HttpRequestImpl(HttpMethod method, string baseUrl, string endPoint, Int64? folderId, string? payload = null)
     {
@@ -898,15 +887,9 @@ public partial class OrchAPISession : IDisposable
         return body;
     }
 
-    public string HttpRequest(HttpMethod method, string endPoint, Int64? folderId, string payload)
-    {
-        return HttpRequestImpl(method, _base_url_orchestrator, endPoint, folderId, payload);
-    }
+    public string HttpRequest(HttpMethod method, string endPoint, Int64? folderId, string payload) => HttpRequestImpl(method, _base_url_orchestrator, endPoint, folderId, payload);
 
-    public string HttpRequestIdentity(HttpMethod method, string endPoint, Int64? folderId, string payload)
-    {
-        return HttpRequestImpl(method, _base_url_identity, endPoint, folderId, payload);
-    }
+    public string HttpRequestIdentity(HttpMethod method, string endPoint, Int64? folderId, string payload) => HttpRequestImpl(method, _base_url_identity, endPoint, folderId, payload);
 
     public string HttpRequestImpl(HttpMethod method, string baseUrl, string endPoint, Int64? folderId = null, object? payload = null)
     {
@@ -921,21 +904,12 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    public string HttpRequest(HttpMethod method, string endPoint, Int64? folderId = null, object? payload = null)
-    {
-        return HttpRequestImpl(method, _base_url_orchestrator, endPoint, folderId, payload);
-    }
+    public string HttpRequest(HttpMethod method, string endPoint, Int64? folderId = null, object? payload = null) => HttpRequestImpl(method, _base_url_orchestrator, endPoint, folderId, payload);
 
-    public string HttpRequestIdentity(HttpMethod method, string endPoint, Int64? folderId = null, object? payload = null)
-    {
-        return HttpRequestImpl(method, _base_url_identity, endPoint, folderId, payload);
-    }
+    public string HttpRequestIdentity(HttpMethod method, string endPoint, Int64? folderId = null, object? payload = null) => HttpRequestImpl(method, _base_url_identity, endPoint, folderId, payload);
 
     // For calling undocumented/private APIs
-    public string HttpRequestPortal(HttpMethod method, string endPoint, Int64? folderId = null, object? payload = null)
-    {
-        return HttpRequestImpl(method, _base_url_portal, endPoint, folderId, payload);
-    }
+    public string HttpRequestPortal(HttpMethod method, string endPoint, Int64? folderId = null, object? payload = null) => HttpRequestImpl(method, _base_url_portal, endPoint, folderId, payload);
 
     public T? HttpRequest<T>(HttpMethod method, string endPoint, Int64? folderId = null, object? query = null)
     {
@@ -963,23 +937,14 @@ public partial class OrchAPISession : IDisposable
     // Public hook used by Invoke-OrchApi: send a fully-prepared HttpRequestMessage through
     // the same pipeline (auth refresh, rate limiting, logging) without raising on non-success.
     // Caller owns disposal of the returned response.
-    public HttpResponseMessage SendApiRequest(HttpRequestMessage request, CancellationToken cancellationToken = default)
-    {
-        return HttpClient_Send(request, cancellationToken: cancellationToken);
-    }
+    public HttpResponseMessage SendApiRequest(HttpRequestMessage request, CancellationToken cancellationToken = default) => HttpClient_Send(request, cancellationToken: cancellationToken);
 
     #endregion
 
     #region Settings
-    public IEnumerable<Settings> GetSettings()
-    {
-        return GetEnumerable<Settings>("/odata/Settings");
-    }
+    public IEnumerable<Settings> GetSettings() => GetEnumerable<Settings>("/odata/Settings");
 
-    public ActivitySettings? GetActivitySettings()
-    {
-        return HttpRequest<ActivitySettings>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetActivitySettings");
-    }
+    public ActivitySettings? GetActivitySettings() => HttpRequest<ActivitySettings>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetActivitySettings");
 
     // /api/Status/Version returns the deployed product build version
     // (e.g. "26.3.0-s192.2662"), distinct from the API contract version
@@ -993,41 +958,20 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<OrchProductVersion>(HttpMethod.Get, "/api/Status/Version");
     }
 
-    public UpdateSettings? GetUpdateSettings()
-    {
-        return HttpRequest<UpdateSettings>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetUpdateSettings");
-    }
+    public UpdateSettings? GetUpdateSettings() => HttpRequest<UpdateSettings>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetUpdateSettings");
 
-    public ExecutionSettingsConfiguration? GetExecutionSettings(int scope)
-    {
-        return HttpRequest<ExecutionSettingsConfiguration>(HttpMethod.Get, $"/odata/Settings/UiPath.Server.Configuration.OData.GetExecutionSettingsConfiguration(scope={scope})");
-    }
+    public ExecutionSettingsConfiguration? GetExecutionSettings(int scope) => HttpRequest<ExecutionSettingsConfiguration>(HttpMethod.Get, $"/odata/Settings/UiPath.Server.Configuration.OData.GetExecutionSettingsConfiguration(scope={scope})");
 
     public void UpdateSettingsBulk(IEnumerable<Settings> settings)
-    {
-        var payload = new { settings = settings.Select(s => new { s.Name, s.Value }).ToArray() };
-        HttpRequest(HttpMethod.Post, "/odata/Settings/UiPath.Server.Configuration.OData.UpdateBulk", null, payload);
-    }
+        => HttpRequest(HttpMethod.Post, "/odata/Settings/UiPath.Server.Configuration.OData.UpdateBulk", null, new { settings = settings.Select(s => new { s.Name, s.Value }).ToArray() });
 
-    public ResponseDictionary? GetWebSettings()
-    {
-        return HttpRequest<ResponseDictionary>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetWebSettings");
-    }
+    public ResponseDictionary? GetWebSettings() => HttpRequest<ResponseDictionary>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetWebSettings");
 
-    public ResponseDictionary? GetAuthenticationSettings()
-    {
-        return HttpRequest<ResponseDictionary>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetAuthenticationSettings");
-    }
+    public ResponseDictionary? GetAuthenticationSettings() => HttpRequest<ResponseDictionary>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetAuthenticationSettings");
 
-    public ODataValueOfString? GetConnectionString()
-    {
-        return HttpRequest<ODataValueOfString>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString");
-    }
+    public ODataValueOfString? GetConnectionString() => HttpRequest<ODataValueOfString>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString");
 
-    public License? GetLicenseSettings()
-    {
-        return HttpRequest<License>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetLicense");
-    }
+    public License? GetLicenseSettings() => HttpRequest<License>(HttpMethod.Get, "/odata/Settings/UiPath.Server.Configuration.OData.GetLicense");
 
     #endregion
 
@@ -1048,10 +992,7 @@ public partial class OrchAPISession : IDisposable
 
     #region Queues
 
-    public IEnumerable<QueueDefinition> GetQueues(Int64 folderId)
-    {
-        return GetEnumerable<QueueDefinition>("/odata/QueueDefinitions", folderId);
-    }
+    public IEnumerable<QueueDefinition> GetQueues(Int64 folderId) => GetEnumerable<QueueDefinition>("/odata/QueueDefinitions", folderId);
 
     public QueueDefinition? GetQueue(Int64 folderId, Int64 queueId)
     {
@@ -1189,27 +1130,20 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Put, $"/odata/QueueDefinitions({queue.Id!.Value})", folderId, queue);
     }
 
-    public void PutQueueRetention(Int64 folderId, Int64 queueId, QueueRetentionSetting setting)
-    {
-        HttpRequest(HttpMethod.Put, $"/odata/QueueRetention({queueId})", folderId, setting);
-    }
+    public void PutQueueRetention(Int64 folderId, Int64 queueId, QueueRetentionSetting setting) => HttpRequest(HttpMethod.Put, $"/odata/QueueRetention({queueId})", folderId, setting);
 
-    public void RemoveQueue(Int64 folderId, Int64 queueId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/QueueDefinitions({queueId})", folderId);
-    }
+    public void RemoveQueue(Int64 folderId, Int64 queueId) => HttpRequest(HttpMethod.Delete, $"/odata/QueueDefinitions({queueId})", folderId);
 
-    public AccessibleFoldersDto? GetFoldersForQueue(Int64 folderId, Int64 queueId)
-    {
-        return HttpRequest<AccessibleFoldersDto>(HttpMethod.Get, $"/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetFoldersForQueue(id={queueId})", folderId);
-    }
+    public AccessibleFoldersDto? GetFoldersForQueue(Int64 folderId, Int64 queueId) => HttpRequest<AccessibleFoldersDto>(HttpMethod.Get, $"/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetFoldersForQueue(id={queueId})", folderId);
 
     public void ShareQueuesToFolders(Int64 folderId, List<Int64> queueIds, List<Int64> toAddFolderIds, List<Int64> toRemoveFolderIds)
     {
-        QueueFoldersShare foldersShare = new();
-        foldersShare.QueueIds = queueIds;
-        foldersShare.ToAddFolderIds = toAddFolderIds;
-        foldersShare.ToRemoveFolderIds = toRemoveFolderIds;
+        QueueFoldersShare foldersShare = new()
+        {
+            QueueIds = queueIds,
+            ToAddFolderIds = toAddFolderIds,
+            ToRemoveFolderIds = toRemoveFolderIds
+        };
 
         HttpRequest(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.ShareToFolders", folderId, foldersShare);
     }
@@ -1245,10 +1179,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<QueueItem>("/odata/QueueItems", folderId, $"{filter}{order}&$expand=Robot,ReviewerUser", skip, first);
     }
 
-    public QueueItem? GetQueueItemById(Int64 folderId, Int64 id)
-    {
-        return HttpRequest<QueueItem>(HttpMethod.Get, $"/odata/QueueItems({id})", folderId);
-    }
+    public QueueItem? GetQueueItemById(Int64 folderId, Int64 id) => HttpRequest<QueueItem>(HttpMethod.Get, $"/odata/QueueItems({id})", folderId);
 
     public BulkOperationResponse? RetryQueueItem(Int64 folderId, IEnumerable<RetryQueueItem> items)
     {
@@ -1270,37 +1201,20 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<QueueItem>(HttpMethod.Post, "/odata/QueueItemComments", folderId, payload);
     }
 
-    public BulkOperationResponseOfInt64? DeleteBulkQueueItem(Int64 folderId, QueueItemDeleteBulkRequest payload)
-    {
-        return HttpRequest<BulkOperationResponseOfInt64>(HttpMethod.Post, "/odata/QueueItems/UiPathODataSvc.DeleteBulk", folderId, payload);
-    }
+    public BulkOperationResponseOfInt64? DeleteBulkQueueItem(Int64 folderId, QueueItemDeleteBulkRequest payload) => HttpRequest<BulkOperationResponseOfInt64>(HttpMethod.Post, "/odata/QueueItems/UiPathODataSvc.DeleteBulk", folderId, payload);
 
-    public IEnumerable<RobotsFromFolderModel> GetRobotsFromFolder(Int64 folderId)
-    {
-        return GetEnumerable<RobotsFromFolderModel>($"/odata/Robots/UiPath.Server.Configuration.OData.GetRobotsFromFolder(folderId={folderId})");
-    }
+    public IEnumerable<RobotsFromFolderModel> GetRobotsFromFolder(Int64 folderId) => GetEnumerable<RobotsFromFolderModel>($"/odata/Robots/UiPath.Server.Configuration.OData.GetRobotsFromFolder(folderId={folderId})");
 
     // Used when creating/updating machines. Note the filter is set. This filter text might be better held on the cache side.
     public IEnumerable<ExtendedRobot> FindAllRobotsAcrossFolders()
-    {
-        return GetEnumerable<ExtendedRobot>($"/odata/Robots/UiPath.Server.Configuration.OData.FindAllAcrossFolders", null,
+        => GetEnumerable<ExtendedRobot>($"/odata/Robots/UiPath.Server.Configuration.OData.FindAllAcrossFolders", null,
             "&$filter=Type eq '2' and ProvisionType eq '1'&$expand=User");
-    }
 
-    public IEnumerable<SimpleUser> GetReviewers(Int64 folderId)
-    {
-        return GetEnumerable<SimpleUser>("/odata/QueueItems/UiPath.Server.Configuration.OData.GetReviewers()", folderId, "&$filter=(Type eq 'DirectoryUser')");
-    }
+    public IEnumerable<SimpleUser> GetReviewers(Int64 folderId) => GetEnumerable<SimpleUser>("/odata/QueueItems/UiPath.Server.Configuration.OData.GetReviewers()", folderId, "&$filter=(Type eq 'DirectoryUser')");
 
-    public BulkOperationResponseDtoOfFailedQueueItem? BulkAddQueueItem(Int64 folderId, BulkAddQueueItemsRequest payload)
-    {
-        return HttpRequest<BulkOperationResponseDtoOfFailedQueueItem>(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.BulkAddQueueItems", folderId, payload);
-    }
+    public BulkOperationResponseDtoOfFailedQueueItem? BulkAddQueueItem(Int64 folderId, BulkAddQueueItemsRequest payload) => HttpRequest<BulkOperationResponseDtoOfFailedQueueItem>(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.BulkAddQueueItems", folderId, payload);
 
-    public BulkOperationResponseDtoOfFailedQueueItem? BulkAddQueueItem(Int64 folderId, string payload)
-    {
-        return HttpRequest<BulkOperationResponseDtoOfFailedQueueItem>(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.BulkAddQueueItems", folderId, payload);
-    }
+    public BulkOperationResponseDtoOfFailedQueueItem? BulkAddQueueItem(Int64 folderId, string payload) => HttpRequest<BulkOperationResponseDtoOfFailedQueueItem>(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.BulkAddQueueItems", folderId, payload);
 
     // This API can only be called from Robot...
     //public QueueItem? StartTransaction(Int64 folderId, TransactionData payload)
@@ -1318,46 +1232,22 @@ public partial class OrchAPISession : IDisposable
     #region CredentialStores
 
     // Cannot retrieve Type. It is needed when posting, though...
-    public IEnumerable<CredentialStore> GetCredentialStores()
-    {
-        //return GetEnumerable<CredentialStore>("/odata/CredentialStores?$expand=Type");
-        return GetEnumerable<CredentialStore>("/odata/CredentialStores");
-    }
+    public IEnumerable<CredentialStore> GetCredentialStores() => GetEnumerable<CredentialStore>("/odata/CredentialStores");
 
-    public CredentialStore? GetCredentialStore(Int64 credentialStoreId)
-    {
-        //return GetEnumerable<CredentialStore>("/odata/CredentialStores?$expand=Type");
-        return HttpRequest<CredentialStore>(HttpMethod.Get, $"/odata/CredentialStores({credentialStoreId})");
-    }
+    public CredentialStore? GetCredentialStore(Int64 credentialStoreId) => HttpRequest<CredentialStore>(HttpMethod.Get, $"/odata/CredentialStores({credentialStoreId})");
 
-    public CredentialStore? CreateCredentialStore(CredentialStore credentialStore)
-    {
-        return HttpRequest<CredentialStore>(HttpMethod.Post, "/odata/CredentialStores", null, credentialStore);
-    }
+    public CredentialStore? CreateCredentialStore(CredentialStore credentialStore) => HttpRequest<CredentialStore>(HttpMethod.Post, "/odata/CredentialStores", null, credentialStore);
 
-    public void PutCredentialStore(CredentialStore credentialStore)
-    {
-        HttpRequest(HttpMethod.Put, $"/odata/CredentialStores({credentialStore.Id!.Value})", null, credentialStore);
-    }
+    public void PutCredentialStore(CredentialStore credentialStore) => HttpRequest(HttpMethod.Put, $"/odata/CredentialStores({credentialStore.Id!.Value})", null, credentialStore);
 
-    public void RemoveCredentialStore(Int64 credentialStoreId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/CredentialStores({credentialStoreId})?forceDelete=true");
-    }
-
+    public void RemoveCredentialStore(Int64 credentialStoreId) => HttpRequest(HttpMethod.Delete, $"/odata/CredentialStores({credentialStoreId})?forceDelete=true");
     #endregion
 
     #region Webhooks
-    public IEnumerable<Webhook> GetWebhooks()
-    {
-        return GetEnumerable<Webhook>("/odata/Webhooks");
-    }
+    public IEnumerable<Webhook> GetWebhooks() => GetEnumerable<Webhook>("/odata/Webhooks");
 
     // Returns empty
-    public void RemoveWebhooks(Int64 webhookId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/Webhooks({webhookId})");
-    }
+    public void RemoveWebhooks(Int64 webhookId) => HttpRequest(HttpMethod.Delete, $"/odata/Webhooks({webhookId})");
 
     public Webhook? CreateWebhook(Webhook webhook)
     {
@@ -1371,54 +1261,32 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<Webhook>(HttpMethod.Post, "/odata/Webhooks", null, webhook);
     }
 
-    public Webhook? PatchWebhook(Int64 webhookId, Webhook webhook)
-    {
-        return HttpRequest<Webhook>(HttpMethod.Patch, $"/odata/Webhooks({webhookId})", null, webhook);
-    }
+    public Webhook? PatchWebhook(Int64 webhookId, Webhook webhook) => HttpRequest<Webhook>(HttpMethod.Patch, $"/odata/Webhooks({webhookId})", null, webhook);
 
-    public IEnumerable<WebhookEventType> GetWebhookEventTypes()
-    {
-        return GetEnumerable<WebhookEventType>("/odata/Webhooks/UiPath.Server.Configuration.OData.GetEventTypes");
-    }
+    public IEnumerable<WebhookEventType> GetWebhookEventTypes() => GetEnumerable<WebhookEventType>("/odata/Webhooks/UiPath.Server.Configuration.OData.GetEventTypes");
 
-    public WebhookPingResult? PingWebhook(Int64 webhookId)
-    {
-        return HttpRequest<WebhookPingResult>(HttpMethod.Post, $"/odata/Webhooks({webhookId})/UiPath.Server.Configuration.OData.Ping");
-    }
+    public WebhookPingResult? PingWebhook(Int64 webhookId) => HttpRequest<WebhookPingResult>(HttpMethod.Post, $"/odata/Webhooks({webhookId})/UiPath.Server.Configuration.OData.Ping");
     #endregion
 
     #region BusinessRules
 
-    public IEnumerable<BusinessRule> GetBusinessRules(Int64 folderId)
-    {
-        return GetEnumerable<BusinessRule>("/odata/BusinessRules", folderId);
-    }
+    public IEnumerable<BusinessRule> GetBusinessRules(Int64 folderId) => GetEnumerable<BusinessRule>("/odata/BusinessRules", folderId);
 
-    public BusinessRule? GetBusinessRule(Int64 folderId, string businessRuleKey)
-    {
-        return HttpRequest<BusinessRule>(HttpMethod.Get, $"/odata/BusinessRules({businessRuleKey})", folderId);
-    }
+    public BusinessRule? GetBusinessRule(Int64 folderId, string businessRuleKey) => HttpRequest<BusinessRule>(HttpMethod.Get, $"/odata/BusinessRules({businessRuleKey})", folderId);
 
-    public void RemoveBusinessRule(Int64 folderId, string businessRuleKey)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/BusinessRules({businessRuleKey})", folderId);
-    }
+    public void RemoveBusinessRule(Int64 folderId, string businessRuleKey) => HttpRequest(HttpMethod.Delete, $"/odata/BusinessRules({businessRuleKey})", folderId);
 
-    public BusinessRule? CreateBusinessRule(Int64 folderId, BusinessRule businessRule, string fileName, byte[] file)
-    {
+    public BusinessRule? CreateBusinessRule(Int64 folderId, BusinessRule businessRule, string fileName, byte[] file) =>
         // Browser HAR shows POST /odata/BusinessRules with multipart/form-data:
         //   businessRule (text)  : JSON-serialized BusinessRuleDto (PascalCase fields)
         //   file (binary)        : the rule definition file (.dmn), Content-Type application/octet-stream
         // X-UIPATH-OrganizationUnitId carries the folder context.
-        return PostMultipartBusinessRule(HttpMethod.Post, "/odata/BusinessRules", folderId, businessRule, fileName, file);
-    }
+        PostMultipartBusinessRule(HttpMethod.Post, "/odata/BusinessRules", folderId, businessRule, fileName, file);
 
-    public void UpdateBusinessRule(Int64 folderId, string businessRuleId, BusinessRule businessRule, string? fileName = null, byte[]? file = null)
-    {
+    public void UpdateBusinessRule(Int64 folderId, string businessRuleId, BusinessRule businessRule, string? fileName = null, byte[]? file = null) =>
         // PUT /odata/BusinessRules({id}). Same multipart shape as POST, but `file` is optional —
         // omitting it preserves the existing rule definition while updating metadata only.
         PostMultipartBusinessRule(HttpMethod.Put, $"/odata/BusinessRules({businessRuleId})", folderId, businessRule, fileName, file);
-    }
 
     private BusinessRule? PostMultipartBusinessRule(HttpMethod method, string endpoint, Int64 folderId, BusinessRule businessRule, string? fileName, byte[]? file)
     {
@@ -1448,18 +1316,12 @@ public partial class OrchAPISession : IDisposable
     #endregion
 
     #region Environent
-    public IEnumerable<PowerShell.Entities.Environment> GetEnvironments(Int64 folderId)
-    {
-        return GetEnumerable<PowerShell.Entities.Environment>("/odata/Environments", folderId, "&$expand=Robots");
-    }
+    public IEnumerable<PowerShell.Entities.Environment> GetEnvironments(Int64 folderId) => GetEnumerable<PowerShell.Entities.Environment>("/odata/Environments", folderId, "&$expand=Robots");
     #endregion
 
     #region Folders
 
-    public IEnumerable<Folder> GetFolders()
-    {
-        return GetEnumerable<Folder>("/odata/Folders");
-    }
+    public IEnumerable<Folder> GetFolders() => GetEnumerable<Folder>("/odata/Folders");
 
     // This endpoint cannot be called from OAuth external app..
     //public void GetAllFoldersForCurrentUser()
@@ -1474,10 +1336,7 @@ public partial class OrchAPISession : IDisposable
     //    return HttpRequest(HttpMethod.Get, $"/api/FoldersNavigation/GetAllRolesForUser?username={userName}&type={type}");
     //}
 
-    public Folder? GetFolderById(Int64 Id)
-    {
-        return HttpRequest<Folder>(HttpMethod.Get, $"/odata/Folders({Id})");
-    }
+    public Folder? GetFolderById(Int64 Id) => HttpRequest<Folder>(HttpMethod.Get, $"/odata/Folders({Id})");
 
     public Folder? CreateFolder(string displayName, string? description, string? feedType, Int64? parentFolderId = null)
     {
@@ -1499,10 +1358,7 @@ public partial class OrchAPISession : IDisposable
         return newFolder;
     }
 
-    public void RemoveFolder(Int64 folderId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/Folders({folderId})");
-    }
+    public void RemoveFolder(Int64 folderId) => HttpRequest(HttpMethod.Delete, $"/odata/Folders({folderId})");
 
     public void EditFolder(Folder folder, string displayName, string? description = null)
     {
@@ -1537,10 +1393,7 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Put, endPoint);
     }
 
-    public LibraryFeed[]? GetLibraryFeeds()
-    {
-        return HttpRequest<LibraryFeed[]>(HttpMethod.Get, "/api/PackageFeeds/GetLibraryFeeds");
-    }
+    public LibraryFeed[]? GetLibraryFeeds() => HttpRequest<LibraryFeed[]>(HttpMethod.Get, "/api/PackageFeeds/GetLibraryFeeds");
 
     // This method should not return ""
     // The caller needs to convert null to "" as necessary
@@ -1557,22 +1410,11 @@ public partial class OrchAPISession : IDisposable
         return feedId;
     }
 
-    public IEnumerable<UserRoles> GetUsersForFolder(Int64 folderId, bool includeInherited = false)
-    {
-        return GetEnumerable<UserRoles>($"/odata/Folders/UiPath.Server.Configuration.OData.GetUsersForFolder(key={folderId},includeInherited={includeInherited.ToString().ToLower()})", null, "&includeAlertsEnabled=true");
-    }
+    public IEnumerable<UserRoles> GetUsersForFolder(Int64 folderId, bool includeInherited = false) => GetEnumerable<UserRoles>($"/odata/Folders/UiPath.Server.Configuration.OData.GetUsersForFolder(key={folderId},includeInherited={includeInherited.ToString().ToLower()})", null, "&includeAlertsEnabled=true");
 
-    public void AssignDomainUser(DomainUserAssignment user)
-    {
-        var request = new { assignment = user };
-        HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignDomainUser", null, request);
-    }
+    public void AssignDomainUser(DomainUserAssignment user) => HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignDomainUser", null, new { assignment = user });
 
-    public void AssignDirectoryUser(DomainUserAssignment user)
-    {
-        var request = new { assignment = user };
-        HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignDirectoryUser", null, request);
-    }
+    public void AssignDirectoryUser(DomainUserAssignment user) => HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignDirectoryUser", null, new { assignment = user });
 
     // Routes folder-user assignment based on the Orchestrator edition: Cloud
     // takes /AssignDirectoryUser; OnPrem takes /AssignDomainUser. Calling the
@@ -1611,42 +1453,24 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignUsers", null, payload);
     }
 
-    public IEnumerable<MachineFolder> GetMachinesAssignedTo(Int64 folderId, string? query = null)
-    {
-        return GetEnumerable<MachineFolder>($"/odata/Folders/UiPath.Server.Configuration.OData.GetMachinesForFolder(key={folderId})", null, query);
-    }
+    public IEnumerable<MachineFolder> GetMachinesAssignedTo(Int64 folderId, string? query = null) => GetEnumerable<MachineFolder>($"/odata/Folders/UiPath.Server.Configuration.OData.GetMachinesForFolder(key={folderId})", null, query);
 
     // Verified on ApiVersion = 15
     public void SetFolderMachineInherit(Int64 folderId, Int64 machineId, bool enabled)
-    {
-        var payload = new { MachineId = machineId, FolderId = folderId, InheritEnabled = enabled };
-        // Returns ""
-        HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.ToggleFolderMachineInherit", folderId, payload);
-    }
+        => HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.ToggleFolderMachineInherit", folderId, new { MachineId = machineId, FolderId = folderId, InheritEnabled = enabled });
 
     // TODO: Specifying the filter here, but that should be fine... It might be better to implement on the cache side later.
-    public IEnumerable<ExtendedRobot> GetFolderRobots(Int64 folderId, MachineFolder machine)
-    {
-        return GetEnumerable<ExtendedRobot>($"/odata/Robots/UiPath.Server.Configuration.OData.GetFolderRobots(folderId={folderId},machineId={machine.Id})",
+    public IEnumerable<ExtendedRobot> GetFolderRobots(Int64 folderId, MachineFolder machine) => GetEnumerable<ExtendedRobot>($"/odata/Robots/UiPath.Server.Configuration.OData.GetFolderRobots(folderId={folderId},machineId={machine.Id})",
             null,
             "&$filter=Type eq '2' and ProvisionType eq 'Automatic'&$expand=User");
-    }
 
-    public IEnumerable<RobotUser> GetMachineRobots(Int64 folderId, MachineFolder machine)
-    {
-        return GetEnumerable<RobotUser>($"/odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machine.Id})");
-    }
+    public IEnumerable<RobotUser> GetMachineRobots(Int64 folderId, MachineFolder machine) => GetEnumerable<RobotUser>($"/odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machine.Id})");
 
-    public void SetMachineRobots(SetMachineRobotsCmd cmd)
-    {
+    public void SetMachineRobots(SetMachineRobotsCmd cmd) =>
         // Returns nothing
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.SetMachineRobots", null, cmd);
-    }
 
-    public IEnumerable<UserRobots> GetUserRobots(Int64 folderId)
-    {
-        return GetEnumerable<UserRobots>("/odata/Sessions/UiPath.Server.Configuration.OData.GetUserRobots", folderId, "&$filter=startswith(Robot/Username,'autogen\\') eq false and Robot/Username ne ''");
-    }
+    public IEnumerable<UserRobots> GetUserRobots(Int64 folderId) => GetEnumerable<UserRobots>("/odata/Sessions/UiPath.Server.Configuration.OData.GetUserRobots", folderId, "&$filter=startswith(Robot/Username,'autogen\\') eq false and Robot/Username ne ''");
 
     public void AddMachinesToFolder(Int64 folderId, IEnumerable<Int64> machineIds)
     {
@@ -1682,22 +1506,13 @@ public partial class OrchAPISession : IDisposable
 
     #endregion
 
-    public AvailableVersions? GetAvailableVersions()
-    {
-        return HttpRequest<AvailableVersions>(HttpMethod.Get, "/api/UpdateServer/GetAvailableVersions?onlyLatestPatchVersions=true");
-    }
+    public AvailableVersions? GetAvailableVersions() => HttpRequest<AvailableVersions>(HttpMethod.Get, "/api/UpdateServer/GetAvailableVersions?onlyLatestPatchVersions=true");
 
     #region PersonalWorkspaces
 
-    public PersonalWorkspace? GetPersonalWorkspace()
-    {
-        return HttpRequest<PersonalWorkspace>(HttpMethod.Get, "/odata/PersonalWorkspaces/UiPath.Server.Configuration.OData.GetPersonalWorkspace");
-    }
+    public PersonalWorkspace? GetPersonalWorkspace() => HttpRequest<PersonalWorkspace>(HttpMethod.Get, "/odata/PersonalWorkspaces/UiPath.Server.Configuration.OData.GetPersonalWorkspace");
 
-    public IEnumerable<PersonalWorkspace> GetPersonalWorkspaces()
-    {
-        return GetEnumerable<PersonalWorkspace>("/odata/PersonalWorkspaces");
-    }
+    public IEnumerable<PersonalWorkspace> GetPersonalWorkspaces() => GetEnumerable<PersonalWorkspace>("/odata/PersonalWorkspaces");
 
     // Currently, this API cannot be called because it does not support OAuth.
     //public void StartExploringPersonalWorkspace(Int64? folderId)
@@ -1705,10 +1520,7 @@ public partial class OrchAPISession : IDisposable
     //    string body = HttpRequest(HttpMethod.Get, $"/odata/PersonalWorkspaces({folderId})/UiPath.Server.Configuration.OData.StartExploring");
     //}
 
-    public EntitiesSummary? GetEntitiesSummary(Int64 folderId)
-    {
-        return HttpRequest<EntitiesSummary>(HttpMethod.Get, $"/odata/Folders/UiPath.Server.Configuration.OData.GetEntitiesSummary(folderId={folderId})?includeShared=true");
-    }
+    public EntitiesSummary? GetEntitiesSummary(Int64 folderId) => HttpRequest<EntitiesSummary>(HttpMethod.Get, $"/odata/Folders/UiPath.Server.Configuration.OData.GetEntitiesSummary(folderId={folderId})?includeShared=true");
 
     #endregion
 
@@ -1743,10 +1555,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<Job>("/odata/Jobs", folderId, $"{filter}{expand}{order}", skip, first);
     }
 
-    public Job? GetJob(Int64 folderId, Int64 jobId)
-    {
-        return HttpRequest<Job>(HttpMethod.Get, $"/odata/Jobs({jobId})?$expand=Robot,Machine,Release", folderId);
-    }
+    public Job? GetJob(Int64 folderId, Int64 jobId) => HttpRequest<Job>(HttpMethod.Get, $"/odata/Jobs({jobId})?$expand=Robot,Machine,Release", folderId);
 
     public MachineRuntime[] GetRuntimesForFolder(Int64 folderId)
     {
@@ -1774,24 +1583,11 @@ public partial class OrchAPISession : IDisposable
         return httpBody?.value ?? [];
     }
 
-    public void StopJobs(Int64 folderId, IEnumerable<Int64> jobIds, bool force = false)
-    {
-        var payload = new { strategy = force ? "2" : "1", jobIds };
+    public void StopJobs(Int64 folderId, IEnumerable<Int64> jobIds, bool force = false) => HttpRequest(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs", folderId, new { strategy = force ? "2" : "1", jobIds });
 
-        HttpRequest(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs", folderId, payload);
-    }
+    public Job? RestartJob(Int64 folderId, Int64 jobId) => HttpRequest<Job>(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.RestartJob", folderId, new { jobId });
 
-    public Job? RestartJob(Int64 folderId, Int64 jobId)
-    {
-        var payload = new { jobId };
-        return HttpRequest<Job>(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.RestartJob", folderId, payload);
-    }
-
-    public Job? ResumeJob(Int64 folderId, string jobKey)
-    {
-        var payload = new { jobKey };
-        return HttpRequest<Job>(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.ResumeJob", folderId, payload);
-    }
+    public Job? ResumeJob(Int64 folderId, string jobKey) => HttpRequest<Job>(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.ResumeJob", folderId, new { jobKey });
 
     //public string? StartRemoteControl(Int64 folderId, string jobKey)
     //{
@@ -1806,10 +1602,7 @@ public partial class OrchAPISession : IDisposable
 
     #region Machines
 
-    public IEnumerable<ExtendedMachine> GetMachines(string? query = null)
-    {
-        return GetEnumerable<ExtendedMachine>("/odata/Machines", null, query);
-    }
+    public IEnumerable<ExtendedMachine> GetMachines(string? query = null) => GetEnumerable<ExtendedMachine>("/odata/Machines", null, query);
 
     public CreatedMachine? AddMachine(ExtendedMachine machine) //, IEnumerable<RobotUser> robotUsers)
     {
@@ -1837,47 +1630,27 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<CreatedMachine>(HttpMethod.Post, "/odata/Machines", null, machine);
     }
 
-    public MachineClientSecretResponse[]? GetMachineClientSecret(string licenseKey)
-    {
-        return HttpRequest<MachineClientSecretResponse[]>(HttpMethod.Get, $"/api/clientsecrets/{licenseKey}");
-    }
+    public MachineClientSecretResponse[]? GetMachineClientSecret(string licenseKey) => HttpRequest<MachineClientSecretResponse[]>(HttpMethod.Get, $"/api/clientsecrets/{licenseKey}");
 
-    public MachineClientSecretResponse? AddMachineClientSecret(string licenseKey)
-    {
-        return HttpRequest<MachineClientSecretResponse>(HttpMethod.Post, $"/api/clientsecrets/{licenseKey}");
-    }
+    public MachineClientSecretResponse? AddMachineClientSecret(string licenseKey) => HttpRequest<MachineClientSecretResponse>(HttpMethod.Post, $"/api/clientsecrets/{licenseKey}");
 
-    public void DeleteMachineClientSecret(string secretId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/api/clientsecrets/{secretId}");
-    }
+    public void DeleteMachineClientSecret(string secretId) => HttpRequest(HttpMethod.Delete, $"/api/clientsecrets/{secretId}");
 
-    public void PatchMachine(ExtendedMachine machine)
-    {
-        // Returns an empty string
-        HttpRequest(HttpMethod.Patch, $"/odata/Machines({machine.Id!.Value})", null, machine);
-    }
+    // Returns an empty string
+    public void PatchMachine(ExtendedMachine machine) => HttpRequest(HttpMethod.Patch, $"/odata/Machines({machine.Id!.Value})", null, machine);
 
-    public void RemoveMachine(Int64 machineId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/Machines({machineId})");
-    }
+    public void RemoveMachine(Int64 machineId) => HttpRequest(HttpMethod.Delete, $"/odata/Machines({machineId})");
 
-    public void RemoveMachines(IEnumerable<Int64> machineIds)
-    {
-        // POST is correct for some reason.
-        HttpRequest(HttpMethod.Post, $"/odata/Machines/UiPath.Server.Configuration.OData.DeleteBulk", null, new { machineIds });
-    }
+    // POST is correct for some reason.
+    public void RemoveMachines(IEnumerable<Int64> machineIds) => HttpRequest(HttpMethod.Post, $"/odata/Machines/UiPath.Server.Configuration.OData.DeleteBulk", null, new { machineIds });
 
     #endregion
 
     #region Packages
 
-    public IEnumerable<Library> GetLibraries(string? feedId = null)
-    {
+    public IEnumerable<Library> GetLibraries(string? feedId = null) =>
         //return GetEnumerable<Library>("/odata/Libraries?$orderby=Id%20desc"); // doesn't work for some reason?
-        return GetEnumerable<Library>("/odata/Libraries", null, feedId is null ? null : $"&feedId={feedId}");
-    }
+        GetEnumerable<Library>("/odata/Libraries", null, feedId is null ? null : $"&feedId={feedId}");
 
     public IEnumerable<Package> GetPackages(string? feedId = null)
     {
@@ -1940,10 +1713,7 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    public void RemoveLibrary(string libraryId, string libraryVersion)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/Libraries('{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(libraryId))}:{libraryVersion}')");
-    }
+    public void RemoveLibrary(string libraryId, string libraryVersion) => HttpRequest(HttpMethod.Delete, $"/odata/Libraries('{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(libraryId))}:{libraryVersion}')");
 
     public void RemovePackage(string processId, string processVersion, string? feedId = null)
     {
@@ -2107,15 +1877,9 @@ public partial class OrchAPISession : IDisposable
 
     #region Process
 
-    public IEnumerable<Release> ListReleases(Int64 folderId)
-    {
-        return GetEnumerable<Release>("/odata/Releases/UiPath.Server.Configuration.OData.ListReleases", folderId, "&$filter=ProcessType eq '1'");
-    }
+    public IEnumerable<Release> ListReleases(Int64 folderId) => GetEnumerable<Release>("/odata/Releases/UiPath.Server.Configuration.OData.ListReleases", folderId, "&$filter=ProcessType eq '1'");
 
-    public IEnumerable<Release> GetReleases(Int64 folderId, string? query = null)
-    {
-        return GetEnumerable<Release>("/odata/Releases", folderId, query);
-    }
+    public IEnumerable<Release> GetReleases(Int64 folderId, string? query = null) => GetEnumerable<Release>("/odata/Releases", folderId, query);
 
     public Release? GetReleaseById(Int64 folderId, Int64 releaseId, string? query = null)
     {
@@ -2247,39 +2011,20 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<ReleaseRetentionSetting>(HttpMethod.Get, $"/odata/ReleaseRetention({releaseId})", folderId);
     }
 
-    public void PutReleaseRetention(Int64 folderId, Int64 releaseId, ReleaseRetentionSetting setting)
-    {
-        HttpRequest(HttpMethod.Put, $"/odata/ReleaseRetention({releaseId})", folderId, setting);
-    }
+    public void PutReleaseRetention(Int64 folderId, Int64 releaseId, ReleaseRetentionSetting setting) => HttpRequest(HttpMethod.Put, $"/odata/ReleaseRetention({releaseId})", folderId, setting);
 
     #endregion ReleaseRetention
 
-    public void RemoveRelease(Int64 folderId, Int64 processId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/Releases({processId})", folderId);
-    }
+    public void RemoveRelease(Int64 folderId, Int64 processId) => HttpRequest(HttpMethod.Delete, $"/odata/Releases({processId})", folderId);
 
     public void UpdateReleaseToLatestVersionBulk(Int64 folderId, IEnumerable<Int64> processIds)
-    {
-        var payload = new { releaseIds = processIds, mergePackageTags = false };
+        => HttpRequest(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersionBulk", folderId, new { releaseIds = processIds, mergePackageTags = false });
 
-        HttpRequest(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersionBulk", folderId, payload);
-    }
+    public void UpdateReleaseToLatestVersion(Int64 folderId, Int64 processId) => HttpRequest(HttpMethod.Post, $"/odata/Releases({processId})/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersion?mergePackageTags=false", folderId, (object?)null);
 
-    public void UpdateReleaseToLatestVersion(Int64 folderId, Int64 processId)
-    {
-        HttpRequest(HttpMethod.Post, $"/odata/Releases({processId})/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersion?mergePackageTags=false", folderId, (object?)null);
-    }
+    public void UpdateReleaseToSpecificVersion(Int64 folderId, Int64 processId, string version) => HttpRequest(HttpMethod.Post, $"/odata/Releases({processId})/UiPath.Server.Configuration.OData.UpdateToSpecificPackageVersion", folderId, new { packageVersion = version });
 
-    public void UpdateReleaseToSpecificVersion(Int64 folderId, Int64 processId, string version)
-    {
-        HttpRequest(HttpMethod.Post, $"/odata/Releases({processId})/UiPath.Server.Configuration.OData.UpdateToSpecificPackageVersion", folderId, new { packageVersion = version });
-    }
-
-    public void RollbackReleaseVersion(Int64 folderId, Int64 processIds)
-    {
-        HttpRequest(HttpMethod.Post, $"/odata/Releases({processIds})/UiPath.Server.Configuration.OData.RollbackToPreviousReleaseVersion?mergePackageTags=false", folderId, (object?)null);
-    }
+    public void RollbackReleaseVersion(Int64 folderId, Int64 processIds) => HttpRequest(HttpMethod.Post, $"/odata/Releases({processIds})/UiPath.Server.Configuration.OData.RollbackToPreviousReleaseVersion?mergePackageTags=false", folderId, (object?)null);
 
     public void CreateRelease(Int64 folderId, Package package, Int64? entryPointId = null)
     {
@@ -2298,21 +2043,12 @@ public partial class OrchAPISession : IDisposable
 
     #region ProcessSchedule
 
-    public IEnumerable<ProcessSchedule> GetProcessSchedules(Int64 folderId)
-    {
-        return GetEnumerable<ProcessSchedule>("/odata/ProcessSchedules", folderId);
-    }
+    public IEnumerable<ProcessSchedule> GetProcessSchedules(Int64 folderId) => GetEnumerable<ProcessSchedule>("/odata/ProcessSchedules", folderId);
 
-    public ProcessSchedule? GetProcessSchedule(Int64 folderId, Int64 processScheduleId)
-    {
-        return HttpRequest<ProcessSchedule>(HttpMethod.Get, $"/odata/ProcessSchedules({processScheduleId})", folderId);
-    }
+    public ProcessSchedule? GetProcessSchedule(Int64 folderId, Int64 processScheduleId) => HttpRequest<ProcessSchedule>(HttpMethod.Get, $"/odata/ProcessSchedules({processScheduleId})", folderId);
 
     // Get the ExecutorRobots of the trigger
-    public Int64[]? GetRobotIdsForSchedule(Int64 folderId, Int64 processScheduleId)
-    {
-        return HttpRequest<HttpBodyValue<Int64[]>>(HttpMethod.Get, $"/odata/ProcessSchedules/UiPath.Server.Configuration.OData.GetRobotIdsForSchedule(key={processScheduleId})", folderId)?.value;
-    }
+    public Int64[] GetRobotIdsForSchedule(Int64 folderId, Int64 processScheduleId) => HttpRequest<HttpBodyValue<Int64[]>>(HttpMethod.Get, $"/odata/ProcessSchedules/UiPath.Server.Configuration.OData.GetRobotIdsForSchedule(key={processScheduleId})", folderId)?.value ?? [];
 
     // Strip ProcessScheduleDto fields per swagger v15-v20. Same WhenWritingNull rationale as
     // StripReleaseFieldsForApiVersion. /odata/ProcessSchedules POST/PUT is strict and replies
@@ -2375,35 +2111,24 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Put, $"/odata/ProcessSchedules({schedule.Id})", folderId, schedule);
     }
 
-    public void DeleteProcessSchedule(Int64 folderId, Int64 processScheduleId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/ProcessSchedules({processScheduleId})", folderId);
-    }
+    public void DeleteProcessSchedule(Int64 folderId, Int64 processScheduleId) => HttpRequest(HttpMethod.Delete, $"/odata/ProcessSchedules({processScheduleId})", folderId);
 
     public bool? EnableProcessSchedule(Int64 folderId, IEnumerable<Int64> processScheduleIds, bool enabled = true)
     {
-        var payload = new { scheduleIds = processScheduleIds, enabled };
-
-        var ret = HttpRequest<HttpBodyValue<bool>>(HttpMethod.Post, "/odata/ProcessSchedules/UiPath.Server.Configuration.OData.SetEnabled", folderId, payload);
+        var ret = HttpRequest<HttpBodyValue<bool>>(HttpMethod.Post, "/odata/ProcessSchedules/UiPath.Server.Configuration.OData.SetEnabled", folderId, new { scheduleIds = processScheduleIds, enabled });
         return ret?.value;
     }
 
     // Server-side validation of a ProcessSchedule's executability (robot/template/license checks)
     // without committing changes. Returns IsValid + Errors + ErrorCodes.
-    public ValidationResult? ValidateProcessSchedule(Int64 folderId, ProcessSchedule schedule)
-    {
-        var payload = new { processSchedule = schedule };
-        return HttpRequest<ValidationResult>(HttpMethod.Post, "/odata/ProcessSchedules/UiPath.Server.Configuration.OData.ValidateProcessSchedule", folderId, payload);
-    }
+    public ValidationResult? ValidateProcessSchedule(Int64 folderId, ProcessSchedule schedule) =>
+        HttpRequest<ValidationResult>(HttpMethod.Post, "/odata/ProcessSchedules/UiPath.Server.Configuration.OData.ValidateProcessSchedule", folderId, new { processSchedule = schedule });
 
     #endregion
 
     #region Buckets
 
-    public IEnumerable<Bucket> GetBuckets(Int64 folderId)
-    {
-        return GetEnumerable<Bucket>("/odata/Buckets", folderId);
-    }
+    public IEnumerable<Bucket> GetBuckets(Int64 folderId) => GetEnumerable<Bucket>("/odata/Buckets", folderId);
 
     public Bucket? PostBucket(Int64 folderId, Bucket bucket)
     {
@@ -2423,36 +2148,18 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Put, $"/odata/Buckets({bucket.Id!.Value})", folderId, bucket);
     }
 
-    public void DeleteBucket(Int64 folderId, Int64 bucketId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/Buckets({bucketId})", folderId);
-    }
+    public void DeleteBucket(Int64 folderId, Int64 bucketId) => HttpRequest(HttpMethod.Delete, $"/odata/Buckets({bucketId})", folderId);
 
     // Returns nothing
-    public void DeleteBucketItem(Int64 folderId, Int64 bucketId, string fullPath)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.DeleteFile?path={Uri.EscapeDataString(fullPath)}", folderId);
-    }
+    public void DeleteBucketItem(Int64 folderId, Int64 bucketId, string fullPath) => HttpRequest(HttpMethod.Delete, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.DeleteFile?path={Uri.EscapeDataString(fullPath)}", folderId);
 
-    public IEnumerable<BlobFile> GetBucketDirectories(Int64 folderId, Int64 bucketId)
-    {
-        return GetEnumerable<BlobFile>($"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetDirectories", folderId, "&directory=%2F&recursive=true");
-    }
+    public IEnumerable<BlobFile> GetBucketDirectories(Int64 folderId, Int64 bucketId) => GetEnumerable<BlobFile>($"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetDirectories", folderId, "&directory=%2F&recursive=true");
 
-    public IEnumerable<BlobFile> GetBucketFiles(Int64 folderId, Bucket bucket)
-    {
-        return GetEnumerable<BlobFile>($"/odata/Buckets({bucket.Id})/UiPath.Server.Configuration.OData.GetFiles", folderId, "&directory=%2F&recursive=true");
-    }
+    public IEnumerable<BlobFile> GetBucketFiles(Int64 folderId, Bucket bucket) => GetEnumerable<BlobFile>($"/odata/Buckets({bucket.Id})/UiPath.Server.Configuration.OData.GetFiles", folderId, "&directory=%2F&recursive=true");
 
-    public BlobFileAccess? GetBucketReadUri(Int64 folderId, Int64 bucketId, string fullPath)
-    {
-        return HttpRequest<BlobFileAccess>(HttpMethod.Get, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetReadUri?path={Uri.EscapeDataString(fullPath)}", folderId);
-    }
+    public BlobFileAccess? GetBucketReadUri(Int64 folderId, Int64 bucketId, string fullPath) => HttpRequest<BlobFileAccess>(HttpMethod.Get, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetReadUri?path={Uri.EscapeDataString(fullPath)}", folderId);
 
-    public BlobFileAccess? GetBucketWriteUri(Int64 folderId, Int64 bucketId, string fullPath)
-    {
-        return HttpRequest<BlobFileAccess>(HttpMethod.Get, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetWriteUri?path={Uri.EscapeDataString(fullPath)}", folderId);
-    }
+    public BlobFileAccess? GetBucketWriteUri(Int64 folderId, Int64 bucketId, string fullPath) => HttpRequest<BlobFileAccess>(HttpMethod.Get, $"/odata/Buckets({bucketId})/UiPath.Server.Configuration.OData.GetWriteUri?path={Uri.EscapeDataString(fullPath)}", folderId);
 
     private static bool ShouldSkipHeader(string headerName)
     {
@@ -2567,10 +2274,7 @@ public partial class OrchAPISession : IDisposable
     }
 
     // Synchronous version
-    public void ReadBucketItem(BlobFileAccess? access, string destinationPath, CancellationToken cancellationToken = default)
-    {
-        ReadBucketItemAsync(access, destinationPath, cancellationToken).GetAwaiter().GetResult();
-    }
+    public void ReadBucketItem(BlobFileAccess? access, string destinationPath, CancellationToken cancellationToken = default) => ReadBucketItemAsync(access, destinationPath, cancellationToken).GetAwaiter().GetResult();
 
     public void WriteBucketItem(BlobFileAccess access, string filePath, CancellationToken cancelToken)
     {
@@ -2614,10 +2318,7 @@ public partial class OrchAPISession : IDisposable
     //    string body = HttpRequest(HttpMethod.Get, "/odata/Buckets/UiPath.Server.Configuration.OData.GetBucketsAcrossFolders", folderId);
     //}
 
-    public AccessibleFoldersDto? GetFoldersForBucket(Int64 folderId, Int64 bucketId)
-    {
-        return HttpRequest<AccessibleFoldersDto>(HttpMethod.Get, $"/odata/Buckets/UiPath.Server.Configuration.OData.GetFoldersForBucket(id={bucketId})", folderId);
-    }
+    public AccessibleFoldersDto? GetFoldersForBucket(Int64 folderId, Int64 bucketId) => HttpRequest<AccessibleFoldersDto>(HttpMethod.Get, $"/odata/Buckets/UiPath.Server.Configuration.OData.GetFoldersForBucket(id={bucketId})", folderId);
 
     public void ShareBucketsToFolders(Int64 folderId, List<Int64> bucketIds, List<Int64> toAddFolderIds, List<Int64> toRemoveFolderIds)
     {
@@ -2642,10 +2343,7 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<HttpTrigger>("/odata/HttpTriggers", folderId);
     }
 
-    public HttpTrigger? GetHttpTrigger(Int64 folderId, string triggerId)
-    {
-        return HttpRequest<HttpTrigger>(HttpMethod.Get, $"/odata/HttpTriggers({triggerId})", folderId);
-    }
+    public HttpTrigger? GetHttpTrigger(Int64 folderId, string triggerId) => HttpRequest<HttpTrigger>(HttpMethod.Get, $"/odata/HttpTriggers({triggerId})", folderId);
 
     public HttpTrigger? CreateHttpTrigger(Int64 folderId, HttpTrigger trigger)
     {
@@ -2682,17 +2380,12 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Put, $"/odata/HttpTriggers({trigger.Id})", folderId, trigger);
     }
 
-    public void RemoveHttpTrigger(Int64 folderId, string triggerId)
-    {
-        // nothing returns
-        HttpRequest(HttpMethod.Delete, $"/odata/HttpTriggers({triggerId})", folderId);
-    }
+    // nothing returns
+    public void RemoveHttpTrigger(Int64 folderId, string triggerId) => HttpRequest(HttpMethod.Delete, $"/odata/HttpTriggers({triggerId})", folderId);
 
     public bool? EnableHttpTriggers(Int64 folderId, string[] triggerIds, bool enabled = true)
     {
-        var payload = new { enabled, triggerIds };
-
-        var ret = HttpRequest<HttpBodyValue<bool>>(HttpMethod.Post, "/odata/HttpTriggers/UiPath.Server.Configuration.OData.SetEnabled", folderId, payload);
+        var ret = HttpRequest<HttpBodyValue<bool>>(HttpMethod.Post, "/odata/HttpTriggers/UiPath.Server.Configuration.OData.SetEnabled", folderId, new { enabled, triggerIds });
         return ret?.value;
     }
 
@@ -2706,17 +2399,12 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<ApiTrigger>("/odata/ApiTriggers", folderId);
     }
 
-    public void RemoveEventTrigger(Int64 folderId, string triggerId)
-    {
-        // nothing returns
-        HttpRequest(HttpMethod.Delete, $"/odata/ApiTriggers({triggerId})", folderId);
-    }
+    // nothing returns
+    public void RemoveEventTrigger(Int64 folderId, string triggerId) => HttpRequest(HttpMethod.Delete, $"/odata/ApiTriggers({triggerId})", folderId);
 
     public bool? EnableEventTriggers(Int64 folderId, string triggerId, bool enabled = true)
     {
-        var payload = new { Enabled = enabled };
-
-        var ret = HttpRequest<HttpBodyValue<bool>>(HttpMethod.Patch, $"/odata/ApiTriggers({triggerId})", folderId, payload);
+        var ret = HttpRequest<HttpBodyValue<bool>>(HttpMethod.Patch, $"/odata/ApiTriggers({triggerId})", folderId, new { Enabled = enabled });
         return ret?.value;
     }
     #endregion
@@ -2738,31 +2426,19 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<Log>("/odata/RobotLogs", folderId, $"{query}{order}", skip, first);
     }
 
-    public IEnumerable<AuditLog> GetAuditLogs(string? query, ulong skip, ulong first)
-    {
-        return GetEnumerable<AuditLog>("/odata/AuditLogs", null, query, skip, first);
-    }
+    public IEnumerable<AuditLog> GetAuditLogs(string? query, ulong skip, ulong first) => GetEnumerable<AuditLog>("/odata/AuditLogs", null, query, skip, first);
 
-    public IEnumerable<AuditLogEntity> GetAuditLogDetails(Int64 auditLogId)
-    {
-        return GetEnumerable<AuditLogEntity>($"/odata/AuditLogs/UiPath.Server.Configuration.OData.GetAuditLogDetails(auditLogId={auditLogId})");
-    }
+    public IEnumerable<AuditLogEntity> GetAuditLogDetails(Int64 auditLogId) => GetEnumerable<AuditLogEntity>($"/odata/AuditLogs/UiPath.Server.Configuration.OData.GetAuditLogDetails(auditLogId={auditLogId})");
 
     #endregion
 
     #region Robot
-    public IEnumerable<Robot> GetRobots()
-    {
-        return GetEnumerable<Robot>("/odata/Robots/UiPath.Server.Configuration.OData.GetConfiguredRobots", null, "&$expand=User");
-    }
+    public IEnumerable<Robot> GetRobots() => GetEnumerable<Robot>("/odata/Robots/UiPath.Server.Configuration.OData.GetConfiguredRobots", null, "&$expand=User");
     #endregion
 
     #region Role
 
-    public IEnumerable<Role> GetRoles()
-    {
-        return GetEnumerable<Role>("/odata/Roles", null, "&$expand=Permissions");
-    }
+    public IEnumerable<Role> GetRoles() => GetEnumerable<Role>("/odata/Roles", null, "&$expand=Permissions");
 
     public Role? PostRole(Role role)
     {
@@ -2794,31 +2470,17 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Put, $"/odata/Roles({role.Id})", null, role);
     }
 
-    public void DeleteRole(Int64 roleId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/Roles({roleId})");
-    }
+    public void DeleteRole(Int64 roleId) => HttpRequest(HttpMethod.Delete, $"/odata/Roles({roleId})");
 
     #endregion
 
     #region User
 
-    public IEnumerable<User> GetUsers()
-    {
-        return GetEnumerable<User>("/odata/Users", null, "&$expand=OrganizationUnits,UserRoles");
+    public IEnumerable<User> GetUsers() => GetEnumerable<User>("/odata/Users", null, "&$expand=OrganizationUnits,UserRoles");//return GetEnumerable<User>("/odata/Users", null, "&$expand=OrganizationUnits,UserRoles,UnattendedRobot"); // This causes an error
 
-        //return GetEnumerable<User>("/odata/Users", null, "&$expand=OrganizationUnits,UserRoles,UnattendedRobot"); // This causes an error
-    }
+    public User? GetUser(Int64 userId) => HttpRequest<User>(HttpMethod.Get, $"/odata/Users({userId})?$expand=OrganizationUnits,UserRoles");
 
-    public User? GetUser(Int64 userId)
-    {
-        return HttpRequest<User>(HttpMethod.Get, $"/odata/Users({userId})?$expand=OrganizationUnits,UserRoles");
-    }
-
-    public UserPrivilege? GetUserPrivilege(Int64 userId)
-    {
-        return HttpRequest<UserPrivilege>(HttpMethod.Get, $"/api/Users/GetPrivileges?userId={userId}");
-    }
+    public UserPrivilege? GetUserPrivilege(Int64 userId) => HttpRequest<UserPrivilege>(HttpMethod.Get, $"/api/Users/GetPrivileges?userId={userId}");
 
     public User? PostUser(User user)
     {
@@ -2865,46 +2527,26 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<User>(HttpMethod.Post, "/odata/Users", null, user);
     }
 
-    public void PutUser(User user)
-    {
-        HttpRequest(HttpMethod.Put, $"/odata/Users({user.Id ?? 0})", null, user);
-    }
+    public void PutUser(User user) => HttpRequest(HttpMethod.Put, $"/odata/Users({user.Id ?? 0})", null, user);
 
-    public void PatchUser(User user)
-    {
-        HttpRequest(HttpMethod.Patch, $"/odata/Users({user.Id ?? 0})", null, user);
-    }
+    public void PatchUser(User user) => HttpRequest(HttpMethod.Patch, $"/odata/Users({user.Id ?? 0})", null, user);
 
-    public void DeleteUser(Int64 userId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/Users({userId})");
-    }
+    public void DeleteUser(Int64 userId) => HttpRequest(HttpMethod.Delete, $"/odata/Users({userId})");
 
-    public User? GetCurrentUser()
-    {
+    public User? GetCurrentUser() =>
         // No client-side IsConfidentialApp guard: let the server be the source
         // of truth. On a Confidential app the server returns an authentication
         // error (typically 401), which the caller's exception cache catches
         // via the standard HttpResponseException whitelist.
-        return HttpRequest<User>(HttpMethod.Get, "/odata/Users/UiPath.Server.Configuration.OData.GetCurrentUser");
-    }
+        HttpRequest<User>(HttpMethod.Get, "/odata/Users/UiPath.Server.Configuration.OData.GetCurrentUser");
 
-    public ExtendedUser? GetCurrentUserExtended()
-    {
-        return HttpRequest<ExtendedUser>(HttpMethod.Get, "/odata/Users/UiPath.Server.Configuration.OData.GetCurrentUserExtended?$expand=PersonalWorkspace");
-    }
+    public ExtendedUser? GetCurrentUserExtended() => HttpRequest<ExtendedUser>(HttpMethod.Get, "/odata/Users/UiPath.Server.Configuration.OData.GetCurrentUserExtended?$expand=PersonalWorkspace");
 
     public void UpdateCurrentUserURPassword(Int64 userId, string password)
-    {
-        var payload = new { UnattendedRobot = new { Password = password } };
-        HttpRequest(HttpMethod.Patch, $"/odata/Users({userId})", null, payload);
-    }
+        => HttpRequest(HttpMethod.Patch, $"/odata/Users({userId})", null, new { UnattendedRobot = new { Password = password } });
 
     public void UnassignUserFromFolder(Int64 folderId, Int64 userId)
-    {
-        var payload = new { userId };
-        HttpRequest(HttpMethod.Post, $"/odata/Folders({folderId})/UiPath.Server.Configuration.OData.RemoveUserFromFolder", null, payload);
-    }
+        => HttpRequest(HttpMethod.Post, $"/odata/Folders({folderId})/UiPath.Server.Configuration.OData.RemoveUserFromFolder", null, new { userId });
 
     #endregion
 
@@ -2914,7 +2556,7 @@ public partial class OrchAPISession : IDisposable
     // https://uipath-japan.slack.com/archives/C0175DZP4PQ/p1751336407409919?thread_ts=1751275792.210139&cid=C0175DZP4PQ
     private DateTime _lastSearchDirectory = DateTime.MinValue;
     private readonly object _lockSearchDirectory = new object();
-    public DirectoryObject[]? SearchDirectory(string prefix, string? domain = null)
+    public DirectoryObject[] SearchDirectory(string prefix, string? domain = null)
     {
         lock (_lockSearchDirectory)
         {
@@ -2936,41 +2578,20 @@ public partial class OrchAPISession : IDisposable
         // (e.g. "frc"). The caller passes the user-supplied -Domain in those
         // cases; we don't currently auto-discover the domain list.
         var effectiveDomain = string.IsNullOrEmpty(domain) ? "autogen" : domain;
-        return HttpRequest<DirectoryObject[]>(HttpMethod.Get, $"/api/DirectoryService/SearchForUsersAndGroups?domain={HttpUtility.UrlEncode(effectiveDomain)}&prefix={HttpUtility.UrlEncode(prefix)}&searchContext=All");
+        return HttpRequest<DirectoryObject[]>(HttpMethod.Get, $"/api/DirectoryService/SearchForUsersAndGroups?domain={HttpUtility.UrlEncode(effectiveDomain)}&prefix={HttpUtility.UrlEncode(prefix)}&searchContext=All") ?? [];
     }
 
     #endregion
 
     #region License
-    public IEnumerable<LicenseNamedUser> GetLicensesNamedUser(string robotType)
-    {
-        return GetEnumerable<LicenseNamedUser>($"/odata/LicensesNamedUser/UiPath.Server.Configuration.OData.GetLicensesNamedUser(robotType='{PathTools.EscapeODataLiteral(robotType)}')");
-    }
+    public IEnumerable<LicenseNamedUser> GetLicensesNamedUser(string robotType) => GetEnumerable<LicenseNamedUser>($"/odata/LicensesNamedUser/UiPath.Server.Configuration.OData.GetLicensesNamedUser(robotType='{PathTools.EscapeODataLiteral(robotType)}')");
 
-    public IEnumerable<LicenseRuntime> GetLicensesRuntime(string robotType)
-    {
+    public IEnumerable<LicenseRuntime> GetLicensesRuntime(string robotType) =>
         //return GetEnumerable<LicenseRuntime>($"/odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{robotType}')", null, "&$expand='LastLoginDate'");
-        return GetEnumerable<LicenseRuntime>($"/odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{PathTools.EscapeODataLiteral(robotType)}')");
-    }
+        GetEnumerable<LicenseRuntime>($"/odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{PathTools.EscapeODataLiteral(robotType)}')");
 
-    private struct LicensesToggleEnabledRequest
-    {
-        public string? key { get; set; }
-        public string? robotType { get; set; }
-        public bool enabled { get; set; }
-    };
-
-    public void ToggleLicenseRuntime(string robotType, string key, string machineName, bool enabled)
-    {
-        LicensesToggleEnabledRequest payload = new()
-        {
-            key = key,
-            robotType = robotType,
-            enabled = enabled
-        };
-
-        HttpRequest(HttpMethod.Post, $"/odata/LicensesRuntime('{Uri.EscapeDataString(PathTools.EscapeODataLiteral(machineName))}')/UiPath.Server.Configuration.OData.ToggleEnabled", null, payload);
-    }
+    public void ToggleLicenseRuntime(string robotType, string key, string machineName, bool enabled) =>
+        HttpRequest(HttpMethod.Post, $"/odata/LicensesRuntime('{Uri.EscapeDataString(PathTools.EscapeODataLiteral(machineName))}')/UiPath.Server.Configuration.OData.ToggleEnabled", null, new { key, robotType, enabled });
     #endregion
 
     #region Stats
@@ -2990,24 +2611,12 @@ public partial class OrchAPISession : IDisposable
     //    return JsonSerializer.Deserialize<CountStats[]>(body) ?? [];
     //}
 
-    public IEnumerable<LicenseStatsModel> GetLicenseStats(int tenantId, int days)
-    {
-        var ret = HttpRequest<LicenseStatsModel[]>(HttpMethod.Get, $"/api/Stats/GetLicenseStats?tenantId={tenantId}&days={days}");
-        return ret ?? [];
-    }
+    public IEnumerable<LicenseStatsModel> GetLicenseStats(int tenantId, int days) => HttpRequest<LicenseStatsModel[]>(HttpMethod.Get, $"/api/Stats/GetLicenseStats?tenantId={tenantId}&days={days}") ?? [];
 
-    public IEnumerable<CountStats> GetJobStats()
-    {
-        var ret = HttpRequest<CountStats[]>(HttpMethod.Get, "/api/Stats/GetJobsStats");
-        return ret ?? [];
-    }
+    public IEnumerable<CountStats> GetJobStats() => HttpRequest<CountStats[]>(HttpMethod.Get, "/api/Stats/GetJobsStats") ?? [];
 
     // Returns Not Found...
-    public IEnumerable<CountStats> GetSessionStats()
-    {
-        var ret = HttpRequest<CountStats[]>(HttpMethod.Get, "/api/Stats/GetSessionsStats");
-        return ret ?? [];
-    }
+    public IEnumerable<CountStats> GetSessionStats() => HttpRequest<CountStats[]>(HttpMethod.Get, "/api/Stats/GetSessionsStats") ?? [];
 
     #endregion
 
@@ -3030,10 +2639,7 @@ public partial class OrchAPISession : IDisposable
         return assets.Concat(secrets);
     }
 
-    public Asset? GetAsset(Int64 folderId, Int64 assetId)
-    {
-        return HttpRequest<Asset>(HttpMethod.Get, $"/odata/Assets({assetId})?$expand=UserValues", folderId);
-    }
+    public Asset? GetAsset(Int64 folderId, Int64 assetId) => HttpRequest<Asset>(HttpMethod.Get, $"/odata/Assets({assetId})?$expand=UserValues", folderId);
 
     public Asset? AddAsset(Int64 folderId, Asset asset)
     {
@@ -3056,15 +2662,9 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<Asset>(HttpMethod.Post, $"/odata/Assets", folderId, asset);
     }
 
-    public void PutAsset(Int64 folderId, Asset asset)
-    {
-        HttpRequest(HttpMethod.Put, $"/odata/Assets({asset.Id})", folderId, asset);
-    }
+    public void PutAsset(Int64 folderId, Asset asset) => HttpRequest(HttpMethod.Put, $"/odata/Assets({asset.Id})", folderId, asset);
 
-    public void RemoveAsset(Int64 folderId, Int64 assetId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/Assets({assetId})", folderId);
-    }
+    public void RemoveAsset(Int64 folderId, Int64 assetId) => HttpRequest(HttpMethod.Delete, $"/odata/Assets({assetId})", folderId);
 
     public AccessibleFoldersDto? GetFoldersForAsset(Int64 folderId, Int64 assetId)
     {
@@ -3085,25 +2685,10 @@ public partial class OrchAPISession : IDisposable
     #endregion
 
     #region ExecutionMedia
-    public IEnumerable<ExecutionMedia> GetExecutionMedia(Int64 folderId, ulong skip = 0, ulong first = ulong.MaxValue)
-    {
-        return GetEnumerable<ExecutionMedia>("/odata/ExecutionMedia", folderId, null, skip, first);
-    }
-
-    private struct ExecutionMediaDeleteMediaByJobIdRequest
-    {
-        public Int64 jobId { get; set; }
-    };
+    public IEnumerable<ExecutionMedia> GetExecutionMedia(Int64 folderId, ulong skip = 0, ulong first = ulong.MaxValue) => GetEnumerable<ExecutionMedia>("/odata/ExecutionMedia", folderId, null, skip, first);
 
     public void RemoveExecutionMedia(Int64 folderId, Int64 jobId)
-    {
-        var payload = new ExecutionMediaDeleteMediaByJobIdRequest
-        {
-            jobId = jobId
-        };
-
-        HttpRequest(HttpMethod.Post, "/odata/ExecutionMedia/UiPath.Server.Configuration.OData.DeleteMediaByJobId", folderId, payload);
-    }
+        => HttpRequest(HttpMethod.Post, "/odata/ExecutionMedia/UiPath.Server.Configuration.OData.DeleteMediaByJobId", folderId, new { jobId });
 
     // Routes through the shared send chokepoint (SendApiRequest -> HttpClient_Send) so this
     // download gets the same auth-refresh-on-401, transient (429/503/504) retry, and Ctrl+C
@@ -3152,46 +2737,25 @@ public partial class OrchAPISession : IDisposable
     // Get classic folder robots
     #region Tasks
 
-    public IEnumerable<OrchTask> GetTasks(Int64 folderId)
-    {
-        return GetEnumerable<OrchTask>("/odata/Tasks", folderId);
-    }
+    public IEnumerable<OrchTask> GetTasks(Int64 folderId) => GetEnumerable<OrchTask>("/odata/Tasks", folderId);
 
-    public IEnumerable<OrchTask> GetTasksAcrossFolders()
-    {
-        return GetEnumerable<OrchTask>("/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders");
-    }
+    public IEnumerable<OrchTask> GetTasksAcrossFolders() => GetEnumerable<OrchTask>("/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders");
 
-    public OrchTask? GetTask(Int64 folderId, Int64 taskId)
-    {
-        return HttpRequest<OrchTask>(HttpMethod.Get, $"/odata/Tasks({taskId})", folderId);
-    }
+    public OrchTask? GetTask(Int64 folderId, Int64 taskId) => HttpRequest<OrchTask>(HttpMethod.Get, $"/odata/Tasks({taskId})", folderId);
 
-    public void RemoveTask(Int64 folderId, Int64 taskId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/Tasks({taskId})", folderId);
-    }
+    public void RemoveTask(Int64 folderId, Int64 taskId) => HttpRequest(HttpMethod.Delete, $"/odata/Tasks({taskId})", folderId);
 
-    public void EditTaskMetadata(Int64 folderId, EditTaskMetadataRequest request)
-    {
-        HttpRequest(HttpMethod.Post, "/odata/Tasks/UiPath.Server.Configuration.OData.EditTaskMetadata", folderId, request);
-    }
+    public void EditTaskMetadata(Int64 folderId, EditTaskMetadataRequest request) => HttpRequest(HttpMethod.Post, "/odata/Tasks/UiPath.Server.Configuration.OData.EditTaskMetadata", folderId, request);
 
     #endregion
 
-    public IEnumerable<Session> GetSessions(Int64 folderId)
-    {
-        return GetEnumerable<Session>("/odata/Sessions", folderId, "&$expand=Robot($expand=License)");
-    }
+    public IEnumerable<Session> GetSessions(Int64 folderId) => GetEnumerable<Session>("/odata/Sessions", folderId, "&$expand=Robot($expand=License)");
 
     // Bulk delete inactive (disconnected / unresponsive) unattended sessions by id.
     // Returns 204 No Content. Tenant-level operation (no X-UIPATH-OrganizationUnitId
     // per the v20 swagger: parameters block only carries the body).
     public void DeleteInactiveSessions(IEnumerable<Int64> sessionIds)
-    {
-        var payload = new { sessionIds };
-        HttpRequest(HttpMethod.Post, "/odata/Sessions/UiPath.Server.Configuration.OData.DeleteInactiveUnattendedSessions", null, payload);
-    }
+        => HttpRequest(HttpMethod.Post, "/odata/Sessions/UiPath.Server.Configuration.OData.DeleteInactiveUnattendedSessions", null, new { sessionIds });
 
     // Enable/disable classic folder robots
     public void ToggleEnabledStatus(Int64 folderId, Int64 robotId, bool enabled)
@@ -3204,22 +2768,12 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Post, "/odata/Robots/UiPath.Server.Configuration.OData.ToggleEnabledStatus", folderId, payload);
     }
 
-    public IEnumerable<Session> GetGlobalSessions(string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
-    {
-        return GetEnumerable<Session>("/odata/Sessions/UiPath.Server.Configuration.OData.GetGlobalSessions", null, query, skip, first);
-    }
+    public IEnumerable<Session> GetGlobalSessions(string? query = null, ulong skip = 0, ulong first = ulong.MaxValue) => GetEnumerable<Session>("/odata/Sessions/UiPath.Server.Configuration.OData.GetGlobalSessions", null, query, skip, first);
 
     //public IEnumerable<MachineSessionRuntime> GetMachineSessionRuntimes(string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
-    public IEnumerable<MachineSessionRuntime> GetMachineSessionRuntimes()
-    {
-        //return GetEnumerable<MachineSessionRuntime>($"/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes", null, query, skip, first);
-        return GetEnumerable<MachineSessionRuntime>($"/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes");
-    }
+    public IEnumerable<MachineSessionRuntime> GetMachineSessionRuntimes() => GetEnumerable<MachineSessionRuntime>($"/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes");
 
-    public IEnumerable<MachineSessionRuntime> GetMachineSessionRuntimesByFolderId(Int64 folderId, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
-    {
-        return GetEnumerable<MachineSessionRuntime>($"/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimesByFolderId(folderId={folderId})", folderId, query, skip, first);
-    }
+    public IEnumerable<MachineSessionRuntime> GetMachineSessionRuntimesByFolderId(Int64 folderId, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue) => GetEnumerable<MachineSessionRuntime>($"/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimesByFolderId(folderId={folderId})", folderId, query, skip, first);
 
     // Test
     //public void GetMachineSessions(Int64 machineId)
@@ -3232,20 +2786,11 @@ public partial class OrchAPISession : IDisposable
 
     #region TestCase
 
-    public IEnumerable<TestCaseDefinition> GetTestCases(Int64 folderId)
-    {
-        return GetEnumerable<TestCaseDefinition>("/odata/TestCaseDefinitions", folderId);
-    }
+    public IEnumerable<TestCaseDefinition> GetTestCases(Int64 folderId) => GetEnumerable<TestCaseDefinition>("/odata/TestCaseDefinitions", folderId);
 
-    public IEnumerable<TestCaseExecution> GetTestCaseExecutions(Int64 folderId, string? filter, ulong skip, ulong first)
-    {
-        return GetEnumerable<TestCaseExecution>("/odata/TestCaseExecutions", folderId, filter, skip, first);
-    }
+    public IEnumerable<TestCaseExecution> GetTestCaseExecutions(Int64 folderId, string? filter, ulong skip, ulong first) => GetEnumerable<TestCaseExecution>("/odata/TestCaseExecutions", folderId, filter, skip, first);
 
-    public TestCaseExecution? GetTestCaseExecutionWithAssertions(Int64 folderId, Int64 testCaseExecutionId)
-    {
-        return HttpRequest<TestCaseExecution>(HttpMethod.Get, $"/odata/TestCaseExecutions({testCaseExecutionId})?$expand=TestCaseAssertions", folderId);
-    }
+    public TestCaseExecution? GetTestCaseExecutionWithAssertions(Int64 folderId, Int64 testCaseExecutionId) => HttpRequest<TestCaseExecution>(HttpMethod.Get, $"/odata/TestCaseExecutions({testCaseExecutionId})?$expand=TestCaseAssertions", folderId);
 
     public void DownloadAssertionScreenshot(Int64 folderId, Int64 assertionId, string destinationPath, CancellationToken cancellationToken = default)
     {
@@ -3283,20 +2828,11 @@ public partial class OrchAPISession : IDisposable
     }
 
     public void RemoveTestCases(Int64 folderId, IEnumerable<Int64> testCaseIds)
-    {
-        var payload = new { testCaseDefinitionIds = testCaseIds.ToList() };
-        HttpRequest(HttpMethod.Post, "/odata/TestCaseDefinitions/UiPath.Server.Configuration.OData.BulkDelete", folderId, payload);
-    }
+        => HttpRequest(HttpMethod.Post, "/odata/TestCaseDefinitions/UiPath.Server.Configuration.OData.BulkDelete", folderId, new { testCaseDefinitionIds = testCaseIds.ToList() });
 
-    public IEnumerable<TestSet> GetTestSets(Int64 folderId)
-    {
-        return GetEnumerable<TestSet>("/odata/TestSets", folderId, "&$filter=(SourceType eq 'User')&$expand=Environment");
-    }
+    public IEnumerable<TestSet> GetTestSets(Int64 folderId) => GetEnumerable<TestSet>("/odata/TestSets", folderId, "&$filter=(SourceType eq 'User')&$expand=Environment");
 
-    public TestSet? GetTestSetForEdit(Int64 folderId, Int64 testSetId)
-    {
-        return HttpRequest<TestSet>(HttpMethod.Get, $"/odata/TestSets({testSetId})/UiPath.Server.Configuration.OData.GetForEdit()", folderId);
-    }
+    public TestSet? GetTestSetForEdit(Int64 folderId, Int64 testSetId) => HttpRequest<TestSet>(HttpMethod.Get, $"/odata/TestSets({testSetId})/UiPath.Server.Configuration.OData.GetForEdit()", folderId);
 
     public TestSet? CreateTestSet(Int64 folderId, TestSet testSet)
     {
@@ -3304,10 +2840,7 @@ public partial class OrchAPISession : IDisposable
         return JsonSerializer.Deserialize<TestSet>(body);
     }
 
-    public void RemoveTestSet(Int64 folderId, Int64 testSetId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/TestSets({testSetId})", folderId);
-    }
+    public void RemoveTestSet(Int64 folderId, Int64 testSetId) => HttpRequest(HttpMethod.Delete, $"/odata/TestSets({testSetId})", folderId);
 
     public Int64? StartTestSets(Int64 folderId, Int64 testSetId)
     {
@@ -3319,26 +2852,14 @@ public partial class OrchAPISession : IDisposable
         return null;
     }
 
-    public IEnumerable<TestSetExecution> GetTestSetExecutions(Int64 folderId, string? filter, ulong skip, ulong first)
-    {
-        return GetEnumerable<TestSetExecution>("/odata/TestSetExecutions", folderId, "&$expand=TestSet" + filter, skip, first);
-    }
+    public IEnumerable<TestSetExecution> GetTestSetExecutions(Int64 folderId, string? filter, ulong skip, ulong first) => GetEnumerable<TestSetExecution>("/odata/TestSetExecutions", folderId, "&$expand=TestSet" + filter, skip, first);
 
-    public void CancelTestSetExecutions(Int64 folderId, Int64 testSetExecutionId)
-    {
-        // Appears to return "null"
-        HttpRequest(HttpMethod.Post, $"/api/TestAutomation/CancelTestSetExecution?testSetExecutionId={testSetExecutionId}", folderId);
-    }
+    // Appears to return "null"
+    public void CancelTestSetExecutions(Int64 folderId, Int64 testSetExecutionId) => HttpRequest(HttpMethod.Post, $"/api/TestAutomation/CancelTestSetExecution?testSetExecutionId={testSetExecutionId}", folderId);
 
-    public string CancelTestCaseExecutions(Int64 folderId, Int64 testSetExecutionId)
-    {
-        return HttpRequest(HttpMethod.Post, $"/api/TestAutomation/CancelTestSetExecution?testCaseExecutionId={testSetExecutionId}", folderId);
-    }
+    public string CancelTestCaseExecutions(Int64 folderId, Int64 testSetExecutionId) => HttpRequest(HttpMethod.Post, $"/api/TestAutomation/CancelTestSetExecution?testCaseExecutionId={testSetExecutionId}", folderId);
 
-    public IEnumerable<TestSetSchedule> GetTestSetSchedules(Int64 folderId)
-    {
-        return GetEnumerable<TestSetSchedule>("/odata/TestSetSchedules", folderId);
-    }
+    public IEnumerable<TestSetSchedule> GetTestSetSchedules(Int64 folderId) => GetEnumerable<TestSetSchedule>("/odata/TestSetSchedules", folderId);
 
     public TestSetSchedule? CreateTestSetSchedule(Int64 folderId, TestSetSchedule testSetSchedule)
     {
@@ -3361,17 +2882,10 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Put, $"/odata/TestSetSchedules({testSetSchedule.Id})", folderId, testSetSchedule);
     }
 
-    public void RemoveTestSetSchedules(Int64 folderId, Int64 testSetScheduleId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/TestSetSchedules({testSetScheduleId})", folderId);
-    }
+    public void RemoveTestSetSchedules(Int64 folderId, Int64 testSetScheduleId) => HttpRequest(HttpMethod.Delete, $"/odata/TestSetSchedules({testSetScheduleId})", folderId);
 
     public void EnableTestSetSchedules(Int64 folderId, bool enabled, IEnumerable<Int64> testSetScheduleIds)
-    {
-        var payload = new { enabled, testSetScheduleIds };
-
-        HttpRequest(HttpMethod.Post, "/odata/TestSetSchedules/UiPath.Server.Configuration.OData.SetEnabled", folderId, payload);
-    }
+        => HttpRequest(HttpMethod.Post, "/odata/TestSetSchedules/UiPath.Server.Configuration.OData.SetEnabled", folderId, new { enabled, testSetScheduleIds });
 
     public TestDataQueue? CreateTestDataQueue(Int64 folderId, TestDataQueue testDataQueue)
     {
@@ -3436,41 +2950,23 @@ public partial class OrchAPISession : IDisposable
 
     #region Calendar
 
-    public IEnumerable<ExtendedCalendar> GetCalendars()
-    {
-        return GetEnumerable<ExtendedCalendar>($"/odata/Calendars");
-    }
+    public IEnumerable<ExtendedCalendar> GetCalendars() => GetEnumerable<ExtendedCalendar>($"/odata/Calendars");
 
     // To get ExcludedDates, GetCalendars(id) must be called.
-    public ExtendedCalendar? GetCalendar(Int64 calendarId)
-    {
-        return HttpRequest<ExtendedCalendar>(HttpMethod.Get, $"/odata/Calendars({calendarId})");
-    }
+    public ExtendedCalendar? GetCalendar(Int64 calendarId) => HttpRequest<ExtendedCalendar>(HttpMethod.Get, $"/odata/Calendars({calendarId})");
 
-    public ExtendedCalendar? PostCalendar(ExtendedCalendar calendar)
-    {
-        return HttpRequest<ExtendedCalendar>(HttpMethod.Post, "/odata/Calendars", null, calendar);
-    }
+    public ExtendedCalendar? PostCalendar(ExtendedCalendar calendar) => HttpRequest<ExtendedCalendar>(HttpMethod.Post, "/odata/Calendars", null, calendar);
 
-    public ExtendedCalendar? PutCalendar(ExtendedCalendar calendar)
-    {
-        return HttpRequest<ExtendedCalendar>(HttpMethod.Put, $"/odata/Calendars({calendar.Id!.Value})", null, calendar);
-    }
+    public ExtendedCalendar? PutCalendar(ExtendedCalendar calendar) => HttpRequest<ExtendedCalendar>(HttpMethod.Put, $"/odata/Calendars({calendar.Id!.Value})", null, calendar);
 
-    public void RemoveCalendar(Int64 calendarId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/Calendars({calendarId})");
-    }
+    public void RemoveCalendar(Int64 calendarId) => HttpRequest(HttpMethod.Delete, $"/odata/Calendars({calendarId})");
 
     #endregion
 
     #region Maintenance
 
     // Host only
-    public MaintenanceSetting? GetMaintenance(int? tenantId)
-    {
-        return HttpRequest<MaintenanceSetting>(HttpMethod.Get, $"/api/Maintenance/Get?tenantId={tenantId}");
-    }
+//    public MaintenanceSetting? GetMaintenance(int? tenantId) => HttpRequest<MaintenanceSetting>(HttpMethod.Get, $"/api/Maintenance/Get?tenantId={tenantId}");
 
     public void SetMaintenanceMode(Int64? sessionId, bool enabled, bool force = false)
     {
@@ -3489,20 +2985,11 @@ public partial class OrchAPISession : IDisposable
 
     #region Action Catalog
 
-    public TaskCatalog? CreateTaskCatalog(Int64 folderId, TaskCatalog taskCatalog)
-    {
-        return HttpRequest<TaskCatalog>(HttpMethod.Post, "/odata/TaskCatalogs/UiPath.Server.Configuration.OData.CreateTaskCatalog", folderId, taskCatalog);
-    }
+    public TaskCatalog? CreateTaskCatalog(Int64 folderId, TaskCatalog taskCatalog) => HttpRequest<TaskCatalog>(HttpMethod.Post, "/odata/TaskCatalogs/UiPath.Server.Configuration.OData.CreateTaskCatalog", folderId, taskCatalog);
 
-    public IEnumerable<TaskCatalog> GetTaskCatalogs(Int64 folderId)
-    {
-        return GetEnumerable<TaskCatalog>("/odata/TaskCatalogs", folderId);
-    }
+    public IEnumerable<TaskCatalog> GetTaskCatalogs(Int64 folderId) => GetEnumerable<TaskCatalog>("/odata/TaskCatalogs", folderId);
 
-    public void RemoveTaskCatalog(Int64 folderId, Int64 catalogId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/odata/TaskCatalogs({catalogId})", folderId);
-    }
+    public void RemoveTaskCatalog(Int64 folderId, Int64 catalogId) => HttpRequest(HttpMethod.Delete, $"/odata/TaskCatalogs({catalogId})", folderId);
 
     #endregion
 
@@ -3618,21 +3105,15 @@ public partial class OrchAPISession : IDisposable
 
 
     // Returns empty with status 200...
-    public UserProfile? GetPmUserProfile()
-    {
-        return HttpRequestIdentity<UserProfile>(HttpMethod.Get, "/api/Account/Profile");
-    }
+    //public UserProfile? GetPmUserProfile() => HttpRequestIdentity<UserProfile>(HttpMethod.Get, "/api/Account/Profile");
 
     // This endpoint only works with host admin privileges
-    public void GetPmSetting()
-    {
-        string body = HttpRequestIdentity(HttpMethod.Get, "/api/Setting");
-    }
+    //public void GetPmSetting()
+    //{
+    //    string body = HttpRequestIdentity(HttpMethod.Get, "/api/Setting");
+    //}
 
-    public DirectoryScope[]? GetPmDirectoryScope(string partitionGlobalId)
-    {
-        return HttpRequestIdentity<DirectoryScope[]>(HttpMethod.Get, $"/api/Directory/Scopes/{partitionGlobalId}");
-    }
+    public DirectoryScope[]? GetPmDirectoryScope(string partitionGlobalId) => HttpRequestIdentity<DirectoryScope[]>(HttpMethod.Get, $"/api/Directory/Scopes/{partitionGlobalId}");
 
     private bool _pmApiDeprecated = true;
     public bool PmApiDeprecated
@@ -3707,16 +3188,7 @@ public partial class OrchAPISession : IDisposable
         return JsonSerializer.Deserialize<Dictionary<string, PmGroupMember>>(body, jsoMemberConverter) ?? [];
     }
 
-    public PmDirectoryEntityInfo[]? SearchPmDirectory(string partitionGlobalId, string userName)
-    {
-        return GetEnumerableWithoutPagingIdentity<PmDirectoryEntityInfo>($"/api/Directory/Search/{partitionGlobalId}", null, $"&startsWith={Uri.EscapeDataString(userName)}");
-        //+ "&sourceFilter=localUsers"
-        //+ "&sourceFilter=localGroups"
-        //+ "&sourceFilter=directoryUsers"
-        //+ "&sourceFilter=directoryGroups"
-        //+ "&sourceFilter=robotAccounts"
-        //+ "&sourceFilter=applications");
-    }
+    public PmDirectoryEntityInfo[]? SearchPmDirectory(string partitionGlobalId, string userName) => GetEnumerableWithoutPagingIdentity<PmDirectoryEntityInfo>($"/api/Directory/Search/{partitionGlobalId}", null, $"&startsWith={Uri.EscapeDataString(userName)}");//+ "&sourceFilter=localUsers"//+ "&sourceFilter=localGroups"//+ "&sourceFilter=directoryUsers"//+ "&sourceFilter=directoryGroups"//+ "&sourceFilter=robotAccounts"//+ "&sourceFilter=applications");
 
     // undocumented API
     //public IEnumerable<PmUser> GetPmDirectoryUsers(string partitionGlobalId)
@@ -3724,28 +3196,17 @@ public partial class OrchAPISession : IDisposable
     //    return GetEnumerablePm2<PmUser>("/api/UserPartition/licenses", null, $"&partitionGlobalId={partitionGlobalId}");
     //}
 
-    public BulkCreateResponse? CreatePmUserBulk(CreateUsersCommand createUsersCommand)
-    {
-        return HttpRequestIdentity<BulkCreateResponse>(HttpMethod.Post, $"/api/User/BulkCreate", null, createUsersCommand);
-    }
+    public BulkCreateResponse? CreatePmUserBulk(CreateUsersCommand createUsersCommand) => HttpRequestIdentity<BulkCreateResponse>(HttpMethod.Post, $"/api/User/BulkCreate", null, createUsersCommand);
 
     // This API is disabled and cannot be used
-    public void GetPmUserLoginAttempts(string userId)
-    {
-        string body = HttpRequestIdentity(HttpMethod.Get, $"/api/User/{userId}/loginAttempts");
-    }
+    public void GetPmUserLoginAttempts(string userId) => HttpRequestIdentity(HttpMethod.Get, $"/api/User/{userId}/loginAttempts");
 
-    public void PutPmUser(string userId, PowerShell.Entities.UpdateUserCommand command)
-    {
+    public void PutPmUser(string userId, PowerShell.Entities.UpdateUserCommand command) =>
         // Returns something like {"succeeded":true,"errors":[]}, but we can ignore it.
         // Errors are handled via exceptions anyway.
         HttpRequestIdentity(HttpMethod.Put, $"/api/User/{userId}", null, command);
-    }
 
-    public void RemovePmUserDeprecated(string userId)
-    {
-        HttpRequestIdentity(HttpMethod.Delete, $"/api/User/{userId}");
-    }
+    public void RemovePmUserDeprecated(string userId) => HttpRequestIdentity(HttpMethod.Delete, $"/api/User/{userId}");
 
     public void RemovePmUser(string partitionGlobalId, string userId)
     {
@@ -3760,16 +3221,11 @@ public partial class OrchAPISession : IDisposable
         HttpRequestPortal(HttpMethod.Delete, "/portal_/api/identity/User", null, payload);
     }
 
-    public void PutPmUserSetting(UpdatePmUserSettingPayload payload)
-    {
+    public void PutPmUserSetting(UpdatePmUserSettingPayload payload) =>
         //HttpRequestPortal(HttpMethod.Put, $"/portal_/api/identity/Setting", null, payload);
         HttpRequestIdentity(HttpMethod.Put, $"/api/Setting", null, payload);
-    }
 
-    public PmGroup[] GetPmGroups(string partitionGlobalId)
-    {
-        return GetEnumerableWithoutPagingIdentity<PmGroup>($"/api/Group/{partitionGlobalId}") ?? [];
-    }
+    public PmGroup[] GetPmGroups(string partitionGlobalId) => GetEnumerableWithoutPagingIdentity<PmGroup>($"/api/Group/{partitionGlobalId}") ?? [];
 
     //public PmGroup[] GetPmGroups2(string partitionGlobalId)
     //{
@@ -3792,10 +3248,7 @@ public partial class OrchAPISession : IDisposable
 
     // This is an undocumented API.
     // partitionGlobalId is not needed for some reason, but the parameter is added to integrate with the cache.
-    public IEnumerable<AvailableUserBundle> GetPmLicenses(string? partitionGlobalId)
-    {
-        return HttpRequestPortal<AvailableUserBundle[]>(HttpMethod.Get, "/api/license/accountant/UserLicense") ?? [];
-    }
+    public IEnumerable<AvailableUserBundle> GetPmLicenses(string? partitionGlobalId) => HttpRequestPortal<AvailableUserBundle[]>(HttpMethod.Get, "/api/license/accountant/UserLicense") ?? [];
 
     // Some Portal license-management endpoints return 415 Unsupported Media Type when
     // invoked without Content-Type (HttpClient omits it on GET by default). Attaching an
@@ -3880,10 +3333,7 @@ public partial class OrchAPISession : IDisposable
 
     // This is an undocumented API.
     // partitionGlobalId is not needed for some reason, but the parameter is added to integrate with the cache.
-    public IEnumerable<NuLicensedGroup> GetPmLicensedGroups(string? partitionGlobalId)
-    {
-        return GetEnumerablePortal<NuLicensedGroup>("/api/license/accountant/UserLicense/group/page");
-    }
+    public IEnumerable<NuLicensedGroup> GetPmLicensedGroups(string? partitionGlobalId) => GetEnumerablePortal<NuLicensedGroup>("/api/license/accountant/UserLicense/group/page");
 
     // This is an undocumented API.
     public void RemovePmLicensedGroup(string? groupId)
@@ -3895,34 +3345,19 @@ public partial class OrchAPISession : IDisposable
     }
 
     // This is an undocumented API.
-    public IEnumerable<NuLicensedGroupMember> GetPmLicenseGroupAllocations(string? groupId)
-    {
-        return GetEnumerablePortal<NuLicensedGroupMember>($"/api/license/accountant/UserLicense/group/{groupId}/allocations");
-    }
+    public IEnumerable<NuLicensedGroupMember> GetPmLicenseGroupAllocations(string? groupId) => GetEnumerablePortal<NuLicensedGroupMember>($"/api/license/accountant/UserLicense/group/{groupId}/allocations");
 
     // This is an undocumented API.
-    public UpdateLicensedGroupResponse? PutPmLicenseGroup(UpdateLicensedGroupCommand command)
-    {
-        return HttpRequestPortal<UpdateLicensedGroupResponse>(HttpMethod.Put, "/api/license/accountant/UserLicense/group", null, command);
-    }
+    public UpdateLicensedGroupResponse? PutPmLicenseGroup(UpdateLicensedGroupCommand command) => HttpRequestPortal<UpdateLicensedGroupResponse>(HttpMethod.Put, "/api/license/accountant/UserLicense/group", null, command);
 
     // This is an undocumented API.
-    public void DeletePmLicenseGroupAllocations(string? groupId, string userId)
-    {
-        HttpRequestPortal(HttpMethod.Delete, $"/api/license/accountant/UserLicense/group/{groupId}/user/{userId}");
-    }
+    public void DeletePmLicenseGroupAllocations(string? groupId, string userId) => HttpRequestPortal(HttpMethod.Delete, $"/api/license/accountant/UserLicense/group/{groupId}/user/{userId}");
 
     // This is an undocumented API.
     // partitionGlobalId is not needed for some reason, but the parameter is added to integrate with the cache.
-    public IEnumerable<NuLicensedUser> GetPmLicensedUsers(string? partitionGlobalId)
-    {
-        return GetEnumerablePortal<NuLicensedUser>("/portal_/api/license/accountant/UserLicense/user/page");
-    }
+    public IEnumerable<NuLicensedUser> GetPmLicensedUsers(string? partitionGlobalId) => GetEnumerablePortal<NuLicensedUser>("/portal_/api/license/accountant/UserLicense/user/page");
 
-    public void PutLicensedUser(AddLicensedUserCommand payload)
-    {
-        HttpRequestPortal(HttpMethod.Post, "/portal_/api/license/accountant/UserLicense/users", null, payload);
-    }
+    public void PutLicensedUser(AddLicensedUserCommand payload) => HttpRequestPortal(HttpMethod.Post, "/portal_/api/license/accountant/UserLicense/users", null, payload);
 
     // This is an undocumented API.
     // Sets the listed users' allocated license bundles atomically (replace, not
@@ -3930,10 +3365,7 @@ public partial class OrchAPISession : IDisposable
     // (no /users suffix) and PUT verb are distinct from PutLicensedUser's
     // POST .../users. Also makes a user a licensed user when they aren't yet,
     // so a single PUT covers both add-user and bundle-assignment.
-    public void PutPmLicenseUser(UpdateLicensedUserCommand command)
-    {
-        HttpRequestPortal(HttpMethod.Put, "/portal_/api/license/accountant/UserLicense", null, command);
-    }
+    public void PutPmLicenseUser(UpdateLicensedUserCommand command) => HttpRequestPortal(HttpMethod.Put, "/portal_/api/license/accountant/UserLicense", null, command);
 
     // This is an undocumented API.
     // Drops the listed users from the licensed-users set entirely (cleans up the
@@ -3983,55 +3415,28 @@ public partial class OrchAPISession : IDisposable
         HttpRequestIdentity(HttpMethod.Delete, $"/api/Group/{partitionGlobalId}", null, removeGroup);
     }
 
-    public IEnumerable<PmRobotAccount> GetPmRobotAccounts(string partitionGlobalId)
-    {
-        return GetEnumerableIdentity<PmRobotAccount>($"/api/RobotAccount/{partitionGlobalId}");
-    }
+    public IEnumerable<PmRobotAccount> GetPmRobotAccounts(string partitionGlobalId) => GetEnumerableIdentity<PmRobotAccount>($"/api/RobotAccount/{partitionGlobalId}");
 
-    public PmRobotAccount? CreatePmRobot(CreateRobotAccountCommand cmd)
-    {
-        return HttpRequestIdentity<PmRobotAccount>(HttpMethod.Post, $"/api/RobotAccount", null, cmd);
-    }
+    public PmRobotAccount? CreatePmRobot(CreateRobotAccountCommand cmd) => HttpRequestIdentity<PmRobotAccount>(HttpMethod.Post, $"/api/RobotAccount", null, cmd);
 
     // partitionGlobalId is not needed for some reason.
-    public PmRobotAccount? UpdatePmRobot(string robotId, UpdateRobotAccountCommand cmd)
-    {
-        return HttpRequestIdentity<PmRobotAccount>(HttpMethod.Put, $"/api/RobotAccount/{robotId}", null, cmd);
-    }
+    public PmRobotAccount? UpdatePmRobot(string robotId, UpdateRobotAccountCommand cmd) => HttpRequestIdentity<PmRobotAccount>(HttpMethod.Put, $"/api/RobotAccount/{robotId}", null, cmd);
 
     public void RemovePmRobot(string partitionGlobalId, string robotId)
-    {
-        var payload = new { robotAccountIDs = new[] { robotId } };
-        HttpRequestIdentity(HttpMethod.Delete, $"/api/RobotAccount/{partitionGlobalId}", null, payload);
-    }
+        => HttpRequestIdentity(HttpMethod.Delete, $"/api/RobotAccount/{partitionGlobalId}", null, new { robotAccountIDs = new[] { robotId } });
 
     // partitionGlobalId is not needed for some reason, but the parameter is added to integrate with the cache.
-    public IEnumerable<ExternalResource> GetPmExternalApiResource(string partitionGlobalId)
-    {
-        return GetEnumerableWithoutPagingIdentity<ExternalResource>("/api/ExternalApiResource") ?? [];
-    }
+    public IEnumerable<ExternalResource> GetPmExternalApiResource(string partitionGlobalId) => GetEnumerableWithoutPagingIdentity<ExternalResource>("/api/ExternalApiResource") ?? [];
 
-    public IEnumerable<ExternalClient> GetPmExternalClients(string partitionGlobalId)
-    {
-        return GetEnumerableWithoutPagingIdentity<ExternalClient>($"/api/ExternalClient/{partitionGlobalId}") ?? [];
-    }
+    public IEnumerable<ExternalClient> GetPmExternalClients(string partitionGlobalId) => GetEnumerableWithoutPagingIdentity<ExternalClient>($"/api/ExternalClient/{partitionGlobalId}") ?? [];
 
-    public ExternalClient? GetPmExternalClient(string? partitionGlobalId, string id)
-    {
-        return HttpRequestIdentity<ExternalClient>(HttpMethod.Get, $"/api/ExternalClient/{partitionGlobalId}/{id}");
-    }
+    public ExternalClient? GetPmExternalClient(string? partitionGlobalId, string id) => HttpRequestIdentity<ExternalClient>(HttpMethod.Get, $"/api/ExternalClient/{partitionGlobalId}/{id}");
 
     // This probably does not need a wrapper method in OrchDriveInfo.
-    public ExternalClientCreated? PostPmExternalClient(CreateExternalClientCommand app)
-    {
-        return HttpRequestIdentity<ExternalClientCreated>(HttpMethod.Post, "/api/ExternalClient", null, app);
-    }
+    public ExternalClientCreated? PostPmExternalClient(CreateExternalClientCommand app) => HttpRequestIdentity<ExternalClientCreated>(HttpMethod.Post, "/api/ExternalClient", null, app);
 
     // Returns nothing
-    public void DeletePmExternalClient(string partitionGlobalId, string id)
-    {
-        HttpRequestIdentity(HttpMethod.Delete, $"/api/ExternalClient/{partitionGlobalId}/{id}");
-    }
+    public void DeletePmExternalClient(string partitionGlobalId, string id) => HttpRequestIdentity(HttpMethod.Delete, $"/api/ExternalClient/{partitionGlobalId}/{id}");
 
     // Forbidden for external app
     //public IEnumerable<int> GetIdentityClient()
@@ -4043,22 +3448,13 @@ public partial class OrchAPISession : IDisposable
     // But what would it be useful for...
     // identifier needs to be a directory adapter.
     // e.g., "aad", "Saml2", "scim", etc.
-    public void GetPmDirectoryConfiguration(string identifier)
-    {
-        string body = HttpRequestIdentity(HttpMethod.Get, $"/api/DirectoryConnection/DirectoryConfiguration?identifier={identifier}");
-    }
+    //public void GetPmDirectoryConfiguration(string identifier) => HttpRequestIdentity(HttpMethod.Get, $"/api/DirectoryConnection/DirectoryConfiguration?identifier={identifier}");
 
     // Returns something like ["aad","Saml2","scim"].
-    public string[]? GetPmAvailableDirectoryTypes()
-    {
-        return HttpRequestIdentity<string[]>(HttpMethod.Get, "/api/DirectoryConnection/AvailableDirectoryTypes");
-    }
+    //public string[]? GetPmAvailableDirectoryTypes() => HttpRequestIdentity<string[]>(HttpMethod.Get, "/api/DirectoryConnection/AvailableDirectoryTypes");
 
     // Seems to return an empty array. Hmm.
-    public void GetPmExternalIdentityProvider(string partitionGlobalId)
-    {
-        string body = HttpRequestIdentity(HttpMethod.Get, $"/api/ExternalIdentityProvider?partitionGlobalId={partitionGlobalId}");
-    }
+    //public void GetPmExternalIdentityProvider(string partitionGlobalId) => HttpRequestIdentity(HttpMethod.Get, $"/api/ExternalIdentityProvider?partitionGlobalId={partitionGlobalId}");
 
     // Forbidden for external app
     //public void GetIdentityResource()
@@ -4073,10 +3469,7 @@ public partial class OrchAPISession : IDisposable
         string body = HttpRequestIdentity(HttpMethod.Get, "/api/Language");
     }
 
-    public void GetIdentitySetting(string partitionGlobalId, string userId)
-    {
-        HttpRequestIdentity(HttpMethod.Get, $"/api/Setting", null, (object)$"&partitionGlobalId={partitionGlobalId}&userId={userId}");
-    }
+    public void GetIdentitySetting(string partitionGlobalId, string userId) => HttpRequestIdentity(HttpMethod.Get, $"/api/Setting", null, (object)$"&partitionGlobalId={partitionGlobalId}&userId={userId}");
 
     // Typed read of a user's identity settings (theme, language, ...). The GET
     // returns nothing unless explicit key filters are supplied, so the caller
@@ -4105,16 +3498,10 @@ public partial class OrchAPISession : IDisposable
     }
 
     // Updates one or more (topicId, mode) subscription toggles for the connected user.
-    public void UpdateUserSubscriptions(string partitionGlobalId, UpdateUserSubscriptionPayload payload)
-    {
-        HttpRequestImpl(HttpMethod.Post, NotificationServiceBase(partitionGlobalId), "/UserSubscription/", null, payload);
-    }
+    public void UpdateUserSubscriptions(string partitionGlobalId, UpdateUserSubscriptionPayload payload) => HttpRequestImpl(HttpMethod.Post, NotificationServiceBase(partitionGlobalId), "/UserSubscription/", null, payload);
 
     // Seems to return an empty array. Hmm.
-    public void GetPmRule(string partitionGlobalId)
-    {
-        string body = HttpRequestIdentity(HttpMethod.Get, $"/api/Rule/{partitionGlobalId}");
-    }
+    //public string GetPmRule(string partitionGlobalId) => HttpRequestIdentity(HttpMethod.Get, $"/api/Rule/{partitionGlobalId}");
 
     // Unfortunately, this does not work with confidential apps. Returns empty.
     // Even when called from a non-confidential app, GetCurrentUser provides richer information. Not useful.
@@ -4137,19 +3524,16 @@ public partial class OrchAPISession : IDisposable
         return body?.FirstOrDefault().Value;
     }
 
-    public AccessAllowedMember[] GetPmPartitionAccessPolicy(string partitionGlobalId)
-    {
-        return HttpRequestPortal<AccessAllowedMember[]>(HttpMethod.Get, $"/api/identity/PartitionAccessPolicy/{partitionGlobalId}") ?? [];
-    }
+    public AccessAllowedMember[] GetPmPartitionAccessPolicy(string partitionGlobalId) => HttpRequestPortal<AccessAllowedMember[]>(HttpMethod.Get, $"/api/identity/PartitionAccessPolicy/{partitionGlobalId}") ?? [];
 
     #endregion
 
     #region Document Understanding
 
-    public DuProject[]? GetDuProjects()
+    public DuProject[] GetDuProjects()
     {
         var body = HttpRequest<DuGetProjectsResponse>(HttpMethod.Get, "/du_/api/framework/projects?api-version=1");
-        return body?.projects;
+        return body?.projects ?? [];
     }
 
     // Does not seem to work... This is problematic.
@@ -4160,38 +3544,35 @@ public partial class OrchAPISession : IDisposable
 
     // Undocumented (not in the public DU swagger): the same internal app/web API the DU web
     // app uses to delete a project. projectId is the DuProject GUID.
-    public void RemoveDuProject(string projectId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/du_/api/app/web/projects/{projectId}?api-version=1.4");
-    }
+    public void RemoveDuProject(string projectId) => HttpRequest(HttpMethod.Delete, $"/du_/api/app/web/projects/{projectId}?api-version=1.4");
 
-    public DuDocumentType[]? GetDuDocumentTypes(string? projectId)
+    public DuDocumentType[] GetDuDocumentTypes(string? projectId)
     {
         var body = HttpRequest<DuGetDocumentTypesResponse>(HttpMethod.Get, $"/du_/api/framework/projects/{projectId}/document-types?api-version=1");
-        return body?.documentTypes;
+        return body?.documentTypes ?? [];
     }
 
-    public DuClassifier[]? GetDuClassifiers(string? projectId)
+    public DuClassifier[] GetDuClassifiers(string? projectId)
     {
         var body = HttpRequest<DuGetClassifiersResponse>(HttpMethod.Get, $"/du_/api/framework/projects/{projectId}/classifiers?api-version=1");
-        return body?.classifiers;
+        return body?.classifiers ?? [];
     }
 
-    public DuExtractor[]? GetDuExtractors(string? projectId)
+    public DuExtractor[] GetDuExtractors(string? projectId)
     {
         var body = HttpRequest<DuGetExtractorsResponse>(HttpMethod.Get, $"/du_/api/framework/projects/{projectId}/extractors?api-version=1");
-        return body?.extractors;
+        return body?.extractors ?? [];
     }
 
     // TODO: Should pagination be supported?
-    public DuUser[]? GetDuUsers(string? partitionGlobalId, string? tenantKey, string? projectId)
+    public DuUser[] GetDuUsers(string? partitionGlobalId, string? tenantKey, string? projectId)
     {
         Uri uri = new(_base_url);
         string baseUrl = $"{uri.Scheme}://{uri.Host}/{partitionGlobalId}/pap_/api/userroleassignments?scope=/tenant/{tenantKey}/DocumentUnderstanding/projects/{projectId}&serviceName=DocumentUnderstanding";
 
         string body = HttpRequestImpl(HttpMethod.Get, baseUrl, "");
         var results = JsonSerializer.Deserialize<HttpBodyResults<DuUser>>(body);
-        return results?.results;
+        return results?.results ?? [];
     }
 
     public DuUser[]? PatchDuUsers(string? partitionGlobalId, string? tenantKey, string? projectId)
@@ -4205,14 +3586,14 @@ public partial class OrchAPISession : IDisposable
     }
 
     // TODO: Should pagination be supported?
-    public DuRole[]? GetDuRoles(string? partitionGlobalId)
+    public DuRole[] GetDuRoles(string? partitionGlobalId)
     {
         Uri uri = new(_base_url);
         string baseUrl = $"{uri.Scheme}://{uri.Host}/{partitionGlobalId}/pap_/api/roles?scopeType=project&serviceName=DocumentUnderstanding";
 
         string body = HttpRequestImpl(HttpMethod.Get, baseUrl, "");
         var results = JsonSerializer.Deserialize<HttpBodyResults<DuRole>>(body);
-        return results?.results;
+        return results?.results ?? [];
     }
 
     // Returns nothing
@@ -4331,99 +3712,45 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    public IEnumerable<TmProject> GetTmProjects()
-    {
-        return GetEnumerableTm<TmProject>("/testmanager_/api/v2/projects");
-    }
+    public IEnumerable<TmProject> GetTmProjects() => GetEnumerableTm<TmProject>("/testmanager_/api/v2/projects");
 
-    public void PutTmProject(TmProject project)
-    {
-        var body = HttpRequest(HttpMethod.Put, $"/testmanager_/api/v2/projects/{project.id}", null, project);
-    }
+    public string PutTmProject(TmProject project) => HttpRequest(HttpMethod.Put, $"/testmanager_/api/v2/projects/{project.id}", null, project);
 
-    public void RemoveTmProject(string projectId)
-    {
-        // Returns nothing
-        HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/projects/{projectId}");
-    }
+    // Returns nothing
+    public void RemoveTmProject(string projectId) => HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/projects/{projectId}");
 
-    public IEnumerable<TmRequirement> GetTmRequirements(string projectId)
-    {
-        return GetEnumerableTm2<TmRequirement>($"/testmanager_/api/v2/{projectId}/requirements");
-    }
+    public IEnumerable<TmRequirement> GetTmRequirements(string projectId) => GetEnumerableTm2<TmRequirement>($"/testmanager_/api/v2/{projectId}/requirements");
 
-    public void RemoveTmRequirements(string projectId, string requirementId)
-    {
-        string body = HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/requirements/{requirementId}");
-    }
+    public string RemoveTmRequirements(string projectId, string requirementId) => HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/requirements/{requirementId}");
 
-    public IEnumerable<TmTestCase> GetTmTestCases(string projectId)
-    {
-        return GetEnumerableTm<TmTestCase>($"/testmanager_/api/v2/{projectId}/testcases");
-    }
+    public IEnumerable<TmTestCase> GetTmTestCases(string projectId) => GetEnumerableTm<TmTestCase>($"/testmanager_/api/v2/{projectId}/testcases");
 
-    public void RemoveTmTestCase(string projectId, string testCaseId)
-    {
-        // Returns empty
-        HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/testcases/{testCaseId}");
-    }
+    // Returns empty
+    public string RemoveTmTestCase(string projectId, string testCaseId) => HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/testcases/{testCaseId}");
 
-    public IEnumerable<TmTestSet> GetTmTestSets(string projectId)
-    {
-        return GetEnumerableTm<TmTestSet>($"/testmanager_/api/v2/{projectId}/testsets");
-    }
+    public IEnumerable<TmTestSet> GetTmTestSets(string projectId) => GetEnumerableTm<TmTestSet>($"/testmanager_/api/v2/{projectId}/testsets");
 
-    public void RemoveTmTestSet(string projectId, string testSetId)
-    {
-        HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/testsets/{testSetId}");
-    }
+    public string RemoveTmTestSet(string projectId, string testSetId) => HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/testsets/{testSetId}");
 
     // This endpoint appears to return the same results as /testexecutions/filtered.
     // Are the parameters unusable?
-    public IEnumerable<TmTestExecution> GetTmTestExecutions(string projectId)
-    {
-        return GetEnumerableTm<TmTestExecution>($"/testmanager_/api/v2/{projectId}/testexecutions");
-    }
+    public IEnumerable<TmTestExecution> GetTmTestExecutions(string projectId) => GetEnumerableTm<TmTestExecution>($"/testmanager_/api/v2/{projectId}/testexecutions");
 
-    public IEnumerable<TmTestExecution> GetTmTestExecutionsFiltered(string projectId)
-    {
-        return GetEnumerableTm<TmTestExecution>($"/testmanager_/api/v2/{projectId}/testexecutions/filtered");
-    }
+    public IEnumerable<TmTestExecution> GetTmTestExecutionsFiltered(string projectId) => GetEnumerableTm<TmTestExecution>($"/testmanager_/api/v2/{projectId}/testexecutions/filtered");
 
-    public IEnumerable<TmTestExecutionResult> GetTmTestExecutionsResult(string projectId, string testExecutionId)
-    {
-        return GetEnumerableTm<TmTestExecutionResult>($"/testmanager_/api/v2/{projectId}/testcaselogs/testexecution/{testExecutionId}/paged");
-    }
+    public IEnumerable<TmTestExecutionResult> GetTmTestExecutionsResult(string projectId, string testExecutionId) => GetEnumerableTm<TmTestExecutionResult>($"/testmanager_/api/v2/{projectId}/testcaselogs/testexecution/{testExecutionId}/paged");
 
-    public IEnumerable<TmRole> GetTmRoles()
-    {
-        return GetEnumerableTm3<TmRole>("/testmanager_/api/v2/roles");
-    }
+    public IEnumerable<TmRole> GetTmRoles() => GetEnumerableTm3<TmRole>("/testmanager_/api/v2/roles");
 
-    public TmServerInfo? GetTmServerInfo()
-    {
-        return HttpRequest<TmServerInfo>(HttpMethod.Get, "/testmanager_/api/serverinfo");
-    }
+    public TmServerInfo? GetTmServerInfo() => HttpRequest<TmServerInfo>(HttpMethod.Get, "/testmanager_/api/serverinfo");
 
-    public TmConfig? GetTmConfiguration()
-    {
-        return HttpRequest<TmConfig>(HttpMethod.Get, "/testmanager_/api/configuration");
-    }
+    public TmConfig? GetTmConfiguration() => HttpRequest<TmConfig>(HttpMethod.Get, "/testmanager_/api/configuration");
 
-    public TmProjectSettings? GetTmProjectSettings(string projectId)
-    {
-        return HttpRequest<TmProjectSettings>(HttpMethod.Get, $"/testmanager_/api/v2/{projectId}/projectsettings");
-    }
+    public TmProjectSettings? GetTmProjectSettings(string projectId) => HttpRequest<TmProjectSettings>(HttpMethod.Get, $"/testmanager_/api/v2/{projectId}/projectsettings");
 
-    public IEnumerable<TmProjectPermission> GetTmProjectPermission(string projectId)
-    {
-        return GetEnumerableTm<TmProjectPermission>($"/testmanager_/api/v2/{projectId}/permissions/project");
-    }
+    public IEnumerable<TmProjectPermission> GetTmProjectPermission(string projectId) => GetEnumerableTm<TmProjectPermission>($"/testmanager_/api/v2/{projectId}/permissions/project");
 
-    public IEnumerable<TmProjectPermission> GetTmDefects(string projectId)
-    {
-        return GetEnumerableTm<TmProjectPermission>($"/testmanager_/api/v2/{projectId}/defects");
-    }
+    public IEnumerable<TmProjectPermission> GetTmDefects(string projectId) => GetEnumerableTm<TmProjectPermission>($"/testmanager_/api/v2/{projectId}/defects");
 
     #endregion
 
