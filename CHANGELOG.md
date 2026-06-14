@@ -4,38 +4,7 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
-
-### Fixed
-
-- **Interactive (PKCE) sign-in works on macOS.** The `scope` parameter of the authorize URL was not
-  URL-encoded, and scopes are space-delimited. Windows browsers silently repair raw spaces in a URL,
-  masking the bug; on macOS the launch path splits the URL at the first raw space, dropping everything
-  after the scope value — including `redirect_uri` — so Identity rejected the sign-in with
-  "Invalid redirect_uri" even though the app registration and config were correct.
-
-### Changed
-
-- **`Scope` on a personal-access-token drive is now treated as a client-side declaration only.**
-  A PAT's scopes are fixed server-side when the token is created, so the config `Scope` cannot change
-  what the token is authorized to do. PAT drives no longer emit the misleading "Ensure the ... scope is
-  included" / "Scope is not specified!" warnings, and the API-version detection is always attempted for
-  PAT drives instead of being gated on `Scope` containing `OR.Settings` (falling back gracefully when
-  the token lacks the scope). Declaring `Scope` on a PAT drive remains meaningful only as the opt-in
-  that mounts the `Du*`/`Tm*` companion drives.
-- The config templates' PAT sample (all 7 locales) no longer contains a `Scope` line; a comment now
-  lists the minimum scopes to select when creating the token on the Preferences page and explains the
-  remaining `Du*`/`Tm*` opt-in role of `Scope`.
-
-### Deprecated
-
-- `Get-OrchAsset -ExportCredentialCsv` is deprecated in favor of `Get-OrchCredentialAsset -ExportCsv`
-  (help updated; the on-disk CSV format is unchanged, so existing files keep importing into
-  `Set-OrchCredentialAsset`). Each asset type's CSV export now pairs with its own cmdlet family:
-  `Get-OrchCredentialAsset -ExportCsv` ↔ `Set-OrchCredentialAsset`, `Get-OrchSecretAsset -ExportCsv` ↔
-  `Set-OrchSecretAsset`.
-
-## [1.9.2] - 2026-06-10
+## [1.9.2] - 2026-06-14
 
 ### Fixed
 
@@ -112,6 +81,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `Get-OrchEventTrigger` now populate the `Release` column. `Get-OrchTaskCatalog` shows the
   `FoldersCount` column (was a typo).
 
+#### Authentication / sign-in
+
+- **Interactive (PKCE) sign-in works on macOS.** The `scope` parameter of the authorize URL was not
+  URL-encoded, and scopes are space-delimited. Windows browsers silently repair raw spaces in a URL,
+  masking the bug; on macOS the launch path splits the URL at the first raw space, dropping everything
+  after the scope value — including `redirect_uri` — so Identity rejected the sign-in with
+  "Invalid redirect_uri" even though the app registration and config were correct.
+
+#### Asset / calendar creation
+
+- **`Set-OrchAsset` and `Add-OrchCalendarDate` warn instead of silently skipping** when a `-Name`
+  containing wildcard characters matches no existing entity and would otherwise create a new one
+  (a name with wildcard metacharacters cannot be created literally). The warning shows the
+  backtick-escaped `-Name` to use for the literal name.
+
+### Changed
+
+- **`Scope` on a personal-access-token drive is now treated as a client-side declaration only.**
+  A PAT's scopes are fixed server-side when the token is created, so the config `Scope` cannot change
+  what the token is authorized to do. PAT drives no longer emit the misleading "Ensure the ... scope is
+  included" / "Scope is not specified!" warnings, and the API-version detection is always attempted for
+  PAT drives instead of being gated on `Scope` containing `OR.Settings` (falling back gracefully when
+  the token lacks the scope). Declaring `Scope` on a PAT drive remains meaningful only as the opt-in
+  that mounts the `Du*`/`Tm*` companion drives.
+- The config templates' PAT sample (all 7 locales) no longer contains a `Scope` line; a comment now
+  lists the minimum scopes to select when creating the token on the Preferences page and explains the
+  remaining `Du*`/`Tm*` opt-in role of `Scope`.
+
+### Deprecated
+
+- `Get-OrchAsset -ExportCredentialCsv` is deprecated in favor of `Get-OrchCredentialAsset -ExportCsv`
+  (help updated; the on-disk CSV format is unchanged, so existing files keep importing into
+  `Set-OrchCredentialAsset`). Each asset type's CSV export now pairs with its own cmdlet family:
+  `Get-OrchCredentialAsset -ExportCsv` ↔ `Set-OrchCredentialAsset`, `Get-OrchSecretAsset -ExportCsv` ↔
+  `Set-OrchSecretAsset`.
+
 ### Performance
 
 - `Enable-OrchTestSetSchedule` / `Disable-OrchTestSetSchedule` skip schedules already in the target
@@ -121,6 +126,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Added auth-flow-selection unit tests and a regression suite (C# unit + live Pester) that reproduces
   the post-1.9.1 fixes (failing on the v1.9.1 build, passing on this release).
+- The live Pester suite is drive-configurable: every test honors `$env:UIPATHORCH_TEST_DRIVE` (and
+  `$env:UIPATHORCH_TEST_REF_DRIVE` for the read-only reference drive), defaulting to the prior literals,
+  so the suite can target any mounted drive.
 
 ## [1.9.1] - 2026-06-09
 

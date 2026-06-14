@@ -523,6 +523,18 @@ a non-idempotent POST is not retried on 503/504; backtick-escaped commas survive
 -GroupName; Add/Remove-OrchRoleFromFolderUser match and complete -Roles consistently on role name;
 Update-/Reset-OrchProcessVersion and Stop-OrchTestSetExecution invalidate their stale cache entries.
 
+Fixed (sign-in): interactive PKCE sign-in works on macOS — the authorize URL's scope is now
+URL-encoded (a raw space had truncated the URL before redirect_uri on macOS). Set-OrchAsset and
+Add-OrchCalendarDate now warn (instead of silently skipping) when a wildcard-containing -Name would
+create a new entity, showing the backtick-escaped name to use for a literal name.
+
+Changed: Scope on a personal-access-token drive is a client-side declaration only (a PAT's scopes are
+fixed server-side), so the misleading scope warnings are gone and the PAT config sample drops the
+Scope line (a comment lists the scopes to select instead).
+
+Deprecated: Get-OrchAsset -ExportCredentialCsv in favor of Get-OrchCredentialAsset -ExportCsv (CSV
+format unchanged; existing files keep importing into Set-OrchCredentialAsset).
+
 Performance: Enable/Disable-OrchTestSetSchedule skips no-op calls and batches per folder.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
