@@ -90,7 +90,8 @@ public class AddCalendarDateCmdlet : OrchestratorPSCmdlet
                 {
                     if (WildcardPattern.ContainsWildcardCharacters(name))
                     {
-                        //WriteWarning($"{System.IO.Path.Combine(drive.NameColonSeparator, name)} did not match any existing calendars. A new calendar cannot be created with a name that contains wildcards.");
+                        WriteWarning($"\"{System.IO.Path.Combine(drive.NameColonSeparator, name)}\": no existing calendar matched, and a new calendar cannot be created with a name that contains wildcard characters. "
+                            + $"To create a calendar with this literal name, escape the wildcard characters with a backtick: -Name '{WildcardPattern.Escape(name)}'.");
                         continue;
                     }
                     string unescapedName = WildcardPattern.Unescape(name);

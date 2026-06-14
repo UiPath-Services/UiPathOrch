@@ -685,6 +685,8 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                     }
                     else if (WildcardPattern.ContainsWildcardCharacters(name))
                     {
+                        WriteWarning($"\"{System.IO.Path.Combine(targetFolder, name)}\": no existing asset matched, and a new asset cannot be created with a name that contains wildcard characters. "
+                            + $"To create an asset with this literal name, escape the wildcard characters with a backtick: -Name '{WildcardPattern.Escape(name)}'.");
                         continue;
                     }
                     else
