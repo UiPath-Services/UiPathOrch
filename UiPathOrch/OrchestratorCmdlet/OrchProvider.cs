@@ -912,15 +912,34 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
     {
         //path = UnescapeWildcard(path);
 
-        var dynamicParameters = DynamicParameters as NewItem_DynamicParameters;
-        if (dynamicParameters is not null && string.IsNullOrEmpty(dynamicParameters.FeedType))
+        var dynamicParameters = DynamicParameters as NewItem_DynamicParameters ?? new NewItem_DynamicParameters();
+
+        // Provider dynamic parameters (FeedType/Description) do NOT bind from the pipeline by
+        // property name, so when a row is piped in (Import-Csv | New-Item) they arrive on the
+        // whole pipeline object that lands on -Value instead. Pull them from there as a fallback
+        // -- this is what makes the `dir -ExportCsv | ... | Import-Csv | New-Item` round-trip
+        // preserve folder type and description (the same reason -Name is read from it below).
+        var psValue = newItemValue as PSObject;
+        if (psValue is not null)
         {
-            dynamicParameters!.FeedType = "Processes";
+            if (string.IsNullOrEmpty(dynamicParameters.FeedType))
+            {
+                dynamicParameters.FeedType = psValue.Properties["FeedType"]?.Value as string;
+            }
+            if (string.IsNullOrEmpty(dynamicParameters.Description))
+            {
+                dynamicParameters.Description = psValue.Properties["Description"]?.Value as string;
+            }
         }
 
-        if (newItemValue is not null)
+        if (string.IsNullOrEmpty(dynamicParameters.FeedType))
         {
-            string name = (newItemValue as PSObject)?.Properties["Name"]?.Value as string;
+            dynamicParameters.FeedType = "Processes";
+        }
+
+        if (psValue is not null)
+        {
+            string name = psValue.Properties["Name"]?.Value as string;
             if (name is not null)
             {
                 // TODO: Is Unescape() needed??
