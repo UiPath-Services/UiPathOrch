@@ -143,9 +143,7 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
             throw new PSArgumentException("You cannot specify -Recurse and -Name at the same time.");
         }
 
-        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), false, 0, true);
-        var wpName = Name.ConvertToWildcardPatternList();
-        var sources = ResolveSources();
+        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), false, 0, true);        var sources = ResolveSources();
 
         using var cancelHandler = new ConsoleCancelHandler();
 
@@ -196,11 +194,11 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
 
                 IEnumerable<Bucket> targetBuckets = null;
 
-                if (wpName is not null)
+                if (Name is not null)
                 {
                     // If -Name is specified, use it
                     targetBuckets = buckets
-                        .FilterByWildcards(b => b!.Name, wpName)
+                        .FilterByNames(b => b!.Name, Name)
                         .OrderBy(b => b.Name);
                     if (!targetBuckets.Any())
                     {

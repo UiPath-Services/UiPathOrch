@@ -164,15 +164,13 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
         }
 
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name!.ConvertToWildcardPatternList();
-
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
             try
             {
                 var processes = drive.Releases.Get(folder);
-                foreach (var process in processes.FilterByWildcards(p => p?.Name, wpName).WithCancellation(cancelHandler.Token))
+                foreach (var process in processes.FilterByNames(p => p?.Name, Name).WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(process.GetPSPath(), "Start Job"))
                     {

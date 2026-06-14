@@ -166,7 +166,6 @@ public class UpdateUserCmdlet : OrchestratorPSCmdlet
         // name contains a comma and ignores an explicit `, escape).
         var processedRoles = Roles.SplitValuesByUnescapedCommasPreservingEscapes();
 
-        var wpUserName = UserName!.ConvertToWildcardPatternList();
         var wpRoles = processedRoles.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -182,7 +181,7 @@ public class UpdateUserCmdlet : OrchestratorPSCmdlet
                 // tenant UserName differs from its canonical EmailAddress, so -UserName user@contoso.com
                 // must still resolve. (SelectByWildcardsAny keeps the empty -> empty "must specify a
                 // name" semantics of the former SelectByWildcards.)
-                var targetUsers = users.SelectByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], wpUserName).OrderBy(u => u.UserName);
+                var targetUsers = users.SelectByNamesAny([u => u?.UserName, u => u?.EmailAddress], UserName).OrderBy(u => u.UserName);
 
                 foreach (var user in targetUsers.WithCancellation(cancelHandler.Token))
                 {

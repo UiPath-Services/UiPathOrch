@@ -103,9 +103,7 @@ public class RemoveQueueItemCmdlet : OrchestratorPSCmdlet
     {
         #region Resolve the drive, folder, and queue for this line
         var (drive, folder) = SessionState.ResolveToSingleFolder(EffectivePath(Path, LiteralPath));
-        var wpName = new string[] { Name! }.ConvertToWildcardPatternList();
-
-        var queues = drive.Queues.Get(folder).FilterByWildcards(q => q?.Name, wpName).Take(2).ToList();
+        var queues = drive.Queues.Get(folder).FilterByNames(q => q?.Name, new[] { Name! }).Take(2).ToList();
         if (queues.Count != 1)
         {
             string queuePath = System.IO.Path.Combine(folder.GetPSPath(), Name!);

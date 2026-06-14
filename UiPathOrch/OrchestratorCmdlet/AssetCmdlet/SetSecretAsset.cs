@@ -438,13 +438,8 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
                 param.SecretValue = ConvertToUnsecureString(Secret!);
             }
 
-            List<WildcardPattern> wpName = param.Name!.ConvertToWildcardPatternList();
-            List<WildcardPattern> wpUserName = null;
             List<WildcardPattern> wpMachineName = null;
             WildcardPattern wpCredentialStore = null;
-
-            if (param.UserName is not null && param.UserName.Any(un => !string.IsNullOrEmpty(un)))
-                wpUserName = param.UserName.ConvertToWildcardPatternList();
 
             if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
                 wpMachineName = param.MachineName.ConvertToWildcardPatternList();
@@ -461,7 +456,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
                 IEnumerable<User> specifiedUsers = null;
                 IEnumerable<ExtendedMachine?> specifiedMachines = null;
 
-                if (wpUserName is not null)
+                if (param.UserName is not null && param.UserName.Any(un => !string.IsNullOrEmpty(un)))
                 {
                     // See SetAsset.cs UserName expansion — the same scope-tightening fix.
                     var assignedUserIds = drive.FolderUsersWithInherited.Get(folder)
@@ -471,9 +466,9 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
                     var tenantUsers = drive.Users.Get()
                         .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
                     // Match both UserName and EmailAddress; see SetAsset.cs.
-                    specifiedUsers = tenantUsers.FilterByWildcardsAny(
+                    specifiedUsers = tenantUsers.FilterByNamesAny(
                         [u => u?.UserName, u => u?.EmailAddress],
-                        wpUserName);
+                        param.UserName);
                     if (!specifiedUsers.Any())
                     {
                         string strUserNames = string.Join(", ", param.UserName!);
@@ -512,7 +507,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
 
                 foreach (var name in param.Name!)
                 {
-                    var matchingAssets = existingAssets.FilterByWildcards(n => n?.Name, wpName);
+                    var matchingAssets = existingAssets.FilterByNames(n => n?.Name, param.Name);
                     if (matchingAssets.Any())
                     {
                         foreach (var matchingAsset in matchingAssets)

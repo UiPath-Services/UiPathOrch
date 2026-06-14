@@ -45,12 +45,10 @@ public class GetCalendarDateCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
-        var wpName = Name.ConvertToWildcardPatternList();
-
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        EmitCalendarDates(this, drives, wpName, IncludePastDate.IsPresent, writer);
+        EmitCalendarDates(this, drives, Name, IncludePastDate.IsPresent, writer);
 
         if (!string.IsNullOrEmpty(ExportCsv))
         {
@@ -69,7 +67,7 @@ public class GetCalendarDateCmdlet : OrchestratorPSCmdlet
     internal static void EmitCalendarDates(
         OrchestratorPSCmdlet caller,
         IEnumerable<OrchDriveInfo> drives,
-        List<WildcardPattern>? calendarWildcards,
+        string[]? calendarNames,
         bool includePastDate,
         StreamWriter? writer)
     {
@@ -80,7 +78,7 @@ public class GetCalendarDateCmdlet : OrchestratorPSCmdlet
             {
                 var calendars = drive.Calendars.Get();
                 var targetCalendars = calendars?
-                    .FilterByWildcards(c => c?.Name, calendarWildcards)
+                    .FilterByNames(c => c?.Name, calendarNames)
                     .OrderBy(c => c.Name)
                     .ToList();
 

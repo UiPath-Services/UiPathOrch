@@ -507,16 +507,9 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
                 param.CredentialPassword = ConvertToUnsecureString(Credential!.Password);
             }
 
-            // expand Asset Name
-            List<WildcardPattern> wpName = param.Name!.ConvertToWildcardPatternList();
-
             // expand UserName and MachineName
-            List<WildcardPattern> wpUserName = null;
             List<WildcardPattern> wpMachineName = null;
             WildcardPattern wpCredentialStore = null;
-
-            if (param.UserName is not null && param.UserName.Any(un => !string.IsNullOrEmpty(un)))
-                wpUserName = param.UserName.ConvertToWildcardPatternList();
 
             if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
                 wpMachineName = param.MachineName.ConvertToWildcardPatternList();
@@ -535,7 +528,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
                 IEnumerable<ExtendedMachine?> specifiedMachines = null;
 
                 // expand UserName
-                if (wpUserName is not null)
+                if (param.UserName is not null && param.UserName.Any(un => !string.IsNullOrEmpty(un)))
                 {
                     // See SetAsset.cs UserName expansion — the same scope-tightening fix.
                     var assignedUserIds = drive.FolderUsersWithInherited.Get(folder)
@@ -545,9 +538,9 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
                     var tenantUsers = drive.Users.Get()
                         .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
                     // Match both UserName and EmailAddress; see SetAsset.cs.
-                    specifiedUsers = tenantUsers.FilterByWildcardsAny(
+                    specifiedUsers = tenantUsers.FilterByNamesAny(
                         [u => u?.UserName, u => u?.EmailAddress],
-                        wpUserName);
+                        param.UserName);
                     if (!specifiedUsers.Any())
                     {
                         string strUserNames = string.Join(", ", param.UserName!);
@@ -588,7 +581,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
 
                 foreach (var name in param.Name!)
                 {
-                    var matchingAssets = existingAssets.FilterByWildcards(n => n?.Name, wpName);
+                    var matchingAssets = existingAssets.FilterByNames(n => n?.Name, param.Name);
                     if (matchingAssets.Any())
                     {
                         // Update existing assets

@@ -69,8 +69,6 @@ public class AddFolderMachineCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
             df => df.folder,
@@ -86,7 +84,7 @@ public class AddFolderMachineCmdlet : OrchestratorPSCmdlet
                 var (drive, folder) = result.Source;
 
                 var addingMachines = machines!
-                    .FilterByWildcards(m => m?.Name, wpName)
+                    .FilterByNames(m => m?.Name, Name)
                     .OrderBy(m => m.Name)
                     .ToList();
 
