@@ -2966,7 +2966,7 @@ public partial class OrchAPISession : IDisposable
     #region Maintenance
 
     // Host only
-//    public MaintenanceSetting? GetMaintenance(int? tenantId) => HttpRequest<MaintenanceSetting>(HttpMethod.Get, $"/api/Maintenance/Get?tenantId={tenantId}");
+    //    public MaintenanceSetting? GetMaintenance(int? tenantId) => HttpRequest<MaintenanceSetting>(HttpMethod.Get, $"/api/Maintenance/Get?tenantId={tenantId}");
 
     public void SetMaintenanceMode(Int64? sessionId, bool enabled, bool force = false)
     {
