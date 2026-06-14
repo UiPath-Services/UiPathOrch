@@ -3098,64 +3098,63 @@ public partial class OrchAPISession : IDisposable
 
     public Asset? AddAsset(Int64 folderId, string name, string value, string? description = null)
     {
-        var payload = new Dictionary<string, object?>
+        // Build a typed Asset rather than a Dictionary<string, object?>: the body serializer is
+        // WhenWritingNull, so the unset fields drop out and the wire payload is identical, but the
+        // property names are now compiler-checked. (Description = null is likewise omitted.)
+        var asset = new Asset
         {
-            ["StringValue"] = value,
-            ["ValueType"] = "Text",
-            ["Name"] = name,
-            ["ValueScope"] = "Global",
-            ["HasDefaultValue"] = true
+            StringValue = value,
+            ValueType = "Text",
+            Name = name,
+            ValueScope = "Global",
+            HasDefaultValue = true,
+            Description = description,
         };
-        if (description is not null) payload["Description"] = description;
-
-        return HttpRequest<Asset>(HttpMethod.Post, $"/odata/Assets", folderId, payload);
+        return HttpRequest<Asset>(HttpMethod.Post, $"/odata/Assets", folderId, asset);
     }
 
     public Asset? AddAsset(Int64 folderId, string name, bool value, string? description = null)
     {
-        var payload = new Dictionary<string, object?>
+        var asset = new Asset
         {
-            ["BoolValue"] = value,
-            ["ValueType"] = "Bool",
-            ["Name"] = name,
-            ["ValueScope"] = "Global",
-            ["HasDefaultValue"] = true
+            BoolValue = value,
+            ValueType = "Bool",
+            Name = name,
+            ValueScope = "Global",
+            HasDefaultValue = true,
+            Description = description,
         };
-        if (description is not null) payload["Description"] = description;
-
-        return HttpRequest<Asset>(HttpMethod.Post, $"/odata/Assets", folderId, payload);
+        return HttpRequest<Asset>(HttpMethod.Post, $"/odata/Assets", folderId, asset);
     }
 
     public Asset? AddAsset(Int64 folderId, string name, int value, string? description = null)
     {
-        var payload = new Dictionary<string, object?>
+        var asset = new Asset
         {
-            ["IntValue"] = value,
-            ["ValueType"] = "Integer",
-            ["Name"] = name,
-            ["ValueScope"] = "Global",
-            ["HasDefaultValue"] = true
+            IntValue = value,
+            ValueType = "Integer",
+            Name = name,
+            ValueScope = "Global",
+            HasDefaultValue = true,
+            Description = description,
         };
-        if (description is not null) payload["Description"] = description;
-
-        return HttpRequest<Asset>(HttpMethod.Post, $"/odata/Assets", folderId, payload);
+        return HttpRequest<Asset>(HttpMethod.Post, $"/odata/Assets", folderId, asset);
     }
 
     public Asset? AddCredentialAsset(Int64 folderId, string name, string userName, string password, Int64 credentialStoreId, string? description = null)
     {
-        var payload = new Dictionary<string, object?>
+        var asset = new Asset
         {
-            ["ValueType"] = "Credential",
-            ["CredentialUsername"] = userName,
-            ["CredentialPassword"] = password,
-            ["CredentialStoreId"] = credentialStoreId,
-            ["Name"] = name,
-            ["ValueScope"] = "Global",
-            ["HasDefaultValue"] = true
+            ValueType = "Credential",
+            CredentialUsername = userName,
+            CredentialPassword = password,
+            CredentialStoreId = credentialStoreId,
+            Name = name,
+            ValueScope = "Global",
+            HasDefaultValue = true,
+            Description = description,
         };
-        if (description is not null) payload["Description"] = description;
-
-        return HttpRequest<Asset>(HttpMethod.Post, $"/odata/Assets", folderId, payload);
+        return HttpRequest<Asset>(HttpMethod.Post, $"/odata/Assets", folderId, asset);
     }
 
     public void PutAsset(Int64 folderId, Asset asset)
