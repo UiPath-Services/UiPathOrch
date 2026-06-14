@@ -1610,18 +1610,13 @@ public partial class OrchAPISession : IDisposable
 
     public void AssignUser(Int64 folderId, Int64 userId, IEnumerable<Int64>? roleIds)
     {
-        var payload = new Dictionary<string, object?>();
-        payload["assignments"] = new Dictionary<string, object?>()
+        var payload = new
         {
-            { "UserIds", new Int64[] { userId } },
-            { "RolesPerFolder",
-                new object[] { new Dictionary<string, object?>()
-                    {
-                        { "FolderId", folderId },
-                        { "RoleIds", roleIds }
-                    }
-                }
-            }
+            assignments = new
+            {
+                UserIds = new Int64[] { userId },
+                RolesPerFolder = new[] { new { FolderId = folderId, RoleIds = roleIds } },
+            },
         };
 
         HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignUsers", null, payload);
@@ -2406,11 +2401,7 @@ public partial class OrchAPISession : IDisposable
 
     public bool? EnableProcessSchedule(Int64 folderId, IEnumerable<Int64> processScheduleIds, bool enabled = true)
     {
-        var payload = new Dictionary<string, object?>
-        {
-            ["scheduleIds"] = processScheduleIds,
-            ["enabled"] = enabled
-        };
+        var payload = new { scheduleIds = processScheduleIds, enabled };
 
         var ret = HttpRequest<HttpBodyValue<bool>>(HttpMethod.Post, "/odata/ProcessSchedules/UiPath.Server.Configuration.OData.SetEnabled", folderId, payload);
         return ret?.value;
@@ -2718,9 +2709,7 @@ public partial class OrchAPISession : IDisposable
 
     public bool? EnableHttpTriggers(Int64 folderId, string[] triggerIds, bool enabled = true)
     {
-        var payload = new Dictionary<string, object?>();
-        payload["enabled"] = enabled;
-        payload["triggerIds"] = triggerIds;
+        var payload = new { enabled, triggerIds };
 
         var ret = HttpRequest<HttpBodyValue<bool>>(HttpMethod.Post, "/odata/HttpTriggers/UiPath.Server.Configuration.OData.SetEnabled", folderId, payload);
         return ret?.value;
@@ -2744,10 +2733,7 @@ public partial class OrchAPISession : IDisposable
 
     public bool? EnableEventTriggers(Int64 folderId, string triggerId, bool enabled = true)
     {
-        var payload = new Dictionary<string, object?>
-        {
-            ["Enabled"] = enabled
-        };
+        var payload = new { Enabled = enabled };
 
         var ret = HttpRequest<HttpBodyValue<bool>>(HttpMethod.Patch, $"/odata/ApiTriggers({triggerId})", folderId, payload);
         return ret?.value;
@@ -2929,20 +2915,13 @@ public partial class OrchAPISession : IDisposable
 
     public void UpdateCurrentUserURPassword(Int64 userId, string password)
     {
-        var payload = new Dictionary<string, object?>();
-        payload["UnattendedRobot"] = new Dictionary<string, object?>
-        {
-            ["Password"] = password
-        };
+        var payload = new { UnattendedRobot = new { Password = password } };
         HttpRequest(HttpMethod.Patch, $"/odata/Users({userId})", null, payload);
     }
 
     public void UnassignUserFromFolder(Int64 folderId, Int64 userId)
     {
-        var payload = new Dictionary<string, object?>()
-        {
-            { "userId", userId }
-        };
+        var payload = new { userId };
         HttpRequest(HttpMethod.Post, $"/odata/Folders({folderId})/UiPath.Server.Configuration.OData.RemoveUserFromFolder", null, payload);
     }
 
