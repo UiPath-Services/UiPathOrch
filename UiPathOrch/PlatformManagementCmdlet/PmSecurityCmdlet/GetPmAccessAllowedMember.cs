@@ -61,6 +61,8 @@ public class GetPmAccessAllowedMemberCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
+        var wpName = Name.ConvertToWildcardPatternList();
+
         // Fetch in parallel; per-org caches serialize same-partition fetches
         // internally. Filtering / WriteObject stay on the pipeline thread.
         using var results = OrchThreadPool.RunForEach(drives,
@@ -77,7 +79,7 @@ public class GetPmAccessAllowedMemberCmdlet : OrchestratorPSCmdlet
                 if (entities is null) continue;
 
                 var targetUsers = entities
-                    .FilterByNames(u => u?.name, Name)
+                    .FilterByWildcards(u => u?.name, wpName)
                     .OrderBy(u => u.name);
 
                 WriteObject(targetUsers.Select(u => { var c = u.ShallowClone(); c.Path = result.Source.NameColonSeparator; return c; }), true);

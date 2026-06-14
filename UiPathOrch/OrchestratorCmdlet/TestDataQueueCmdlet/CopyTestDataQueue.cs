@@ -42,6 +42,8 @@ public class CopyTestDataQueueCmdlet : OrchestratorPSCmdlet
         // If source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
+        var wpName = Name.ConvertToWildcardPatternList();
+
         using var reporterTestDataQueues = new ProgressReporter(this, 1300, Int32.MaxValue, "Copying test data queues...");
         using var cancelHandler = new ConsoleCancelHandler();
 
@@ -51,7 +53,7 @@ public class CopyTestDataQueueCmdlet : OrchestratorPSCmdlet
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicTestDataQueues?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.TestDataQueues.Get(srcFolder).FilterByNames(b => b?.Name, Name);
+                var srcEntities = srcDrive.TestDataQueues.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName);
                 if (!srcEntities.Any()) continue;
             }
             catch (Exception ex)
@@ -66,7 +68,7 @@ public class CopyTestDataQueueCmdlet : OrchestratorPSCmdlet
             try
             {
                 Core.OrchProvider.CopyTestDataQueues(this,
-                    srcDrive, srcFolder, Name,
+                    srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterTestDataQueues,
                     false, cancelHandler.Token);
                 dstDrive.TestDataQueues.ClearCache(dstFolder);

@@ -81,6 +81,8 @@ public class GetWebhookCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
+        var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
+
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
@@ -98,7 +100,7 @@ public class GetWebhookCmdlet : OrchestratorPSCmdlet
                 if (webhooks is null) continue;
 
                 var filtered = webhooks
-                    .FilterByNames(c => c?.Name, Name)
+                    .FilterByWildcards(c => c?.Name, wpName)
                     .OrderBy(c => c.Name);
 
                 if (writer is not null) { WriteCsvContent(writer, result.Source, filtered); }

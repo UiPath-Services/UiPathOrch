@@ -588,6 +588,18 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
+            // expand Asset Name
+            List<WildcardPattern> wpName = param.Name!.ConvertToWildcardPatternList();
+
+            // expand UserName and MachineName
+            List<WildcardPattern> wpUserName = null;
+            List<WildcardPattern> wpMachineName = null;
+
+            if (param.UserName is not null && param.UserName.Any(un => !string.IsNullOrEmpty(un)))
+                wpUserName = param.UserName.ConvertToWildcardPatternList();
+
+            if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
+                wpMachineName = param.MachineName.ConvertToWildcardPatternList();
 
             var drivesFolders = SessionState.EnumFolders(param.Path);
             foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
@@ -598,7 +610,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                 IEnumerable<ExtendedMachine?> specifiedMachines = null;
 
                 // expand UserName
-                if (param.UserName is not null && param.UserName.Any(un => !string.IsNullOrEmpty(un)))
+                if (wpUserName is not null)
                 {
                     // Restrict the candidate set to users actually assigned to this folder
                     // (directly or via inheritance) so that asset per-User values cannot
@@ -615,9 +627,9 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                     // Match both UserName (tenant form) and EmailAddress (canonical)
                     // so Azure AD B2B guests resolve regardless of which form the
                     // caller supplies — see FilterByWildcards multi-selector overload.
-                    specifiedUsers = tenantUsers.FilterByNamesAny(
+                    specifiedUsers = tenantUsers.FilterByWildcardsAny(
                         [u => u?.UserName, u => u?.EmailAddress],
-                        param.UserName);
+                        wpUserName);
                     if (!specifiedUsers.Any())
                     {
                         string strUserNames = string.Join(", ", param.UserName!);
@@ -629,7 +641,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                 }
 
                 // expand MachineName
-                if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
+                if (wpMachineName is not null)
                 {
                     // Restrict the candidate set to machines actually assigned to this folder
                     // so that asset per-machine values cannot reference machines outside the
@@ -640,7 +652,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                         .ToHashSet();
                     var tenantMachines = drive.Machines.Get()
                         .Where(m => m?.Id is not null && assignedIds.Contains(m.Id!.Value));
-                    specifiedMachines = tenantMachines.FilterByNames(m => m?.Name, param.MachineName);
+                    specifiedMachines = tenantMachines.FilterByWildcards(m => m?.Name, wpMachineName);
                     if (!specifiedMachines.Any())
                     {
                         string strMachineNames = string.Join(", ", param.MachineName!);
@@ -660,7 +672,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
 
                 foreach (var name in param.Name!.WithCancellation(cancelHandler.Token))
                 {
-                    var matchingAssets = existingAssets.FilterByNames(n => n?.Name, param.Name);
+                    var matchingAssets = existingAssets.FilterByWildcards(n => n?.Name, wpName);
                     if (matchingAssets.Any())
                     {
                         // Update existing assets

@@ -28,6 +28,7 @@ public class RemoveFolderMachineCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
@@ -36,7 +37,7 @@ public class RemoveFolderMachineCmdlet : OrchestratorPSCmdlet
             {
                 var entities = drive.FolderMachinesAssigned.Get(folder);
 
-                var removingMachines = entities.FilterByNames(m => m?.Name, Name);
+                var removingMachines = entities.FilterByWildcards(m => m?.Name, wpName);
 
                 List<Int64> machineIdsToRemove = [];
                 foreach (var machine in removingMachines.OrderBy(m => m.Name))

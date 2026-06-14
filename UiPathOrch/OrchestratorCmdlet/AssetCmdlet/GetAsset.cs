@@ -182,6 +182,7 @@ public class GetAssetCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
         var wpValueType = ValueType.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
@@ -205,7 +206,7 @@ public class GetAssetCmdlet : OrchestratorPSCmdlet
 
                 var output = assets
                     .FilterByWildcards(a => a?.ValueType, wpValueType)
-                    .FilterByNames(m => m?.Name, Name)
+                    .FilterByWildcards(m => m?.Name, wpName)
                     //.OrderBy(m => m.ValueType)
                     .OrderBy(m => m.Name);
 

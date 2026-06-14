@@ -58,6 +58,8 @@ public class GetPmExternalApiResourceCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
+        var wpName = Name.ConvertToWildcardPatternList();
+
         // Fetch in parallel; per-org caches serialize same-partition fetches
         // internally. Filtering / WriteObject stay on the pipeline thread.
         using var results = OrchThreadPool.RunForEach(drives,
@@ -73,7 +75,7 @@ public class GetPmExternalApiResourceCmdlet : OrchestratorPSCmdlet
                 var resources = result.GetResult(cancelHandler.Token);
                 if (resources is null) continue;
                 WriteObject(resources
-                    .FilterByNames(a => a!.name!, Name)
+                    .FilterByWildcards(a => a!.name!, wpName)
                     .OrderBy(a => a!.name)
                     .Select(a => { var c = a!.ShallowClone(); c.Path = result.Source.NameColonSeparator; return c; }),
                     true);

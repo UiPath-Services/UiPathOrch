@@ -28,6 +28,7 @@ public class RemovePmUserCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
+        var wpEmail = Email.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
@@ -46,7 +47,7 @@ public class RemovePmUserCmdlet : OrchestratorPSCmdlet
 
                 var partitionGlobalId = drive!.GetPartitionGlobalId();
 
-                var targetUsers = users.FilterByNames(u => u?.email, Email);
+                var targetUsers = users.FilterByWildcards(u => u?.email, wpEmail);
 
                 if (NoMatchWarning.IsPresent && !targetUsers.Any())
                 {

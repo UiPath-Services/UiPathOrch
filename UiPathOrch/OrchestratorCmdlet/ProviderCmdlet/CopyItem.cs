@@ -518,7 +518,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyFolderUsers(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, string[]? userNames, List<WildcardPattern>? wpType,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpUserName, List<WildcardPattern>? wpType,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken,
         Dictionary<string, string>? userMapping = null)
@@ -527,7 +527,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         var srcFolderUsers = srcDrive.FolderUsersWithNoInherited.Get(srcFolder)
             // -UserName matches tenant UserName OR EmailAddress (B2B).
-            .FilterFolderUsersByUserName(srcDrive, userNames).ToList();
+            .FilterFolderUsersByUserName(srcDrive, wpUserName).ToList();
         if (srcFolderUsers.Count == 0)
         {
             return;
@@ -535,7 +535,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         // Get already-assigned users
         var dstFolderUsers = dstDrive.FolderUsersWithNoInherited.Get(newFolder)
-            .FilterFolderUsersByUserName(dstDrive, userNames)
+            .FilterFolderUsersByUserName(dstDrive, wpUserName)
             .FilterByWildcards(u => u?.UserEntity?.Type, wpType).ToList();
 
         string targetFolder = newFolder.GetPSPath();
@@ -710,7 +710,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
     internal static void CopyFolderMachines(
         IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, string[]? name,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpNames,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -721,7 +721,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         {
             srcMachines = srcDrive.FolderMachinesAssigned.Get(srcFolder)
                 .Where(e => e.IsAssignedToFolder.GetValueOrDefault())
-                .FilterByNames(m => m?.Name, name);
+                .FilterByWildcards(m => m?.Name, wpNames);
         }
         catch (Exception ex)
         {
@@ -961,7 +961,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyProcesses(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, string[]? name,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -981,7 +981,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         {
             // call ToList() to create shallow copy
             processes = srcDrive.Releases.Get(srcFolder)
-                .FilterByNames(r => r?.Name, name)
+                .FilterByWildcards(r => r?.Name, wpName)
                 .ToList();
         }
         catch (Exception ex)
@@ -2078,7 +2078,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyAssets(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, string[]? name,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken,
         Dictionary<string, string>? userMapping = null)
@@ -2090,7 +2090,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         List<Asset> srcAssets;
         try
         {
-            srcAssets = srcDrive.Assets.Get(srcFolder).FilterByNames(a => a?.Name, name).ToList();
+            srcAssets = srcDrive.Assets.Get(srcFolder).FilterByWildcards(a => a?.Name, wpName).ToList();
         }
         catch (Exception ex)
         {
@@ -2353,7 +2353,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyQueues(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, string[]? name,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -2369,7 +2369,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         List<QueueDefinition> srcQueues = null;
         try
         {
-            srcQueues = srcDrive.Queues.Get(srcFolder).FilterByNames(q => q?.Name, name).ToList();
+            srcQueues = srcDrive.Queues.Get(srcFolder).FilterByWildcards(q => q?.Name, wpName).ToList();
         }
         catch (Exception ex)
         {
@@ -2589,7 +2589,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyTriggers(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, string[]? name,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -2598,7 +2598,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         List<ProcessSchedule> srcTriggers = null;
         try
         {
-            srcTriggers = srcDrive.GetTriggers(srcFolder).FilterByNames(t => t?.Name, name).ToList();
+            srcTriggers = srcDrive.GetTriggers(srcFolder).FilterByWildcards(t => t?.Name, wpName).ToList();
         }
         catch (Exception ex)
         {
@@ -2720,7 +2720,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyApiTriggers(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, string[]? name,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -2734,7 +2734,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         List<HttpTrigger> srcTriggers = null;
         try
         {
-            srcTriggers = srcDrive.ApiTriggers.Get(srcFolder).FilterByNames(t => t?.Name, name).ToList();
+            srcTriggers = srcDrive.ApiTriggers.Get(srcFolder).FilterByWildcards(t => t?.Name, wpName).ToList();
         }
         catch (Exception ex)
         {
@@ -2876,7 +2876,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyBuckets(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, string[]? name,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -2893,7 +2893,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         List<Bucket> srcBuckets;
         try
         {
-            srcBuckets = srcDrive.Buckets.Get(srcFolder).FilterByNames(b => b?.Name, name).ToList();
+            srcBuckets = srcDrive.Buckets.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
         }
         catch (Exception ex)
         {
@@ -2994,7 +2994,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyTestSets(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, string[]? name,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -3011,7 +3011,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         try
         {
-            var srcTestSets = srcDrive.TestSets.Get(srcFolder).FilterByNames(b => b?.Name, name).ToList();
+            var srcTestSets = srcDrive.TestSets.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
             reporter.TotalNum = srcTestSets.Count;
 
             int index = 0;
@@ -3196,7 +3196,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyTestSetSchedules(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, string[]? name,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -3211,7 +3211,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         List<TestSetSchedule> srcTestSetSchedules;
         try
         {
-            srcTestSetSchedules = srcDrive.TestSetSchedules.Get(srcFolder).FilterByNames(b => b?.Name, name).ToList();
+            srcTestSetSchedules = srcDrive.TestSetSchedules.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
         }
         catch (Exception ex)
         {
@@ -3256,7 +3256,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyTestDataQueues(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, string[]? name,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -3273,7 +3273,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         List<TestDataQueue> srcTestDataQueues;
         try
         {
-            srcTestDataQueues = srcDrive.TestDataQueues.Get(srcFolder).FilterByNames(b => b?.Name, name).ToList();
+            srcTestDataQueues = srcDrive.TestDataQueues.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
         }
         catch (Exception ex)
         {
@@ -3345,7 +3345,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
     internal static void CopyActionCatalogs(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, string[]? name,
+        OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -3357,7 +3357,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         List<TaskCatalog> srcTaskCatalogs;
         try
         {
-            srcTaskCatalogs = srcDrive.ActionCatalogs.Get(srcFolder).FilterByNames(b => b?.Name, name).ToList();
+            srcTaskCatalogs = srcDrive.ActionCatalogs.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
         }
         catch (Exception ex)
         {

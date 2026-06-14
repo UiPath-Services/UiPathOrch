@@ -30,6 +30,7 @@ public class GetTestSetCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
@@ -45,7 +46,7 @@ public class GetTestSetCmdlet : OrchestratorPSCmdlet
                 if (entities is null) continue;
 
                 WriteObject(entities
-                    .FilterByNames(ts => ts?.Name, Name)
+                    .FilterByWildcards(ts => ts?.Name, wpName)
                     .OrderBy(ts => ts.Name),
                     true);
             }

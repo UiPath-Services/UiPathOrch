@@ -191,6 +191,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
         }
 
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
         WildcardPattern wpVersion = null;
         if (!string.IsNullOrEmpty(Version))
         {
@@ -248,7 +249,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
 
                     foreach (var release in releases
                         .Where(r => r.ProcessType != "TestAutomationProcess")
-                        .SelectByNames(r => r?.Name, Name)
+                        .FilterByWildcards(r => r?.Name, wpName)
                         .OrderBy(r => r.Name).WithCancellation(cancelHandler.Token))
                     {
                         if (wpVersion is null)

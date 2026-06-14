@@ -76,6 +76,8 @@ public class RemovePmLicensedUserCmdlet : OrchestratorPSCmdlet
     {
         _toRemove ??= [];
 
+        var wpEmail = Email.ConvertToWildcardPatternList();
+
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -90,7 +92,9 @@ public class RemovePmLicensedUserCmdlet : OrchestratorPSCmdlet
                 // entirely we match every licensed user, paralleling
                 // Remove-PmLicensedGroup's behavior without -GroupName.
                 matched = drive.PmLicensedUsers.Get()
-                    .FilterByNamesAny([u => u?.email, u => u?.name], Email)
+                    .Where(u => wpEmail is null
+                                || wpEmail.Count == 0
+                                || wpEmail.Any(p => p.IsMatch(u.email) || p.IsMatch(u.name)))
                     .OrderBy(u => u.email);
             }
             catch (Exception ex)

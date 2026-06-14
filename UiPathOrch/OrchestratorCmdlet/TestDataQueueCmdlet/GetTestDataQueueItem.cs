@@ -54,6 +54,7 @@ public class GetTestDataQueueItemCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
 
@@ -67,7 +68,7 @@ public class GetTestDataQueueItemCmdlet : OrchestratorPSCmdlet
             df => df.folder.GetPSPath(),
             df => (object)df.folder,
             df => df.drive.TestDataQueues.Get(df.folder)
-                .FilterByNames(e => e?.Name, Name)
+                .FilterByWildcards(e => e?.Name, wpName)
                 .Select(q => (df.drive, df.folder, queue: q)),
             t => t.queue.GetPSPath(),
             t => (object)t.queue,

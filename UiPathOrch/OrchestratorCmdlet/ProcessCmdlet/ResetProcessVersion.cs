@@ -65,6 +65,8 @@ public class ResetProcessVersionCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
+
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
@@ -74,7 +76,7 @@ public class ResetProcessVersionCmdlet : OrchestratorPSCmdlet
 
                 foreach (var release in releases
                     .Where(e => e.ProcessType != "TestAutomationProcess")
-                    .SelectByNames(e => e?.Name, Name)
+                    .FilterByWildcards(e => e?.Name, wpName)
                     .OrderBy(e => e.Name))
                 {
                     if (release.ReleaseVersions is null || release.ReleaseVersions.Length <= 1)

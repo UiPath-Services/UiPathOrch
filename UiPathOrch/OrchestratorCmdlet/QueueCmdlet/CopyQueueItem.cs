@@ -43,6 +43,7 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
         // If the source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         using ProgressReporter reporterQueue = new(this, 3, int.MaxValue, "Copying new items");
@@ -50,7 +51,7 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
         // Count the number of queues to be processed
         reporterQueue.TotalNum = srcDrivesFolders.CountEntities(
             drive => drive.Queues,
-            e => e.FilterByNames(q => q?.Name, Name)
+            e => e.FilterByWildcards(q => q?.Name, wpName)
         );
 
         int idxQueue = 0;
@@ -61,7 +62,7 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
 
             try
             {
-                var srcQueues = srcDrive.Queues.Get(srcFolder).FilterByNames(b => b?.Name, Name).ToList();
+                var srcQueues = srcDrive.Queues.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
                 if (srcQueues.Count == 0) continue;
 
                 var dstQueues = dstDrive.Queues.Get(dstFolder);

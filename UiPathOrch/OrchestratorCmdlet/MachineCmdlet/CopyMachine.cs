@@ -30,7 +30,7 @@ public class CopyMachineCmdlet : OrchestratorPSCmdlet
     internal static void CopyMachines(
         IWritableHost _this,
         OrchDriveInfo srcDrive,
-        string[]? name,
+        List<WildcardPattern>? wpName,
         IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -41,7 +41,7 @@ public class CopyMachineCmdlet : OrchestratorPSCmdlet
         {
             srcMachines = srcDrive!.Machines.Get()
                 .Where(m => m.Scope != "PersonalWorkspace")
-                .FilterByNames(m => m?.Name, name)
+                .FilterByWildcards(m => m?.Name, wpName)
                 .OrderBy(m => m.Name)
                 .ToList();
         }
@@ -158,10 +158,11 @@ public class CopyMachineCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
+        var wpName = Name.ConvertToWildcardPatternList();
         var srcDrive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath)!);
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
         using var cancelHandler = new ConsoleCancelHandler();
-        CopyMachines(this, srcDrive, Name, dstDrives, false, cancelHandler.Token);
+        CopyMachines(this, srcDrive, wpName, dstDrives, false, cancelHandler.Token);
     }
 }

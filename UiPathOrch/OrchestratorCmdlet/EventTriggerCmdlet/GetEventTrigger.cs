@@ -54,6 +54,7 @@ public class GetEventTriggerCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
@@ -69,7 +70,7 @@ public class GetEventTriggerCmdlet : OrchestratorPSCmdlet
                 if (triggers is null) continue;
 
                 var filtered = triggers
-                    .FilterByNames(s => s?.Name, Name)
+                    .FilterByWildcards(s => s?.Name, wpName)
                     .OrderBy(s => s.Name);
 
                 foreach (var t in filtered)

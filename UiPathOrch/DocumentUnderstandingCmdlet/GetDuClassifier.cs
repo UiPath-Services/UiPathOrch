@@ -65,6 +65,7 @@ public class GetDuClassifierCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumDuFolders(EffectivePath(Path, LiteralPath), Recurse);
+        var wpClassifierName = Name.ConvertToWildcardPatternList();
 
         // Synchronous version
         //foreach (var driveProject in drivesProjects)
@@ -72,7 +73,7 @@ public class GetDuClassifierCmdlet : OrchestratorPSCmdlet
         //    var (drive, project) = driveProject;
 
         //    WriteObject(drive.GetDuClassifiers(project)?
-        //        .FilterByNames(u => u.name!, Name)
+        //        .FilterByWildcards(u => u.name!, wpClassifierName)
         //        .OrderBy(e => e.name),
         //        true);
         //}
@@ -97,7 +98,7 @@ public class GetDuClassifierCmdlet : OrchestratorPSCmdlet
                 var pathProject = project.GetPSPath();
                 var projectName = project.name;
                 WriteObject(entities
-                    .FilterByNames(u => u?.name, Name)
+                    .FilterByWildcards(u => u?.name, wpClassifierName)
                     .OrderBy(e => e.name)
                     .Select(e => { var c = e.ShallowClone(); c.Path = pathProject; c.Project = projectName; return c; }),
                     true);

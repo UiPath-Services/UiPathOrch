@@ -226,6 +226,8 @@ public class GetTestSetExecutionCmdlet : OrchestratorPSCmdlet
         ulong first = First ?? ulong.MaxValue;
 
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
+
         // If no filter parameters are specified, return the cache contents
         bool bOutCache = (
             Last is null &&
@@ -245,7 +247,7 @@ public class GetTestSetExecutionCmdlet : OrchestratorPSCmdlet
                 if (entities is not null)
                 {
                     WriteObject(entities.Values
-                        .FilterByNames(e => e?.Name, Name),
+                        .FilterByWildcards(e => e?.Name, wpName),
                         true);
                 }
             }
@@ -270,7 +272,7 @@ public class GetTestSetExecutionCmdlet : OrchestratorPSCmdlet
 
                 // This cmdlet supports -Skip and -First, so output must not be sorted here
                 WriteObject(entities
-                    .FilterByNames(e => e?.Name, Name),
+                    .FilterByWildcards(e => e?.Name, wpName),
                     true);
             }
             catch (OrchException ex)

@@ -25,11 +25,12 @@ class GetPmUserLoginAttemptCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
+        var wpEmail = Email.ConvertToWildcardPatternList();
 
 
         foreach (var drive in drives)
         {
-            var users = drive.PmUsers.Get().FilterByNames(u => u?.email, Email);
+            var users = drive.PmUsers.Get().FilterByWildcards(u => u?.email, wpEmail);
             foreach (var user in users)
             {
                 drive.OrchAPISession.GetPmUserLoginAttempts(user.id!);

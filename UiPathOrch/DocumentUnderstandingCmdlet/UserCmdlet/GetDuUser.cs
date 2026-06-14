@@ -76,7 +76,9 @@ public class GetDuUserCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumDuFolders(EffectivePath(Path, LiteralPath), Recurse);
-        //
+        //var wpUserName = UserName.ConvertToWildcardPatternList();
+        var wpName = Name.ConvertToWildcardPatternList();
+
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
@@ -101,8 +103,8 @@ public class GetDuUserCmdlet : OrchestratorPSCmdlet
                 var pathProject = project.GetPSPath();
                 var projectName = project.name;
                 var targetEntities = entities
-                        //.FilterByNames(u => u?.UserName, UserName)
-                        .FilterByNames(u => u?.Name, Name)
+                        //.FilterByWildcards(u => u?.UserName, wpUserName)
+                        .FilterByWildcards(u => u?.Name, wpName)
                         .OrderBy(e => e.Name)
                         .Select(u => { var c = u.ShallowClone(); c.Path = pathProject; c.Project = projectName; return c; });
 

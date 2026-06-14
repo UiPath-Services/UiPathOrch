@@ -148,8 +148,9 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
     {
         if (Robot is null || Robot.Length == 0 || Robot.Any(r => r == "*"))
             return null; // No robot filter (target all robots)
+        var wpRobot = Robot.ConvertToWildcardPatternList();
         var robots = drive.Robots.Get();
-        return robots.SelectByNames(r => r?.Name, Robot).Select(r => r.Id).ToList();
+        return robots.SelectByWildcards(r => r?.Name, wpRobot).Select(r => r.Id).ToList();
     }
 
     private string? MakeFilter(OrchDriveInfo drive, Folder folder, IReadOnlyList<long?>? robotIdBatch = null)
@@ -159,8 +160,9 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
         #region ReleaseName
         if (ReleaseName is not null && ReleaseName.Length > 0 && !ReleaseName.Any(p => p == "*"))
         {
+            var wpProcess = ReleaseName.ConvertToWildcardPatternList();
             var releases = drive.Releases.Get(folder);
-            var targetReleases = releases.SelectByNames(r => r?.Name, ReleaseName);
+            var targetReleases = releases.SelectByWildcards(r => r?.Name, wpProcess);
             if (!targetReleases.Any()) return "null";
             var processes = new List<string>();
             var visitedProcessIds = new HashSet<Int64>();

@@ -105,6 +105,8 @@ public class RedoQueueItemCmdlet : OrchestratorPSCmdlet
         _csvLines ??= [];
 
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
+        var wpName = Name.ConvertToWildcardPatternList();
+
         foreach (var (drive, folder) in drivesFolders)
         {
             IEnumerable<QueueDefinition> queues = null;
@@ -118,7 +120,7 @@ public class RedoQueueItemCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
-            var targetQueues = queues.SelectByNames(q => q!.Name, Name);
+            var targetQueues = queues.FilterByWildcards(q => q!.Name, wpName);
 
             foreach (var queue in targetQueues)
             {
@@ -160,6 +162,8 @@ public class RedoQueueItemCmdlet : OrchestratorPSCmdlet
         if (_csvLines is null) return;
 
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
+        var wpName = Name.ConvertToWildcardPatternList();
+
         using var cancelHandler = new ConsoleCancelHandler();
 
         foreach (var csvLine in _csvLines.WithCancellation(cancelHandler.Token))

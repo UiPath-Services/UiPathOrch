@@ -75,7 +75,7 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
             EffectivePath(Path, LiteralPath),
             DifferencePath,
             DifferenceName,
-            Name,
+            Name.ConvertToWildcardPatternList(),
             IncludeEqual.IsPresent,
             only,
             drive => drive.Roles.Get(),

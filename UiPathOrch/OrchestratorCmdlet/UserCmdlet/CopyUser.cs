@@ -46,8 +46,8 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
     internal static void CopyUsers(
         IWritableHost _this,
         OrchDriveInfo srcDrive,
-        string[]? userName,
-        string[]? fullName,
+        List<WildcardPattern>? wpUserName,
+        List<WildcardPattern>? wpFullName,
         List<WildcardPattern>? wpType,
         IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken,
@@ -57,8 +57,8 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
         srcDrive.UsersDetailed.ClearCache();
 
         var srcUsers = srcDrive.Users.Get()
-            .FilterByNamesAny([user => user?.UserName, user => user?.EmailAddress], userName)
-            .FilterByNames(user => user?.FullName, fullName)
+            .FilterByWildcardsAny([user => user?.UserName, user => user?.EmailAddress], wpUserName)
+            .FilterByWildcards(user => user?.FullName, wpFullName)
             .FilterByWildcards(user => user?.Type, wpType)
             .OrderBy(user => user.UserName)
             .ToList();
@@ -304,6 +304,8 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
         if (UserName?.Length == 0 || string.IsNullOrEmpty(UserName?[0])) UserName = null;
         if (FullName?.Length == 0 || string.IsNullOrEmpty(FullName?[0])) FullName = null;
 
+        var wpUserName = UserName.ConvertToWildcardPatternList();
+        var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
         var srcDrive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath)!) ?? throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
@@ -313,6 +315,6 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
         var userMapping = dstDrives.Count == 1
             ? SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrives[0], UserMappingCsv)
             : null;
-        CopyUsers(this, srcDrive, UserName, FullName, wpType, dstDrives, false, cancelHandler.Token, userMapping);
+        CopyUsers(this, srcDrive, wpUserName, wpFullName, wpType, dstDrives, false, cancelHandler.Token, userMapping);
     }
 }

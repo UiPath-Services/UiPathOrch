@@ -140,6 +140,7 @@ public abstract class AddOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
         {
             var srcDrivesFolders = SessionState.EnumFolders(paths, Recurse.IsPresent, Depth).ToList();
             var drivesLinks = SessionState.EnumFolders(links).ToList();
+            var wpName = names.ConvertToWildcardPatternList();
 
             foreach (var (drive, folder) in srcDrivesFolders)
             {
@@ -161,7 +162,7 @@ public abstract class AddOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
                 if (sameDriveLinks.Count == 0) continue;
 
                 foreach (var entity in entities
-                    .FilterByNames(e => GetEntityName(e), names)
+                    .FilterByWildcards(e => GetEntityName(e), wpName)
                     .OrderBy(e => GetEntityName(e)).WithCancellation(cancelHandler.Token))
                 {
                     long entityId = GetEntityId(entity);

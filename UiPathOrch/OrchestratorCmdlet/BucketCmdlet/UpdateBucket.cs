@@ -67,6 +67,7 @@ public class UpdateBucketCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
         WildcardPattern? wpCredentialStore = CredentialStore.ConvertToWildcardPattern();
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -84,7 +85,7 @@ public class UpdateBucketCmdlet : OrchestratorPSCmdlet
             if (buckets is null) continue;
 
             foreach (var bucket in buckets
-                .FilterByNames(b => b?.Name, Name)
+                .FilterByWildcards(b => b?.Name, wpName)
                 .OrderBy(b => b.Name).WithCancellation(cancelHandler.Token))
             {
                 string target = bucket.GetPSPath();

@@ -24,6 +24,8 @@ public class TestWebhookCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
+        var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
+
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
@@ -32,7 +34,7 @@ public class TestWebhookCmdlet : OrchestratorPSCmdlet
                 var webhooks = drive.Webhooks.Get();
 
                 foreach (var webhook in webhooks
-                    .FilterByNames(wh => wh?.Name, Name)
+                    .FilterByWildcards(wh => wh?.Name, wpName)
                     .OrderBy(wh => wh.Name).WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(webhook.GetPSPath(), "Send Ping"))

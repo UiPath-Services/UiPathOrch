@@ -89,7 +89,7 @@ public class CompareTriggerCmdlet : OrchestratorPSCmdlet
             EffectivePath(Path, LiteralPath),
             DifferencePath,
             DifferenceName,
-            Name,
+            Name.ConvertToWildcardPatternList(),
             Recurse.IsPresent, Depth, IncludeEqual.IsPresent,
             only,
             (drive, folder) => drive.GetTriggers(folder),

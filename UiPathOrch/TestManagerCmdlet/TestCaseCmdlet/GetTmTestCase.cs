@@ -27,6 +27,7 @@ public class GetTmTestCaseCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
@@ -42,7 +43,7 @@ public class GetTmTestCaseCmdlet : OrchestratorPSCmdlet
                 if (entity is null) continue;
 
                 WriteObject(entity
-                    .FilterByNames(e => e?.name, Name)
+                    .FilterByWildcards(e => e?.name, wpName)
                     .OrderBy(e => e.objKey!, ObjKeyComparer.Instance),
                     true);
             }

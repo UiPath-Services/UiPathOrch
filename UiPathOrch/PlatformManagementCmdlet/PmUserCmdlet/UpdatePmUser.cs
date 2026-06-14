@@ -58,6 +58,7 @@ public class UpdatePmUserCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
+        var wpEmail = Email.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
@@ -65,7 +66,7 @@ public class UpdatePmUserCmdlet : OrchestratorPSCmdlet
             try
             {
                 var users = drive.PmUsers.Get();
-                var targetUsers = users.SelectByNames(u => u?.email, Email);
+                var targetUsers = users.SelectByWildcards(u => u?.email, wpEmail);
                 foreach (var user in targetUsers.OrderBy(u => u.email).WithCancellation(cancelHandler.Token))
                 {
                     UiPath.PowerShell.Entities.UpdateUserCommand src = new()

@@ -32,6 +32,7 @@ public class ResetTestDataQueueItemCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
@@ -40,7 +41,7 @@ public class ResetTestDataQueueItemCmdlet : OrchestratorPSCmdlet
             {
                 var queues = drive.TestDataQueues.Get(folder);
                 foreach (var queue in queues
-                    .FilterByNames(e => e?.Name, Name)
+                    .FilterByWildcards(e => e?.Name, wpName)
                     .OrderBy(e => e.Name).WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(queue.GetPSPath(), "Reset TestDataQueueItem"))

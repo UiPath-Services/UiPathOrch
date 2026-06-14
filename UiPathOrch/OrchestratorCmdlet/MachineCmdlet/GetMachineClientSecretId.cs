@@ -126,6 +126,7 @@ public class GetMachineClientSecretIdCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
+        var wpName = Name.ConvertToWildcardPatternList();
         var wpSecretId = SecretId.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -145,7 +146,7 @@ public class GetMachineClientSecretIdCmdlet : OrchestratorPSCmdlet
             var targetMachines = machines
                 .Where(m => m.Scope != "PersonalWorkspace" && m.Scope != "AutomationCloudRobot")
                 .Where(m => m?.LicenseKey is not null)
-                .FilterByNames(m => m?.Name, Name)
+                .FilterByWildcards(m => m?.Name, wpName)
                 .OrderBy(m => m.Name);
 
             using var results = OrchThreadPool.RunForEach(targetMachines,

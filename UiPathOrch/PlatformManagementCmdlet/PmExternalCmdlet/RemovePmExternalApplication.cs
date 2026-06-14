@@ -27,6 +27,7 @@ public class RemovePmExternalApplicationCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
@@ -37,7 +38,7 @@ public class RemovePmExternalApplicationCmdlet : OrchestratorPSCmdlet
                 if (entities is null) continue;
 
                 foreach (var app in entities
-                    .FilterByNames(e => e?.name, Name)
+                    .FilterByWildcards(e => e?.name, wpName)
                     .OrderBy(e => e.name).WithCancellation(cancelHandler.Token))
                 {
                     string target = app.GetPSPath(drive.NameColonSeparator);

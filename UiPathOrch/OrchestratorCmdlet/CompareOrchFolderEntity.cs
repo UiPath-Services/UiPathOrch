@@ -70,7 +70,7 @@ internal static class FolderCompare
         string? referencePath,
         string? differencePath,
         string? differenceName,
-        string[]? nameFilter,
+        List<WildcardPattern>? wpName,
         bool recurse, uint depth, bool includeEqual,
         IReadOnlyCollection<string>? only,
         Func<OrchDriveInfo, Folder, IEnumerable<T>> getEntities,
@@ -118,7 +118,7 @@ internal static class FolderCompare
             foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancel.Token))
             {
                 IEnumerable<T> refs;
-                try { refs = getEntities(srcDrive, srcFolder).FilterByNames(getName, nameFilter); }
+                try { refs = getEntities(srcDrive, srcFolder).FilterByWildcards(getName, wpName); }
                 catch (Exception ex) { writeError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), errorId, ErrorCategory.InvalidOperation, srcFolder)); continue; }
 
                 foreach (var r in refs)
@@ -134,7 +134,7 @@ internal static class FolderCompare
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancel.Token))
         {
             List<T> refs;
-            try { refs = getEntities(srcDrive, srcFolder).FilterByNames(getName, nameFilter).ToList(); }
+            try { refs = getEntities(srcDrive, srcFolder).FilterByWildcards(getName, wpName).ToList(); }
             catch (Exception ex) { writeError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), errorId, ErrorCategory.InvalidOperation, srcFolder)); continue; }
 
             Folder? dstFolder = ResolveDifferenceFolderOrNull(srcRootFolder, srcFolder, dstDrive, dstRootFolder);
@@ -144,7 +144,7 @@ internal static class FolderCompare
             {
                 try
                 {
-                    foreach (var e in getEntities(dstDrive, dstFolder).FilterByNames(getName, nameFilter))
+                    foreach (var e in getEntities(dstDrive, dstFolder).FilterByWildcards(getName, wpName))
                         if (getName(e) is { } n) diffByName[n] = e;
                 }
                 catch (Exception ex) { writeError(new ErrorRecord(new OrchException(dstFolder.GetPSPath(), ex), errorId, ErrorCategory.InvalidOperation, dstFolder)); continue; }
@@ -248,7 +248,7 @@ internal static class TenantCompare
         string? referencePath,
         string? differencePath,
         string? differenceName,
-        string[]? nameFilter,
+        List<WildcardPattern>? wpName,
         bool includeEqual,
         IReadOnlyCollection<string>? only,
         Func<OrchDriveInfo, IEnumerable<T>> getEntities,
@@ -266,7 +266,7 @@ internal static class TenantCompare
         var dstDrive = sessionState.GetOrchDrive(differencePath);
 
         List<T> refs;
-        try { refs = getEntities(srcDrive).FilterByNames(getName, nameFilter).ToList(); }
+        try { refs = getEntities(srcDrive).FilterByWildcards(getName, wpName).ToList(); }
         catch (Exception ex) { writeError(new ErrorRecord(new OrchException(srcDrive.NameColonSeparator, ex), errorId, ErrorCategory.InvalidOperation, srcDrive)); return; }
 
         // Broadcast mode: every reference entity vs the single named target.
@@ -302,7 +302,7 @@ internal static class TenantCompare
 
         // Name-match mode.
         List<T> diffs;
-        try { diffs = getEntities(dstDrive).FilterByNames(getName, nameFilter).ToList(); }
+        try { diffs = getEntities(dstDrive).FilterByWildcards(getName, wpName).ToList(); }
         catch (Exception ex) { writeError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, ex), errorId, ErrorCategory.InvalidOperation, dstDrive)); return; }
 
         var diffByName = new Dictionary<string, T>(StringComparer.OrdinalIgnoreCase);

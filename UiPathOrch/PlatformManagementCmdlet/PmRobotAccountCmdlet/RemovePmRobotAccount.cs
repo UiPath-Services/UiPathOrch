@@ -22,6 +22,7 @@ public class RemovePmRobotAccountCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
@@ -33,7 +34,7 @@ public class RemovePmRobotAccountCmdlet : OrchestratorPSCmdlet
 
                 foreach (var robot in entities
                     .Where(r => r is not null)
-                    .FilterByNames(r => r!.name!, Name)
+                    .FilterByWildcards(r => r!.name!, wpName)
                     .OrderBy(r => r!.name).WithCancellation(cancelHandler.Token))
                 {
                     string target = robot.GetPSPath(drive.NameColonSeparator);

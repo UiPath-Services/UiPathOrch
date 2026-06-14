@@ -145,6 +145,8 @@ public class GetClassicRobotCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
+
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
@@ -163,7 +165,7 @@ public class GetClassicRobotCmdlet : OrchestratorPSCmdlet
                 if (sessions is null) continue;
 
                 Output(writer, sessions
-                    .FilterByNames(s => s?.Robot?.Name, Name)
+                    .FilterByWildcards(s => s?.Robot?.Name, wpName)
                     .OrderBy(s => s.Robot?.Name));
             }
             catch (OrchException ex)

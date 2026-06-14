@@ -295,7 +295,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
         {
             var userRobots = drive.UserRobots.Get(folder);
             filter.AddIfNotNull(userRobots
-                .SelectByNames(u => u?.UserName, WindowsIdentity)
+                .SelectByWildcards(u => u?.UserName, WindowsIdentity)
                 .Where(u => u.RobotNames is not null)
                 .SelectMany(u => u?.RobotNames!)
                 .Where(r => !string.IsNullOrEmpty(r))

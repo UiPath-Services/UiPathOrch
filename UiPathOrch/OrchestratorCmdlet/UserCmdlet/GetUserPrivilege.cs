@@ -24,6 +24,7 @@ public class GetUserPrivilegeCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
+        var wpUserName = UserName.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
@@ -32,13 +33,13 @@ public class GetUserPrivilegeCmdlet : OrchestratorPSCmdlet
             {
                 var users = drive.Users.Get();
                 var targetUsers = users
-                    .FilterByNames(u => u?.UserName, UserName)
+                    .FilterByWildcards(u => u?.UserName, wpUserName)
                     .Where(u => u.Type == "DirectoryUser" || u.Type == "DirectoryGroup")
                     .OrderBy(u => u.UserName)
                     .ToList();
 
                 using var results = OrchThreadPool.RunForEach(targetUsers
-                        .FilterByNames(u => u?.UserName, UserName)
+                        .FilterByWildcards(u => u?.UserName, wpUserName)
                         .OrderBy(u => u.UserName),
                     user => user.GetPSPath(),
                     user => user,

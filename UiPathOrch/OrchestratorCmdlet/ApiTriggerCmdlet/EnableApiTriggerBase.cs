@@ -62,6 +62,8 @@ public class EnableApiTriggerCmdletBase<Enable> : OrchestratorPSCmdlet where Ena
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
+
         string action = $"{(Enable.Value ? "Enable" : "Disable")} ApiTrigger";
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -75,7 +77,7 @@ public class EnableApiTriggerCmdletBase<Enable> : OrchestratorPSCmdlet where Ena
                     .Where(t => Enable.Value
                         ? !t.Enabled.GetValueOrDefault()
                         : t.Enabled.GetValueOrDefault())
-                    .FilterByNames(t => t?.Name, Name)
+                    .FilterByWildcards(t => t?.Name, wpName)
                     .OrderBy(t => t.Name).WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(trigger.GetPSPath(), action))

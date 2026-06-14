@@ -134,6 +134,8 @@ public class GetSecretAssetCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
+
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
@@ -152,7 +154,7 @@ public class GetSecretAssetCmdlet : OrchestratorPSCmdlet
 
                 var output = assets
                     .Where(a => a.ValueType == "Secret")
-                    .FilterByNames(m => m?.Name, Name)
+                    .FilterByWildcards(m => m?.Name, wpName)
                     .OrderBy(m => m.Name)
                     .ToList();
 

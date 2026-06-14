@@ -27,12 +27,12 @@ public class CopyRoleCmdlet : OrchestratorPSCmdlet
 
     internal static void CopyRoles(
         IWritableHost _this,
-        OrchDriveInfo srcDrive, string[]? name,
+        OrchDriveInfo srcDrive, List<WildcardPattern>? wpName,
         IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
         var srcRoles = srcDrive!.Roles.Get()
-            .FilterByNames(role => role?.Name, name)
+            .FilterByWildcards(role => role?.Name, wpName)
             .OrderBy(role => role.Name)
             .ToList();
 
@@ -89,6 +89,8 @@ public class CopyRoleCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
+        var wpName = Name.ConvertToWildcardPatternList();
+
         var srcDrive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath)!);
         if (srcDrive is null)
             throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
@@ -98,6 +100,6 @@ public class CopyRoleCmdlet : OrchestratorPSCmdlet
         srcDrive.Roles.ClearCache();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        CopyRoles(this, srcDrive, Name, dstDrives, false, cancelHandler.Token);
+        CopyRoles(this, srcDrive, wpName, dstDrives, false, cancelHandler.Token);
     }
 }

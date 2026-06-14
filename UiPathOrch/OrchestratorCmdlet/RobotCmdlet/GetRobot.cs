@@ -99,6 +99,9 @@ public class GetRobotCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
+        var wpFullName = FullName.ConvertToWildcardPatternList();
+        var wpUsername = Username.ConvertToWildcardPatternList();
+
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
@@ -113,8 +116,8 @@ public class GetRobotCmdlet : OrchestratorPSCmdlet
                 if (robots is null) continue;
 
                 WriteObject(robots
-                    .FilterByNames(r => r?.User?.FullName, FullName)
-                    .FilterByNames(r => r?.Username, Username)
+                    .FilterByWildcards(r => r?.User?.FullName, wpFullName)
+                    .FilterByWildcards(r => r?.Username, wpUsername)
                     .OrderBy(r => r.User?.FullName)
                     .ThenBy(r => r.Username),
                     true);

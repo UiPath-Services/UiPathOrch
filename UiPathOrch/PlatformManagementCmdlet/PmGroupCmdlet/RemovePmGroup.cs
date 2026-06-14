@@ -24,6 +24,7 @@ public class RemovePmGroupCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
+        var wpGroupName = GroupName.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
@@ -36,7 +37,7 @@ public class RemovePmGroupCmdlet : OrchestratorPSCmdlet
 
                 foreach (var group in groups
                     .Where(g => g is not null)
-                    .FilterByNames(g => g?.name!, GroupName)
+                    .FilterByWildcards(g => g?.name!, wpGroupName)
                     .OrderBy(g => g?.name).WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(group!.GetPSPath(drive.NameColonSeparator), "Remove PmGroup"))

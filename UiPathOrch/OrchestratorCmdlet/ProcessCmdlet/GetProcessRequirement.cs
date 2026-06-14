@@ -32,6 +32,7 @@ public class GetProcessRequirementCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
@@ -41,7 +42,7 @@ public class GetProcessRequirementCmdlet : OrchestratorPSCmdlet
             {
                 var releases = drive.Releases.Get(folder);
                 targetReleases = releases
-                    .FilterByNames(r => r?.Name, Name)
+                    .FilterByWildcards(r => r?.Name, wpName)
                     .OrderBy(r => r.Name);
             }
             catch (Exception ex)

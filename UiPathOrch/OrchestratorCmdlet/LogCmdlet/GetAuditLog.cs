@@ -190,11 +190,12 @@ public class GetAuditLogCmdlet : OrchestratorPSCmdlet
         if (UserName is not null && UserName.Length > 0)
         {
             var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
+            var wpUserName = UserName.ConvertToWildcardPatternList();
             var userIds = new HashSet<Int64>();
             foreach (var drive in drives)
             {
                 userIds.UnionWith(drive.Users.Get()
-                    .FilterByNames(u => u?.UserName, UserName)
+                    .FilterByWildcards(u => u?.UserName, wpUserName)
                     .Select(u => u.Id ?? 0));
             }
             // When UserName is specified but resolves to no users, narrow the result to nothing

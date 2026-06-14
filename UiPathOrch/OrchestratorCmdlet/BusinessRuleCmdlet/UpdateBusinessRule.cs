@@ -56,6 +56,7 @@ class UpdateBusinessRuleCmdlet : OrchestratorPSCmdlet
         }
 
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
@@ -63,7 +64,7 @@ class UpdateBusinessRuleCmdlet : OrchestratorPSCmdlet
             try
             {
                 var rules = drive.BusinessRules.Get(folder)
-                    .FilterByNames(r => r?.Name, Name)
+                    .FilterByWildcards(r => r?.Name, wpName)
                     .OrderBy(r => r.Name)
                     .ToList();
 

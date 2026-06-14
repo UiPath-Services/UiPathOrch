@@ -27,6 +27,7 @@ public class GetTmTestSetCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         //foreach (var driveProject in drivesProjects)
         //{
@@ -55,7 +56,7 @@ public class GetTmTestSetCmdlet : OrchestratorPSCmdlet
                 if (entity is null) continue;
 
                 WriteObject(entity
-                    .FilterByNames(e => e?.name, Name)
+                    .FilterByWildcards(e => e?.name, wpName)
                     .OrderBy(e => e.objKey!, ObjKeyComparer.Instance),
                     true);
             }

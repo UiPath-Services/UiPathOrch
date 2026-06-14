@@ -42,6 +42,8 @@ public class CopyTestSetScheduleCmdlet : OrchestratorPSCmdlet
         // If source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;
 
+        var wpName = Name.ConvertToWildcardPatternList();
+
         using var reporterTestSchedules = new ProgressReporter(this, 1200, Int32.MaxValue, "Copying test schedules...");
         using var cancelHandler = new ConsoleCancelHandler();
 
@@ -51,7 +53,7 @@ public class CopyTestSetScheduleCmdlet : OrchestratorPSCmdlet
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicTestSetSchedules?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.TestSetSchedules.Get(srcFolder).FilterByNames(b => b?.Name, Name);
+                var srcEntities = srcDrive.TestSetSchedules.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName);
                 if (!srcEntities.Any()) continue;
             }
             catch (Exception ex)
@@ -66,7 +68,7 @@ public class CopyTestSetScheduleCmdlet : OrchestratorPSCmdlet
             try
             {
                 Core.OrchProvider.CopyTestSetSchedules(this,
-                    srcDrive, srcFolder, Name,
+                    srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterTestSchedules,
                     false, cancelHandler.Token);
                 dstDrive.TestSetSchedules.ClearCache(dstFolder);

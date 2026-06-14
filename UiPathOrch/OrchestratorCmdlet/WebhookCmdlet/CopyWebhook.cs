@@ -31,7 +31,7 @@ public class CopyWebhookCmdlet : OrchestratorPSCmdlet
     internal static void CopyWebhooks(
         IWritableHost _this,
         OrchDriveInfo srcDrive,
-        string[]? name,
+        List<WildcardPattern>? wpName,
         IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -53,7 +53,7 @@ public class CopyWebhookCmdlet : OrchestratorPSCmdlet
         foreach (var dstDrive in dstDrives)
         {
             foreach (var srcWebhook in srcWebhooks
-                .FilterByNames(e => e?.Name, name)
+                .FilterByWildcards(e => e?.Name, wpName)
                 .OrderBy(e => e.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
@@ -115,7 +115,10 @@ public class CopyWebhookCmdlet : OrchestratorPSCmdlet
         var srcDrive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath)!) ?? throw new InvalidOperationException($"'{Path}' is not a valid UiPathOrch drive.");
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
 
+        var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
+        //var wpName = Name.ConvertToWildcardPatternList();
+
         using var cancelHandler = new ConsoleCancelHandler();
-        CopyWebhooks(this, srcDrive, Name, dstDrives, false, cancelHandler.Token);
+        CopyWebhooks(this, srcDrive, wpName, dstDrives, false, cancelHandler.Token);
     }
 }

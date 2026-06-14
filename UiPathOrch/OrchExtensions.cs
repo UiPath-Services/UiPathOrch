@@ -234,107 +234,6 @@ internal static class OrchCollectionExtensions
         return source.Where(item => patterns.Any(pattern => pattern.IsMatch(selector(item))));
     }
 
-    // === Literal-first name matching (FilterByNames family) ===========================
-    // A piped entity's Name can contain PowerShell wildcard metacharacters — e.g. a role
-    // literally named "Sales [EU]" or a folder "test [test]". Binding that piped Name to a
-    // [SupportsWildcards] -Name and re-interpreting it as a wildcard either throws on an invalid
-    // pattern or, worse, matches a DIFFERENT entity and acts on the wrong one. These matchers key
-    // on the Name (cross-tenant-stable), never the tenant-local Id, so `Get-X -Path A | <verb>-X
-    // -Path B` stays correct across drives.
-    //
-    // Per requested name: if any source entity matches it literally (case-insensitive), it is a
-    // literal selector; otherwise it is a wildcard (an invalid pattern matches nothing instead of
-    // throwing). So `Get-X | <verb>-X` acts on exactly the piped entities, while an interactive
-    // `-Name 'foo*'` (no literal hit) still wildcard-expands. The only behavior change vs a pure
-    // wildcard is the pathological case of an entity LITERALLY named with metacharacters while the
-    // same string is also meant as a wildcard — there literal wins (the safer, narrower choice).
-    //
-    // Filter* return the whole source when names is null/empty; Select* return empty (the action-
-    // cmdlet "no -Name => no-op" semantics, mirroring SelectByWildcards). *Any take several
-    // selectors (e.g. a User's UserName and EmailAddress) and match if any projection matches.
-    // Results keep source order with no duplicates.
-    private static Func<T, bool> BuildNameMatcher<T>(
-        ICollection<T> list,
-        IReadOnlyList<Func<T?, string?>> selectors,
-        string[] names)
-    {
-        var literals = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        var wildcards = new List<WildcardPattern>();
-        foreach (var name in names)
-        {
-            if (name is null) continue;
-            bool hasLiteral = list.Any(item => selectors.Any(sel =>
-                string.Equals(sel(item), name, StringComparison.OrdinalIgnoreCase)));
-            if (hasLiteral)
-            {
-                literals.Add(name);
-            }
-            else
-            {
-                try
-                {
-                    var wp = new WildcardPattern(name, WildcardOptions.IgnoreCase);
-                    wp.IsMatch(string.Empty); // WildcardPattern compiles lazily on first IsMatch, so
-                                              // force it now: an invalid pattern throws here (and is
-                                              // skipped) instead of mid-enumeration where it would
-                                              // abort the whole operation.
-                    wildcards.Add(wp);
-                }
-                catch { /* invalid pattern with no literal match => contributes no matches */ }
-            }
-        }
-
-        return item => selectors.Any(sel =>
-        {
-            var name = sel(item);
-            return name is not null && (literals.Contains(name) || wildcards.Any(p => p.IsMatch(name)));
-        });
-    }
-
-    // null/empty names => all source.
-    public static IEnumerable<T> FilterByNames<T>(
-        this IEnumerable<T> source,
-        Func<T?, string?> selector,
-        string[]? names)
-    {
-        if (names is null || names.Length == 0) return source;
-        var list = source as ICollection<T> ?? source.ToList();
-        return list.Where(BuildNameMatcher(list, [selector], names));
-    }
-
-    // Multi-selector FilterByNames (e.g. UserName OR EmailAddress). null/empty names => all source.
-    public static IEnumerable<T> FilterByNamesAny<T>(
-        this IEnumerable<T> source,
-        IReadOnlyList<Func<T?, string?>> selectors,
-        string[]? names)
-    {
-        if (names is null || names.Length == 0) return source;
-        var list = source as ICollection<T> ?? source.ToList();
-        return list.Where(BuildNameMatcher(list, selectors, names));
-    }
-
-    // null/empty names => empty (action-cmdlet no-op semantics).
-    public static IEnumerable<T> SelectByNames<T>(
-        this IEnumerable<T> source,
-        Func<T?, string?> selector,
-        string[]? names)
-    {
-        if (names is null || names.Length == 0) return [];
-        var list = source as ICollection<T> ?? source.ToList();
-        return list.Where(BuildNameMatcher(list, [selector], names));
-    }
-
-    // Multi-selector SelectByNames. null/empty names => empty.
-    public static IEnumerable<T> SelectByNamesAny<T>(
-        this IEnumerable<T> source,
-        IReadOnlyList<Func<T?, string?>> selectors,
-        string[]? names)
-    {
-        if (names is null || names.Length == 0) return [];
-        var list = source as ICollection<T> ?? source.ToList();
-        return list.Where(BuildNameMatcher(list, selectors, names));
-    }
-
     /// <summary>
     /// Multi-selector variant: keep an item if any pattern matches the
     /// projection of any selector. Useful when an entity has several
@@ -362,27 +261,25 @@ internal static class OrchCollectionExtensions
     }
 
     /// <summary>
-    /// Filter a Folder <c>UserRoles</c> list by <c>-UserName</c> (literal-first).
+    /// Filter a Folder <c>UserRoles</c> list by <c>-UserName</c> wildcards.
     /// Matching considers both <c>UserName</c> (tenant form) and
     /// <c>EmailAddress</c> (canonical) by indirecting through
     /// <c>drive.Users.Get()</c> — the Folder users API returns
     /// <c>UserEntity</c> without an <c>EmailAddress</c> field, so direct
     /// Folder-level matching can't honor Azure AD B2B guest aliases.
     /// A folder user whose <c>UserEntity.Id</c> has no matching tenant
-    /// user is excluded. Returns the source unchanged when userNames is
-    /// null/empty (= no UserName filter applied). Uses <c>FilterByNamesAny</c>
-    /// so a piped user whose name carries wildcard metacharacters matches
-    /// itself instead of being re-interpreted as a wildcard.
+    /// user is excluded. Returns the source unchanged when patterns is
+    /// null/empty (= no UserName filter applied).
     /// </summary>
     public static IEnumerable<UserRoles> FilterFolderUsersByUserName(
         this IEnumerable<UserRoles> source,
         OrchDriveInfo drive,
-        string[]? userNames)
+        IReadOnlyList<WildcardPattern>? wpUserName)
     {
-        if (userNames is null || userNames.Length == 0) return source;
+        if (wpUserName is null || wpUserName.Count == 0) return source;
         var matchedIds = drive.Users.Get()
-            .Where(u => u.Id is not null)
-            .FilterByNamesAny([u => u?.UserName, u => u?.EmailAddress], userNames)
+            .Where(u => u.Id is not null &&
+                wpUserName.Any(p => p.IsMatch(u.UserName ?? "") || p.IsMatch(u.EmailAddress ?? "")))
             .Select(u => u.Id!.Value)
             .ToHashSet();
         return source.Where(fu =>

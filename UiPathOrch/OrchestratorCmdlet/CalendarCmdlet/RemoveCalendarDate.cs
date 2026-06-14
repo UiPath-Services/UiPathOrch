@@ -86,6 +86,7 @@ public class RemoveCalendarDateCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
+        var wpName = Name.ConvertToWildcardPatternList();
 
         // Zero out the time component
         ExcludedDate = ExcludedDate!.Select(d => d.Date).ToArray();
@@ -105,7 +106,7 @@ public class RemoveCalendarDateCmdlet : OrchestratorPSCmdlet
             }
             if (calendars is null) continue;
 
-            var targetCalendars = calendars.FilterByNames(c => c?.Name, Name);
+            var targetCalendars = calendars.FilterByWildcards(c => c?.Name, wpName);
 
             foreach (var targetCalendar in targetCalendars.WithCancellation(cancelHandler.Token))
             {

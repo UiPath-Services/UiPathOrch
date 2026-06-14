@@ -44,6 +44,7 @@ public class RemoveTestCaseCmdlet : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
         // -Name is taken literally (no comma-split): one CSV cell / quoted string is one
         // test case name. Select multiple via a native -Name a,b,c array or one per row.
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
@@ -51,7 +52,7 @@ public class RemoveTestCaseCmdlet : OrchestratorPSCmdlet
             IEnumerable<TestCaseDefinition> matches;
             try
             {
-                matches = drive.TestCases.Get(folder).FilterByNames(t => t?.Name, Name).OrderBy(t => t?.Name);
+                matches = drive.TestCases.Get(folder).FilterByWildcards(t => t?.Name, wpName).OrderBy(t => t?.Name);
             }
             catch (Exception ex)
             {

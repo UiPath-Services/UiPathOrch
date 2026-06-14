@@ -81,12 +81,14 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
+        var wpUserName = UserName.ConvertToWildcardPatternList();
+        var wpFullName = FullName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        EmitDetailedUsers(this, drives, UserName, FullName, wpType, writer);
+        EmitDetailedUsers(this, drives, wpUserName, wpFullName, wpType, writer);
 
         if (!string.IsNullOrEmpty(ExportCsv))
         {
@@ -110,8 +112,8 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
     internal static void EmitDetailedUsers(
         OrchestratorPSCmdlet caller,
         IEnumerable<OrchDriveInfo> drives,
-        string[]? userName,
-        string[]? fullName,
+        List<WildcardPattern>? userNameWildcards,
+        List<WildcardPattern>? fullNameWildcards,
         List<WildcardPattern>? typeWildcards,
         StreamWriter? writer)
     {
@@ -122,10 +124,10 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
             drive => drive.NameColonSeparator,
             drive => (object)drive,
             drive => drive.Users.Get()
-                .FilterByNames(u => u?.FullName, fullName)
+                .FilterByWildcards(u => u?.FullName, fullNameWildcards)
                 // Match both UserName (tenant form) and EmailAddress (canonical);
                 // see GetUserCmdlet for the rationale.
-                .FilterByNamesAny([u => u?.UserName, u => u?.EmailAddress], userName)
+                .FilterByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], userNameWildcards)
                 .FilterByWildcards(u => u?.Type, typeWildcards)
                 .OrderBy(u => u.UserName)
                 .Select(u => (drive, user: u)),

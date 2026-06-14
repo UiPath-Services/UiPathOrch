@@ -52,6 +52,8 @@ public class CopyAssetCmdlet : OrchestratorPSCmdlet
 
         var userMapping = SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv);
 
+        var wpName = Name.ConvertToWildcardPatternList();
+
         // It may be better not to clear the cache implicitly..
         //srcDrive._dicExtendedMachines = null;
         //srcDrive._dicCredentialStores = null;
@@ -68,7 +70,7 @@ public class CopyAssetCmdlet : OrchestratorPSCmdlet
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicAssets?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.Assets.Get(srcFolder).FilterByNames(e => e?.Name, Name);
+                var srcEntities = srcDrive.Assets.Get(srcFolder).FilterByWildcards(e => e?.Name, wpName);
                 if (!srcEntities.Any()) continue;
             }
             catch (Exception ex)
@@ -83,7 +85,7 @@ public class CopyAssetCmdlet : OrchestratorPSCmdlet
             try
             {
                 Core.OrchProvider.CopyAssets(this,
-                    srcDrive, srcFolder, Name,
+                    srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterAssets,
                     false, cancelHandler.Token, userMapping);
                 dstDrive.Assets.ClearCache(dstFolder);

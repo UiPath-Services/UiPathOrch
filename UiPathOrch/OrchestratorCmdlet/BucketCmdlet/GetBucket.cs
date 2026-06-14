@@ -92,6 +92,7 @@ public class GetBucketCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
@@ -110,7 +111,7 @@ public class GetBucketCmdlet : OrchestratorPSCmdlet
                 if (entities is null) continue;
 
                 var targetEntities = entities
-                    .FilterByNames(s => s?.Name, Name)
+                    .FilterByWildcards(s => s?.Name, wpName)
                     .OrderBy(s => s.Name);
 
                 if (writer is not null)

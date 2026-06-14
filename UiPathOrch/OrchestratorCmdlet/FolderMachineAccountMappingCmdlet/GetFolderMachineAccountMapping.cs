@@ -66,6 +66,8 @@ public class GetFolderMachineAccountMappingCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
+
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
             df => df.folder,
@@ -74,7 +76,7 @@ public class GetFolderMachineAccountMappingCmdlet : OrchestratorPSCmdlet
                 var (drive, folder) = df;
                 var folderMachines = drive.FolderMachinesAssigned.Get(folder)
                     .Where(m => !m.PropagateToSubFolders.GetValueOrDefault())
-                    .FilterByNames(m => m?.Name, Name)
+                    .FilterByWildcards(m => m?.Name, wpName)
                     .OrderBy(m => m.Name);
 
                 List<List<ExtendedRobot>> ret = [];

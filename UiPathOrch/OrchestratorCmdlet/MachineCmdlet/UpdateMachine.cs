@@ -48,6 +48,7 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(MachineRobotUsersCompleter))]
+    [SupportsWildcards]
     [RobotUserArgumentTransformation]
     public string[]? RobotUsers { get; set; }
 
@@ -130,11 +131,13 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
 
+        var wpName = Name.ConvertToWildcardPatternList();
+
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
             var existingMachines = drive.Machines.Get();
-            var targetMachines = existingMachines.SelectByNames(m => m?.Name, Name);
+            var targetMachines = existingMachines.FilterByWildcards(m => m?.Name, wpName);
 
             foreach (var machine in targetMachines.OrderBy(m => m.Name).WithCancellation(cancelHandler.Token))
             {
@@ -177,12 +180,10 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
                     else
                     {
                         var robots = drive.AllRobotsAcrossFolders.Get();
-                        // Match -RobotUsers exactly by robot FullName (the CSV / manual form) OR numeric
-                        // Id (the object-pipe form a piped RobotUser is transformed to) — no wildcards,
-                        // so Get-OrchMachine | Update-OrchMachine works.
-                        var targetRobots = robots.Where(r =>
-                            (r.User?.FullName is { } fn && processedRobotUsers!.Contains(fn, StringComparer.OrdinalIgnoreCase))
-                            || (r.Id?.ToString() is { } id && processedRobotUsers!.Contains(id, StringComparer.OrdinalIgnoreCase)));
+                        var wpRobotUsers = processedRobotUsers.ConvertToWildcardPatternList();
+                        // Match on User.FullName (the CSV / manual form) OR Id (the object-pipe form a
+                        // piped RobotUser is transformed to), so Get-OrchMachine | Update-OrchMachine works.
+                        var targetRobots = robots.FilterByWildcardsAny([r => r?.User?.FullName, r => r?.Id?.ToString()], wpRobotUsers);
                         patch.RobotUsers = targetRobots
                             .Select(r => new RobotUser()
                             {

@@ -65,6 +65,7 @@ public class RemovePmGroupMemberCmdlet : OrchestratorPSCmdlet
         // Split GroupName specified in CSV by commas, honoring backtick-escaped commas -- a group's
         // display name can contain a comma (e.g. "Finance, EMEA"); matches the other CSV cmdlets.
         var groupName = GroupName.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();
+        var wpGroupName = groupName.ConvertToWildcardPatternList();
 
         // Split Type specified in CSV by commas
         var type = Type!
@@ -73,6 +74,7 @@ public class RemovePmGroupMemberCmdlet : OrchestratorPSCmdlet
              .ToArray();
         var wpType = type.ConvertToWildcardPatternList();
 
+        var wpUserName = UserName.ConvertToWildcardPatternList();
 
         // Preserve the specified parameters.
         // Expand drives, groups, and users.
@@ -84,7 +86,7 @@ public class RemovePmGroupMemberCmdlet : OrchestratorPSCmdlet
         {
             var targetGroups = drive.PmGroups.Get()
                 .Where(g => g is not null)
-                .FilterByNames(g => g!.name ?? "", groupName);
+                .FilterByWildcards(g => g!.name ?? "", wpGroupName);
 
             if (NoMatchWarning.IsPresent && !(targetGroups?.Any() ?? false))
             {
@@ -99,7 +101,7 @@ public class RemovePmGroupMemberCmdlet : OrchestratorPSCmdlet
 
                 var targetMembers = detailedGroup?.members?
                     .FilterByWildcards(m => m?.objectType, wpType)
-                    .FilterByNames(m => m?.name, UserName);
+                    .FilterByWildcards(m => m?.name, wpUserName);
 
                 if (NoMatchWarning.IsPresent && !(targetMembers?.Any() ?? false))
                 {

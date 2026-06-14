@@ -75,6 +75,7 @@ public class UpdateTestSetScheduleCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
@@ -90,7 +91,7 @@ public class UpdateTestSetScheduleCmdlet : OrchestratorPSCmdlet
             }
             if (schedules is null) continue;
 
-            var targetSchedules = schedules.SelectByNames(s => s?.Name, Name).OrderBy(s => s.Name);
+            var targetSchedules = schedules.SelectByWildcards(s => s?.Name, wpName).OrderBy(s => s.Name);
 
             foreach (var schedule in targetSchedules.WithCancellation(cancelHandler.Token))
             {

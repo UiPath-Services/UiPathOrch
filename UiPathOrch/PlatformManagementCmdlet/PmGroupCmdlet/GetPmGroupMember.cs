@@ -63,6 +63,7 @@ public class GetPmGroupMemberCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
+        var wpGroupName = GroupName.ConvertToWildcardPatternList();
 
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
@@ -81,7 +82,7 @@ public class GetPmGroupMemberCmdlet : OrchestratorPSCmdlet
             drive => (object)drive,
             drive => drive.PmGroups.Get()
                 .Where(g => g is not null)
-                .FilterByNames(g => g?.name!, GroupName)
+                .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g.name)
                 .Select(group => (drive, group)),
             t => t.group.GetPSPath(t.drive.NameColonSeparator),

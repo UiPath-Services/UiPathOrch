@@ -144,6 +144,7 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
         }
 
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), false, 0, true);
+        var wpName = Name.ConvertToWildcardPatternList();
         var sources = ResolveSources();
 
         using var cancelHandler = new ConsoleCancelHandler();
@@ -195,11 +196,11 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
 
                 IEnumerable<Bucket> targetBuckets = null;
 
-                if (Name is not null)
+                if (wpName is not null)
                 {
                     // If -Name is specified, use it
                     targetBuckets = buckets
-                        .FilterByNames(b => b!.Name, Name)
+                        .FilterByWildcards(b => b!.Name, wpName)
                         .OrderBy(b => b.Name);
                     if (!targetBuckets.Any())
                     {

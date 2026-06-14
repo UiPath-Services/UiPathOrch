@@ -38,6 +38,7 @@ public class TestTriggerCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
@@ -45,7 +46,7 @@ public class TestTriggerCmdlet : OrchestratorPSCmdlet
             try
             {
                 var triggers = drive.GetTriggers(folder)
-                    .FilterByNames(t => t?.Name, Name)
+                    .FilterByWildcards(t => t?.Name, wpName)
                     .OrderBy(t => t.Name)
                     .ToList();
 

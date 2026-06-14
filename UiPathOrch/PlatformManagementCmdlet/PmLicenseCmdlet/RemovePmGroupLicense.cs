@@ -88,6 +88,7 @@ public class RemovePmGroupLicenseCmdlet : OrchestratorPSCmdlet
 
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
 
+        var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpLicense = License.ConvertToWildcardPatternList();
 
         var specifiedLicenses = AvailableUserBundlesItems.Items.SelectByWildcards(i => i.Value, wpLicense).ToList();
@@ -95,7 +96,7 @@ public class RemovePmGroupLicenseCmdlet : OrchestratorPSCmdlet
         foreach (var drive in drives)
         {
             var licenseGroups = drive.PmLicensedGroups.Get();
-            var targetGroups = licenseGroups.SelectByNames(g => g?.name, GroupName);
+            var targetGroups = licenseGroups.SelectByWildcards(g => g?.name, wpGroupName);
 
             foreach (var group in targetGroups.OrderBy(g => g.name))
             {

@@ -100,6 +100,7 @@ public class MoveFolderUserCmdlet : OrchestratorPSCmdlet
         var srcDrivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath));
         var dstDrivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(Destination);
 
+        var wpUserName = UserName.ConvertToWildcardPatternList();
         //var wpFullName = FullName?.Select(fn => new WildcardPattern(fn, WildcardOptions.IgnoreCase)).ToList();
 
         bool keepSource = KeepSource.ToNullableBool() ?? false;
@@ -117,7 +118,7 @@ public class MoveFolderUserCmdlet : OrchestratorPSCmdlet
                     .Where(u => u.Id is not null)
                     // -UserName matches tenant UserName OR EmailAddress (B2B);
                     // see FilterFolderUsersByUserName.
-                    .FilterFolderUsersByUserName(srcDrive, UserName);
+                    .FilterFolderUsersByUserName(srcDrive, wpUserName);
             }
             catch (Exception ex)
             {

@@ -438,7 +438,16 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
                 param.SecretValue = ConvertToUnsecureString(Secret!);
             }
 
+            List<WildcardPattern> wpName = param.Name!.ConvertToWildcardPatternList();
+            List<WildcardPattern> wpUserName = null;
+            List<WildcardPattern> wpMachineName = null;
             WildcardPattern wpCredentialStore = null;
+
+            if (param.UserName is not null && param.UserName.Any(un => !string.IsNullOrEmpty(un)))
+                wpUserName = param.UserName.ConvertToWildcardPatternList();
+
+            if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
+                wpMachineName = param.MachineName.ConvertToWildcardPatternList();
 
             if (!string.IsNullOrEmpty(param.CredentialStore))
                 wpCredentialStore = new WildcardPattern(param.CredentialStore, WildcardOptions.IgnoreCase);
@@ -452,7 +461,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
                 IEnumerable<User> specifiedUsers = null;
                 IEnumerable<ExtendedMachine?> specifiedMachines = null;
 
-                if (param.UserName is not null && param.UserName.Any(un => !string.IsNullOrEmpty(un)))
+                if (wpUserName is not null)
                 {
                     // See SetAsset.cs UserName expansion — the same scope-tightening fix.
                     var assignedUserIds = drive.FolderUsersWithInherited.Get(folder)
@@ -462,9 +471,9 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
                     var tenantUsers = drive.Users.Get()
                         .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
                     // Match both UserName and EmailAddress; see SetAsset.cs.
-                    specifiedUsers = tenantUsers.FilterByNamesAny(
+                    specifiedUsers = tenantUsers.FilterByWildcardsAny(
                         [u => u?.UserName, u => u?.EmailAddress],
-                        param.UserName);
+                        wpUserName);
                     if (!specifiedUsers.Any())
                     {
                         string strUserNames = string.Join(", ", param.UserName!);
@@ -475,7 +484,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
                     }
                 }
 
-                if (param.MachineName is not null && param.MachineName.Any(mn => !string.IsNullOrEmpty(mn)))
+                if (wpMachineName is not null)
                 {
                     // See SetAsset.cs MachineName expansion — the same scope-tightening fix.
                     var assignedIds = drive.FolderMachinesAssigned.Get(folder)
@@ -484,7 +493,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
                         .ToHashSet();
                     var tenantMachines = drive.Machines.Get()
                         .Where(m => m?.Id is not null && assignedIds.Contains(m.Id!.Value));
-                    specifiedMachines = tenantMachines.FilterByNames(m => m?.Name, param.MachineName);
+                    specifiedMachines = tenantMachines.FilterByWildcards(m => m?.Name, wpMachineName);
                     if (!specifiedMachines.Any())
                     {
                         string strMachineNames = string.Join(", ", param.MachineName!);
@@ -503,7 +512,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
 
                 foreach (var name in param.Name!)
                 {
-                    var matchingAssets = existingAssets.FilterByNames(n => n?.Name, param.Name);
+                    var matchingAssets = existingAssets.FilterByWildcards(n => n?.Name, wpName);
                     if (matchingAssets.Any())
                     {
                         foreach (var matchingAsset in matchingAssets)

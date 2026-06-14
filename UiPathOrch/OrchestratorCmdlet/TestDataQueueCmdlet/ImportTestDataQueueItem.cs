@@ -151,6 +151,7 @@ public class ImportTestDataQueueItemCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
+        var wpName = Name.ConvertToWildcardPatternList();
         var encoding = CsvEncoding ?? Encoding.UTF8;
 
         // Parse each CSV file once (schema-independent: headers + raw rows).
@@ -185,7 +186,7 @@ public class ImportTestDataQueueItemCmdlet : OrchestratorPSCmdlet
             try
             {
                 var queues = drive.TestDataQueues.Get(folder)
-                    .FilterByNames(e => e?.Name, Name)
+                    .FilterByWildcards(e => e?.Name, wpName)
                     .OrderBy(e => e.Name);
                 foreach (var queue in queues.WithCancellation(cancelHandler.Token))
                 {

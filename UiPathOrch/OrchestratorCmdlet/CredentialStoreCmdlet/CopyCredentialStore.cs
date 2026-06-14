@@ -52,7 +52,7 @@ public class CopyCredentialStoreCmdlet : OrchestratorPSCmdlet
 
     internal static void CopyCredentialStores(
         IWritableHost _this,
-        OrchDriveInfo srcDrive, string[]? name,
+        OrchDriveInfo srcDrive, List<WildcardPattern>? wpName,
         IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
@@ -63,7 +63,7 @@ public class CopyCredentialStoreCmdlet : OrchestratorPSCmdlet
         try
         {
             stores = srcDrive.CredentialStores.Get()
-                .FilterByNames(s => s?.Name, name).ToList();
+                .FilterByWildcards(s => s?.Name, wpName).ToList();
         }
         catch (Exception ex)
         {
@@ -131,7 +131,9 @@ public class CopyCredentialStoreCmdlet : OrchestratorPSCmdlet
         var srcDrive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath));
 
         var dstDrives = SessionState.EnumDestinationDrives(Destination!);
+        var wpName = Name.ConvertToWildcardPatternList();
+
         using var cancelHandler = new ConsoleCancelHandler();
-        CopyCredentialStores(this, srcDrive, Name, dstDrives, false, cancelHandler.Token);
+        CopyCredentialStores(this, srcDrive, wpName, dstDrives, false, cancelHandler.Token);
     }
 }

@@ -75,12 +75,15 @@ public class RemovePmGroupLicenseAllocationCmdlet : OrchestratorPSCmdlet
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
 
+        var wpGroupName = GroupName.ConvertToWildcardPatternList();
+        var wpUserName = UserName.ConvertToWildcardPatternList();
+
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
             var groups = drive.PmLicensedGroups.Get();
 
-            var targetGroups = groups.FilterByNames(g => g?.name, GroupName);
+            var targetGroups = groups.FilterByWildcards(g => g?.name, wpGroupName);
 
             if (NoMatchWarning.IsPresent && !targetGroups.Any())
             {
@@ -94,7 +97,7 @@ public class RemovePmGroupLicenseAllocationCmdlet : OrchestratorPSCmdlet
             {
                 var users = drive.GetPmLicensedGroupAllocations(group);
 
-                var targetUsers = users.FilterByNames(u => u?.name, UserName);
+                var targetUsers = users.FilterByWildcards(u => u?.name, wpUserName);
 
                 if (NoMatchWarning.IsPresent && !targetUsers.Any())
                 {

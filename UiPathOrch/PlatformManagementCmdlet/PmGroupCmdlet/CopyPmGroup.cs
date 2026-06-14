@@ -83,9 +83,10 @@ public class CopyPmGroupCmdlet : OrchestratorPSCmdlet
     {
         var srcDrive = SessionState.GetPmDrive(EffectivePath(Path, LiteralPath));
         var dstDrives = SessionState.EnumPmDrives(Destination);
+        var wpGroupName = GroupName.ConvertToWildcardPatternList();
 
         var srcGroups = srcDrive.PmGroups.Get();
-        var targetGroups = srcGroups.FilterByNames(g => g?.name, GroupName);
+        var targetGroups = srcGroups.FilterByWildcards(g => g?.name, wpGroupName);
 
         using var cancelHandler = new ConsoleCancelHandler();
 

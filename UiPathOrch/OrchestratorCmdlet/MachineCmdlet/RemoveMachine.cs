@@ -35,13 +35,15 @@ public class RemoveMachineCmdlet : OrchestratorPSCmdlet
         // -Name is taken literally (no comma-split): one CSV cell / quoted string is one
         // machine name. Select multiple machines via a native -Name a,b,c array or one
         // per CSV row.
+        var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
+
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
             IEnumerable<ExtendedMachine> matches;
             try
             {
-                matches = drive.Machines.Get().FilterByNames(m => m?.Name, Name).OrderBy(m => m.Name);
+                matches = drive.Machines.Get().FilterByWildcards(m => m?.Name, wpName).OrderBy(m => m.Name);
             }
             catch (Exception ex)
             {

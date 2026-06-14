@@ -24,6 +24,8 @@ public class GetCredentialStoreCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
+        var wpName = Name?.Select(name => new WildcardPattern(PathTools.UnescapePSText(name), WildcardOptions.IgnoreCase)).ToList();
+
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
@@ -38,7 +40,7 @@ public class GetCredentialStoreCmdlet : OrchestratorPSCmdlet
                 if (machines is null) continue;
 
                 WriteObject(machines
-                    .FilterByNames(c => c?.Name, Name)
+                    .FilterByWildcards(c => c?.Name, wpName)
                     .OrderBy(c => c.Name),
                     true);
             }

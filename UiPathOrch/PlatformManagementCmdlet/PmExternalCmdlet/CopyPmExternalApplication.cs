@@ -30,6 +30,7 @@ public class CopyPmExternalApplicationCmdlet : OrchestratorPSCmdlet
     {
         var srcDrive = SessionState.GetPmDrive(EffectivePath(Path, LiteralPath));
         var dstDrives = SessionState.EnumPmDrives(Destination);
+        var wpName = Name.ConvertToWildcardPatternList();
 
         var srcClients = srcDrive.PmExternalClients.Get();
         var srcPartitionGlobalId = srcDrive.GetPartitionGlobalId();
@@ -37,7 +38,7 @@ public class CopyPmExternalApplicationCmdlet : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var srcApp in srcClients
-            .FilterByNames(app => app?.name, Name)
+            .FilterByWildcards(app => app?.name, wpName)
             .OrderBy(app => app.name).WithCancellation(cancelHandler.Token))
         {
             string target = srcApp.GetPSPath(srcDrive.NameColonSeparator);

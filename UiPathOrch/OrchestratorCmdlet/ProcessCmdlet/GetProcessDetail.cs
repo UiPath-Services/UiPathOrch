@@ -76,10 +76,12 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        var wpName = Name.ConvertToWildcardPatternList();
+
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
-        EmitDetailedReleases(this, drivesFolders, Name, writer);
+        EmitDetailedReleases(this, drivesFolders, wpName, writer);
 
         if (!string.IsNullOrEmpty(ExportCsv))
         {
@@ -97,7 +99,7 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
     internal static void EmitDetailedReleases(
         OrchestratorPSCmdlet caller,
         IEnumerable<(OrchDriveInfo drive, Folder folder)> drivesFolders,
-        string[]? name,
+        List<WildcardPattern>? nameWildcards,
         StreamWriter? writer)
     {
         using var cancelHandler = new ConsoleCancelHandler();
@@ -108,7 +110,7 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
             {
                 var releases = drive.Releases.Get(folder);
                 targetReleases = releases
-                    .FilterByNames(r => r?.Name, name)
+                    .FilterByWildcards(r => r?.Name, nameWildcards)
                     .OrderBy(r => r.Name);
             }
             catch (Exception ex)

@@ -171,6 +171,7 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
+        var wpName = Name.ConvertToWildcardPatternList();
 
         if (string.IsNullOrEmpty(CommitType))
         {
@@ -221,7 +222,7 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
             try
             {
                 var queues = drive.Queues.Get(folder);
-                foreach (var queue in queues.FilterByNames(q => q?.Name, Name))
+                foreach (var queue in queues.FilterByWildcards(q => q?.Name, wpName))
                 {
                     foreach (var queueItem in queueItemData.WithCancellation(cancelHandler.Token))
                     {

@@ -135,6 +135,7 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
         _csvLines ??= new(new ForthItemIgnoreCaseComparer<OrchDriveInfo, PmGroup, string>());
 
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
+        var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList(); // Type does not support wildcards
         //var objectTypes = DirectoryTypes.Items.FilterByWildcards(t => t.Value, wpType).Select(t => t.Key);
 
@@ -143,7 +144,7 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
         foreach (var drive in drives)
         {
             var groups = drive.PmGroups.Get();
-            var filteredGroups = groups.FilterByNames(g => g?.name, GroupName).ToList();
+            var filteredGroups = groups.FilterByWildcards(g => g?.name, wpGroupName).ToList();
 
             foreach (var group in filteredGroups)
             {

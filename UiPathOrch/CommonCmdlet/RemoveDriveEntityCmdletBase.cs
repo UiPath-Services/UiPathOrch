@@ -38,6 +38,7 @@ public abstract class RemoveDriveEntityCmdletBase<TEntity> : OrchestratorPSCmdle
     protected sealed override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
+        var wpName = Name.ConvertToWildcardPatternList();
         var getName = GetName;
         var getPSPath = GetPSPath;
         var preFilter = PreFilter;
@@ -52,7 +53,7 @@ public abstract class RemoveDriveEntityCmdletBase<TEntity> : OrchestratorPSCmdle
                 if (preFilter is not null) entities = preFilter(entities);
 
                 foreach (var entity in entities
-                    .FilterByNames(getName, Name)
+                    .FilterByWildcards(getName, wpName)
                     .OrderBy(getName).WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(getPSPath(entity), $"Remove {EntityNoun}"))
