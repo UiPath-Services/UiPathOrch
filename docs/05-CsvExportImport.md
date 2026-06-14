@@ -467,9 +467,25 @@ another organization directly (no CSV needed).
 
 ### Creating Folders in Bulk via CSV
 
+`Get-ChildItem -ExportCsv` (i.e. `dir -ExportCsv`) writes one importable row per
+folder with these four columns:
+
+| Column | Holds | Binds to (`New-Item`) |
+|---|---|---|
+| `Path` | the folder's **parent** path | `-Path` |
+| `Name` | the folder's leaf name (its `DisplayName`) | `-Name` |
+| `Description` | the folder description | `-Description` |
+| `FeedType` | `Processes` or `FolderHierarchy` | `-FeedType` |
+
+`Path` is the *parent*, not the folder's own path, so each row replays as
+`New-Item -Path <parent> -Name <leaf>` and the folder is recreated under its
+parent. Personal folders are excluded from the export (they can't be recreated
+this way). If you pass a directory or omit the file name, the export defaults to
+`ExportedFolders.csv`.
+
 1. Export the folder structure from the source tenant:
    ```powershell
-   dir -Recurse -ExportCsv C:\temp\folders.csv
+   dir Orch1:\ -Recurse -ExportCsv C:\temp\folders.csv
    ```
 2. Replace the drive name in the `Path` column (e.g., `Orch1:` → `Orch2:`).
    The hierarchy in the `Path` column must be preserved for subfolders to be
@@ -478,6 +494,14 @@ another organization directly (no CSV needed).
    ```powershell
    Import-Csv C:\temp\folders.csv | New-Item
    ```
+
+Because `Path` is the parent, sort the CSV so parents precede their children (a
+`-Recurse` export already lists them top-down) — a child row whose parent
+doesn't exist yet errors with *"&lt;parent&gt; does not exist."* `FeedType` is
+honored only for **top-level** folders; for a subfolder the value is ignored and
+the folder inherits `Processes`, since a folder's classic/modern nature is fixed
+by its top-level ancestor. Omit the `FeedType` column (or leave the cell empty)
+and new top-level folders default to `Processes`.
 
 ### Copying, Moving, and Deleting Folders in Bulk via CSV
 
