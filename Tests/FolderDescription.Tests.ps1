@@ -16,7 +16,7 @@
 #>
 
 BeforeAll {
-    $script:Drive  = 'Orch2'
+    $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
 
     $script:Folder = "${script:Drive}:\PesterDesc_$(Get-Random -Maximum 99999)"

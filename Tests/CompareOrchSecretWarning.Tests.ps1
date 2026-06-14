@@ -19,7 +19,7 @@
 #>
 
 BeforeAll {
-    $script:Drive = 'Orch2'
+    $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
     # Matches nothing, so no real comparison happens; the BeginProcessing warning still fires.
     $script:NoMatch = "zzPesterNoSuch_$(Get-Random -Maximum 99999)_*"

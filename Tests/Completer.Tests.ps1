@@ -31,7 +31,7 @@
 #>
 
 BeforeAll {
-    $script:TargetDrive = 'Orch2'
+    $script:TargetDrive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     $script:FixtureRoot = "${script:TargetDrive}:\TestFixture_Base"
 
     Get-PSDrive $script:TargetDrive -ErrorAction Stop | Out-Null

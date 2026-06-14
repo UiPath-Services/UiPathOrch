@@ -23,8 +23,8 @@ BeforeAll {
     # Orch2 is the destructive test target (same tenant as OrchTest but a
     # separate drive instance so cache state lines up with Import-Fixture).
     # Orch1 stays read-only — used only to discover a reference package.
-    $script:Drive = 'Orch2'
-    $script:RefDrive = 'Orch1'
+    $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
+    $script:RefDrive = if ($env:UIPATHORCH_TEST_REF_DRIVE) { $env:UIPATHORCH_TEST_REF_DRIVE } else { 'Orch1' }
     $script:Prefix = "PesterTest_$(Get-Random -Maximum 9999)_"
     $script:RootFolder = "${script:Drive}:\${script:Prefix}Root"
     $script:SubFolder = "${script:RootFolder}\${script:Prefix}Sub"

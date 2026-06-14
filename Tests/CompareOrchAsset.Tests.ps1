@@ -18,7 +18,7 @@
 #>
 
 BeforeAll {
-    $script:Drive  = 'Orch2'
+    $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     $script:Prefix = "PesterCmp_$(Get-Random -Maximum 9999)_"
 
     $script:RootA = "${script:Drive}:\${script:Prefix}A"

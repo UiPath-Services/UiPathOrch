@@ -51,7 +51,7 @@
 #>
 
 BeforeAll {
-    $script:TargetDrive  = 'Orch2'
+    $script:TargetDrive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     $script:SrcRoot      = "${script:TargetDrive}:\TestFixture_Base"
     $script:DstFolderName = "TestFixture_RoundTrip_$PID"
     $script:DstRoot      = "${script:TargetDrive}:\$($script:DstFolderName)"
