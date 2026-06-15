@@ -504,6 +504,10 @@ PrivateData = @{
         ReleaseNotes = @'
 1.9.2
 
+Added: the authorize URL handed to the browser is written to the log file (when Logging.Enabled is on),
+so a failing interactive PKCE sign-in can be diagnosed from the request side. It carries no secrets and
+is gated by Logging.Enabled alone (independent of log level).
+
 Fixed (pipe-to-update data loss): Get-Orch* | New-/Update-Orch* no longer corrupts or wipes a field
 when the whole entity is piped in. A producer's Tag[] / WebhookEvent[] / RobotUser[] / RobotExecutor[]
 bound to the string parameter by coercing each object to a garbage type-name string, so the cmdlet

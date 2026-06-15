@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [1.9.2] - 2026-06-14
 
+### Added
+
+- **The authorize URL handed to the browser is written to the log file** when the drive's
+  `Logging.Enabled` is on, under an `=== Authorize URL handed to the browser ===` heading. This is the
+  PKCE sign-in request exactly as UiPath Identity receives it, so a failing interactive sign-in can be
+  diagnosed from the request side — complementing `Resolve-OrchAuthError`, which works from the error
+  response. The URL contains no secrets (only `client_id`, `redirect_uri`, `scope`, and the public PKCE
+  code challenge), and it is gated by `Logging.Enabled` alone, independent of the log level.
+
 ### Fixed
 
 #### Pipe-to-update data loss (an entity piped into New-/Update-Orch*)

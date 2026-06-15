@@ -447,6 +447,13 @@ internal class OrchestratorAuthManager
                 ? $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={encodedScope}&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256{acrValues}"
                 : $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={encodedScope}&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}{acrValues}";
 
+            // Log the exact URL handed to the browser (when the drive's Logging is
+            // enabled). This is the authorize request as Identity receives it, so a
+            // failing interactive sign-in can be inspected without digging through
+            // browser history. The URL carries no secrets -- only client_id,
+            // redirect_uri, scope, and the public PKCE code challenge.
+            LogAuthorizeUrl(authUrl);
+
             using var listener = new HttpListener();
             try
             {
@@ -912,6 +919,26 @@ internal class OrchestratorAuthManager
         {
             try { await _drive.OrchAPISession.WriteLogBlockAsync(block, System.Threading.CancellationToken.None); }
             catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Auth settings log write failed: {ex.Message}"); }
+        });
+    }
+
+    /// <summary>
+    /// Log the authorize URL handed to the browser, when the drive's
+    /// <c>Logging.Enabled</c> is on. Mirrors <see cref="LogAuthSettings"/>'s
+    /// fire-and-forget write. The URL contains no secrets -- only client_id,
+    /// redirect_uri, scope, and the public PKCE code challenge -- so it is safe
+    /// to persist and share for diagnosing a failing interactive sign-in.
+    /// </summary>
+    private void LogAuthorizeUrl(string authUrl)
+    {
+        var logging = _drive._psDrive.Logging;
+        if (!(logging?.Enabled.GetValueOrDefault() ?? false)) return;
+
+        var block = $"{DateTime.Now:HH:mm:ss.fff} === Authorize URL handed to the browser ===\n{authUrl}\n\n";
+        _ = System.Threading.Tasks.Task.Run(async () =>
+        {
+            try { await _drive.OrchAPISession.WriteLogBlockAsync(block, System.Threading.CancellationToken.None); }
+            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Authorize URL log write failed: {ex.Message}"); }
         });
     }
 
