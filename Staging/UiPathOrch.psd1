@@ -532,7 +532,12 @@ Fixed (other): Get-Item resolves backtick-named folders literally; New-Item stop
 Get-OrchPmGroup tolerates an unknown/absent member objectType; large downloads are Ctrl+C-cancellable;
 a non-idempotent POST is not retried on 503/504; backtick-escaped commas survive in -Tags / -Roles /
 -GroupName; Add/Remove-OrchRoleFromFolderUser match and complete -Roles consistently on role name;
-Update-/Reset-OrchProcessVersion and Stop-OrchTestSetExecution invalidate their stale cache entries.
+single-column (comma-less) CSV imports correctly (Import-OrchQueueItem / -TestDataQueueItem);
+tab completion no longer breaks after a colon-form switch (-Switch:$true);
+dir -ExportCsv no longer NREs when nothing matches (writes a header-only CSV); Import-Csv | New-Item
+preserves a folder's FeedType/Description on round-trip; Get-OrchJob / Get-OrchQueueItem return the
+correct -First/-Skip items when a filter forces batching; Get-OrchMachine surfaces previously-dropped
+slot fields; Update-/Reset-OrchProcessVersion and Stop-OrchTestSetExecution invalidate their stale cache entries.
 Open-OrchLogLocation works on macOS (opens the folder via open) and reveals the drive's log subfolder
 selected on Windows/macOS.
 
@@ -543,7 +548,8 @@ create a new entity, showing the backtick-escaped name to use for a literal name
 
 Changed: Scope on a personal-access-token drive is a client-side declaration only (a PAT's scopes are
 fixed server-side), so the misleading scope warnings are gone and the PAT config sample drops the
-Scope line (a comment lists the scopes to select instead).
+Scope line (a comment lists the scopes to select instead). Invoke-OrchApi now takes the API path as its
+first positional argument (Invoke-OrchApi odata/... works; -ApiPath aliases -Uri like Invoke-RestMethod).
 
 Deprecated: Get-OrchAsset -ExportCredentialCsv in favor of Get-OrchCredentialAsset -ExportCsv (CSV
 format unchanged; existing files keep importing into Set-OrchCredentialAsset).

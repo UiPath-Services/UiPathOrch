@@ -40,6 +40,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `Remove-OrchPmGroupMember -GroupName`, so a value that legitimately contains a comma is no longer
   mis-split.
 - `Add-OrchUser` applies `IsExternalLicensed` per row in a CSV/pipeline batch.
+- **A single-column CSV (no commas) is imported correctly.** The shared multi-line CSV parser only
+  finalized a record when a row contained at least one comma, so a comma-less file was misread as a
+  single unterminated multi-line field and its rows were dropped. End-of-line with balanced quotes now
+  ends a record regardless of column count, fixing `Import-OrchQueueItem` / `Import-OrchTestDataQueueItem`
+  on single-column files.
+- **`Import-Csv | New-Item` preserves a folder's `FeedType` and `Description`.** The provider's dynamic
+  parameters were not bound from the pipeline by property name, so a folder CSV round-trip silently
+  dropped them — every recreated folder came back as a modern (Processes) folder with no description.
+  `New-Item` now reads them off the piped row, the same way it already reads `-Name`.
 
 #### Locale / culture
 
@@ -69,8 +78,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   guests whose tenant UserName differs from their email).
 - `Add-OrchRoleToFolderUser` / `Remove-OrchRoleFromFolderUser` match and tab-complete `-Roles`
   consistently on the role name, so a completed value always resolves and Add/Remove are symmetric.
+- Tab completion no longer breaks after a colon-form switch (`-Switch:$true`). The completer
+  mis-classified the colon form as a value-taking parameter and swallowed the following positional
+  argument as its value, so completion for the next parameter failed. Switch parameters are now detected
+  by name (whether bare or colon form), and a `-Param:value` element is treated as self-contained.
 - The directory-search query is URL-escaped; the package/library upload response no longer throws on an
   empty result array.
+- `dir -ExportCsv` on a folder no longer throws a `NullReferenceException` when nothing matches (it
+  writes a header-only CSV instead), and duplicate-name suppression is applied on both the CSV and
+  non-CSV export paths so exported rows stay consistent and don't collide on `Import-Csv | New-Item`.
+- `Get-OrchJob` / `Get-OrchQueueItem` return the correct items for `-First` / `-Skip` when a `-RobotId` /
+  `-ReviewerUserId` filter forces batched requests: the per-batch (independently server-sorted) results
+  are now re-sorted globally before `-Skip` / `-First` are applied. `Get-OrchJob` also clamps a very
+  large `-First` so it cannot overflow to a negative take (which silently dropped all output), and
+  `Get-OrchQueueItem` treats a negative `-Skip` as `0`.
 - `Open-OrchLogLocation` works on macOS — it opens the log folder via `open` instead of warning that the
   platform is unsupported. On Windows and macOS, when invoked from an Orch drive it now reveals that
   drive's log subfolder selected inside its parent (Explorer `/select`, Finder `open -R`).
@@ -106,6 +127,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   names never matched the emitted type, so the table was a raw property dump). `Get-OrchApiTrigger` /
   `Get-OrchEventTrigger` now populate the `Release` column. `Get-OrchTaskCatalog` shows the
   `FoldersCount` column (was a typo).
+- `Get-OrchMachine` surfaces machine slot fields that had drifted out of the entity model
+  (`HostingSlots`, `AppTestSlots`, `PerformanceTestSlots`, `ServerlessLicensingModel`, and the
+  live-only `AgentSlots`).
 
 #### Authentication / sign-in
 
@@ -134,6 +158,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The config templates' PAT sample (all 7 locales) no longer contains a `Scope` line; a comment now
   lists the minimum scopes to select when creating the token on the Preferences page and explains the
   remaining `Du*`/`Tm*` opt-in role of `Scope`.
+- **`Invoke-OrchApi` takes the API path as its first positional argument.** `Invoke-OrchApi odata/...`
+  previously bound the string to `-Path` and then prompted for the mandatory `-ApiPath`. `-ApiPath` is
+  now Position 0 (it already aliases `-Uri`, matching `Invoke-RestMethod`), and `-Path` / `-LiteralPath`
+  bind by name or pipeline only.
 
 ### Deprecated
 
