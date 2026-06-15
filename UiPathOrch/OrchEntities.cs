@@ -4607,7 +4607,18 @@ public class UserRoleAssignmentsCmd // added by UiPathOrch
 }
 
 // UiPath.DocumentUnderstanding.Framework.Api.Controllers.Model.Discovery.Project
-public class DuProject
+// Drive-local navigation surface shared by the flat "shadow" provider entities
+// (DuProject / TmProject). Lets OrchShadowProviderBase<,> stamp Path/FullName
+// generically; the per-entity key field (name vs projectPrefix) and the typed
+// ShallowClone stay behind provider hooks. Both members already existed on the
+// entities — this interface only declares them, it changes no behavior.
+public interface IShadowProject
+{
+    string? Path { get; set; }
+    string? FullName { get; set; }
+}
+
+public class DuProject : IShadowProject
 {
     // Path / FullName: drive-local. Cache stores the bare entity; cmdlets
     // ShallowClone() per emit and stamp these — matches the PM* pattern,
@@ -4765,7 +4776,7 @@ public class TmPagingModel2<T>
 }
 
 // UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.ProjectDto
-public class TmProject
+public class TmProject : IShadowProject
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch

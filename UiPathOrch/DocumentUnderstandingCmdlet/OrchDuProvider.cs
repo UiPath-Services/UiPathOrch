@@ -1,22 +1,18 @@
 //#undef DEBUG
 
-using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
-using System.Text.Json;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Entities.JsonConverter;
 
 namespace UiPath.PowerShell.Core;
 
 [CmdletProvider("UiPathOrchDu", ProviderCapabilities.ShouldProcess)]
 [OutputType(typeof(DuProject), ProviderCmdlet = ProviderCmdlet.GetChildItem)]
 [OutputType(typeof(DuProject), ProviderCmdlet = ProviderCmdlet.GetItem)]
-public class OrchDuProvider : OrchShadowProviderBase
+public class OrchDuProvider : OrchShadowProviderBase<OrchDuDriveInfo, DuProject>
 {
     protected OrchDriveInfo OrchDriveInfo => ((OrchDuDriveInfo)this.PSDriveInfo).ParentDrive;
     protected OrchDuDriveInfo OrchDuDriveInfo => (OrchDuDriveInfo)this.PSDriveInfo;
@@ -31,179 +27,34 @@ public class OrchDuProvider : OrchShadowProviderBase
         return SessionState.Drive.Get(driveName) as OrchDuDriveInfo;
     }
 
-    DuProject? GetProject(string path)
-    {
-        var psPath = System.IO.Path.GetFileName(path);
-        if (psPath == "") return null;
+    // ----- per-provider hooks -------------------------------------------------
 
-        var projects = OrchDuDriveInfo.GetDuProjects();
-        return projects?.FirstOrDefault(p => string.Compare(p.name, psPath, StringComparison.OrdinalIgnoreCase) == 0);
+    protected override string? GetName(DuProject project) => project.name;
+    protected override DuProject Clone(DuProject project) => project.ShallowClone();
+    protected override ListCachePerTenant<DuProject> ProjectsCache(OrchDuDriveInfo drive) => drive.DuProjects;
+    protected override List<OrchDuDriveInfo> EnumShadowDrives(string path) => SessionState.EnumDuDrives([path]);
+
+    protected override string ProviderName => "UiPathOrchDu";
+    protected override string ScopeMarker => "Du.";
+    protected override string RootSuffix => "du_";
+    protected override string DriveSuffix => "Du";
+
+    protected override OrchDuDriveInfo CreateShadowDrive(ProviderInfo provider, string name, string description, string root)
+        => new(provider, name, description, root);
+
+    protected override void LinkParentDrive(OrchDuDriveInfo drive, OrchDriveInfo parent) => drive.ParentDrive = parent;
+
+    protected override string BuildBrowseUrl(OrchDuDriveInfo drive, DuProject? project)
+    {
+        string endpoint = drive.OrchAPISession._base_url + "/du_/projects/";
+        if (project is not null) { endpoint += $"{project.id}/details"; }
+        return endpoint;
     }
 
-    #region DriveCmdletProvider overrides
+    protected override void RemoveProjectApi(OrchDuDriveInfo drive, DuProject project)
+        => drive.OrchAPISession.RemoveDuProject(project.id!);
 
-    protected override Collection<PSDriveInfo>? InitializeDefaultDrives()
-    {
-        string configFilePath = OrchProvider.GetConfigFilePath();
-        if (File.Exists(configFilePath))
-        {
-            string json = File.ReadAllText(configFilePath);
-            UiPathOrchConfig config;
-            try
-            {
-                config = JsonSerializer.Deserialize<UiPathOrchConfig>(json, JsonTools.jsonAllowComments);
-                if (config is null) return null;
-            }
-            catch
-            {
-                // Invalid config file cases are handled by OrchProvider
-                return null;
-            }
-
-            Collection<PSDriveInfo> ret = base.InitializeDefaultDrives();
-            foreach (var drive in config!.PSDrives!)
-            {
-                if (drive.Enabled is null || drive.Enabled.GetValueOrDefault())
-                {
-                    if (drive.Scope?.Contains("Du.") ?? false)
-                    {
-                        if (drive.Root is null) continue;
-                        string root = drive.Root.TrimEnd('/') + "/du_";
-
-                        var duProvider = SessionState.Provider.GetOne("UiPathOrchDu");
-
-                        var duDrive = new OrchDuDriveInfo(duProvider, drive.Name + "Du", drive?.Description ?? "", root);
-                        SessionState.Drive.New(duDrive, scope: "Global");
-                    }
-                }
-            }
-            return ret;
-        }
-
-        // Missing config file cases are handled by OrchProvider
-        return null;
-    }
-
-    protected override PSDriveInfo NewDrive(PSDriveInfo drive)
-    {
-        OrchDuDriveInfo duDrive = (OrchDuDriveInfo)drive;
-
-        // Depending on the provider class loading order, the UiPathOrch provider may not be registered yet at this point.
-        // By performing the following in every provider's NewDrive, we ensure UiPathOrch and UiPathOrchDu are reliably associated.
-        try
-        {
-            // var orchProvider = SessionState.Provider.GetOne("UiPathOrch");
-            // If no exception is thrown, orchProvider is guaranteed to be not null
-            var orchDrive = SessionState.Drive.Get(drive.Name.Substring(0, drive.Name.Length - 2)) as OrchDriveInfo;
-            duDrive.ParentDrive = orchDrive!;
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"DU drive parent linking failed for '{drive.Name}': {ex.Message}");
-        }
-
-        return drive;
-    }
-
-    #endregion DriveCmdletProvider overrides
-
-    #region ItemCmdletProvider overrides
-
-    protected override void GetItem(string path)
-    {
-        var project = GetProject(path);
-        if (project is not null)
-        {
-            // Stamp a per-call clone (like GetChildItems / NewItem) so the emitted object's own
-            // Path/FullName are this drive's drive-qualified path. Emitting the bare shared cache
-            // entity would leave FullName empty or leak another drive's last-stamped value.
-            var clone = project.ShallowClone();
-            clone.Path = OrchDuDriveInfo.NameColonSeparator;
-            clone.FullName = OrchDuDriveInfo.NameColonSeparator + project.name;
-            WriteItemObject(clone, clone.FullName, true);
-        }
-        // Root path or non-existent path: output nothing (no error)
-    }
-
-    protected override void InvokeDefaultAction(string path)
-    {
-        var drives = SessionState.EnumDuDrives([path]);
-        if (drives is null)
-        {
-            return;
-        }
-
-        foreach (var drive in drives)
-        {
-            string endpoint = drive.OrchAPISession._base_url + "/du_/projects/";
-
-            var project = GetProject(path);
-            if (project is not null) { endpoint += $"{project.id}/details"; }
-
-            Process.Start(new ProcessStartInfo(endpoint) { UseShellExecute = true });
-        }
-    }
-
-    // The ItemExists method apparently does not need to handle wildcards.
-    protected override bool ItemExists(string path)
-    {
-        string path2 = System.IO.Path.GetFileName(path);
-        if (path2 == "") return true;
-
-        return GetProject(path) is not null;
-    }
-
-    #endregion ItemCmdletProvider overrides
-
-    #region ContainerCmdletProvider overrides
-
-    protected override void GetChildItems(string path, bool recurse)
-    {
-        GetChildItems(path, recurse, 0);
-    }
-
-    protected override void GetChildItems(string path, bool recurse, uint depth)
-    {
-        if (!path.EndsWith(System.IO.Path.DirectorySeparatorChar))
-        {
-            return;
-        }
-        var projects = OrchDuDriveInfo.GetDuProjects();
-        var pathPrefix = OrchDuDriveInfo.NameColonSeparator;
-        foreach (var project in projects!.OrderBy(p => p.name))
-        {
-            if (Stopping) return;
-            string psPathEscaped = pathPrefix + project.name;
-            //string psPathEscaped = PathTools.EscapePSText2(psPath);
-            // Per-drive ShallowClone() with drive-local Path / FullName
-            // stamped — uniform DU cache path-isolation pattern.
-            var clone = project.ShallowClone();
-            clone.Path = pathPrefix;
-            clone.FullName = psPathEscaped;
-            WriteItemObject(clone, psPathEscaped, true);
-        }
-    }
-
-    // GetChildNames must call WriteItemObject with just the name string, not the object.
-    // This method is invoked when running Get-ChildItem -Name and wildcard resolution (cd t*, rmdir *).
-    // The first argument (name string) is matched against the wildcard pattern by LocationGlobber.
-    protected override void GetChildNames(string path, ReturnContainers returnContainers)
-    {
-        var projects = OrchDuDriveInfo.GetDuProjects();
-        foreach (var project in projects!.OrderBy(p => p.name))
-        {
-            if (Stopping) return;
-            string fullPath = OrchDuDriveInfo.NameColonSeparator + project.name;
-            WriteItemObject(project.name, fullPath, true);
-        }
-    }
-
-    protected override bool HasChildItems(string path)
-    {
-        if (path == OrchDuDriveInfo.NameColonSeparator)
-            return true;
-        return false;
-    }
+    // ----- DU-only operations -------------------------------------------------
 
     public class NewItem_DynamicParameters
     {
@@ -294,57 +145,12 @@ public class OrchDuProvider : OrchShadowProviderBase
         return new NewItem_DynamicParameters();
     }
 
-    #endregion
-
-    #region NavigationCmdletProvider overrides
-
-    // Document Understanding deletes a project through the same undocumented internal app/web
-    // API used to create one (RemoveDuProject), mirroring the Test Manager provider's RemoveItem.
-    // Rename has no known endpoint, so it stays an explicit "not supported" error below rather
-    // than a generic base-class fallthrough.
-    protected override void RemoveItem(string path, bool recurse)
-    {
-        var drives = SessionState.EnumDuDrives([path]);
-        if (drives is null)
-        {
-            return;
-        }
-
-        foreach (var drive in drives)
-        {
-            var project = GetProject(path);
-            if (project is null) continue;
-
-            if (ShouldProcess(path, "Remove Project"))
-            {
-                try
-                {
-                    drive.OrchAPISession.RemoveDuProject(project.id!);
-                    drive.DuProjects.ClearCache();
-                }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(path, ex), "RemoveDuProjectError", ErrorCategory.InvalidOperation, project));
-                    drive.DuProjects.ClearCache();
-                }
-            }
-        }
-    }
-
+    // Document Understanding projects cannot be renamed: the DU API exposes no project-rename
+    // endpoint, so this stays an explicit "not supported" error rather than a generic fallthrough.
     protected override void RenameItem(string path, string newName)
     {
         WriteError(new ErrorRecord(
             new OrchException(path, "Document Understanding projects cannot be renamed with Rename-Item: the DU API exposes no project-rename endpoint. Rename the project from the Document Understanding web app instead."),
             "RenameDuProjectNotSupported", ErrorCategory.NotImplemented, path));
     }
-
-    // Canonicalize a DU project name's casing from the passive cache (see base class).
-    protected override string? CanonicalizeProjectName(string name)
-    {
-        var projects = PSDriveInfo is OrchDuDriveInfo drive ? drive.DuProjects.CachedValue : null;
-        return projects?.FirstOrDefault(p => string.Equals(p.name, name, StringComparison.OrdinalIgnoreCase))?.name;
-    }
-
-    #endregion
-
 }
