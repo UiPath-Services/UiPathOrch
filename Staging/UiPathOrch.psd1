@@ -526,6 +526,8 @@ Get-OrchPmGroup tolerates an unknown/absent member objectType; large downloads a
 a non-idempotent POST is not retried on 503/504; backtick-escaped commas survive in -Tags / -Roles /
 -GroupName; Add/Remove-OrchRoleFromFolderUser match and complete -Roles consistently on role name;
 Update-/Reset-OrchProcessVersion and Stop-OrchTestSetExecution invalidate their stale cache entries.
+Open-OrchLogLocation works on macOS (opens the folder via open) and reveals the drive's log subfolder
+selected on Windows/macOS.
 
 Fixed (sign-in): interactive PKCE sign-in works on macOS — the authorize URL's scope is now
 URL-encoded (a raw space had truncated the URL before redirect_uri on macOS). Set-OrchAsset and

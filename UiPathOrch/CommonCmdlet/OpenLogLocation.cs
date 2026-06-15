@@ -20,14 +20,17 @@ public class OpenOrchLogLocationCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         string logFolderPath;
+        bool driveResolved;
         try
         {
             var drive = SessionState.GetOrchDrive(EffectivePath(Path, LiteralPath));
             logFolderPath = drive.OrchAPISession.GetLogFolderPath();
+            driveResolved = true;
         }
         catch
         {
             logFolderPath = UiPath.PowerShell.Core.OrchProvider.GetLogFolderBasePath();
+            driveResolved = false;
         }
 
         if (string.IsNullOrEmpty(logFolderPath))
@@ -42,15 +45,34 @@ public class OpenOrchLogLocationCmdlet : OrchestratorPSCmdlet
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            // Windows: open the log folder with File Explorer.
+            // Windows: when invoked from an Orch drive, reveal that drive's log
+            // subfolder selected inside its parent (/select); otherwise open the
+            // base log folder directly.
             try
             {
                 Process.Start(new ProcessStartInfo
                 {
                     FileName = "explorer.exe",
-                    Arguments = logFolderPath,
+                    Arguments = driveResolved ? $"/select,\"{logFolderPath}\"" : logFolderPath,
                     UseShellExecute = true
                 });
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(ex, "OpenFolderFailed", ErrorCategory.OpenError, logFolderPath));
+            }
+        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+        {
+            // macOS: when invoked from an Orch drive, reveal that drive's log
+            // subfolder selected in Finder (open -R); otherwise open the base log
+            // folder. ArgumentList keeps a path with spaces intact.
+            try
+            {
+                var psi = new ProcessStartInfo { FileName = "open", UseShellExecute = false };
+                if (driveResolved) psi.ArgumentList.Add("-R");
+                psi.ArgumentList.Add(logFolderPath);
+                Process.Start(psi);
             }
             catch (Exception ex)
             {

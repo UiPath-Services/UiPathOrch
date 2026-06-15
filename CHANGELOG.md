@@ -71,6 +71,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   consistently on the role name, so a completed value always resolves and Add/Remove are symmetric.
 - The directory-search query is URL-escaped; the package/library upload response no longer throws on an
   empty result array.
+- `Open-OrchLogLocation` works on macOS — it opens the log folder via `open` instead of warning that the
+  platform is unsupported. On Windows and macOS, when invoked from an Orch drive it now reveals that
+  drive's log subfolder selected inside its parent (Explorer `/select`, Finder `open -R`).
 
 #### HTTP
 
