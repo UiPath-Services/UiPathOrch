@@ -211,4 +211,51 @@ public class CsvRowCapTests
             Assert.Equal("gamma", contents[1][1]);
         });
     }
+
+    // ---- (4) single-column CSV (no comma on any row) ------------------------
+    // The end-of-line finalizer used to require a comma (currentRow.Count != 0),
+    // so a single-column file never produced rows. These pin the fix.
+
+    [Fact]
+    public void ParseCsvContent_SingleColumn_ProducesOneFieldPerRow()
+    {
+        WithCsv("h1\na\nb\n", path =>
+        {
+            ImportQueueItemCmdlet.ParseCsvContent(path, Encoding.UTF8, int.MaxValue,
+                out var headers, out var contents, out var errors, out var total);
+            Assert.Empty(errors);
+            Assert.Equal(new[] { "h1" }, headers);
+            Assert.Equal(2, total);
+            Assert.Equal(new[] { "a" }, contents[0]);
+            Assert.Equal(new[] { "b" }, contents[1]);
+        });
+    }
+
+    [Fact]
+    public void ParseCsvContent_SingleColumn_QuotedValueWithComma_KeptAsOneField()
+    {
+        WithCsv("h1\n\"a,b\"\n", path =>
+        {
+            ImportQueueItemCmdlet.ParseCsvContent(path, Encoding.UTF8, int.MaxValue,
+                out var headers, out var contents, out var errors, out var total);
+            Assert.Empty(errors);
+            Assert.Equal(new[] { "h1" }, headers);
+            Assert.Equal(1, total);
+            Assert.Equal(new[] { "a,b" }, contents[0]);
+        });
+    }
+
+    [Fact]
+    public void ParseCsvContent_SingleColumn_MultilineValue_KeptAsOneRecord()
+    {
+        WithCsv("h1\n\"x\ny\"\nz\n", path =>
+        {
+            ImportQueueItemCmdlet.ParseCsvContent(path, Encoding.UTF8, int.MaxValue,
+                out _, out var contents, out var errors, out var total);
+            Assert.Empty(errors);
+            Assert.Equal(2, total);                 // 2 records over 3 data lines
+            Assert.Equal("x\ny", contents[0][0]);
+            Assert.Equal("z", contents[1][0]);
+        });
+    }
 }

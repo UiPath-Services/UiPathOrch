@@ -170,23 +170,31 @@ internal static class MultilineCsv
                 continue; // Proceed to the next line
             }
 
-            // Add the last field if we're not inside quotes (end of line)
-            if (!inQuotes && currentRow.Count != 0)
+            // Still inside a quoted field at the physical line end: the field
+            // carries an embedded newline. Keep it and accumulate the next line.
+            if (inQuotes)
             {
-                currentRow.Add(currentField.ToString());
-                currentField.Clear();
-                if (currentRowNumber != 0 && headers.Count() < currentRow.Count())
-                {
-                    currentField.Clear();
-                    currentRow.Clear();
-                    errorInfo.Add(new CSVParseError(currentRowNumber, "Fields Mismatch", "N/A", "Too Many Fields"));
-                    continue;
-                }
-            }
-            else
-            {
-                // Multiline field, add newline character and continue accumulating
                 currentField.Append('\n');
+                continue;
+            }
+
+            // Not inside quotes: this physical line ends a record. (The previous
+            // `currentRow.Count != 0` guard wrongly required a comma, so a
+            // single-column row — no comma — never finalized and was treated as a
+            // multiline field. End-of-line with balanced quotes always ends a row,
+            // regardless of column count.) Skip a wholly blank line rather than
+            // emitting an empty row.
+            if (currentField.Length == 0 && currentRow.Count == 0)
+            {
+                continue;
+            }
+
+            currentRow.Add(currentField.ToString());
+            currentField.Clear();
+            if (currentRowNumber != 0 && headers.Count < currentRow.Count)
+            {
+                currentRow.Clear();
+                errorInfo.Add(new CSVParseError(currentRowNumber, "Fields Mismatch", "N/A", "Too Many Fields"));
                 continue;
             }
 
@@ -196,7 +204,7 @@ internal static class MultilineCsv
                 headers = new List<string>(currentRow);
                 ++currentRowNumber;
             }
-            else if (currentRow.Count > 0) // Avoid adding empty lines as rows
+            else // currentRow has at least one field here
             {
                 ++totalDataRows;
                 // Stop retaining rows past the cap (the file will be rejected),
