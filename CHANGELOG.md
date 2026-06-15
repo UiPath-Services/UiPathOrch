@@ -80,6 +80,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - A non-idempotent `POST` (e.g. add queue item, create) is no longer retried on `503` / `504` (which
   could duplicate a write that already committed); `429` still retries for all methods.
 
+#### Connectivity (NAT64 / IPv6-only networks)
+
+- **A request no longer hangs indefinitely on IPv6-only / NAT64+DNS64 networks.** On such a network a
+  synthesized backend address can complete the TCP handshake but black-hole the TLS handshake (broken
+  Path-MTU discovery drops the large Certificate flight). The default in-order dialer connected to that
+  address and then wedged in the synchronous TLS handshake — where `HttpClient`'s timeout does not fire —
+  so a call could hang forever (e.g. `Copy-Item` stalled while copying test data queue items). All HTTP
+  clients now dial through a Happy Eyeballs connector (RFC 8305 §4/§5 address ordering and staggered
+  attempts, plus the Happy Eyeballs v3 rule of treating *TLS-handshake completion* — not the TCP connect
+  — as success): every resolved address is tried with staggered TCP+TLS attempts interleaved by family
+  (IPv6 first), and the first whose TLS handshake completes wins, routing around the dead paths. Because
+  this runs on the async path, `HttpClient`'s timeout and `Ctrl+C` now abort a stuck connect instead of
+  hanging. Connections through an explicit proxy keep the platform's native dialer.
+
 #### Cache freshness
 
 - `Update-OrchProcessVersion` / `Reset-OrchProcessVersion` invalidate the detailed-release cache, so a

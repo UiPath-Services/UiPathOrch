@@ -401,74 +401,14 @@ public partial class OrchAPISession : IDisposable
 
     internal HttpClient InitializeHttpClient(OrchDriveInfo drive)
     {
-        HttpClient ret;
+        // SocketsHttpHandler with proxy config, an optional SSL-error override, and (for direct
+        // connections) an RFC 8305 Happy Eyeballs dialer that survives NAT64/DNS64 networks
+        // where the default in-order dialer hangs in a black-holed TLS handshake. See OrchHttp.
+        var handler = OrchHttp.CreateHandler(
+            drive._psDrive.Proxy,
+            drive._psDrive.IgnoreSslErrors.GetValueOrDefault(false));
 
-        if (drive._psDrive.Proxy?.Enabled ?? false)
-        {
-            HttpClientHandler handler;
-            IWebProxy iWebProxy;
-            try
-            {
-                if (drive._psDrive.Proxy.UseDefaultWebProxy.GetValueOrDefault())
-                {
-                    iWebProxy = WebRequest.DefaultWebProxy;
-                }
-                else
-                {
-                    Uri proxyUri = new(drive._psDrive.Proxy.Url ?? "");
-
-                    var proxy = new WebProxy
-                    {
-                        Address = proxyUri,
-                        BypassProxyOnLocal = drive._psDrive.Proxy.BypassProxyOnLocal ?? true,
-                        UseDefaultCredentials = drive._psDrive.Proxy.UseDefaultCredentials ?? false
-                    };
-
-                    if (drive._psDrive.Proxy?.Credentials is not null && !proxy.UseDefaultCredentials)
-                    {
-                        proxy.Credentials = new NetworkCredential(
-                            userName: drive._psDrive.Proxy.Credentials.Username,
-                            password: drive._psDrive.Proxy.Credentials.Password);
-                    }
-
-                    iWebProxy = proxy;
-                }
-
-                handler = new HttpClientHandler
-                {
-                    Proxy = iWebProxy,
-                    UseProxy = true
-                };
-
-                // Ignore exceptions when SSL certificates are missing
-                if (drive._psDrive.IgnoreSslErrors.GetValueOrDefault(false))
-                {
-                    handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true;
-                }
-            }
-            catch (Exception ex)
-            {
-                throw new ArgumentException($"Proxy: {ex.Message}", ex);
-            }
-
-            ret = new HttpClient(handler);
-        }
-        else
-        {
-            // Ignore exceptions when SSL certificates are missing
-            if (drive._psDrive.IgnoreSslErrors.GetValueOrDefault(false))
-            {
-                var handler = new HttpClientHandler
-                {
-                    ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => true,
-                };
-                ret = new HttpClient(handler);
-            }
-            else
-            {
-                ret = new HttpClient();
-            }
-        }
+        var ret = new HttpClient(handler);
 
         var version = Assembly.GetExecutingAssembly().GetName().Version;
         string userAgent = $"UiPathOrch/{version}";

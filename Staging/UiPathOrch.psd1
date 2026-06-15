@@ -520,6 +520,13 @@ Fixed (locale): OData $filter and JSON timestamps, and Calendar excluded-date CS
 culture-invariant (ISO-8601). Add-OrchCalendarDate no longer duplicates an already-excluded date at a
 non-UTC offset.
 
+Fixed (connectivity): a request no longer hangs forever on IPv6-only / NAT64+DNS64 networks where a
+backend completes the TCP handshake but black-holes the TLS handshake (broken Path-MTU discovery). All
+HTTP clients now dial through a Happy Eyeballs connector (RFC 8305 plus the v3 TLS-completion-as-success
+rule): staggered TCP+TLS attempts across every resolved address, interleaved by family (IPv6 first), the
+first completed TLS winning. HttpClient's timeout and Ctrl+C now abort a stuck connect. Connections
+through an explicit proxy keep the platform's native dialer.
+
 Fixed (other): Get-Item resolves backtick-named folders literally; New-Item stops after an invalid
 -FeedType; Ctrl+C stops list cmdlets cleanly; Add-OrchUser applies per-row IsExternalLicensed;
 Get-OrchPmGroup tolerates an unknown/absent member objectType; large downloads are Ctrl+C-cancellable;
