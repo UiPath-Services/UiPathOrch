@@ -234,7 +234,6 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         return false;
     }
 
-    // TODO: The handling when a value is specified for a switch parameter may not be correct
     public static string? GetParameterValue(CommandAst commandAst, string parameterName, string[]? positionalParams = null)
     {
         var elements = commandAst.CommandElements.Skip(1).Select(e => e.ToString()).ToList();
@@ -250,7 +249,11 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
             {
                 string currentParamName = elements[i].TrimStart('-').Split(':')[0];
                 bool isPositionalParam = positionalParams is not null && Array.IndexOf(positionalParams, currentParamName) >= 0;
-                bool isSwitchParam = GetSwitchParameterValue(commandAst, currentParamName);
+                // Decide by NAME whether this is a switch — not GetSwitchParameterValue, which is
+                // false for the "-Switch:$true" colon form and would then make the colon-value case
+                // fall into the regular branch and wrongly eat the following positional token.
+                // A switch (bare or colon form) never takes a following token.
+                bool isSwitchParam = IsKnownSwitchParameterName(commandAst, currentParamName);
 
                 if (currentParamName.Equals(parameterName, StringComparison.OrdinalIgnoreCase))
                 {
@@ -266,7 +269,7 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
                 }
                 else if (isSwitchParam)
                 {
-                    // For switch parameters, simply remove them
+                    // Switch (bare or "-Switch:$true"): a single self-contained element.
                     elements.RemoveAt(i);
                     i--;
                     if (isPositionalParam && positionIndex > i)
@@ -371,10 +374,14 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
         {
             if (elements[i].StartsWith('-'))
             {
-                bool isSwitchParam = GetSwitchParameterValue(commandAst, elements[i].TrimStart('-').Split(':')[0]);
-                elements.RemoveAt(i); // Remove param name
-                if (!isSwitchParam && i < elements.Count && !elements[i].StartsWith("-"))
-                    elements.RemoveAt(i); // Remove param value
+                // Self-contained when it's a switch (by name — GetSwitchParameterValue is false for
+                // the "-Switch:$true" colon form) or carries an inline "-Param:value"; such an
+                // element never consumes the following positional token.
+                bool selfContained = elements[i].Contains(':')
+                    || IsKnownSwitchParameterName(commandAst, elements[i].TrimStart('-').Split(':')[0]);
+                elements.RemoveAt(i); // Remove param name (and its inline value, if any)
+                if (!selfContained && i < elements.Count && !elements[i].StartsWith("-"))
+                    elements.RemoveAt(i); // Remove the separate param value token
                 i--;
             }
         }

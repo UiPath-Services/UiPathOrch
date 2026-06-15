@@ -59,6 +59,35 @@ public class OrchCompleterSwitchDetectionTests
         Assert.False(OrchArgumentCompleter.GetSwitchParameterValue(ast, "ThisDoesNotExist"));
     }
 
+    // GetParameterValue must not let a switch swallow the following positional argument.
+    // Remove-OrchAsset: Name=pos0, ValueType=pos1, Recurse=switch.
+    private static readonly string[] AssetPositionals = { "Name", "ValueType" };
+
+    [Fact]
+    public void GetParameterValue_ColonSwitchBeforePositional_PositionalResolved()
+    {
+        // The bug: "-Recurse:$true" has a non-null AST Argument, so GetSwitchParameterValue
+        // reported it as a value-bound param and the positional "MyAsset" was eaten as its value.
+        var ast = ParseFirstCommand("Remove-OrchAsset -Recurse:$true MyAsset");
+        Assert.Equal("MyAsset", OrchArgumentCompleter.GetParameterValue(ast, "Name", AssetPositionals));
+    }
+
+    [Fact]
+    public void GetParameterValue_BareSwitchBeforePositional_PositionalResolved()
+    {
+        var ast = ParseFirstCommand("Remove-OrchAsset -Recurse MyAsset");
+        Assert.Equal("MyAsset", OrchArgumentCompleter.GetParameterValue(ast, "Name", AssetPositionals));
+    }
+
+    [Fact]
+    public void GetParameterValue_NamedValue_SpaceAndColonForms()
+    {
+        Assert.Equal("Text", OrchArgumentCompleter.GetParameterValue(
+            ParseFirstCommand("Remove-OrchAsset -ValueType Text"), "ValueType"));
+        Assert.Equal("Text", OrchArgumentCompleter.GetParameterValue(
+            ParseFirstCommand("Remove-OrchAsset -ValueType:Text"), "ValueType"));
+    }
+
     [Fact]
     public void SwitchWithExplicitValue_ReturnsFalse()
     {
