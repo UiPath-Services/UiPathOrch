@@ -288,8 +288,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
             string json = File.ReadAllText(configFilePath);
             try
             {
-                _config = JsonSerializer.Deserialize<UiPathOrchConfig>(json, JsonTools.jsonAllowComments);
-                if (_config is null) throw new Exception("Deserialization resulted in a null object.");
+                _config = JsonSerializer.Deserialize<UiPathOrchConfig>(json, JsonTools.jsonAllowComments) ?? throw new Exception("Deserialization resulted in a null object.");
             }
             catch (Exception ex)
             {
@@ -308,15 +307,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
                 WriteWarning($"Please edit '{configFilePath}'. After saving your changes, run `Import-OrchConfig` to reload the configuration.");
 
                 return null;
-
-                //else
-                //{
-                //    string folder = System.IO.Path.GetDirectoryName(configFilePath);
-                //    string fileName = System.IO.Path.GetFileName(configFilePath);
-
-                //    SessionState.Path.SetLocation(folder);
-                //    WriteWarning($"Please edit ./{fileName}. Once edited, launch a new PS session and `Import-Module UiPathOrch` to mount your Orchestrator tenants as PSDrives.");
-                //}
             }
 
             Collection<PSDriveInfo> ret = base.InitializeDefaultDrives();
@@ -333,13 +323,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
                 if (!drive.Enabled.GetValueOrDefault()) continue;
 
                 WarningPSDriveConfig(drive);
-
-                //if (string.IsNullOrEmpty(drive.IdentityUrl))
-                //{
-                //    drive.IdentityUrl = _baseUrl.Contains("uipath.com", StringComparison.InvariantCultureIgnoreCase)
-                //        ? _baseUrl + "/identity_/connect/token"
-                //        : _baseUrl + "/identity/connect/token";
-                //}
 
                 try
                 {
@@ -545,11 +528,56 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
         Process.Start(new ProcessStartInfo(endpoint) { UseShellExecute = true });
     }
 
-    // TODO: Should we implement something here? Though it seems like this is never called..
+    // Contract: report whether the path is *syntactically* well-formed for this
+    // provider. This is NOT an existence check (that is ItemExists' job) — it
+    // only rejects input that could never name a folder. Mirrors the built-in
+    // providers: FileSystemProvider rejects null/empty plus invalid filename
+    // chars; RegistryProvider/SessionStateProviderBase reject null/empty.
+    //
+    // Two callers reach this override:
+    //  (1) The engine, ONLY via the cmdlet `Test-Path -IsValid <path>`. Plain
+    //      Test-Path (no -IsValid), Get-Item, Get-ChildItem, Set-Location,
+    //      Resolve-Path, Remove-Item, etc. never call it — they go through
+    //      ItemExists / GetItem instead. The chain is:
+    //        Test-Path -IsValid            (TestPathCommand: if (IsValid) ...)
+    //          -> SessionState.Path.IsValid(path, context)        (PathIntrinsics)
+    //            -> SessionStateInternal.IsValidPath(path, context)
+    //              -> ItemCmdletProvider.IsValidPath(path, context)  (internal wrapper)
+    //                -> this override
+    //  (2) Our own NormalizeRelativePath, as an input guard — mirroring
+    //      FileSystemProvider, which is the one built-in provider that calls its
+    //      own IsValidPath internally. That path-resolution chain (Resolve-Path,
+    //      relative navigation, tab completion) is what exercises this method in
+    //      normal use; the -IsValid switch alone would leave it nearly dormant.
     protected override bool IsValidPath(string path)
     {
-        //Tools.DebugFuncEntry("IsValidPath", path, SessionState);
-        //Tools.DebugFuncExit("IsValidPath", true, SessionState);
+        if (string.IsNullOrEmpty(path))
+        {
+            return false;
+        }
+
+        // Reduce to the Orchestrator path (drive qualifier stripped, separators
+        // normalized to '/', leading/trailing separators trimmed). An empty
+        // result is the drive root, which is a valid location.
+        string orchPath = OrchDriveInfo.PSPathToOrchPath(path);
+        if (orchPath.Length == 0)
+        {
+            return true;
+        }
+
+        // A folder name legitimately contains spaces and most punctuation, so we
+        // deliberately do not reject those. A control character, however, can
+        // never appear in a real folder name — such a path is malformed.
+        // (FileSystemProvider performs the analogous invalid-char check because
+        // .NET path APIs stopped throwing on bad characters.)
+        foreach (char c in orchPath)
+        {
+            if (char.IsControl(c))
+            {
+                return false;
+            }
+        }
+
         return true;
     }
 
@@ -1199,6 +1227,26 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
 
     protected override string NormalizeRelativePath(string path, string basePath)
     {
+        // FileSystemProvider invokes its own IsValidPath here as an input guard
+        // (see FileSystemProvider.NormalizeRelativePath: the only place the engine
+        // calls IsValidPath internally — every other use is the user typing
+        // `Test-Path -IsValid`). We mirror that so IsValidPath is actually
+        // exercised on the normal path-resolution chain (Resolve-Path, relative
+        // navigation, tab completion), not just that rare cmdlet switch. The base
+        // NavigationCmdletProvider.NormalizeRelativePath does NOT call IsValidPath,
+        // so without this the override would never fire here.
+        //
+        // Deviation from FileSystemProvider: an empty path is let through to the
+        // base (which maps it to ""), because an empty Orchestrator path denotes
+        // the drive root — a valid location — whereas FileSystemProvider rejects
+        // empty outright.
+        if (!string.IsNullOrEmpty(path) && !IsValidPath(path))
+        {
+            throw new ArgumentException(
+                $"The path '{path}' is not a valid {ProviderInfo?.Name ?? "Orchestrator"} provider path.",
+                nameof(path));
+        }
+
         string result = base.NormalizeRelativePath(path, basePath);
         if (result.StartsWith(System.IO.Path.DirectorySeparatorChar) && result.Length > 1)
             result = result[1..];
@@ -1226,6 +1274,38 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
             retNew = retNew.Substring(0, retNew.Length - 1);
         }
         return retNew;
+    }
+
+    // Mirror FileSystemProvider.GetChildName. The base NavigationCmdletProvider
+    // implementation trims the trailing separator but does NOT re-root a bare
+    // drive, so `Split-Path Orch1:\ -Leaf` returns "Orch1:" where the FileSystem
+    // provider returns the rooted "Orch1:\" (its GetChildName calls
+    // EnsureDriveIsRooted for the no-separator case). We replicate that so a
+    // drive-root leaf round-trips as a usable drive path. Every non-root case
+    // produces the same result as the base (verified via Split-Path against the
+    // FileSystem provider), so this override only corrects the drive-root edge.
+    protected override string GetChildName(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+        {
+            throw new ArgumentException("The path cannot be null or empty.", nameof(path));
+        }
+
+        char sep = System.IO.Path.DirectorySeparatorChar;
+
+        // Normalize the alternate separator, then drop a trailing separator.
+        string normalized = path.Replace(System.IO.Path.AltDirectorySeparatorChar, sep).TrimEnd(sep);
+
+        int separatorIndex = normalized.LastIndexOf(sep);
+        if (separatorIndex == -1)
+        {
+            // No separator: a bare leaf or a drive root. Re-root a path that ends
+            // in ':' (e.g. "Orch1:" -> "Orch1:\"), matching the FileSystem
+            // provider's EnsureDriveIsRooted; leave a plain leaf unchanged.
+            return normalized.EndsWith(':') ? normalized + sep : normalized;
+        }
+
+        return normalized.Substring(separatorIndex + 1);
     }
 
     protected override void MoveItem(string path, string destination)
