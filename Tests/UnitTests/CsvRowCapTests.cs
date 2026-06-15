@@ -139,4 +139,76 @@ public class CsvRowCapTests
             Assert.Equal(2, total);          // both records still counted
         });
     }
+
+    // ---- (3) double-quote (RFC 4180) handling in the multi-line parser -------
+    // The earlier inline parser mangled values containing double quotes; the
+    // shared MultilineCsv parser handles "" escaping, quote-wrapped commas, and
+    // fields that begin with an escaped quote. These pin that behavior.
+
+    [Fact]
+    public void ParseCsvContent_EscapedDoubleQuote_UnescapesToSingleQuote()
+    {
+        // 1,"say ""hi"""  ->  field = say "hi"
+        WithCsv("h1,h2\n1,\"say \"\"hi\"\"\"\n", path =>
+        {
+            ImportQueueItemCmdlet.ParseCsvContent(path, Encoding.UTF8, int.MaxValue,
+                out _, out var contents, out var errors, out var total);
+            Assert.Empty(errors);
+            Assert.Equal(1, total);
+            Assert.Equal("say \"hi\"", contents[0][1]);
+        });
+    }
+
+    [Fact]
+    public void ParseCsvContent_QuotedFieldWithEmbeddedComma_KeepsComma()
+    {
+        // 1,"a,b"  ->  field = a,b (one field, comma preserved)
+        WithCsv("h1,h2\n1,\"a,b\"\n", path =>
+        {
+            ImportQueueItemCmdlet.ParseCsvContent(path, Encoding.UTF8, int.MaxValue,
+                out _, out var contents, out var errors, out _);
+            Assert.Empty(errors);
+            Assert.Equal(new[] { "1", "a,b" }, contents[0]);
+        });
+    }
+
+    [Fact]
+    public void ParseCsvContent_FieldStartingWithEscapedQuotes_Unescapes()
+    {
+        // 1,"""Allow"",""Solutions"""  ->  field = "Allow","Solutions"
+        WithCsv("h1,h2\n1,\"\"\"Allow\"\",\"\"Solutions\"\"\"\n", path =>
+        {
+            ImportQueueItemCmdlet.ParseCsvContent(path, Encoding.UTF8, int.MaxValue,
+                out _, out var contents, out var errors, out _);
+            Assert.Empty(errors);
+            Assert.Equal("\"Allow\",\"Solutions\"", contents[0][1]);
+        });
+    }
+
+    [Fact]
+    public void ParseCsvContent_QuotedEmptyField_IsEmptyString()
+    {
+        WithCsv("h1,h2\n1,\"\"\n", path =>
+        {
+            ImportQueueItemCmdlet.ParseCsvContent(path, Encoding.UTF8, int.MaxValue,
+                out _, out var contents, out var errors, out _);
+            Assert.Empty(errors);
+            Assert.Equal(new[] { "1", "" }, contents[0]);
+        });
+    }
+
+    [Fact]
+    public void ParseCsvContent_MultilineFieldWithEscapedQuote_Combined()
+    {
+        // 1,"alpha<NL>""q"""  ->  field = alpha\n"q"   (embedded newline + escaped quote)
+        WithCsv("h1,h2\n1,\"alpha\n\"\"q\"\"\"\n2,gamma\n", path =>
+        {
+            ImportQueueItemCmdlet.ParseCsvContent(path, Encoding.UTF8, int.MaxValue,
+                out _, out var contents, out var errors, out var total);
+            Assert.Empty(errors);
+            Assert.Equal(2, total);
+            Assert.Equal("alpha\n\"q\"", contents[0][1]);
+            Assert.Equal("gamma", contents[1][1]);
+        });
+    }
 }
