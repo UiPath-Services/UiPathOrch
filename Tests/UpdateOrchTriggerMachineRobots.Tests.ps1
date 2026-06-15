@@ -48,6 +48,15 @@ BeforeAll {
     Import-OrchConfig | Out-Null
     $script:hasDrive = $null -ne (Get-OrchPSDrive | Where-Object Name -eq $script:DriveName)
 
+    # The fixture (folder + trigger + machine) is environment-specific. If the folder
+    # isn't even present, skip cleanly: probing a non-existent path throws (terminating,
+    # not suppressed by -ErrorAction SilentlyContinue), which would abort BeforeAll and
+    # FAIL every test instead of skipping it.
+    $script:folderExists = $false
+    if ($script:hasDrive) {
+        try { $script:folderExists = [bool](Test-Path $script:FolderPath) } catch { $script:folderExists = $false }
+    }
+
     # Robot: use a caller-supplied one if given (UIPATHORCH_TEST_ROBOT_LOGIN);
     # otherwise provision a throwaway robot account end to end — org
     # (Set-PmRobotAccount) -> tenant (Add-OrchUser, with a dummy Default
@@ -58,7 +67,7 @@ BeforeAll {
     if ($env:UIPATHORCH_TEST_ROBOT_LOGIN) {
         $script:RobotLogin = $env:UIPATHORCH_TEST_ROBOT_LOGIN
     }
-    elseif ($script:hasDrive) {
+    elseif ($script:folderExists) {
         $script:RobotLogin = "ZZBot_$([guid]::NewGuid().ToString('N').Substring(0,8))"
         try {
             Set-PmRobotAccount -Path $script:Drive -UserName $script:RobotLogin -GroupName 'Automation Users' -Confirm:$false -ErrorAction Stop *>$null
@@ -75,7 +84,7 @@ BeforeAll {
         }
     }
 
-    if ($script:hasDrive) {
+    if ($script:folderExists) {
         $t = Get-OrchTriggerDetail -Path $script:FolderPath -Name $script:Trigger -ErrorAction SilentlyContinue
         $m = Get-OrchFolderMachine -Path $script:FolderPath -ErrorAction SilentlyContinue |
             Where-Object Name -eq $script:Machine

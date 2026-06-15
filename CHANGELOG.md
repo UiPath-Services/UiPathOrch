@@ -183,6 +183,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - The live Pester suite is drive-configurable: every test honors `$env:UIPATHORCH_TEST_DRIVE` (and
   `$env:UIPATHORCH_TEST_REF_DRIVE` for the read-only reference drive), defaulting to the prior literals,
   so the suite can target any mounted drive.
+- Added `Tests/Invoke-AllTests.ps1`, a runner that gives each live Pester file a clean fixture
+  (reset + import) and pins the current location to the disposable tenant, so the whole suite runs
+  reliably instead of cascading into mass failure when run together; documented in `Tests/README.md`.
+  Two files were made self-sufficient to match: `CopyTestDataQueueMigration` creates its own scratch
+  folders, and `UpdateOrchTriggerMachineRobots` skips cleanly (instead of failing) when its
+  environment-specific trigger/machine fixture is absent.
 
 ## [1.9.1] - 2026-06-09
 

@@ -15,7 +15,8 @@
 
     Requirements:
     - $env:UIPATHORCH_TEST_DRIVE (Automation Cloud drive, ApiVersion >= 18). Defaults to 'Orch2'.
-    - At least two non-personal folders on that drive.
+    - The test creates its own two scratch folders, so the tenant need not already
+      have any non-personal folders.
 
 .NOTES
     Run with: Invoke-Pester -Path Tests\CopyTestDataQueueMigration.Tests.ps1 -Output Detailed
@@ -27,13 +28,13 @@ BeforeAll {
     $script:DriveColon = "$($script:Drive):"
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
 
-    $folders = @(
-        Get-ChildItem "$($script:Drive):\" |
-            Where-Object { $_.PSIsContainer -and $_.PSChildName -notlike '*workspace*' } |
-            Select-Object -First 2 -ExpandProperty PSChildName)
-    if ($folders.Count -lt 2) { throw "Need at least two non-personal folders on '$($script:DriveColon)'." }
-    $script:Src = "$($script:Drive):\$($folders[0])"
-    $script:Dst = "$($script:Drive):\$($folders[1])"
+    # Two own scratch folders so the test is self-sufficient and does not depend on
+    # the tenant already having >= 2 non-personal folders at the root.
+    $suffix = [guid]::NewGuid().ToString('N').Substring(0, 8)
+    $script:Src = "$($script:Drive):\ZZ_MigTDQ_src_$suffix"
+    $script:Dst = "$($script:Drive):\ZZ_MigTDQ_dst_$suffix"
+    New-Item -Path $script:Src -ItemType Directory -ErrorAction Stop | Out-Null
+    New-Item -Path $script:Dst -ItemType Directory -ErrorAction Stop | Out-Null
     $script:Qn = 'zzPesterMigTDQ'
     $script:Req = '{"type":"object","properties":{"a":{"type":"string"},"b":{"type":"string"}},"required":["a","b"]}'
     $script:Relax = '{"type":"object","properties":{"a":{"type":"string"},"b":{"type":"string"}},"required":[]}'
@@ -83,5 +84,6 @@ AfterAll {
     foreach ($p in $script:Src, $script:Dst) {
         Get-OrchTestDataQueue -Path $p | Where-Object Name -eq $script:Qn |
             Remove-OrchTestDataQueue -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-Item -Path $p -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
