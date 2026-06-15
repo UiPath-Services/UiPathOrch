@@ -157,6 +157,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
 
     public static string GetBasePath()
     {
+        string? configDirOverride = System.Environment.GetEnvironmentVariable("UIPATHORCH_CONFIG_DIR");
+        if (!string.IsNullOrWhiteSpace(configDirOverride))
+        {
+            return System.Environment.ExpandEnvironmentVariables(configDirOverride);
+        }
+
         string moduleName = "UiPathOrch";
         if (OperatingSystem.IsWindows())
         {
@@ -172,6 +178,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
 
     public static string GetConfigFilePath()
     {
+        string? configPathOverride = System.Environment.GetEnvironmentVariable("UIPATHORCH_CONFIG_PATH");
+        if (!string.IsNullOrWhiteSpace(configPathOverride))
+        {
+            return System.Environment.ExpandEnvironmentVariables(configPathOverride);
+        }
+
         string configFileName = "UiPathOrchConfig.json";
         return System.IO.Path.Combine(GetBasePath(), configFileName);
     }
