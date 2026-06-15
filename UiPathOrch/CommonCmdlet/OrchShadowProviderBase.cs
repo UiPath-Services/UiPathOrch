@@ -81,11 +81,15 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
 
     // ----- path semantics (flat, container-only) ------------------------------
 
-    // These providers only ever return containers, and every path that resolves to a project is
-    // valid; there is no leaf/file concept to validate.
-    protected override bool IsValidPath(string path) => true;
+    // These providers only ever return containers; there is no leaf/file concept. Syntactic
+    // validation is shared with OrchProvider via PathTools (reject null/empty and control chars,
+    // accept the drive root). Reached from `Test-Path -IsValid` and the NormalizeRelativePath guard.
+    protected override bool IsValidPath(string path) => PathTools.IsValidProviderPath(path);
 
     protected override bool IsItemContainer(string path) => true;
+
+    // Re-root a bare drive for the drive-root leaf case, shared with OrchProvider via PathTools.
+    protected override string GetChildName(string path) => PathTools.GetChildNameWithDriveRoot(path);
 
     protected override string MakePath(string parent, string child)
     {
@@ -98,6 +102,15 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
 
     protected override string NormalizeRelativePath(string path, string basePath)
     {
+        // Input guard, mirroring OrchProvider / FileSystemProvider: reject a malformed path up
+        // front (an empty path is the drive root, so let it through to the base).
+        if (!string.IsNullOrEmpty(path) && !IsValidPath(path))
+        {
+            throw new ArgumentException(
+                $"The path '{path}' is not a valid {ProviderInfo?.Name ?? "Orchestrator"} provider path.",
+                nameof(path));
+        }
+
         string result = base.NormalizeRelativePath(path, basePath);
         if (result.StartsWith(System.IO.Path.DirectorySeparatorChar) && result.Length > 1)
             result = result[1..];

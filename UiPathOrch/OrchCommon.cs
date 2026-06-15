@@ -50,6 +50,51 @@ public static class PathTools
     // already-escaped value would double the doubling.
     public static string EscapeODataLiteral(string? input) => (input ?? string.Empty).Replace("'", "''");
 
+    // Shared syntactic path validation for the Orchestrator providers (the hierarchical
+    // OrchProvider and the flat DU/TM shadows). Reports whether `path` is well-formed enough to
+    // NAME an item — it is NOT an existence check (that is the provider's ItemExists). Mirrors the
+    // built-in providers: reject null/empty, accept the drive root, and reject control characters
+    // (which can never appear in a real folder/project name; spaces and ordinary punctuation are
+    // fine). Both OrchProvider and OrchShadowProviderBase delegate here so the rule lives in one
+    // place. Reached from `Test-Path -IsValid` and from each provider's NormalizeRelativePath guard.
+    public static bool IsValidProviderPath(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            return false;
+
+        // Reduce to the Orchestrator path (drive qualifier stripped, separators normalized to '/',
+        // leading/trailing separators trimmed). An empty result is the drive root — a valid location.
+        string orchPath = OrchDriveInfo.PSPathToOrchPath(path);
+        if (orchPath.Length == 0)
+            return true;
+
+        foreach (char c in orchPath)
+            if (char.IsControl(c))
+                return false;
+
+        return true;
+    }
+
+    // Shared GetChildName for the Orchestrator providers, mirroring FileSystemProvider.GetChildName
+    // + EnsureDriveIsRooted: trim a trailing separator, return the last segment, but re-root a bare
+    // drive ("Orch1:" -> "Orch1:\") so a drive-root leaf round-trips as a usable path. The base
+    // NavigationCmdletProvider trims but does not re-root, so without this `Split-Path X:\ -Leaf`
+    // yields "X:". Throws on null/empty like the built-in providers.
+    public static string GetChildNameWithDriveRoot(string path)
+    {
+        if (string.IsNullOrEmpty(path))
+            throw new ArgumentException("The path cannot be null or empty.", nameof(path));
+
+        char sep = Path.DirectorySeparatorChar;
+        string normalized = path.Replace(Path.AltDirectorySeparatorChar, sep).TrimEnd(sep);
+
+        int separatorIndex = normalized.LastIndexOf(sep);
+        if (separatorIndex == -1)
+            return normalized.EndsWith(':') ? normalized + sep : normalized;
+
+        return normalized.Substring(separatorIndex + 1);
+    }
+
     // Normalize Rename-Item's -NewName, matching the FileSystem provider. PowerShell passes the raw
     // argument straight to RenameItem; tab completion commonly yields ".\Foo" (which would otherwise
     // be stored verbatim, so `ren .\Shared .\Shared2` would name the folder ".\Shared2"). Strip a

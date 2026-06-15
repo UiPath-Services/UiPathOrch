@@ -549,37 +549,8 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
     //      own IsValidPath internally. That path-resolution chain (Resolve-Path,
     //      relative navigation, tab completion) is what exercises this method in
     //      normal use; the -IsValid switch alone would leave it nearly dormant.
-    protected override bool IsValidPath(string path)
-    {
-        if (string.IsNullOrEmpty(path))
-        {
-            return false;
-        }
-
-        // Reduce to the Orchestrator path (drive qualifier stripped, separators
-        // normalized to '/', leading/trailing separators trimmed). An empty
-        // result is the drive root, which is a valid location.
-        string orchPath = OrchDriveInfo.PSPathToOrchPath(path);
-        if (orchPath.Length == 0)
-        {
-            return true;
-        }
-
-        // A folder name legitimately contains spaces and most punctuation, so we
-        // deliberately do not reject those. A control character, however, can
-        // never appear in a real folder name — such a path is malformed.
-        // (FileSystemProvider performs the analogous invalid-char check because
-        // .NET path APIs stopped throwing on bad characters.)
-        foreach (char c in orchPath)
-        {
-            if (char.IsControl(c))
-            {
-                return false;
-            }
-        }
-
-        return true;
-    }
+    // Shared with the DU/TM shadow providers via PathTools so the syntactic rule lives in one place.
+    protected override bool IsValidPath(string path) => PathTools.IsValidProviderPath(path);
 
     // Probably implementation complete
     // The ItemExists method does not seem to need to handle wildcards.
@@ -1284,29 +1255,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
     // drive-root leaf round-trips as a usable drive path. Every non-root case
     // produces the same result as the base (verified via Split-Path against the
     // FileSystem provider), so this override only corrects the drive-root edge.
-    protected override string GetChildName(string path)
-    {
-        if (string.IsNullOrEmpty(path))
-        {
-            throw new ArgumentException("The path cannot be null or empty.", nameof(path));
-        }
-
-        char sep = System.IO.Path.DirectorySeparatorChar;
-
-        // Normalize the alternate separator, then drop a trailing separator.
-        string normalized = path.Replace(System.IO.Path.AltDirectorySeparatorChar, sep).TrimEnd(sep);
-
-        int separatorIndex = normalized.LastIndexOf(sep);
-        if (separatorIndex == -1)
-        {
-            // No separator: a bare leaf or a drive root. Re-root a path that ends
-            // in ':' (e.g. "Orch1:" -> "Orch1:\"), matching the FileSystem
-            // provider's EnsureDriveIsRooted; leave a plain leaf unchanged.
-            return normalized.EndsWith(':') ? normalized + sep : normalized;
-        }
-
-        return normalized.Substring(separatorIndex + 1);
-    }
+    // Shared with the DU/TM shadow providers via PathTools (re-roots a bare drive for the
+    // drive-root leaf case; non-root cases match the base NavigationCmdletProvider).
+    protected override string GetChildName(string path) => PathTools.GetChildNameWithDriveRoot(path);
 
     protected override void MoveItem(string path, string destination)
     {
