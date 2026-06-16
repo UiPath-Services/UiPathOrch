@@ -517,6 +517,44 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         return retRoles;
     }
 
+    // Per-name outcome from ResolveDstDirectoryUserPure.
+    internal enum FindDstDirectoryUserResult
+    {
+        Resolved,    // exactly one matching directory object; resolved is non-null
+        NotFound,    // no matching directory object -> caller falls back to email search
+        Duplicated,  // more than one match -> ambiguous; caller emits an error and skips
+    }
+
+    // Pure destination-directory resolution extracted from CopyFolderUsers so the
+    // matching policy is unit-testable without a live OrchAPISession. The IO
+    // wrapper (CopyFolderUsers) still performs the SearchDirectory call, the
+    // "Duplicated" WriteError, the email fallback on NotFound, and the final
+    // folder assignment.
+    //
+    // searchResults is what dstDrive.SearchDirectory(searchName) returned. NOTE:
+    // SearchDirectory hits /api/DirectoryService/SearchForUsersAndGroups?prefix=,
+    // which is a PREFIX search -- the server returns every user/group whose name
+    // STARTS WITH searchName, not just exact hits. searchName is passed so the
+    // post-filter can narrow that prefix set down to the intended object.
+    internal static (DirectoryObject? resolved, FindDstDirectoryUserResult result) ResolveDstDirectoryUserPure(
+        IEnumerable<DirectoryObject>? searchResults,
+        string searchName,
+        int type)
+    {
+        var matches = (searchResults ?? Enumerable.Empty<DirectoryObject>())
+            .Where(u => u is not null && u.type == type)
+            // SearchForUsersAndGroups is a PREFIX search; the email-fallback branch
+            // and TestUserMappingCsv both narrow back to an exact identityName hit,
+            // so do the same here -- otherwise a lone prefix sibling resolves to the
+            // wrong principal, or several siblings raise a spurious "Duplicated".
+            .Where(u => string.Compare(u.identityName, searchName, StringComparison.OrdinalIgnoreCase) == 0)
+            .ToList();
+
+        if (matches.Count == 1) return (matches[0], FindDstDirectoryUserResult.Resolved);
+        if (matches.Count > 1) return (matches[0], FindDstDirectoryUserResult.Duplicated);
+        return (null, FindDstDirectoryUserResult.NotFound);
+    }
+
     internal static void CopyFolderUsers(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpUserName, List<WildcardPattern>? wpType,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
@@ -599,22 +637,22 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     }
 
                     // Need to search the directory..
-                    var resolvedUsers = dstDrive.SearchDirectory(resolvedUserName)?
-                        .Where(u => u.type == type).ToList();
+                    var (resolvedPrimary, dirResult) = ResolveDstDirectoryUserPure(
+                        dstDrive.SearchDirectory(resolvedUserName), resolvedUserName, type);
 
                     DirectoryObject resolved = null;
 
-                    if (resolvedUsers?.Count == 1)
+                    if (dirResult == FindDstDirectoryUserResult.Resolved)
                     {
-                        resolved = resolvedUsers.First();
+                        resolved = resolvedPrimary;
                     }
 
-                    else if (resolvedUsers?.Count > 1)
+                    else if (dirResult == FindDstDirectoryUserResult.Duplicated)
                     {
                         _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"Duplicated {type} found for '{userName}'."), "SearchForUsersAndGroupsError", ErrorCategory.InvalidOperation, dstDrive));
                     }
 
-                    else if (resolvedUsers is null || resolvedUsers.Count == 0)
+                    else // FindDstDirectoryUserResult.NotFound
                     {
                         // A user with the same name as the srcDrive user was not found in the dstDrive directory!
                         // So also search dstDrive using this user's email address.
@@ -1815,7 +1853,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcReleaseId, string msg)
     {
-        if (srcReleaseId is not null && srcReleaseId == 0) return null;
+        if (srcReleaseId is null || srcReleaseId == 0) return null;
 
         string target = srcFolder.GetPSPath();
         //string msg = $"Migrating process id {Path.Combine(srcFolder.GetPSPath(), srcReleaseId?.ToString() ?? "")}";
