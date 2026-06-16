@@ -2667,7 +2667,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
                 if (postingTrigger.StopProcessDate < DateTime.Now)
                 {
-                    _this.WriteWarning($"{msg}: The StopProcessDate is in the past ({postingTrigger.StopProcessDate.Value.ToLocalTime}). Remove it before copying.");
+                    _this.WriteWarning($"{msg}: The StopProcessDate is in the past ({postingTrigger.StopProcessDate.Value.ToLocalTime()}). Remove it before copying.");
                     postingTrigger.StopProcessDate = null;
                     postingTrigger.Enabled = false;
                 }
