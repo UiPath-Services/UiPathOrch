@@ -68,9 +68,13 @@ namespace UiPath.PowerShell.Core;
 //
 // Package / Process
 //   CopyPackages               per-folder + tenant packages, version-aware upload
-//   CopyProcesses              Releases, with argument values rewritten through
-//                              Bucket / Queue / CredentialStore / Asset link
-//                              redirection
+//   CopyProcesses              Releases. Per-process id redirection: EntryPointId is
+//                              remapped across feeds via PackageEntryPoints (matched by
+//                              entry-point Path), and RetentionBucketId via FindDstBucket.
+//                              InputArguments (plain workflow input values) are copied
+//                              verbatim; Arguments metadata is reset (the server re-derives
+//                              it from the package); ResourceOverwrites is reset (it is a
+//                              job-execution override, never persisted on a Release).
 //
 // Asset
 //   LinkAsset                  short-circuit: link to an existing dst asset
@@ -1088,7 +1092,9 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         var dstEntryPoints = dstDrive.PackageEntryPoints.Get((dstFeedId ?? "", srcRelease.ProcessKey!, srcRelease.ProcessVersion!)).ToList();
 
                         var srcEntryPoint = srcEntryPoints.FirstOrDefault(e => e.Id == srcRelease.EntryPointId);
-                        var dstEntryPoint = dstEntryPoints.FirstOrDefault(e => e.Path == srcEntryPoint!.Path);
+                        // Match by entry-point Path, case-insensitively to stay consistent
+                        // with the OrdinalIgnoreCase policy of the FindDst* family.
+                        var dstEntryPoint = dstEntryPoints.FirstOrDefault(e => string.Equals(e.Path, srcEntryPoint!.Path, StringComparison.OrdinalIgnoreCase));
 
                         srcRelease.EntryPointId = dstEntryPoint?.Id;
                     }
