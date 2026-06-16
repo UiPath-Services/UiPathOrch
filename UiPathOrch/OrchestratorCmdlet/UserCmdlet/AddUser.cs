@@ -13,8 +13,6 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.User))]
 public class AddUserCmdlet : OrchestratorPSCmdlet
 {
-    internal const int AutoType = -1;
-
     // Needed for case-insensitive comparison of UserName
     // Should this be moved to OrchComparer.cs?
     internal class CsvLineComparer : IEqualityComparer<(OrchDriveInfo drive, int type, string userName, string? domain)>
@@ -236,60 +234,35 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
     internal static int[] ResolveSpecifiedTypes(IEnumerable<string?>? type)
     {
         var wpType = type.ConvertToWildcardPatternList();
-        if (wpType is null || wpType.Count == 0)
-        {
-            return Types.Keys.ToArray();
-        }
-
         return Types.SelectByWildcards(t => t.Value, wpType).Select(t => t.Key).ToArray();
     }
 
-    internal static DirectoryObject? CreateLocalUserDirectoryObject(PmGroupMember? user)
+    internal static string ConvertToKind(string type)
     {
-        if (user is null ||
-            !string.Equals(user.objectType, "DirectoryUser", StringComparison.OrdinalIgnoreCase) ||
-            !string.Equals(user.source, "local", StringComparison.OrdinalIgnoreCase) ||
-            string.IsNullOrEmpty(user.identifier))
+        return type switch
+        {
+            "DirectoryUser" => "User",
+            "DirectoryGroup" => "Group",
+            "DirectoryExternalApplication" => "Application",
+            _ => type
+        };
+    }
+
+    internal static DirectoryObject? CreateDirectoryObject(PmGroupMember? member, int type)
+    {
+        if (member is null || string.IsNullOrEmpty(member.identifier))
         {
             return null;
         }
 
         return new DirectoryObject()
         {
-            type = 0,
-            source = user.source,
-            domain = "autogen",
-            identifier = user.identifier,
-            identityName = user.name,
-            displayName = user.displayName
+            type = type,
+            source = member.source,
+            identifier = member.identifier,
+            identityName = member.name ?? member.email ?? member.displayName,
+            displayName = member.displayName
         };
-    }
-
-    internal static DirectoryObject? CreateLocalUserDirectoryObject(PmDirectoryEntityInfo? user)
-    {
-        if (user is null ||
-            !string.Equals(user.objectType, "DirectoryUser", StringComparison.OrdinalIgnoreCase) ||
-            !string.Equals(user.source, "local", StringComparison.OrdinalIgnoreCase) ||
-            string.IsNullOrEmpty(user.identifier))
-        {
-            return null;
-        }
-
-        return new DirectoryObject()
-        {
-            type = 0,
-            source = user.source,
-            domain = "autogen",
-            identifier = user.identifier,
-            identityName = user.identityName,
-            displayName = user.displayName
-        };
-    }
-
-    internal static bool IsLocalUserDomain(string? domain)
-    {
-        return string.IsNullOrWhiteSpace(domain) ||
-            string.Equals(domain, "autogen", StringComparison.OrdinalIgnoreCase);
     }
 
     internal static string ResolvePostingDomain(string? explicitDomain, string? resolvedDomain)
@@ -502,9 +475,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
         Roles = Roles.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();
 
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
-        var specifiedTypes = Type is null || Type.Length == 0
-            ? [AutoType]
-            : ResolveSpecifiedTypes(Type);
+        var specifiedTypes = ResolveSpecifiedTypes(Type);
 
         foreach (var drive in drives)
         {
@@ -603,122 +574,25 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
         return false;
     }
 
-    private DirectoryObject? ResolveLocalDirectoryUser(OrchDriveInfo drive, string userName)
-    {
-        try
-        {
-            var resolvedUser = drive.PmBulkResolveByName("user", [userName], u => u).FirstOrDefault().Value;
-            var localUser = CreateLocalUserDirectoryObject(resolvedUser);
-            if (localUser is not null)
-            {
-                return localUser;
-            }
-        }
-        catch
-        {
-            // Fall through to the searchable identity directory and then the
-            // legacy Orchestrator directory service. Some older deployments lack
-            // BulkResolveByName for a principal even when Search can still find it.
-        }
-
-        try
-        {
-            var matches = drive.SearchPmDirectoryCache.Get(userName.ToLowerInvariant())?
-                .Select(CreateLocalUserDirectoryObject)
-                .Where(u => u is not null)
-                .Select(u => u!)
-                .Where(u =>
-                    string.Equals(u.identityName, userName, StringComparison.OrdinalIgnoreCase))
-                .ToList() ?? [];
-
-            if (matches.Count == 1)
-            {
-                return matches[0];
-            }
-            if (matches.Count > 1)
-            {
-                WriteError(new ErrorRecord(
-                    new OrchException(drive.NameColonSeparator, $"Duplicated local users found for '{userName}'."),
-                    "SearchForUsersAndGroupsError",
-                    ErrorCategory.InvalidOperation,
-                    drive));
-                return null;
-            }
-        }
-        catch
-        {
-            // Keep DirectoryService as a compatibility fallback.
-        }
-
-        return null;
-    }
-
     private DirectoryObject? ResolveAddUserDirectoryObject(OrchDriveInfo drive, string userName, int type, string? domain)
     {
-        return type == 0 && IsLocalUserDomain(domain)
-            ? ResolveLocalDirectoryUser(drive, userName) ?? ResolveDirectoryName(this, drive, userName, type, domain)
-            : ResolveDirectoryName(this, drive, userName, type, domain);
-    }
-
-    private List<DirectoryObject> ResolveAutoAddUserDirectoryObjects(OrchDriveInfo drive, string userName, string? domain)
-    {
-        List<DirectoryObject> users = [];
-
-        try
+        if (type == 3)
         {
-            var localUser = IsLocalUserDomain(domain) ? ResolveLocalDirectoryUser(drive, userName) : null;
-            if (localUser is not null)
-            {
-                users.Add(localUser);
-            }
-
-            var localUserIdentifier = localUser?.identifier;
-            var localUserIdentityName = localUser?.identityName;
-            var searchedUsers = drive.SearchDirectory(userName, domain)
-                .Where(u => u.type is int t && Types.ContainsKey(t))
-                .Where(u =>
-                    localUser is null ||
-                    !(
-                        u.type == 0 &&
-                        (string.Equals(u.identifier, localUserIdentifier, StringComparison.OrdinalIgnoreCase) ||
-                         string.Equals(u.identityName, localUserIdentityName, StringComparison.OrdinalIgnoreCase))
-                    ))
-                .GroupBy(u => u.type!.Value)
-                .ToList();
-
-            foreach (var group in searchedUsers)
-            {
-                var matches = group.ToList();
-                if (matches.Count == 1)
-                {
-                    users.Add(matches[0]);
-                }
-                else if (matches.Count > 1)
-                {
-                    WriteError(new ErrorRecord(
-                        new OrchException(drive.NameColonSeparator, $"Duplicated {Types[group.Key]} entries found for '{userName}'."),
-                        "SearchForUsersAndGroupsError",
-                        ErrorCategory.InvalidOperation,
-                        drive));
-                }
-            }
-        }
-        catch (Exception ex)
-        {
-            string t = drive.NameColonSeparator + userName;
-            WriteError(new ErrorRecord(new OrchException(t, "Failed to search directory", ex), "SearchDirectoryError", ErrorCategory.InvalidOperation, drive));
+            return ResolveDirectoryName(this, drive, userName, type, domain);
         }
 
-        if (users.Count == 0)
+        var kind = ConvertToKind(Types[type]);
+        var resolvedMember = drive.PmBulkResolveByName(kind, [userName], u => u).FirstOrDefault().Value;
+        var user = CreateDirectoryObject(resolvedMember, type);
+        if (user is null)
         {
             WriteError(new ErrorRecord(
-                new OrchException(drive.NameColonSeparator, $"No users, groups, robots, or applications found for '{userName}'."),
+                new OrchException(drive.NameColonSeparator, $"{Types[type]} '{userName}' was not found."),
                 "SearchForUsersAndGroupsError",
                 ErrorCategory.InvalidOperation,
                 drive));
         }
-
-        return users;
+        return user;
     }
 
     protected override void EndProcessing()
@@ -749,21 +623,10 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
 
             //var existingUsers = drive.Users.Get();
 
-            List<DirectoryObject> users = [];
+            DirectoryObject? user = null;
             try
             {
-                if (type == AutoType)
-                {
-                    users = ResolveAutoAddUserDirectoryObjects(drive, userName, domain);
-                }
-                else
-                {
-                    var resolvedUser = ResolveAddUserDirectoryObject(drive, userName, type, domain);
-                    if (resolvedUser is not null)
-                    {
-                        users.Add(resolvedUser);
-                    }
-                }
+                user = ResolveAddUserDirectoryObject(drive, userName, type, domain);
             }
             catch (Exception ex)
             {
@@ -771,7 +634,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
                 WriteError(new ErrorRecord(new OrchException(t, "Failed to search directory", ex), "SearchDirectoryError", ErrorCategory.InvalidOperation, drive));
                 continue;
             }
-            if (users.Count == 0)
+            if (user is null)
             {
                 // Ensure the progress bar advances even when the user is not found
                 reporter.WriteProgress(++index, System.IO.Path.Combine(drive.NameColonSeparator, userName));
@@ -782,8 +645,6 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
 
             reporter.WriteProgress(++index, System.IO.Path.Combine(drive.NameColonSeparator, userName));
 
-            foreach (var user in users)
-            {
                 var resolvedType = user.type ?? 0;
 
                 string target = System.IO.Path.Combine(drive.NameColonSeparator, user.identityName ?? user.identifier!);
@@ -984,7 +845,6 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
                 {
                     WriteError(new ErrorRecord(new OrchException(target, ex), "AddUserError", ErrorCategory.InvalidOperation, drive));
                 }
-            }
         }
     }
 }
