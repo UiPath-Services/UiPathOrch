@@ -1092,9 +1092,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         var dstEntryPoints = dstDrive.PackageEntryPoints.Get((dstFeedId ?? "", srcRelease.ProcessKey!, srcRelease.ProcessVersion!)).ToList();
 
                         var srcEntryPoint = srcEntryPoints.FirstOrDefault(e => e.Id == srcRelease.EntryPointId);
-                        // Match by entry-point Path, case-insensitively to stay consistent
-                        // with the OrdinalIgnoreCase policy of the FindDst* family.
-                        var dstEntryPoint = dstEntryPoints.FirstOrDefault(e => string.Equals(e.Path, srcEntryPoint!.Path, StringComparison.OrdinalIgnoreCase));
+                        var dstEntryPoint = ResolveDstEntryPointByPath(dstEntryPoints, srcEntryPoint!.Path);
 
                         srcRelease.EntryPointId = dstEntryPoint?.Id;
                     }
@@ -1376,6 +1374,16 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         if (candidates is null || string.IsNullOrEmpty(srcName)) return null;
         return candidates.FirstOrDefault(c => c is not null && string.Equals(nameOf(c), srcName, comparison));
     }
+
+    // Resolve the destination package entry point whose Path matches srcPath. Named
+    // wrapper over ResolveDstByName so the entry-point match shares the family's
+    // OrdinalIgnoreCase policy. CopyProcesses uses this to remap a Release's
+    // EntryPointId across feeds; the original inline '==' was case-sensitive and
+    // silently dropped the EntryPointId when a dst feed exposed the same entry point
+    // under a different case (e.g. "Main.xaml" vs "main.xaml").
+    internal static PackageEntryPoint? ResolveDstEntryPointByPath(
+        IEnumerable<PackageEntryPoint>? dstEntryPoints, string? srcPath)
+        => ResolveDstByName(dstEntryPoints, srcPath, e => e.Path);
 
     // Result of FindDstUser's pure-logic resolver (see ResolveDstUserPure).
     // Lets the IO wrapper emit the right warning per case without re-checking.
