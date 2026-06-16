@@ -1396,6 +1396,40 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         IEnumerable<PackageEntryPoint>? dstEntryPoints, string? srcPath)
         => ResolveDstByName(dstEntryPoints, srcPath, e => e.Path);
 
+    // Per-step outcome of ResolveDstByIdThenName.
+    internal enum FindDstByNameResult
+    {
+        NullOrZeroId,   // srcId is null or 0 -> caller returns null silently
+        SrcNotFound,    // no src entity carries srcId
+        DstNotFound,    // src found, but no dst entity shares its name
+        Resolved,       // matched; dst is non-null
+    }
+
+    // Pure decision core shared by the simple name-based FindDst* wrappers
+    // (FindDstBucket / FindDstQueue / FindDstRelease / FindDstMachine /
+    // FindDstCalendar / FindDstCredentialStore / FindDstTestSet): guard the id,
+    // look the src entity up by id, then match a dst entity by name (case-
+    // insensitive, via ResolveDstByName). The IO wrappers still own how each
+    // result maps to WriteWarning / WriteError + the per-entity message, so this
+    // extraction does not change their output. FindDstTestCase is intentionally
+    // NOT covered — it matches on a compound (PackageIdentifier, Name) key.
+    internal static (TDst? dst, FindDstByNameResult result) ResolveDstByIdThenName<TSrc, TDst>(
+        IEnumerable<TSrc>? srcEntities, long? srcId, Func<TSrc, long?> srcIdOf,
+        IEnumerable<TDst>? dstEntities, Func<TSrc, string?> srcNameOf, Func<TDst, string?> dstNameOf)
+        where TSrc : class
+        where TDst : class
+    {
+        if (srcId is null || srcId == 0) return (null, FindDstByNameResult.NullOrZeroId);
+
+        var src = srcEntities?.FirstOrDefault(e => e is not null && srcIdOf(e) == srcId);
+        if (src is null) return (null, FindDstByNameResult.SrcNotFound);
+
+        var dst = ResolveDstByName(dstEntities, srcNameOf(src), dstNameOf);
+        if (dst is null) return (null, FindDstByNameResult.DstNotFound);
+
+        return (dst, FindDstByNameResult.Resolved);
+    }
+
     // Result of FindDstUser's pure-logic resolver (see ResolveDstUserPure).
     // Lets the IO wrapper emit the right warning per case without re-checking.
     internal enum FindDstUserResult
