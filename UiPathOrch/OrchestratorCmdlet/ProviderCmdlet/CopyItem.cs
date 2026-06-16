@@ -2401,9 +2401,19 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         srcQueue.ReleaseId, msg)?.Id;
                 }
 
-                // TODO: I don't think ProcessScheduleId is being copied properly?
-                // It seems like a value that needs to be migrated from somewhere.
-                // Verify with Get-OrchQueue -Recurse | select name,ProcessScheduleId
+                // ProcessScheduleId is the queue's server-managed back-reference to its
+                // queue trigger. CreateQueue ignores a client-supplied value: verified by
+                // POSTing /odata/QueueDefinitions with ProcessScheduleId set to a
+                // non-existent id and to an id already bound to another queue — the created
+                // queue came back with it null both times (there is no "free, assignable"
+                // schedule id to test with, since a ProcessScheduleId only ever exists as a
+                // trigger's reference to its own queue). The server sets it when a queue
+                // trigger targeting this queue is created. So copying the src value here is
+                // a harmless no-op, order-independent: the dst queue gets its real
+                // ProcessScheduleId when the queue trigger is copied — by CopyTriggers in
+                // the Copy-Item flow, or by a later standalone Copy-OrchTrigger. Copying a
+                // queue trigger before its queue is handled gracefully (FindDstQueue skips
+                // it with a warning), so neither order corrupts the relationship.
                 postingQueue = new QueueDefinition()
                 {
                     Name = srcQueue.Name,
