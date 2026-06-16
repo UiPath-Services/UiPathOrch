@@ -1092,9 +1092,20 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                         var dstEntryPoints = dstDrive.PackageEntryPoints.Get((dstFeedId ?? "", srcRelease.ProcessKey!, srcRelease.ProcessVersion!)).ToList();
 
                         var srcEntryPoint = srcEntryPoints.FirstOrDefault(e => e.Id == srcRelease.EntryPointId);
-                        var dstEntryPoint = ResolveDstEntryPointByPath(dstEntryPoints, srcEntryPoint!.Path);
-
-                        srcRelease.EntryPointId = dstEntryPoint?.Id;
+                        if (srcEntryPoint is null)
+                        {
+                            // The release references an entry point that isn't in the package's
+                            // entry-point list (e.g. removed in a repackage). We can't remap it,
+                            // so null it — posting the src id into the dst tenant would be wrong —
+                            // and warn instead of letting the old 'srcEntryPoint!' throw an NRE.
+                            _this.WriteWarning($"{msg}: source entry point id {srcRelease.EntryPointId} not found in package '{srcRelease.ProcessKey} {srcRelease.ProcessVersion}'; copying the process without an entry point.");
+                            srcRelease.EntryPointId = null;
+                        }
+                        else
+                        {
+                            var dstEntryPoint = ResolveDstEntryPointByPath(dstEntryPoints, srcEntryPoint.Path);
+                            srcRelease.EntryPointId = dstEntryPoint?.Id;
+                        }
                     }
                 }
                 catch (Exception ex)
