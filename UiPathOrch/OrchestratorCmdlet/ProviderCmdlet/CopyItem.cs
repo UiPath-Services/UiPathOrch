@@ -425,102 +425,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         return newFolder;
     }
 
-    // Per-src-role resolution outcome from ResolveDstRolesPure.
-    internal enum FindDstRoleResult
-    {
-        Resolved,                       // matched a dst folder-scope role; Id appended to result list
-        SkippedAsInherited,             // src role marked Origin = "Inherited" -> caller skips silently
-        SkippedAsTenantRole,            // matched but dst role's Type == "Tenant" -> excluded from folder roles
-        NotFoundInDstTenant,            // no dst role with matching Id (same-drive) or Name (cross-drive)
-    }
-
-    internal sealed record FindDstRoleEntry(SimpleRole SrcRole, Role? DstRole, FindDstRoleResult Result);
-
-    // Pure version of FindDstRoles. Caller supplies the dst tenant role list
-    // (fetched and possibly null-checked outside) so the matching policy is
-    // exercisable without standing up a real OrchDriveInfo.
-    //
-    // Policy (preserved verbatim):
-    //   - srcRoles with Origin == "Inherited" are silently skipped.
-    //   - When isSameDrive, match by Id (safer for renamed roles).
-    //   - When cross-drive, match by Name (case-insensitive).
-    //   - A matched dst role with Type == "Tenant" is intentionally NOT
-    //     added to the returned folder-role-id list -- tenant roles are
-    //     surfaced in classic-folder user payloads but cannot legally be
-    //     assigned as folder-scope roles.
-    internal static List<FindDstRoleEntry> ResolveDstRolesPure(
-        IEnumerable<SimpleRole> srcRoles,
-        IEnumerable<Role> dstTenantRoles,
-        bool isSameDrive)
-    {
-        var entries = new List<FindDstRoleEntry>();
-        var dstList = dstTenantRoles.ToList();
-
-        foreach (var sr in srcRoles)
-        {
-            if (sr.Origin == "Inherited")
-            {
-                entries.Add(new FindDstRoleEntry(sr, null, FindDstRoleResult.SkippedAsInherited));
-                continue;
-            }
-
-            Role? matched = isSameDrive
-                ? dstList.FirstOrDefault(r => r.Id == sr.Id)
-                : dstList.FirstOrDefault(r => string.Equals(r.Name, sr.Name, StringComparison.OrdinalIgnoreCase));
-
-            if (matched is null)
-            {
-                entries.Add(new FindDstRoleEntry(sr, null, FindDstRoleResult.NotFoundInDstTenant));
-                continue;
-            }
-
-            if (matched.Type == "Tenant")
-            {
-                entries.Add(new FindDstRoleEntry(sr, matched, FindDstRoleResult.SkippedAsTenantRole));
-                continue;
-            }
-
-            entries.Add(new FindDstRoleEntry(sr, matched, FindDstRoleResult.Resolved));
-        }
-        return entries;
-    }
-
-    internal static List<Int64>? FindDstRoles(IWritableHost _this,
-        OrchDriveInfo srcDrive, IEnumerable<SimpleRole> srcRoleIds,
-        OrchDriveInfo dstDrive, string msg)
-    {
-        if (srcRoleIds is null || !srcRoleIds.Any()) return null;
-
-        ICollection<Role> dstTenantRoles = null;
-        try
-        {
-            dstTenantRoles = dstDrive.Roles.Get();
-        }
-        catch (Exception ex)
-        {
-            _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, msg, ex), "MigrateRoleIdError", ErrorCategory.InvalidOperation, dstDrive));
-            return null;
-        }
-
-        var entries = ResolveDstRolesPure(srcRoleIds, dstTenantRoles, isSameDrive: srcDrive == dstDrive);
-
-        var retRoles = new List<Int64>();
-        foreach (var entry in entries)
-        {
-            switch (entry.Result)
-            {
-                case FindDstRoleResult.NotFoundInDstTenant:
-                    _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have role with Name = '{entry.SrcRole.Name}'.");
-                    break;
-                case FindDstRoleResult.Resolved:
-                    retRoles.Add(entry.DstRole!.Id ?? 0);
-                    break;
-                    // SkippedAsInherited / SkippedAsTenantRole: silent (preserved from original).
-            }
-        }
-        return retRoles;
-    }
-
     // Per-name outcome from ResolveDstDirectoryUserPure.
     internal enum FindDstDirectoryUserResult
     {
@@ -970,38 +874,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     }
 
 
-    // action should be like "Copy Process"
-    internal static Bucket? FindDstBucket(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, Int64? srcBucketId,
-        OrchDriveInfo dstDrive, Folder newFolder, string action, string msg)
-    {
-        if (srcBucketId is null || srcBucketId == 0) return null;
-
-        var srcBuckets = srcDrive.Buckets.Get(srcFolder);
-        var srcBucket = srcBuckets.FirstOrDefault(b => b.Id == srcBucketId);
-        if (srcBucket is null)
-        {
-            _this.WriteWarning($"{msg}: {srcDrive.NameColonSeparator} does not have the bucket with Id = {srcBucketId}.");
-            return null;
-        }
-
-        var dstBuckets = dstDrive.Buckets.Get(newFolder);
-        // Case-insensitive name match. The Orchestrator server rejects
-        // bucket creation with "The name <X> is already used" when a same-
-        // name bucket exists in any case, so name uniqueness IS case-
-        // insensitive at the API level. The original '==' comparison was
-        // case-sensitive, would miss a dst bucket whose name differed
-        // only in case, and would then trigger that server-side rejection
-        // -- the latent symptom was "Copy-Item fails with already-used".
-        var dstBucket = ResolveDstByName(dstBuckets, srcBucket.Name, b => b.Name);
-        if (dstBucket is null)
-        {
-            _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have the bucket with Name = '{srcBucket.Name}'.");
-            return null;
-        }
-        return dstBucket;
-    }
-
     internal static void CopyProcesses(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
@@ -1272,6 +1144,447 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
     }
 
+    // =====================================================================
+    // Destination resolution
+    // ---------------------------------------------------------------------
+    // Given a src entity, find its counterpart in the dst tenant/folder.
+    // First the shared resolvers and ResolveDstByIdThenName, immediately
+    // followed by the simple FindDst* that route their decision through it
+    // (Bucket / Machine / Queue / Release / Calendar / CredentialStore /
+    // TestSet). Below the divider are the remaining FindDst* that each carry
+    // their own resolution core (Roles / User / Session), compound match
+    // (TestCase / PmGroups), or link-FQN math (Folders).
+    // =====================================================================
+
+    // Generic name-match resolver used by the simple FindDst* methods
+    // (FindDstRobot / FindDstMachine / FindDstQueue / FindDstRelease /
+    // FindDstCalendar / FindDstCredentialStore / FindDstBucket /
+    // FindDstTestSet).
+    //
+    // All current callers use the default StringComparison.OrdinalIgnoreCase
+    // -- every entity kind the Orchestrator UI treats by name does so
+    // case-insensitively, and same-name uniqueness on the server side is
+    // case-insensitive too (creation with a differently-cased name fails
+    // with "name already used"). The Ordinal overload is retained for any
+    // future caller that has a legitimate case-sensitive need.
+    internal static T? ResolveDstByName<T>(
+        IEnumerable<T>? candidates,
+        string? srcName,
+        Func<T, string?> nameOf,
+        StringComparison comparison = StringComparison.OrdinalIgnoreCase)
+        where T : class
+    {
+        if (candidates is null || string.IsNullOrEmpty(srcName)) return null;
+        return candidates.FirstOrDefault(c => c is not null && string.Equals(nameOf(c), srcName, comparison));
+    }
+
+    // Resolve the destination package entry point whose Path matches srcPath. Named
+    // wrapper over ResolveDstByName so the entry-point match shares the family's
+    // OrdinalIgnoreCase policy. CopyProcesses uses this to remap a Release's
+    // EntryPointId across feeds; the original inline '==' was case-sensitive and
+    // silently dropped the EntryPointId when a dst feed exposed the same entry point
+    // under a different case (e.g. "Main.xaml" vs "main.xaml").
+    internal static PackageEntryPoint? ResolveDstEntryPointByPath(
+        IEnumerable<PackageEntryPoint>? dstEntryPoints, string? srcPath)
+        => ResolveDstByName(dstEntryPoints, srcPath, e => e.Path);
+
+    // Per-step outcome of ResolveDstByIdThenName.
+    internal enum FindDstByNameResult
+    {
+        NullOrZeroId,   // srcId is null or 0 -> caller returns null silently
+        SrcNotFound,    // no src entity carries srcId
+        DstNotFound,    // src found, but no dst entity shares its name
+        Resolved,       // matched; dst is non-null
+    }
+
+    // Pure decision core shared by the simple name-based FindDst* wrappers
+    // (FindDstBucket / FindDstQueue / FindDstRelease / FindDstMachine /
+    // FindDstCalendar / FindDstCredentialStore / FindDstTestSet): guard the id,
+    // look the src entity up by id, then match a dst entity by name (case-
+    // insensitive, via ResolveDstByName). The IO wrappers still own how each
+    // result maps to WriteWarning / WriteError + the per-entity message, so this
+    // extraction does not change their output. FindDstTestCase is intentionally
+    // NOT covered — it matches on a compound (PackageIdentifier, Name) key.
+    // Returns the matched src entity too (on DstNotFound / Resolved) so the IO
+    // wrapper can name it in its "dst does not have ... '<name>'" message.
+    internal static (TDst? dst, TSrc? src, FindDstByNameResult result) ResolveDstByIdThenName<TSrc, TDst>(
+        IEnumerable<TSrc>? srcEntities, long? srcId, Func<TSrc, long?> srcIdOf,
+        IEnumerable<TDst>? dstEntities, Func<TSrc, string?> srcNameOf, Func<TDst, string?> dstNameOf)
+        where TSrc : class
+        where TDst : class
+    {
+        if (srcId is null || srcId == 0) return (null, null, FindDstByNameResult.NullOrZeroId);
+
+        var src = srcEntities?.FirstOrDefault(e => e is not null && srcIdOf(e) == srcId);
+        if (src is null) return (null, null, FindDstByNameResult.SrcNotFound);
+
+        var dst = ResolveDstByName(dstEntities, srcNameOf(src), dstNameOf);
+        if (dst is null) return (null, src, FindDstByNameResult.DstNotFound);
+
+        return (dst, src, FindDstByNameResult.Resolved);
+    }
+
+    // action should be like "Copy Process"
+    internal static Bucket? FindDstBucket(IWritableHost _this,
+        OrchDriveInfo srcDrive, Folder srcFolder, Int64? srcBucketId,
+        OrchDriveInfo dstDrive, Folder newFolder, string action, string msg)
+    {
+        if (srcBucketId is null || srcBucketId == 0) return null; // skip the fetches when there's no id
+
+        var (dstBucket, srcBucket, result) = ResolveDstByIdThenName(
+            srcDrive.Buckets.Get(srcFolder), srcBucketId, b => b.Id,
+            dstDrive.Buckets.Get(newFolder), b => b.Name, b => b.Name);
+        switch (result)
+        {
+            case FindDstByNameResult.SrcNotFound:
+                _this.WriteWarning($"{msg}: {srcDrive.NameColonSeparator} does not have the bucket with Id = {srcBucketId}.");
+                return null;
+            case FindDstByNameResult.DstNotFound:
+                _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have the bucket with Name = '{srcBucket!.Name}'.");
+                return null;
+        }
+        return dstBucket;
+    }
+
+    internal static MachineFolder? FindDstMachine(IWritableHost _this,
+        OrchDriveInfo srcDrive, Folder srcFolder,
+        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcMachineId, string msg)
+    {
+        if (srcMachineId is null || srcMachineId == 0) return null; // skip the fetches when there's no id
+
+        try
+        {
+            var (dstMachineFolder, srcMachine, result) = ResolveDstByIdThenName(
+                srcDrive.Machines.Get(), srcMachineId, m => m.Id,
+                dstDrive.FolderMachinesAssigned.Get(dstFolder), m => m.Name, m => m.Name);
+            switch (result)
+            {
+                case FindDstByNameResult.SrcNotFound:
+                    _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have machine with Id = {srcMachineId}.");
+                    return null;
+                case FindDstByNameResult.DstNotFound:
+                    _this.WriteWarning($"{msg}: A machine with the name '{srcMachine!.Name}' is not assigned in '{dstFolder.GetPSPath()}'.");
+                    return null;
+            }
+            return dstMachineFolder;
+        }
+        catch (Exception ex)
+        {
+            string target = dstFolder.GetPSPath();
+            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateMachineIdError", ErrorCategory.InvalidOperation, target));
+            return null;
+        }
+    }
+
+    internal static QueueDefinition? FindDstQueue(IWritableHost _this,
+        OrchDriveInfo srcDrive, Folder srcFolder,
+        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcQueueId, string msg)
+    {
+        if (srcQueueId is null || srcQueueId.Value == 0) return null;
+
+        // Considering that cmdlets may be executed consecutively in a script,
+        // we shouldn't have been clearing the cache each time..
+        // Comment out the below.
+
+        // Clear this folder's cache so we can copy the latest state
+        //srcDrive._dicQueueDefinitions?.TryRemove(srcFolder.Id ?? 0, out var _);
+
+        IEnumerable<QueueDefinition>? srcQueues, dstQueues;
+        try
+        {
+            srcQueues = srcDrive.Queues.Get(srcFolder);
+        }
+        catch (Exception ex)
+        {
+            string target = srcFolder.GetPSPath();
+            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateQueueIdError", ErrorCategory.InvalidOperation, target));
+            return null;
+        }
+        try
+        {
+            dstQueues = dstDrive.Queues.Get(dstFolder);
+        }
+        catch (Exception ex)
+        {
+            string target = dstFolder.GetPSPath();
+            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateQueueIdError", ErrorCategory.InvalidOperation, target));
+            return null;
+        }
+
+        var (dstQueue, srcQueue, result) = ResolveDstByIdThenName(
+            srcQueues, srcQueueId, q => q.Id, dstQueues, q => q.Name, q => q.Name);
+        switch (result)
+        {
+            // Normalized to a warning to match the rest of the FindDst* family —
+            // only FindDstQueue used WriteError for src-not-found (accidental).
+            case FindDstByNameResult.SrcNotFound:
+                _this.WriteWarning($"{msg}: {srcFolder.GetPSPath()} does not have queue with Id = {srcQueueId}.");
+                return null;
+            case FindDstByNameResult.DstNotFound:
+                _this.WriteWarning($"{msg}: {dstFolder.GetPSPath()} does not have queue with Name = '{srcQueue!.Name}'.");
+                return null;
+        }
+        return dstQueue;
+    }
+
+    internal static Release? FindDstRelease(IWritableHost _this,
+        OrchDriveInfo srcDrive, Folder srcFolder,
+        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcReleaseId, string msg)
+    {
+        if (srcReleaseId is null || srcReleaseId == 0) return null;
+
+        IEnumerable<Release>? srcReleases, dstReleases;
+        try
+        {
+            srcReleases = srcDrive.Releases.Get(srcFolder);
+        }
+        catch (Exception ex)
+        {
+            string target = srcFolder.GetPSPath();
+            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateProcessIdError", ErrorCategory.InvalidOperation, target));
+            return null;
+        }
+        try
+        {
+            dstReleases = dstDrive.Releases.Get(dstFolder);
+        }
+        catch (Exception ex)
+        {
+            string target = dstFolder.GetPSPath();
+            _this.WriteError(new ErrorRecord(
+                new OrchException(target, $"{msg}: Failed to get processes from {dstFolder.GetPSPath()}", ex),
+                "MigrateProcessIdError", ErrorCategory.InvalidOperation, target));
+            return null;
+        }
+
+        var (dstRelease, srcRelease, result) = ResolveDstByIdThenName(
+            srcReleases, srcReleaseId, r => r.Id, dstReleases, r => r.Name, r => r.Name);
+        switch (result)
+        {
+            case FindDstByNameResult.SrcNotFound:
+                _this.WriteWarning($"{msg}: The process id {srcReleaseId} not found in '{srcFolder.GetPSPath()}'.");
+                return null;
+            case FindDstByNameResult.DstNotFound:
+                _this.WriteWarning($"{msg}: {dstFolder.GetPSPath()} does not have process with Name = '{srcRelease!.Name}'.");
+                return null;
+        }
+        return dstRelease;
+    }
+
+    internal static ExtendedCalendar? FindDstCalendar(IWritableHost _this,
+        OrchDriveInfo srcDrive, OrchDriveInfo dstDrive, Int64? srcCalendarId, string msg)
+    {
+        if (srcCalendarId is null || srcCalendarId == 0) return null;
+
+        // Calendars are tenant-level. Only the dst fetch is wrapped (preserving the
+        // original asymmetry — a src-side failure propagates to the caller).
+        IEnumerable<ExtendedCalendar>? dstCalendars;
+        try
+        {
+            dstCalendars = dstDrive.Calendars.Get();
+        }
+        catch (Exception ex)
+        {
+            _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, msg, ex), "MigrateCalendarIdError", ErrorCategory.InvalidOperation, dstDrive));
+            return null;
+        }
+
+        var (dstCalendar, srcCalendar, result) = ResolveDstByIdThenName(
+            srcDrive.Calendars.Get(), srcCalendarId, c => c.Id, dstCalendars, c => c.Name, c => c.Name);
+        switch (result)
+        {
+            case FindDstByNameResult.SrcNotFound:
+                _this.WriteWarning($"{msg}: {srcDrive.NameColonSeparator} doesn't have calendar with Id = {srcCalendarId}.");
+                return null;
+            case FindDstByNameResult.DstNotFound:
+                _this.WriteWarning($"{msg}: Calendar with name '{srcCalendar!.Name}' does not exist in '{dstDrive.NameColonSeparator}'.");
+                return null;
+        }
+        return dstCalendar;
+    }
+
+    internal static CredentialStore? FindDstCredentialStore(IWritableHost _this,
+        OrchDriveInfo srcDrive,
+        OrchDriveInfo dstDrive, Folder newFolder, Int64? srcCredentialStoreId, string msg)
+    {
+        if (srcCredentialStoreId is null || srcCredentialStoreId.Value == 0) return null; // skip the fetches when there's no id
+
+        try
+        {
+            var (dstCredentialStore, srcCredentialStore, result) = ResolveDstByIdThenName(
+                srcDrive.CredentialStores.Get(), srcCredentialStoreId, cs => cs.Id,
+                dstDrive.CredentialStores.Get(), cs => cs.Name, cs => cs.Name);
+            switch (result)
+            {
+                case FindDstByNameResult.SrcNotFound:
+                    _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have credential store with Id = {srcCredentialStoreId}.");
+                    return null;
+                case FindDstByNameResult.DstNotFound:
+                    _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have credential store with Name = '{srcCredentialStore!.Name}'.");
+                    return null;
+            }
+            return dstCredentialStore;
+        }
+        catch (Exception ex)
+        {
+            string target = newFolder.GetPSPath();
+            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateCredentialStoreIdError", ErrorCategory.InvalidOperation, target));
+            return null;
+        }
+    }
+
+    internal static TestSet? FindDstTestSet(IWritableHost _this,
+            OrchDriveInfo srcDrive, Folder srcFolder, Int64? srcTestSetId,
+            OrchDriveInfo dstDrive, Folder newFolder, string msg)
+    {
+        if (srcTestSetId is null || srcTestSetId == 0) return null; // skip the fetches when there's no id
+
+        var (dstTestSet, srcTestSet, result) = ResolveDstByIdThenName(
+            srcDrive.TestSets.Get(srcFolder), srcTestSetId, ts => ts.Id,
+            dstDrive.TestSets.Get(newFolder), ts => ts.Name, ts => ts.Name);
+        switch (result)
+        {
+            case FindDstByNameResult.SrcNotFound:
+                _this.WriteWarning($"{msg}: {srcFolder.GetPSPath()} does not have test set with Id = {srcTestSetId}.");
+                return null;
+            case FindDstByNameResult.DstNotFound:
+                _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have test set with Name = '{srcTestSet!.Name}'.");
+                return null;
+        }
+        return dstTestSet;
+    }
+
+    // ---------------------------------------------------------------------
+    // Other FindDst* — not callers of ResolveDstByIdThenName: each has its
+    // own resolution core / compound match / FQN math.
+    // ---------------------------------------------------------------------
+
+    // Per-src-role resolution outcome from ResolveDstRolesPure.
+    internal enum FindDstRoleResult
+    {
+        Resolved,                       // matched a dst folder-scope role; Id appended to result list
+        SkippedAsInherited,             // src role marked Origin = "Inherited" -> caller skips silently
+        SkippedAsTenantRole,            // matched but dst role's Type == "Tenant" -> excluded from folder roles
+        NotFoundInDstTenant,            // no dst role with matching Id (same-drive) or Name (cross-drive)
+    }
+
+    internal sealed record FindDstRoleEntry(SimpleRole SrcRole, Role? DstRole, FindDstRoleResult Result);
+
+    // Pure version of FindDstRoles. Caller supplies the dst tenant role list
+    // (fetched and possibly null-checked outside) so the matching policy is
+    // exercisable without standing up a real OrchDriveInfo.
+    //
+    // Policy (preserved verbatim):
+    //   - srcRoles with Origin == "Inherited" are silently skipped.
+    //   - When isSameDrive, match by Id (safer for renamed roles).
+    //   - When cross-drive, match by Name (case-insensitive).
+    //   - A matched dst role with Type == "Tenant" is intentionally NOT
+    //     added to the returned folder-role-id list -- tenant roles are
+    //     surfaced in classic-folder user payloads but cannot legally be
+    //     assigned as folder-scope roles.
+    internal static List<FindDstRoleEntry> ResolveDstRolesPure(
+        IEnumerable<SimpleRole> srcRoles,
+        IEnumerable<Role> dstTenantRoles,
+        bool isSameDrive)
+    {
+        var entries = new List<FindDstRoleEntry>();
+        var dstList = dstTenantRoles.ToList();
+
+        foreach (var sr in srcRoles)
+        {
+            if (sr.Origin == "Inherited")
+            {
+                entries.Add(new FindDstRoleEntry(sr, null, FindDstRoleResult.SkippedAsInherited));
+                continue;
+            }
+
+            Role? matched = isSameDrive
+                ? dstList.FirstOrDefault(r => r.Id == sr.Id)
+                : dstList.FirstOrDefault(r => string.Equals(r.Name, sr.Name, StringComparison.OrdinalIgnoreCase));
+
+            if (matched is null)
+            {
+                entries.Add(new FindDstRoleEntry(sr, null, FindDstRoleResult.NotFoundInDstTenant));
+                continue;
+            }
+
+            if (matched.Type == "Tenant")
+            {
+                entries.Add(new FindDstRoleEntry(sr, matched, FindDstRoleResult.SkippedAsTenantRole));
+                continue;
+            }
+
+            entries.Add(new FindDstRoleEntry(sr, matched, FindDstRoleResult.Resolved));
+        }
+        return entries;
+    }
+
+    internal static List<Int64>? FindDstRoles(IWritableHost _this,
+        OrchDriveInfo srcDrive, IEnumerable<SimpleRole> srcRoleIds,
+        OrchDriveInfo dstDrive, string msg)
+    {
+        if (srcRoleIds is null || !srcRoleIds.Any()) return null;
+
+        ICollection<Role> dstTenantRoles = null;
+        try
+        {
+            dstTenantRoles = dstDrive.Roles.Get();
+        }
+        catch (Exception ex)
+        {
+            _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, msg, ex), "MigrateRoleIdError", ErrorCategory.InvalidOperation, dstDrive));
+            return null;
+        }
+
+        var entries = ResolveDstRolesPure(srcRoleIds, dstTenantRoles, isSameDrive: srcDrive == dstDrive);
+
+        var retRoles = new List<Int64>();
+        foreach (var entry in entries)
+        {
+            switch (entry.Result)
+            {
+                case FindDstRoleResult.NotFoundInDstTenant:
+                    _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have role with Name = '{entry.SrcRole.Name}'.");
+                    break;
+                case FindDstRoleResult.Resolved:
+                    retRoles.Add(entry.DstRole!.Id ?? 0);
+                    break;
+                    // SkippedAsInherited / SkippedAsTenantRole: silent (preserved from original).
+            }
+        }
+        return retRoles;
+    }
+
+    internal static TestCaseDefinition? FindDstTestCase(IWritableHost _this,
+        OrchDriveInfo srcDrive, Folder srcFolder, Int64? srcDefinitionId,
+        OrchDriveInfo dstDrive, Folder newFolder, string msg)
+    {
+        var srcTestCases = srcDrive.TestCases.Get(srcFolder);
+        var srcTestCase = srcTestCases.FirstOrDefault(ts => ts.Id == srcDefinitionId);
+        if (srcTestCase is null)
+        {
+            _this.WriteWarning($"{msg}: {srcFolder.GetPSPath()} does not have test case with Id = {srcDefinitionId}.");
+            return null;
+        }
+
+        var dstTestCases = dstDrive.TestCases.Get(newFolder);
+        // Case-insensitive compound match. Test entity names follow the
+        // same Orchestrator name-uniqueness rule as Buckets (rejected on
+        // create when a same-name entity differs only in case), so a
+        // case-sensitive '==' lookup here would miss a dst test case that
+        // exists under a different case and cause a spurious "not found"
+        // warning. PackageIdentifier is intrinsically case-stable but
+        // matched the same way for symmetry.
+        var dstTestCase = dstTestCases.FirstOrDefault(tc =>
+            string.Equals(tc.PackageIdentifier, srcTestCase.PackageIdentifier, StringComparison.OrdinalIgnoreCase) &&
+            string.Equals(tc.Name, srcTestCase.Name, StringComparison.OrdinalIgnoreCase));
+        if (dstTestCase is null)
+        {
+            _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have test case with PackageIdentifier = '{srcTestCase.PackageIdentifier}' and Name = '{srcTestCase.Name}'.");
+        }
+        return dstTestCase;
+    }
+
     // If the group does not exist at the destination, create a group with the same name
     internal static List<PmGroup>? FindDstPmGroups(IWritableHost _this,
         OrchDriveInfo srcDrive, IEnumerable<string>? srcPmGroupIds,
@@ -1332,102 +1645,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             ret.Add(dstPmGroup);
         }
         return ret;
-    }
-
-    internal static CredentialStore? FindDstCredentialStore(IWritableHost _this,
-        OrchDriveInfo srcDrive,
-        OrchDriveInfo dstDrive, Folder newFolder, Int64? srcCredentialStoreId, string msg)
-    {
-        if (srcCredentialStoreId is null || srcCredentialStoreId.Value == 0) return null;
-
-        try
-        {
-            CredentialStore srcCredentialStore = srcDrive.CredentialStores.Get().FirstOrDefault(cs => (cs.Id ?? 0) == srcCredentialStoreId);
-            if (srcCredentialStore is null)
-            {
-                _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have credential store with Id = {srcCredentialStoreId}.");
-                return null;
-            }
-
-            var dstCredentialStore = ResolveDstByName(dstDrive.CredentialStores.Get(), srcCredentialStore.Name, cs => cs.Name);
-            if (dstCredentialStore is null)
-            {
-                _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have credential store with Name = '{srcCredentialStore.Name}'.");
-            }
-            return dstCredentialStore;
-        }
-        catch (Exception ex)
-        {
-            string target = newFolder.GetPSPath();
-            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateCredentialStoreIdError", ErrorCategory.InvalidOperation, target));
-            return null;
-        }
-    }
-
-    // Generic name-match resolver used by the simple FindDst* methods
-    // (FindDstRobot / FindDstMachine / FindDstQueue / FindDstRelease /
-    // FindDstCalendar / FindDstCredentialStore / FindDstBucket /
-    // FindDstTestSet).
-    //
-    // All current callers use the default StringComparison.OrdinalIgnoreCase
-    // -- every entity kind the Orchestrator UI treats by name does so
-    // case-insensitively, and same-name uniqueness on the server side is
-    // case-insensitive too (creation with a differently-cased name fails
-    // with "name already used"). The Ordinal overload is retained for any
-    // future caller that has a legitimate case-sensitive need.
-    internal static T? ResolveDstByName<T>(
-        IEnumerable<T>? candidates,
-        string? srcName,
-        Func<T, string?> nameOf,
-        StringComparison comparison = StringComparison.OrdinalIgnoreCase)
-        where T : class
-    {
-        if (candidates is null || string.IsNullOrEmpty(srcName)) return null;
-        return candidates.FirstOrDefault(c => c is not null && string.Equals(nameOf(c), srcName, comparison));
-    }
-
-    // Resolve the destination package entry point whose Path matches srcPath. Named
-    // wrapper over ResolveDstByName so the entry-point match shares the family's
-    // OrdinalIgnoreCase policy. CopyProcesses uses this to remap a Release's
-    // EntryPointId across feeds; the original inline '==' was case-sensitive and
-    // silently dropped the EntryPointId when a dst feed exposed the same entry point
-    // under a different case (e.g. "Main.xaml" vs "main.xaml").
-    internal static PackageEntryPoint? ResolveDstEntryPointByPath(
-        IEnumerable<PackageEntryPoint>? dstEntryPoints, string? srcPath)
-        => ResolveDstByName(dstEntryPoints, srcPath, e => e.Path);
-
-    // Per-step outcome of ResolveDstByIdThenName.
-    internal enum FindDstByNameResult
-    {
-        NullOrZeroId,   // srcId is null or 0 -> caller returns null silently
-        SrcNotFound,    // no src entity carries srcId
-        DstNotFound,    // src found, but no dst entity shares its name
-        Resolved,       // matched; dst is non-null
-    }
-
-    // Pure decision core shared by the simple name-based FindDst* wrappers
-    // (FindDstBucket / FindDstQueue / FindDstRelease / FindDstMachine /
-    // FindDstCalendar / FindDstCredentialStore / FindDstTestSet): guard the id,
-    // look the src entity up by id, then match a dst entity by name (case-
-    // insensitive, via ResolveDstByName). The IO wrappers still own how each
-    // result maps to WriteWarning / WriteError + the per-entity message, so this
-    // extraction does not change their output. FindDstTestCase is intentionally
-    // NOT covered — it matches on a compound (PackageIdentifier, Name) key.
-    internal static (TDst? dst, FindDstByNameResult result) ResolveDstByIdThenName<TSrc, TDst>(
-        IEnumerable<TSrc>? srcEntities, long? srcId, Func<TSrc, long?> srcIdOf,
-        IEnumerable<TDst>? dstEntities, Func<TSrc, string?> srcNameOf, Func<TDst, string?> dstNameOf)
-        where TSrc : class
-        where TDst : class
-    {
-        if (srcId is null || srcId == 0) return (null, FindDstByNameResult.NullOrZeroId);
-
-        var src = srcEntities?.FirstOrDefault(e => e is not null && srcIdOf(e) == srcId);
-        if (src is null) return (null, FindDstByNameResult.SrcNotFound);
-
-        var dst = ResolveDstByName(dstEntities, srcNameOf(src), dstNameOf);
-        if (dst is null) return (null, FindDstByNameResult.DstNotFound);
-
-        return (dst, FindDstByNameResult.Resolved);
     }
 
     // Result of FindDstUser's pure-logic resolver (see ResolveDstUserPure).
@@ -1666,42 +1883,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         }
     }
 
-    internal static MachineFolder? FindDstMachine(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder,
-        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcMachineId, string msg)
-    {
-        if (srcMachineId is null || srcMachineId == 0) return null;
-        //string msg = $"Migrating the machine id {Path.Combine(srcDrive.NameColon, srcMachineId?.ToString() ?? "")}";
-        try
-        {
-            var srcMachine = srcDrive.Machines.Get().FirstOrDefault(m => m.Id == srcMachineId);
-            if (srcMachine is null)
-            {
-                _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have machine with Id = {srcMachineId}.");
-                return null;
-            }
-            //msg = $"Migrating id of the machine {Path.Combine(srcDrive.NameColon, srcMachine.Name!)}";
-            var dstMachineFolder = ResolveDstByName(dstDrive.FolderMachinesAssigned.Get(dstFolder), srcMachine.Name, m => m.Name);
-            if (dstMachineFolder is null)
-            {
-                string target = dstFolder.GetPSPath();
-                //_this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: A machine with the name '{srcMachine.Name}' is not assigned in '{dstFolder.GetPSPath()}'."),
-                //    "MigrateMachineIdError",
-                //    ErrorCategory.InvalidOperation,
-                //    target));
-                _this.WriteWarning($"{msg}: A machine with the name '{srcMachine.Name}' is not assigned in '{dstFolder.GetPSPath()}'.");
-                return null;
-            }
-            return dstMachineFolder;
-        }
-        catch (Exception ex)
-        {
-            string target = dstFolder.GetPSPath();
-            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateMachineIdError", ErrorCategory.InvalidOperation, target));
-            return null;
-        }
-    }
-
     // Pure 3-tier session matching extracted from FindDstSession so the
     // fallback chain is unit-testable. Original behaviour preserved verbatim,
     // including the questionable bits (see asymmetries below).
@@ -1808,136 +1989,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
             _this.WriteError(new ErrorRecord(new OrchException(dstFolder.GetPSPath(), msg, ex), "MigrateSessionIdError", ErrorCategory.InvalidOperation, dstFolder));
             return null;
         }
-    }
-
-    internal static QueueDefinition? FindDstQueue(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder,
-        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcQueueId, string msg)
-    {
-        if (srcQueueId is null || srcQueueId.Value == 0) return null;
-
-        // Considering that cmdlets may be executed consecutively in a script,
-        // we shouldn't have been clearing the cache each time..
-        // Comment out the below.
-
-        // Clear this folder's cache so we can copy the latest state
-        //srcDrive._dicQueueDefinitions?.TryRemove(srcFolder.Id ?? 0, out var _);
-
-        QueueDefinition srcQueue = null;
-        try
-        {
-            srcQueue = srcDrive.Queues.Get(srcFolder)?.FirstOrDefault(q => q.Id == srcQueueId);
-        }
-        catch (Exception ex)
-        {
-            string target = srcFolder.GetPSPath();
-            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateQueueIdError", ErrorCategory.InvalidOperation, target));
-            return null;
-        }
-        if (srcQueue is null)
-        {
-            string target = srcFolder.GetPSPath();
-            _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {srcFolder.GetPSPath()} does not have queue with Id = {srcQueueId}."), "MigrateQueueIdError", ErrorCategory.InvalidOperation, target));
-            return null;
-        }
-
-        QueueDefinition dstQueue = null;
-        try
-        {
-            dstQueue = ResolveDstByName(dstDrive.Queues.Get(dstFolder), srcQueue.Name, q => q.Name);
-        }
-        catch (Exception ex)
-        {
-            string target = dstFolder.GetPSPath();
-            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateQueueIdError", ErrorCategory.InvalidOperation, target));
-            return null;
-        }
-        if (dstQueue is null)
-        {
-            _this.WriteWarning($"{msg}: {dstFolder.GetPSPath()} does not have queue with Name = '{srcQueue.Name}'.");
-            return null;
-        }
-        return dstQueue;
-    }
-
-    internal static Release? FindDstRelease(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder,
-        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcReleaseId, string msg)
-    {
-        if (srcReleaseId is null || srcReleaseId == 0) return null;
-
-        string target = srcFolder.GetPSPath();
-        //string msg = $"Migrating process id {Path.Combine(srcFolder.GetPSPath(), srcReleaseId?.ToString() ?? "")}";
-        Release srcRelease = null;
-        try
-        {
-            srcRelease = srcDrive.Releases.Get(srcFolder)?.FirstOrDefault(r => r.Id == srcReleaseId);
-        }
-        catch (Exception ex)
-        {
-            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateProcessIdError", ErrorCategory.InvalidOperation, target));
-            return null;
-        }
-        if (srcRelease is null)
-        {
-            _this.WriteWarning($"{msg}: The process id {srcReleaseId} not found in '{srcFolder.GetPSPath()}'.");
-            return null;
-        }
-
-        //msg = $"Migrating id of process {Path.Combine(srcFolder.GetPSPath(), srcRelease.Name!)}";
-
-        Release dstRelease = null;
-        target = dstFolder.GetPSPath();
-        try
-        {
-            dstRelease = ResolveDstByName(dstDrive.Releases.Get(dstFolder), srcRelease.Name, r => r.Name);
-        }
-        catch (Exception ex)
-        {
-            _this.WriteError(new ErrorRecord(
-                new OrchException(target, $"{msg}: Failed to get processes from {dstFolder.GetPSPath()}", ex),
-                "MigrateProcessIdError", ErrorCategory.InvalidOperation, target));
-            return null;
-        }
-        if (dstRelease is null)
-        {
-            _this.WriteWarning($"{msg}: {dstFolder.GetPSPath()} does not have process with Name = '{srcRelease.Name}'.");
-            return null;
-        }
-        return dstRelease;
-    }
-
-    internal static ExtendedCalendar? FindDstCalendar(IWritableHost _this,
-        OrchDriveInfo srcDrive, OrchDriveInfo dstDrive, Int64? srcCalendarId, string msg)
-    {
-        if (srcCalendarId is null || srcCalendarId == 0) return null;
-
-        var srcCalendars = srcDrive.Calendars.Get();
-        var srcCalendar = srcCalendars?.FirstOrDefault(c => c.Id == srcCalendarId);
-        if (srcCalendar is null)
-        {
-            _this.WriteWarning($"{msg}: {srcDrive.NameColonSeparator} doesn't have calendar with Id = {srcCalendarId}.");
-            return null;
-        }
-
-        //msg = $"Migrating id of the calendar {Path.Combine(srcDrive.NameColon, srcCalendar.Name!)}";
-        ExtendedCalendar dstCalendar = null;
-        try
-        {
-            dstCalendar = ResolveDstByName(dstDrive.Calendars.Get(), srcCalendar.Name, c => c.Name);
-        }
-        catch (Exception ex)
-        {
-            _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, msg, ex), "MigrateCalendarIdError", ErrorCategory.InvalidOperation, dstDrive));
-            return null;
-        }
-        if (dstCalendar is null)
-        {
-            //_this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"{msg}: {dstDrive.NameColonSeparator} doesn't have calendar with Name = {srcCalendar.Name}."), "MigrateMachineIdError", ErrorCategory.InvalidOperation, dstDrive));
-            _this.WriteWarning($"{msg}: Calendar with name '{srcCalendar.Name}' does not exist in '{dstDrive.NameColonSeparator}'.");
-            return null;
-        }
-        return dstCalendar;
     }
 
     /// <summary>
@@ -2935,36 +2986,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
     // There is no need to copy TestCases.
     // TestCases are created by copying the test process package.
 
-    internal static TestCaseDefinition? FindDstTestCase(IWritableHost _this,
-        OrchDriveInfo srcDrive, Folder srcFolder, Int64? srcDefinitionId,
-        OrchDriveInfo dstDrive, Folder newFolder, string msg)
-    {
-        var srcTestCases = srcDrive.TestCases.Get(srcFolder);
-        var srcTestCase = srcTestCases.FirstOrDefault(ts => ts.Id == srcDefinitionId);
-        if (srcTestCase is null)
-        {
-            _this.WriteWarning($"{msg}: {srcFolder.GetPSPath()} does not have test case with Id = {srcDefinitionId}.");
-            return null;
-        }
-
-        var dstTestCases = dstDrive.TestCases.Get(newFolder);
-        // Case-insensitive compound match. Test entity names follow the
-        // same Orchestrator name-uniqueness rule as Buckets (rejected on
-        // create when a same-name entity differs only in case), so a
-        // case-sensitive '==' lookup here would miss a dst test case that
-        // exists under a different case and cause a spurious "not found"
-        // warning. PackageIdentifier is intrinsically case-stable but
-        // matched the same way for symmetry.
-        var dstTestCase = dstTestCases.FirstOrDefault(tc =>
-            string.Equals(tc.PackageIdentifier, srcTestCase.PackageIdentifier, StringComparison.OrdinalIgnoreCase) &&
-            string.Equals(tc.Name, srcTestCase.Name, StringComparison.OrdinalIgnoreCase));
-        if (dstTestCase is null)
-        {
-            _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have test case with PackageIdentifier = '{srcTestCase.PackageIdentifier}' and Name = '{srcTestCase.Name}'.");
-        }
-        return dstTestCase;
-    }
-
     internal static void CopyTestSets(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
@@ -3141,30 +3162,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 break;
             }
         }
-    }
-
-    internal static TestSet? FindDstTestSet(IWritableHost _this,
-            OrchDriveInfo srcDrive, Folder srcFolder, Int64? srcTestSetId,
-            OrchDriveInfo dstDrive, Folder newFolder, string msg)
-    {
-        var srcTestSets = srcDrive.TestSets.Get(srcFolder);
-        var srcTestSet = srcTestSets.FirstOrDefault(ts => ts.Id == srcTestSetId);
-        if (srcTestSet is null)
-        {
-            _this.WriteWarning($"{msg}: {srcFolder.GetPSPath()} does not have test set with Id = {srcTestSetId}.");
-            return null;
-        }
-
-        var dstTestSets = dstDrive.TestSets.Get(newFolder);
-        // Case-insensitive name match (same rationale as FindDstBucket /
-        // FindDstTestCase). Original '==' was case-sensitive; missed dst
-        // test sets that existed under a different case.
-        var dstTestSet = ResolveDstByName(dstTestSets, srcTestSet.Name, ts => ts.Name);
-        if (dstTestSet is null)
-        {
-            _this.WriteWarning($"{msg}: {newFolder.GetPSPath()} does not have test set with Name = '{srcTestSet.Name}'.");
-        }
-        return dstTestSet;
     }
 
     internal static void CopyTestSetSchedules(IWritableHost _this,

@@ -19,8 +19,13 @@ public class ResolveDstByIdThenNameTests
     private sealed record Ent(long? Id, string? Name);
 
     private static (Ent? dst, FindDstByNameResult result) Run(
-        Ent[]? src, long? id, Ent[]? dst) =>
-        ResolveDstByIdThenName(src, id, e => e.Id, dst, e => e.Name, e => e.Name);
+        Ent[]? src, long? id, Ent[]? dst)
+    {
+        // The core also returns the matched src entity (for the wrappers' messages);
+        // these tests only assert dst + result, so discard it here.
+        var (d, _, r) = ResolveDstByIdThenName(src, id, e => e.Id, dst, e => e.Name, e => e.Name);
+        return (d, r);
+    }
 
     [Fact]
     public void NullId_ReturnsNullOrZeroId()
