@@ -1,0 +1,125 @@
+using System.Management.Automation;
+using UiPath.OrchAPI;
+using UiPath.PowerShell.Commands;
+using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Positional;
+using UiPath.PowerShell.Entities;
+
+namespace UiPath.PowerShell.Core;
+
+public partial class OrchProvider
+{
+    public class NewItem_DynamicParameters
+    {
+        [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<Processes_FolderHierarchy>))]
+        public string? FeedType { get; set; }
+
+        [Parameter(Position = 2, ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<DescriptionHere>))]
+        public string? Description { get; set; }
+    }
+
+    protected override void NewItem(string path, string itemTypeName, object newItemValue)
+    {
+        //path = UnescapeWildcard(path);
+
+        var dynamicParameters = DynamicParameters as NewItem_DynamicParameters ?? new NewItem_DynamicParameters();
+
+        // Provider dynamic parameters (FeedType/Description) do NOT bind from the pipeline by
+        // property name, so when a row is piped in (Import-Csv | New-Item) they arrive on the
+        // whole pipeline object that lands on -Value instead. Pull them from there as a fallback
+        // -- this is what makes the `dir -ExportCsv | ... | Import-Csv | New-Item` round-trip
+        // preserve folder type and description (the same reason -Name is read from it below).
+        var psValue = newItemValue as PSObject;
+        if (psValue is not null)
+        {
+            if (string.IsNullOrEmpty(dynamicParameters.FeedType))
+            {
+                dynamicParameters.FeedType = psValue.Properties["FeedType"]?.Value as string;
+            }
+            if (string.IsNullOrEmpty(dynamicParameters.Description))
+            {
+                dynamicParameters.Description = psValue.Properties["Description"]?.Value as string;
+            }
+        }
+
+        if (string.IsNullOrEmpty(dynamicParameters.FeedType))
+        {
+            dynamicParameters.FeedType = "Processes";
+        }
+
+        if (psValue is not null)
+        {
+            string name = psValue.Properties["Name"]?.Value as string;
+            if (name is not null)
+            {
+                // TODO: Is Unescape() needed??
+                //path = System.IO.Path.Combine(path, WildcardPattern.Unescape(name));
+                path = System.IO.Path.Combine(path, name);
+            }
+        }
+
+        if (ShouldProcess(path, "New Folder"))
+        {
+            var drive = GetOrchDriveInfo(path);
+
+            if (drive is null)
+            {
+                return;
+            }
+
+            string parentPath = GetParentPath(path, "");
+            if (!ItemExists(parentPath))
+            {
+                WriteError(new ErrorRecord(new OrchException(path, $"{parentPath} does not exist."), "NewItem", ErrorCategory.InvalidOperation, drive));
+                return;
+            }
+
+            try
+            {
+                Int64? parentPathId;
+                string displayName;
+
+                if (parentPath == System.IO.Path.DirectorySeparatorChar.ToString())
+                {
+                    displayName = path.Substring(parentPath.Length);
+                    parentPathId = null;
+                }
+                else
+                {
+                    displayName = path.Substring(parentPath.Length + 1);
+                    string orchParentPath = OrchDriveInfo.PSPathToOrchPath(parentPath);
+                    parentPathId = drive.GetFolder(orchParentPath)?.Id;
+                }
+
+                if (!string.IsNullOrEmpty(dynamicParameters?.FeedType) && (dynamicParameters.FeedType != "Processes" && dynamicParameters.FeedType != "FolderHierarchy"))
+                {
+                    WriteError(new ErrorRecord(new OrchException($"{path} ({dynamicParameters.FeedType})", "FeedType must be 'Processes' or 'FolderHierarchy'."), "NewFolderError", ErrorCategory.InvalidArgument, path));
+                    return; // don't fall through to CreateFolder with an invalid FeedType (was a confusing double error)
+                }
+
+                Folder f = drive.OrchAPISession.CreateFolder(displayName,
+                    dynamicParameters?.Description,
+                    (parentPathId is null || parentPathId == 0) ? dynamicParameters?.FeedType : "Processes",
+                    parentPathId);
+                if (f is not null)
+                {
+                    f.FullName = path;
+                    WriteItemObject(f, path, true);
+                }
+                drive._dicFolders = null;
+                drive._dicFoldersForEnumFolders = null;
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(path, ex), "NewFolderError", ErrorCategory.InvalidOperation, path));
+            }
+        }
+    }
+
+    protected override object NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
+    {
+        return new NewItem_DynamicParameters();
+    }
+}
