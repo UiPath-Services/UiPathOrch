@@ -1801,54 +1801,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         return dstQueue;
     }
 
-    //private QueueDefinition? FindDstTrigger(
-    //    OrchDriveInfo srcDrive, Folder srcFolder,
-    //    OrchDriveInfo dstDrive, Folder dstFolder,
-    //    Int64? srcQueueId)
-    //{
-    //    if (srcQueueId is null || srcQueueId.Value == 0) return null;
-    //    srcDrive._dicQueueDefinitions?.TryRemove(srcFolder.Id ?? 0, out var _);
-
-    //    string msg = $"Migrating the queue id {Path.Combine(srcFolder.GetPSPath(), srcQueueId?.ToString() ?? "")}";
-    //    QueueDefinition srcQueue = null;
-    //    try
-    //    {
-    //        srcQueue = srcDrive.GetQueues(srcFolder)?.FirstOrDefault(q => q.Id == srcQueueId);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        string target = srcFolder.GetPSPath();
-    //        WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateQueueIdError", ErrorCategory.InvalidOperation, target));
-    //        return null;
-    //    }
-    //    if (srcQueue is null)
-    //    {
-    //        string target = srcFolder.GetPSPath();
-    //        WriteError(new ErrorRecord(new OrchException(target, $"{msg}: The queue not found."), "MigrateQueueIdError", ErrorCategory.InvalidOperation, target));
-    //        return null;
-    //    }
-
-    //    msg = $"Migrating id of the queue {Path.Combine(srcFolder.GetPSPath(), srcQueue.Name!)}";
-    //    QueueDefinition dstQueue = null;
-    //    try
-    //    {
-    //        dstQueue = dstDrive.GetQueues(dstFolder)?.FirstOrDefault(q => string.Compare(q.Name, srcQueue.Name, StringComparison.OrdinalIgnoreCase) == 0);
-    //    }
-    //    catch (Exception ex)
-    //    {
-    //        string target = dstFolder.GetPSPath();
-    //        WriteError(new ErrorRecord(new OrchException(target, msg, ex), "MigrateQueueIdError", ErrorCategory.InvalidOperation, target));
-    //        return null;
-    //    }
-    //    if (dstQueue is null)
-    //    {
-    //        string target = dstFolder.GetPSPath();
-    //        WriteError(new ErrorRecord(new OrchException(target, $"{msg}: The queue does not exist."), "MigrateQueueIdError", ErrorCategory.InvalidOperation, target));
-    //        return null;
-    //    }
-    //    return dstQueue;
-    //}
-
     internal static Release? FindDstRelease(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcReleaseId, string msg)
@@ -2039,23 +1991,41 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         return fqn;
     }
 
-    internal static bool LinkAsset(IWritableHost _this,
+    // Shared implementation behind LinkAsset / LinkQueue / LinkBucket. When the
+    // source entity is shared into folders other than srcFolder, reproduce that
+    // link graph at the destination: for every dst folder that mirrors a src link
+    // folder AND already holds a same-named entity, share that dst entity into
+    // newFolder. Returns true if at least one link was established (so the caller
+    // skips creating a duplicate). The same shared entity has one Id across all
+    // its link folders, so seenIds dedups redundant Share*ToFolders calls;
+    // per-iteration try/catch lets one folder's failure not block the others.
+    //
+    // The three thin wrappers below supply only what differs: the entity name/id
+    // accessors, the src link-folder lookup, the dst entity lookup, the concrete
+    // Share*ToFolders call, and the two error ids. Link* are file-internal (the
+    // Copy-Orch* cmdlets enter through CopyAssets/CopyQueues/CopyBuckets), so this
+    // refactor doesn't touch any externally-visible signature.
+    private static bool LinkSharedEntity<T>(
+        IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder,
-        OrchDriveInfo dstDrive, Folder newFolder, Asset asset, string msg)
+        OrchDriveInfo dstDrive, Folder newFolder,
+        string? entityName, string msg,
+        string getLinkErrorId, string linkErrorId,
+        Func<List<Int64>?> getSrcLinkFolderIds,
+        Func<Folder, IEnumerable<T>> getDstEntities,
+        Func<T, string?> nameOf,
+        Func<T, Int64> idOf,
+        Action<Int64, Int64, Int64> share)
+        where T : class
     {
         // TODO: Is this version number correct? There likely aren't any Orchestrators older than v12 anymore.
         if (srcDrive.OrchAPISession.ApiVersion < 12) return false;
         if (dstDrive.OrchAPISession.ApiVersion < 12) return false;
 
-        //string msg = $"Sharing asset {Path.Combine(srcFolder.GetPSPath(), asset.Name!)}";
         IEnumerable<Folder> dstLinkFolders = null;
         try
         {
-            var srcLinks = srcDrive.GetFoldersForAsset(srcFolder, asset);
-            var srcLinkFolderIds = srcLinks?.AccessibleFolders?
-                .Select(af => af.Id ?? 0)
-                .Where(id => id != srcFolder.Id)
-                .ToList();
+            var srcLinkFolderIds = getSrcLinkFolderIds();
             if (srcLinkFolderIds is null || !srcLinkFolderIds.Any())
             {
                 return false;
@@ -2076,43 +2046,48 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         catch (Exception ex)
         {
             string target = srcFolder.GetPSPath();
-            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "GetAssetLinkError", ErrorCategory.InvalidOperation, target));
+            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), getLinkErrorId, ErrorCategory.InvalidOperation, target));
             return false;
         }
 
-        // Reproduce the full source link graph: link newFolder to *every* dst
-        // folder that already has the asset, not just the first one found.
-        // The same shared asset has the same Id when seen from any of its link
-        // targets, so the seenIds dedup avoids redundant ShareAssetsToFolders
-        // calls when the dst already has the asset linked across multiple
-        // folders. Per-iteration try/catch lets one folder's failure not block
-        // the others; we return true if at least one link was established so
-        // the caller skips the duplicate-creation path for newFolder.
         bool linked = false;
         var seenIds = new HashSet<Int64>();
         foreach (var dstLinkFolder in dstLinkFolders)
         {
             try
             {
-                var assets = dstDrive.Assets.Get(dstLinkFolder);
-                var dstAsset = assets.FirstOrDefault(a => string.Compare(a.Name, asset.Name, StringComparison.OrdinalIgnoreCase) == 0);
-                if (dstAsset is null) continue;
-                if (!seenIds.Add(dstAsset.Id ?? 0)) continue;
+                var dstEntity = getDstEntities(dstLinkFolder)
+                    .FirstOrDefault(e => string.Compare(nameOf(e), entityName, StringComparison.OrdinalIgnoreCase) == 0);
+                if (dstEntity is null) continue;
+                Int64 dstEntityId = idOf(dstEntity);
+                if (!seenIds.Add(dstEntityId)) continue;
 
-                dstDrive.OrchAPISession.ShareAssetsToFolders(dstLinkFolder.Id ?? 0,
-                                new List<Int64> { dstAsset.Id ?? 0 },
-                                new List<Int64> { newFolder.Id ?? 0 },
-                                new List<Int64>());
+                share(dstLinkFolder.Id ?? 0, dstEntityId, newFolder.Id ?? 0);
                 linked = true;
             }
             catch (Exception ex)
             {
                 string target = $"{dstLinkFolder.GetPSPath()} → {newFolder.GetPSPath()}";
-                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "LinkAssetError", ErrorCategory.InvalidOperation, target));
+                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), linkErrorId, ErrorCategory.InvalidOperation, target));
                 // continue — one folder's failure shouldn't block the others
             }
         }
         return linked;
+    }
+
+    internal static bool LinkAsset(IWritableHost _this,
+        OrchDriveInfo srcDrive, Folder srcFolder,
+        OrchDriveInfo dstDrive, Folder newFolder, Asset asset, string msg)
+    {
+        return LinkSharedEntity<Asset>(_this, srcDrive, srcFolder, dstDrive, newFolder,
+            asset.Name, msg, "GetAssetLinkError", "LinkAssetError",
+            () => srcDrive.GetFoldersForAsset(srcFolder, asset)?.AccessibleFolders?
+                .Select(af => af.Id ?? 0).Where(id => id != srcFolder.Id).ToList(),
+            f => dstDrive.Assets.Get(f),
+            a => a.Name,
+            a => a.Id ?? 0,
+            (linkFolderId, entityId, newFolderId) => dstDrive.OrchAPISession.ShareAssetsToFolders(
+                linkFolderId, new List<Int64> { entityId }, new List<Int64> { newFolderId }, new List<Int64>()));
     }
 
     internal static void CopyAssets(IWritableHost _this,
@@ -2316,71 +2291,16 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder, QueueDefinition queue)
     {
-        // TODO: Is this version number correct? There likely aren't any Orchestrators older than v12 anymore.
-        if (srcDrive.OrchAPISession.ApiVersion < 12) return false;
-        if (dstDrive.OrchAPISession.ApiVersion < 12) return false;
-
         string msg = $"Sharing queue {queue.GetPSPath()}";
-        IEnumerable<Folder> dstLinkFolders = null;
-        try
-        {
-            var srcLinks = srcDrive.GetFoldersForQueue(srcFolder, queue);
-            var srcLinkFolderIds = srcLinks?.AccessibleFolders?
-                .Select(af => af.Id ?? 0)
-                .Where(id => id != srcFolder.Id)
-                .ToList();
-            if (srcLinkFolderIds is null || !srcLinkFolderIds.Any())
-            {
-                return false;
-            }
-
-            dstLinkFolders = FindDstFolders(
-                srcLinkFolderIds,
-                srcDrive.GetFolders(),
-                dstDrive.GetFolders(),
-                srcFolder,
-                newFolder);
-
-            if (dstLinkFolders is null || !dstLinkFolders.Any())
-            {
-                return false;
-            }
-        }
-        catch (Exception ex)
-        {
-            string target = srcFolder.GetPSPath();
-            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "GetQueueLinkError", ErrorCategory.InvalidOperation, target));
-            return false;
-        }
-
-        // Reproduce the full source link graph: link newFolder to *every* dst
-        // folder that already has the queue, not just the first one found.
-        // See LinkAsset for the full rationale (seenIds dedup + per-iteration
-        // try/catch + linked-tracker semantics).
-        bool linked = false;
-        var seenIds = new HashSet<Int64>();
-        foreach (var dstLinkFolder in dstLinkFolders)
-        {
-            try
-            {
-                var queues = dstDrive.Queues.Get(dstLinkFolder);
-                var dstQueue = queues.FirstOrDefault(a => string.Compare(a.Name, queue.Name, StringComparison.OrdinalIgnoreCase) == 0);
-                if (dstQueue is null) continue;
-                if (!seenIds.Add(dstQueue.Id ?? 0)) continue;
-
-                dstDrive.OrchAPISession.ShareQueuesToFolders(dstLinkFolder.Id ?? 0,
-                                [dstQueue.Id ?? 0],
-                                [newFolder.Id ?? 0],
-                                []);
-                linked = true;
-            }
-            catch (Exception ex)
-            {
-                string target = $"{dstLinkFolder.GetPSPath()} → {newFolder.GetPSPath()}";
-                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "LinkQueueError", ErrorCategory.InvalidOperation, target));
-            }
-        }
-        return linked;
+        return LinkSharedEntity<QueueDefinition>(_this, srcDrive, srcFolder, dstDrive, newFolder,
+            queue.Name, msg, "GetQueueLinkError", "LinkQueueError",
+            () => srcDrive.GetFoldersForQueue(srcFolder, queue)?.AccessibleFolders?
+                .Select(af => af.Id ?? 0).Where(id => id != srcFolder.Id).ToList(),
+            f => dstDrive.Queues.Get(f),
+            q => q.Name,
+            q => q.Id ?? 0,
+            (linkFolderId, entityId, newFolderId) => dstDrive.OrchAPISession.ShareQueuesToFolders(
+                linkFolderId, new List<Int64> { entityId }, new List<Int64> { newFolderId }, new List<Int64>()));
     }
 
     internal static void CopyQueueItem(IWritableHost _this,
@@ -2846,71 +2766,16 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder, Bucket bucket)
     {
-        if (srcDrive.OrchAPISession.ApiVersion < 12) return false;
-        if (dstDrive.OrchAPISession.ApiVersion < 12) return false;
-
         string msg = $"Sharing bucket {bucket.GetPSPath()}";
-
-        IEnumerable<Folder> dstLinkFolders = null;
-        try
-        {
-            var srcLinks = srcDrive.GetFoldersForBucket(srcFolder, bucket);
-            var srcLinkFolderIds = srcLinks?.AccessibleFolders?
-                .Select(af => af.Id ?? 0)
-                .Where(id => id != srcFolder.Id)
-                .ToList();
-            if (srcLinkFolderIds is null || !srcLinkFolderIds.Any())
-            {
-                return false;
-            }
-
-            dstLinkFolders = FindDstFolders(
-                srcLinkFolderIds,
-                srcDrive.GetFolders(),
-                dstDrive.GetFolders(),
-                srcFolder,
-                newFolder);
-
-            if (dstLinkFolders is null || !dstLinkFolders.Any())
-            {
-                return false;
-            }
-        }
-        catch (Exception ex)
-        {
-            string target = srcFolder.GetPSPath();
-            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "GetBucketLinkError", ErrorCategory.InvalidOperation, target));
-            return false;
-        }
-
-        // Reproduce the full source link graph: link newFolder to *every* dst
-        // folder that already has the bucket, not just the first one found.
-        // See LinkAsset for the full rationale (seenIds dedup + per-iteration
-        // try/catch + linked-tracker semantics).
-        bool linked = false;
-        var seenIds = new HashSet<Int64>();
-        foreach (var dstLinkFolder in dstLinkFolders)
-        {
-            try
-            {
-                var buckets = dstDrive.Buckets.Get(dstLinkFolder);
-                var dstBucket = buckets.FirstOrDefault(a => string.Compare(a.Name, bucket.Name, StringComparison.OrdinalIgnoreCase) == 0);
-                if (dstBucket is null) continue;
-                if (!seenIds.Add(dstBucket.Id ?? 0)) continue;
-
-                dstDrive.OrchAPISession.ShareBucketsToFolders(dstLinkFolder.Id ?? 0,
-                                new List<Int64> { dstBucket.Id ?? 0 },
-                                new List<Int64> { newFolder.Id ?? 0 },
-                                new List<Int64>());
-                linked = true;
-            }
-            catch (Exception ex)
-            {
-                string target = $"{dstLinkFolder.GetPSPath()} → {newFolder.GetPSPath()}";
-                _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "LinkBucketError", ErrorCategory.InvalidOperation, target));
-            }
-        }
-        return linked;
+        return LinkSharedEntity<Bucket>(_this, srcDrive, srcFolder, dstDrive, newFolder,
+            bucket.Name, msg, "GetBucketLinkError", "LinkBucketError",
+            () => srcDrive.GetFoldersForBucket(srcFolder, bucket)?.AccessibleFolders?
+                .Select(af => af.Id ?? 0).Where(id => id != srcFolder.Id).ToList(),
+            f => dstDrive.Buckets.Get(f),
+            b => b.Name,
+            b => b.Id ?? 0,
+            (linkFolderId, entityId, newFolderId) => dstDrive.OrchAPISession.ShareBucketsToFolders(
+                linkFolderId, new List<Int64> { entityId }, new List<Int64> { newFolderId }, new List<Int64>()));
     }
 
     internal static void CopyBuckets(IWritableHost _this,
@@ -3636,125 +3501,71 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                     {
                         int rootIndex = 0;
 
-                        // #1 Copy folder users
-                        string msg;
-                        msg = "Copying folder users...      ";
-                        reporter.WriteProgress(++rootIndex);
-                        srcDrive.FolderUsersWithInherited.ClearCache(srcFolder);
-                        srcDrive.FolderUsersWithNoInherited.ClearCache(srcFolder);
-                        using var reporterFolderUsers = new ProgressReporter(this, 100, Int32.MaxValue, msg);
-                        CopyFolderUsers(this, srcDrive, srcFolder, null, null, dstDrive, newFolder, reporterFolderUsers, true, cancelToken, userMapping);
+                        // Each stage bumps the parent progress bar, optionally clears a
+                        // src-side cache, then runs its per-entity copy under a child
+                        // ProgressReporter. Ordering is significant — buckets before
+                        // processes, packages before triggers — so keep this list in
+                        // dependency order. Base numbers (100..1300) match the original
+                        // per-stage reporter offsets. (Test cases are intentionally absent:
+                        // they are created automatically when packages/processes copy.)
+                        var stages = new (string Label, int Base, Action? PreStep, Action<ProgressReporter> Run)[]
+                        {
+                            ("Copying folder users...      ", 100,
+                                () => { srcDrive.FolderUsersWithInherited.ClearCache(srcFolder); srcDrive.FolderUsersWithNoInherited.ClearCache(srcFolder); },
+                                r => CopyFolderUsers(this, srcDrive, srcFolder, null, null, dstDrive, newFolder, r, true, cancelToken, userMapping)),
+                            ("Copying folder machines...   ", 200,
+                                () => srcDrive.FolderMachinesAssigned.ClearCache(srcFolder),
+                                r => CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                            ("Copying buckets...           ", 300, null,
+                                r => CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                            ("Copying packages...          ", 400, null,
+                                r => CopyPackages(this, srcDrive, srcFolder, dstDrive, newFolder, r, cancelToken)),
+                            ("Copying processes...         ", 500, null,
+                                r => CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                            ("Copying assets...            ", 600,
+                                () => srcDrive.Assets.ClearCache(srcFolder),
+                                r => CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, userMapping)),
+                            ("Copying queues...            ", 700, null,
+                                r => CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                            ("Copying triggers...          ", 800,
+                                () => srcDrive.Triggers.ClearCache(srcFolder),
+                                r => CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                            ("Copying API triggers...      ", 900,
+                                () => srcDrive.ApiTriggers.ClearCache(srcFolder),
+                                r => CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                            ("Copying test sets...         ", 1000, null,
+                                r => CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                            ("Copying test schedules...    ", 1100, null,
+                                r => CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                            ("Copying test data queues...  ", 1200, null,
+                                r => CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                            ("Copying action catalogs...   ", 1300, null,
+                                r => CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                        };
 
-                        cancelToken.ThrowIfCancellationRequested();
-
-                        // #2 Copy folder machines
-                        msg = "Copying folder machines...   ";
-                        reporter.WriteProgress(++rootIndex);
-                        srcDrive.FolderMachinesAssigned.ClearCache(srcFolder);
-                        using var reporterFolderMachines = new ProgressReporter(this, 200, Int32.MaxValue, msg);
-                        CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterFolderMachines, true, cancelToken);
-
-                        cancelToken.ThrowIfCancellationRequested();
-
-                        // #3 Copy buckets
-                        // Buckets must be copied before copying processes
-                        msg = "Copying buckets...           ";
-                        reporter.WriteProgress(++rootIndex);
-                        using var reporterBuckets = new ProgressReporter(this, 300, Int32.MaxValue, msg);
-                        CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterBuckets, true, cancelToken);
-
-                        cancelToken.ThrowIfCancellationRequested();
-
-                        // #4 Copy folder packages
-                        msg = "Copying packages...          ";
-                        reporter.WriteProgress(++rootIndex);
-                        using var reporterPackages = new ProgressReporter(this, 400, Int32.MaxValue, msg);
-                        CopyPackages(this, srcDrive, srcFolder, dstDrive, newFolder, reporterPackages, cancelToken);
-
-                        cancelToken.ThrowIfCancellationRequested();
-
-                        // #5 Copy processes
-                        msg = "Copying processes...         ";
-                        reporter.WriteProgress(++rootIndex);
-                        using var reporterProcesses = new ProgressReporter(this, 500, Int32.MaxValue, msg);
-                        CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterProcesses, true, cancelToken);
-
-                        cancelToken.ThrowIfCancellationRequested();
-
-                        // #6 Copy assets
-                        msg = "Copying assets...            ";
-                        reporter.WriteProgress(++rootIndex);
-                        srcDrive.Assets.ClearCache(srcFolder);
-                        using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, msg);
-                        CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterAssets, true, cancelToken, userMapping);
-
-                        cancelToken.ThrowIfCancellationRequested();
-
-                        // #7 Copy queues
-                        msg = "Copying queues...            ";
-                        reporter.WriteProgress(++rootIndex);
-                        using var reporterQueues = new ProgressReporter(this, 700, Int32.MaxValue, msg);
-                        CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterQueues, true, cancelToken);
-
-                        cancelToken.ThrowIfCancellationRequested();
-
-                        // #8 Copy triggers
-                        msg = "Copying triggers...          ";
-                        reporter.WriteProgress(++rootIndex);
-                        srcDrive.Triggers.ClearCache(srcFolder);
-                        using var reporterTriggers = new ProgressReporter(this, 800, Int32.MaxValue, msg);
-                        CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTriggers, true, cancelToken);
-
-                        cancelToken.ThrowIfCancellationRequested();
-
-                        // #8 Copy API triggers
-                        msg = "Copying API triggers...      ";
-                        reporter.WriteProgress(++rootIndex);
-                        srcDrive.ApiTriggers.ClearCache(srcFolder);
-                        using var reporterApiTriggers = new ProgressReporter(this, 900, Int32.MaxValue, msg);
-                        CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterApiTriggers, true, cancelToken);
-
-                        cancelToken.ThrowIfCancellationRequested();
-
-                        // #xx Test cases do not need to be copied.
-                        // They are automatically created when packages and processes are copied.
-                        //msg = "Copying test cases...        ";
-                        //reporter.WriteProgress();
-                        //using var reporterTestCases = new ProgressReporter(this, 1100, Int32.MaxValue, msg);
-                        //CopyTestCases(this, srcDrive, srcFolder, dstDrive, newFolder, reporterTestCases);
-
-                        // #10 Copy test sets
-                        msg = "Copying test sets...         ";
-                        reporter.WriteProgress(++rootIndex);
-                        using var reporterTestSets = new ProgressReporter(this, 1000, Int32.MaxValue, msg);
-                        CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSets, true, cancelToken);
-
-                        cancelToken.ThrowIfCancellationRequested();
-
-                        // #11 Copy test set schedules
-                        msg = "Copying test schedules...    ";
-                        reporter.WriteProgress(++rootIndex);
-                        using var reporterTestSchedules = new ProgressReporter(this, 1100, Int32.MaxValue, msg);
-                        CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestSchedules, true, cancelToken);
-
-                        cancelToken.ThrowIfCancellationRequested();
-
-                        // #12 Copy test data queues
-                        msg = "Copying test data queues...  ";
-                        reporter.WriteProgress(++rootIndex);
-                        using var reporterTestDataQueues = new ProgressReporter(this, 1200, Int32.MaxValue, msg);
-                        CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterTestDataQueues, true, cancelToken);
-
-                        cancelToken.ThrowIfCancellationRequested();
-
-                        // #13 Copy action catalogs
-                        msg = "Copying action catalogs...   ";
-                        reporter.WriteProgress(++rootIndex);
-                        using var reporterActionCatalogs = new ProgressReporter(this, 1300, Int32.MaxValue, msg);
-                        //srcDrive.ActionCatalogs.ClearCache(srcFolder);
-                        CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, reporterActionCatalogs, true, cancelToken);
-
-                        cancelToken.ThrowIfCancellationRequested();
+                        // Child reporters are kept alive for the whole sequence and disposed
+                        // together at the end (reverse order, like the original stacked
+                        // `using var` declarations) so the progress display timing is unchanged.
+                        var childReporters = new List<ProgressReporter>(stages.Length);
+                        try
+                        {
+                            foreach (var stage in stages)
+                            {
+                                reporter.WriteProgress(++rootIndex);
+                                stage.PreStep?.Invoke();
+                                var childReporter = new ProgressReporter(this, stage.Base, Int32.MaxValue, stage.Label);
+                                childReporters.Add(childReporter);
+                                stage.Run(childReporter);
+                                cancelToken.ThrowIfCancellationRequested();
+                            }
+                        }
+                        finally
+                        {
+                            for (int i = childReporters.Count - 1; i >= 0; i--)
+                            {
+                                childReporters[i].Dispose();
+                            }
+                        }
                     }
                 }
 
@@ -3936,7 +3747,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
                 var foldersToBeCopied = srcDrive.GetFolders().Where((f => f.ParentId is null && f != srcDrive.RootFolder));
                 foreach (var folderToBeCopied in foldersToBeCopied)
                 {
-                    isDirty = CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true, cancelHandler.Token, userMapping);
+                    // Accumulate: if ANY top-level folder was actually copied the dst
+                    // folder cache must be invalidated below. Plain '=' would keep only
+                    // the last folder's result, skipping the reset when the final folder
+                    // returns false (e.g. a personal workspace) despite earlier copies.
+                    isDirty |= CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true, cancelHandler.Token, userMapping);
                 }
             }
             else if (!ExcludeEntities)
