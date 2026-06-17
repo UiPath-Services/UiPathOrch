@@ -4,6 +4,32 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.9.4] - 2026-06-18
+
+### Fixed
+
+#### Cross-platform
+
+- **`-TimeZoneId` tab-completion now suggests Orchestrator-valid ids on Linux/macOS.** The
+  completer listed the host OS's time-zone ids, which are IANA ids (e.g. `Asia/Tokyo`) on
+  Linux/macOS — but Orchestrator's `-TimeZoneId` requires a **Windows** time-zone id (e.g.
+  `Tokyo Standard Time`) and rejects IANA ids with *"not a valid windows time zone id"*. The
+  completer now emits Windows ids on every platform (from the live OS list on Windows, and an
+  embedded Windows time-zone table on Linux/macOS), so completions are accepted by Orchestrator
+  everywhere. (`-TimeZone`, which takes the display name and is resolved server-side, is
+  unaffected.)
+
+### Internal / CI
+
+- The Linux/macOS CI test matrix added in 1.9.3 now passes: two test classes had hard-coded
+  Windows path separators (corrected to be platform-aware; the underlying path conversion was
+  already cross-platform), and the `-TimeZoneId` completer gap above was surfaced and fixed.
+- Added regression tests with no behavior change: the 1.9.3 security fixes (the `Invoke-OrchApi`
+  same-origin token guard and the `Get-OrchLog -JobKey` GUID validation), entity-layer purity,
+  exported-command ↔ help-page parity, drive cache-field wiring, the PKCE authorize-URL builder,
+  and the folder-enumeration ordering. Several large methods were split into pure, testable
+  helpers and a duplicated JWT base64url decoder was consolidated — all behavior-preserving.
+
 ## [1.9.3] - 2026-06-17
 
 ### Security

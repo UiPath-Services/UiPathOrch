@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.9.3'
+ModuleVersion = '1.9.4'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -502,26 +502,20 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.9.3
+1.9.4
 
-Security: Invoke-OrchApi now accepts an absolute -ApiPath URL only when it targets the same origin
-(scheme + host + port) the drive is already authenticated against — its Orchestrator, Identity, or
-Portal base URL. Previously any absolute URL was used verbatim, which would send the drive's live
-bearer token to an arbitrary (and possibly http-downgraded) host. Use a relative API path, or
--Identity / -Portal, to reach the drive's own deployment. Get-OrchLog -JobKey is validated as a GUID
-before it goes into the OData $filter, so a crafted value can't alter the filter expression (and you
-get a clear client-side error instead of an opaque server 400).
+Fixed (cross-platform): -TimeZoneId tab-completion now suggests Orchestrator-valid ids on Linux/macOS.
+The completer listed the host OS time-zone ids, which are IANA ids (e.g. Asia/Tokyo) on Linux/macOS,
+but Orchestrator's -TimeZoneId requires a Windows time-zone id (e.g. Tokyo Standard Time) and rejects
+IANA ids ("not a valid windows time zone id"). The completer now emits Windows ids on every platform:
+the live OS list on Windows, and an embedded Windows time-zone table on Linux/macOS. -TimeZone (the
+display name, resolved server-side) is unaffected.
 
-Fixed (cross-platform): interactive PKCE sign-in with -UseInPrivate no longer fails on Linux/macOS —
-the Edge InPrivate launch is Windows-only and now falls back to the default browser elsewhere (and
-when Edge is not installed), so sign-in completes on every platform. CSV export now defaults to UTF-8
-(with BOM) instead of the OS ANSI code page: on Windows-ja this fixes Shift-JIS corruption of
-non-ASCII names on re-import, matches what PowerShell 7's Import-Csv reads by default, and makes
-export/import round-trips identical across Windows, Linux, and macOS.
-
-Docs / CI: the README documentation index is resynced with the docs site (adds the Folder Operations
-and AI Integration guides) and migration-guide feedback now routes to GitHub Discussions/Issues. CI
-now builds and runs the unit tests on Linux and macOS in addition to Windows.
+Internal / CI: the Linux/macOS CI test matrix added in 1.9.3 now passes — two test classes had
+hard-coded Windows path separators (the underlying path conversion was already cross-platform).
+Behavior-preserving regression tests were added for the 1.9.3 security fixes, entity-layer purity,
+command/help parity, cache-field wiring, the PKCE authorize-URL builder, and folder ordering, and a
+few large methods were split into pure testable helpers.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
