@@ -1880,42 +1880,8 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             }
             if (folders is not null)
             {
-                #region Build newDicFolders
-                // 1. First, add all folders directly under the root
-                // 1-1. Add all personal workspace folders (already done above)
-                // 1-2. Add the remaining folders directly under the root
-                newDicFolders.AddRange(folders
-                    .Where(f => !f.FullyQualifiedName!.Contains('/'))
-                    .OrderBy(f => f.FullyQualifiedNameOrderable));
-
-                // 2. Add all folders under personal workspace folders
-                newDicFolders.AddRange(folders
-                    .Where(f => f.FeedType == "PersonalWorkspace")
-                    .Where(f => f.FullyQualifiedName!.Contains('/')) // This filter may not be necessary, but keeping it
-                    .OrderBy(f => f.FullyQualifiedNameOrderable));
-
-                // 3. Add all remaining folders
-                newDicFolders.AddRange(folders
-                    .Where(f => f.FeedType != "PersonalWorkspace")
-                    .Where(f => f.FullyQualifiedName!.Contains('/'))
-                    .OrderBy(f => f.FullyQualifiedNameOrderable));
-                #endregion
-
-                #region Build newDicFoldersForEnumFolders
-                // newDicFoldersForEnumFolders is used by OrchDriveInfo.EnumFolders(). The sort order differs slightly.
-                // 1. First, add all personal workspace folders (only root-level ones are done so far)
-                // Add folders under personal workspace folders, then re-sort by FullyQualifiedName
-                newDicFoldersForEnumFolders.AddRange(folders
-                    .Where(f => f.FeedType == "PersonalWorkspace"));
-                newDicFoldersForEnumFolders = newDicFoldersForEnumFolders
-                    .OrderBy(f => f.FullyQualifiedNameOrderable)
-                    .ToList();
-
-                // 2. Add all remaining folders
-                newDicFoldersForEnumFolders.AddRange(folders
-                    .Where(f => f.FeedType != "PersonalWorkspace")
-                    .OrderBy(f => f.FullyQualifiedNameOrderable));
-                #endregion
+                (newDicFolders, newDicFoldersForEnumFolders) =
+                    BuildFolderViews(newDicFolders, newDicFoldersForEnumFolders, folders);
             }
 
             // Publish — EnumFolders reads _dicFoldersForEnumFolders directly, so publish it
@@ -1925,6 +1891,43 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             Volatile.Write(ref _dicFolders, newDicFolders);
             return newDicFolders.AsReadOnly();
         }
+    }
+
+    // Pure ordering core of GetFolders(), extracted so the two folder "views" and
+    // their (subtly different) grouping/sort are unit-testable without a live drive
+    // — see FolderViewOrderingTests. Both lists arrive with the personal-workspace
+    // folders already prepended; this appends the API folders in the documented
+    // order and returns the finished views. `main` backs GetFolders(); `enumView`
+    // backs EnumFolders(). Behavior is identical to the inline code it replaced.
+    internal static (List<Folder> main, List<Folder> enumView) BuildFolderViews(
+        List<Folder> main, List<Folder> enumView, IReadOnlyList<Folder> apiFolders)
+    {
+        // main view: root-level first, then PersonalWorkspace-feed nested folders,
+        // then all other nested folders; each group sorted by FullyQualifiedNameOrderable.
+        main.AddRange(apiFolders
+            .Where(f => !f.FullyQualifiedName!.Contains('/'))
+            .OrderBy(f => f.FullyQualifiedNameOrderable));
+        main.AddRange(apiFolders
+            .Where(f => f.FeedType == "PersonalWorkspace")
+            .Where(f => f.FullyQualifiedName!.Contains('/')) // This filter may not be necessary, but keeping it
+            .OrderBy(f => f.FullyQualifiedNameOrderable));
+        main.AddRange(apiFolders
+            .Where(f => f.FeedType != "PersonalWorkspace")
+            .Where(f => f.FullyQualifiedName!.Contains('/'))
+            .OrderBy(f => f.FullyQualifiedNameOrderable));
+
+        // enum view (OrchDriveInfo.EnumFolders): the prepended PW folders plus ALL
+        // PersonalWorkspace-feed folders are re-sorted together, then every non-PW
+        // folder is appended in order. Sort order differs slightly from the main view.
+        enumView.AddRange(apiFolders.Where(f => f.FeedType == "PersonalWorkspace"));
+        enumView = enumView
+            .OrderBy(f => f.FullyQualifiedNameOrderable)
+            .ToList();
+        enumView.AddRange(apiFolders
+            .Where(f => f.FeedType != "PersonalWorkspace")
+            .OrderBy(f => f.FullyQualifiedNameOrderable));
+
+        return (main, enumView);
     }
 
     // Append a newly-created folder to both caches under the same lock GetFolders uses.
