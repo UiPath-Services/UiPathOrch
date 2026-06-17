@@ -142,6 +142,31 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
         if (ApiPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
             ApiPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
+            // An absolute URL is accepted only if it points at the same origin
+            // (scheme + host + port) the drive already talks to — its Orchestrator,
+            // Identity, or Portal base URL. Otherwise the drive's live bearer token
+            // would be sent to an arbitrary (and possibly http-downgraded) host.
+            if (!Uri.TryCreate(ApiPath, UriKind.Absolute, out var absUri))
+            {
+                ThrowTerminatingError(new ErrorRecord(
+                    new ArgumentException($"'{ApiPath}' is not a valid absolute URI."),
+                    "InvokeOrchApiInvalidUri", ErrorCategory.InvalidArgument, ApiPath));
+                return;
+            }
+            var session = drive.OrchAPISession;
+            bool sameOrigin = IsKnownOrigin(absUri, session._base_url_orchestrator)
+                           || IsKnownOrigin(absUri, session._base_url_identity)
+                           || IsKnownOrigin(absUri, session._base_url_portal);
+            if (!sameOrigin)
+            {
+                ThrowTerminatingError(new ErrorRecord(
+                    new ArgumentException(
+                        $"Absolute URL origin '{absUri.Scheme}://{absUri.Authority}' does not match the drive's " +
+                        "Orchestrator, Identity, or Portal origin. The drive's access token is only sent to its own " +
+                        "deployment; pass a relative API path (e.g. 'odata/Releases'), or use -Identity / -Portal."),
+                    "InvokeOrchApiCrossHostUri", ErrorCategory.InvalidArgument, ApiPath));
+                return;
+            }
             url = ApiPath;
         }
         else
@@ -320,6 +345,17 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
     }
 
     // ----- helpers -----
+
+    // True if the candidate absolute URL shares scheme + host + port with baseUrl,
+    // i.e. it targets the same origin the drive is already authenticated against.
+    private static bool IsKnownOrigin(Uri candidate, string? baseUrl)
+    {
+        return !string.IsNullOrEmpty(baseUrl)
+            && Uri.TryCreate(baseUrl, UriKind.Absolute, out var b)
+            && string.Equals(candidate.Scheme, b.Scheme, StringComparison.OrdinalIgnoreCase)
+            && string.Equals(candidate.Host, b.Host, StringComparison.OrdinalIgnoreCase)
+            && candidate.Port == b.Port;
+    }
 
     internal static HttpContent BuildBodyContent(object body, string contentType)
     {

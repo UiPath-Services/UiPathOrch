@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.9.2'
+ModuleVersion = '1.9.3'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -502,59 +502,26 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.9.2
+1.9.3
 
-Added: the authorize URL handed to the browser is written to the log file (when Logging.Enabled is on),
-so a failing interactive PKCE sign-in can be diagnosed from the request side. It carries no secrets and
-is gated by Logging.Enabled alone (independent of log level).
+Security: Invoke-OrchApi now accepts an absolute -ApiPath URL only when it targets the same origin
+(scheme + host + port) the drive is already authenticated against — its Orchestrator, Identity, or
+Portal base URL. Previously any absolute URL was used verbatim, which would send the drive's live
+bearer token to an arbitrary (and possibly http-downgraded) host. Use a relative API path, or
+-Identity / -Portal, to reach the drive's own deployment. Get-OrchLog -JobKey is validated as a GUID
+before it goes into the OData $filter, so a crafted value can't alter the filter expression (and you
+get a clear client-side error instead of an opaque server 400).
 
-Fixed (pipe-to-update data loss): Get-Orch* | New-/Update-Orch* no longer corrupts or wipes a field
-when the whole entity is piped in. A producer's Tag[] / WebhookEvent[] / RobotUser[] / RobotExecutor[]
-bound to the string parameter by coercing each object to a garbage type-name string, so the cmdlet
-overwrote the field on save. -Tags, Webhook -Events, Machine -RobotUsers and Trigger -ExecutorRobots
-now bind correctly. Multi-value robot columns also round-trip through Import-Csv | Update-OrchMachine /
-Update-OrchTrigger. Entity copy keeps queue RetryAbandonedItems / stale-retention action and process
-AutoUpdate.
+Fixed (cross-platform): interactive PKCE sign-in with -UseInPrivate no longer fails on Linux/macOS —
+the Edge InPrivate launch is Windows-only and now falls back to the default browser elsewhere (and
+when Edge is not installed), so sign-in completes on every platform. CSV export now defaults to UTF-8
+(with BOM) instead of the OS ANSI code page: on Windows-ja this fixes Shift-JIS corruption of
+non-ASCII names on re-import, matches what PowerShell 7's Import-Csv reads by default, and makes
+export/import round-trips identical across Windows, Linux, and macOS.
 
-Fixed (locale): OData $filter and JSON timestamps, and Calendar excluded-date CSV export, are now
-culture-invariant (ISO-8601). Add-OrchCalendarDate no longer duplicates an already-excluded date at a
-non-UTC offset.
-
-Fixed (connectivity): a request no longer hangs forever on IPv6-only / NAT64+DNS64 networks where a
-backend completes the TCP handshake but black-holes the TLS handshake (broken Path-MTU discovery). All
-HTTP clients now dial through a Happy Eyeballs connector (RFC 8305 plus the v3 TLS-completion-as-success
-rule): staggered TCP+TLS attempts across every resolved address, interleaved by family (IPv6 first), the
-first completed TLS winning. HttpClient's timeout and Ctrl+C now abort a stuck connect. Connections
-through an explicit proxy keep the platform's native dialer.
-
-Fixed (other): Get-Item resolves backtick-named folders literally; New-Item stops after an invalid
--FeedType; Ctrl+C stops list cmdlets cleanly; Add-OrchUser applies per-row IsExternalLicensed;
-Get-OrchPmGroup tolerates an unknown/absent member objectType; large downloads are Ctrl+C-cancellable;
-a non-idempotent POST is not retried on 503/504; backtick-escaped commas survive in -Tags / -Roles /
--GroupName; Add/Remove-OrchRoleFromFolderUser match and complete -Roles consistently on role name;
-single-column (comma-less) CSV imports correctly (Import-OrchQueueItem / -TestDataQueueItem);
-tab completion no longer breaks after a colon-form switch (-Switch:$true);
-dir -ExportCsv no longer NREs when nothing matches (writes a header-only CSV); Import-Csv | New-Item
-preserves a folder's FeedType/Description on round-trip; Get-OrchJob / Get-OrchQueueItem return the
-correct -First/-Skip items when a filter forces batching; Get-OrchMachine surfaces previously-dropped
-slot fields; Update-/Reset-OrchProcessVersion and Stop-OrchTestSetExecution invalidate their stale cache entries.
-Open-OrchLogLocation works on macOS (opens the folder via open) and reveals the drive's log subfolder
-selected on Windows/macOS.
-
-Fixed (sign-in): interactive PKCE sign-in works on macOS — the authorize URL's scope is now
-URL-encoded (a raw space had truncated the URL before redirect_uri on macOS). Set-OrchAsset and
-Add-OrchCalendarDate now warn (instead of silently skipping) when a wildcard-containing -Name would
-create a new entity, showing the backtick-escaped name to use for a literal name.
-
-Changed: Scope on a personal-access-token drive is a client-side declaration only (a PAT's scopes are
-fixed server-side), so the misleading scope warnings are gone and the PAT config sample drops the
-Scope line (a comment lists the scopes to select instead). Invoke-OrchApi now takes the API path as its
-first positional argument (Invoke-OrchApi odata/... works; -ApiPath aliases -Uri like Invoke-RestMethod).
-
-Deprecated: Get-OrchAsset -ExportCredentialCsv in favor of Get-OrchCredentialAsset -ExportCsv (CSV
-format unchanged; existing files keep importing into Set-OrchCredentialAsset).
-
-Performance: Enable/Disable-OrchTestSetSchedule skips no-op calls and batches per folder.
+Docs / CI: the README documentation index is resynced with the docs site (adds the Folder Operations
+and AI Integration guides) and migration-guide feedback now routes to GitHub Discussions/Issues. CI
+now builds and runs the unit tests on Linux and macOS in addition to Windows.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

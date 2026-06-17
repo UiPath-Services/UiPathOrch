@@ -470,9 +470,12 @@ internal class OrchestratorAuthManager
                 throw new InvalidOperationException(message, ex);
             }
 
-            if (UseInPrivate)
+            if (UseInPrivate && OperatingSystem.IsWindows())
             {
-                // Open in InPrivate browser (Edge + temporary profile for complete cookie isolation)
+                // Open in InPrivate browser (Edge + temporary profile for complete cookie
+                // isolation). This path is Edge-on-Windows only; on other platforms (or when
+                // Edge is not installed) we fall back to the default browser below so the
+                // sign-in still completes — the InPrivate isolation just can't be honored.
                 string edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86),
                     @"Microsoft\Edge\Application\msedge.exe");
                 if (!File.Exists(edgePath))
@@ -480,8 +483,15 @@ internal class OrchestratorAuthManager
                     edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles),
                         @"Microsoft\Edge\Application\msedge.exe");
                 }
-                string tempProfile = Path.Combine(Path.GetTempPath(), "UiPathOrch_" + Guid.NewGuid().ToString("N")[..8]);
-                Process.Start(new ProcessStartInfo(edgePath, $"--inprivate --user-data-dir=\"{tempProfile}\" \"{authUrl}\"") { UseShellExecute = false });
+                if (File.Exists(edgePath))
+                {
+                    string tempProfile = Path.Combine(Path.GetTempPath(), "UiPathOrch_" + Guid.NewGuid().ToString("N")[..8]);
+                    Process.Start(new ProcessStartInfo(edgePath, $"--inprivate --user-data-dir=\"{tempProfile}\" \"{authUrl}\"") { UseShellExecute = false });
+                }
+                else
+                {
+                    Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
+                }
             }
             else
             {

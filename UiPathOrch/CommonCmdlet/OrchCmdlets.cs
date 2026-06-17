@@ -412,7 +412,11 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
     {
         if (string.IsNullOrEmpty(filePath)) return null;
 
-        encoding ??= Encoding.Default;
+        // Default to UTF-8 (BOM added below) — portable across Windows/Linux/macOS and the
+        // encoding PowerShell 7's Import-Csv reads by default, so CSV round-trips stay lossless.
+        // Encoding.Default is the OS ANSI code page on Windows (e.g. Shift-JIS for ja-JP),
+        // which corrupts non-ASCII names on re-import and differs from Unix (UTF-8).
+        encoding ??= Encoding.UTF8;
 
         // For UTF-8, add a BOM
         if (encoding is UTF8Encoding)

@@ -99,6 +99,8 @@ Get-Help Get-OrchAsset -Online
 Guides (each cmdlet's full help is also at `Get-Help <CmdletName> -Online`):
 
 - [Getting Started](docs/00-GettingStarted.md) — install, OAuth setup, first connection
+- [Folder Operations](docs/03-FolderOperations.md) — navigate & manage folders: `cd` / `dir`, `New-Item`, `Rename`/`Move`/`Copy`/`Remove-Item`, `Set-ItemProperty -Name Description`
+- [AI Integration (PowerShell.MCP)](docs/01-AIIntegration.md) — connect an AI assistant through a shared PowerShell console
 - [Essential Guide for AI](docs/02-Essentials.md) — execution rules, decision flow, error protocol
 - [Cmdlet Reference](docs/04-CmdletReference.md) — cmdlets by area, with examples
 - [CSV Export & Import](docs/05-CsvExportImport.md) — bulk import / export patterns

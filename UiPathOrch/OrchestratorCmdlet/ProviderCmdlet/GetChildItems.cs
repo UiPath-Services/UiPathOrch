@@ -53,7 +53,7 @@ public partial class OrchProvider
 
     private string? ExportCsvFile(OrchDriveInfo drive, string exportCsv, Encoding? csvEncoding, IEnumerable<Folder> output)
     {
-        Encoding encoding = csvEncoding ?? Encoding.Default;
+        Encoding encoding = csvEncoding ?? Encoding.UTF8;
         string[] headers = ["Path", "Name", "Description", "FeedType"];
 
         var (physicalCsvPath, providerCsvPath) = OrchestratorPSCmdlet.GenerateCsvFilePath(exportCsv, SessionState, DefaultCsvName);

@@ -231,7 +231,19 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
         #region JobKey
         if (!string.IsNullOrEmpty(JobKey))
         {
-            filter.Add($"(JobKey eq {JobKey})");
+            // JobKey is an Edm.Guid field (unquoted in the filter). Validate it as a GUID so a
+            // crafted value can't alter the $filter expression, and surface a clear client-side
+            // error instead of an opaque server 400.
+            if (Guid.TryParse(JobKey, out var jobKeyGuid))
+            {
+                filter.Add($"(JobKey eq {jobKeyGuid})");
+            }
+            else
+            {
+                ThrowTerminatingError(new ErrorRecord(
+                    new ArgumentException($"-JobKey must be a GUID; got '{JobKey}'."),
+                    "GetOrchLogInvalidJobKey", ErrorCategory.InvalidArgument, JobKey));
+            }
         }
         #endregion
 

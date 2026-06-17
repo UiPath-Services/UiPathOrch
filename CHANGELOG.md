@@ -4,6 +4,36 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.9.3] - 2026-06-17
+
+### Security
+
+- **`Invoke-OrchApi` only sends the drive's token to the drive's own origin.** An absolute
+  `-ApiPath` URL is now accepted only when its scheme + host + port match the drive's Orchestrator,
+  Identity, or Portal base URL. Previously any absolute URL was used verbatim, so the drive's live
+  bearer token would be sent to an arbitrary (and possibly `http`-downgraded) host. Pass a relative
+  API path, or use `-Identity` / `-Portal`, to reach the drive's own deployment.
+- **`Get-OrchLog -JobKey` is validated as a GUID** before it is placed in the OData `$filter`, so a
+  crafted value cannot alter the filter expression (you also get a clear client-side error instead of
+  an opaque server `400`).
+
+### Fixed
+
+#### Cross-platform
+
+- **Interactive PKCE sign-in with `-UseInPrivate` no longer fails on Linux/macOS.** The Edge
+  InPrivate launch is Windows-only; on other platforms (and when Edge is not installed) it now falls
+  back to the default browser, so the sign-in completes everywhere.
+- **CSV export defaults to UTF-8 (with BOM)** instead of the OS ANSI code page. On Windows-ja this
+  fixes Shift-JIS corruption of non-ASCII names on re-import, matches what PowerShell 7's `Import-Csv`
+  reads by default, and makes export/import round-trips identical across Windows, Linux, and macOS.
+
+### Docs / CI
+
+- README documentation index resynced with the docs site (adds the Folder Operations and AI
+  Integration guides); migration-guide feedback now routes to GitHub Discussions/Issues.
+- CI now builds and runs the unit tests on Linux and macOS in addition to Windows.
+
 ## [1.9.2] - 2026-06-14
 
 ### Added

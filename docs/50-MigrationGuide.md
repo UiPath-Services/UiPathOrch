@@ -483,10 +483,11 @@ untested scenarios.
      email format" instead of actual usernames)
 4. **Show the draft email to the user** and ask for explicit approval before
    sending
-5. Send the approved feedback to: `yoshifumi.tsuda@uipath.com`
-   - Subject: `[UiPathOrch Migration Feedback]`
-   - If the AI cannot send email directly, present the draft and ask the user
-     to send it manually
+5. Submit the approved feedback through the project's GitHub channel:
+   - **GitHub Discussions** (preferred): <https://github.com/UiPath-Services/UiPathOrch/discussions>
+   - or **GitHub Issues** for a concrete bug or feature request: <https://github.com/UiPath-Services/UiPathOrch/issues>
+   - If the AI cannot open a browser, present the draft and ask the user to
+     post it manually
 
 ### Feedback Template
 

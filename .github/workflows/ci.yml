@@ -51,3 +51,29 @@ jobs:
 
       - name: Test
         run: dotnet test --no-build --configuration Release --verbosity normal
+
+  # Build + unit-test on Linux and macOS so the "Windows | Linux | macOS" claim is
+  # exercised by CI and cross-platform regressions (path handling, browser launch,
+  # CSV encoding) are caught. Formatting is verified by the Windows job only.
+  crossplat:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        run: dotnet restore --source https://api.nuget.org/v3/index.json --ignore-failed-sources
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release --verbosity normal
