@@ -1,3 +1,17 @@
+// -----------------------------------------------------------------------------
+// This file is large (~3,700 lines, ~170 API methods) ON PURPOSE — do not split it.
+//
+// It is a flat REGISTRY of independent REST calls, not a "god class": each method
+// is thin, wrapping one endpoint, with no shared mutable state or tangled control
+// flow between methods, so the size carries none of the coupling/complexity that
+// makes large files harmful. Splitting into per-domain partials would not lower
+// coupling (there is none to lower); it would only cost what this layout gives
+// for free — one grep / one scroll across the whole API surface, and a trivial
+// place to add the next call. C# compiles per-assembly, so there is no build-time
+// win. If a method here grows real logic, extract that logic to a helper rather
+// than splitting the file (see Jwt.cs for the pattern).
+// -----------------------------------------------------------------------------
+
 #pragma warning disable IDE1006 // Naming styles
 
 using System.Net;

@@ -1,3 +1,20 @@
+// -----------------------------------------------------------------------------
+// This file is large (~5,200 lines, ~300 wire DTOs) ON PURPOSE — do not split it.
+//
+// It is a flat REGISTRY of independent data-transfer objects, not a "god class":
+// each type is a small, self-contained shape with no shared mutable state and no
+// tangled control flow, so the size carries none of the coupling/complexity that
+// makes large files harmful. Splitting into per-domain files would not lower
+// coupling (there is none to lower); it would only cost what this layout gives
+// for free — one grep / one scroll to see every entity, and a trivial place to
+// add the next one. C# compiles per-assembly, so there is no build-time win.
+//
+// The real risk of a big DTO file is behavior silently creeping into the data
+// classes. That is guarded by OrchEntitiesPurityTests (no decode / JSON-parse /
+// HTTP / crypto / host logic here) — NOT by splitting. Keep DTOs pure data; put
+// behavior in the core / auth / session / cmdlet layers (see Jwt.cs).
+// -----------------------------------------------------------------------------
+
 using System.Collections;
 using System.Management.Automation;
 using System.Text.Json;
