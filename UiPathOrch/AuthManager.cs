@@ -406,6 +406,132 @@ internal class OrchestratorAuthManager
         return Convert.ToBase64String(imageBytes);
     }
 
+    // The "left the browser on an error page -> use Resolve-OrchAuthError" hint,
+    // shared by every PKCE failure path below so the guidance stays consistent.
+    private const string PkceErrorPageHint =
+        "(e.g. An unknown error has occurred. (#200)), "
+        + "copy that page's full URL from the address bar, "
+        + "run `cd $HOME`, then "
+        + "`Resolve-OrchAuthError '<url>'`.";
+
+    // Builds the Identity authorize URL. Extracted as a pure, testable function:
+    // endpoint selection (explicit IdentityUrl / Cloud common path + acr_values /
+    // on-prem) and the scope URL-encoding the v1.9.2 macOS fix depends on (a raw
+    // space in scope truncates the launched URL and drops redirect_uri).
+    internal static string BuildAuthorizeUrl(
+        string? identityUrl, bool isCloud, string baseUrl,
+        string? scope, string? appId, string? redirectUrl,
+        bool useInPrivate, string? codeVerifier)
+    {
+        string endPoint;
+        string acrValues = "";
+        if (!string.IsNullOrEmpty(identityUrl))
+        {
+            endPoint = identityUrl + "/connect/authorize";
+        }
+        else if (isCloud)
+        {
+            // Cloud: The authorize endpoint uses a common path without the org prefix,
+            // and specifies the organization name via acr_values (to accommodate UiPath Identity spec changes).
+            var baseUri = new Uri(baseUrl);
+            string orgName = baseUri.AbsolutePath.Trim('/');
+            endPoint = $"{baseUri.Scheme}://{baseUri.Host}/identity_/connect/authorize";
+            acrValues = useInPrivate
+                ? "" // InPrivate: omit acr_values to display the authentication provider selection screen
+                : $"&acr_values=tenantName:{orgName}";
+        }
+        else
+        {
+            endPoint = baseUrl + "/identity/connect/authorize";
+        }
+
+        // The scope value contains literal spaces (space-delimited scopes plus
+        // " offline_access"), so it must be URL-encoded like redirect_uri.
+        // Windows browsers normalized raw spaces to %20, masking the omission;
+        // on macOS the launch path splits the URL at the first raw space, so
+        // everything after the scope value (including redirect_uri) was lost
+        // and Identity rejected the request with "Invalid redirect_uri".
+        string encodedScope = WebUtility.UrlEncode($"{scope} offline_access");
+        return !string.IsNullOrEmpty(codeVerifier)
+            ? $"{endPoint}?response_type=code&client_id={appId}&scope={encodedScope}&redirect_uri={WebUtility.UrlEncode(redirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256{acrValues}"
+            : $"{endPoint}?response_type=code&client_id={appId}&scope={encodedScope}&redirect_uri={WebUtility.UrlEncode(redirectUrl)}{acrValues}";
+    }
+
+    // The success-page language: the embedded notification HTML exists only for
+    // these locales, so anything else falls back to English.
+    internal static string ResolveNotificationLang(string twoLetterIsoLang)
+    {
+        string[] supportedLangs = ["de", "en", "fr", "ja", "ko", "ro", "tr"];
+        return supportedLangs.Contains(twoLetterIsoLang) ? twoLetterIsoLang : "en";
+    }
+
+    // The Orchestrator drive plus the Du / Tm shadow drives that Import-OrchConfig
+    // mounts alongside it — created when the drive's scope includes Du. / TM.
+    // scopes (the same condition used to create them), and named <Name>Du /
+    // <Name>Tm. Lists whichever apply, for display on the success page.
+    internal static string FormatMountedDriveList(string driveColon, string scope)
+    {
+        string baseName = driveColon.TrimEnd(':');
+        var mountedDrives = new List<string> { driveColon };
+        if (scope.Contains("Du.")) mountedDrives.Add($"{baseName}Du:");
+        if (scope.Contains("TM.")) mountedDrives.Add($"{baseName}Tm:");
+        return string.Join(", ", mountedDrives);
+    }
+
+    // Starts the loopback HttpListener for the PKCE redirect, mapping a bind
+    // failure to an actionable message (privileged port vs port-in-use).
+    private HttpListener StartAuthListener()
+    {
+        var listener = new HttpListener();
+        try
+        {
+            listener.Prefixes.Add(_drive._psDrive.HttpListener!);
+            listener.Start();
+        }
+        catch (HttpListenerException ex)
+        {
+            // If starting the listener failed
+            listener.Close();
+            var uri = new Uri(_drive._psDrive.RedirectUrl!);
+            string message = uri.Port <= 1024
+                ? $"Failed to start the HttpListener. The port {uri.Port} specified in 'RedirectUrl' may require administrative privileges. Please ensure you have the necessary permissions or try changing this port in the configuration file, which can be opened using the Edit-OrchConfig cmdlet."
+                : $"Failed to start the HttpListener. The port {uri.Port} specified in 'RedirectUrl' may be in use. Try changing this port in the configuration file, which can be opened using the Edit-OrchConfig cmdlet.";
+            throw new InvalidOperationException(message, ex);
+        }
+        return listener;
+    }
+
+    // Opens the authorize URL in a browser. With -UseInPrivate on Windows, uses
+    // Edge InPrivate + a throwaway profile for full cookie isolation; on other
+    // platforms (or when Edge is absent) falls back to the default browser so
+    // sign-in still completes — the isolation just can't be honored there.
+    private void LaunchSignInBrowser(string authUrl)
+    {
+        if (UseInPrivate && OperatingSystem.IsWindows())
+        {
+            string edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86),
+                @"Microsoft\Edge\Application\msedge.exe");
+            if (!File.Exists(edgePath))
+            {
+                edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles),
+                    @"Microsoft\Edge\Application\msedge.exe");
+            }
+            if (File.Exists(edgePath))
+            {
+                string tempProfile = Path.Combine(Path.GetTempPath(), "UiPathOrch_" + Guid.NewGuid().ToString("N")[..8]);
+                Process.Start(new ProcessStartInfo(edgePath, $"--inprivate --user-data-dir=\"{tempProfile}\" \"{authUrl}\"") { UseShellExecute = false });
+            }
+            else
+            {
+                Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
+            }
+        }
+        else
+        {
+            Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
+        }
+    }
+
     private string GetAuthorizationCode(string? codeVerifier)
     {
         // See _pkceLock declaration for the rationale. Held for the full
@@ -414,38 +540,11 @@ internal class OrchestratorAuthManager
         lock (_pkceLock)
         {
             LogAuthSettings();
-            string endPoint;
-            string acrValues = "";
-            if (!string.IsNullOrEmpty(_drive._psDrive.IdentityUrl))
-            {
-                endPoint = _drive._psDrive.IdentityUrl + "/connect/authorize";
-            }
-            else if (_drive._psDrive.IsCloud)
-            {
-                // Cloud: The authorize endpoint uses a common path without the org prefix,
-                // and specifies the organization name via acr_values (to accommodate UiPath Identity spec changes).
-                var baseUri = new Uri(BaseUrl);
-                string orgName = baseUri.AbsolutePath.Trim('/');
-                endPoint = $"{baseUri.Scheme}://{baseUri.Host}/identity_/connect/authorize";
-                acrValues = UseInPrivate
-                    ? "" // InPrivate: omit acr_values to display the authentication provider selection screen
-                    : $"&acr_values=tenantName:{orgName}";
-            }
-            else
-            {
-                endPoint = BaseUrl + "/identity/connect/authorize";
-            }
 
-            // The scope value contains literal spaces (space-delimited scopes plus
-            // " offline_access"), so it must be URL-encoded like redirect_uri.
-            // Windows browsers normalized raw spaces to %20, masking the omission;
-            // on macOS the launch path splits the URL at the first raw space, so
-            // everything after the scope value (including redirect_uri) was lost
-            // and Identity rejected the request with "Invalid redirect_uri".
-            string encodedScope = WebUtility.UrlEncode($"{_drive._psDrive.Scope} offline_access");
-            string authUrl = !string.IsNullOrEmpty(codeVerifier)
-                ? $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={encodedScope}&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256{acrValues}"
-                : $"{endPoint}?response_type=code&client_id={_drive._psDrive.AppId}&scope={encodedScope}&redirect_uri={WebUtility.UrlEncode(_drive._psDrive.RedirectUrl)}{acrValues}";
+            string authUrl = BuildAuthorizeUrl(
+                _drive._psDrive.IdentityUrl, _drive._psDrive.IsCloud, BaseUrl,
+                _drive._psDrive.Scope, _drive._psDrive.AppId, _drive._psDrive.RedirectUrl,
+                UseInPrivate, codeVerifier);
 
             // Log the exact URL handed to the browser (when the drive's Logging is
             // enabled). This is the authorize request as Identity receives it, so a
@@ -454,49 +553,8 @@ internal class OrchestratorAuthManager
             // redirect_uri, scope, and the public PKCE code challenge.
             LogAuthorizeUrl(authUrl);
 
-            using var listener = new HttpListener();
-            try
-            {
-                listener.Prefixes.Add(_drive._psDrive.HttpListener!);
-                listener.Start();
-            }
-            catch (HttpListenerException ex)
-            {
-                // If starting the listener failed
-                var uri = new Uri(_drive._psDrive.RedirectUrl!);
-                string message = uri.Port <= 1024
-                    ? $"Failed to start the HttpListener. The port {uri.Port} specified in 'RedirectUrl' may require administrative privileges. Please ensure you have the necessary permissions or try changing this port in the configuration file, which can be opened using the Edit-OrchConfig cmdlet."
-                    : $"Failed to start the HttpListener. The port {uri.Port} specified in 'RedirectUrl' may be in use. Try changing this port in the configuration file, which can be opened using the Edit-OrchConfig cmdlet.";
-                throw new InvalidOperationException(message, ex);
-            }
-
-            if (UseInPrivate && OperatingSystem.IsWindows())
-            {
-                // Open in InPrivate browser (Edge + temporary profile for complete cookie
-                // isolation). This path is Edge-on-Windows only; on other platforms (or when
-                // Edge is not installed) we fall back to the default browser below so the
-                // sign-in still completes — the InPrivate isolation just can't be honored.
-                string edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFilesX86),
-                    @"Microsoft\Edge\Application\msedge.exe");
-                if (!File.Exists(edgePath))
-                {
-                    edgePath = Path.Combine(System.Environment.GetFolderPath(System.Environment.SpecialFolder.ProgramFiles),
-                        @"Microsoft\Edge\Application\msedge.exe");
-                }
-                if (File.Exists(edgePath))
-                {
-                    string tempProfile = Path.Combine(Path.GetTempPath(), "UiPathOrch_" + Guid.NewGuid().ToString("N")[..8]);
-                    Process.Start(new ProcessStartInfo(edgePath, $"--inprivate --user-data-dir=\"{tempProfile}\" \"{authUrl}\"") { UseShellExecute = false });
-                }
-                else
-                {
-                    Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
-                }
-            }
-            else
-            {
-                Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
-            }
+            using var listener = StartAuthListener();
+            LaunchSignInBrowser(authUrl);
 
             string? authorizationCode = null;
             Exception? capturedException = null;
@@ -561,9 +619,7 @@ internal class OrchestratorAuthManager
                                 }
 
                                 // Send a response back to the browser
-                                string lang = System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
-                                string[] supportedLangs = ["de", "en", "fr", "ja", "ko", "ro", "tr"];
-                                if (!supportedLangs.Contains(lang)) lang = "en";
+                                string lang = ResolveNotificationLang(System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
 
                                 using Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream($"UiPathOrch.Resources.{lang}.MountSuccessNotification.html");
                                 using StreamReader reader = new(stream!);
@@ -579,16 +635,7 @@ internal class OrchestratorAuthManager
                                 // rendered string and the PSGallery URL match what was actually published.
                                 string versionStr = Assembly.GetExecutingAssembly().GetName().Version?.ToString(3) ?? "";
 
-                                // The Orchestrator drive plus the Du / Tm shadow drives that
-                                // Import-OrchConfig mounts alongside it — created when the drive's
-                                // scope includes Du. / TM. scopes (the same condition used to create
-                                // them), and named <Name>Du / <Name>Tm. List whichever apply.
-                                string baseName = _drive.NameColon.TrimEnd(':');
-                                string driveScope = _drive._psDrive.Scope ?? "";
-                                var mountedDrives = new List<string> { _drive.NameColon };
-                                if (driveScope.Contains("Du.")) mountedDrives.Add($"{baseName}Du:");
-                                if (driveScope.Contains("TM.")) mountedDrives.Add($"{baseName}Tm:");
-                                string mountedDrivesStr = string.Join(", ", mountedDrives);
+                                string mountedDrivesStr = FormatMountedDriveList(_drive.NameColon, _drive._psDrive.Scope ?? "");
 
                                 string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, mountedDrivesStr, versionStr, LoadBotImageRandomly(), userStyle, userEncoded);
 
@@ -663,12 +710,8 @@ internal class OrchestratorAuthManager
                 // hint message verbatim — Resolve-OrchAuthError exists
                 // exactly for this, but the user has to be told.
                 throw new InvalidOperationException(
-                        "PKCE sign-in was canceled (Ctrl+C). If the browser "
-                        + "was left on a sign-in error page (e.g. "
-                        + "An unknown error has occurred. (#200)), "
-                        + "copy that page's full URL from the address bar, "
-                        + "run `cd $HOME`, then "
-                        + "`Resolve-OrchAuthError '<url>'`.", oce);
+                        "PKCE sign-in was canceled (Ctrl+C). If the browser was left on a sign-in error page "
+                        + PkceErrorPageHint, oce);
             }
             catch (AggregateException ae)
             {
@@ -678,12 +721,8 @@ internal class OrchestratorAuthManager
                     // outer Wait observed cancellation. Same hint applies;
                     // same exception-type swap reason as above.
                     throw new InvalidOperationException(
-                        "PKCE sign-in was canceled (Ctrl+C). If the browser "
-                        + "was left on a sign-in error page (e.g. "
-                        + "An unknown error has occurred. (#200)), "
-                        + "copy that page's full URL from the address bar, "
-                        + "run `cd $HOME`, then "
-                        + "`Resolve-OrchAuthError '<url>'`.", ae);
+                        "PKCE sign-in was canceled (Ctrl+C). If the browser was left on a sign-in error page "
+                        + PkceErrorPageHint, ae);
                 }
                 else
                 {
@@ -710,11 +749,8 @@ internal class OrchestratorAuthManager
                 // misleading empty results).
                 throw new InvalidOperationException(
                     "PKCE sign-in timed out after 3 minutes (no browser callback received). "
-                    + "If the browser was left on a sign-in error page (e.g. "
-                    + "An unknown error has occurred. (#200)), "
-                    + "copy that page's full URL from the address bar, "
-                    + "run `cd $HOME`, then "
-                    + "`Resolve-OrchAuthError '<url>'`.");
+                    + "If the browser was left on a sign-in error page "
+                    + PkceErrorPageHint);
             }
 
             if (capturedException is not null)
@@ -725,12 +761,8 @@ internal class OrchestratorAuthManager
             if (authorizationCode is null)
             {
                 throw new InvalidOperationException(
-                    "Authorization code was not received. If the browser "
-                    + "showed an error page (e.g. "
-                    + "An unknown error has occurred. (#200)), "
-                    + "copy that page's full URL from the address bar, "
-                    + "run `cd $HOME`, then "
-                    + "`Resolve-OrchAuthError '<url>'`.");
+                    "Authorization code was not received. If the browser showed an error page "
+                    + PkceErrorPageHint);
             }
 
             return authorizationCode;
