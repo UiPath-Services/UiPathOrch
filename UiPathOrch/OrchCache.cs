@@ -304,7 +304,16 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
         // Update _cache (do nothing if the list does not exist)
         if (_cache.TryGetValue(partitionGlobalId, out var list))
         {
-            // No lock needed since this is assumed to be called only from the main thread
+            // No lock: this in-place list mutation is reached only from the cmdlet's
+            // main pipeline thread. Verified invariant — the sole caller of Set() is
+            // OrchDriveInfo.CreatePmGroup, whose only caller is New-PmGroup, which
+            // runs a sequential foreach (no RunForEach / parallel fan-out). The Get()
+            // / enumeration paths read these lists without locking too, so they rely
+            // on the same single-thread assumption.
+            // CONTRACT: any future caller that invokes Set() (or a Create* that calls
+            // it) from a parallel context (RunForEach lambda, Task, etc.) MUST add
+            // read+write synchronization here AND on the enumeration paths first —
+            // List<T>.Add / indexer are not atomic and tear under concurrent access.
             bool replaced = false;
             for (int i = 0; i < list.Count; i++)
             {

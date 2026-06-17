@@ -231,18 +231,14 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
         #region JobKey
         if (!string.IsNullOrEmpty(JobKey))
         {
-            // JobKey is an Edm.Guid field (unquoted in the filter). Validate it as a GUID so a
-            // crafted value can't alter the $filter expression, and surface a clear client-side
-            // error instead of an opaque server 400.
-            if (Guid.TryParse(JobKey, out var jobKeyGuid))
+            try
             {
-                filter.Add($"(JobKey eq {jobKeyGuid})");
+                filter.Add(BuildJobKeyFilterClause(JobKey));
             }
-            else
+            catch (ArgumentException ex)
             {
                 ThrowTerminatingError(new ErrorRecord(
-                    new ArgumentException($"-JobKey must be a GUID; got '{JobKey}'."),
-                    "GetOrchLogInvalidJobKey", ErrorCategory.InvalidArgument, JobKey));
+                    ex, "GetOrchLogInvalidJobKey", ErrorCategory.InvalidArgument, JobKey));
             }
         }
         #endregion
@@ -318,6 +314,22 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
         string ret = filter.CreateAndFilter(f => f);
         ret = $"&$filter={ret}";
         return ret;
+    }
+
+    // Builds the OData $filter clause for -JobKey. JobKey is an Edm.Guid field
+    // (unquoted in the filter), so validating it as a GUID means a crafted value
+    // cannot alter the $filter expression. Parsing also normalizes the GUID to its
+    // canonical form, so any stray characters cause a clean client-side failure
+    // instead of an opaque server 400. Extracted as a pure, testable function —
+    // see GetLogJobKeyFilterTests. Throws ArgumentException for a non-GUID; the
+    // caller wraps it into a terminating ErrorRecord.
+    internal static string BuildJobKeyFilterClause(string jobKey)
+    {
+        if (Guid.TryParse(jobKey, out var jobKeyGuid))
+        {
+            return $"(JobKey eq {jobKeyGuid})";
+        }
+        throw new ArgumentException($"-JobKey must be a GUID; got '{jobKey}'.");
     }
 
     // Ordering for the no-filter cache-output path. Extracted as a pure,

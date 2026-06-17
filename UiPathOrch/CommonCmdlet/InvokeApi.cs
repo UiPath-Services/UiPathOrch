@@ -348,7 +348,9 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
 
     // True if the candidate absolute URL shares scheme + host + port with baseUrl,
     // i.e. it targets the same origin the drive is already authenticated against.
-    private static bool IsKnownOrigin(Uri candidate, string? baseUrl)
+    // internal (not private) so the cross-host token-leak guard can be unit-tested
+    // directly — see InvokeOriginGuardTests.
+    internal static bool IsKnownOrigin(Uri candidate, string? baseUrl)
     {
         return !string.IsNullOrEmpty(baseUrl)
             && Uri.TryCreate(baseUrl, UriKind.Absolute, out var b)
