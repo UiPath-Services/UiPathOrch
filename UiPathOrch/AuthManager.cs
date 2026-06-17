@@ -786,14 +786,7 @@ internal class OrchestratorAuthManager
         var parts = _access_token?.Split('.') ?? [];
         if (parts.Length != 3) throw new InvalidOperationException("Invalid JWT");
 
-        // Base64URL decode
-        var payload = parts[1];
-        payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
-        payload = payload.Replace('-', '+').Replace('_', '/');
-
-        var jsonBytes = Convert.FromBase64String(payload);
-        var json = Encoding.UTF8.GetString(jsonBytes);
-        return JsonDocument.Parse(json);
+        return JsonDocument.Parse(Jwt.DecodePayloadJson(parts[1]));
     }
 
     public string DebugJwtToken()
@@ -801,13 +794,7 @@ internal class OrchestratorAuthManager
         var parts = _access_token?.Split('.') ?? [];
         if (parts.Length != 3) return "";
 
-        var payload = parts[1];
-        payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
-        payload = payload.Replace('-', '+').Replace('_', '/');
-
-        var jsonBytes = Convert.FromBase64String(payload);
-        var json = Encoding.UTF8.GetString(jsonBytes);
-        return json;
+        return Jwt.DecodePayloadJson(parts[1]);
     }
 
     #region Auth diagnostics logging

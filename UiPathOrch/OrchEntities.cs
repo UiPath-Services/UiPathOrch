@@ -72,7 +72,7 @@ public class OrchPSDrive
         TenantId = drive._tenantId;
         TenantKey = drive._tenantKey;
         AccessToken = drive.OrchAPISession.AuthManager.AccessToken;
-        Claims = JwtClaims.Parse(AccessToken);
+        Claims = Jwt.ReadClaims(AccessToken);
         // Derive CurrentUser from JWT (free) so it populates immediately after auth for both
         // Conf and Non-Conf apps. Falls back to the cached User's UserName for Non-Conf tenants
         // whose Identity Server doesn't emit preferred_username/name claims (older deployments).

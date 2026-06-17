@@ -70,7 +70,7 @@ public class OrchEntitiesPurityTests
 
         Assert.True(hits.Count == 0,
             "OrchEntities.cs (the DTO layer) must stay pure data. Found active logic that " +
-            "belongs in the core/auth/session/cmdlet layers — move it out (see JwtClaims.cs " +
+            "belongs in the core/auth/session/cmdlet layers — move it out (see Jwt.cs " +
             "for the pattern) rather than letting the entity file accrete behavior:\n\n" +
             string.Join("\n", hits));
     }
