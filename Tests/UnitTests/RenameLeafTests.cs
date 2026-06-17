@@ -9,7 +9,11 @@ namespace UnitTests;
 // (e.g. "..\sub5") is rejected (returns null) rather than silently reduced.
 public class RenameLeafTests
 {
-    private const string Src = "Orch1:\\src\\sub3"; // the item being renamed
+    // Inputs use Windows '\' for readability; RenameLeaf relies on Path.GetFileName/
+    // GetDirectoryName, which only treat '\' as a separator on Windows. Feed each
+    // platform its own separator so the test exercises real per-platform input.
+    private static string ToPlatform(string p) => p.Replace('\\', System.IO.Path.DirectorySeparatorChar);
+    private static readonly string Src = ToPlatform("Orch1:\\src\\sub3"); // the item being renamed
 
     [Theory]
     [InlineData(".\\Shared2", "Shared2")]
@@ -21,7 +25,7 @@ public class RenameLeafTests
     [InlineData(".\\.config", ".config")]
     [InlineData("Orch1:\\src\\Shared2", "Shared2")] // same directory as the source -> leaf allowed
     public void ReducesToLeaf(string input, string expected)
-        => Assert.Equal(expected, PathTools.RenameLeaf(Src, input));
+        => Assert.Equal(expected, PathTools.RenameLeaf(Src, ToPlatform(input)));
 
     [Theory]
     [InlineData(null)]
@@ -35,5 +39,5 @@ public class RenameLeafTests
     [InlineData("sub\\Shared2")]          // into a subfolder -> reject
     [InlineData("Orch1:\\other\\Shared2")] // a different folder -> reject
     public void ReturnsNullForNonLeafOrMove(string? input)
-        => Assert.Null(PathTools.RenameLeaf(Src, input));
+        => Assert.Null(PathTools.RenameLeaf(Src, input is null ? null : ToPlatform(input)));
 }
