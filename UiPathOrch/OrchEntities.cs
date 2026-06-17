@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Management.Automation;
-using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using UiPath.PowerShell.Core;
@@ -55,47 +54,6 @@ public class OrchPSDrive
     public string? AccessToken { get; set; }
     public PSObject? Claims { get; set; }
 
-    private static readonly HashSet<string> _unixTimestampClaims = ["exp", "iat", "nbf", "auth_time"];
-
-    private static PSObject? ParseJwtClaims(string? token)
-    {
-        if (string.IsNullOrEmpty(token)) return null;
-
-        var parts = token.Split('.');
-        if (parts.Length != 3) return null;
-
-        try
-        {
-            var payload = parts[1];
-            payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
-            payload = payload.Replace('-', '+').Replace('_', '/');
-            var json = Encoding.UTF8.GetString(Convert.FromBase64String(payload));
-
-            using var doc = JsonDocument.Parse(json);
-            var claims = new PSObject();
-            foreach (var prop in doc.RootElement.EnumerateObject())
-            {
-                object value = prop.Value.ValueKind switch
-                {
-                    JsonValueKind.String => prop.Value.GetString()!,
-                    JsonValueKind.Number when _unixTimestampClaims.Contains(prop.Name)
-                        => DateTimeOffset.FromUnixTimeSeconds(prop.Value.GetInt64()).LocalDateTime,
-                    JsonValueKind.Number => prop.Value.GetInt64(),
-                    JsonValueKind.True => true,
-                    JsonValueKind.False => false,
-                    JsonValueKind.Array => prop.Value.EnumerateArray().Select(e => e.ToString()).ToArray(),
-                    _ => prop.Value.ToString()
-                };
-                claims.Properties.Add(new PSNoteProperty(prop.Name, value));
-            }
-            return claims;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
     public OrchPSDrive(OrchDriveInfo drive)
     {
         Name = drive.Name;
@@ -114,7 +72,7 @@ public class OrchPSDrive
         TenantId = drive._tenantId;
         TenantKey = drive._tenantKey;
         AccessToken = drive.OrchAPISession.AuthManager.AccessToken;
-        Claims = ParseJwtClaims(AccessToken);
+        Claims = JwtClaims.Parse(AccessToken);
         // Derive CurrentUser from JWT (free) so it populates immediately after auth for both
         // Conf and Non-Conf apps. Falls back to the cached User's UserName for Non-Conf tenants
         // whose Identity Server doesn't emit preferred_username/name claims (older deployments).
