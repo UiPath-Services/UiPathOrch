@@ -2,6 +2,7 @@ using System.Collections;
 using System.Linq;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Core;
 using Xunit;
 
 namespace UnitTests;
@@ -48,16 +49,21 @@ public class TimeZoneIdCompleterTests
     [Fact]
     public void EmittedTexts_AreActualTimeZoneInfoIds()
     {
-        // Every completion the completer emits must round-trip through
-        // TimeZoneInfo.FindSystemTimeZoneById — i.e., must be a valid Id.
-        var validIds = TimeZoneInfo.GetSystemTimeZones().Select(t => t.Id).ToHashSet();
+        // Every completion must be a real time-zone Id (the original bug was wiring a
+        // DisplayName completer onto -TimeZoneId). Orchestrator requires a WINDOWS id,
+        // so validate against the same source the completer uses per platform: the live
+        // OS list on Windows, the embedded Windows table on Linux/macOS (where the OS
+        // list is IANA and would be the wrong answer).
+        var validIds = (OperatingSystem.IsWindows()
+            ? TimeZoneInfo.GetSystemTimeZones().Select(t => t.Id)
+            : WindowsTimeZones.All.Select(z => z.Id)).ToHashSet();
         var results = Run("*").Take(50).ToList();
         Assert.NotEmpty(results);
         foreach (var r in results)
         {
             // CompletionText is the PSText-escaped value (may have a leading '); compare the ListItemText.
             Assert.True(validIds.Contains(r.ListItemText),
-                $"TimeZoneIdCompleter emitted '{r.ListItemText}' which is NOT a TimeZoneInfo.Id — would be rejected as -TimeZoneId input.");
+                $"TimeZoneIdCompleter emitted '{r.ListItemText}' which is NOT a valid Windows time-zone Id — would be rejected as -TimeZoneId input.");
         }
     }
 

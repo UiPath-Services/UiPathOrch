@@ -1645,11 +1645,19 @@ internal class TimeZoneIdCompleter : OrchArgumentCompleter
     {
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones()
-            .Where(t => wp.IsMatch(t.Id) || wp.IsMatch(t.DisplayName)))
+        // Orchestrator's -TimeZoneId requires a WINDOWS time-zone id (IANA ids such as
+        // "Asia/Tokyo" are rejected with "not a valid windows time zone id"). On Windows
+        // the live OS list already provides Windows ids; on Linux/macOS the OS list is
+        // IANA, so fall back to the embedded Windows table so completions stay
+        // Orchestrator-valid cross-platform. See WindowsTimeZones.
+        IEnumerable<(string Id, string DisplayName)> zones = OperatingSystem.IsWindows()
+            ? TimeZoneInfo.GetSystemTimeZones().Select(t => (Id: t.Id, DisplayName: t.DisplayName))
+            : WindowsTimeZones.All;
+
+        foreach (var (id, displayName) in zones.Where(z => wp.IsMatch(z.Id) || wp.IsMatch(z.DisplayName)))
         {
-            string tiphelp = $"{timeZone.DisplayName} (Id = '{timeZone.Id}')";
-            yield return new CompletionResult(PathTools.EscapePSText(timeZone.Id), timeZone.Id, CompletionResultType.ParameterValue, tiphelp);
+            string tiphelp = $"{displayName} (Id = '{id}')";
+            yield return new CompletionResult(PathTools.EscapePSText(id), id, CompletionResultType.ParameterValue, tiphelp);
         }
     }
 }
