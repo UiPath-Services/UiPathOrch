@@ -77,17 +77,15 @@ public partial class OrchProvider
 
             try
             {
-                Int64? parentPathId;
-                string displayName;
+                string displayName = LeafFromParent(path, parentPath);
 
+                Int64? parentPathId;
                 if (parentPath == System.IO.Path.DirectorySeparatorChar.ToString())
                 {
-                    displayName = path.Substring(parentPath.Length);
                     parentPathId = null;
                 }
                 else
                 {
-                    displayName = path.Substring(parentPath.Length + 1);
                     string orchParentPath = OrchDriveInfo.PSPathToOrchPath(parentPath);
                     parentPathId = drive.GetFolder(orchParentPath)?.Id;
                 }
@@ -116,6 +114,23 @@ public partial class OrchProvider
                 WriteError(new ErrorRecord(new OrchException(path, ex), "NewFolderError", ErrorCategory.InvalidOperation, path));
             }
         }
+    }
+
+    // The new folder's name = the path minus its parent. The parent may or may not carry a
+    // trailing separator: a NESTED parent resolves to "Orch1:\Foo" (no trailing sep), but the
+    // DRIVE ROOT resolves to "Orch1:\" (WITH one, since the 1.9.x GetParentPath re-rooting fix).
+    // So strip a single boundary separator only when it is actually present, instead of always
+    // skipping one char. The old `Substring(parentPath.Length + 1)` assumed no trailing separator
+    // and therefore dropped the FIRST character of every top-level folder name —
+    // `New-Item Orch1:\TestFixture_Base` created "estFixture_Base". Pure + unit-tested.
+    internal static string LeafFromParent(string path, string parentPath)
+    {
+        string rest = path.Substring(parentPath.Length);
+        if (rest.Length > 0 && rest[0] == System.IO.Path.DirectorySeparatorChar)
+        {
+            rest = rest.Substring(1);
+        }
+        return rest;
     }
 
     protected override object NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)

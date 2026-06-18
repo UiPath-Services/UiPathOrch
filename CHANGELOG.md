@@ -4,6 +4,31 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+#### Provider
+
+- **`New-Item` / `mkdir` dropped the first character of a TOP-LEVEL folder name** — creating a
+  folder named `estFixture_Base` for `New-Item Orch1:\TestFixture_Base`. The new folder's name is
+  the path minus its parent, and the parent-path computation was recently changed so the drive
+  root resolves to `Orch1:\` (WITH a trailing separator) to fix the `dir` `Directory:` header. The
+  leaf extraction (`Substring(parentPath.Length + 1)`) still assumed the parent never ended in a
+  separator, so for a top-level folder it skipped the leaf's first character. Folders created
+  **under** another folder (nested) were unaffected. The leaf is now taken by stripping a single
+  boundary separator only when one is actually present. (The regression was introduced after 1.9.4
+  and never shipped to the Gallery.)
+
+### Internal
+
+- The provider's child-enumeration logic — `HasChildItems` subfolder detection, `dir` /
+  `dir -Recurse` depth-filtering and parent-grouped ordering, and `-Name` / wildcard child
+  selection — was extracted from the `OrchProvider` overrides into pure, drive-free helpers and
+  given unit coverage, closing a gap where this historically fragile globber logic could only be
+  verified against a live tenant. Behavior-preserving. Regression coverage was also added for the
+  top-level `New-Item` fix above.
+
 ## [1.9.4] - 2026-06-18
 
 ### Fixed
