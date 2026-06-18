@@ -80,4 +80,52 @@ public class PathToolsTests
         Assert.Equal("Orch1:" + sep + "Shared", PathTools.ParentPathWithDriveRoot("Orch1:" + sep + "Shared"));
         Assert.Equal("", PathTools.ParentPathWithDriveRoot(""));
     }
+
+    // Convert the readable '\' separators in the InlineData to the running OS separator so the
+    // expectations hold on the Linux/macOS CI legs too.
+    private static string P(string s) => s.Replace('\\', System.IO.Path.DirectorySeparatorChar);
+
+    // The leaf side of the drive-root re-rooting (symmetric to ParentPathWithDriveRoot). A bare
+    // drive re-roots ("Orch1:" -> "Orch1:\") so Split-Path X:\ -Leaf yields "X:\", not "X:";
+    // every other case returns the last segment with any trailing separator trimmed.
+    [Theory]
+    [InlineData("Orch1:\\Shared", "Shared")]
+    [InlineData("Orch1:\\A\\B", "B")]
+    [InlineData("Orch1:\\Shared\\", "Shared")]   // trailing separator trimmed first
+    [InlineData("Orch1:\\", "Orch1:\\")]          // drive root re-rooted
+    [InlineData("Orch1:", "Orch1:\\")]            // bare drive re-rooted
+    public void GetChildNameWithDriveRoot_returnsLeaf_andRerootsBareDrive(string path, string expected)
+    {
+        Assert.Equal(P(expected), PathTools.GetChildNameWithDriveRoot(P(path)));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void GetChildNameWithDriveRoot_throwsOnNullOrEmpty(string? path)
+    {
+        Assert.Throws<System.ArgumentException>(() => PathTools.GetChildNameWithDriveRoot(path!));
+    }
+
+    // Syntactic-only validity (NOT existence): null/empty are invalid, the drive root is valid, a
+    // normal folder path is valid, and a control character (which can never appear in a real folder
+    // name) is rejected.
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("", false)]
+    [InlineData("Orch1:\\", true)]            // drive root
+    [InlineData("Orch1:\\Shared", true)]
+    [InlineData("Orch1:\\Shared\\Deep", true)]
+    public void IsValidProviderPath_acceptsWellFormedPaths(string? path, bool expected)
+    {
+        Assert.Equal(expected, PathTools.IsValidProviderPath(path is null ? null! : P(path)));
+    }
+
+    [Fact]
+    public void IsValidProviderPath_rejectsControlCharactersInAName()
+    {
+        // A bell (U+0007) inside a folder name is a control char -> invalid.
+        string path = P("Orch1:\\Foo") + (char)7 + "Bar";
+        Assert.False(PathTools.IsValidProviderPath(path));
+    }
 }

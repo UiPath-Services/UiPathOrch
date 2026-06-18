@@ -74,4 +74,25 @@ public class DriveRootParentPathRegressionTests
 
         Assert.Equal($"Orch1:{sep}Shared", parent);
     }
+
+    // End-to-end of New-Item's folder-name extraction: the engine hands NewItem the full path; NewItem
+    // takes the parent via GetParentPath and strips it off to get the new folder's name (LeafFromParent).
+    // The isolated LeafFromParentTests pin the math against a HARD-CODED parent; this pins the PAIR, so a
+    // future change to GetParentPath's drive-root form (the re-rooting that caused the top-level
+    // truncation — `New-Item Orch1:\TestFixture_Base` created "estFixture_Base") is caught here even if
+    // LeafFromParent itself is left untouched. The top-level rows are the regressing case.
+    [Theory]
+    [InlineData("Orch1:\\TestFixture_Base", "TestFixture_Base")]  // top-level: parent is the drive root "Orch1:\"
+    [InlineData("Orch1:\\Shared", "Shared")]                      // top-level
+    [InlineData("Orch1:\\A\\B", "B")]                             // nested: parent "Orch1:\A" (no trailing sep)
+    [InlineData("Orch1:\\A\\B\\C", "C")]                          // nested
+    public void NewItem_leaf_derived_via_GetParentPath_is_the_folder_name(string path, string expectedLeaf)
+    {
+        string sep = System.IO.Path.DirectorySeparatorChar.ToString();
+        path = path.Replace("\\", sep);
+        var provider = new TestableOrchProvider();
+
+        string parent = provider.ParentOf(path);                 // == GetParentPath(path, "")
+        Assert.Equal(expectedLeaf, OrchProvider.LeafFromParent(path, parent));
+    }
 }
