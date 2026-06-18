@@ -304,7 +304,7 @@
       </ViewSelectedBy>
       <GroupBy>
         <Label>Directory</Label>
-        <PropertyName>Path</PropertyName>
+        <ScriptBlock>$_.PSParentPath -replace '.*::'</ScriptBlock>
       </GroupBy>
       <TableControl>
         <TableHeaders>
