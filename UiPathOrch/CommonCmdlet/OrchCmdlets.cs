@@ -383,17 +383,6 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                 psPath = resolvedPath.Path;
                 physicalPath = resolvedPath.ProviderPath;
                 break;
-            //case 0: // This should not happen because GetResolvedPSPathFromPSPath() would throw an exception
-            //var parentFolder = Path.GetDirectoryName(paramExportCsv);
-            //var fileName = Path.GetFileName(paramExportCsv);
-            //resolvedPaths = state.Path.GetResolvedPSPathFromPSPath(parentFolder);
-            //physicalPath = resolvedPaths.Count switch
-            //{
-            //    1 => Path.Combine(resolvedPaths.First().ProviderPath, fileName),
-            //    0 => throw new FileNotFoundException($"The specified path '{paramExportCsv}' does not exist."),
-            //    _ => throw new InvalidOperationException($"The specified path '{paramExportCsv}' resolves to multiple locations."),
-            //};
-            //break;
             default:
                 throw new InvalidOperationException($"The specified path '{paramExportCsv}' resolves to multiple locations.");
         }
@@ -592,7 +581,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
         catch (Exception ex)
         {
-            _this?.WriteError(new ErrorRecord(new OrchException(target, "Failed to deserialize ExecutorRobots.", ex), "GetRobotsFromFolderError", ErrorCategory.InvalidOperation, target));
+            _this?.WriteError(new ErrorRecord(new OrchException(target, "Failed to deserialize ExecutorRobots.", ex), "DeserializeExecutorRobotsError", ErrorCategory.InvalidOperation, target));
             return null;
         }
     }
@@ -718,7 +707,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
         catch (Exception ex)
         {
-            _this?.WriteError(new ErrorRecord(new OrchException(target, "Failed to deserialize MachineRobots.", ex), "GetUsersError", ErrorCategory.InvalidOperation, target));
+            _this?.WriteError(new ErrorRecord(new OrchException(target, "Failed to deserialize MachineRobots.", ex), "DeserializeMachineRobotsError", ErrorCategory.InvalidOperation, target));
             return null;
         }
     }

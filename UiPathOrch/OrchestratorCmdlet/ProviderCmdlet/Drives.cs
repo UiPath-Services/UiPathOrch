@@ -79,6 +79,15 @@ public partial class OrchProvider
             if (!configFileLanguages.Contains(lang)) lang = "en";
 
             SaveResourceToFile($"UiPathOrch.Resources.{lang}.UiPathOrchConfig.json", configFilePath);
+
+            // The config file holds plaintext credentials (AppSecret / PAT / Password).
+            // On Unix, restrict it to owner read/write (0600) — the default FileMode.CreateNew
+            // would otherwise inherit the umask. On Windows the per-user profile path already
+            // carries a restrictive ACL, and File.SetUnixFileMode is unsupported there.
+            if (!OperatingSystem.IsWindows())
+            {
+                System.IO.File.SetUnixFileMode(configFilePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
+            }
         }
     }
 

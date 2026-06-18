@@ -3632,10 +3632,11 @@ public partial class OrchAPISession : IDisposable
     // No pagination
     private IEnumerable<T> GetEnumerableTm3<T>(string endPoint, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
     {
+        const ulong PageSize = 1000;
         ulong total = 0;
         while (true)
         {
-            ulong top = Math.Min(first - total, 1000);
+            ulong top = Math.Min(first - total, PageSize);
             string url = $"{_base_url}{endPoint}?top={top}&skip={skip}{query}";
 
             var request = new HttpRequestMessage(HttpMethod.Get, url);

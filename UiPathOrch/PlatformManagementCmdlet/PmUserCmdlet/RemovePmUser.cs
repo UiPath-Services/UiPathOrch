@@ -39,7 +39,12 @@ public class RemovePmUserCmdlet : OrchestratorPSCmdlet
                 // Ideally we should check if OR.User.Read scope is available before calling, but...
                 currentUser = drive.CurrentUser.Get();
             }
-            catch { }
+            catch
+            {
+                // Swallow: resolving the current user is best-effort (used only to
+                // skip self-removal below). If OR.User.Read scope is missing the
+                // Get() throws — proceed with currentUser == null rather than abort.
+            }
 
             try
             {
