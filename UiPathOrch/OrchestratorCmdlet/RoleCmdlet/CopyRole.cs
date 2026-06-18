@@ -69,7 +69,12 @@ public class CopyRoleCmdlet : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        var addedRole = dstDrive.OrchAPISession.PostRole(role);
+                        // DeepCopy first: PostRole strips fields in place (role.Id/IsStatic and
+                        // every Permission's Id/RoleId). `role` here is the SOURCE drive's cached
+                        // object, so passing it raw would corrupt the source Role cache (and its
+                        // shared Permission instances). Every other Copy/Update cmdlet DeepCopies
+                        // before Post*/Put*; this one must too.
+                        var addedRole = dstDrive.OrchAPISession.PostRole(OrchCollectionExtensions.DeepCopy(role));
                         //addedRole.Path = dstDrive.NameColonSeparator;
                         //WriteObject(addedRole);
                     }
