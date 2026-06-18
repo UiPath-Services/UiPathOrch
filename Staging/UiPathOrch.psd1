@@ -504,6 +504,18 @@ PrivateData = @{
         ReleaseNotes = @'
 1.9.4
 
+Fixed (provider): dir / dir -Recurse lost its "Directory:" section headers and rendered folders as
+one flat list, because the Folder table view grouped on a Path property that had been removed from
+the Folder entity. It now groups on the engine-supplied PSParentPath (like the FileSystem provider).
+Display-only.
+
+Fixed (cmdlets): two mismatched FullyQualifiedErrorIds on the trigger serialization helpers are
+corrected (executor-robots reported GetRobotsFromFolderError; machine-robot-sessions reported
+GetUsersError).
+
+Security: the per-drive config file (plaintext credentials) is now created with owner-only
+permissions on Linux/macOS (0600); Windows relies on the per-user profile ACL.
+
 Fixed (cross-platform): -TimeZoneId tab-completion now suggests Orchestrator-valid ids on Linux/macOS.
 The completer listed the host OS time-zone ids, which are IANA ids (e.g. Asia/Tokyo) on Linux/macOS,
 but Orchestrator's -TimeZoneId requires a Windows time-zone id (e.g. Tokyo Standard Time) and rejects
@@ -511,7 +523,10 @@ IANA ids ("not a valid windows time zone id"). The completer now emits Windows i
 the live OS list on Windows, and an embedded Windows time-zone table on Linux/macOS. -TimeZone (the
 display name, resolved server-side) is unaffected.
 
-Internal / CI: the Linux/macOS CI test matrix added in 1.9.3 now passes — two test classes had
+Internal: the three folder-scoped trigger enable/disable cmdlets were consolidated onto a shared
+EnableFolderEntityCmdletBase, and the folder catalog moved behind a dedicated tenant-scoped
+FolderCache (atomic publish, registry-driven clear, targeted folder removal) — both behavior-
+preserving. CI: the Linux/macOS CI test matrix added in 1.9.3 now passes — two test classes had
 hard-coded Windows path separators (the underlying path conversion was already cross-platform).
 Behavior-preserving regression tests were added for the 1.9.3 security fixes, entity-layer purity,
 command/help parity, cache-field wiring, the PKCE authorize-URL builder, and folder ordering, and a

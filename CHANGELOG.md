@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+#### Provider
+
+- **`dir` / `dir -Recurse` lost its `Directory:` section headers** and rendered every folder as
+  one flat list — which read as "only the root-level folders are listed". The Folder table view
+  grouped on a `Path` property that had since been removed from the Folder entity, so the grouping
+  key was always empty. It now groups on the engine-supplied `PSParentPath` note-property (the same
+  mechanism the built-in FileSystem provider uses), so the `Directory:` headers are back. The other
+  entity views are unchanged. Display-only — no change to the objects emitted.
+
+#### Cmdlets
+
+- Two mismatched `FullyQualifiedErrorId`s are corrected: deserializing a trigger's executor robots
+  reported `GetRobotsFromFolderError` and deserializing its machine-robot sessions reported
+  `GetUsersError`; both now carry a descriptive id matching the operation.
+
 #### Cross-platform
 
 - **`-TimeZoneId` tab-completion now suggests Orchestrator-valid ids on Linux/macOS.** The
@@ -19,8 +34,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   everywhere. (`-TimeZone`, which takes the display name and is resolved server-side, is
   unaffected.)
 
+### Security
+
+- The per-drive config file — which holds plaintext credentials (AppSecret / PAT / password) — is
+  now created with owner-only permissions on Linux/macOS (`0600`) instead of inheriting the umask.
+  On Windows it continues to rely on the restrictive per-user profile ACL.
+
 ### Internal / CI
 
+- The three folder-scoped trigger enable/disable cmdlets (`Enable`/`Disable-OrchTrigger`,
+  `-OrchApiTrigger`, `-OrchEventTrigger`) were consolidated onto a shared
+  `EnableFolderEntityCmdletBase`, mirroring the existing `RemoveFolderEntityCmdletBase`.
+  Behavior-preserving, with one intentional alignment: a failed per-folder fetch is now reported
+  against the folder uniformly (`ApiTrigger`/`EventTrigger` previously reported the drive).
+- The drive's folder catalog moved behind a dedicated tenant-scoped `FolderCache`, replacing two
+  hand-maintained list fields. It self-registers for `Clear-OrchCache` / `ClearTenantCache`,
+  publishes both folder sort-projections in a single atomic write, and supports targeted removal so
+  deleting a folder drops just that subtree instead of clearing and refetching the whole catalog.
+  Behavior-preserving.
 - The Linux/macOS CI test matrix added in 1.9.3 now passes: two test classes had hard-coded
   Windows path separators (corrected to be platform-aware; the underlying path conversion was
   already cross-platform), and the `-TimeZoneId` completer gap above was surfaced and fixed.
