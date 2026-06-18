@@ -638,6 +638,13 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
+    // Named, null-safe wrappers over OrchApiFloor for this session's discovered ApiVersion.
+    // Supports == `ApiVersion >= floor`, Below == `ApiVersion < floor`; both are false when the
+    // version is unknown (null), matching the historic inline comparisons. See OrchApiFloor.
+    private bool Supports(double floor) => OrchApiFloor.Supports(ApiVersion, floor);
+
+    private bool Below(double floor) => OrchApiFloor.Below(ApiVersion, floor);
+
     // Returns true when a usable (non-empty) token was applied to the client.
     // The bool lets the (re)auth flow avoid advancing expiry / marking the
     // session authenticated when a token endpoint returns a 200 with no
@@ -737,10 +744,20 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
+    // Pure: composes one page's request URL. `query` is the caller-supplied OData/identity tail
+    // (already begins with '&', e.g. "&$filter=..."); it is concatenated verbatim. odataStyle
+    // selects the OData '$top'/'$skip' spelling vs the identity/portal 'top'/'skip' spelling.
+    // Extracted from the GetEnumerable* helpers so the paging-URL composition is unit-testable
+    // without a live session (the rest of those helpers is the un-mockable HttpClient send).
+    internal static string BuildPagedUrl(string baseUrl, string endPoint, ulong top, ulong skip, string? query, bool odataStyle)
+        => odataStyle
+            ? $"{baseUrl}{endPoint}?$top={top}&$skip={skip}{query}"
+            : $"{baseUrl}{endPoint}?top={top}&skip={skip}{query}";
+
     private IEnumerable<T> GetEnumerable<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
         => Paginate<T>((top, pageSkip) =>
         {
-            string url = $"{_base_url_orchestrator}{endPoint}?$top={top}&$skip={pageSkip}{query}";
+            string url = BuildPagedUrl(_base_url_orchestrator, endPoint, top, pageSkip, query, odataStyle: true);
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (folderId.HasValue)
             {
@@ -756,7 +773,7 @@ public partial class OrchAPISession : IDisposable
     private IEnumerable<T> GetEnumerableIdentity<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
         => Paginate<T>((top, pageSkip) =>
         {
-            string url = $"{_base_url_identity}{endPoint}?top={top}&skip={pageSkip}{query}";
+            string url = BuildPagedUrl(_base_url_identity, endPoint, top, pageSkip, query, odataStyle: false);
             var request = new HttpRequestMessage(HttpMethod.Get, url);
             if (folderId.HasValue)
             {
@@ -774,7 +791,7 @@ public partial class OrchAPISession : IDisposable
     private IEnumerable<T> GetEnumerablePortal<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
         => Paginate<T>((top, pageSkip) =>
         {
-            string url = $"{_base_url_portal}{endPoint}?top={top}&skip={pageSkip}{query}";
+            string url = BuildPagedUrl(_base_url_portal, endPoint, top, pageSkip, query, odataStyle: false);
             var request = new HttpRequestMessage(HttpMethod.Get, url)
             {
                 // The body is required even when empty: without it the Get-OrchPmUser
@@ -935,7 +952,7 @@ public partial class OrchAPISession : IDisposable
         // /odata/Alerts was removed in Orchestrator API v18+. Throw a
         // DeterministicApiException so the cache layer remembers the failure
         // and skips the API call on subsequent invocations.
-        if (ApiVersion >= 18)
+        if (Supports(OrchApiFloor.AlertsRemoved))
         {
             throw new DeterministicApiException(
                 "The Alerts API has been deprecated since Orchestrator API version 18.0.");
@@ -951,7 +968,7 @@ public partial class OrchAPISession : IDisposable
     public QueueDefinition? GetQueue(Int64 folderId, Int64 queueId)
     {
         // TODO: Which one should be called when ApiVersion is 17 or 18?
-        if (ApiVersion >= 19)
+        if (Supports(OrchApiFloor.QueueGetAction))
         {
             return HttpRequest<QueueDefinition>(HttpMethod.Get, $"/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetQueue(id={queueId})", folderId);
         }
@@ -960,7 +977,7 @@ public partial class OrchAPISession : IDisposable
             var queue = HttpRequest<QueueDefinition>(HttpMethod.Get, $"/odata/QueueDefinitions({queueId})", folderId);
             if (queue is null) return null;
 
-            if (16 <= ApiVersion) // && ApiVersion < 19)
+            if (Supports(OrchApiFloor.QueueRetentionMerge)) // && ApiVersion < 19)
             {
                 try
                 {
@@ -1001,30 +1018,40 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<QueueRetentionSetting>(HttpMethod.Get, $"/odata/QueueRetention({queueId})?retentionType={retentionType}", folderId);
     }
 
-    public QueueDefinition? CreateQueue(Int64 folderId, QueueDefinition queue)
+    // Strips the QueueDefinitionDto fields that the given ApiVersion does not have (System.Text.Json
+    // is configured WhenWritingNull, so nulling a field excludes it from the POST/PUT body).
+    //
+    // Mutates `queue` in place: callers pass a freshly-built or DeepCopy'd object (the module-wide
+    // convention for the Post*/Put* helpers — see CopyRole/UpdateQueue/NewQueue). Shared by
+    // Create / Edit / Put.
+    //
+    //   < v19: StaleRetention* — confirmed absent from the web interface on v17.
+    //   < v18: RetryAbandonedItems — added to QueueDefinitionDto in WebApi v18.0 (swagger
+    //          v15-v17 vs v18-v20). MSI 25.10 reports v17.0 and lacks the field; sending it
+    //          triggers strict-deserialization failure ("command/queueDef must not be null", 400).
+    internal static void StripQueueFieldsForApiVersion(QueueDefinition queue, double? apiVersion)
     {
-        // Confirmed that StaleRetention is not present in the web interface for ApiVersion = 17
-        if (ApiVersion < 19)
+        if (OrchApiFloor.Below(apiVersion, OrchApiFloor.QueueStaleRetention))
         {
             queue.StaleRetentionAction = null;
             queue.StaleRetentionPeriod = null;
             queue.StaleRetentionBucketId = null;
             queue.StaleRetentionBucketName = null;
         }
-
-        // RetryAbandonedItems was added to QueueDefinitionDto in WebApi v18.0
-        // (per swagger v15.0-v17.0 vs v18.0-v20.0). MSI 25.10 reports ApiVersion 17.0
-        // and does not have the field; sending it triggers strict-deserialization failure
-        // with "command must not be null" / "queueDef must not be null" (HTTP 400).
-        if (ApiVersion < 18)
+        if (OrchApiFloor.Below(apiVersion, OrchApiFloor.QueueRetryAbandonedItems))
         {
             queue.RetryAbandonedItems = null;
         }
+    }
+
+    public QueueDefinition? CreateQueue(Int64 folderId, QueueDefinition queue)
+    {
+        StripQueueFieldsForApiVersion(queue, ApiVersion);
 
         // Verified on OC 22.10.1 (15.0) POST /odata/QueueDefinitions
         // Verified on OC 23.4.0 (16.0) POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue
         // Verified on OC 23.10.0 (17.0) POST /odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue
-        if (ApiVersion >= 16)
+        if (Supports(OrchApiFloor.QueueCreateAction))
         {
             return HttpRequest<QueueDefinition>(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.CreateQueue", folderId, queue);
         }
@@ -1049,38 +1076,14 @@ public partial class OrchAPISession : IDisposable
 
     public void EditQueue(Int64 folderId, QueueDefinition queue)
     {
-        // Strip fields that are not in QueueDefinitionDto for the target ApiVersion;
-        // see CreateQueue for the rationale.
-        if (ApiVersion < 19)
-        {
-            queue.StaleRetentionAction = null;
-            queue.StaleRetentionPeriod = null;
-            queue.StaleRetentionBucketId = null;
-            queue.StaleRetentionBucketName = null;
-        }
-        if (ApiVersion < 18)
-        {
-            queue.RetryAbandonedItems = null;
-        }
-
+        StripQueueFieldsForApiVersion(queue, ApiVersion);
         // Returns nothing
         HttpRequest(HttpMethod.Post, "/odata/QueueDefinitions/UiPath.Server.Configuration.OData.EditQueue", folderId, queue);
     }
 
     public void PutQueueDefinition(Int64 folderId, QueueDefinition queue)
     {
-        if (ApiVersion < 19)
-        {
-            queue.StaleRetentionAction = null;
-            queue.StaleRetentionPeriod = null;
-            queue.StaleRetentionBucketId = null;
-            queue.StaleRetentionBucketName = null;
-        }
-        if (ApiVersion < 18)
-        {
-            queue.RetryAbandonedItems = null;
-        }
-
+        StripQueueFieldsForApiVersion(queue, ApiVersion);
         HttpRequest(HttpMethod.Put, $"/odata/QueueDefinitions({queue.Id!.Value})", folderId, queue);
     }
 
@@ -1635,7 +1638,7 @@ public partial class OrchAPISession : IDisposable
 
     public PackageEntryPoint? GetPackageMainEntryPoint(string? feedId, string packageId, string packageVersion)
     {
-        if (ApiVersion < 12) return null; // Confirmed it returns Not Found on 11.1. TODO: What about 12+? Verify with New-OrchProcess.
+        if (Below(OrchApiFloor.PackageEntryPointMetadata)) return null; // Confirmed it returns Not Found on 11.1. TODO: What about 12+? Verify with New-OrchProcess.
 
         //string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageMainEntryPoint(key='{HttpUtility.UrlEncode(packageId)}:{packageVersion}')";
 
@@ -1652,9 +1655,9 @@ public partial class OrchAPISession : IDisposable
     public IEnumerable<PackageEntryPoint> GetPackageEntryPoints(string? feedId, string packageId, string packageVersion)
     {
         // Confirmed Not Found on 11.1 (OC 20.10); the action endpoint was added in v15.0.
-        // Mirror the GetPackageMainEntryPoint < 12 guard - callers degrade to "no entry
+        // Mirror the GetPackageMainEntryPoint guard - callers degrade to "no entry
         // point metadata available" instead of a hard failure.
-        if (ApiVersion < 12) return [];
+        if (Below(OrchApiFloor.PackageEntryPointMetadata)) return [];
 
         string endPoint = $"/odata/Processes/UiPath.Server.Configuration.OData.GetPackageEntryPoints(key='{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(packageId))}:{packageVersion}')";
         if (!string.IsNullOrEmpty(feedId))
@@ -1837,7 +1840,7 @@ public partial class OrchAPISession : IDisposable
 
     public Release? GetReleaseById(Int64 folderId, Int64 releaseId, string? query = null)
     {
-        if (ApiVersion >= 19)
+        if (Supports(OrchApiFloor.ReleaseGetAction))
         {
             return HttpRequest<Release>(HttpMethod.Get, $"/odata/Releases({releaseId})/UiPath.Server.Configuration.OData.GetRelease", folderId, query);
         }
@@ -1858,13 +1861,16 @@ public partial class OrchAPISession : IDisposable
     // deserialization and HTTP 400 ("release/command must not be null"). System.Text.Json
     // is configured WhenWritingNull, so nulling a field excludes it from the JSON entirely.
     //
+    // Mutates `release` (and its nested ProcessSettings) in place: callers pass a freshly-built
+    // or DeepCopy'd object (the module-wide Post*/Put* convention).
+    //
     // Empirical findings (OData $metadata + POST probe per OC build) drive these thresholds;
     // ApiVersion alone is not a reliable schema indicator (22.10.1 reports v15 but its
     // ReleaseDto already has RobotSize that the v15.0 swagger snapshot lacks).
-    private void StripReleaseFieldsForApiVersion(Release release)
+    internal static void StripReleaseFieldsForApiVersion(Release release, double? apiVersion)
     {
         // Fields added in v19.0
-        if (ApiVersion < 19)
+        if (OrchApiFloor.Below(apiVersion, OrchApiFloor.ReleaseV19Fields))
         {
             release.EnvironmentVariables = null;
             release.MinRequiredRobotVersion = null;
@@ -1878,7 +1884,7 @@ public partial class OrchAPISession : IDisposable
             }
         }
         // Fields added in v17.0 (verified rejected by 22.10.1 / ApiVersion 15)
-        if (ApiVersion < 17)
+        if (OrchApiFloor.Below(apiVersion, OrchApiFloor.ReleaseV17Fields))
         {
             release.HiddenForAttendedUser = null;
             release.EntryPointPath = null;
@@ -1886,7 +1892,7 @@ public partial class OrchAPISession : IDisposable
         // Fields added in v16.0 (verified rejected by 22.10.1 / ApiVersion 15).
         // RobotSize: same v15-era split as the ProcessSchedule v16 fields - 22.10.1
         // has it, 22.4.4 does not, both report ApiVersion 15. Bundled here under < 16.
-        if (ApiVersion < 16)
+        if (OrchApiFloor.Below(apiVersion, OrchApiFloor.ReleaseV16Fields))
         {
             release.RemoteControlAccess = null;
             release.VideoRecordingSettings = null;
@@ -1900,13 +1906,13 @@ public partial class OrchAPISession : IDisposable
         if (release.RetentionPeriod == 0) release.RetentionPeriod = null;
         if (release.StaleRetentionPeriod == 0) release.StaleRetentionPeriod = null;
 
-        StripReleaseFieldsForApiVersion(release);
+        StripReleaseFieldsForApiVersion(release, ApiVersion);
 
         // Verified on OC 22.10.1 (15.0) POST /odata/Releases
         // Verified on OC 23.4.0 (16.0) POST /odata/Releases
         // Verified on OC 23.10.6 (17.0) POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
         // Verified on Automation Cloud (19.0) POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
-        if (ApiVersion >= 19)
+        if (Supports(OrchApiFloor.ReleaseCloudRetentionDefault))
         {
             // It seems RetentionAction "None" cannot be used with Automation Cloud.
             // TODO: What about MSI Orchestrator? What about Automation Suite?
@@ -1920,7 +1926,7 @@ public partial class OrchAPISession : IDisposable
             }
             return HttpRequest<Release>(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.CreateRelease", folderId, release);
         }
-        else if (ApiVersion >= 17)
+        else if (Supports(OrchApiFloor.ReleaseCreateAction))
         {
             return HttpRequest<Release>(HttpMethod.Post, "/odata/Releases/UiPath.Server.Configuration.OData.CreateRelease", folderId, release);
         }
@@ -1929,7 +1935,7 @@ public partial class OrchAPISession : IDisposable
             // Confirmed that non-null SpecificPriorityValue causes an error on 11.1
             // Confirmed that non-null SpecificPriorityValue causes an error on 13.0
             // TODO: What about 14 and later?
-            if (ApiVersion < 14 && release.SpecificPriorityValue is not null)
+            if (Below(OrchApiFloor.ReleaseSpecificPriority) && release.SpecificPriorityValue is not null)
             {
                 if (release.SpecificPriorityValue >= 61) release.JobPriority = "High";
                 else if (release.SpecificPriorityValue <= 30) release.JobPriority = "Low";
@@ -1945,14 +1951,14 @@ public partial class OrchAPISession : IDisposable
             release.FeedId = null;
             release.ProcessSettings = null;
             // EntryPointId: added in v15.0
-            if (ApiVersion < 15) release.EntryPointId = null;
+            if (Below(OrchApiFloor.ReleaseEntryPointId)) release.EntryPointId = null;
             return HttpRequest<Release>(HttpMethod.Post, "/odata/Releases", folderId, release);
         }
     }
 
     public void PatchRelease(Int64 folderId, Release release)
     {
-        StripReleaseFieldsForApiVersion(release);
+        StripReleaseFieldsForApiVersion(release, ApiVersion);
         HttpRequest(HttpMethod.Patch, $"/odata/Releases({release.Id!.Value})", folderId, release);
     }
 
@@ -1961,7 +1967,7 @@ public partial class OrchAPISession : IDisposable
     {
         // Could not read the retention policy with API ver 16.0.
         // Could read the retention policy with API ver 17.0.
-        if (ApiVersion < 17) return null;
+        if (Below(OrchApiFloor.ReleaseRetentionReadable)) return null;
         return HttpRequest<ReleaseRetentionSetting>(HttpMethod.Get, $"/odata/ReleaseRetention({releaseId})", folderId);
     }
 
