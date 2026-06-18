@@ -3,27 +3,26 @@ using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
-public class EnableEventTriggerCmdletBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
+public class EnableEventTriggerCmdletBase<Enable> : EnableFolderEntityCmdletBase<ApiTrigger, Enable> where Enable : IBoolParameter
 {
-    public virtual string[]? Name { get; set; }
+    protected override string EntityNoun => "EventTrigger";
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [SupportsWildcards]
-    public string[]? Path { get; set; }
+    protected override IEnumerable<ApiTrigger> GetEntities(OrchDriveInfo drive, Folder folder) => drive.EventTriggers.Get(folder);
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [Alias("PSPath")]
-    public string[]? LiteralPath { get; set; }
+    protected override Func<ApiTrigger?, string?> GetName => t => t?.Name;
+    protected override Func<ApiTrigger, string> GetPSPath => t => t.GetPSPath();
+    protected override Func<ApiTrigger, bool> IsEnabled => t => t.Enabled.GetValueOrDefault();
 
-    [Parameter]
-    public SwitchParameter Recurse { get; set; }
-
-    [Parameter]
-    public uint Depth { get; set; }
+    protected override void SetEnabled(OrchDriveInfo drive, Folder folder, ApiTrigger entity, bool enabled)
+    {
+        drive.OrchAPISession.EnableEventTriggers(folder.Id ?? 0, entity.Id!, enabled);
+        drive.EventTriggers.ClearCache(folder);
+    }
 
     // This cannot be shared because it only enumerates disabled Event triggers
     internal class NameCompleter : OrchArgumentCompleter
@@ -55,53 +54,6 @@ public class EnableEventTriggerCmdletBase<Enable> : OrchestratorPSCmdlet where E
                     string tooltip = trigger.GetPSPath();
                     yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tooltip);
                 }
-            }
-        }
-    }
-
-    protected override void ProcessRecord()
-    {
-        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-
-        string action = $"{(Enable.Value ? "Enable" : "Disable")} EventTrigger";
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
-        {
-            try
-            {
-                var triggers = drive.EventTriggers.Get(folder);
-
-                foreach (var trigger in triggers
-                    .Where(t => Enable.Value
-                        ? !t.Enabled.GetValueOrDefault()
-                        : t.Enabled.GetValueOrDefault())
-                    .FilterByWildcards(t => t?.Name, wpName)
-                    .OrderBy(t => t.Name).WithCancellation(cancelHandler.Token))
-                {
-                    if (ShouldProcess(trigger.GetPSPath(), action))
-                    {
-                        try
-                        {
-                            drive.OrchAPISession.EnableEventTriggers(folder.Id ?? 0, trigger.Id!, Enable.Value);
-                            drive.EventTriggers.ClearCache(folder);
-                        }
-                        catch (Exception ex)
-                        {
-                            string errorId = $"{(Enable.Value ? "Enable" : "Disable")}EventTriggerError";
-                            WriteError(new ErrorRecord(new OrchException(trigger.GetPSPath(), ex), errorId, ErrorCategory.InvalidOperation, trigger));
-                        }
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetEventTriggerError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }

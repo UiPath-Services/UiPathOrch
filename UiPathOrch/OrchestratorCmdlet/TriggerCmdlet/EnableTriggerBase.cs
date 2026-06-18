@@ -3,27 +3,27 @@ using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 
 namespace UiPath.PowerShell.Commands;
 
-public class EnableTriggerCmdletBase<Enable> : OrchestratorPSCmdlet where Enable : IBoolParameter
+public class EnableTriggerCmdletBase<Enable> : EnableFolderEntityCmdletBase<ProcessSchedule, Enable> where Enable : IBoolParameter
 {
-    public virtual string[]? Name { get; set; }
+    protected override string EntityNoun => "Trigger";
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [SupportsWildcards]
-    public string[]? Path { get; set; }
+    protected override IEnumerable<ProcessSchedule> GetEntities(OrchDriveInfo drive, Folder folder) => drive.GetTriggers(folder);
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [Alias("PSPath")]
-    public string[]? LiteralPath { get; set; }
+    protected override Func<ProcessSchedule?, string?> GetName => t => t?.Name;
+    protected override Func<ProcessSchedule, string> GetPSPath => t => t.GetPSPath();
+    protected override Func<ProcessSchedule, bool> IsEnabled => t => t.Enabled.GetValueOrDefault();
 
-    [Parameter]
-    public SwitchParameter Recurse { get; set; }
-
-    [Parameter]
-    public uint Depth { get; set; }
+    protected override void SetEnabled(OrchDriveInfo drive, Folder folder, ProcessSchedule entity, bool enabled)
+    {
+        drive.OrchAPISession.EnableProcessSchedule(folder.Id ?? 0, [entity.Id ?? 0], enabled);
+        drive.Triggers.ClearCache(folder);
+        drive.TriggersDetailed.ClearCache(folder);
+    }
 
     internal class NameCompleter : OrchArgumentCompleter
     {
@@ -56,55 +56,6 @@ public class EnableTriggerCmdletBase<Enable> : OrchestratorPSCmdlet where Enable
                     string tiphelp = TipHelp(trigger);
                     yield return new CompletionResult(PathTools.EscapePSText(trigger.Name), trigger.Name, CompletionResultType.Text, tiphelp);
                 }
-            }
-        }
-    }
-
-    protected override void ProcessRecord()
-    {
-        var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
-        var wpName = Name.ConvertToWildcardPatternList();
-
-        string action = $"{(Enable.Value ? "Enable" : "Disable")} Trigger";
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
-        {
-            try
-            {
-                var schedules = drive.GetTriggers(folder);
-
-                foreach (var trigger in schedules
-                    .Where(t => Enable.Value
-                        ? !t.Enabled.GetValueOrDefault()
-                        : t.Enabled.GetValueOrDefault())
-                    .FilterByWildcards(t => t?.Name, wpName)
-                    .OrderBy(t => t.Name).WithCancellation(cancelHandler.Token))
-                {
-                    if (ShouldProcess(trigger.GetPSPath(), action))
-                    {
-                        try
-                        {
-                            drive.OrchAPISession.EnableProcessSchedule(folder.Id ?? 0, [trigger.Id ?? 0], Enable.Value);
-                            drive.Triggers.ClearCache(folder);
-                            drive.TriggersDetailed.ClearCache(folder);
-                        }
-                        catch (Exception ex)
-                        {
-                            string errorId = $"{(Enable.Value ? "Enable" : "Disable")}TriggerError";
-                            WriteError(new ErrorRecord(new OrchException(trigger.GetPSPath(), ex), errorId, ErrorCategory.InvalidOperation, trigger));
-                        }
-                    }
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                throw;
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetTriggerError", ErrorCategory.InvalidOperation, folder));
-                continue;
             }
         }
     }
