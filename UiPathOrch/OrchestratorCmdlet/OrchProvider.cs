@@ -161,11 +161,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
         Folder f = drive.GetFolder(orchPath);
         if (f is not null)
         {
-            // PSPath must be drive-qualified ("Orch1:\..."), identical to GetChildItems:
-            // prepend the drive name and escape wildcard metachars. Otherwise Get-Item's
-            // PSPath loses the drive ("::\Autopilot") and -LiteralPath/PSPath binding from
-            // Get-Item output fails to resolve.
-            string psPath = drive.NameColon + PathTools.EscapePSText2(OrchDriveInfo.OrchProviderPathToPSPath(f!.FullyQualifiedName!));
+            // PSPath must be drive-qualified ("Orch1:\..."), identical to GetChildItems / GetChildNames:
+            // prepend the drive name (otherwise the PSPath loses the drive, "::\Autopilot", and
+            // -LiteralPath/PSPath binding from Get-Item output fails to resolve). Emit it RAW — do NOT
+            // wildcard-escape — because -LiteralPath ([Alias("PSPath")]) re-applies WildcardPattern.Escape
+            // on bind; pre-escaping here double-escapes a name like "Fin*ce" so `Get-Item -LiteralPath
+            // $f.PSPath` would fail to resolve back to the same folder.
+            string psPath = drive.NameColon + OrchDriveInfo.OrchProviderPathToPSPath(f!.FullyQualifiedName!);
             WriteItemObject(f, psPath, true);
         }
     }

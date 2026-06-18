@@ -131,13 +131,17 @@ public partial class OrchProvider
             {
                 if (Stopping) return;
 
-                string psPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName!);
-                string psPathEscaped = drive.NameColon + PathTools.EscapePSText2(psPath);
+                // Emit the PSPath RAW (drive-qualified, but NOT wildcard-escaped), identical to
+                // GetChildNames and GetItem. The PSPath binds to -LiteralPath ([Alias("PSPath")]),
+                // whose EffectivePath re-applies WildcardPattern.Escape on bind; pre-escaping here
+                // would escape twice, so a folder named e.g. "Fin*ce" would fail to resolve back to
+                // itself via `dir | <cmdlet> -LiteralPath` or `Get-Item -LiteralPath $f.PSPath`.
+                string psPathRaw = drive.NameColon + OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName!);
 
                 // A folder with the same name as a personal workspace may exist; suppress
                 // duplicate names on BOTH paths so `dir` output and an exported CSV stay
                 // consistent (duplicate CSV rows would also collide on Import-Csv | New-Item).
-                if (!dupCheck.Add(psPathEscaped))
+                if (!dupCheck.Add(psPathRaw))
                 {
                     WriteWarning($"The folder name '{folder.GetPSPath()}' (Id = {folder.Id}) is duplicated. This folder won't be listed.");
                     continue;
@@ -145,7 +149,7 @@ public partial class OrchProvider
 
                 if (string.IsNullOrEmpty(parameters?.ExportCsv))
                 {
-                    WriteItemObject(folder, psPathEscaped, true);
+                    WriteItemObject(folder, psPathRaw, true);
                 }
                 else
                 {

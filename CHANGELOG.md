@@ -19,6 +19,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   **under** another folder (nested) were unaffected. The leaf is now taken by stripping a single
   boundary separator only when one is actually present. (The regression was introduced after 1.9.4
   and never shipped to the Gallery.)
+- **`Get-Item` and `dir` could not round-trip a folder whose name contains a PowerShell wildcard
+  metacharacter (`*` or `?`) through `-LiteralPath`.** They emitted the item's `PSPath`
+  wildcard-escaped (e.g. ``Orch1:\Fin`*ce``); because `-LiteralPath` (`[Alias("PSPath")]`) re-applies
+  `WildcardPattern.Escape` when it binds, the pre-escaped `PSPath` escaped twice and failed to resolve
+  back to the folder — so `Get-Item Orch1:\Fin*ce | Get-Item -LiteralPath $_.PSPath` and
+  `dir | <cmdlet> -LiteralPath` broke for such names. `Get-Item` / `dir` now emit the `PSPath` RAW
+  (drive-qualified, not wildcard-escaped), matching `Get-ChildItem -Name`, so the round-trip resolves.
+  Only names containing `*` or `?` were affected (the escape was a no-op for every other name).
 
 ### Internal
 

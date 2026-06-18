@@ -130,4 +130,24 @@ public class ProviderEngineNavigationTests : IClassFixture<OrchProviderHarness>
         Assert.False(Bool($@"Test-Path -LiteralPath 'Test:{S}Fince'"));   // '*' is literal, not "match zero+"
         Assert.False(Bool($@"Test-Path -LiteralPath 'Test:{S}FinXce'"));  // not a wildcard match either
     }
+
+    [Fact]
+    public void PSPath_round_trips_through_LiteralPath_for_a_plain_name()
+    {
+        // Baseline: an item's emitted PSPath rebinds to the same item via -LiteralPath.
+        string back = Str($@"$i = Get-Item Test:{S}Shared; (Get-Item -LiteralPath $i.PSPath).FullyQualifiedName");
+        Assert.Equal("Shared", back);
+    }
+
+    [Fact]
+    public void PSPath_round_trips_through_LiteralPath_for_a_wildcard_named_folder()
+    {
+        // The real guard: a name containing a wildcard metacharacter ('*') must survive the
+        // emit -> PSPath -> -LiteralPath rebind round-trip. The provider escapes the emitted PSPath
+        // (EscapePSText2) while -LiteralPath binding re-applies WildcardPattern.Escape (EffectivePath);
+        // if those two are inconsistent the name double-escapes and the rebind fails to resolve.
+        _h.Seed(new[] { OrchProviderHarness.F("Fin*ce", 5, null) });
+        string back = Str($@"$i = Get-Item -LiteralPath 'Test:{S}Fin*ce'; (Get-Item -LiteralPath $i.PSPath).FullyQualifiedName");
+        Assert.Equal("Fin*ce", back);
+    }
 }
