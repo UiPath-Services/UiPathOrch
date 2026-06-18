@@ -1152,7 +1152,7 @@ internal static class SessionStateExtensions
             if (drive is null) continue;
 
             drive.GetFolders(); // sorted by OrchDirectory and DisplayName
-            var dicFolders = drive._dicFoldersForEnumFolders;
+            var dicFolders = drive.EnumFoldersCached;
             if (dicFolders is null || dicFolders.Count == 0) continue;
 
             Folder folder = drive.GetFolder(OrchDriveInfo.PSPathToOrchPath(WildcardPattern.Unescape(p.ProviderPath)));

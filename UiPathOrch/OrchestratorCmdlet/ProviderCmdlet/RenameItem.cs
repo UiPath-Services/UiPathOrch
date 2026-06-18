@@ -35,8 +35,8 @@ public partial class OrchProvider
                 if (folder is null)
                     return;
                 drive.OrchAPISession.EditFolder(folder, newName!);
-                drive._dicFolders = null;
-                drive._dicFoldersForEnumFolders = null;
+                // The renamed folder's path (and its descendants') changes — clear and re-fetch.
+                drive.ClearFolders();
 
                 //if (DynamicParameters is RuntimeDefinedParameterDictionary parameters)
                 //{

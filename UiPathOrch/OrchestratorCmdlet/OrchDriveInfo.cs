@@ -115,10 +115,8 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         }
 
         #region Orchestrator API cache
-        _dicFolders = null;
-        _dicFoldersForEnumFolders = null;
-
-
+        // Folder catalog is flushed via the _allTenantCache registry (base.ClearTenantCache
+        // above) — FolderCache self-registers, so no hand-null is needed here.
         _tenantId = null;
         _tenantKey = null;
 
@@ -1583,6 +1581,8 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         EntitiesSummary = new(this, fid => OrchAPISession.GetEntitiesSummary(fid!.Value), (e, folderPath) => e.Path = folderPath);
         FolderFeedId = new(this, OrchAPISession.GetFolderFeedId, null, 12);
         ActionCatalogs = new(this, OrchAPISession.GetTaskCatalogs, (e, folderPath) => e.Path = folderPath, 16); // Confirmed no error is returned in v16
+        _folderCache = new FolderCache(this, BuildFolderCache);
+
         ApiTriggers = new(this, OrchAPISession.GetHttpTriggers, (e, folderPath) => e.Path = folderPath, 18); // Confirmed not present in the v17 web interface (executing in v17 does not return an error, though)
         BusinessRules = new(this, OrchAPISession.GetBusinessRules, (e, folderPath) => e.Path = folderPath);
         Connections = new(this, OrchAPISession.GetConnections, (e, folderPath) => e.Path = folderPath, 20); // Connection Service v1 (Integration Service); gated at API v20
@@ -1754,143 +1754,146 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         );
     }
 
-    internal List<Folder>? _dicFolders; // sorted by OrchDirectory and DisplayName
-    internal List<Folder>? _dicFoldersForEnumFolders;
-    // Why: prior code mutated _dicFolders incrementally (assign → AddRange → AddRange…); a
-    // concurrent reader could pass the null-check and return a partially-built list, causing
-    // ItemExists() → false for folders that actually exist. Build into locals, publish once.
-    private readonly object _foldersInitLock = new();
-    public ReadOnlyCollection<Folder> GetFolders()
+    // Folder catalog cache. Owns storage + atomic publish + invalidation; the fetch /
+    // enrichment / ordering (BuildFolderCache) and all navigation stay below and just read
+    // it. Self-registers into _allTenantCache, so ClearTenantCache flushes it.
+    private readonly FolderCache _folderCache;
+
+    // Passive accessors over the catalog for paths that must not trigger a fetch.
+    internal List<Folder>? EnumFoldersCached => _folderCache.CachedEnumView;
+    internal bool IsFolderCatalogPopulated => _folderCache.CachedMain is not null;
+
+    // Invalidate the folder catalog only (targeted). ClearTenantCache also flushes it via the
+    // _allTenantCache registry; the mutation sites (New/Remove/Rename/Move folder) use this.
+    internal void ClearFolders() => _folderCache.ClearCache();
+
+    // Remove a deleted folder (and its descendants) from the catalog — targeted, no refetch.
+    // Used by Remove-Item; creation paths clear instead (the next GetFolders re-fetches).
+    internal void RemoveFolderFromCache(Folder folder) => _folderCache.Remove(folder);
+
+    public ReadOnlyCollection<Folder> GetFolders() => _folderCache.GetMain().AsReadOnly();
+
+    // Fetches and orders the folder catalog (both sort projections). Invoked lazily by
+    // FolderCache on first access; FolderCache owns the locking, publish and caching. The
+    // body is unchanged from the former inline GetFolders() implementation.
+    private (List<Folder> main, List<Folder> enumView) BuildFolderCache()
     {
-        var snapshot = Volatile.Read(ref _dicFolders);
-        if (snapshot is not null) return snapshot.AsReadOnly();
+        OrchAPISession.EnsureAuthenticated();
 
-        lock (_foldersInitLock)
+        var tasks = new List<Task>();
+
+        // get current user to get my own personal workspace
+        ExtendedUser user = null;
+        List<PersonalWorkspace> personalWorkspaces = null;
+        if (!OrchAPISession.AuthManager.IsConfidentialApp)
         {
-            if (_dicFolders is not null) return _dicFolders.AsReadOnly();
-
-            OrchAPISession.EnsureAuthenticated();
-
-            var tasks = new List<Task>();
-
-            // get current user to get my own personal workspace
-            ExtendedUser user = null;
-            List<PersonalWorkspace> personalWorkspaces = null;
-            if (!OrchAPISession.AuthManager.IsConfidentialApp)
-            {
-                tasks.Add(Task.Run(() =>
-                {
-                    // Auxiliary fetch — the result only enriches folder enumeration with the
-                    // current user's personal workspace. Failures here (typically missing optional
-                    // scopes) are non-fatal; folders are fetched independently below.
-                    try { user = CurrentUser.Get() as ExtendedUser; }
-                    catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"GetCurrentUser failed: {ex.Message}"); }
-                }));
-
-                // get personal workspaces that being explored
-                tasks.Add(Task.Run(() =>
-                {
-                    // Auxiliary fetch — see comment on the GetCurrentUser task above.
-                    try { personalWorkspaces = PersonalWorkspaces.Get(); }
-                    catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"PersonalWorkspaces.Get failed: {ex.Message}"); }
-                }));
-            }
-
-            // get folders
-            List<Folder> folders = null;
             tasks.Add(Task.Run(() =>
             {
-                // If an exception occurs, let it propagate
-                folders = OrchAPISession.GetFolders().ToList();
+                // Auxiliary fetch — the result only enriches folder enumeration with the
+                // current user's personal workspace. Failures here (typically missing optional
+                // scopes) are non-fatal; folders are fetched independently below.
+                try { user = CurrentUser.Get() as ExtendedUser; }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"GetCurrentUser failed: {ex.Message}"); }
             }));
 
-            Task.WaitAll([.. tasks]);
-
-            // Build into local lists; publish atomically below so concurrent readers
-            // never see a partially populated cache.
-            var newDicFolders = new List<Folder>();
-            var newDicFoldersForEnumFolders = new List<Folder>();
-
-            // Process the current user result
-            string personalWorkspaceName = "";
-            if (user is not null && user.PersonalWorkspace is not null)
+            // get personal workspaces that being explored
+            tasks.Add(Task.Run(() =>
             {
-                personalWorkspaceName = user.PersonalWorkspace.DisplayName;
-                user.PersonalWorkspace.ParentId = null; // Fix: this sometimes has a value for some reason
-                user.PersonalWorkspace.FolderType ??= "Personal"; // Fix: this is null in ApiVer 11.1 for some reason
-                user.PersonalWorkspace.FeedType = "FolderHierarchy"; // Fix: this contains "Processes" for some reason
-                //user.PersonalWorkspace.FullName = NameColonSeparator + WildcardPattern.Escape(user.PersonalWorkspace.DisplayName);
-                user.PersonalWorkspace.FullName = NameColonSeparator + user.PersonalWorkspace.DisplayName;
-                newDicFolders.Add(user.PersonalWorkspace);
-                newDicFoldersForEnumFolders.Add(user.PersonalWorkspace);
-            }
-
-            // Process the personal workspaces being explored result
-            #region retriving Exploring Personal Workspace
-            if (personalWorkspaces is not null)
-            {
-                foreach (var ws in personalWorkspaces
-                    .Where(ws => ws.Name != personalWorkspaceName && // Exclude My Workspace since it was already added in the current user processing above
-                        (user is not null && ws.ExploringUserIds is not null && ws.ExploringUserIds.Any(id => id == user?.Id)))
-                    .OrderBy(ws => ws.Name))
-                {
-                    // Add other users' workspaces that we are currently exploring
-                    // (Workspaces we are not exploring are inaccessible due to lack of permissions)
-                    //                        if (user is not null && ws.ExploringUserIds is not null && ws.ExploringUserIds.Any(id => id == user?.Id))
-                    {
-                        var pwFolder = new Folder()
-                        {
-                            DisplayName = ws.Name,
-                            FullyQualifiedName = ws.Name,
-                            FullyQualifiedNameOrderable = ws.Name,
-                            Id = ws.Id,
-                            IsActive = ws.IsActive,
-                            Key = ws.Key,
-                            FolderType = "Personal",
-                            FeedType = "FolderHierarchy",
-                            ProvisionType = "Automatic",
-                            PermissionModel = "FineGrained",
-                            FullName = NameColonSeparator + WildcardPattern.Escape(ws.Name)
-                        };
-                        newDicFolders.Add(pwFolder);
-                        newDicFoldersForEnumFolders.Add(pwFolder);
-                    }
-                }
-            }
-            #endregion
-
-            // Process the folders result
-            foreach (var folder in folders ?? [])
-            {
-                // Skip already-added folders
-                folder.FolderType ??= "Standard"; // Fix: this is null in ApiVer 11.1 for some reason
-
-                // Stamp FullName with the folder's own (drive-qualified) path.
-                int idx = folder.FullyQualifiedName!.LastIndexOf('/');
-                if (idx != -1)
-                {
-                    string orchPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName.Substring(0, idx));
-                    folder.FullName = NameColon + Path.Combine(orchPath, folder.DisplayName ?? "");
-                }
-                else
-                {
-                    string orchPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName);
-                    folder.FullName = NameColon + orchPath;
-                }
-            }
-            if (folders is not null)
-            {
-                (newDicFolders, newDicFoldersForEnumFolders) =
-                    BuildFolderViews(newDicFolders, newDicFoldersForEnumFolders, folders);
-            }
-
-            // Publish — EnumFolders reads _dicFoldersForEnumFolders directly, so publish it
-            // first; that way any reader that has just observed a non-null _dicFolders will
-            // also see the matching _dicFoldersForEnumFolders.
-            Volatile.Write(ref _dicFoldersForEnumFolders, newDicFoldersForEnumFolders);
-            Volatile.Write(ref _dicFolders, newDicFolders);
-            return newDicFolders.AsReadOnly();
+                // Auxiliary fetch — see comment on the GetCurrentUser task above.
+                try { personalWorkspaces = PersonalWorkspaces.Get(); }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"PersonalWorkspaces.Get failed: {ex.Message}"); }
+            }));
         }
+
+        // get folders
+        List<Folder> folders = null;
+        tasks.Add(Task.Run(() =>
+        {
+            // If an exception occurs, let it propagate
+            folders = OrchAPISession.GetFolders().ToList();
+        }));
+
+        Task.WaitAll([.. tasks]);
+
+        // Build into local lists; publish atomically below so concurrent readers
+        // never see a partially populated cache.
+        var newDicFolders = new List<Folder>();
+        var newDicFoldersForEnumFolders = new List<Folder>();
+
+        // Process the current user result
+        string personalWorkspaceName = "";
+        if (user is not null && user.PersonalWorkspace is not null)
+        {
+            personalWorkspaceName = user.PersonalWorkspace.DisplayName;
+            user.PersonalWorkspace.ParentId = null; // Fix: this sometimes has a value for some reason
+            user.PersonalWorkspace.FolderType ??= "Personal"; // Fix: this is null in ApiVer 11.1 for some reason
+            user.PersonalWorkspace.FeedType = "FolderHierarchy"; // Fix: this contains "Processes" for some reason
+                                                                 //user.PersonalWorkspace.FullName = NameColonSeparator + WildcardPattern.Escape(user.PersonalWorkspace.DisplayName);
+            user.PersonalWorkspace.FullName = NameColonSeparator + user.PersonalWorkspace.DisplayName;
+            newDicFolders.Add(user.PersonalWorkspace);
+            newDicFoldersForEnumFolders.Add(user.PersonalWorkspace);
+        }
+
+        // Process the personal workspaces being explored result
+        #region retriving Exploring Personal Workspace
+        if (personalWorkspaces is not null)
+        {
+            foreach (var ws in personalWorkspaces
+                .Where(ws => ws.Name != personalWorkspaceName && // Exclude My Workspace since it was already added in the current user processing above
+                    (user is not null && ws.ExploringUserIds is not null && ws.ExploringUserIds.Any(id => id == user?.Id)))
+                .OrderBy(ws => ws.Name))
+            {
+                // Add other users' workspaces that we are currently exploring
+                // (Workspaces we are not exploring are inaccessible due to lack of permissions)
+                //                        if (user is not null && ws.ExploringUserIds is not null && ws.ExploringUserIds.Any(id => id == user?.Id))
+                {
+                    var pwFolder = new Folder()
+                    {
+                        DisplayName = ws.Name,
+                        FullyQualifiedName = ws.Name,
+                        FullyQualifiedNameOrderable = ws.Name,
+                        Id = ws.Id,
+                        IsActive = ws.IsActive,
+                        Key = ws.Key,
+                        FolderType = "Personal",
+                        FeedType = "FolderHierarchy",
+                        ProvisionType = "Automatic",
+                        PermissionModel = "FineGrained",
+                        FullName = NameColonSeparator + WildcardPattern.Escape(ws.Name)
+                    };
+                    newDicFolders.Add(pwFolder);
+                    newDicFoldersForEnumFolders.Add(pwFolder);
+                }
+            }
+        }
+        #endregion
+
+        // Process the folders result
+        foreach (var folder in folders ?? [])
+        {
+            // Skip already-added folders
+            folder.FolderType ??= "Standard"; // Fix: this is null in ApiVer 11.1 for some reason
+
+            // Stamp FullName with the folder's own (drive-qualified) path.
+            int idx = folder.FullyQualifiedName!.LastIndexOf('/');
+            if (idx != -1)
+            {
+                string orchPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName.Substring(0, idx));
+                folder.FullName = NameColon + Path.Combine(orchPath, folder.DisplayName ?? "");
+            }
+            else
+            {
+                string orchPath = OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName);
+                folder.FullName = NameColon + orchPath;
+            }
+        }
+        if (folders is not null)
+        {
+            (newDicFolders, newDicFoldersForEnumFolders) =
+                BuildFolderViews(newDicFolders, newDicFoldersForEnumFolders, folders);
+        }
+
+        return (newDicFolders, newDicFoldersForEnumFolders);
     }
 
     // Pure ordering core of GetFolders(), extracted so the two folder "views" and
@@ -1935,14 +1938,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     // GetFolders rebuilds from the API and the new folder is picked up). Sort order is
     // not restored — call sites that need it null the caches afterwards so GetFolders
     // rebuilds.
-    internal void AppendFolderToCache(Folder folder)
-    {
-        lock (_foldersInitLock)
-        {
-            _dicFolders?.Add(folder);
-            _dicFoldersForEnumFolders?.Add(folder);
-        }
-    }
+    internal void AppendFolderToCache(Folder folder) => _folderCache.Append(folder);
 
     public Folder? GetFolder(string? orchPath)
     {

@@ -144,6 +144,109 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
     }
 }
 
+/// <summary>
+/// Tenant-scoped cache of the drive's folder catalog. Unlike the generic entity
+/// caches, folders are the navigation backbone — a tree with dual identity (numeric
+/// <c>Id</c> and path <c>FullyQualifiedName</c>) and two sort projections — so this
+/// class owns ONLY storage, atomic publish, incremental append and tenant-scoped
+/// invalidation. The fetch/enrichment/ordering and all tree navigation
+/// (GetFolder / HasSubfolders / EnumFolders) stay on <c>OrchDriveInfo</c> and just
+/// read these lists.
+///
+/// Self-registers into <c>_allTenantCache</c>, so <c>ClearTenantCache()</c> /
+/// <c>Clear-OrchCache</c> flush it automatically — no hand-maintained null-out
+/// (the bug class the registry was introduced to kill).
+///
+/// Deliberately does NOT cache exceptions (unlike the generic bases): folders are
+/// the backbone, so a transient fetch failure must not brick all navigation until
+/// the next Clear-OrchCache. A failed build throws and the next Get rebuilds.
+/// </summary>
+public class FolderCache : ITenantCacheClearable
+{
+    // Holds both projections so they publish together in a single reference write —
+    // a reader never observes a main view without its matching enum view.
+    private sealed class Views
+    {
+        public Views(List<Folder> main, List<Folder> enumView) { Main = main; EnumView = enumView; }
+        public List<Folder> Main { get; }
+        public List<Folder> EnumView { get; }
+    }
+
+    private readonly object _lock = new();
+    // volatile + publish-after-build: readers on weakly-ordered CPUs never observe a
+    // non-null cache that points at a partially-built pair.
+    private volatile Views? _cache;
+    private readonly Func<(List<Folder> main, List<Folder> enumView)> _builder;
+
+    public FolderCache(OrchDriveInfoBase drive, Func<(List<Folder> main, List<Folder> enumView)> builder)
+    {
+        drive._allTenantCache.Add(this);
+        _builder = builder;
+    }
+
+    private Views GetOrBuild()
+    {
+        var snapshot = _cache;
+        if (snapshot is not null) return snapshot;
+
+        lock (_lock)
+        {
+            if (_cache is not null) return _cache;
+            var (main, enumView) = _builder();
+            var views = new Views(main, enumView);
+            _cache = views; // single atomic publish of both projections
+            return views;
+        }
+    }
+
+    // Main view (web-UI sort) backing GetFolders(); builds on first access.
+    public List<Folder> GetMain() => GetOrBuild().Main;
+
+    // Enum view backing EnumFolders(); builds on first access.
+    public List<Folder> GetEnumView() => GetOrBuild().EnumView;
+
+    // Passive peeks: return the cached projection without triggering a fetch (null
+    // until built). Used by paths that must not hit the API before authentication.
+    public List<Folder>? CachedMain => _cache?.Main;
+    public List<Folder>? CachedEnumView => _cache?.EnumView;
+
+    // Append a freshly-created folder to both projections under the build lock.
+    // No-op when the cache is null (a concurrent ClearCache happened; the next
+    // GetMain()/GetEnumView() rebuilds from the API and picks the folder up). Sort
+    // order is not restored — call sites that need it clear the cache afterwards.
+    public void Append(Folder folder)
+    {
+        lock (_lock)
+        {
+            var snapshot = _cache;
+            snapshot?.Main.Add(folder);
+            snapshot?.EnumView.Add(folder);
+        }
+    }
+
+    // Remove a deleted folder — and any descendants, since a server-side folder delete
+    // cascades — from both projections under the lock, matched by FullyQualifiedName.
+    // No-op when the cache is null. Targeted: avoids a full clear + refetch on delete.
+    public void Remove(Folder folder)
+    {
+        var self = folder?.FullyQualifiedName;
+        if (string.IsNullOrEmpty(self)) return;
+        string prefix = self + "/";
+        lock (_lock)
+        {
+            var snapshot = _cache;
+            if (snapshot is null) return;
+            bool Match(Folder f) =>
+                string.Equals(f.FullyQualifiedName, self, StringComparison.OrdinalIgnoreCase)
+                || (f.FullyQualifiedName?.StartsWith(prefix, StringComparison.OrdinalIgnoreCase) ?? false);
+            snapshot.Main.RemoveAll(Match);
+            snapshot.EnumView.RemoveAll(Match);
+        }
+    }
+
+    public void ClearCache() => _cache = null;
+}
+
 // Organization entities keyed by partitionGlobalId.
 // This represents the cache of unique entities across all organizations.
 public class ListCachePerOrganization<T> : ITenantCacheClearable

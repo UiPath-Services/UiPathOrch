@@ -417,8 +417,7 @@ public partial class OrchProvider
             }
             if (isDirty)
             {
-                dstDrive._dicFolders = null;
-                dstDrive._dicFoldersForEnumFolders = null;
+                dstDrive.ClearFolders();
             }
             return;
         }
@@ -432,16 +431,14 @@ public partial class OrchProvider
         {
             // If an exception leaked, we don't know whether the folder was created or not..
             // So clear the folder cache.
-            dstDrive._dicFolders = null;
-            dstDrive._dicFoldersForEnumFolders = null;
+            dstDrive.ClearFolders();
             throw;
         }
         finally
         {
             if (bDirty)
             {
-                dstDrive._dicFolders = null;
-                dstDrive._dicFoldersForEnumFolders = null;
+                dstDrive.ClearFolders();
             }
         }
     }

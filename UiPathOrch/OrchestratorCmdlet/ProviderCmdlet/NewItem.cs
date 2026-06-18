@@ -1,5 +1,4 @@
 using System.Management.Automation;
-using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
@@ -108,8 +107,9 @@ public partial class OrchProvider
                     f.FullName = path;
                     WriteItemObject(f, path, true);
                 }
-                drive._dicFolders = null;
-                drive._dicFoldersForEnumFolders = null;
+                // Clear rather than hand-insert the new folder: the next GetFolders re-fetches
+                // the authoritative entry (server fields + correct sort) on demand.
+                drive.ClearFolders();
             }
             catch (Exception ex)
             {

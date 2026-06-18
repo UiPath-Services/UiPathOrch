@@ -1,19 +1,8 @@
-using System.Collections.ObjectModel;
 using System.Data;
-using System.Diagnostics;
-using System.Globalization;
 using System.Management.Automation;
-using System.Management.Automation.Provider;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Json;
-using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
-using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Entities.JsonConverter;
 
 namespace UiPath.PowerShell.Core;
 
@@ -120,8 +109,7 @@ public partial class OrchProvider
         var parameters = DynamicParameters as GetChildItems_Parameters;
         if (parameters is not null && parameters.Reload.IsPresent)
         {
-            drive._dicFolders = null;
-            drive._dicFoldersForEnumFolders = null;
+            drive.ClearFolders();
             drive.PersonalWorkspaces.ClearCache();
         }
 

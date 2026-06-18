@@ -62,8 +62,8 @@ public partial class OrchProvider
                 }
 
                 drive.OrchAPISession.MoveFolder(srcFolder.Id ?? 0, dstFolder.Id);
-                drive._dicFolders = null;
-                drive._dicFoldersForEnumFolders = null;
+                // The moved subtree's paths all change — clear and let GetFolders re-fetch.
+                drive.ClearFolders();
                 drive.ClearFolderCache(srcFolder);
             }
             catch (Exception ex)

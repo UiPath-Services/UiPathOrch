@@ -290,7 +290,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
 
         // Canonicalize folder name casing from cache (like FileSystemProvider.NormalizeThePath).
         // Only when folders are already cached — avoid triggering API calls before authentication.
-        if (PSDriveInfo is OrchDriveInfo drive && drive._dicFolders != null && !string.IsNullOrEmpty(result))
+        if (PSDriveInfo is OrchDriveInfo drive && drive.IsFolderCatalogPopulated && !string.IsNullOrEmpty(result))
         {
             string orchPath = result.Replace(System.IO.Path.DirectorySeparatorChar, '/');
             var folder = drive.GetFolder(orchPath);

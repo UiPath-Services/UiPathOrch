@@ -1,8 +1,5 @@
 using System.Management.Automation;
-using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
-using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core;
@@ -76,11 +73,9 @@ public partial class OrchProvider
                     drive.PersonalWorkspaces.ClearCache();
                 }
 
-                // Folder structure changed — invalidate both caches; the next GetFolders
-                // rebuilds atomically (lock + Volatile.Write) so concurrent readers cannot
-                // observe a partial state.
-                drive._dicFolders = null;
-                drive._dicFoldersForEnumFolders = null;
+                // The folder (and, on a cascading delete, its descendants) is gone — drop it
+                // from the catalog directly. Targeted: no full clear + refetch.
+                drive.RemoveFolderFromCache(folder);
 
                 drive.ClearFolderCache(folder);
             }

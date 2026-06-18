@@ -1,7 +1,6 @@
 using System.Collections.ObjectModel;
 using System.Management.Automation;
 using UiPath.PowerShell.Commands;
-using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core;
 
@@ -105,8 +104,7 @@ public partial class OrchProvider
             try
             {
                 drive.OrchAPISession.EditFolder(folder, folder.DisplayName!, newDescription ?? string.Empty);
-                drive._dicFolders = null;
-                drive._dicFoldersForEnumFolders = null;
+                drive.ClearFolders();
 
                 var result = new PSObject();
                 result.Properties.Add(new PSNoteProperty("Description", newDescription));
@@ -159,8 +157,7 @@ public partial class OrchProvider
             try
             {
                 drive.OrchAPISession.EditFolder(folder, folder.DisplayName!, string.Empty);
-                drive._dicFolders = null;
-                drive._dicFoldersForEnumFolders = null;
+                drive.ClearFolders();
 
                 var result = new PSObject();
                 result.Properties.Add(new PSNoteProperty("Description", string.Empty));
