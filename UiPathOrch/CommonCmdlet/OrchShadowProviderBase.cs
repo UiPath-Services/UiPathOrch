@@ -91,6 +91,10 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
     // Re-root a bare drive for the drive-root leaf case, shared with OrchProvider via PathTools.
     protected override string GetChildName(string path) => PathTools.GetChildNameWithDriveRoot(path);
 
+    // Symmetric parent-side re-rooting ("Du1:" -> "Du1:\"), shared with OrchProvider via PathTools,
+    // so PSParentPath / Split-Path -Parent of a top-level item match FileSystemProvider.
+    protected override string GetParentPath(string path, string root) => PathTools.ParentPathWithDriveRoot(base.GetParentPath(path, root));
+
     protected override string MakePath(string parent, string child)
     {
         string result = base.MakePath(parent, child);

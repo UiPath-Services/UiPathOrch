@@ -325,6 +325,11 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
     // drive-root leaf case; non-root cases match the base NavigationCmdletProvider).
     protected override string GetChildName(string path) => PathTools.GetChildNameWithDriveRoot(path);
 
+    // Keep the drive root's separator on a top-level item's parent ("Orch1:" -> "Orch1:\") so
+    // PSParentPath (and the Folder view's "Directory:" group header) and Split-Path -Parent match
+    // FileSystemProvider. Symmetric to the GetChildName re-rooting above. See PathTools.
+    protected override string GetParentPath(string path, string root) => PathTools.ParentPathWithDriveRoot(base.GetParentPath(path, root));
+
     #endregion
 
 }

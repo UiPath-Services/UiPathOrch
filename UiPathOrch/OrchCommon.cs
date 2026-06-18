@@ -95,6 +95,19 @@ public static class PathTools
         return normalized.Substring(separatorIndex + 1);
     }
 
+    // Symmetric to GetChildNameWithDriveRoot, for the parent side. The base
+    // NavigationCmdletProvider.GetParentPath trims the drive root to a bare "Orch1:", so a
+    // top-level item's parent loses its separator: PSParentPath renders "Orch1:" and the Folder
+    // table's "Directory:" group header shows "Orch1:" instead of "Orch1:\" (and Split-Path
+    // -Parent of a root child yields "Orch1:"). FileSystemProvider keeps the root separator;
+    // re-root a bare drive here so each provider's GetParentPath matches. Only a bare drive
+    // qualifier ends with ':' (folder/project names cannot contain ':'), so the guard is exact.
+    // `parentPath` is the base-computed parent; an empty parent (above the root) is left as-is.
+    public static string ParentPathWithDriveRoot(string parentPath)
+        => !string.IsNullOrEmpty(parentPath) && parentPath.EndsWith(':')
+            ? parentPath + Path.DirectorySeparatorChar
+            : parentPath;
+
     // Normalize Rename-Item's -NewName, matching the FileSystem provider. PowerShell passes the raw
     // argument straight to RenameItem; tab completion commonly yields ".\Foo" (which would otherwise
     // be stored verbatim, so `ren .\Shared .\Shared2` would name the folder ".\Shared2"). Strip a

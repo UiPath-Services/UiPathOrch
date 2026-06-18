@@ -65,4 +65,19 @@ public class PathToolsTests
     {
         Assert.Equal(expected, PathTools.UnescapePSText(input));
     }
+
+    // A bare drive parent keeps its separator ("Orch1:" -> "Orch1:\"), matching FileSystemProvider;
+    // everything else is returned unchanged. Uses the OS separator so the expectation holds on the
+    // Linux/macOS CI legs too.
+    [Fact]
+    public void ParentPathWithDriveRoot_reroots_only_a_bare_drive()
+    {
+        string sep = System.IO.Path.DirectorySeparatorChar.ToString();
+
+        Assert.Equal("Orch1:" + sep, PathTools.ParentPathWithDriveRoot("Orch1:"));
+        Assert.Equal("Du1:" + sep, PathTools.ParentPathWithDriveRoot("Du1:"));
+        // Non-root parents and empties are untouched.
+        Assert.Equal("Orch1:" + sep + "Shared", PathTools.ParentPathWithDriveRoot("Orch1:" + sep + "Shared"));
+        Assert.Equal("", PathTools.ParentPathWithDriveRoot(""));
+    }
 }
