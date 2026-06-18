@@ -86,4 +86,48 @@ public class ProviderEngineNavigationTests : IClassFixture<OrchProviderHarness>
         Assert.EndsWith($"Test:{S}", Str($@"(Get-Item Test:{S}Shared).PSParentPath"));
         Assert.EndsWith($"Test:{S}Shared", Str($@"(Get-Item Test:{S}Shared{S}Sub).PSParentPath"));
     }
+
+    [Fact]
+    public void Multi_segment_wildcard_globs_level_by_level()
+    {
+        // Test:\*\Sub -> only Shared has a child named exactly "Sub" (Production has "SubA", Empty none).
+        // Exercises HasChildItems + GetChildNames at each level of the glob.
+        var res = _h.Run($@"(Resolve-Path Test:{S}*{S}Sub).Path");
+        Assert.Single(res);
+        Assert.EndsWith($"Test:{S}Shared{S}Sub", (string)res[0].BaseObject);
+    }
+
+    [Fact]
+    public void Test_Path_PathType_reflects_container_only_provider()
+    {
+        // Every item is a container (IsItemContainer == true); there are no leaves.
+        Assert.True(Bool($@"Test-Path Test:{S}Shared -PathType Container"));
+        Assert.False(Bool($@"Test-Path Test:{S}Shared -PathType Leaf"));
+    }
+
+    [Fact]
+    public void Get_Item_emits_the_typed_Folder_with_provider_notes()
+    {
+        Assert.Equal("Shared", Str($@"(Get-Item Test:{S}Shared).DisplayName"));
+        Assert.Equal("Shared", Str($@"(Get-Item Test:{S}Shared).FullyQualifiedName"));
+        Assert.Equal("Sub", Str($@"(Get-Item Test:{S}Shared{S}Sub).DisplayName"));
+        Assert.True(Bool($@"(Get-Item Test:{S}Shared).PSIsContainer"));
+        Assert.Equal("Shared", Str($@"(Get-Item Test:{S}Shared).PSChildName"));
+    }
+
+    [Fact]
+    public void LiteralPath_treats_wildcard_metacharacters_in_a_name_literally()
+    {
+        // A folder whose NAME contains a wildcard metacharacter ('*') must resolve literally via
+        // -LiteralPath (ItemExists resolves the path with no wildcard interpretation) — and a name
+        // that would only match it as a wildcard must NOT exist.
+        _h.Seed(new[]
+        {
+            OrchProviderHarness.F("Fin*ce", 5, null),
+            OrchProviderHarness.F("Plain", 6, null),
+        });
+        Assert.True(Bool($@"Test-Path -LiteralPath 'Test:{S}Fin*ce'"));
+        Assert.False(Bool($@"Test-Path -LiteralPath 'Test:{S}Fince'"));   // '*' is literal, not "match zero+"
+        Assert.False(Bool($@"Test-Path -LiteralPath 'Test:{S}FinXce'"));  // not a wildcard match either
+    }
 }
