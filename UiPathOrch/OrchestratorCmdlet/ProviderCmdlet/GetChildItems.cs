@@ -120,47 +120,14 @@ public partial class OrchProvider
 
         //string orchPath = OrchDriveInfo.PSPathToOrchPath(path).ToLower();
         string orchPath = OrchDriveInfo.PSPathToOrchPath(path);
-        uint currentDepth = FolderDepth(orchPath);
 
         HashSet<string> dupCheck = [];
 
         List<Folder> csvOutput = null;
 
-        // Returns the parent portion of a FullyQualifiedName ("A/B/C" -> "A/B", "X" -> "").
-        // Used to group siblings together so Format-Table's GroupBy keeps each Directory
-        // section contiguous under -Recurse, instead of interleaving grandchildren between
-        // sibling folders the way a flat alphabetical sort does.
-        static string ParentOf(string fqn)
-        {
-            int idx = fqn.LastIndexOf('/');
-            return idx < 0 ? "" : fqn[..idx];
-        }
-
         try
         {
-            // Collect matching folders first, then re-emit grouped by parent. Sort is stable
-            // and only on parent path — sibling order within each parent comes from the
-            // original _dicFolders sequence, which intentionally puts personal workspaces
-            // before regular folders to match the Orchestrator web UI.
-            var matched = new List<Folder>();
-            string? orchPathStart = orchPath == "" ? null : orchPath + "/";
-
-            foreach (var folder in drive.GetFolders())
-            {
-                if (Stopping) return;
-                if (orchPathStart is not null &&
-                    !folder.FullyQualifiedName!.StartsWith(orchPathStart, StringComparison.OrdinalIgnoreCase))
-                    continue;
-
-                uint folderDepth = FolderDepth(folder.FullyQualifiedName!);
-                if (folderDepth - (currentDepth + 1) <= depth)
-                {
-                    matched.Add(folder);
-                }
-            }
-
-            foreach (var folder in matched.OrderBy(
-                f => ParentOf(f.FullyQualifiedName!), StringComparer.OrdinalIgnoreCase))
+            foreach (var folder in SelectChildItems(drive.GetFolders(), orchPath, depth))
             {
                 if (Stopping) return;
 
@@ -213,6 +180,48 @@ public partial class OrchProvider
         }
     }
 
+    // Returns the parent portion of a FullyQualifiedName ("A/B/C" -> "A/B", "X" -> "").
+    // Used to group siblings together so Format-Table's GroupBy keeps each Directory section
+    // contiguous under -Recurse, instead of interleaving grandchildren between sibling folders
+    // the way a flat alphabetical sort does.
+    internal static string FqnParent(string fqn)
+    {
+        int idx = fqn.LastIndexOf('/');
+        return idx < 0 ? "" : fqn[..idx];
+    }
+
+    // The depth-filter + parent-grouped ordering behind GetChildItems / dir, extracted pure over
+    // the catalog so it is unit-testable without a live drive. Keeps only folders under orchPath
+    // (the drive root when ""), within `depth` extra levels (0 = direct children), then re-emits
+    // grouped by parent: the sort is STABLE and ONLY on parent path, so sibling order within each
+    // parent comes from the catalog sequence (which intentionally puts personal workspaces before
+    // regular folders to match the Orchestrator web UI). Per-item Stopping is not checked here —
+    // this is an in-memory pass over an already-fetched list; the cancellable work (WriteItemObject)
+    // stays in the caller's output loop, which keeps its Stopping check.
+    internal static List<Folder> SelectChildItems(IEnumerable<Folder> folders, string orchPath, uint depth)
+    {
+        uint currentDepth = FolderDepth(orchPath);
+        string? orchPathStart = orchPath == "" ? null : orchPath + "/";
+
+        var matched = new List<Folder>();
+        foreach (var folder in folders)
+        {
+            if (orchPathStart is not null &&
+                !folder.FullyQualifiedName!.StartsWith(orchPathStart, StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            uint folderDepth = FolderDepth(folder.FullyQualifiedName!);
+            if (folderDepth - (currentDepth + 1) <= depth)
+            {
+                matched.Add(folder);
+            }
+        }
+
+        return matched
+            .OrderBy(f => FqnParent(f.FullyQualifiedName!), StringComparer.OrdinalIgnoreCase)
+            .ToList();
+    }
+
     protected override object GetChildItemsDynamicParameters(string path, bool recurse)
     {
         return new GetChildItems_Parameters();
@@ -262,32 +271,33 @@ public partial class OrchProvider
 
         string ocPath = OrchDriveInfo.PSPathToOrchPath(path);
 
+        // The parent-id lookup only matters for the non-root branch; skip it at the root so
+        // GetFolder (a catalog probe) is not invoked there — matching the former code exactly.
+        Int64 parentFolderId = ocPath == "" ? 0 : (drive.GetFolder(ocPath)?.Id ?? 0);
+
+        foreach (var folder in SelectChildNames(drive.GetFolders(), ocPath, parentFolderId))
+        {
+            if (Stopping) return;
+            string fullPath = drive.NameColon + OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName!);
+            WriteItemObject(folder.DisplayName!, fullPath, true);
+        }
+    }
+
+    // Selects the direct children of a folder for GetChildNames (-Name / wildcard resolution).
+    // Two branches, both pure over the catalog:
+    //  * root (ocPath == ""): folders at depth 1. The equivalent "!ParentId.HasValue" test also
+    //    works here (GetFolders() masks every top-level folder's ParentId to null), but matching
+    //    GetChildItems' depth filter keeps the two enumeration methods consistent.
+    //  * non-root: folders whose ParentId equals the resolved parent folder's id.
+    // Source order is preserved (Where is stable), so siblings keep the catalog's web-UI order.
+    internal static IEnumerable<Folder> SelectChildNames(IEnumerable<Folder> folders, string ocPath, Int64 parentFolderId)
+    {
         if (ocPath == "")
         {
-            // Direct children of the drive root = folders at depth 1, filtered the same way as
-            // GetChildItems (by depth) so the two enumeration methods stay consistent. The
-            // equivalent "!ParentId.HasValue" test also works here (GetFolders() masks every
-            // top-level folder's ParentId to null), but matching GetChildItems is clearer.
-            foreach (var folder in drive.GetFolders().Where(f =>
-                f.FullyQualifiedName is not null && FolderDepth(f.FullyQualifiedName) == 1))
-            {
-                if (Stopping) return;
-                string fullPath = drive.NameColon + OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName!);
-                WriteItemObject(folder.DisplayName!, fullPath, true);
-            }
+            return folders.Where(f =>
+                f.FullyQualifiedName is not null && FolderDepth(f.FullyQualifiedName) == 1);
         }
-        else
-        {
-            Folder parentFolder = drive.GetFolder(ocPath);
-            Int64 parentFolderId = parentFolder?.Id ?? 0;
-
-            foreach (var folder in drive.GetFolders().Where(f => f.ParentId == parentFolderId))
-            {
-                if (Stopping) return;
-                string fullPath = drive.NameColon + OrchDriveInfo.OrchProviderPathToPSPath(folder.FullyQualifiedName!);
-                WriteItemObject(folder.DisplayName!, fullPath, true);
-            }
-        }
+        return folders.Where(f => f.ParentId == parentFolderId);
     }
 
     // Always returning true seems to reduce accidental rmdir operations due to user error.
@@ -306,16 +316,18 @@ public partial class OrchProvider
         if (drive is null)
             return false;
 
-        return HasSubfolders(drive, OrchDriveInfo.PSPathToOrchPath(path));
+        return HasSubfolders(drive.GetFolders(), OrchDriveInfo.PSPathToOrchPath(path));
     }
 
     // True if the folder at the given fully-qualified Orchestrator path has any direct subfolder.
-    // "" is the drive root, whose direct children are the depth-1 folders.
-    private static bool HasSubfolders(OrchDriveInfo drive, string fqn)
+    // "" is the drive root, whose direct children are the depth-1 folders. Pure over the folder
+    // list (not the drive) so HasChildItems' accuracy — which the wildcard path globber and
+    // Remove-Item's recurse prompt both depend on — is unit-testable without a live drive.
+    internal static bool HasSubfolders(IEnumerable<Folder> folders, string fqn)
     {
         uint childDepth = FolderDepth(fqn) + 1;
         string start = fqn + "/";
-        return drive.GetFolders().Any(f =>
+        return folders.Any(f =>
             f.FullyQualifiedName is not null &&
             FolderDepth(f.FullyQualifiedName) == childDepth &&
             (fqn.Length == 0 || (f.FullyQualifiedName + "/").StartsWith(start, StringComparison.OrdinalIgnoreCase)));

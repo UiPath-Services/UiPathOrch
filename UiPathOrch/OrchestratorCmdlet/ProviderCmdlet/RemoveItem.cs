@@ -42,7 +42,7 @@ public partial class OrchProvider
             // so don't ask again here. A folder with no subfolders leaves the engine silent, so warn
             // about the resources it contains (like the Orchestrator web delete dialog) before they
             // are removed without notice. -Force / -Recurse opt out.
-            if (!Force && !recurse && !HasSubfolders(drive, folder.FullyQualifiedName ?? string.Empty))
+            if (!Force && !recurse && !HasSubfolders(drive.GetFolders(), folder.FullyQualifiedName ?? string.Empty))
             {
                 string? summary = DescribeFolderContents(drive, folder);
                 if (summary is not null &&
