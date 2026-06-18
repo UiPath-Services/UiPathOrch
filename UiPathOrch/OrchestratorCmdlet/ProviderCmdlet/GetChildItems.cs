@@ -263,8 +263,9 @@ public partial class OrchProvider
     // (`[Alias("PSPath")]`), and `EffectivePath` re-applies WildcardPattern.Escape on bind — so
     // a pre-escaped path would be escaped twice (e.g. a folder named `Fin*ce`) and fail to
     // resolve literally. Left raw, it round-trips: `dir | <cmdlet> -LiteralPath` and
-    // `Get-Item -LiteralPath $f.PSPath` both resolve correctly. (EscapePSText2 in GetChildItems /
-    // GetItem only escapes `* ?` and predates this; matching IT here would be the wrong target.)
+    // `Get-Item -LiteralPath $f.PSPath` both resolve correctly. GetChildItems and GetItem now emit
+    // the PSPath the same RAW way (they previously wildcard-escaped via EscapePSText2, which broke
+    // exactly this round-trip for `* ?` names) — all four emit paths agree.
     protected override void GetChildNames(string path, ReturnContainers returnContainers)
     {
         OrchDriveInfo? drive = GetOrchDriveInfo(path);
