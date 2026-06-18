@@ -487,6 +487,16 @@ public partial class OrchAPISession : IDisposable
     // lifetime when positive, else the conservative 1h fallback.
     internal static DateTime ComputeTokenExpiry(DateTime from, int expiresInSeconds) => expiresInSeconds > 0 ? from.AddSeconds(expiresInSeconds) : from.AddHours(1);
 
+    // Test-only: mark the session authenticated with a far-future expiry and suppress the one-time
+    // Entra-ID warning probe, so provider operations that gate on EnsureAuthenticated (e.g. the
+    // Get-ChildItem enumerate path) run against a seeded catalog without any network call.
+    internal void MarkAuthenticatedForTest()
+    {
+        _isAuthenticated = true;
+        Volatile.Write(ref _expiryTimeTicks, DateTime.Now.AddHours(1).Ticks);
+        EntraIdWarningChecked = true;
+    }
+
     internal void EnsureAuthenticated()
     {
         // Fail fast if a prior call proved the credential is broken (re-issued token still

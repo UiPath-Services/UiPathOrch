@@ -30,6 +30,29 @@ public class ProviderEngineNavigationTests : IClassFixture<OrchProviderHarness>
 
     private string Str(string script) => (string)_h.Run(script)[0].BaseObject;
     private bool Bool(string script) => (bool)_h.Run(script)[0].BaseObject;
+    private System.Collections.Generic.List<string> Strs(string script) =>
+        System.Linq.Enumerable.ToList(System.Linq.Enumerable.Select(_h.Run(script), o => (string)o.BaseObject));
+
+    [Fact]
+    public void Get_ChildItem_lists_only_top_level_folders()
+    {
+        // dir returns FOLDERS at depth 1 only (no nested folders, no non-folder entities).
+        var names = Strs($@"(Get-ChildItem Test:{S}).DisplayName");
+        Assert.Contains("Shared", names);
+        Assert.Contains("Empty", names);
+        Assert.Contains("Production", names);
+        Assert.DoesNotContain("Sub", names);    // Shared/Sub is nested — not listed without -Recurse
+        Assert.DoesNotContain("SubA", names);
+    }
+
+    [Fact]
+    public void Get_ChildItem_Recurse_includes_nested_folders()
+    {
+        var fqns = Strs($@"(Get-ChildItem Test:{S} -Recurse).FullyQualifiedName");
+        Assert.Contains("Shared", fqns);
+        Assert.Contains("Shared/Sub", fqns);
+        Assert.Contains("Production/SubA", fqns);
+    }
 
     [Fact]
     public void TestPath_resolves_existing_and_missing_folders_via_ItemExists()
@@ -85,6 +108,18 @@ public class ProviderEngineNavigationTests : IClassFixture<OrchProviderHarness>
         // a top-level item's parent must be "Test:\" (WITH separator), not the bare "Test:".
         Assert.EndsWith($"Test:{S}", Str($@"(Get-Item Test:{S}Shared).PSParentPath"));
         Assert.EndsWith($"Test:{S}Shared", Str($@"(Get-Item Test:{S}Shared{S}Sub).PSParentPath"));
+    }
+
+    [Fact]
+    public void Resolution_is_case_insensitive_and_yields_the_catalog_cased_object()
+    {
+        // The resolved PATH STRING keeps the typed casing (a PowerShell engine detail the provider
+        // does not control), but resolution itself is case-insensitive and the resolved Folder
+        // OBJECT carries the catalog's canonical casing — which is what callers actually consume.
+        Assert.True(Bool($@"Test-Path Test:{S}shared"));
+        Assert.True(Bool($@"Test-Path Test:{S}SHARED{S}sub"));
+        Assert.Equal("Shared", Str($@"(Get-Item Test:{S}SHARED).FullyQualifiedName"));
+        Assert.Equal("Sub", Str($@"(Get-Item Test:{S}shared{S}SUB).DisplayName"));
     }
 
     [Fact]

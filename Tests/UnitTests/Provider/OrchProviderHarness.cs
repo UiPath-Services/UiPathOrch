@@ -37,6 +37,12 @@ public sealed class OrchProviderHarness : IDisposable
             "-OAuthScope 'OR.Folders OR.Settings OR.Users' -Scope Global -ErrorAction Stop | Out-Null");
 
         Drive = (OrchDriveInfo)Run("Get-PSDrive -Name Test")[0].BaseObject;
+
+        // Mark the session authenticated (far-future expiry, Entra probe suppressed) so the
+        // Get-ChildItem enumerate path — which calls EnsureAuthenticated — runs against the seeded
+        // catalog without any network call. The wildcard / Test-Path / Split-Path / Get-Item paths
+        // never authenticate, so this only unlocks the direct dir enumeration.
+        Drive.OrchAPISession.MarkAuthenticatedForTest();
     }
 
     public void Seed(IEnumerable<Folder> folders) => Drive.SeedFolderCatalogForTest(folders);

@@ -39,9 +39,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Added an in-process runspace test harness that mounts a UiPathOrch drive with a seeded folder
   catalog (no live tenant, no auth) and drives the real PowerShell engine globber against the
   provider — pinning wildcard resolution through `HasChildItems`, `Split-Path` / `GetParentPath`
-  drive-root re-rooting, and `Get-Item` `PSParentPath`. Test-only; the shipping module gains a pair
-  of `internal` test seams but no behavior change, and only the test project references the
-  PowerShell SDK.
+  drive-root re-rooting, `Get-Item` `PSParentPath`, `dir` / `dir -Recurse` enumeration, and
+  case-insensitive resolution. Test-only; the shipping module gains a few `internal` test seams but
+  no behavior change, and only the test project references the PowerShell SDK.
 
 ## [1.9.4] - 2026-06-18
 
