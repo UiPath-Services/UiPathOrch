@@ -245,6 +245,11 @@ public class FolderCache : ITenantCacheClearable
     }
 
     public void ClearCache() => _cache = null;
+
+    // Test-only: publish a folder catalog directly, bypassing the API builder, so provider
+    // navigation (wildcard globbing, HasChildItems, Get-Item / Split-Path / PSParentPath) can be
+    // exercised in a runspace without a live tenant. See OrchDriveInfo.SeedFolderCatalogForTest.
+    internal void SeedForTest(List<Folder> main, List<Folder> enumView) => _cache = new Views(main, enumView);
 }
 
 // Organization entities keyed by partitionGlobalId.

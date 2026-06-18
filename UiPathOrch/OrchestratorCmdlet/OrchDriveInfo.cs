@@ -1767,6 +1767,17 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     // _allTenantCache registry; the mutation sites (New/Remove/Rename/Move folder) use this.
     internal void ClearFolders() => _folderCache.ClearCache();
 
+    // Test-only: seed the folder catalog so provider navigation (wildcard resolution, HasChildItems,
+    // Get-Item / Split-Path / PSParentPath) runs against an in-memory tree instead of a live tenant.
+    // GetChildNames / HasChildItems / ItemExists / GetItem do not authenticate, so seeding alone is
+    // enough to drive the real engine globber against this provider. Both projections receive the
+    // same ordered list (the main-vs-enum divergence is covered by FolderViewOrderingTests).
+    internal void SeedFolderCatalogForTest(IEnumerable<Folder> folders)
+    {
+        var list = folders.ToList();
+        _folderCache.SeedForTest(list, new List<Folder>(list));
+    }
+
     // Remove a deleted folder (and its descendants) from the catalog — targeted, no refetch.
     // Used by Remove-Item; creation paths clear instead (the next GetFolders re-fetches).
     internal void RemoveFolderFromCache(Folder folder) => _folderCache.Remove(folder);

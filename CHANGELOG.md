@@ -28,6 +28,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   given unit coverage, closing a gap where this historically fragile globber logic could only be
   verified against a live tenant. Behavior-preserving. Regression coverage was also added for the
   top-level `New-Item` fix above.
+- Added an in-process runspace test harness that mounts a UiPathOrch drive with a seeded folder
+  catalog (no live tenant, no auth) and drives the real PowerShell engine globber against the
+  provider — pinning wildcard resolution through `HasChildItems`, `Split-Path` / `GetParentPath`
+  drive-root re-rooting, and `Get-Item` `PSParentPath`. Test-only; the shipping module gains a pair
+  of `internal` test seams but no behavior change, and only the test project references the
+  PowerShell SDK.
 
 ## [1.9.4] - 2026-06-18
 
