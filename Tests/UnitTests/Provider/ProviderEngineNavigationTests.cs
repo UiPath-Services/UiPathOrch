@@ -143,9 +143,9 @@ public class ProviderEngineNavigationTests : IClassFixture<OrchProviderHarness>
     public void PSPath_round_trips_through_LiteralPath_for_a_wildcard_named_folder()
     {
         // The real guard: a name containing a wildcard metacharacter ('*') must survive the
-        // emit -> PSPath -> -LiteralPath rebind round-trip. The provider escapes the emitted PSPath
-        // (EscapePSText2) while -LiteralPath binding re-applies WildcardPattern.Escape (EffectivePath);
-        // if those two are inconsistent the name double-escapes and the rebind fails to resolve.
+        // emit -> PSPath -> -LiteralPath rebind round-trip. The provider must emit the PSPath RAW
+        // while -LiteralPath binding re-applies WildcardPattern.Escape (EffectivePath); if the emit
+        // side pre-escapes, the name double-escapes and the rebind fails to resolve.
         _h.Seed(new[] { OrchProviderHarness.F("Fin*ce", 5, null) });
         string back = Str($@"$i = Get-Item -LiteralPath 'Test:{S}Fin*ce'; (Get-Item -LiteralPath $i.PSPath).FullyQualifiedName");
         Assert.Equal("Fin*ce", back);

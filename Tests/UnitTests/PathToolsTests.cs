@@ -33,17 +33,6 @@ public class PathToolsTests
     }
 
     [Theory]
-    [InlineData(null, "")]
-    [InlineData("", "")]
-    [InlineData("normal", "normal")]
-    [InlineData("wild*card", "wild`*card")]
-    [InlineData("quest?ion", "quest`?ion")]
-    public void EscapePSText2_OnlyEscapesWildcards(string? input, string expected)
-    {
-        Assert.Equal(expected, PathTools.EscapePSText2(input));
-    }
-
-    [Theory]
     [InlineData(null, false)]
     [InlineData("", false)]
     [InlineData("x", false)]

@@ -148,27 +148,6 @@ public static class PathTools
         return newName;
     }
 
-    // Use this when calling WriteItemObject() in the provider's GetChildItems.
-    // Characters like [ and ] seem to be handled automatically. * and ? are presumably not expected in file names.
-    public static string EscapePSText2(string? input)
-    {
-        //            return "'" + WildcardPattern.Escape(input) + "'";
-        if (string.IsNullOrEmpty(input))
-        {
-            return "";
-        }
-
-        string ret = input
-            .Replace("*", "`*")
-            .Replace("?", "`?");
-        //.TrimStart('\\');
-
-        //if (input != ret || input.Contains(' ')) //★★★
-        //    ret = '\'' + ret + '\'';
-
-        return ret;
-    }
-
     public static bool IsEscapedPSText(string? input)
     {
         if (string.IsNullOrEmpty(input))

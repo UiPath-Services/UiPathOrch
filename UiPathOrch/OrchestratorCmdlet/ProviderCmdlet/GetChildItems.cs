@@ -258,14 +258,14 @@ public partial class OrchProvider
     //
     // That path is emitted RAW (unescaped), mirroring the authoritative FileSystem provider,
     // whose GetChildNames does `WriteItemObject(fsinfo.Name, fsinfo.FullName, ...)` with the
-    // unescaped FullName (PowerShell's FileSystemProvider.cs). Do NOT EscapePSText2 /
-    // WildcardPattern.Escape it here: the PSPath built from this path binds to `-LiteralPath`
+    // unescaped FullName (PowerShell's FileSystemProvider.cs). Do NOT WildcardPattern.Escape it
+    // here: the PSPath built from this path binds to `-LiteralPath`
     // (`[Alias("PSPath")]`), and `EffectivePath` re-applies WildcardPattern.Escape on bind — so
     // a pre-escaped path would be escaped twice (e.g. a folder named `Fin*ce`) and fail to
     // resolve literally. Left raw, it round-trips: `dir | <cmdlet> -LiteralPath` and
     // `Get-Item -LiteralPath $f.PSPath` both resolve correctly. GetChildItems and GetItem now emit
-    // the PSPath the same RAW way (they previously wildcard-escaped via EscapePSText2, which broke
-    // exactly this round-trip for `* ?` names) — all four emit paths agree.
+    // the PSPath the same RAW way (they previously wildcard-escaped the PSPath, which broke exactly
+    // this round-trip for `* ?` names) — all four emit paths agree.
     protected override void GetChildNames(string path, ReturnContainers returnContainers)
     {
         OrchDriveInfo? drive = GetOrchDriveInfo(path);
