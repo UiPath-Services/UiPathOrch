@@ -178,7 +178,7 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
                     .FilterByWildcards(t => t?.Name, wpName)
                     .OrderBy(t => t.Name);
 
-                var results = ParallelResults.ForEach(triggers, trigger => drive.GetTrigger(folder, trigger));
+                var results = ParallelResults.ForEach(triggers, trigger => drive.TriggersDetailed.Get(folder, trigger.Id!.Value));
 
                 foreach (var result in results)
                 {

@@ -105,8 +105,10 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         // OrchDriveInfoBase. The block below is the Orchestrator-specific
         // tenant-level extras that the shadow drives (Du / Tm) do not need.
         // These are all tenant-scoped (tenant identity, folder catalog,
-        // PmApiDeprecated, org-shared SearchPmDirectoryCache) so they fire on
-        // any clear that touches tenant scope (tenant-only or drive-level).
+        // PmApiDeprecated) so they fire on any clear that touches tenant scope
+        // (tenant-only or drive-level). The org-shared SearchPmDirectoryCache is
+        // registry-driven (KeyedSingleCachePerOrganization self-registers into
+        // _allTenantCache), so base.ClearTenantCache() already flushes it.
         base.ClearTenantCache();
 
         if (_orchAPISession is not null)
@@ -119,13 +121,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         // above) — FolderCache self-registers, so no hand-null is needed here.
         _tenantId = null;
         _tenantKey = null;
-
-        #endregion
-
-        #region Platform Management cache
-
-
-        SearchPmDirectoryCache.ClearCache();
 
         #endregion
     }
@@ -355,11 +350,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
 
     #endregion
 
-    #region OrchEntitiesSummary cache
-    // key: foldlerId
-
-    #endregion
-
     #region OrchTrigger cache
     // Backwards-compat shim: delegates to Triggers (ListCachePerFolder).
     // Pre-v12 Personal workspaces have no triggers — short-circuit so we don't
@@ -370,24 +360,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         return Triggers.Get(folder);
     }
     #endregion
-
-    // Backwards-compat shim: delegates to TriggersDetailed
-    // (KeyedSingleCachePerFolder). The detail payload doesn't include the
-    // schedule's executor-robot assignments — those come from a separate
-    // endpoint — so we side-fetch them once per cache entry and stash them on
-    // the cached trigger. Re-fetch only if ExecutorRobots is still null
-    // (which means a previous side-fetch failed or hasn't run yet).
-    public ProcessSchedule? GetTrigger(Folder folder, ProcessSchedule schedule)
-    {
-        var trigger = TriggersDetailed.Get(folder, schedule.Id!.Value);
-        if (trigger is not null && trigger.ExecutorRobots is null)
-        {
-            trigger.ExecutorRobots = OrchAPISession.GetRobotIdsForSchedule(folder.Id ?? 0, schedule.Id!.Value)
-                .Select(id => new RobotExecutor() { Id = id })
-                .ToArray();
-        }
-        return trigger;
-    }
 
     #region OrchAsset cache
 
@@ -1626,7 +1598,22 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             (trigger, folderPath) => trigger.Path = folderPath);
 
         TriggersDetailed = new(this,
-            (folderId, scheduleId) => OrchAPISession.GetProcessSchedule(folderId, scheduleId),
+            (folderId, scheduleId) =>
+            {
+                // The detail payload omits the schedule's executor-robot assignments (they come
+                // from a separate endpoint), so enrich the cached entity with them here — the
+                // cache then always holds a complete trigger. TriggersDetailed.Get is consumed
+                // only where ExecutorRobots is needed (CopyTriggers / Get-OrchTriggerDetail /
+                // the Update-OrchTrigger ExecutorRobots completer).
+                var trigger = OrchAPISession.GetProcessSchedule(folderId, scheduleId);
+                if (trigger is not null)
+                {
+                    trigger.ExecutorRobots = OrchAPISession.GetRobotIdsForSchedule(folderId, scheduleId)
+                        .Select(id => new RobotExecutor { Id = id })
+                        .ToArray();
+                }
+                return trigger;
+            },
             (trigger, folderPath, _) => trigger.Path = folderPath);
         TestSetSchedules = new(this, OrchAPISession.GetTestSetSchedules, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
         UserRobots = new(this, OrchAPISession.GetUserRobots);

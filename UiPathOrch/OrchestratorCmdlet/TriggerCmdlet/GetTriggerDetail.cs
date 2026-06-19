@@ -127,7 +127,7 @@ public class GetTriggerDetailCmdlet : OrchestratorPSCmdlet
 
                 foreach (var entity in targetEntities)
                 {
-                    var detailedEntity = drive.GetTrigger(folder, entity);
+                    var detailedEntity = drive.TriggersDetailed.Get(folder, entity.Id!.Value);
                     if (detailedEntity is null) continue;
 
                     if (writer is not null) { WriteCsvContent(caller, writer, detailedEntity); }

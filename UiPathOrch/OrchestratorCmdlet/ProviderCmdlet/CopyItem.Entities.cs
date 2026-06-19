@@ -1199,7 +1199,7 @@ public partial class OrchProvider
                 //reporter.WriteProgress(++index, srcTrigger.Name);
                 reporter.WriteProgress(++index);
 
-                var detailedSrcTrigger = srcDrive.GetTrigger(srcFolder, srcTrigger);
+                var detailedSrcTrigger = srcDrive.TriggersDetailed.Get(srcFolder, srcTrigger.Id!.Value);
 
                 var postingTrigger = OrchCollectionExtensions.DeepCopy(detailedSrcTrigger);
                 if (postingTrigger is null) continue;
