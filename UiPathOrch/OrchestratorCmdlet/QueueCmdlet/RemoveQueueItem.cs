@@ -169,28 +169,30 @@ public class RemoveQueueItemCmdlet : OrchestratorPSCmdlet
                     // If rowVersion is not specified
                     if (string.IsNullOrEmpty(line.RowVersion))
                     {
-                        // First, look in the cache (flat by id; queue.Name no
-                        // longer participates in the cache key).
-                        var allItems = line.Drive.QueueItems.GetCache(line.Folder);
-                        if (allItems is not null && allItems.TryGetValue(line.Id, out var itemToRemove))
+                        // Cache first (flat, id-keyed); on a miss fetch just this item via the
+                        // list endpoint filtered to "Id in (<id>)" (richer than the old by-id
+                        // endpoint — it carries the same $expand — and re-uses the one Fetch path).
+                        var cached = line.Drive.QueueItems.GetCache(line.Folder);
+                        if (cached is not null && cached.TryGetValue(line.Id, out var hit))
                         {
-                            line.RowVersion = itemToRemove.RowVersion;
+                            line.RowVersion = hit.RowVersion;
                         }
 
-                        // If not in the cache, retrieve via API
                         if (string.IsNullOrEmpty(line.RowVersion))
                         {
                             QueueItem item = null;
                             try
                             {
-                                item = line.Drive.GetQueueItemById(line.Folder, queue, line.Id);
-                                line.RowVersion = item?.RowVersion;
+                                item = line.Drive.QueueItems
+                                    .Fetch(line.Folder, $"&$filter=Id in ({line.Id})", 0, 1, null, false, queue.Name, queue.GetPSPath())
+                                    .FirstOrDefault();
                             }
                             catch (Exception ex)
                             {
                                 WriteError(new ErrorRecord(new OrchException(System.IO.Path.Combine(target, line.Id.ToString()), ex), "GetQueueItemError", ErrorCategory.InvalidOperation, queue));
                                 continue;
                             }
+                            line.RowVersion = item?.RowVersion;
                             if (string.IsNullOrEmpty(line.RowVersion))
                             {
                                 WriteWarning($"\"{queue.GetPSPath()}\": No item found with Id {line.Id}.");

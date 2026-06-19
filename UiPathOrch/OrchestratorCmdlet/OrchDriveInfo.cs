@@ -470,32 +470,13 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     // queueName → itemId) is flattened — per-queue grouping is a display-time
     // concern (each QueueItem carries its queue.Name) and external readers
     // regroup via GroupBy when needed.
+    // Thin typed adapter: the enrichment (Path / PathName / Name) now lives in the QueueItems
+    // cache's ownerInitializer; this just supplies the owning queue's Name / PSPath per call.
     public List<QueueItem> GetQueueItems(Folder folder, QueueDefinition queue, string filter, ulong skip, ulong first, string? orderBy = null, bool orderAscending = false)
-    {
-        var items = QueueItems.Fetch(folder, filter, skip, first, orderBy, orderAscending).ToList();
-        string folderPath = folder.GetPSPath();
-        string queuePath = queue.GetPSPath();
-        foreach (var item in items)
-        {
-            item.Path = folderPath;
-            item.PathName = queuePath;
-            item.Name = queue.Name;
-        }
-        return items;
-    }
+        => QueueItems.Fetch(folder, filter, skip, first, orderBy, orderAscending, queue.Name, queue.GetPSPath()).ToList();
 
-    public QueueItem? GetQueueItemById(Folder folder, QueueDefinition queue, Int64 id)
-    {
-        var item = OrchAPISession.GetQueueItemById(folder.Id!.Value, id);
-        if (item is not null)
-        {
-            item.Path = folder.GetPSPath();
-            item.PathName = queue.GetPSPath();
-            item.Name = queue.Name;
-            QueueItems.AddToCache(folder, item);
-        }
-        return item;
-    }
+    // A queue item by id is just GetQueueItems with an "Id eq <id>" OData filter (same list
+    // endpoint, same enrichment) — Remove-OrchQueueItem does that on a cache miss.
     #endregion
 
     #region OrchTestSetExecution cache
@@ -1545,10 +1526,17 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             // orderBy, orderAscending); matches IncrementalCachePerFolder's
             // fetcher signature exactly.
             OrchAPISession.GetQueueItems,
-            qi => qi.Id ?? 0);
-        // No initializer: GetQueueItems wrapper sets Path / PathName / Name
-        // per-call from the caller's Folder + QueueDefinition references (none
-        // are derivable from just the item id).
+            qi => qi.Id ?? 0,
+            // Owner enrichment: stamp folder path + the owning queue's name / PSPath onto each
+            // item (was the GetQueueItems wrapper body). ownerName = queue.Name, ownerPath =
+            // queue.GetPSPath(), supplied per Fetch call. A by-id lookup is just Fetch with an
+            // "Id eq <id>" OData filter — no separate point endpoint is needed.
+            ownerInitializer: (item, folderPath, ownerName, ownerPath) =>
+            {
+                item.Path = folderPath;
+                item.Name = ownerName;
+                item.PathName = ownerPath;
+            });
 
         // Non-indexed folder entities
         // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?

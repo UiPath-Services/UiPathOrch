@@ -1694,12 +1694,18 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     // Additional processing before adding to cache (e.g., merging with existing cache)
     private readonly Action<TEntity, TEntity?>? _mergeFunc;
 
+    // Owner-context enrichment: (entity, folderPath, ownerName, ownerPath). Lets a per-Fetch
+    // caller stamp fields derived from the OWNING entity that the id-keyed cache can't know on
+    // its own — e.g. a QueueItem's queue Name / PSPath. Applied alongside _initializer.
+    private readonly Action<TEntity, string, string?, string?>? _ownerInitializer;
+
     public IncrementalCachePerFolder(
         OrchDriveInfoBase drive,
         Func<Int64, string?, ulong, ulong, string?, bool, IEnumerable<TEntity>> fetchFunc,
         Func<TEntity, TKey?> getKeyFunc,
         Action<TEntity, string>? initializer = null,
-        Action<TEntity, TEntity?>? mergeFunc = null)
+        Action<TEntity, TEntity?>? mergeFunc = null,
+        Action<TEntity, string, string?, string?>? ownerInitializer = null)
     {
         _drive = drive;
         _drive._allFolderCache.Add(this);
@@ -1707,6 +1713,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
         _getKeyFunc = getKeyFunc;
         _initializer = initializer;
         _mergeFunc = mergeFunc;
+        _ownerInitializer = ownerInitializer;
     }
 
     /// <summary>
@@ -1728,7 +1735,9 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
         ulong skip = 0,
         ulong first = ulong.MaxValue,
         string? orderBy = null,
-        bool orderAscending = false)
+        bool orderAscending = false,
+        string? ownerName = null,
+        string? ownerPath = null)
     {
         Int64 folderId = folder.Id ?? 0;
 
@@ -1763,6 +1772,7 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
         foreach (var entity in fetched)
         {
             _initializer?.Invoke(entity, folderPath);
+            _ownerInitializer?.Invoke(entity, folderPath, ownerName, ownerPath);
 
             var key = _getKeyFunc(entity);
             if (key is null) continue;

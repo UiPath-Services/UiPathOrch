@@ -1230,8 +1230,6 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<QueueItem>("/odata/QueueItems", folderId, $"{filter}{order}&$expand=Robot,ReviewerUser", skip, first);
     }
 
-    public QueueItem? GetQueueItemById(Int64 folderId, Int64 id) => HttpRequest<QueueItem>(HttpMethod.Get, $"/odata/QueueItems({id})", folderId);
-
     public BulkOperationResponse? RetryQueueItem(Int64 folderId, IEnumerable<RetryQueueItem> items)
     {
         RetryQueueItemRequest payload = new()
