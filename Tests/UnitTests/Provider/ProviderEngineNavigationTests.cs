@@ -155,6 +155,19 @@ public class ProviderEngineNavigationTests : IClassFixture<OrchProviderHarness>
     }
 
     [Fact]
+    public void NormalizeRelativePath_tolerates_a_null_basePath()
+    {
+        // Regression: the engine passes a NULL basePath in some contexts (e.g. Remove-Item -Recurse
+        // while the current location is on the drive). NormalizeRelativePath must not NullReference —
+        // the full-path casing change called PSPathToOrchPath(basePath) without guarding null, which
+        // threw out of path normalization and silently broke Remove-Item -Recurse on the drive.
+        // With no base to relativize against, the full path is returned — exactly as FileSystemProvider
+        // does (NormalizeRelativePath('C:\Windows', $null) -> 'C:\Windows').
+        Assert.Equal($"Test:{S}Shared",
+            Str($@"$ExecutionContext.SessionState.Path.NormalizeRelativePath('Test:{S}Shared', $null)"));
+    }
+
+    [Fact]
     public void NormalizeRelativePath_self_case_canonicalizes_the_leaf_casing_like_FileSystem()
     {
         // path == basePath relativizes to "..\<leaf>" (both providers). FileSystemProvider

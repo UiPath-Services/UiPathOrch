@@ -286,6 +286,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
                 nameof(path));
         }
 
+        // The engine passes a NULL basePath in some contexts (e.g. Remove-Item -Recurse while the
+        // current location is on this drive), even though the inherited signature types it as a
+        // non-nullable `string`. The base NavigationCmdletProvider defends with the same `??=`; mirror
+        // it so the PSPathToOrchPath(basePath) calls below never NullReference.
+        basePath ??= string.Empty;
+
         char sep = System.IO.Path.DirectorySeparatorChar;
         string result;
 
