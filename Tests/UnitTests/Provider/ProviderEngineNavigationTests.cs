@@ -155,6 +155,18 @@ public class ProviderEngineNavigationTests : IClassFixture<OrchProviderHarness>
     }
 
     [Fact]
+    public void NormalizeRelativePath_self_case_canonicalizes_the_leaf_casing_like_FileSystem()
+    {
+        // path == basePath relativizes to "..\<leaf>" (both providers). FileSystemProvider
+        // canonicalizes the leaf casing there (C:\WINDOWS vs C:\WINDOWS -> "..\Windows"); mirror it
+        // so a mis-cased self path yields the catalog casing, not the typed casing.
+        Assert.Equal($"..{S}Shared",
+            Str($@"$ExecutionContext.SessionState.Path.NormalizeRelativePath('Test:{S}SHARED','Test:{S}SHARED')"));
+        Assert.Equal($"..{S}SubA",
+            Str($@"$ExecutionContext.SessionState.Path.NormalizeRelativePath('Test:{S}production{S}suba','Test:{S}PRODUCTION{S}SUBA')"));
+    }
+
+    [Fact]
     public void NormalizeRelativePath_nested_leaf_is_not_clobbered_by_a_same_named_top_level_folder()
     {
         // Regression: relativizing "Production\Sub" against "Production" must yield the nested leaf

@@ -334,7 +334,15 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
                 {
                     result = fqn.Substring(baseOrch.Length + 1).Replace('/', sep);
                 }
-                // else (path == basePath, or not under it): keep the relativized result ("..\leaf").
+                else if (string.Equals(fqn, baseOrch, StringComparison.OrdinalIgnoreCase))
+                {
+                    // Self case (path == basePath): the base resolved it to "..\<typed-leaf>";
+                    // canonicalize the leaf from the catalog fqn so it matches FileSystemProvider
+                    // (C:\WINDOWS vs C:\WINDOWS -> "..\Windows").
+                    int slash = fqn.LastIndexOf('/');
+                    result = ".." + sep + (slash < 0 ? fqn : fqn.Substring(slash + 1));
+                }
+                // else (path not under basePath, e.g. a sibling): keep the relativized "..\..\leaf".
             }
         }
 
