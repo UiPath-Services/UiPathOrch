@@ -2916,6 +2916,55 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         }
     }
 
+    It 'R18: Copy-OrchAsset -WhatIf warns about per-user values that would be dropped, without copying' {
+        # Companion to R15. The real copy already warns + drops a per-User UserValue
+        # whose user is not assigned to the destination folder. -WhatIf must surface
+        # the SAME "... is not assigned in '<dst>'." warning so the operator sees the
+        # loss before committing — yet must NOT actually create the asset.
+        #
+        # Setup mirrors R15: a top-level sibling folder where TestUserA has no access
+        # (neither direct nor inherited), and a source asset carrying a per-User value
+        # for TestUserA.
+        $name = "${script:Prefix}Reg_WhatIfDrop"
+        $siblingFolder = "${script:Drive}:\${script:Prefix}Reg_WhatIfSibling"
+        try {
+            Remove-Item -LiteralPath $siblingFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+            $null = mkdir $siblingFolder -ErrorAction Stop
+            Clear-OrchCache
+
+            $siblingUsers = @(Get-OrchFolderUser -Path $siblingFolder -ErrorAction SilentlyContinue |
+                ForEach-Object { $_.UserEntity.UserName })
+            if ($siblingUsers -contains $script:TestUserA) {
+                Set-ItResult -Skipped -Because "TestUserA ($script:TestUserA) is unexpectedly present in the sibling folder; cannot exercise the unassigned path"
+                return
+            }
+
+            # Source asset in RootFolder with Global value + per-User UserValue for TestUserA.
+            Set-OrchAsset -Name $name -ValueType Text -Value 'global_value' -Path $script:RootFolder | Out-Null
+            Set-OrchAsset -Name $name -ValueType Text -Value 'user_value' -UserName $script:TestUserA -Path $script:RootFolder | Out-Null
+            Clear-OrchCache
+
+            $src = Get-OrchAsset -Name $name -Path $script:RootFolder
+            ($src.UserValues | Measure-Object).Count | Should -BeGreaterOrEqual 1 -Because 'sanity: source has at least one per-User UserValue'
+
+            # === -WhatIf: must warn, must NOT copy ===
+            $warnings = $null
+            Copy-OrchAsset -Name $name -Path $script:RootFolder -Destination $siblingFolder `
+                -WhatIf -WarningVariable warnings -WarningAction SilentlyContinue
+            Clear-OrchCache
+
+            ($warnings | Where-Object { $_ -match "is not assigned in" } | Measure-Object).Count |
+                Should -BeGreaterOrEqual 1 -Because '-WhatIf must surface the per-user drop the real copy would warn about'
+
+            $dst = Get-OrchAsset -Name $name -Path $siblingFolder -ErrorAction SilentlyContinue
+            $dst | Should -BeNullOrEmpty -Because '-WhatIf must only preview — no asset may be created in the destination'
+        } finally {
+            Remove-OrchAsset -Name $name -Path $script:RootFolder -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-OrchAsset -Name $name -Path $siblingFolder -Confirm:$false -ErrorAction SilentlyContinue
+            Remove-Item -LiteralPath $siblingFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+        }
+    }
+
     It 'R17: Add-OrchUser multi-row CSV preserves row-1 scalar values when row-2 cells blank' {
         # Bug fix: OrchCsvHelper.AssignStringValue / AssignIntValue used to fall
         # through to setter(newValue) when newValue was unspecified, silently
