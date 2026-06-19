@@ -4,6 +4,48 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.9.6] - 2026-06-19
+
+### Added
+
+#### Cmdlets
+
+- **`Get-OrchQueueItem -Id`** — fetch specific queue items by id. Accepts multiple comma-separated
+  values, emitted as a single OData `Id in (...)` filter (one server round trip, with the same
+  `$expand`'d shape and Path / PathName / Name enrichment as every other filter). Tab completion on
+  `-Id` suggests ids already loaded in the cache for the targeted queue(s) and excludes ids already
+  typed on the same `-Id` list. Live-verified on Automation Cloud v20.
+
+### Fixed
+
+#### Cmdlets
+
+- **`Update-OrchQueue` (and any queue edit) failed on Orchestrator v11–v13.** When a field absent
+  from the older `QueueDefinitionDto` (`Tags`, `Encrypted`, `IsProcessInCurrentFolder`,
+  `FoldersCount`) reached the request, the server rejected the whole call with
+  `"queueDefinitionDto must not be null"` (HTTP 400). These `< v14` fields are now stripped for the
+  `Edit` / `Put` paths as well as `Create` (in the shared `StripQueueFieldsForApiVersion`), so queue
+  edits survive on v11–v13. Live-reproduced and fixed on 21.10.4 (API v13). (Long-standing — the
+  strip previously covered only the create path.)
+- **`Get-OrchBucketLink` could return stale folder-sharing after a folder move / cache clear.**
+  `ClearFolderCache` dropped the folder's `AssetLinks` and `QueueLinks` entries but not
+  `BucketLinks` — all three are the same id-keyed tenant cache and none are auto-cleared per folder,
+  so a stale `BucketLinks` entry survived e.g. `Move-Item`. `ClearFolderCache` now drops
+  `BucketLinks` for the folder too, symmetric with assets and queues. (Long-standing.)
+
+### Internal
+
+- Consolidated queue retention defaulting into `OrchAPISession.CreateQueue` (was duplicated in
+  `New-OrchQueue` / `Copy-OrchQueue`); the Cloud `None`→`Delete` guard is kept. Behavior-preserving.
+- Folded queue-item Path / PathName / Name stamping into the `QueueItems` cache. A queue item by id
+  is now a `Fetch` with an `Id in (<id>)` filter (the dedicated `GetQueueItemById` endpoint is
+  removed); `Remove-OrchQueueItem` resolves its row version that way.
+- Dropped a redundant `SearchPmDirectoryCache` clear from `ClearTenantCache`, and folded the
+  per-trigger executor-robot side-fetch into the `TriggersDetailed` cache (removing the `GetTrigger`
+  shim).
+- Moved the provider's `Invoke-Item` handler to `ProviderCmdlet/InvokeItem.cs` and simplified
+  `ConsoleCancelHandler`.
+
 ## [1.9.5] - 2026-06-19
 
 ### Fixed
