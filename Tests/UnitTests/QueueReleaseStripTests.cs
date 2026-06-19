@@ -66,6 +66,41 @@ public class QueueReleaseStripTests
         Assert.True(q.RetryAbandonedItems);
     }
 
+    private static QueueDefinition QueueWithV14Fields() => new()
+    {
+        Name = "Q",
+        Tags = new Tag[0],
+        Encrypted = true,
+        IsProcessInCurrentFolder = true,
+        FoldersCount = 3,
+    };
+
+    [Fact]
+    public void StripQueue_v13_nulls_v14_fields()
+    {
+        // Tags / Encrypted / IsProcessInCurrentFolder / FoldersCount are absent from the v11-v13
+        // DTO; sending them 400s ("queueDefinitionDto must not be null", live-confirmed on v13).
+        // Edit/Put only call this strip, so this is what keeps them alive on v11-v13.
+        var q = QueueWithV14Fields();
+        OrchAPISession.StripQueueFieldsForApiVersion(q, 13.0);
+        Assert.Null(q.Tags);
+        Assert.Null(q.Encrypted);
+        Assert.Null(q.IsProcessInCurrentFolder);
+        Assert.Null(q.FoldersCount);
+        Assert.Equal("Q", q.Name); // unrelated fields preserved
+    }
+
+    [Fact]
+    public void StripQueue_v14_keeps_v14_fields()
+    {
+        var q = QueueWithV14Fields();
+        OrchAPISession.StripQueueFieldsForApiVersion(q, 14.0);
+        Assert.NotNull(q.Tags);
+        Assert.True(q.Encrypted);
+        Assert.True(q.IsProcessInCurrentFolder);
+        Assert.Equal(3, q.FoldersCount);
+    }
+
     private static Release FullRelease() => new()
     {
         Id = 99,

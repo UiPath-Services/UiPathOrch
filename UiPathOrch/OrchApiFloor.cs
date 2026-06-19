@@ -21,6 +21,7 @@ namespace UiPath.OrchAPI;
 internal static class OrchApiFloor
 {
     // --- Queues ---
+    public const double QueueV14Fields = 14;           // QueueDefinitionDto Tags / Encrypted / IsProcessInCurrentFolder / FoldersCount (absent v11-v13; live-confirmed Tags rejected on 21.10.4 / v13)
     public const double QueueCreateAction = 16;        // POST .../OData.CreateQueue (vs legacy POST /odata/QueueDefinitions)
     public const double QueueGetAction = 19;           // GET  .../OData.GetQueue(id=)
     public const double QueueRetentionMerge = 16;      // merge QueueRetention into the legacy GET result

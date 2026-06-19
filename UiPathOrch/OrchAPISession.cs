@@ -1039,6 +1039,11 @@ public partial class OrchAPISession : IDisposable
     //   < v18: RetryAbandonedItems — added to QueueDefinitionDto in WebApi v18.0 (swagger
     //          v15-v17 vs v18-v20). MSI 25.10 reports v17.0 and lacks the field; sending it
     //          triggers strict-deserialization failure ("command/queueDef must not be null", 400).
+    //   < v14: Tags / Encrypted / IsProcessInCurrentFolder / FoldersCount — absent from the
+    //          v11/v13 DTO (swagger v11; live-confirmed: Update-OrchQueue -Tags 400'd with
+    //          "queueDefinitionDto must not be null" on 21.10.4 / v13 before this strip). The
+    //          legacy < v16 CreateQueue branch nulls these too; doing it here makes Edit / Put
+    //          (which only call this helper) survive on v11-v13.
     internal static void StripQueueFieldsForApiVersion(QueueDefinition queue, double? apiVersion)
     {
         if (OrchApiFloor.Below(apiVersion, OrchApiFloor.QueueStaleRetention))
@@ -1051,6 +1056,13 @@ public partial class OrchAPISession : IDisposable
         if (OrchApiFloor.Below(apiVersion, OrchApiFloor.QueueRetryAbandonedItems))
         {
             queue.RetryAbandonedItems = null;
+        }
+        if (OrchApiFloor.Below(apiVersion, OrchApiFloor.QueueV14Fields))
+        {
+            queue.Tags = null;
+            queue.Encrypted = null;
+            queue.IsProcessInCurrentFolder = null;
+            queue.FoldersCount = null;
         }
     }
 
@@ -1136,14 +1148,17 @@ public partial class OrchAPISession : IDisposable
         }
         else
         {
-            // TODO: Should the following only be done when ApiVersion < 19?
-            // Should EditQueue() also perform the same processing?
+            // < v16 legacy POST /odata/QueueDefinitions. Retention is not a create-body field
+            // below v16 (separate /odata/QueueRetention resource from v16), so null it. The
+            // other fields below are dropped to preserve long-standing legacy-create behaviour;
+            // StripQueueFieldsForApiVersion (run above) already nulls Tags / Encrypted /
+            // IsProcessInCurrentFolder / FoldersCount < v14 and RetryAbandonedItems < v18 — so
+            // EditQueue / PutQueueDefinition, which only call the strip, now survive on v11-v13
+            // too (was the open TODO here; verified: Update-OrchQueue -Tags 400'd on v13 before).
             queue.RetentionAction = null;
             queue.RetentionPeriod = null;
             queue.RetentionBucketId = null;
             queue.RetentionBucketName = null;
-            // Tags, Encrypted, RetryAbandonedItems, IsProcessInCurrentFolder,
-            // FoldersCount: not present in v11-v13
             queue.Tags = null;
             queue.Encrypted = null;
             queue.RetryAbandonedItems = null;
@@ -1993,8 +2008,13 @@ public partial class OrchAPISession : IDisposable
         // Verified on Automation Cloud (19.0) POST /odata/Releases/UiPath.Server.Configuration.OData.CreateRelease
         if (Supports(OrchApiFloor.ReleaseCloudRetentionDefault))
         {
-            // It seems RetentionAction "None" cannot be used with Automation Cloud.
-            // TODO: What about MSI Orchestrator? What about Automation Suite?
+            // Coerce RetentionAction "None" (Keep) to "Delete". The "None cannot be used on
+            // Automation Cloud" observation that motivated this no longer reproduces: current
+            // Cloud (v20) ACCEPTS "None" (verified live via PUT /odata/ReleaseRetention). The
+            // guard is kept for safety anyway, matching the queue path
+            // (ApplyQueueRetentionDefaults): the platform that rejected it (older Cloud snapshot
+            // / Automation Suite) is no longer reproducible to confirm.
+            // TODO: revisit given an Automation Suite instance.
             if (_drive._psDrive.IsCloud)
             {
                 if (string.IsNullOrEmpty(release.RetentionAction) || release.RetentionAction == "None")
