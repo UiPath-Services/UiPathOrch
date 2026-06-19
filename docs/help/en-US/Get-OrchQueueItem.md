@@ -23,7 +23,7 @@ Gets queue items (transactions) from UiPath Orchestrator queues.
 Get-OrchQueueItem [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
  [-DeferDateAfter <datetime>] [-DeferDateBefore <datetime>] [-DueDateAfter <datetime>]
  [-DueDateBefore <datetime>] [-EndProcessingAfter <datetime>]
- [-EndProcessingBefore <datetime>] [-Exception <string[]>] [-First <int>]
+ [-EndProcessingBefore <datetime>] [-Exception <string[]>] [-First <int>] [-Id <long[]>]
  [-OrderAscending] [-OrderBy <string>] [-Priority <string[]>] [-Reviewer <string[]>]
  [-Revision <string[]>] [-Robot <string[]>] [-Skip <int>]
  [-StartProcessingAfter <datetime>] [-StartProcessingBefore <datetime>]
@@ -36,7 +36,7 @@ Get-OrchQueueItem [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Dept
 
 Gets queue items (transactions) from UiPath Orchestrator queues. Queue items represent individual work units that are processed by robots through the queue mechanism. Each item has a status, priority, and optional scheduling dates.
 
-This cmdlet supports extensive filtering by status, priority, robot, reviewer, exception type, and various date ranges. When no filter parameters are specified, the cmdlet outputs cached items and displays a warning. Use -First to limit the number of results returned.
+This cmdlet supports extensive filtering by status, priority, robot, reviewer, exception type, various date ranges, and specific item ids (-Id, emitted as an OData `Id in (...)` filter). When no filter parameters are specified, the cmdlet outputs cached items and displays a warning. Use -First to limit the number of results returned.
 
 Results are ordered by DeferDate in descending order by default. Use -OrderBy to change the sort field and -OrderAscending to reverse the sort direction.
 
@@ -113,7 +113,15 @@ PS Orch1:\> Get-OrchQueueItem -Recurse -Status Failed -First 20
 
 Gets the first 20 failed queue items from all queues across all folders recursively.
 
-### Example 8: Flatten a single queue into a table with SpecificContent columns
+### Example 8: Get specific items by id
+
+```powershell
+PS Orch1:\Shared> Get-OrchQueueItem TestQueue2 -Id 12345,12346,12347
+```
+
+Gets the three queue items with the given ids from the "TestQueue2" queue in a single request (an OData `Id in (...)` filter). Tab completion on -Id suggests ids already loaded in the cache for the queue.
+
+### Example 9: Flatten a single queue into a table with SpecificContent columns
 
 ```powershell
 PS Orch1:\Shared> Get-OrchQueueItem OrderQueue -First 20 | ForEach-Object Expanded | Format-Table
@@ -121,7 +129,7 @@ PS Orch1:\Shared> Get-OrchQueueItem OrderQueue -First 20 | ForEach-Object Expand
 
 Uses the Expanded ScriptProperty to promote SpecificContent keys into top-level columns. Format-Table then renders one row per item with columns for Id, Reference, Status, Priority, the standard dates, and the queue's specific payload keys (e.g., OrderId, Customer, Amount).
 
-### Example 9: Render multiple queues with per-queue schemas
+### Example 10: Render multiple queues with per-queue schemas
 
 ```powershell
 PS Orch1:\Shared> Get-OrchQueueItem -Name 'Order*' -Status New | Format-OrchQueueItem
@@ -369,6 +377,27 @@ Gets only the specified number of queue items. Enter the number of items to retr
 
 ```yaml
 Type: System.Nullable`1[System.Int32]
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Id
+
+Filters queue items to the specified item ids. Accepts multiple comma-separated values, emitted as a single OData `Id in (...)` filter (one server round trip). Combine with -Name to scope the lookup to a queue. Tab completion suggests ids already loaded in the cache for the targeted queue(s) and excludes ids already typed on the same -Id list.
+
+```yaml
+Type: System.Int64[]
 DefaultValue: None
 SupportsWildcards: false
 Aliases: []
@@ -644,7 +673,7 @@ When no filter parameters are specified, the cmdlet returns cached items and dis
 
 The default sort order is by DeferDate in descending order. Use -OrderBy and -OrderAscending to customize sorting.
 
-For viewing items as a flat table, use the Expanded ScriptProperty (single queue) or Format-OrchQueueItem (multiple queues). See the Description and Examples 8-9.
+For viewing items as a flat table, use the Expanded ScriptProperty (single queue) or Format-OrchQueueItem (multiple queues). See the Description and Examples 9-10.
 
 ## RELATED LINKS
 

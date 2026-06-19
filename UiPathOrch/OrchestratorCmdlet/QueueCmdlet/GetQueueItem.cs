@@ -17,6 +17,12 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
+    // Item ids to fetch (comma-separated). Emitted as an OData "Id in (...)" filter, so it
+    // goes through the same list query as the other filters (no by-id endpoint).
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(QueueItemIdCompleter))]
+    public Int64[]? Id { get; set; }
+
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<QueueItemStatusItems, int>))]
     [SupportsWildcards]
@@ -183,6 +189,46 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
         }
     }
 
+    // Completes -Id from the QueueItems cache only (no network — completers must be fast):
+    // suggests ids of items already loaded for the targeted queue(s), excluding ids the user
+    // has already typed on the same -Id list.
+    private class QueueItemIdCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
+            string commandName,
+            string parameterName,
+            string wordToComplete,
+            CommandAst commandAst,
+            IDictionary fakeBoundParameters)
+        {
+            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+            // Scope to the bound -Name queue(s) (item.Name == queue.Name, stamped by the cache).
+            var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
+            // Exclude ids already present in this -Id argument.
+            var wpExclude = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+
+            foreach (var (drive, folder) in drivesFolders)
+            {
+                var cached = drive.QueueItems.GetCache(folder)?.Values;
+                if (cached is null) continue;
+
+                foreach (var item in cached.OrderByDescending(i => i.Id))
+                {
+                    if (wpName is not null && (item.Name is null || !wpName.Any(w => w.IsMatch(item.Name)))) continue;
+
+                    var idText = item.Id?.ToString();
+                    if (string.IsNullOrEmpty(idText)) continue;
+                    if (!wp.IsMatch(idText)) continue;
+                    if (wpExclude is not null && wpExclude.Any(w => w.IsMatch(idText))) continue;
+
+                    string tip = $"{idText}  {item.Status}  {item.Reference}";
+                    yield return new CompletionResult(idText, idText, CompletionResultType.ParameterValue, tip);
+                }
+            }
+        }
+    }
+
     // RobotId eq / ReviewerUserId eq causes API to return 400 when there are 21 or more items
     private const int SimpleFieldBatchSize = 15;
 
@@ -204,6 +250,12 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
         IReadOnlyList<long?>? robotIdBatch = null, IReadOnlyList<long?>? reviewerIdBatch = null)
     {
         List<string> filter = [$"(QueueDefinitionId eq {queue.Id})"];
+
+        if (Id is not null && Id.Length > 0)
+        {
+            // OData `in` operator (single round trip for many ids).
+            filter.Add($"Id in ({string.Join(",", Id)})");
+        }
 
         filter.AddIfNotNull(QueueItemStatusItems.Items
             .SelectByWildcards(i => i.Key, Status)
@@ -281,6 +333,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
         if (string.IsNullOrEmpty(OrderBy)) OrderBy = "Id";
 
         bool bOutCache = (
+            Id is null &&
             Status is null &&
             Revision is null &&
             Priority is null &&
