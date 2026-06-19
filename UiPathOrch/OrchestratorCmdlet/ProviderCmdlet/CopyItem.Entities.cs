@@ -760,7 +760,30 @@ public partial class OrchProvider
         {
             cancelToken.ThrowIfCancellationRequested();
 
-            if (shouldProcess || _this.ShouldProcess($"Item: '{asset.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Asset"))
+            ShouldProcessReason spReason = ShouldProcessReason.None;
+            bool proceed = shouldProcess
+                || _this.ShouldProcess($"Item: '{asset.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Asset", out spReason);
+
+            // -WhatIf skips the copy, but still surface which per-user values would be dropped because
+            // their user / machine isn't assigned to the destination folder (read-only; same
+            // FindDstUser / FindDstMachine warnings the real copy below would emit).
+            if (!proceed)
+            {
+                if (spReason == ShouldProcessReason.WhatIf && asset.UserValues is not null)
+                {
+                    string previewMsg = $"Copying asset {asset.GetPSPath()}";
+                    foreach (var uv in asset.UserValues)
+                    {
+                        if (FindDstUser(_this, srcDrive, dstDrive, newFolder, uv.UserId, previewMsg, userMapping) is null) continue;
+                        if (uv.MachineId is not null && uv.MachineId != 0)
+                        {
+                            FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, uv.MachineId, previewMsg);
+                        }
+                    }
+                }
+                continue;
+            }
+
             {
                 msg = $"Copying asset {asset.GetPSPath()}";
                 //reporter.WriteProgress(++index, asset.Name);

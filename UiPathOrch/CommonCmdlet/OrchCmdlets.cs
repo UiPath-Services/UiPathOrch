@@ -120,6 +120,17 @@ public class RobotExecutorArgumentTransformationAttribute : ArgumentTransformati
 
 public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 {
+    // IWritableHost: out-reason ShouldProcess so Copy-Orch* can tell -WhatIf from a declined
+    // -Confirm and preview read-only side effects (e.g. per-user UserValues dropped for users /
+    // machines not assigned to the destination folder) under -WhatIf. The strings mirror what the
+    // 2-arg ShouldProcess(target, action) builds, so the "What if:" line is identical.
+    public bool ShouldProcess(string target, string action, out ShouldProcessReason reason)
+        => ShouldProcess(
+            $"Performing the operation \"{action}\" on target \"{target}\".",
+            $"Are you sure you want to perform this action?\nPerforming the operation \"{action}\" on target \"{target}\".",
+            action,
+            out reason);
+
     // Resolves -Path / -LiteralPath into the path list fed to the Enum* resolvers.
     // -LiteralPath (a PSPath note-property via [Alias("PSPath")], or hand-typed) is
     // WildcardPattern-escaped so it resolves literally; the resolver itself strips any

@@ -16,6 +16,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `-Id` suggests ids already loaded in the cache for the targeted queue(s) and excludes ids already
   typed on the same `-Id` list. Live-verified on Automation Cloud v20.
 
+### Changed
+
+#### Provider
+
+- **`Copy-OrchAsset -WhatIf` now previews per-user values that would be dropped.** When a per-user
+  asset value references a user or machine not assigned to the destination folder, the real copy
+  already warns and drops just that value (the server would otherwise silently discard it). `-WhatIf`
+  now emits the same `"... is not assigned in '<dst>'."` warnings without copying, so the loss is
+  visible before committing. Scoped to direct `Copy-OrchAsset`; `Copy-Item -Recurse` also copies
+  folder users / machines, so no value is dropped there. Live-verified on Automation Cloud v20.
+
 ### Fixed
 
 #### Cmdlets

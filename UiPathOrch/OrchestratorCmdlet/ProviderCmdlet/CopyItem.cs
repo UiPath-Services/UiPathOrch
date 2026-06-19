@@ -149,6 +149,15 @@ public interface IWritableHost
     public void WriteWarning(string text);
     public void WriteProgress(ProgressRecord progressRecord);
     public bool ShouldProcess(string target, string action);
+
+    // Variant that also reports WHY ShouldProcess returned false (notably -WhatIf vs a declined
+    // -Confirm). Default returns no reason; OrchestratorPSCmdlet overrides it with the real reason
+    // so callers can preview read-only side effects (e.g. dropped per-user UserValues) under -WhatIf.
+    public bool ShouldProcess(string target, string action, out ShouldProcessReason reason)
+    {
+        reason = ShouldProcessReason.None;
+        return ShouldProcess(target, action);
+    }
     //public void WriteObject(object sendToPipeline, bool enumerateCollection);
     //public void WriteObject(object sendToPipeline);
     //public void ThrowTerminatingError(ErrorRecord errorRecord);
