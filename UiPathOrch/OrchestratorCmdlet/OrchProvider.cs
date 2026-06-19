@@ -1,21 +1,12 @@
 //#undef DEBUG
 
-using System.Collections.ObjectModel;
-using System.Data;
-using System.Diagnostics;
-using System.Globalization;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
-using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Text;
-using System.Text.Json;
-using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Entities;
-using UiPath.PowerShell.Entities.JsonConverter;
 
 // Installation instructions
 // 1. Install PowerShell 7. Download PowerShell-7.x.x-win-x64.msi. It can be installed side by side with PowerShell 5.
@@ -172,36 +163,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
         }
     }
 
-    protected override void InvokeDefaultAction(string path)
-    {
-        var drive = GetOrchDriveInfo(path);
-        if (drive is null)
-        {
-            return;
-        }
-
-        string endpoint = drive.OrchAPISession._base_url;
-
-        string orchPath = OrchDriveInfo.PSPathToOrchPath(path);
-        Folder folder = drive.GetFolder(orchPath);
-
-        var (tenantId, _) = drive.GetTenantId();
-        bool bQuery = false;
-        //if (drive.OrchAPISession.ApiVersion < 12 && tenantId.HasValue)
-        if (tenantId.HasValue)
-        {
-            endpoint += $"?tid={tenantId.Value}";
-            bQuery = true;
-        }
-
-        if (folder is not null && folder.Id.HasValue && folder.Id! != 0)
-        {
-            endpoint += bQuery ? '&' : '?';
-            endpoint += $"fid={folder.Id}";
-        }
-
-        Process.Start(new ProcessStartInfo(endpoint) { UseShellExecute = true });
-    }
+    // InvokeDefaultAction (Invoke-Item) lives in ProviderCmdlet/InvokeItem.cs.
 
     // Contract: report whether the path is *syntactically* well-formed for this
     // provider. This is NOT an existence check (that is ItemExists' job) — it
