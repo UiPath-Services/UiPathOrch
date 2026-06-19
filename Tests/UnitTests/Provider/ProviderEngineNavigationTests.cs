@@ -123,6 +123,67 @@ public class ProviderEngineNavigationTests : IClassFixture<OrchProviderHarness>
     }
 
     [Fact]
+    public void NormalizeRelativePath_relativizes_a_top_level_item_against_the_drive_root()
+    {
+        // Regression: the tab completer relativizes a child's absolute path against the current
+        // location via NormalizeRelativePath. At the DRIVE ROOT this must return the bare leaf
+        // ("Shared"), not the full drive-qualified path ("Test:\Shared") — otherwise `cd <tab>` at
+        // the root completes to ".\Test:\Shared" instead of ".\Shared". (The drive-root GetParentPath
+        // re-rooting broke the base NavigationCmdletProvider's parent-walk relativization; nested base
+        // paths were unaffected.) Mirrors FileSystemProvider: `C:\Windows` vs `C:\` -> `Windows`.
+        Assert.Equal("Shared",
+            Str($@"$ExecutionContext.SessionState.Path.NormalizeRelativePath('Test:{S}Shared','Test:{S}')"));
+        Assert.Equal($"Production{S}SubA",
+            Str($@"$ExecutionContext.SessionState.Path.NormalizeRelativePath('Test:{S}Production{S}SubA','Test:{S}')"));
+        // A nested base path already relativized correctly and must stay correct.
+        Assert.Equal("SubA",
+            Str($@"$ExecutionContext.SessionState.Path.NormalizeRelativePath('Test:{S}Production{S}SubA','Test:{S}Production')"));
+    }
+
+    [Fact]
+    public void NormalizeRelativePath_canonicalizes_casing_from_the_catalog_like_FileSystem()
+    {
+        // FileSystemProvider canonicalizes a mis-cased path to the on-disk casing (C:\WINDOWS vs C:\
+        // -> "Windows"). Mirror that from the catalog, keyed off the FULL path so the canonical
+        // casing of every segment is applied.
+        Assert.Equal("Shared",
+            Str($@"$ExecutionContext.SessionState.Path.NormalizeRelativePath('Test:{S}SHARED','Test:{S}')"));
+        Assert.Equal($"Production{S}SubA",
+            Str($@"$ExecutionContext.SessionState.Path.NormalizeRelativePath('Test:{S}PRODUCTION{S}suba','Test:{S}')"));
+        Assert.Equal("SubA",
+            Str($@"$ExecutionContext.SessionState.Path.NormalizeRelativePath('Test:{S}production{S}SUBA','Test:{S}Production')"));
+    }
+
+    [Fact]
+    public void NormalizeRelativePath_nested_leaf_is_not_clobbered_by_a_same_named_top_level_folder()
+    {
+        // Regression: relativizing "Production\Sub" against "Production" must yield the nested leaf
+        // "Sub" — NOT be rewritten to an unrelated top-level folder that merely shares the leaf's
+        // name case-insensitively (here a lower-cased "sub"). The old casing-canonicalization block
+        // re-looked-up the RELATIVE result as if it were a full path and returned "sub".
+        _h.Seed(new[]
+        {
+            OrchProviderHarness.F("sub", 9, null),            // an unrelated top-level folder "sub"
+            OrchProviderHarness.F("Production", 3, null),
+            OrchProviderHarness.F("Production/Sub", 33, 3),   // the nested "Sub" being relativized
+        });
+        Assert.Equal("Sub",
+            Str($@"$ExecutionContext.SessionState.Path.NormalizeRelativePath('Test:{S}Production{S}Sub','Test:{S}Production')"));
+    }
+
+    [Fact]
+    public void Tab_completion_of_cd_at_drive_root_yields_drive_relative_paths()
+    {
+        // The user-facing symptom: `cd <tab>` at the drive root must offer ".\Shared", not the
+        // drive-qualified ".\Test:\Shared".
+        var texts = Strs($@"Push-Location; Set-Location Test:{S}; " +
+            $@"(TabExpansion2 -inputScript 'cd ' -cursorColumn 3).CompletionMatches | ForEach-Object CompletionText; " +
+            $@"Pop-Location");
+        Assert.Contains($".{S}Shared", texts);
+        Assert.DoesNotContain(texts, t => t.Contains($"Test:{S}"));
+    }
+
+    [Fact]
     public void Multi_segment_wildcard_globs_level_by_level()
     {
         // Test:\*\Sub -> only Shared has a child named exactly "Sub" (Production has "SubA", Empty none).

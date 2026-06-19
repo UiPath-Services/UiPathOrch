@@ -29,6 +29,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   (verified on Windows with an `a[1]` folder). Only names containing `*` or `?` were affected (the
   escape was a no-op for every other name). (Introduced in 1.8.0, when `-LiteralPath` / `PSPath`
   binding was added; the already-present emit-side escaping then broke the rebind.)
+- **`NormalizeRelativePath` could resolve a nested path to the wrong folder when its leaf shared a
+  top-level folder's name.** The folder-casing canonicalization looked up the *relative* result as if
+  it were a full path, so relativizing e.g. `Orch1:\Development\Sub` against `Orch1:\Development`
+  returned `sub` when an unrelated top-level `sub` folder existed. It now canonicalizes casing from
+  the *full* path's actual folder (like the FileSystem provider), so each segment keeps its catalog
+  casing and a same-named top-level folder no longer wins. (Long-standing.)
 
 #### Cmdlets
 
@@ -50,12 +56,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   ordering, `-Name` / wildcard selection) and the `New-Item` leaf extraction were pulled out of the
   `OrchProvider` overrides into pure, drive-free helpers with regression coverage — closing a gap
   where this historically fragile globber logic could only be verified against a live tenant. This
-  also fixed a within-cycle regression where the drive-root `GetParentPath` re-rooting above made a
-  top-level `New-Item` drop the first character of the folder name (introduced and fixed since 1.9.4;
-  never shipped). Added direct tests for the `PathTools` path primitives, and an in-process runspace
-  harness that drives the real PowerShell engine globber against a seeded drive (wildcard resolution
-  through `HasChildItems`, `Split-Path` / `PSParentPath` drive-root re-rooting, `dir` enumeration,
-  `-LiteralPath` literal wildcard names, case-insensitive resolution). Test-only; the shipping module
+  also fixed two within-cycle regressions from the drive-root `GetParentPath` re-rooting above (both
+  introduced and fixed since 1.9.4; never shipped): a top-level `New-Item` dropped the first
+  character of the folder name, and `cd <tab>` at a drive root completed to `.\Orch1:\Autopilot`
+  instead of `.\Autopilot` (the re-rooted parent broke the base provider's parent-walk
+  relativization at the drive root; `NormalizeRelativePath` now relativizes the drive-root base by
+  string prefix like the FileSystem provider). Added direct tests for the `PathTools` path
+  primitives, and an in-process runspace harness that drives the real PowerShell engine globber
+  against a seeded drive (wildcard resolution through `HasChildItems`, `Split-Path` / `PSParentPath`
+  drive-root re-rooting, `dir` enumeration, `-LiteralPath` literal wildcard names, case-insensitive
+  resolution, and the drive-root relativization above). Test-only; the shipping module
   gains a few `internal` test seams but no behavior change, and only the test project references the
   PowerShell SDK.
 

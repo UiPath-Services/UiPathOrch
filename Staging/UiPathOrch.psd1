@@ -513,6 +513,10 @@ wildcard metacharacter (* or ?) through -LiteralPath: the emitted PSPath was wil
 -LiteralPath re-escapes on bind, so it double-escaped and failed to resolve. The PSPath is now emitted
 raw (matching Get-ChildItem -Name). Only names containing * or ? were affected.
 
+Fixed (provider): NormalizeRelativePath could resolve a nested path to the wrong folder when its leaf
+matched an unrelated top-level folder of the same name (e.g. Development\Sub -> sub). It now
+canonicalizes casing from the full path's actual folder, like the FileSystem provider.
+
 Fixed (cmdlets): Copy-OrchRole corrupted the source drive's cached roles — a later Get-OrchRole on the
 source returned null Ids/permissions until the cache was cleared. The role is now deep-copied before
 the create call, matching every other Copy/Update cmdlet.

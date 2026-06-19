@@ -286,19 +286,55 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
                 nameof(path));
         }
 
-        string result = base.NormalizeRelativePath(path, basePath);
-        if (result.StartsWith(System.IO.Path.DirectorySeparatorChar) && result.Length > 1)
-            result = result[1..];
+        char sep = System.IO.Path.DirectorySeparatorChar;
+        string result;
 
-        // Canonicalize folder name casing from cache (like FileSystemProvider.NormalizeThePath).
-        // Only when folders are already cached — avoid triggering API calls before authentication.
-        if (PSDriveInfo is OrchDriveInfo drive && drive.IsFolderCatalogPopulated && !string.IsNullOrEmpty(result))
+        // FileSystemProvider relativizes by STRING PREFIX (NormalizeRelativePathHelper compares the
+        // path and base, both ended with a separator), not via the base NavigationCmdletProvider's
+        // GetParentPath parent-walk. That walk breaks at the DRIVE ROOT: a top-level item's
+        // GetParentPath returns "Orch1:\" (with a trailing separator — required so PSParentPath and
+        // the `dir` "Directory:" header read "Orch1:\"), which never string-equals the walk's trimmed
+        // base "Orch1:", so it fails to relativize and returns the full "Orch1:\Autopilot" — which the
+        // tab completer then renders as ".\Orch1:\Autopilot". Mirror FileSystemProvider for the
+        // drive-root base (relative path = the whole orch path); every other base path already
+        // relativizes correctly through the base (nested -> child, self/sibling -> "..\leaf").
+        if (!string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(basePath) &&
+            PSDriveInfo is OrchDriveInfo && OrchDriveInfo.PSPathToOrchPath(basePath).Length == 0)
         {
-            string orchPath = result.Replace(System.IO.Path.DirectorySeparatorChar, '/');
-            var folder = drive.GetFolder(orchPath);
-            if (folder != null)
+            result = OrchDriveInfo.PSPathToOrchPath(path).Replace('/', sep);
+        }
+        else
+        {
+            result = base.NormalizeRelativePath(path, basePath);
+            if (result.StartsWith(sep) && result.Length > 1)
+                result = result[1..];
+        }
+
+        // Canonicalize folder-name casing from the catalog, like FileSystemProvider (e.g. C:\WINDOWS
+        // vs C:\ -> "Windows"). Key off the FULL path's actual folder, NOT the relative `result`:
+        // looking the relative leaf up as if it were a full path matched an unrelated same-named
+        // top-level folder (relativizing "Development\Sub" returned "sub"). The catalog is fetched on
+        // demand (once, then cached) like any first use; the lookup is wrapped so a fetch/auth failure
+        // degrades to the typed-casing relative result instead of throwing out of path normalization
+        // (casing is cosmetic — resolution itself is case-insensitive).
+        if (PSDriveInfo is OrchDriveInfo drive && !string.IsNullOrEmpty(path))
+        {
+            Folder? folder = null;
+            try { folder = drive.GetFolder(OrchDriveInfo.PSPathToOrchPath(path)); }
+            catch { /* offline / auth failure: keep the typed-casing relative result */ }
+            if (folder?.FullyQualifiedName is string fqn)
             {
-                result = folder.FullyQualifiedName?.Replace('/', System.IO.Path.DirectorySeparatorChar);
+                string baseOrch = OrchDriveInfo.PSPathToOrchPath(basePath);
+                if (baseOrch.Length == 0)
+                {
+                    result = fqn.Replace('/', sep);
+                }
+                else if (fqn.Length > baseOrch.Length &&
+                         fqn.StartsWith(baseOrch + "/", StringComparison.OrdinalIgnoreCase))
+                {
+                    result = fqn.Substring(baseOrch.Length + 1).Replace('/', sep);
+                }
+                // else (path == basePath, or not under it): keep the relativized result ("..\leaf").
             }
         }
 
