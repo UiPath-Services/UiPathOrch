@@ -201,7 +201,7 @@ public static class PathTools
 
 public class ConsoleCancelHandler : IDisposable
 {
-    private readonly CancellationTokenSource _cts;
+    private readonly CancellationTokenSource _cts = new();
     private readonly ConsoleCancelEventHandler _handler;
     private bool _cancelKeyPressed;
 
@@ -211,45 +211,22 @@ public class ConsoleCancelHandler : IDisposable
     // Property exposing the CancellationTokenSource
     public CancellationToken Token => _cts.Token;
 
-    // Default constructor
     public ConsoleCancelHandler()
     {
-        _cts = new CancellationTokenSource();
-        _handler = CreateHandler(null);
-        Console.CancelKeyPress += _handler;
-    }
-
-    // Constructor that accepts a delegate for cancellation handling
-    public ConsoleCancelHandler(Action onCancel)
-    {
-        _cts = new CancellationTokenSource();
-        _handler = CreateHandler(onCancel);
-        Console.CancelKeyPress += _handler;
-    }
-
-    // Common initialization logic
-    private ConsoleCancelEventHandler CreateHandler(Action? onCancel)
-    {
-        return (sender, args) =>
+        _handler = (sender, args) =>
         {
             _cancelKeyPressed = true;
-            try
-            {
-                onCancel?.Invoke();
-            }
-            finally
-            {
-                _cts.Cancel(); // Ensure the token is cancelled
-                args.Cancel = true; // Prevent the process from terminating
-            }
+            _cts.Cancel();
+            args.Cancel = true; // prevent the process from terminating
         };
+        Console.CancelKeyPress += _handler;
     }
 
     // Dispose pattern implementation
     public void Dispose()
     {
         Console.CancelKeyPress -= _handler;
-        _cts?.Dispose();
+        _cts.Dispose();
         GC.SuppressFinalize(this);
     }
 }
