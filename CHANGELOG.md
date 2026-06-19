@@ -19,14 +19,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   from `GetParentPath`; the underlying re-rooting gap was older but only surfaced in the header then.)
 - **`Get-Item` and `dir` could not round-trip a folder whose name contains a PowerShell wildcard
   metacharacter (`*` or `?`) through `-LiteralPath`.** They emitted the item's `PSPath`
-  wildcard-escaped (e.g. ``Orch1:\Fin`*ce``); because `-LiteralPath` (`[Alias("PSPath")]`) re-applies
-  `WildcardPattern.Escape` when it binds, the pre-escaped `PSPath` escaped twice and failed to resolve
-  back to the folder — so `Get-Item Orch1:\Fin*ce | Get-Item -LiteralPath $_.PSPath` and
-  `dir | <cmdlet> -LiteralPath` broke for such names. `Get-Item` / `dir` now emit the `PSPath` RAW
-  (drive-qualified, not wildcard-escaped), matching `Get-ChildItem -Name`, so the round-trip resolves.
-  Only names containing `*` or `?` were affected (the escape was a no-op for every other name).
-  (Introduced in 1.8.0, when `-LiteralPath` / `PSPath` binding — which re-escapes on bind — was added;
-  the already-present emit-side escaping then double-escaped.)
+  wildcard-escaped (e.g. ``Orch1:\Fin`*ce``). Taken literally by a built-in `-LiteralPath`, that
+  pre-escaped path carries a stray backtick and no longer matches the folder; and the module's own
+  `-LiteralPath` resolver, which re-escapes once before resolving, double-escapes it. So both
+  `Get-Item Orch1:\Fin*ce | Get-Item -LiteralPath $_.PSPath` and `dir | <cmdlet> -LiteralPath` broke
+  for such names. `Get-Item` / `dir` now emit the `PSPath` RAW (drive-qualified, not wildcard-escaped),
+  matching `Get-ChildItem -Name` — and the FileSystem provider, which likewise emits a raw
+  `PSPath` / `PSChildName` for wildcard-character names and round-trips through `-LiteralPath`
+  (verified on Windows with an `a[1]` folder). Only names containing `*` or `?` were affected (the
+  escape was a no-op for every other name). (Introduced in 1.8.0, when `-LiteralPath` / `PSPath`
+  binding was added; the already-present emit-side escaping then broke the rebind.)
 
 #### Cmdlets
 
