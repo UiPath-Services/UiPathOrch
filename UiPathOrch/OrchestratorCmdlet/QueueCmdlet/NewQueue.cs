@@ -167,14 +167,11 @@ public class NewQueueCmdlet : OrchestratorPSCmdlet
                 newQueue.AssignStringIfNotNullOrEmpty(StaleRetentionAction, (q, v) => q.StaleRetentionAction = v);
                 newQueue.AssignNumberIfNotNullOrZero(StaleRetentionPeriod, (q, v) => q.StaleRetentionPeriod = v);
 
+                // Retention defaults (Delete/30 final, Delete/180 stale, None->Delete at
+                // >= v19) are applied centrally in OrchAPISession.CreateQueue.
+
                 if (drive.OrchAPISession.ApiVersion >= 16)
                 {
-                    newQueue.RetentionAction ??= "Delete";
-                    if (newQueue.RetentionPeriod is null || newQueue.RetentionPeriod == 0)
-                    {
-                        newQueue.RetentionPeriod = 30;
-                    }
-
                     #region Convert RetentionBucket to RetentionBucketId
                     newQueue.AssignIdFromName(
                         RetentionBucket,
@@ -192,14 +189,6 @@ public class NewQueueCmdlet : OrchestratorPSCmdlet
                         (s, v) => s.StaleRetentionBucketId = v,
                         this, target, "StaleRetentionBucket");
                     #endregion
-                }
-
-                if (drive.OrchAPISession.ApiVersion >= 19)
-                {
-                    if (string.IsNullOrEmpty(newQueue.RetentionAction) || newQueue.RetentionAction == "None")
-                    {
-                        newQueue.RetentionAction = "Delete";
-                    }
                 }
 
                 if (ShouldProcess(target, "New Queue"))

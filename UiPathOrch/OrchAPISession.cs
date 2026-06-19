@@ -1054,8 +1054,77 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
+    // Canonical version-aware retention defaults for a queue being created. Called from
+    // CreateQueue() (just before StripQueueFieldsForApiVersion) so every create path —
+    // New-OrchQueue and Copy-OrchQueue (CopyQueues) — gets identical retention behaviour and
+    // the "Delete"/30/"Delete"/180 constants live in exactly one place. Mutates `queue` in
+    // place (same convention as StripQueueFieldsForApiVersion).
+    //
+    // Ordering matters: it runs BEFORE the strip, so below v19 the strip still nulls the
+    // StaleRetention* fields and the stale defaults set here are correctly dropped.
+    //
+    // Behaviour notes (live-verified against the OData.CreateQueue action endpoint, the one
+    // the module POSTs to at >= v16):
+    //   - Automation Cloud (v20, svc1): RetentionPeriod is REQUIRED (a bare body 400s with
+    //     "Invalid argument 'Period'"); Final + Stale body retention are honoured; Action
+    //     "None" is accepted on THIS version.
+    //   - On-prem 25.10.2 (API v17): Period not required, Final honoured, Action "None"
+    //     accepted. On-prem tops out at v17, so the >= v19 / Stale path is Cloud-only.
+    // The Delete/30 default is therefore load-bearing (Cloud requires a Period).
+    //
+    // The "None" -> "Delete" coercion below is RETAINED on purpose: an older Orchestrator was
+    // observed to fail the POST when RetentionAction was "None", and that platform (older
+    // Cloud snapshot / Automation Suite) is no longer reproducible to re-confirm. Current
+    // Cloud v20 happens to accept "None", but the two platforms tested here are too small a
+    // sample to drop a guard that fixed a real failure. Gated >= v19 (Cloud / Automation
+    // Suite); on-prem never reaches it.
+    internal static void ApplyQueueRetentionDefaults(QueueDefinition queue, double? apiVersion)
+    {
+        // Queue retention is a v16+ concept (QueueRetentionMerge floor); below that the
+        // legacy CreateQueue path strips retention entirely, so there is nothing to default.
+        if (OrchApiFloor.Below(apiVersion, OrchApiFloor.QueueRetentionMerge))
+        {
+            return;
+        }
+
+        if (string.IsNullOrEmpty(queue.RetentionAction))
+        {
+            queue.RetentionAction = "Delete";
+        }
+        if (queue.RetentionPeriod is null || queue.RetentionPeriod == 0)
+        {
+            queue.RetentionPeriod = 30;
+        }
+
+        // StaleRetention* only exist >= v19 (QueueStaleRetention); below that they are
+        // stripped from the body. The server defaults omitted stale to Delete/180, but set
+        // it explicitly so a copied queue keeps parity with its source. "None" (Keep) is
+        // coerced to "Delete" here — see the note above.
+        if (!OrchApiFloor.Below(apiVersion, OrchApiFloor.QueueStaleRetention))
+        {
+            if (string.IsNullOrEmpty(queue.StaleRetentionAction))
+            {
+                queue.StaleRetentionAction = "Delete";
+            }
+            if (queue.StaleRetentionPeriod is null || queue.StaleRetentionPeriod == 0)
+            {
+                queue.StaleRetentionPeriod = 180;
+            }
+
+            if (queue.RetentionAction == "None")
+            {
+                queue.RetentionAction = "Delete";
+            }
+            if (queue.StaleRetentionAction == "None")
+            {
+                queue.StaleRetentionAction = "Delete";
+            }
+        }
+    }
+
     public QueueDefinition? CreateQueue(Int64 folderId, QueueDefinition queue)
     {
+        ApplyQueueRetentionDefaults(queue, ApiVersion);
         StripQueueFieldsForApiVersion(queue, ApiVersion);
 
         // Verified on OC 22.10.1 (15.0) POST /odata/QueueDefinitions

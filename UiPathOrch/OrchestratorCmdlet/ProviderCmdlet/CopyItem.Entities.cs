@@ -1042,18 +1042,21 @@ public partial class OrchProvider
                     AnalyticsDataJsonSchema = srcQueue.AnalyticsDataJsonSchema,
                     SlaInMinutes = srcQueue.SlaInMinutes,
                     RiskSlaInMinutes = srcQueue.RiskSlaInMinutes,
-                    RetentionAction = srcQueue.RetentionAction ?? "Delete", // TODO: OR version dependent. Should probably be done in CreateQueue()
-                    RetentionPeriod = srcQueue.RetentionPeriod ?? 30, // TODO: OR version dependent. Should probably be done in CreateQueue()
+                    RetentionAction = srcQueue.RetentionAction,
+                    RetentionPeriod = srcQueue.RetentionPeriod,
                     RetentionBucketId = FindDstBucket(_this,
                             srcDrive, srcFolder, srcQueue.RetentionBucketId,
                             dstDrive, newFolder, "Copy Process", msg)?.Id,
-                    StaleRetentionAction = srcQueue.StaleRetentionAction ?? "Delete",
-                    StaleRetentionPeriod = srcQueue.StaleRetentionPeriod ?? 180,
+                    StaleRetentionAction = srcQueue.StaleRetentionAction,
+                    StaleRetentionPeriod = srcQueue.StaleRetentionPeriod,
                     StaleRetentionBucketId = FindDstBucket(_this,
                             srcDrive, srcFolder, srcQueue.StaleRetentionBucketId,
                             dstDrive, newFolder, "Copy Process", msg)?.Id,
                     Tags = srcQueue.Tags
                 };
+
+                // Retention defaults (Delete/30 final, Delete/180 stale, None->Delete at
+                // >= v19) are applied centrally in OrchAPISession.CreateQueue.
 
                 if (dstDrive.OrchAPISession.ApiVersion >= 19)
                 {
@@ -1064,25 +1067,6 @@ public partial class OrchProvider
                         && (postingQueue.ProcessScheduleId is null || postingQueue.ProcessScheduleId == 0))
                     {
                         postingQueue.SlaInMinutes = 1440; // 24 hours
-                    }
-
-                    // "None" means "Keep". In Automation Cloud, "None" cannot be used.
-                    if (string.IsNullOrEmpty(postingQueue.RetentionAction) || postingQueue.RetentionAction == "None")
-                    {
-                        postingQueue.RetentionAction = "Delete";
-                    }
-                    if (postingQueue.RetentionPeriod is null || postingQueue.RetentionPeriod == 0)
-                    {
-                        postingQueue.RetentionPeriod = 30;
-                    }
-
-                    if (string.IsNullOrEmpty(postingQueue.StaleRetentionAction) || postingQueue.StaleRetentionAction == "None")
-                    {
-                        postingQueue.StaleRetentionAction = "Delete";
-                    }
-                    if (postingQueue.StaleRetentionPeriod is null || postingQueue.StaleRetentionPeriod == 0)
-                    {
-                        postingQueue.StaleRetentionPeriod = 180;
                     }
                 }
 
