@@ -25,6 +25,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `dir | <cmdlet> -LiteralPath` broke for such names. `Get-Item` / `dir` now emit the `PSPath` RAW
   (drive-qualified, not wildcard-escaped), matching `Get-ChildItem -Name`, so the round-trip resolves.
   Only names containing `*` or `?` were affected (the escape was a no-op for every other name).
+  (Introduced in 1.8.0, when `-LiteralPath` / `PSPath` binding — which re-escapes on bind — was added;
+  the already-present emit-side escaping then double-escaped.)
 
 #### Cmdlets
 
@@ -32,7 +34,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   cached `Role` objects and passed each straight to the create call, which strips fields on the
   object in place — so a later `Get-OrchRole` on the *source* drive returned null Ids / permissions
   until the cache was cleared. The role is now deep-copied before the create call (matching every
-  other Copy/Update cmdlet), isolating the cached object's nested permission graph.
+  other Copy/Update cmdlet), isolating the cached object's nested permission graph. (Long-standing —
+  `Copy-OrchRole` has lacked the peer cmdlets' deep-copy since early in its history.)
 
 ### Internal
 
