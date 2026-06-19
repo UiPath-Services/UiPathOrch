@@ -36,8 +36,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         }
     }
 
-    //public bool _warningOutput = false;
-
     // Initialized in OrchFolderProvider's Start method
     internal static SessionState? SessionState;
 
@@ -95,10 +93,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         //            return WildcardPattern.Escape("\\" + path.Replace('/', '\\'));
     }
 
-    // TODO: created folder cache sorted by FullyQualifiedName for GetFolder()
-    // public HashSet<Folder> _folderSetCache;
-
-
     public override void ClearTenantCache()
     {
         // Registry-driven part (cache instances iterate themselves) lives on
@@ -149,18 +143,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         // TestSetExecutions auto-cleared per folder via _allFolderCache (IncrementalCachePerFolder).
     }
 
-    //public void ClearFolderCacheRecurse(Folder folder)
-    //{
-    //    Int64? folderId = folder.Id;
-
-    //    var subfolders = GetFolders().Where(f => f.ParentId == folderId);
-    //    foreach (var subfolder in subfolders)
-    //    {
-    //        ClearFolderCacheRecurse(subfolder);
-    //    }
-    //    ClearFolderCache(folder);
-    //}
-
     // Returns true if an API call was made
     public bool GetAuditLogDetails(AuditLog log)
     {
@@ -200,46 +182,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         }
         return job;
     }
-
-
-    #region OrchReleaseList cache
-    // This API is undocumented, and it seems it may not work on older versions of Orchestrator.
-    // Therefore, sealing it off for now.
-    // Key: folderId
-    //internal ConcurrentDictionary<Int64, List<Release>>? _dicReleaseList;
-    //internal ExceptionsCachePer<Int64> _dicReleaseList_Exceptions = new();
-    //public ReadOnlyCollection<Release> ListReleases(Folder folder)
-    //{
-    //    _dicReleaseList_Exceptions.ThrowCachedExceptionIfAny(folder.Id ?? 0);
-
-    //    if (_dicReleaseList is null)
-    //    {
-    //        lock (_dicReleaseList_Exceptions)
-    //        {
-    //            _dicReleaseList ??= new ConcurrentDictionary<Int64, List<Release>>();
-    //        }
-    //    }
-    //    if (!_dicReleaseList.TryGetValue(folder.Id ?? 0, out List<Release> releases))
-    //    {
-    //        try
-    //        {
-    //            releases = OrchAPISession.ListReleases(folder.Id ?? 0).ToList();
-    //            string path = folder.GetPSPath();
-    //            foreach (var release in releases)
-    //            {
-    //                release.Path = path;
-    //            }
-    //            _dicReleaseList[folder.Id ?? 0] = releases;
-    //        }
-    //        catch (HttpResponseException ex)
-    //        {
-    //            _dicReleaseList_Exceptions.CacheException(folder.Id ?? 0, ex);
-    //            throw;
-    //        }
-    //    }
-    //    return releases.AsReadOnly();
-    //}
-    #endregion
 
     internal string? _partitionGlobalId = null;
     internal object _partitionGlobalIdLock = new();
@@ -974,7 +916,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly ListCachePerFolder<OrchTask> Tasks;
     public readonly ListCachePerFolder<TestCaseDefinition> TestCases;
     public readonly ListCachePerFolder<TestDataQueue> TestDataQueues;
-    //public readonly ListCachePerFolder<TestDataQueueItem> TestDataQueueItems;
     public readonly ListCachePerFolder<TestSet> TestSets;
     public readonly ListCachePerFolder<Release> Releases;
     public readonly KeyedSingleCachePerFolder<long, Release> ReleasesDetailed;
@@ -990,8 +931,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly IndexedListCachePerFolder<Bucket, BlobFile> BucketFiles;
     public readonly IndexedListCachePerFolder<Release, SubtypedPackageResource> ReleaseRequirements;
     public readonly IndexedListCachePerFolder<TestDataQueue, TestDataQueueItem> TestDataQueueItems;
-
-    //public readonly CachePerFolder<Release> Processes; // This one was indexed..
 
     // Incremental cache for folder entities
     public readonly IncrementalCachePerFolder<Int64, Job> Jobs;
@@ -1638,14 +1577,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             fid => OrchAPISession.GetMachinesAssignedTo(fid, "&$filter=(IsAssignedToFolder eq false)"),
             (e, folderPath) => e.Path = folderPath
         );
-
-        // Processes is indexed, so the cache cannot be implemented as shown below
-        //Processes = new(this,
-        //    OrchAPISession.ApiVersion >= 12
-        //        ? fid => OrchAPISession.GetReleases(fid, "&$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint")
-        //        : fid => OrchAPISession.GetReleases(fid, "&$expand=Environment,CurrentVersion,ReleaseVersions"),
-        //    (e, folderPath) => e.Path = folderPath
-        //);
 
         // Indexed folder entities
         BucketFiles = new(this, OrchAPISession.GetBucketFiles,
