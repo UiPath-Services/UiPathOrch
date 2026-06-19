@@ -4,21 +4,19 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.9.5] - 2026-06-19
 
 ### Fixed
 
 #### Provider
 
-- **`New-Item` / `mkdir` dropped the first character of a TOP-LEVEL folder name** — creating a
-  folder named `estFixture_Base` for `New-Item Orch1:\TestFixture_Base`. The new folder's name is
-  the path minus its parent, and the parent-path computation was recently changed so the drive
-  root resolves to `Orch1:\` (WITH a trailing separator) to fix the `dir` `Directory:` header. The
-  leaf extraction (`Substring(parentPath.Length + 1)`) still assumed the parent never ended in a
-  separator, so for a top-level folder it skipped the leaf's first character. Folders created
-  **under** another folder (nested) were unaffected. The leaf is now taken by stripping a single
-  boundary separator only when one is actually present. (The regression was introduced after 1.9.4
-  and never shipped to the Gallery.)
+- **`dir` / `dir -Recurse` showed a top-level folder's parent as `Orch1:` instead of `Orch1:\`** in
+  the `Directory:` group header (and `Split-Path -Parent` of a root child returned the bare
+  `Orch1:`). `GetChildName` already re-rooted a bare drive to `Orch1:\`, but the symmetric
+  `GetParentPath` did not, so a top-level item's parent lost its trailing separator. `GetParentPath`
+  now re-roots the bare drive too, matching the FileSystem provider. Display-only. (Introduced in
+  1.9.4, when the `Directory:` grouping moved to the engine-supplied `PSParentPath` — which derives
+  from `GetParentPath`; the underlying re-rooting gap was older but only surfaced in the header then.)
 - **`Get-Item` and `dir` could not round-trip a folder whose name contains a PowerShell wildcard
   metacharacter (`*` or `?`) through `-LiteralPath`.** They emitted the item's `PSPath`
   wildcard-escaped (e.g. ``Orch1:\Fin`*ce``); because `-LiteralPath` (`[Alias("PSPath")]`) re-applies
@@ -28,20 +26,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   (drive-qualified, not wildcard-escaped), matching `Get-ChildItem -Name`, so the round-trip resolves.
   Only names containing `*` or `?` were affected (the escape was a no-op for every other name).
 
+#### Cmdlets
+
+- **`Copy-OrchRole` corrupted the source drive's cached roles.** It iterated the source drive's
+  cached `Role` objects and passed each straight to the create call, which strips fields on the
+  object in place — so a later `Get-OrchRole` on the *source* drive returned null Ids / permissions
+  until the cache was cleared. The role is now deep-copied before the create call (matching every
+  other Copy/Update cmdlet), isolating the cached object's nested permission graph.
+
 ### Internal
 
-- The provider's child-enumeration logic — `HasChildItems` subfolder detection, `dir` /
-  `dir -Recurse` depth-filtering and parent-grouped ordering, and `-Name` / wildcard child
-  selection — was extracted from the `OrchProvider` overrides into pure, drive-free helpers and
-  given unit coverage, closing a gap where this historically fragile globber logic could only be
-  verified against a live tenant. Behavior-preserving. Regression coverage was also added for the
-  top-level `New-Item` fix above.
-- Added an in-process runspace test harness that mounts a UiPathOrch drive with a seeded folder
-  catalog (no live tenant, no auth) and drives the real PowerShell engine globber against the
-  provider — pinning wildcard resolution through `HasChildItems`, `Split-Path` / `GetParentPath`
-  drive-root re-rooting, `Get-Item` `PSParentPath`, `dir` / `dir -Recurse` enumeration, and
-  case-insensitive resolution. Test-only; the shipping module gains a few `internal` test seams but
-  no behavior change, and only the test project references the PowerShell SDK.
+- Centralized the scattered `ApiVersion >= N` / `< N` magic-number gates in the queue / release /
+  alert / package paths behind named predicates, and extracted the per-version field-strip and
+  paged-request URL composition into testable static helpers — behavior-preserving, with new unit
+  coverage (API floor predicates, queue/release field stripping, paged-URL composition).
+- Hardened and unit-tested the provider's path / navigation layer. The child-enumeration globber
+  (`HasChildItems` subfolder detection, `dir` / `dir -Recurse` depth-filtering and parent-grouped
+  ordering, `-Name` / wildcard selection) and the `New-Item` leaf extraction were pulled out of the
+  `OrchProvider` overrides into pure, drive-free helpers with regression coverage — closing a gap
+  where this historically fragile globber logic could only be verified against a live tenant. This
+  also fixed a within-cycle regression where the drive-root `GetParentPath` re-rooting above made a
+  top-level `New-Item` drop the first character of the folder name (introduced and fixed since 1.9.4;
+  never shipped). Added direct tests for the `PathTools` path primitives, and an in-process runspace
+  harness that drives the real PowerShell engine globber against a seeded drive (wildcard resolution
+  through `HasChildItems`, `Split-Path` / `PSParentPath` drive-root re-rooting, `dir` enumeration,
+  `-LiteralPath` literal wildcard names, case-insensitive resolution). Test-only; the shipping module
+  gains a few `internal` test seams but no behavior change, and only the test project references the
+  PowerShell SDK.
 
 ## [1.9.4] - 2026-06-18
 

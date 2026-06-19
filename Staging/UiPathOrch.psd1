@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.9.4'
+ModuleVersion = '1.9.5'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -502,35 +502,25 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.9.4
+1.9.5
 
-Fixed (provider): dir / dir -Recurse lost its "Directory:" section headers and rendered folders as
-one flat list, because the Folder table view grouped on a Path property that had been removed from
-the Folder entity. It now groups on the engine-supplied PSParentPath (like the FileSystem provider).
-Display-only.
+Fixed (provider): dir / dir -Recurse showed a top-level folder's parent as "Orch1:" instead of
+"Orch1:\" in the Directory: header (and Split-Path -Parent of a root child) — GetParentPath now
+re-roots a bare drive the way GetChildName already did, matching the FileSystem provider. Display-only.
 
-Fixed (cmdlets): two mismatched FullyQualifiedErrorIds on the trigger serialization helpers are
-corrected (executor-robots reported GetRobotsFromFolderError; machine-robot-sessions reported
-GetUsersError).
+Fixed (provider): Get-Item / dir could not round-trip a folder whose name contains a PowerShell
+wildcard metacharacter (* or ?) through -LiteralPath: the emitted PSPath was wildcard-escaped while
+-LiteralPath re-escapes on bind, so it double-escaped and failed to resolve. The PSPath is now emitted
+raw (matching Get-ChildItem -Name). Only names containing * or ? were affected.
 
-Security: the per-drive config file (plaintext credentials) is now created with owner-only
-permissions on Linux/macOS (0600); Windows relies on the per-user profile ACL.
+Fixed (cmdlets): Copy-OrchRole corrupted the source drive's cached roles — a later Get-OrchRole on the
+source returned null Ids/permissions until the cache was cleared. The role is now deep-copied before
+the create call, matching every other Copy/Update cmdlet.
 
-Fixed (cross-platform): -TimeZoneId tab-completion now suggests Orchestrator-valid ids on Linux/macOS.
-The completer listed the host OS time-zone ids, which are IANA ids (e.g. Asia/Tokyo) on Linux/macOS,
-but Orchestrator's -TimeZoneId requires a Windows time-zone id (e.g. Tokyo Standard Time) and rejects
-IANA ids ("not a valid windows time zone id"). The completer now emits Windows ids on every platform:
-the live OS list on Windows, and an embedded Windows time-zone table on Linux/macOS. -TimeZone (the
-display name, resolved server-side) is unaffected.
-
-Internal: the three folder-scoped trigger enable/disable cmdlets were consolidated onto a shared
-EnableFolderEntityCmdletBase, and the folder catalog moved behind a dedicated tenant-scoped
-FolderCache (atomic publish, registry-driven clear, targeted folder removal) — both behavior-
-preserving. CI: the Linux/macOS CI test matrix added in 1.9.3 now passes — two test classes had
-hard-coded Windows path separators (the underlying path conversion was already cross-platform).
-Behavior-preserving regression tests were added for the 1.9.3 security fixes, entity-layer purity,
-command/help parity, cache-field wiring, the PKCE authorize-URL builder, and folder ordering, and a
-few large methods were split into pure testable helpers.
+Internal: centralized the OrchAPISession API-version gates and extracted testable HTTP helpers; pulled
+the provider's child-enumeration globber and New-Item leaf extraction into pure, unit-tested helpers
+and added an in-process runspace harness that drives the real engine globber against a seeded drive;
+removed now-dead code. Behavior-preserving apart from the provider fixes above.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
