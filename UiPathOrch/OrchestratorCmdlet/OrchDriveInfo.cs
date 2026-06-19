@@ -148,6 +148,8 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         // Triggers / TriggersDetailed auto-cleared per folder via _allFolderCache.
         // Drop QueueLinks entries for this folder only (matching the AssetLinks pattern).
         QueueLinks.ClearCache(k => k.folderId == folderId);
+        // Drop BucketLinks entries for this folder only (matching AssetLinks / QueueLinks).
+        BucketLinks.ClearCache(k => k.folderId == folderId);
         // Releases auto-cleared per folder via _allFolderCache (ListCachePerFolder).
         // TestSetExecutions auto-cleared per folder via _allFolderCache (IncrementalCachePerFolder).
     }
