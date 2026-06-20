@@ -45,17 +45,15 @@ public class GetUserPrivilegeCmdlet : OrchestratorPSCmdlet
                     user => user,
                     user => drive.UserPrivileges.Get(user));
 
-                //int index = 0;
-                //string msg = "Get users... ";
-                //using var reporter = new ProgressReporter(this, 1, targetUsers.Count, msg, msg);
+                using var reporter = new ProgressReporter(this, 1, results.Count, "Getting user privileges");
                 foreach (var result in results)
                 {
                     try
                     {
-                        var entities = result.GetResult(cancelHandler.Token);
+                        // Bar fills with the TRUE number of background fetches completed, so it
+                        // keeps advancing while output is blocked on an early-but-slow user.
+                        var entities = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                         if (entities is null) continue;
-
-                        //reporter.WriteProgress(++index, $"{index:D}/{reporter.TotalNum} {detailedUser.GetPSPath()}");
 
                         WriteObject(entities);
                     }

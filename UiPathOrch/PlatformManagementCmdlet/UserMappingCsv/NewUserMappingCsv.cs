@@ -84,7 +84,7 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
             try
             {
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, group.displayName);
                 var detailedSrcGroup = srcDrive.PmGroups.Get(group.id);
 
                 if (detailedSrcGroup is null || detailedSrcGroup.members is null) continue;
@@ -163,7 +163,7 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
             try
             {
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, folder.GetPSPath());
                 var folderUsers = srcDrive.FolderUsersWithNoInherited.Get(folder);
 
                 if (folderUsers is null) continue;

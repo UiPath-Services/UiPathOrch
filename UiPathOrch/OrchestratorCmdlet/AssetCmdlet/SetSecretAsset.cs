@@ -563,7 +563,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
                 var (drive, folder) = drivesFolders[0];
 
                 var target = asset.GetPSPath();
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, asset.Name);
 
                 var existingAssets = drive.Assets.Get(folder);
                 var existingAsset = existingAssets.FirstOrDefault(a => a.Name == asset.Name);

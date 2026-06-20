@@ -85,11 +85,12 @@ public class GetDuClassifierCmdlet : OrchestratorPSCmdlet
             dp => dp.drive.GetDuClassifiers(dp.project));
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting DU classifiers");
         foreach (var result in results)
         {
             try
             {
-                var entities = result.GetResult(cancelHandler.Token);
+                var entities = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (entities is null) continue;
 
                 // Per-drive ShallowClone() copies with drive-local Path /

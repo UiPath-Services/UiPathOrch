@@ -419,8 +419,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
             int indexQueue = 0;
             foreach (var queue in targetQueues.WithCancellation(cancelHandler.Token))
             {
-                //reporterQueue.WriteProgress(++indexQueue, queue.GetPSPath());
-                reporterQueue.WriteProgress(++indexQueue);
+                reporterQueue.WriteProgress(++indexQueue, queue.Name);
 
                 int first = First ?? int.MaxValue; // first is reset per queue
                 int skip = Math.Max(0, Skip ?? 0); // negative -Skip is meaningless; treat as 0 (it was otherwise cast to a huge $skip on the non-batched path)

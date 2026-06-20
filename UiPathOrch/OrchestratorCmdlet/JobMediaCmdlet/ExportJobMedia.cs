@@ -181,7 +181,7 @@ public class SaveJobMediaCmdlet : OrchestratorPSCmdlet
 
                 if (ShouldProcess(target, "Export JobMedia"))
                 {
-                    reporter.WriteProgress(++index);
+                    reporter.WriteProgress(++index, $"job {media.JobId}", $"Saving media to {Destination}");
 
                     try
                     {

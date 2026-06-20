@@ -149,11 +149,12 @@ public class GetAlertCmdlet : OrchestratorPSCmdlet
         );
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting alerts");
         foreach (var result in results)
         {
             try
             {
-                var alerts = result.GetResult(cancelHandler.Token);
+                var alerts = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (alerts is null) continue;
 
                 WriteObject(alerts, true);

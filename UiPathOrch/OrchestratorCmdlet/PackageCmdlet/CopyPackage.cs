@@ -231,8 +231,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
         {
             cancelToken.ThrowIfCancellationRequested();
 
-            //reporterMain.WriteProgress(++indexMain, $"{indexMain:D}/{srcDrivesFolders.Count} {srcFolder.GetPSPath()}");
-            if (srcDrivesFolders.Count > 1) reporterMain.WriteProgress(++index1);
+            if (srcDrivesFolders.Count > 1) reporterMain.WriteProgress(++index1, srcFolder.GetPSPath());
             try
             {
                 var srcPackages = srcDrive.GetPackages(srcFolder)
@@ -248,7 +247,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
                 {
                     cancelToken.ThrowIfCancellationRequested();
 
-                    if (reporter2.TotalNum > 1) reporter2.WriteProgress(++index2);
+                    if (reporter2.TotalNum > 1) reporter2.WriteProgress(++index2, srcPackage.Id);
 
                     var srcVersions = srcDrive.GetPackageVersions(srcFolder, srcPackage.Id!)
                         .FilterByWildcards(p => p?.Version, wpVersion)
@@ -297,7 +296,8 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
                             if (shouldProcess || _this.ShouldProcess(target, $"Copy Package"))
                             {
                                 // Progress should only be displayed when actually copying
-                                reporter3.WriteProgress(++index3, $"{key}.nupkg to {dstDrive.NameColonSeparator}");
+                                reporter3.Activity = $"Copying versions to {dstDrive.NameColonSeparator}";
+                                reporter3.WriteProgress(++index3, srcVersion.Version);
 
                                 if (fileName is null)
                                 {

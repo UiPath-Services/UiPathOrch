@@ -80,7 +80,7 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
 
                 var target = $"Item: {srcDrive.NameColonSeparator}{OrchArgumentCompleter.TipHelp(srcUser)} Destination: {dstDrive.NameColonSeparator}";
 
-                reporter.WriteProgress(++index, $"{srcUser.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                reporter.WriteProgress(++index, srcUser.UserName, $"Copying users to {dstDrive.NameColonSeparator}");
 
                 if (shouldProcess || _this.ShouldProcess(target, "Copy User"))
                 {

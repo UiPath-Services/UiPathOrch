@@ -61,7 +61,7 @@ public class ImportLibraryCmdlet : OrchestratorPSCmdlet
             string target = drive.NameColonSeparator;
             if (ShouldProcess(target, $"Import Library {fullPath}"))
             {
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, System.IO.Path.GetFileName(fullPath), $"Importing libraries to {drive.NameColonSeparator}");
                 try
                 {
                     // If a library with the same name already exists on the drive, show a warning and skip the import

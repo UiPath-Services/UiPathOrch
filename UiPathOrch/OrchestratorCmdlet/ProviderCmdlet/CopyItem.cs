@@ -158,6 +158,12 @@ public interface IWritableHost
         reason = ShouldProcessReason.None;
         return ShouldProcess(target, action);
     }
+
+    // True when the host's Write-Progress renderer handles East Asian Wide characters
+    // correctly (PowerShell #21293 / PR #26185). Default is conservative -- assume it does
+    // NOT, so ProgressReporter drops wide StatusDescription text. OrchestratorPSCmdlet and
+    // OrchProvider override this using the live host version.
+    public bool RendersWideProgress => false;
     //public void WriteObject(object sendToPipeline, bool enumerateCollection);
     //public void WriteObject(object sendToPipeline);
     //public void ThrowTerminatingError(ErrorRecord errorRecord);
@@ -354,6 +360,17 @@ public class CopyItem_DynamicParameters
 public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 {
     private bool ExcludeEntities = false;
+
+    // IWritableHost: report whether this host renders wide Write-Progress text correctly
+    // (PowerShell #21293 / PR #26185), based on the live host version. See ProgressRendering.
+    public bool RendersWideProgress
+    {
+        get
+        {
+            try { return ProgressRendering.HostRendersWideProgress(Host?.Version); }
+            catch { return false; }
+        }
+    }
 
     // We want to clear the tenant package cache only once, but how to implement that..
     //private ReadOnlyCollection<Package> tenantPackagesCache = null;

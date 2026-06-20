@@ -110,7 +110,7 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
             {
                 cancelToken.ThrowIfCancellationRequested();
 
-                reporter1.WriteProgress(++index1);
+                reporter1.WriteProgress(++index1, library.Id);
                 try
                 {
                     srcDrive.LibraryVersions.ClearCache();
@@ -159,7 +159,8 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
                             if (shouldProcess || _this.ShouldProcess(target, $"Copy Library"))
                             {
                                 // Progress should only be displayed when actually copying
-                                reporter2.WriteProgress(++index2, $"{key}.nupkg to {dstDrive.NameColonSeparator}");
+                                reporter2.Activity = $"Copying versions to {dstDrive.NameColonSeparator}";
+                                reporter2.WriteProgress(++index2, version.Version);
 
                                 if (fileName is null)
                                 {

@@ -75,13 +75,13 @@ public partial class OrchProvider
         string targetFolder = newFolder.GetPSPath();
 
         reporter.TotalNum = srcFolderUsers.Count;
+        reporter.Activity = $"Copying folder users to {newFolder.GetPSPath()}";
         int index = 0;
         foreach (var userRole in srcFolderUsers.OrderBy(u => u.UserEntity?.UserName))
         {
             cancelToken.ThrowIfCancellationRequested();
 
-            //reporter.WriteProgress(++index, $"{index:D}/{srcFolderUsers.Count} {userRole.UserEntity!.UserName}");
-            reporter.WriteProgress(++index);
+            reporter.WriteProgress(++index, userRole.UserEntity!.UserName);
 
             if (shouldProcess || _this.ShouldProcess($"Item: '{userRole.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy FolderUser"))
             {
@@ -412,6 +412,7 @@ public partial class OrchProvider
         });
 
         reporter.TotalNum = totalNum;
+        reporter.Activity = $"Copying packages to {newFolder.GetPSPath()}";
 
         string srcFeedFolder = System.IO.Path.Combine(srcDrive.NameColon, srcFolder.GetPackageFeedFolder());
         string dstFeedFolder = System.IO.Path.Combine(dstDrive.NameColon, newFolder.GetPackageFeedFolder());
@@ -426,8 +427,7 @@ public partial class OrchProvider
             {
                 cancelToken.ThrowIfCancellationRequested();
 
-                //reporter.WriteProgress(++index, $"{version.Id}:{version.Version}");
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, $"{version.Id} {version.Version}");
 
                 string fileName;
                 byte[] fileContent;
@@ -493,6 +493,7 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = processes.Count;
+        reporter.Activity = $"Copying processes to {newFolder.GetPSPath()}";
 
         int index = 0;
         bool isNewFolderProcessCacheDirty = false;
@@ -509,8 +510,7 @@ public partial class OrchProvider
                 // At the very least, there is content that is only returned by GetReleaseById.
                 //var releaseInCache = processes.FirstOrDefault(p => p.Id == process.Id);
 
-                //reporter.WriteProgress(++index, $"{index:D}/{processes.Count} {process.Name}");
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, process.Name);
 
                 #region Get the source release information
                 Release srcRelease = null;
@@ -754,6 +754,7 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcAssets.Count;
+        reporter.Activity = $"Copying assets to {newFolder.GetPSPath()}";
 
         // One budget shared across every asset in this folder so that copying many assets that
         // all reference the same unassigned users / machines collapses into a few warnings plus a
@@ -779,8 +780,7 @@ public partial class OrchProvider
                 continue;
             }
 
-            //reporter.WriteProgress(++index, asset.Name);
-            reporter.WriteProgress(++index);
+            reporter.WriteProgress(++index, asset.Name);
             CopyOneAsset(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, userMapping, dropBudget);
         }
     }
@@ -1048,6 +1048,7 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcQueues.Count;
+        reporter.Activity = $"Copying queues to {newFolder.GetPSPath()}";
 
         int index = 0;
         foreach (var queue in srcQueues.OrderBy(q => q.Name))
@@ -1058,8 +1059,7 @@ public partial class OrchProvider
             {
                 target = srcFolder.GetPSPath();
                 msg = $"Copying queue {queue.GetPSPath()}";
-                //reporter.WriteProgress(++index, queue.Name);
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, queue.Name);
 
                 QueueDefinition postingQueue = null;
 
@@ -1267,6 +1267,7 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcTriggers.Count;
+        reporter.Activity = $"Copying triggers to {newFolder.GetPSPath()}";
 
         int index = 0;
         foreach (var srcTrigger in srcTriggers.OrderBy(t => t.Name))
@@ -1278,8 +1279,7 @@ public partial class OrchProvider
                 target = newFolder.GetPSPath();
                 msg = $"Copying trigger {srcTrigger.GetPSPath()}";
 
-                //reporter.WriteProgress(++index, srcTrigger.Name);
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, srcTrigger.Name);
 
                 var detailedSrcTrigger = srcDrive.TriggersDetailed.Get(srcFolder, srcTrigger.Id!.Value);
 
@@ -1403,6 +1403,7 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcTriggers.Count;
+        reporter.Activity = $"Copying API triggers to {newFolder.GetPSPath()}";
         target = newFolder.GetPSPath();
 
         int index = 0;
@@ -1413,8 +1414,7 @@ public partial class OrchProvider
             if (shouldProcess || _this.ShouldProcess($"Item: '{trigger.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy ApiTrigger"))
             {
                 msg = $"Copying API trigger {trigger.GetPSPath()}";
-                //reporter.WriteProgress(++index, trigger.Name);
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, trigger.Name);
 
                 //var detailedTrigger = srcDrive.OrchAPISession.GetHttpTrigger(srcFolder.Id ?? 0, trigger.Id!);
                 //detailedTrigger ??= trigger;
@@ -1491,6 +1491,7 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcBuckets.Count;
+        reporter.Activity = $"Copying buckets to {newFolder.GetPSPath()}";
         target = newFolder.GetPSPath();
 
         int index = 0;
@@ -1501,8 +1502,7 @@ public partial class OrchProvider
             if (shouldProcess || _this.ShouldProcess($"Item: '{bucket.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Bucket"))
             {
                 msg = $"Copying bucket {System.IO.Path.Combine(bucket.GetPSPath())}";
-                //reporter.WriteProgress(++index, bucket.Name);
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, bucket.Name);
 
                 // Get links, and if an entity with the same name exists in the linked folder of the target drive,
                 // just create a link to it instead
@@ -1572,6 +1572,7 @@ public partial class OrchProvider
         {
             var srcTestSets = srcDrive.TestSets.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
             reporter.TotalNum = srcTestSets.Count;
+            reporter.Activity = $"Copying test sets to {newFolder.GetPSPath()}";
 
             int index = 0;
             foreach (var ts in srcTestSets.OrderBy(t => t.Name))
@@ -1582,8 +1583,7 @@ public partial class OrchProvider
                 if (shouldProcess || _this.ShouldProcess(target, "Copy TestSet"))
                 {
                     msg = $"Copying test set {ts.GetPSPath()}";
-                    //reporter.WriteProgress(++index, testSetSchedule.Name);
-                    reporter.WriteProgress(++index);
+                    reporter.WriteProgress(++index, ts.Name);
                     try
                     {
                         var postingTestSet = srcDrive.OrchAPISession.GetTestSetForEdit(srcFolder.Id ?? 0, ts.Id ?? 0);
@@ -1755,6 +1755,7 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcTestSetSchedules.Count;
+        reporter.Activity = $"Copying test schedules to {newFolder.GetPSPath()}";
 
         int index = 0;
         foreach (var testSetSchedule in srcTestSetSchedules.OrderBy(t => t.Name))
@@ -1765,8 +1766,7 @@ public partial class OrchProvider
             if (shouldProcess || _this.ShouldProcess(target, "Copy TestSetSchedule"))
             {
                 msg = $"Copying test schedule {System.IO.Path.Combine(srcFolder.GetPSPath(), testSetSchedule.Name!)}";
-                //reporter.WriteProgress(++index, testSetSchedule.Name);
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, testSetSchedule.Name);
 
                 var postingTestSetSchedule = OrchCollectionExtensions.DeepCopy(testSetSchedule);
                 postingTestSetSchedule.Id = null;
@@ -1817,6 +1817,7 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcTestDataQueues.Count;
+        reporter.Activity = $"Copying test data queues to {newFolder.GetPSPath()}";
 
         int index = 0;
         foreach (var testDataQueue in srcTestDataQueues
@@ -1829,8 +1830,7 @@ public partial class OrchProvider
             if (shouldProcess || _this.ShouldProcess(target, "Copy TestDataQueue"))
             {
                 msg = $"Copying test data queue {System.IO.Path.Combine(srcFolder.GetPSPath(), testDataQueue.Name!)}";
-                //reporter.WriteProgress(++index, testDataQueue.Name);
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, testDataQueue.Name);
 
                 var postingTestDataQueue = OrchCollectionExtensions.DeepCopy(testDataQueue);
                 postingTestDataQueue.Id = null;
@@ -1901,6 +1901,7 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcTaskCatalogs.Count;
+        reporter.Activity = $"Copying action catalogs to {newFolder.GetPSPath()}";
 
         int index = 0;
         foreach (var srcTaskCatalog in srcTaskCatalogs.OrderBy(t => t.Name))
@@ -1911,8 +1912,7 @@ public partial class OrchProvider
             if (shouldProcess || _this.ShouldProcess(target, "Copy ActionCatalog"))
             {
                 msg = $"Copying action catalog {System.IO.Path.Combine(srcFolder.GetPSPath(), srcTaskCatalog.Name!)}";
-                //reporter.WriteProgress(++index, testDataQueue.Name);
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, srcTaskCatalog.Name);
 
                 var postingTaskCatalog = OrchCollectionExtensions.DeepCopy(srcTaskCatalog);
                 postingTaskCatalog.Id = null;

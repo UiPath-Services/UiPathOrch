@@ -103,6 +103,7 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
         StreamWriter? writer)
     {
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(caller, 1, 0, "Getting process details");
         foreach (var (drive, folder) in drivesFolders)
         {
             IEnumerable<Release> targetReleases;
@@ -124,11 +125,13 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
                 release => release,
                 release => drive.ReleasesDetailed.Get(folder, release.Id!.Value));
 
+            reporter.TotalNum = results.Count;
+            reporter.Activity = $"Getting process details in {folder.GetPSPath()}";
             foreach (var result in results.WithCancellation(cancelHandler.Token))
             {
                 try
                 {
-                    var releaseDetailed = result.GetResult(cancelHandler.Token);
+                    var releaseDetailed = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                     if (releaseDetailed is null) continue;
 
                     if (releaseDetailed.EntryPointId is not null)

@@ -103,7 +103,7 @@ public class ImportPackageCmdlet : OrchestratorPSCmdlet
             string target2 = target + System.IO.Path.GetFileName(fullPath);
             if (ShouldProcess(target, $"Import Package {fullPath}"))
             {
-                reporter.WriteProgress(++index);
+                reporter.WriteProgress(++index, System.IO.Path.GetFileName(fullPath), $"Importing packages to {target}");
                 try
                 {
                     // If a package with the same name already exists in targetFolder, show a warning and skip the copy

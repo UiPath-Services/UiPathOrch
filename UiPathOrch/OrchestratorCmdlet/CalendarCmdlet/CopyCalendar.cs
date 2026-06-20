@@ -67,7 +67,7 @@ public class CopyCalendarCmdlet : OrchestratorPSCmdlet
 
                 cancelToken.ThrowIfCancellationRequested();
 
-                reporter.WriteProgress(++index, $"{srcCalendar.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                reporter.WriteProgress(++index, srcCalendar.Name, $"Copying calendars to {dstDrive.NameColonSeparator}");
 
                 if (shouldProcess || _this.ShouldProcess($"Item: {item} Destination: {destination}", "Copy Calendar"))
                 {

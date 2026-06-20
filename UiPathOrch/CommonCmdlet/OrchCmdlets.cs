@@ -131,6 +131,17 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
             action,
             out reason);
 
+    // IWritableHost: report whether this host renders wide Write-Progress text correctly
+    // (PowerShell #21293 / PR #26185), based on the live host version. See ProgressRendering.
+    public bool RendersWideProgress
+    {
+        get
+        {
+            try { return ProgressRendering.HostRendersWideProgress(Host?.Version); }
+            catch { return false; }
+        }
+    }
+
     // Resolves -Path / -LiteralPath into the path list fed to the Enum* resolvers.
     // -LiteralPath (a PSPath note-property via [Alias("PSPath")], or hand-typed) is
     // WildcardPattern-escaped so it resolves literally; the resolver itself strips any

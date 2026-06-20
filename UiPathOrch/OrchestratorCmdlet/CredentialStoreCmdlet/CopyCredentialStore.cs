@@ -81,7 +81,7 @@ public class CopyCredentialStoreCmdlet : OrchestratorPSCmdlet
             foreach (var store in stores)
             {
                 cancelToken.ThrowIfCancellationRequested();
-                reporter.WriteProgress(++index, $"{store.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                reporter.WriteProgress(++index, store.Name, $"Copying credential stores to {dstDrive.NameColonSeparator}");
 
                 // Skip if the source store is "Orchestrator Database" and a store with the same name exists at the destination
                 if (string.Compare(store.Name, "Orchestrator Database", StringComparison.OrdinalIgnoreCase) == 0)

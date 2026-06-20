@@ -52,7 +52,7 @@ public class CopyRoleCmdlet : OrchestratorPSCmdlet
                 .OrderBy(r => r.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
-                reporter.WriteProgress(++index, $"{role.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                reporter.WriteProgress(++index, role.Name, $"Copying roles to {dstDrive.NameColonSeparator}");
 
                 // Skip if the source role is static and a role with the same name exists at the destination
                 if (role.IsStatic.GetValueOrDefault())

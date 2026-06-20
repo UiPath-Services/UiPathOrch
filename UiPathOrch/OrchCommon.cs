@@ -277,6 +277,13 @@ public class OrchTask<TSource, TResult> : IDisposable
     public TResult? Result { get; private set; }
     public Exception? Exception { get; private set; }
 
+    // Display label (the getPathFunc result), stamped as soon as the task starts running --
+    // before it even waits on the semaphore -- so a consumer that is blocked draining this
+    // not-yet-completed slot can still show "what am I waiting on". (Path above is only set on
+    // the exception path; Label is set up front on every task.)
+    public string? Label { get; private set; }
+    internal void SetLabel(string label) => Label = label;
+
     public OrchTask()
     {
         CompletedEvent = new ManualResetEventSlim(false);
@@ -344,6 +351,42 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
     // OrchThreadPool static class only.
     internal CancellationToken Token => _cts.Token;
 
+    // Total number of source work items.
+    public int Count => _threads.Length;
+
+    // Number of background queries that have actually finished, independent of the sorted
+    // drain order -- so a consumer can show TRUE progress while it is blocked draining an
+    // early-but-slow item (the rest fetch in parallel behind it). Cheap IsSet reads; n is the
+    // source count and the caller throttles how often it polls this.
+    public int CompletedCount
+    {
+        get
+        {
+            int n = 0;
+            foreach (var t in _threads)
+            {
+                if (t.CompletedEvent.IsSet) n++;
+            }
+            return n;
+        }
+    }
+
+    // Drains one slot in sorted order while keeping the bar filled with the TRUE number of
+    // background fetches completed (CompletedCount) -- so it advances even while output is
+    // blocked on an early-but-slow item, the rest fetching in parallel behind it. The status
+    // name is this slot's label (what we are currently waiting on). Must be called from the
+    // pipeline thread, since it calls reporter.WriteProgress.
+    public TResult? GetResultWithProgress(OrchTask<TSource, TResult> result, ProgressReporter reporter, CancellationToken token)
+    {
+        while (!result.CompletedEvent.Wait(150, token))
+        {
+            reporter.WriteProgress(CompletedCount, result.Label);
+        }
+        TResult? value = result.GetResult(token);
+        reporter.WriteProgress(CompletedCount, result.Label);
+        return value;
+    }
+
     // Track a background Task so Dispose can wait for it before tearing down
     // the semaphore (otherwise tasks blocked on WaitAsync would race with
     // SemaphoreSlim.Dispose and throw ObjectDisposedException). Internal for
@@ -406,6 +449,10 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
                     threads[index].SetException(source, "<getPathFunc/getTargetFunc threw>", source!, funcEx);
                     return;
                 }
+
+                // Stamp the display label before queueing behind the semaphore so a consumer
+                // blocked on this slot can name what it is waiting for (see OrchTask.Label).
+                threads[index].SetLabel(pathStr);
 
                 try
                 {
@@ -875,6 +922,24 @@ public class ProgressReporter(IWritableHost provider, int id, int totalNum, stri
         set { totalNum = value; }
     }
 
+    // Set once per batch (e.g. when the destination folder changes) so the activity line
+    // carries the operation + destination context while the per-item StatusDescription
+    // stays just "{index}/{total} {name}". The destination may contain a Japanese folder
+    // name, so the activity line is width-sanitized the same way as the status (see SafeText).
+    public string Activity
+    {
+        set { progressRecord.Activity = SafeText(value)!; }
+    }
+
+    // PowerShell #21293: the console host miscounts East Asian Wide characters when sizing the
+    // progress bar, so any wide text (in the status OR the activity line) pushes the bar's
+    // closing ']' onto the next line. Unless the host is known-fixed (PR #26185), collapse each
+    // run of wide characters to an ASCII "..." -- leaving the narrow segments intact and the
+    // whole string one-cell-per-char. "請求書" -> "...", "Invoice請求Folder" -> "Invoice...Folder".
+    // A null/empty stays as-is (no name -> no "..."), distinct from a hidden wide name.
+    private string? SafeText(string? text)
+        => provider?.RendersWideProgress == true ? text : EastAsianWidth.CollapseWide(text);
+
     private void WriteProgress()
     {
         provider?.WriteProgress(progressRecord);
@@ -885,9 +950,9 @@ public class ProgressReporter(IWritableHost provider, int id, int totalNum, stri
         progressRecord.PercentComplete = totalNum > 0 ? (index * 100) / totalNum : 0;
         if (!string.IsNullOrEmpty(activity))
         {
-            progressRecord.Activity = activity;
+            progressRecord.Activity = SafeText(activity)!;
         }
-        progressRecord.StatusDescription = $"{index:D}/{totalNum} {statusDescription}".TrimEnd();
+        progressRecord.StatusDescription = $"{index:D}/{totalNum} {SafeText(statusDescription)}".TrimEnd();
         WriteProgress();
     }
 

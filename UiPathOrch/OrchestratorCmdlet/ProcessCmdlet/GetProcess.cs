@@ -80,14 +80,18 @@ public class GetProcessCmdlet : OrchestratorPSCmdlet
         }
 
         // List-only path: emit shallow Release entries from each folder.
+        var folderList = drivesFolders.ToList();
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders)
+        using var reporter = new ProgressReporter(this, 1, folderList.Count, "Getting processes");
+        int index = 0;
+        foreach (var (drive, folder) in folderList)
         {
             // Ctrl+C between folders: let the cancellation propagate (outside the try) so the
             // pipeline stops AS CANCELLED, rather than returning partial results that look like a
             // complete listing -- and without emitting one "operation was canceled" error per
             // remaining folder.
             cancelHandler.Token.ThrowIfCancellationRequested();
+            reporter.WriteProgress(++index, folder.GetPSPath());
             try
             {
                 var releases = drive.Releases.Get(folder);

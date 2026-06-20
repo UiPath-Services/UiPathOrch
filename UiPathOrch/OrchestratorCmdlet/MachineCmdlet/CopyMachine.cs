@@ -68,7 +68,7 @@ public class CopyMachineCmdlet : OrchestratorPSCmdlet
                 {
                     cancelToken.ThrowIfCancellationRequested();
 
-                    reporter.WriteProgress(++index, $"{machine.GetPSPath()} to {dstDrive.NameColonSeparator}");
+                    reporter.WriteProgress(++index, machine.Name, $"Copying machines to {dstDrive.NameColonSeparator}");
 
                     string targetMachine = machine.GetPSPath();
                     if (shouldProcess || _this.ShouldProcess($"Item: {targetMachine} Destination: {dstDrive.NameColonSeparator}", $"Copy Machine"))

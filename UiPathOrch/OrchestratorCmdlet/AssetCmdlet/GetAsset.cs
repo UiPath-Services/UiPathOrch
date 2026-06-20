@@ -197,11 +197,12 @@ public class GetAssetCmdlet : OrchestratorPSCmdlet
             df => df.drive.Assets.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting assets");
         foreach (var result in results)
         {
             try
             {
-                var assets = result.GetResult(cancelHandler.Token);
+                var assets = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (assets is null) continue;
 
                 var output = assets

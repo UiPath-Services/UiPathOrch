@@ -131,12 +131,11 @@ public partial class OrchProvider
                     if (destinationWorkspace is not null)
                     {
                         newFolder = destinationWorkspace;
-                        reporter.WriteProgress(0, $"\"{srcFolder.GetPSPath()}\" to \"{newFolder.GetPSPath()}\"");
+                        reporter.WriteProgress(0, srcFolder.GetPSPath(), $"Copying folder to {newFolder.GetPSPath()}");
                     }
                     else
                     {
-                        reporter.WriteProgress(0, $"\"{srcFolder.GetPSPath()}\" to \"{dstFolder.GetPSPath()}\"");
-                        reporter.WriteProgress(0);
+                        reporter.WriteProgress(0, srcFolder.GetPSPath(), $"Copying folder to {dstFolder.GetPSPath()}");
                         newFolder = CopyFolder(srcDrive, srcFolder, dstDrive, dstFolder, feedType!, cancelToken);
                         if (newFolder is null) return false;
                     }
@@ -199,7 +198,7 @@ public partial class OrchProvider
                         {
                             foreach (var stage in stages)
                             {
-                                reporter.WriteProgress(++rootIndex);
+                                reporter.WriteProgress(++rootIndex, stage.Label.Trim());
                                 stage.PreStep?.Invoke();
                                 var childReporter = new ProgressReporter(this, stage.Base, Int32.MaxValue, stage.Label);
                                 childReporters.Add(childReporter);

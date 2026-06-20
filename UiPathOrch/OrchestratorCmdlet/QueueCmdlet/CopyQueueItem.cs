@@ -77,8 +77,11 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
                         continue;
                     }
 
-                    string progressNew = $"{{0}} {srcQueue.GetPSPath()} to {dstQueue.GetPSPath()}";
-                    reporterQueue.WriteProgress(idxQueue, string.Format(progressNew, 0)); // The trailing zero is the number of items being processed.
+                    // Status is "{items copied} {queue name}" -- the running item count leads so it
+                    // stays at a fixed, readable position while the variable-length name follows; the
+                    // destination goes on the activity line. Count is 0 before the first batch.
+                    reporterQueue.Activity = $"Copying new items to {dstQueue.GetPSPath()}";
+                    reporterQueue.WriteProgress(idxQueue, $"0 {srcQueue.Name}");
 
                     string target = $"Items in '{srcQueue.GetPSPath()}' Destination: '{dstQueue.GetPSPath()}'";
 
@@ -101,7 +104,7 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
                             {
                                 srcItems = srcDrive.GetQueueItems(srcFolder, srcQueue, query, 100 * first, 100);
                                 if (srcItems.Count == 0) break;
-                                reporterQueue.WriteProgress(idxQueue, string.Format(progressNew, (first++ * 100) + (ulong)srcItems.Count));
+                                reporterQueue.WriteProgress(idxQueue, $"{(first++ * 100) + (ulong)srcItems.Count} {srcQueue.Name}");
                             }
                             catch (Exception ex)
                             {

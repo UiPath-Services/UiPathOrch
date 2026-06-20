@@ -62,7 +62,7 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
 
                     try
                     {
-                        reporter.WriteProgress(++index, $"{srcRobotAccount.GetPSPath(srcDrive.NameColonSeparator)} to {dstDrive.NameColonSeparator}");
+                        reporter.WriteProgress(++index, srcRobotAccount.displayName, $"Copying robot accounts to {dstDrive.NameColonSeparator}");
 
                         string target = $"Item: {System.IO.Path.Combine(srcDrive!.NameColon, srcRobotAccount!.displayName!)} Destination: {dstDrive.NameColonSeparator}";
 
