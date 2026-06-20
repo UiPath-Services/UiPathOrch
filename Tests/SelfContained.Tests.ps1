@@ -2953,8 +2953,14 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
                 -WhatIf -WarningVariable warnings -WarningAction SilentlyContinue
             Clear-OrchCache
 
-            ($warnings | Where-Object { $_ -match "is not assigned in" } | Measure-Object).Count |
+            $dropWarn = $warnings | Where-Object { $_ -match "is not assigned in" }
+            ($dropWarn | Measure-Object).Count |
                 Should -BeGreaterOrEqual 1 -Because '-WhatIf must surface the per-user drop the real copy would warn about'
+            # Warning must state the value is dropped and show the concrete remediation cmdlet.
+            ($dropWarn | Where-Object { $_ -match "is dropped" }) |
+                Should -Not -BeNullOrEmpty -Because 'the warning must say the value is dropped'
+            ($dropWarn | Where-Object { $_ -match "Copy-OrchFolderUser -Path" }) |
+                Should -Not -BeNullOrEmpty -Because 'the warning must show the Copy-OrchFolderUser remediation example'
 
             $dst = Get-OrchAsset -Name $name -Path $siblingFolder -ErrorAction SilentlyContinue
             $dst | Should -BeNullOrEmpty -Because '-WhatIf must only preview — no asset may be created in the destination'

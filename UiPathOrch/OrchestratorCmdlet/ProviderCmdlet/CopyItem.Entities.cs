@@ -755,200 +755,259 @@ public partial class OrchProvider
 
         reporter.TotalNum = srcAssets.Count;
 
+        // One budget shared across every asset in this folder so that copying many assets that
+        // all reference the same unassigned users / machines collapses into a few warnings plus a
+        // single bulk-remediation hint instead of flooding the warning stream.
+        var dropBudget = new DropWarningBudget(_this, srcFolder.GetPSPath(), newFolder.GetPSPath(), DropWarningThreshold);
+
         int index = 0;
         foreach (var asset in srcAssets.OrderBy(a => a.Name))
         {
             cancelToken.ThrowIfCancellationRequested();
 
+            // shouldProcess == true means an ancestor (e.g. a folder copy) already confirmed.
+            // Otherwise ask: a declined -Confirm just skips, while -WhatIf still previews which
+            // per-user values would be dropped (read-only) before returning without copying.
             ShouldProcessReason spReason = ShouldProcessReason.None;
-            bool proceed = shouldProcess
-                || _this.ShouldProcess($"Item: '{asset.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Asset", out spReason);
-
-            // -WhatIf skips the copy, but still surface which per-user values would be dropped because
-            // their user / machine isn't assigned to the destination folder (read-only; same
-            // FindDstUser / FindDstMachine warnings the real copy below would emit).
-            if (!proceed)
+            if (!shouldProcess &&
+                !_this.ShouldProcess($"Item: '{asset.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Asset", out spReason))
             {
-                if (spReason == ShouldProcessReason.WhatIf && asset.UserValues is not null)
+                if (spReason == ShouldProcessReason.WhatIf)
                 {
-                    string previewMsg = $"Copying asset {asset.GetPSPath()}";
-                    foreach (var uv in asset.UserValues)
-                    {
-                        if (FindDstUser(_this, srcDrive, dstDrive, newFolder, uv.UserId, previewMsg, userMapping) is null) continue;
-                        if (uv.MachineId is not null && uv.MachineId != 0)
-                        {
-                            FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, uv.MachineId, previewMsg);
-                        }
-                    }
+                    PreviewDroppedUserValues(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, userMapping, dropBudget);
                 }
                 continue;
             }
 
+            //reporter.WriteProgress(++index, asset.Name);
+            reporter.WriteProgress(++index);
+            CopyOneAsset(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, userMapping, dropBudget);
+        }
+    }
+
+    // Maximum number of per-value "owner not assigned, value dropped" warnings emitted in full
+    // per CopyAssets call before they collapse into a single bulk-remediation hint. See DropWarningBudget.
+    private const int DropWarningThreshold = 5;
+
+    // Routes a drop warning through the budget when one is supplied (asset copy), otherwise writes
+    // it directly (other FindDstMachine callers, e.g. session / robot migration, pass no budget).
+    private static void WarnDrop(IWritableHost host, DropWarningBudget? budget, string message)
+    {
+        if (budget is not null)
+        {
+            budget.Warn(message);
+        }
+        else
+        {
+            host.WriteWarning(message);
+        }
+    }
+
+    // PowerShell single-quoted literal for a value that may itself contain quotes, so the
+    // "e.g.: ..." command examples in the drop warnings stay copy-paste safe.
+    private static string PsLiteral(string? value) => "'" + (value ?? string.Empty).Replace("'", "''") + "'";
+
+    // Resolves a per-user asset value's destination user and machine, emitting the same
+    // "not assigned in '<dst>'" warnings FindDstUser / FindDstMachine produce (throttled via
+    // budget). Returns false when the user or machine can't be mapped to the destination folder
+    // (the value would be dropped). Resolved ids come back via out params; the input AssetUserValue
+    // is never mutated, so this is safe to call against a cached source asset during a -WhatIf preview.
+    private static bool TryMapUserValueOwner(IWritableHost _this,
+        OrchDriveInfo srcDrive, Folder srcFolder, OrchDriveInfo dstDrive, Folder newFolder,
+        AssetUserValue userValue, string msg, Dictionary<string, string>? userMapping,
+        DropWarningBudget? budget, out long? dstUserId, out long? dstMachineId)
+    {
+        dstUserId = FindDstUser(_this, srcDrive, srcFolder, dstDrive, newFolder, userValue.UserId, msg, budget, userMapping)?.Id;
+        dstMachineId = userValue.MachineId;
+        if (dstUserId is null || dstUserId == 0)
+        {
+            return false;
+        }
+
+        if (userValue.MachineId is not null && userValue.MachineId != 0)
+        {
+            // FindDstMachine emits the WriteWarning when the machine isn't assigned to the
+            // destination folder; returning false here drops just this value (no extra warning).
+            dstMachineId = FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, userValue.MachineId, msg, budget)?.Id;
+            if (dstMachineId is null || dstMachineId == 0)
             {
-                msg = $"Copying asset {asset.GetPSPath()}";
-                //reporter.WriteProgress(++index, asset.Name);
-                reporter.WriteProgress(++index);
+                return false;
+            }
+        }
+        return true;
+    }
 
-                // Get links, and if an entity with the same name exists in the linked folder of the target drive,
-                // just create a link to it instead
-                if (LinkAsset(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, msg))
+    // -WhatIf preview: surface which per-user values would be dropped (their user / machine
+    // isn't assigned to the destination folder) without copying anything.
+    private static void PreviewDroppedUserValues(IWritableHost _this,
+        OrchDriveInfo srcDrive, Folder srcFolder, OrchDriveInfo dstDrive, Folder newFolder,
+        Asset asset, Dictionary<string, string>? userMapping, DropWarningBudget? budget)
+    {
+        if (asset.UserValues is null)
+        {
+            return;
+        }
+        string msg = $"Copying asset {asset.GetPSPath()}";
+        foreach (var userValue in asset.UserValues)
+        {
+            TryMapUserValueOwner(_this, srcDrive, srcFolder, dstDrive, newFolder, userValue, msg, userMapping, budget, out _, out _);
+        }
+    }
+
+    // Copies one asset to the destination folder: links to an existing same-named asset if one
+    // is present, otherwise POSTs a sanitized copy. Credential / Secret values get placeholders;
+    // per-user values are re-homed to the destination's users / machines or dropped with a warning.
+    private static void CopyOneAsset(IWritableHost _this,
+        OrchDriveInfo srcDrive, Folder srcFolder, OrchDriveInfo dstDrive, Folder newFolder,
+        Asset asset, Dictionary<string, string>? userMapping, DropWarningBudget? budget)
+    {
+        string msg = $"Copying asset {asset.GetPSPath()}";
+
+        // Get links, and if an entity with the same name exists in the linked folder of the target drive,
+        // just create a link to it instead
+        if (LinkAsset(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, msg))
+        {
+            return;
+        }
+
+        string target = newFolder.GetPSPath();
+
+        bool bCredentialWarningNeeded = false;
+        bool bSecretWarningNeeded = false;
+        try
+        {
+            Asset postingAsset = OrchCollectionExtensions.DeepCopy(asset);
+            postingAsset.Id = null;
+            postingAsset.Key = null;
+            postingAsset.Value = null;
+            postingAsset.CredentialStoreId = FindDstCredentialStore(_this,
+                srcDrive, dstDrive, newFolder, postingAsset.CredentialStoreId, msg)?.Id;
+            postingAsset.CreationTime = null;
+            postingAsset.CreatorUserId = null;
+            postingAsset.LastModificationTime = null;
+            postingAsset.LastModifierUserId = null;
+            postingAsset.FoldersCount = null;
+            // postingAsset.Path = null; // Not needed since it has the JsonIgnore attribute
+
+            if (postingAsset.ValueType == "Credential")
+            {
+                postingAsset.IntValue = null;
+                postingAsset.BoolValue = null;
+                postingAsset.StringValue = null;
+                // ExternalName (vault reference) takes priority — don't clobber it with a placeholder.
+                if (string.IsNullOrEmpty(postingAsset.ExternalName))
                 {
-                    continue;
+                    postingAsset.CredentialPassword = "!!!PLEASE UPDATE!!!";
+                    bCredentialWarningNeeded = true;
                 }
-
-                target = newFolder.GetPSPath();
-
-                bool bCredentialWarningNeeded = false;
-                bool bSecretWarningNeeded = false;
-                try
+            }
+            else if (postingAsset.ValueType == "Secret")
+            {
+                // The server masks SecretValue on GET (always ""), so copying would POST an empty
+                // secret which the server rejects with "asset secret value cannot be null".
+                // Use a placeholder and warn so the operator rotates it — unless ExternalName
+                // (vault reference) is set, in which case preserve it and no placeholder is needed.
+                postingAsset.IntValue = null;
+                postingAsset.BoolValue = null;
+                postingAsset.StringValue = null;
+                if (string.IsNullOrEmpty(postingAsset.ExternalName))
                 {
-                    Asset postingAsset = OrchCollectionExtensions.DeepCopy(asset);
-                    postingAsset.Id = null;
-                    postingAsset.Key = null;
-                    postingAsset.Value = null;
-                    postingAsset.CredentialStoreId = FindDstCredentialStore(_this,
-                        srcDrive, dstDrive, newFolder, postingAsset.CredentialStoreId, msg)?.Id;
-                    postingAsset.CreationTime = null;
-                    postingAsset.CreatorUserId = null;
-                    postingAsset.LastModificationTime = null;
-                    postingAsset.LastModifierUserId = null;
-                    postingAsset.FoldersCount = null;
-                    // postingAsset.Path = null; // Not needed since it has the JsonIgnore attribute
+                    postingAsset.SecretValue = "!!!PLEASE UPDATE!!!";
+                    bSecretWarningNeeded = true;
+                }
+            }
 
-                    if (postingAsset.ValueType == "Credential")
+            if (postingAsset.UserValues is not null && postingAsset.UserValues.Count == 0)
+            {
+                postingAsset.UserValues = null;
+                postingAsset.ValueScope = "Global"; // ISSUE: Some assets had "PerRobot" despite having no UserValues
+            }
+            if (postingAsset.UserValues is not null)
+            {
+                List<AssetUserValue>? migratedUserValues = null;
+                foreach (var userValue in postingAsset.UserValues)
+                {
+                    if (!TryMapUserValueOwner(_this, srcDrive, srcFolder, dstDrive, newFolder, userValue, msg, userMapping, budget, out long? dstUserId, out long? dstMachineId))
                     {
-                        postingAsset.IntValue = null;
-                        postingAsset.BoolValue = null;
-                        postingAsset.StringValue = null;
-                        // ExternalName (vault reference) takes priority — don't clobber it with a placeholder.
-                        if (string.IsNullOrEmpty(postingAsset.ExternalName))
+                        continue;
+                    }
+                    userValue.UserId = dstUserId;
+                    userValue.MachineId = dstMachineId;
+
+                    userValue.Id = null;
+                    userValue.Value = null;
+                    // userValue.Path = null; // Not needed since it has the JsonIgnore attribute
+                    // userValue.Name = null; // Not needed since it has the JsonIgnore attribute
+                    // userValue.PathName = null; // Not needed since it has the JsonIgnore attribute
+                    userValue.CredentialStoreId = FindDstCredentialStore(_this,
+                        srcDrive, dstDrive, newFolder, userValue.CredentialStoreId, msg)?.Id;
+
+                    if (userValue.ValueType == "Credential")
+                    {
+                        userValue.IntValue = null;
+                        userValue.BoolValue = null;
+                        userValue.StringValue = null;
+                        if (string.IsNullOrEmpty(userValue.ExternalName))
                         {
-                            postingAsset.CredentialPassword = "!!!PLEASE UPDATE!!!";
+                            userValue.CredentialPassword = "!!!PLEASE UPDATE!!!";
                             bCredentialWarningNeeded = true;
                         }
                     }
-                    else if (postingAsset.ValueType == "Secret")
+                    else if (userValue.ValueType == "Secret")
                     {
-                        // The server masks SecretValue on GET (always ""), so copying would POST an empty
-                        // secret which the server rejects with "asset secret value cannot be null".
-                        // Use a placeholder and warn so the operator rotates it — unless ExternalName
-                        // (vault reference) is set, in which case preserve it and no placeholder is needed.
-                        postingAsset.IntValue = null;
-                        postingAsset.BoolValue = null;
-                        postingAsset.StringValue = null;
-                        if (string.IsNullOrEmpty(postingAsset.ExternalName))
+                        userValue.IntValue = null;
+                        userValue.BoolValue = null;
+                        userValue.StringValue = null;
+                        if (string.IsNullOrEmpty(userValue.ExternalName))
                         {
-                            postingAsset.SecretValue = "!!!PLEASE UPDATE!!!";
+                            userValue.SecretValue = "!!!PLEASE UPDATE!!!";
                             bSecretWarningNeeded = true;
                         }
                     }
-
-                    if (postingAsset.UserValues is not null && postingAsset.UserValues.Count == 0)
-                    {
-                        postingAsset.UserValues = null;
-                        postingAsset.ValueScope = "Global"; // ISSUE: Some assets had "PerRobot" despite having no UserValues
-                    }
-                    if (postingAsset.UserValues is not null)
-                    {
-                        List<AssetUserValue>? migratedUserValues = null;
-                        foreach (var userValue in postingAsset.UserValues)
-                        {
-                            userValue.UserId = FindDstUser(_this, srcDrive, dstDrive, newFolder, userValue.UserId, msg, userMapping)?.Id;
-                            if (userValue.UserId is null || userValue.UserId == 0)
-                            {
-                                continue;
-                            }
-
-                            if (userValue.MachineId is not null && userValue.MachineId != 0)
-                            {
-                                userValue.MachineId = FindDstMachine(_this,
-                                    srcDrive, srcFolder,
-                                    dstDrive, newFolder, userValue.MachineId, msg)?.Id;
-                                // FindDstMachine already emits a WriteWarning when the machine is not
-                                // assigned to the destination folder. Skip this UserValue silently here
-                                // to avoid a duplicate warning+error pair.
-                                if (userValue.MachineId is null || userValue.MachineId == 0)
-                                {
-                                    continue;
-                                }
-                            }
-
-                            userValue.Id = null;
-                            userValue.Value = null;
-                            // userValue.Path = null; // Not needed since it has the JsonIgnore attribute
-                            // userValue.Name = null; // Not needed since it has the JsonIgnore attribute
-                            // userValue.PathName = null; // Not needed since it has the JsonIgnore attribute
-                            userValue.CredentialStoreId = FindDstCredentialStore(_this,
-                                srcDrive, dstDrive, newFolder, userValue.CredentialStoreId, msg)?.Id;
-
-                            if (userValue.ValueType == "Credential")
-                            {
-                                userValue.IntValue = null;
-                                userValue.BoolValue = null;
-                                userValue.StringValue = null;
-                                if (string.IsNullOrEmpty(userValue.ExternalName))
-                                {
-                                    userValue.CredentialPassword = "!!!PLEASE UPDATE!!!";
-                                    bCredentialWarningNeeded = true;
-                                }
-                            }
-                            else if (userValue.ValueType == "Secret")
-                            {
-                                userValue.IntValue = null;
-                                userValue.BoolValue = null;
-                                userValue.StringValue = null;
-                                if (string.IsNullOrEmpty(userValue.ExternalName))
-                                {
-                                    userValue.SecretValue = "!!!PLEASE UPDATE!!!";
-                                    bSecretWarningNeeded = true;
-                                }
-                            }
-                            migratedUserValues ??= [];
-                            migratedUserValues.Add(userValue);
-                        }
-                        if (migratedUserValues is null)
-                        {
-                            postingAsset.ValueScope = "Global";
-                            postingAsset.UserValues = null;
-                            if (!postingAsset.HasDefaultValue.GetValueOrDefault())
-                            {
-                                _this.WriteWarning($"{msg}: No applicable per-user values for the destination folder and the asset has no global default value. Skipping.");
-                                continue;
-                            }
-                        }
-                        postingAsset.UserValues = migratedUserValues;
-                    }
-
-                    var created = dstDrive.OrchAPISession.AddAsset(newFolder.Id ?? 0, postingAsset);
-
-                    // This output clutters the screen, so maybe we don't need it..
-                    //if (!shouldProcess && created is not null)
-                    //{
-                    //    created.Path = newFolder.GetPSPath();
-                    //    _this.WriteObject(created);
-                    //}
-
-                    if (bCredentialWarningNeeded)
-                    {
-                        target = System.IO.Path.Combine(newFolder.GetPSPath(), created?.Name ?? "");
-                        _this.WriteWarning($"'{target}': Please update credential asset passwords with Set-OrchCredentialAsset cmdlet.");
-                    }
-
-                    if (bSecretWarningNeeded)
-                    {
-                        target = System.IO.Path.Combine(newFolder.GetPSPath(), created?.Name ?? "");
-                        _this.WriteWarning($"'{target}': Please update Secret asset values with Set-OrchSecretAsset cmdlet.");
-                    }
-
-                    // Decided to clear the cache in each Copy-OrchXxx. Not doing it here.
-                    // When copying folders, the destination new folder's cache is empty anyway.
-                    //dstDrive._dicAssets?.TryRemove(newFolder.Id.Value!, out _);
+                    migratedUserValues ??= [];
+                    migratedUserValues.Add(userValue);
                 }
-                catch (Exception ex)
+                if (migratedUserValues is null)
                 {
-                    _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "CopyAssetError", ErrorCategory.InvalidOperation, target));
+                    postingAsset.ValueScope = "Global";
+                    postingAsset.UserValues = null;
+                    if (!postingAsset.HasDefaultValue.GetValueOrDefault())
+                    {
+                        _this.WriteWarning($"{msg}: No applicable per-user values for the destination folder and the asset has no global default value. Skipping.");
+                        return;
+                    }
                 }
+                postingAsset.UserValues = migratedUserValues;
             }
+
+            var created = dstDrive.OrchAPISession.AddAsset(newFolder.Id ?? 0, postingAsset);
+
+            // This output clutters the screen, so maybe we don't need it..
+            //if (!shouldProcess && created is not null)
+            //{
+            //    created.Path = newFolder.GetPSPath();
+            //    _this.WriteObject(created);
+            //}
+
+            if (bCredentialWarningNeeded)
+            {
+                target = System.IO.Path.Combine(newFolder.GetPSPath(), created?.Name ?? "");
+                _this.WriteWarning($"'{target}': Please update credential asset passwords with Set-OrchCredentialAsset cmdlet.");
+            }
+
+            if (bSecretWarningNeeded)
+            {
+                target = System.IO.Path.Combine(newFolder.GetPSPath(), created?.Name ?? "");
+                _this.WriteWarning($"'{target}': Please update Secret asset values with Set-OrchSecretAsset cmdlet.");
+            }
+
+            // Decided to clear the cache in each Copy-OrchXxx. Not doing it here.
+            // When copying folders, the destination new folder's cache is empty anyway.
+            //dstDrive._dicAssets?.TryRemove(newFolder.Id.Value!, out _);
+        }
+        catch (Exception ex)
+        {
+            _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "CopyAssetError", ErrorCategory.InvalidOperation, target));
         }
     }
 
@@ -1928,6 +1987,45 @@ public partial class OrchProvider
 
             dstMyself.Roles!.Remove(folderAdministratorRole);
             dstDrive.OrchAPISession.AssignUser(newFolder.Id ?? 0, dstMyself.Id ?? 0, dstMyself.Roles.Select(r => r.Id ?? 0)); ;
+        }
+    }
+
+    // Throttles the per-value "owner not assigned, value dropped" warnings emitted while copying an
+    // asset's per-user values. The first DropWarningThreshold drops warn in full (each naming the
+    // user / machine and the per-value Copy-OrchFolderUser / Copy-OrchFolderMachine fix); once
+    // exceeded, a single summary points at the bulk Copy-OrchFolderUser * / Copy-OrchFolderMachine *
+    // fix and the rest are suppressed, so copying an asset — or a folder of assets — with many
+    // unmapped owners doesn't flood the warning stream. One instance is shared per CopyAssets call.
+    internal sealed class DropWarningBudget
+    {
+        private readonly IWritableHost _host;
+        private readonly string _srcPath;
+        private readonly string _dstPath;
+        private readonly int _threshold;
+        private int _count;
+        private bool _summarized;
+
+        public DropWarningBudget(IWritableHost host, string srcPath, string dstPath, int threshold)
+        {
+            _host = host;
+            _srcPath = srcPath;
+            _dstPath = dstPath;
+            _threshold = threshold;
+        }
+
+        public void Warn(string detailedMessage)
+        {
+            _count++;
+            if (_count <= _threshold)
+            {
+                _host.WriteWarning(detailedMessage);
+                return;
+            }
+            if (!_summarized)
+            {
+                _summarized = true;
+                _host.WriteWarning($"More than {_threshold} per-user values were dropped because their user / machine is not assigned in '{_dstPath}'; further per-value warnings are suppressed. To assign all of the source folder's users / machines at once, e.g.: Copy-OrchFolderUser -Path {PsLiteral(_srcPath)} * -Destination {PsLiteral(_dstPath)}  (and Copy-OrchFolderMachine * for machines).");
+            }
         }
     }
 }

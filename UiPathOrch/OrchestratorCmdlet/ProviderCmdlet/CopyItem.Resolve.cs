@@ -110,7 +110,8 @@ public partial class OrchProvider
 
     internal static MachineFolder? FindDstMachine(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder,
-        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcMachineId, string msg)
+        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcMachineId, string msg,
+        DropWarningBudget? budget = null)
     {
         if (srcMachineId is null || srcMachineId == 0) return null; // skip the fetches when there's no id
 
@@ -125,7 +126,7 @@ public partial class OrchProvider
                     _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have machine with Id = {srcMachineId}.");
                     return null;
                 case FindDstByNameResult.DstNotFound:
-                    _this.WriteWarning($"{msg}: A machine with the name '{srcMachine!.Name}' is not assigned in '{dstFolder.GetPSPath()}'.");
+                    WarnDrop(_this, budget, $"{msg}: the machine '{srcMachine!.Name}' is dropped because it is not assigned in '{dstFolder.GetPSPath()}'. To keep it, copy the assignment from the source folder, e.g.: Copy-OrchFolderMachine -Path {PsLiteral(srcFolder.GetPSPath())} -Name {PsLiteral(srcMachine!.Name)} -Destination {PsLiteral(dstFolder.GetPSPath())}");
                     return null;
             }
             return dstMachineFolder;
@@ -570,8 +571,9 @@ public partial class OrchProvider
     // TODO: Is this implementation incomplete? Need to search the directory for users.
     // The current implementation only searches local users.
     internal static Entities.User? FindDstUser(IWritableHost _this,
-        OrchDriveInfo srcDrive,
+        OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder, Int64? srcUserId, string msg,
+        DropWarningBudget? budget = null,
         Dictionary<string, string>? userMapping = null)
     {
         if (srcUserId is null || srcUserId == 0) return null;
@@ -632,7 +634,7 @@ public partial class OrchProvider
                     // with a UserId that the destination folder doesn't own; the
                     // server returns 200 but silently drops the UserValue (and can
                     // wipe the asset's Global Value as a side effect).
-                    _this.WriteWarning($"{msg}: A user with the name '{searchName}' is not assigned in '{newFolder.GetPSPath()}'.");
+                    WarnDrop(_this, budget, $"{msg}: the per-user value for user '{searchName}' is dropped because the user is not assigned in '{newFolder.GetPSPath()}'. To keep it, copy the assignment from the source folder, e.g.: Copy-OrchFolderUser -Path {PsLiteral(srcFolder.GetPSPath())} -UserName {PsLiteral(searchName)} -Destination {PsLiteral(newFolder.GetPSPath())}");
                     return null;
 
                 default:
