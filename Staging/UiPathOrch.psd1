@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.9.5'
+ModuleVersion = '1.9.6'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -502,29 +502,28 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.9.5
+1.9.6
 
-Fixed (provider): dir / dir -Recurse showed a top-level folder's parent as "Orch1:" instead of
-"Orch1:\" in the Directory: header (and Split-Path -Parent of a root child) — GetParentPath now
-re-roots a bare drive the way GetChildName already did, matching the FileSystem provider. Display-only.
+Added (cmdlets): Get-OrchQueueItem -Id fetches specific queue items by id. Accepts multiple
+comma-separated values, emitted as a single OData "Id in (...)" filter (one round trip). Tab
+completion suggests ids cached for the targeted queue(s), scoped to the bound -Name and excluding
+ids already typed on the same list.
 
-Fixed (provider): Get-Item / dir could not round-trip a folder whose name contains a PowerShell
-wildcard metacharacter (* or ?) through -LiteralPath: the emitted PSPath was wildcard-escaped while
--LiteralPath re-escapes on bind, so it double-escaped and failed to resolve. The PSPath is now emitted
-raw (matching Get-ChildItem -Name). Only names containing * or ? were affected.
+Changed (provider): Copy-OrchAsset per-user-value drop warnings are now actionable. When a value's
+user or machine isn't assigned to the destination folder it is dropped (the server would otherwise
+silently discard it); the warning now says the value "is dropped" and shows a copy-paste-ready
+Copy-OrchFolderUser / Copy-OrchFolderMachine command (paths/names quote-escaped). -WhatIf previews
+the same warnings without copying. After the 5th drop in one copy a single bulk hint is emitted and
+the rest are suppressed. Scoped to direct Copy-OrchAsset.
 
-Fixed (provider): NormalizeRelativePath could resolve a nested path to the wrong folder when its leaf
-matched an unrelated top-level folder of the same name (e.g. Development\Sub -> sub). It now
-canonicalizes casing from the full path's actual folder, like the FileSystem provider.
+Fixed (cmdlets): Update-OrchQueue (and any queue edit) failed on Orchestrator v11-v13 because fields
+absent from the older DTO reached the request; those < v14 fields are now stripped on the edit path
+too. Get-OrchBucketLink could return stale folder-sharing after a folder move; ClearFolderCache now
+drops the folder's BucketLinks entry, symmetric with assets and queues.
 
-Fixed (cmdlets): Copy-OrchRole corrupted the source drive's cached roles — a later Get-OrchRole on the
-source returned null Ids/permissions until the cache was cleared. The role is now deep-copied before
-the create call, matching every other Copy/Update cmdlet.
-
-Internal: centralized the OrchAPISession API-version gates and extracted testable HTTP helpers; pulled
-the provider's child-enumeration globber and New-Item leaf extraction into pure, unit-tested helpers
-and added an in-process runspace harness that drives the real engine globber against a seeded drive;
-removed now-dead code. Behavior-preserving apart from the provider fixes above.
+Internal: consolidated queue retention defaulting into OrchAPISession.CreateQueue; folded queue-item
+enrichment and the by-id fetch into the QueueItems cache (Id in filter, no by-id endpoint); refactored
+CopyAssets so the real copy and the -WhatIf preview share one drop path. Behavior-preserving.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

@@ -4,7 +4,7 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [1.9.6] - 2026-06-19
+## [1.9.6] - 2026-06-20
 
 ### Added
 
@@ -20,12 +20,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### Provider
 
-- **`Copy-OrchAsset -WhatIf` now previews per-user values that would be dropped.** When a per-user
-  asset value references a user or machine not assigned to the destination folder, the real copy
-  already warns and drops just that value (the server would otherwise silently discard it). `-WhatIf`
-  now emits the same `"... is not assigned in '<dst>'."` warnings without copying, so the loss is
-  visible before committing. Scoped to direct `Copy-OrchAsset`; `Copy-Item -Recurse` also copies
-  folder users / machines, so no value is dropped there. Live-verified on Automation Cloud v20.
+- **`Copy-OrchAsset` per-user-value drop warnings are now actionable, and `-WhatIf` previews them.**
+  When a per-user asset value's user or machine isn't assigned to the destination folder, that value
+  is dropped (the server would otherwise silently discard it, and could wipe the asset's global value).
+  The warning now states the value `is dropped` and shows a copy-paste-ready remediation —
+  `Copy-OrchFolderUser -Path <src> -UserName <user> -Destination <dst>` (or `Copy-OrchFolderMachine`
+  for machines), with paths / names single-quote escaped. `-WhatIf` emits the same warnings without
+  copying, so the loss is visible before committing. To avoid flooding when many values drop, after
+  the 5th drop in one copy a single bulk hint
+  (`Copy-OrchFolderUser -Path <src> * -Destination <dst>`) is emitted and the rest are suppressed.
+  Scoped to direct `Copy-OrchAsset`; `Copy-Item -Recurse` also copies folder users / machines, so
+  nothing is dropped there. Live-verified on Automation Cloud v20.
 
 ### Fixed
 
@@ -46,16 +51,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Internal
 
-- Consolidated queue retention defaulting into `OrchAPISession.CreateQueue` (was duplicated in
-  `New-OrchQueue` / `Copy-OrchQueue`); the Cloud `None`→`Delete` guard is kept. Behavior-preserving.
-- Folded queue-item Path / PathName / Name stamping into the `QueueItems` cache. A queue item by id
-  is now a `Fetch` with an `Id in (<id>)` filter (the dedicated `GetQueueItemById` endpoint is
-  removed); `Remove-OrchQueueItem` resolves its row version that way.
-- Dropped a redundant `SearchPmDirectoryCache` clear from `ClearTenantCache`, and folded the
-  per-trigger executor-robot side-fetch into the `TriggersDetailed` cache (removing the `GetTrigger`
-  shim).
-- Moved the provider's `Invoke-Item` handler to `ProviderCmdlet/InvokeItem.cs` and simplified
-  `ConsoleCancelHandler`.
+- Consolidated queue retention defaulting into `OrchAPISession.CreateQueue` (kept the Cloud `None`→`Delete` guard).
+- Queue-item by-id now goes through the `QueueItems` cache as an `Id in (...)` filter; removed the `GetQueueItemById` endpoint.
+- Removed a duplicate `SearchPmDirectoryCache` clear in `ClearTenantCache`; folded the trigger executor-robot fetch into `TriggersDetailed` (removed the `GetTrigger` shim).
+- Moved the provider's `Invoke-Item` handler to `InvokeItem.cs`; simplified `ConsoleCancelHandler`.
+- `CopyAssets` refactor: the real copy and `-WhatIf` preview share one drop path, throttled by `DropWarningBudget`.
 
 ## [1.9.5] - 2026-06-19
 
