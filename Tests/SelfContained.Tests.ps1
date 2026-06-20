@@ -312,11 +312,22 @@ Describe 'QueueItem Import' {
         $script:QIQueueName = "${script:Prefix}QIQueue"
         Push-Location $script:RootFolder
         New-OrchQueue -Name $script:QIQueueName
+
+        # Second queue in the same folder, seeded with its own items. Used by the
+        # -Id completer scoping test: completing for one queue must not leak the
+        # other queue's item ids, even though both share the per-folder cache.
+        $script:QIQueueName2 = "${script:Prefix}QIQueue2"
+        New-OrchQueue -Name $script:QIQueueName2
+        $csv2 = Join-Path $script:TempDir 'queueitems_q2.csv'
+        "Reference`nQ2-001`nQ2-002" | Set-Content -Path $csv2 -Encoding UTF8 -NoNewline
+        Import-OrchQueueItem -Name $script:QIQueueName2 -ImportCsv $csv2 | Out-Null
+
         Clear-OrchCache
     }
 
     AfterAll {
         Remove-OrchQueue -Name $script:QIQueueName -Confirm:$false -ErrorAction SilentlyContinue
+        Remove-OrchQueue -Name $script:QIQueueName2 -Confirm:$false -ErrorAction SilentlyContinue
         Pop-Location
     }
 
@@ -341,6 +352,90 @@ Describe 'QueueItem Import' {
         $refs | Should -Contain 'REF-001'
         $refs | Should -Contain 'REF-002'
         $refs | Should -Contain 'REF-003'
+    }
+
+    It 'Get-OrchQueueItem -Id fetches a single item by id' {
+        $all = Get-OrchQueueItem -Name $script:QIQueueName -First 10
+        $all.Count | Should -BeGreaterOrEqual 1
+        $target = $all[0]
+
+        $byId = Get-OrchQueueItem -Name $script:QIQueueName -Id $target.Id
+        @($byId).Count | Should -Be 1 -Because '-Id must return exactly the requested item'
+        $byId.Id | Should -Be $target.Id
+        $byId.Reference | Should -Be $target.Reference -Because 'the by-id result carries the same enriched shape as a normal Get'
+    }
+
+    It 'Get-OrchQueueItem -Id accepts multiple comma-separated ids (OData Id in)' {
+        $all = Get-OrchQueueItem -Name $script:QIQueueName -First 10
+        $all.Count | Should -BeGreaterOrEqual 2
+        $ids = @($all[0].Id, $all[1].Id)
+
+        $byIds = Get-OrchQueueItem -Name $script:QIQueueName -Id $ids
+        @($byIds).Count | Should -Be 2 -Because 'a comma-separated -Id list is one Id in (...) round trip'
+        ($byIds.Id | Sort-Object) | Should -Be ($ids | Sort-Object)
+    }
+
+    It 'Get-OrchQueueItem -Id completer suggests cached ids and excludes already-specified ones' {
+        # Populate the per-folder QueueItems cache the completer reads.
+        $all = Get-OrchQueueItem -Name $script:QIQueueName -First 10
+        $all.Count | Should -BeGreaterOrEqual 2
+        $id1 = $all[0].Id
+        $id2 = $all[1].Id
+
+        $line = "Get-OrchQueueItem -Name $($script:QIQueueName) -Id "
+        $cands = (TabExpansion2 $line $line.Length).CompletionMatches.CompletionText
+        $cands | Should -Contain "$id1" -Because 'the completer suggests ids cached for the targeted queue'
+        $cands | Should -Contain "$id2"
+
+        # An id already typed on the same -Id list must drop out of the candidates.
+        $line2 = "Get-OrchQueueItem -Name $($script:QIQueueName) -Id $id1,"
+        $cands2 = (TabExpansion2 $line2 $line2.Length).CompletionMatches.CompletionText
+        $cands2 | Should -Not -Contain "$id1" -Because 'an already-specified id must be excluded'
+        $cands2 | Should -Contain "$id2" -Because 'other cached ids are still suggested'
+    }
+
+    It 'Get-OrchQueueItem -Id queries the server even with an empty cache (never served from cache)' {
+        # -Id is a filter, so it always hits the API: IncrementalCachePerFolder.Fetch never
+        # serves a query from the cache (it only accumulates). Prove -Id does not depend on a
+        # primed cache by clearing it first.
+        $all = Get-OrchQueueItem -Name $script:QIQueueName -First 10
+        $all.Count | Should -BeGreaterOrEqual 1
+        $targetId = $all[0].Id
+
+        Clear-OrchCache  # empty the per-folder QueueItems cache
+        $byId = Get-OrchQueueItem -Name $script:QIQueueName -Id $targetId
+        @($byId).Count | Should -Be 1 -Because '-Id must query Orchestrator, not require a populated cache'
+        $byId.Id | Should -Be $targetId
+    }
+
+    It 'Get-OrchQueueItem with no filter outputs the cache (no fresh query) and warns' {
+        # The only no-API path: with no filter parameters the cmdlet returns the items the
+        # cache accumulated from prior fetches, and warns that it is doing so.
+        Get-OrchQueueItem -Name $script:QIQueueName -First 10 | Out-Null  # prime the cache
+
+        $w = $null
+        $cached = Get-OrchQueueItem -Name $script:QIQueueName -WarningVariable w -WarningAction SilentlyContinue
+        ($w -join "`n") | Should -Match 'cache' -Because 'the no-filter path announces it is outputting the cache'
+        @($cached).Count | Should -BeGreaterOrEqual 3 -Because 'the primed cache holds the imported items'
+    }
+
+    It 'Get-OrchQueueItem -Id completer is scoped to the bound -Name queue' {
+        # Both queues live in the same folder and share the per-folder QueueItems cache,
+        # so completing -Id for one queue must filter out the other queue's item ids.
+        Start-Sleep -Seconds 2
+        Clear-OrchCache
+        $q1items = Get-OrchQueueItem -Name $script:QIQueueName -First 50
+        $q2items = Get-OrchQueueItem -Name $script:QIQueueName2 -First 50
+        $q1items.Count | Should -BeGreaterOrEqual 1
+        $q2items.Count | Should -BeGreaterOrEqual 1 -Because 'the second queue fixture was seeded with items'
+        $q2ids = @($q2items.Id | ForEach-Object { "$_" })
+
+        $line = "Get-OrchQueueItem -Name $($script:QIQueueName) -Id "
+        $cands = (TabExpansion2 $line $line.Length).CompletionMatches.CompletionText
+        $cands | Should -Contain "$($q1items[0].Id)" -Because 'the bound queue''s own ids are suggested'
+        foreach ($q2id in $q2ids) {
+            $cands | Should -Not -Contain $q2id -Because "completer scoped to '$($script:QIQueueName)' must not leak the other queue's id $q2id"
+        }
     }
 
     It 'Import-OrchQueueItem preserves an embedded newline in a quoted CSV field' {
