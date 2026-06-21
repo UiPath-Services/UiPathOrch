@@ -1,6 +1,7 @@
 using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -35,45 +36,62 @@ public class GetPackageVersionCmdlet : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
 
-        // Phase 1 = GetPackages per (drive, folder); fanout to (drive, folder, package).
-        // Phase 2 = GetPackageVersions per package. Cap=4 shared across both phases
-        // by ChainedThreadPool (avoids the cap-multiplication of nested OrchThreadPool).
-        using var pool = OrchThreadPool.RunForEachChained(
+        // A two-phase chain (list packages, then fetch each one's versions) can't show a
+        // meaningful percentage while streaming: the package total isn't known until every
+        // folder has been listed, so the bar's ceiling would keep growing mid-run. Instead
+        // run the phases in sequence so each bar has a known denominator.
+
+        // Phase 1: list matching packages across every folder (parallel, cap=4). The folder
+        // count is known up front, so this bar is a real percentage; it also yields the
+        // total package count for Phase 2.
+        using var packagePool = OrchThreadPool.RunForEach(
             drivesFolders,
             df => df.folder.GetPSPath(),
             df => (object)df.folder,
             df => df.drive.GetPackages(df.folder)
                 .FilterByWildcards(p => p?.Id, wpId)
                 .OrderBy(p => p.Id!.ToLower())
-                .Select(p => (df.drive, df.folder, package: p)),
+                .Select(p => (df.drive, df.folder, package: p))
+                .ToList());
+
+        var packages = new List<(OrchDriveInfo drive, Folder folder, Package package)>();
+        using (var reporter = new ProgressReporter(this, 1, packagePool.Count, "Listing packages"))
+        {
+            foreach (var task in packagePool)
+            {
+                try
+                {
+                    var found = packagePool.GetResultWithProgress(task, reporter, cancelHandler.Token);
+                    if (found is not null) packages.AddRange(found);
+                }
+                catch (OrchException ex)
+                {
+                    // Distinct ErrorId ("couldn't list packages") vs the version error below.
+                    WriteError(new ErrorRecord(ex, "GetPackageError", ErrorCategory.InvalidOperation, ex.Target));
+                }
+            }
+        }
+
+        // Phase 2: fetch versions per package (parallel, cap=4) with a real percentage
+        // against the now-known package count.
+        using var versionPool = OrchThreadPool.RunForEach(
+            packages,
             t => t.package.GetPSPath(),
             t => (object)t.package,
-            t => t.drive.GetPackageVersions(t.folder, t.package.Id!),
-            cancelHandler.Token);
+            t => t.drive.GetPackageVersions(t.folder, t.package.Id!));
 
-        using var reporter = new ProgressReporter(this, 1, 0, "Getting package versions");
-        foreach (var task in pool)
+        using var versionReporter = new ProgressReporter(this, 1, versionPool.Count, "Getting package versions");
+        foreach (var task in versionPool)
         {
             try
             {
-                var versions = pool.GetResultWithProgress(task, reporter, cancelHandler.Token);
-                WriteObject(versions!
-                    .FilterByWildcards(v => v?.Version, wpVersion),
-                    //.OrderBy(v => v.Version!, VersionComparer.Instance),
-                    true);
+                var versions = versionPool.GetResultWithProgress(task, versionReporter, cancelHandler.Token);
+                WriteObject(versions!.FilterByWildcards(v => v?.Version, wpVersion), true);
             }
             catch (OrchException ex)
             {
                 WriteError(new ErrorRecord(ex, "GetPackageVersionError", ErrorCategory.InvalidOperation, ex.Target));
             }
-        }
-
-        // Phase 1 errors (GetPackages failures) — distinct ErrorId to
-        // preserve the legacy distinction between "couldn't list packages"
-        // and "couldn't get versions of a specific package".
-        foreach (var (_, ex) in pool.Phase1Errors)
-        {
-            WriteError(new ErrorRecord(ex, "GetPackageError", ErrorCategory.InvalidOperation, ex.Target));
         }
     }
 }
