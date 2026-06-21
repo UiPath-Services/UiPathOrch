@@ -103,11 +103,10 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
     /// -ExpandDetails path, and by GetUserCmdlet's -ExportCsv path.
     ///
     /// Any of the three wildcard-pattern lists may be null (= no filter on
-    /// that field). Phase 1 (drive.GetUsers + filter) and Phase 2
-    /// (drive.GetUser per matched user) share a single cap=4 semaphore via
-    /// ChainedThreadPool — drive-level fetches can race, and per-drive
-    /// progress streams as Phase 2 results arrive without waiting for all
-    /// drives' Phase 1 to finish.
+    /// that field). Runs two sequential parallel phases (each OrchThreadPool.RunForEach,
+    /// cap=4): Phase 1 lists matched users per drive, Phase 2 fetches each user's detail.
+    /// Sequencing the phases lets the bar show a real percentage against the known user
+    /// count instead of a running index with no total.
     /// </summary>
     internal static void EmitDetailedUsers(
         OrchestratorPSCmdlet caller,
@@ -119,7 +118,10 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
     {
         using var cancelHandler = new ConsoleCancelHandler();
 
-        using var pool = OrchThreadPool.RunForEachChained(
+        // Two sequential phases so each progress bar has a known denominator (the user total
+        // isn't known until every drive is listed -- this used to fall back to a running index
+        // with no percentage). Phase 1 lists matched users per drive; Phase 2 fetches detail.
+        using var userPool = OrchThreadPool.RunForEach(
             drives,
             drive => drive.NameColonSeparator,
             drive => (object)drive,
@@ -130,24 +132,39 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
                 .FilterByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], userNameWildcards)
                 .FilterByWildcards(u => u?.Type, typeWildcards)
                 .OrderBy(u => u.UserName)
-                .Select(u => (drive, user: u)),
+                .Select(u => (drive, user: u))
+                .ToList());
+
+        var users = new List<(OrchDriveInfo drive, User user)>();
+        using (var listReporter = new ProgressReporter(caller, 1, userPool.Count, "Listing users"))
+        {
+            foreach (var task in userPool)
+            {
+                try
+                {
+                    var found = userPool.GetResultWithProgress(task, listReporter, cancelHandler.Token);
+                    if (found is not null) users.AddRange(found);
+                }
+                catch (OrchException ex)
+                {
+                    caller.WriteError(new ErrorRecord(ex, "GetUserDetailError", ErrorCategory.InvalidOperation, ex.Target));
+                }
+            }
+        }
+
+        using var detailPool = OrchThreadPool.RunForEach(
+            users,
             t => t.user.GetPSPath(),
             t => (object)t.user,
-            t => t.drive.UsersDetailed.Get(t.user.Id!.Value),
-            cancelHandler.Token);
+            t => t.drive.UsersDetailed.Get(t.user.Id!.Value));
 
-        // Total user count is unknown until all Phase 1 fetches complete,
-        // so the progress bar shows the running index without a percentage.
-        int index = 0;
-        using var reporter = new ProgressReporter(caller, 1, 0, "Get users... ");
-        foreach (var task in pool)
+        using var detailReporter = new ProgressReporter(caller, 1, detailPool.Count, "Getting user details");
+        foreach (var task in detailPool)
         {
             try
             {
-                var detailedUser = task.GetResult(cancelHandler.Token);
+                var detailedUser = detailPool.GetResultWithProgress(task, detailReporter, cancelHandler.Token);
                 if (detailedUser is null) continue;
-
-                reporter.WriteProgress(++index, detailedUser.GetPSPath());
 
                 var (drive, _) = task.Source;
                 if (writer is not null) { WriteCsvContent(writer, drive, detailedUser); }
@@ -157,13 +174,6 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
             {
                 caller.WriteError(new ErrorRecord(ex, "GetUserDetailError", ErrorCategory.InvalidOperation, ex.Target));
             }
-        }
-
-        // Phase 1 errors (per-drive GetUsers failures). Same ErrorId as
-        // Phase 2 to preserve the legacy single-id behavior.
-        foreach (var (_, ex) in pool.Phase1Errors)
-        {
-            caller.WriteError(new ErrorRecord(ex, "GetUserDetailError", ErrorCategory.InvalidOperation, ex.Target));
         }
     }
 

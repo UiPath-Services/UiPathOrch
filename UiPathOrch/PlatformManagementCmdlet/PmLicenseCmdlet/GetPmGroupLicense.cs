@@ -153,24 +153,47 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
             // group list itself, so it uses the cheap list-only path below.
             using var cancelHandler = new ConsoleCancelHandler();
 
-            using var pool = OrchThreadPool.RunForEachChained(
+            // Two sequential phases so each progress bar has a known denominator. Phase 1
+            // lists licensed groups per drive; Phase 2 fetches each group's allocations.
+            using var groupPool = OrchThreadPool.RunForEach(
                 drives,
                 drive => drive.NameColonSeparator,
                 drive => (object)drive,
                 drive => drive.PmLicensedGroups.Get()
                     .FilterByWildcards(g => g?.name, wpGroupName)
                     .OrderBy(g => g?.name)
-                    .Select(group => (drive, group)),
+                    .Select(group => (drive, group))
+                    .ToList());
+
+            var groups = new List<(OrchDriveInfo drive, NuLicensedGroup group)>();
+            using (var listReporter = new ProgressReporter(this, 1, groupPool.Count, "Listing licensed groups"))
+            {
+                foreach (var task in groupPool)
+                {
+                    try
+                    {
+                        var found = groupPool.GetResultWithProgress(task, listReporter, cancelHandler.Token);
+                        if (found is not null) groups.AddRange(found);
+                    }
+                    catch (OrchException ex)
+                    {
+                        WriteError(new ErrorRecord(ex, "GetPmGroupLicenseError", ErrorCategory.InvalidOperation, ex.Target));
+                    }
+                }
+            }
+
+            using var allocationPool = OrchThreadPool.RunForEach(
+                groups,
                 t => t.group.GetPSPath(t.drive.NameColonSeparator),
                 t => (object)t.group,
-                t => t.drive.GetPmLicensedGroupAllocations(t.group),
-                cancelHandler.Token);
+                t => t.drive.GetPmLicensedGroupAllocations(t.group));
 
-            foreach (var task in pool)
+            using var allocationReporter = new ProgressReporter(this, 1, allocationPool.Count, "Getting group allocations");
+            foreach (var task in allocationPool)
             {
                 try
                 {
-                    var entities = task.GetResult(cancelHandler.Token);
+                    var entities = allocationPool.GetResultWithProgress(task, allocationReporter, cancelHandler.Token);
                     if (entities is null) continue;
 
                     var (drive, group) = task.Source;
@@ -187,11 +210,6 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
                 }
             }
 
-            // Phase 1 (per-drive list) failures.
-            foreach (var (_, ex) in pool.Phase1Errors)
-            {
-                WriteError(new ErrorRecord(ex, "GetPmGroupLicenseError", ErrorCategory.InvalidOperation, ex.Target));
-            }
         }
         else
         {

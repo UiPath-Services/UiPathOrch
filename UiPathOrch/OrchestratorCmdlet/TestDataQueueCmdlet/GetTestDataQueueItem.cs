@@ -58,42 +58,53 @@ public class GetTestDataQueueItemCmdlet : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
 
-        // Phase 1 = list TestDataQueues per (drive, folder); fanout to
-        // (drive, folder, queue). Phase 2 = TestDataQueueItems.Get per queue.
-        // Cap=4 shared across both phases via ChainedThreadPool — the
-        // previous nested OrchThreadPool stacked to cap=4×4=16 against a
-        // single Orchestrator.
-        using var pool = OrchThreadPool.RunForEachChained(
+        // Two sequential phases so each progress bar has a known denominator. Phase 1 lists
+        // test data queues per folder (parallel, cap=4); Phase 2 fetches items per queue.
+        using var queuePool = OrchThreadPool.RunForEach(
             drivesFolders,
             df => df.folder.GetPSPath(),
             df => (object)df.folder,
             df => df.drive.TestDataQueues.Get(df.folder)
                 .FilterByWildcards(e => e?.Name, wpName)
-                .Select(q => (df.drive, df.folder, queue: q)),
+                .Select(q => (df.drive, df.folder, queue: q))
+                .ToList());
+
+        var queues = new List<(OrchDriveInfo drive, Folder folder, TestDataQueue queue)>();
+        using (var reporter = new ProgressReporter(this, 1, queuePool.Count, "Listing test data queues"))
+        {
+            foreach (var task in queuePool)
+            {
+                try
+                {
+                    var found = queuePool.GetResultWithProgress(task, reporter, cancelHandler.Token);
+                    if (found is not null) queues.AddRange(found);
+                }
+                catch (OrchException ex)
+                {
+                    // Distinct ErrorId ("couldn't list queues") vs the item error below.
+                    WriteError(new ErrorRecord(ex, "GetTestDataQueueError", ErrorCategory.InvalidOperation, ex.Target));
+                }
+            }
+        }
+
+        using var itemPool = OrchThreadPool.RunForEach(
+            queues,
             t => t.queue.GetPSPath(),
             t => (object)t.queue,
-            t => t.drive.TestDataQueueItems.Get(t.folder, t.queue),
-            cancelHandler.Token);
+            t => t.drive.TestDataQueueItems.Get(t.folder, t.queue));
 
-        foreach (var task in pool)
+        using var itemReporter = new ProgressReporter(this, 1, itemPool.Count, "Getting test data queue items");
+        foreach (var task in itemPool)
         {
             try
             {
-                var entities = task.GetResult(cancelHandler.Token);
+                var entities = itemPool.GetResultWithProgress(task, itemReporter, cancelHandler.Token);
                 WriteObject(entities, true);
             }
             catch (OrchException ex)
             {
                 WriteError(new ErrorRecord(ex, "GetTestDataQueueItemError", ErrorCategory.InvalidOperation, ex.Target));
             }
-        }
-
-        // Phase 1 errors (per-folder TestDataQueues list failures) — distinct
-        // ErrorId to preserve the legacy split between "couldn't list queues"
-        // and "couldn't get items of a specific queue".
-        foreach (var (_, ex) in pool.Phase1Errors)
-        {
-            WriteError(new ErrorRecord(ex, "GetTestDataQueueError", ErrorCategory.InvalidOperation, ex.Target));
         }
     }
 }

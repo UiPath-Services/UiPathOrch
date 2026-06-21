@@ -76,7 +76,9 @@ public class GetPmGroupMemberCmdlet : OrchestratorPSCmdlet
         // Emission stays on the pipeline thread.
         using var cancelHandler = new ConsoleCancelHandler();
 
-        using var pool = OrchThreadPool.RunForEachChained(
+        // Two sequential phases so each progress bar has a known denominator. Phase 1 lists
+        // groups per drive; Phase 2 fetches each group's detail (members).
+        using var groupPool = OrchThreadPool.RunForEach(
             drives,
             drive => drive.NameColonSeparator,
             drive => (object)drive,
@@ -84,17 +86,38 @@ public class GetPmGroupMemberCmdlet : OrchestratorPSCmdlet
                 .Where(g => g is not null)
                 .FilterByWildcards(g => g?.name!, wpGroupName)
                 .OrderBy(g => g.name)
-                .Select(group => (drive, group)),
+                .Select(group => (drive, group))
+                .ToList());
+
+        var groups = new List<(OrchDriveInfo drive, PmGroup group)>();
+        using (var listReporter = new ProgressReporter(this, 1, groupPool.Count, "Listing groups"))
+        {
+            foreach (var task in groupPool)
+            {
+                try
+                {
+                    var found = groupPool.GetResultWithProgress(task, listReporter, cancelHandler.Token);
+                    if (found is not null) groups.AddRange(found);
+                }
+                catch (OrchException ex)
+                {
+                    WriteError(new ErrorRecord(ex, "GetPmGroupMemberError", ErrorCategory.InvalidOperation, ex.Target));
+                }
+            }
+        }
+
+        using var detailPool = OrchThreadPool.RunForEach(
+            groups,
             t => t.group.GetPSPath(t.drive.NameColonSeparator),
             t => (object)t.group,
-            t => t.drive.PmGroups.Get(t.group.id),
-            cancelHandler.Token);
+            t => t.drive.PmGroups.Get(t.group.id));
 
-        foreach (var task in pool)
+        using var detailReporter = new ProgressReporter(this, 1, detailPool.Count, "Getting group members");
+        foreach (var task in detailPool)
         {
             try
             {
-                var detailedGroup = task.GetResult(cancelHandler.Token);
+                var detailedGroup = detailPool.GetResultWithProgress(task, detailReporter, cancelHandler.Token);
                 if (detailedGroup is null) continue;
 
                 var (drive, _) = task.Source;
@@ -121,12 +144,6 @@ public class GetPmGroupMemberCmdlet : OrchestratorPSCmdlet
             {
                 WriteError(new ErrorRecord(ex, "GetPmGroupMemberError", ErrorCategory.InvalidOperation, ex.Target));
             }
-        }
-
-        // Phase 1 (per-drive group-list) failures, same ErrorId as Phase 2.
-        foreach (var (_, ex) in pool.Phase1Errors)
-        {
-            WriteError(new ErrorRecord(ex, "GetPmGroupMemberError", ErrorCategory.InvalidOperation, ex.Target));
         }
 
         if (!string.IsNullOrEmpty(ExportCsv))

@@ -6,25 +6,20 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-// Generic base for the Get-Orch{Asset,Bucket,Queue}Link trio. Uses
-// OrchThreadPool.RunForEachChained: Phase 1 fetches the per-folder entity
-// list, fanout produces (drive, folder, entity) tuples, Phase 2 calls
-// GetFoldersFor* per entity. Phase 1 + Phase 2 share a single semaphore
-// (cap=4) so the total in-flight API call budget stays at 4 across the
-// chain, while consumer drain streams in (folder, entity, link) order.
+// Generic base for the Get-Orch{Asset,Bucket,Queue}Link trio. Runs two sequential
+// parallel phases (each via OrchThreadPool.RunForEach, cap=4): Phase 1 lists the entities
+// per folder; Phase 2 resolves each entity's accessible folders (GetFoldersFor*). Running
+// the phases in sequence — rather than a streaming chain — lets each progress bar show a
+// real percentage against a known denominator (folder count, then entity count).
 //
-// Output ordering: drivesFolders sorted by PSPath, entities OrderBy(name)
-// inside each Phase 1 result, links OrderBy(FullyQualifiedName) inside
-// each Phase 2 result. ChainedThreadPool yields tasks in flat insertion
-// order (= source order × per-source enumeration order), so no
-// after-the-fact sort is needed.
+// Output ordering: drivesFolders sorted by PSPath, entities OrderBy(name); each pool drains
+// in source order, so no after-the-fact sort is needed.
 //
-// Cancellation: ConsoleCancelHandler.Token forwards to OrchTask.GetResult,
-// which throws OperationCanceledException as soon as the consumer notices.
-// In-flight workers may still complete their current synchronous API call
-// (no token plumbed through OrchAPISession), but per-key cache atomicity in
-// OrchDriveInfo (the link cache is set only after a full successful response)
-// keeps the cache clean either way.
+// Cancellation: ConsoleCancelHandler.Token forwards to OrchTask.GetResult, which throws
+// OperationCanceledException as soon as the consumer notices. In-flight workers may still
+// complete their current synchronous API call (no token plumbed through OrchAPISession),
+// but per-key cache atomicity in OrchDriveInfo (the link cache is set only after a full
+// successful response) keeps the cache clean either way.
 //
 // Derived classes must:
 //   - Decorate the class with [Cmdlet(VerbsCommon.Get, "OrchXxxLink")] and
@@ -102,26 +97,50 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
 
-        using var pool = OrchThreadPool.RunForEachChained(
+        // Two sequential phases so each progress bar has a known denominator. Phase 1 lists
+        // the link-able entities per folder (parallel, cap=4); Phase 2 resolves each entity's
+        // accessible folders.
+        using var entityPool = OrchThreadPool.RunForEach(
             drivesFolders,
             df => df.folder.GetPSPath(),
             df => (object)df.folder,
             df => GetEntities(df.drive, df.folder)
                 .FilterByWildcards(e => GetEntityName(e), wpName)
                 .OrderBy(e => GetEntityName(e))
-                .Select(e => (df.drive, df.folder, entity: e)),
-            t => t.folder.GetPSPath(),
-            t => (object)t.folder,
-            t => GetFoldersForEntity(t.drive, t.folder, t.entity),
-            cancelHandler.Token);
+                .Select(e => (df.drive, df.folder, entity: e))
+                .ToList());
+
+        var entities = new List<(OrchDriveInfo drive, Folder folder, TEntity entity)>();
+        using (var listReporter = new ProgressReporter(this, 1, entityPool.Count, "Listing entities"))
+        {
+            foreach (var task in entityPool)
+            {
+                try
+                {
+                    var found = entityPool.GetResultWithProgress(task, listReporter, cancelHandler.Token);
+                    if (found is not null) entities.AddRange(found);
+                }
+                catch (OrchException ex)
+                {
+                    WriteError(new ErrorRecord(ex, ErrorId, ErrorCategory.InvalidOperation, ex.Target));
+                }
+            }
+        }
 
         var emitted = new HashSet<(long srcFolderId, long entityId, long linkFolderId)>();
 
-        foreach (var task in pool)
+        using var linkPool = OrchThreadPool.RunForEach(
+            entities,
+            t => t.folder.GetPSPath(),
+            t => (object)t.folder,
+            t => GetFoldersForEntity(t.drive, t.folder, t.entity));
+
+        using var linkReporter = new ProgressReporter(this, 1, linkPool.Count, "Getting links");
+        foreach (var task in linkPool)
         {
             try
             {
-                var accessible = task.GetResult(cancelHandler.Token);
+                var accessible = linkPool.GetResultWithProgress(task, linkReporter, cancelHandler.Token);
                 if (accessible?.AccessibleFolders is not { Length: > 1 }) continue;
 
                 var (drive, folder, entity) = task.Source;
@@ -174,15 +193,6 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
                 string target = task.Source.Item2.GetPSPath(); // Item2 = folder (see deconstruction above)
                 WriteError(new ErrorRecord(new OrchException(target, ex), ErrorId, ErrorCategory.InvalidOperation, target));
             }
-        }
-
-        // Phase 1 errors (per-folder GetEntities failures) — drained after
-        // Phase 2 completes. Same ErrorId as Phase 2 to keep the link
-        // cmdlets simple; switch to a separate ErrorId here if callers need
-        // to distinguish.
-        foreach (var (_, ex) in pool.Phase1Errors)
-        {
-            WriteError(new ErrorRecord(ex, ErrorId, ErrorCategory.InvalidOperation, ex.Target));
         }
 
         if (writer is not null)

@@ -38,51 +38,55 @@ public class GetLibraryVersionCmdlet : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
 
-        // Phase 1 = list libraries per drive (host- or tenant-feed depending
-        // on -HostFeed); fanout to (drive, lib). Phase 2 = list versions per
-        // library. Cap=4 shared across both phases via ChainedThreadPool —
-        // the previous nested OrchThreadPool stacked to cap=4×4=16 against
-        // a single Orchestrator.
-        using var pool = OrchThreadPool.RunForEachChained(
+        // Two sequential phases so each progress bar has a known denominator (a streaming
+        // chain never learns the library total until every drive is listed). Phase 1 lists
+        // libraries per drive (parallel, cap=4); Phase 2 fetches versions per library.
+        using var libraryPool = OrchThreadPool.RunForEach(
             drives,
             drive => drive.NameColonSeparator,
             drive => (object)drive,
-            drive =>
+            drive => (HostFeed ? drive.LibrariesInHost.Get() : drive.LibrariesInTenant.Get())
+                .FilterByWildcards(l => l?.Id, wpId)
+                .Select(lib => (drive, lib))
+                .ToList());
+
+        var libraries = new List<(OrchDriveInfo drive, Library lib)>();
+        using (var reporter = new ProgressReporter(this, 1, libraryPool.Count, "Listing libraries"))
+        {
+            foreach (var task in libraryPool)
             {
-                var libs = HostFeed
-                    ? drive.LibrariesInHost.Get()
-                    : drive.LibrariesInTenant.Get();
-                return libs
-                    .FilterByWildcards(l => l?.Id, wpId)
-                    .Select(lib => (drive, lib));
-            },
+                try
+                {
+                    var found = libraryPool.GetResultWithProgress(task, reporter, cancelHandler.Token);
+                    if (found is not null) libraries.AddRange(found);
+                }
+                catch (OrchException ex)
+                {
+                    // Distinct ErrorId ("couldn't list libraries") vs the version error below.
+                    WriteError(new ErrorRecord(ex, "GetLibraryError", ErrorCategory.InvalidOperation, ex.Target));
+                }
+            }
+        }
+
+        using var versionPool = OrchThreadPool.RunForEach(
+            libraries,
             t => t.lib.GetPSPath(),
             t => (object)t.lib,
-            t => (HostFeed
-                ? t.drive.LibraryVersionsInHostFeed.Get(t.lib.Id!)
-                : t.drive.LibraryVersions.Get(t.lib.Id!))
-                .FilterByWildcards(l => l?.Version, wpVersion),
-            cancelHandler.Token);
+            t => (HostFeed ? t.drive.LibraryVersionsInHostFeed.Get(t.lib.Id!) : t.drive.LibraryVersions.Get(t.lib.Id!))
+                .FilterByWildcards(l => l?.Version, wpVersion));
 
-        foreach (var task in pool)
+        using var versionReporter = new ProgressReporter(this, 1, versionPool.Count, "Getting library versions");
+        foreach (var task in versionPool)
         {
             try
             {
-                var versions = task.GetResult(cancelHandler.Token);
+                var versions = versionPool.GetResultWithProgress(task, versionReporter, cancelHandler.Token);
                 WriteObject(versions, true);
             }
             catch (OrchException ex)
             {
                 WriteError(new ErrorRecord(ex, "GetLibraryVersionError", ErrorCategory.InvalidOperation, ex.Target));
             }
-        }
-
-        // Phase 1 errors (per-drive library list failures) — distinct ErrorId
-        // to preserve the legacy split between "couldn't list libraries" and
-        // "couldn't get versions of a specific library".
-        foreach (var (_, ex) in pool.Phase1Errors)
-        {
-            WriteError(new ErrorRecord(ex, "GetLibraryError", ErrorCategory.InvalidOperation, ex.Target));
         }
     }
 }
