@@ -739,10 +739,6 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
                                 return;
                             }
 
-                            // Stamp the label before queueing behind the semaphore so a consumer
-                            // blocked on this slot can name what it waits for (GetResultWithProgress).
-                            task.SetLabel(pathStr);
-
                             try
                             {
                                 await _semaphore.WaitAsync(token);
@@ -781,10 +777,6 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
         });
     }
 
-    // Phase-2 tasks discovered so far. Grows while Phase 1 fans out; final once
-    // DiscoveryComplete is true.
-    public int DiscoveredCount => _allTasks.Count;
-
     // Phase-2 fetches that have actually finished, regardless of the drain order.
     public int CompletedCount
     {
@@ -799,30 +791,20 @@ public sealed class ChainedThreadPool<TSource, TFlat, TResult> : IDisposable, IE
         }
     }
 
-    // True once Phase 1 has finished fanning out -- i.e. DiscoveredCount is final.
-    public bool DiscoveryComplete => _producer.IsCompleted;
-
-    // Drains one Phase-2 task in flat order while keeping the bar filled with the TRUE
-    // completed/discovered counts, so it advances during the per-item fetch and the
-    // denominator settles once discovery finishes. Bar value = CompletedCount, total =
-    // DiscoveredCount (+1 sentinel until discovery completes, so a transient
-    // completed==discovered never flashes a premature 100%), name = the awaited task's
-    // label. Must be called from the pipeline thread. Single-phase analogue:
-    // OrchThreadPoolImpl.GetResultWithProgress.
+    // Drains one Phase-2 task in flat order while showing an INDETERMINATE bar with the
+    // running count of completed fetches. A two-phase chain doesn't know its total until
+    // Phase 1 finishes fanning out, so a percentage would make the bar's ceiling grow
+    // mid-run; a plain count is monotonic and never jumps. The count keeps climbing even
+    // while the drained head is blocked (other Phase-2 fetches finish in parallel). Must
+    // be called from the pipeline thread.
     public TResult? GetResultWithProgress(OrchTask<TFlat, TResult> task, ProgressReporter reporter, CancellationToken token)
     {
         while (!task.CompletedEvent.Wait(150, token))
         {
-            Tick(reporter, task);
+            reporter.WriteProgressIndeterminate($"{CompletedCount} fetched");
         }
-        Tick(reporter, task);
+        reporter.WriteProgressIndeterminate($"{CompletedCount} fetched");
         return task.GetResult(token);
-    }
-
-    private void Tick(ProgressReporter reporter, OrchTask<TFlat, TResult> task)
-    {
-        reporter.TotalNum = DiscoveryComplete ? DiscoveredCount : DiscoveredCount + 1;
-        reporter.WriteProgress(CompletedCount, task.Label);
     }
 
     public IEnumerator<OrchTask<TFlat, TResult>> GetEnumerator()
@@ -1052,6 +1034,21 @@ public class ProgressReporter(IWritableHost provider, int id, int totalNum, stri
             progressRecord.Activity = SafeText(activity)!;
         }
         progressRecord.StatusDescription = $"{index:D}/{totalNum} {SafeText(statusDescription)}".TrimEnd();
+        WriteProgress();
+    }
+
+    // Indeterminate progress: no percentage bar (PercentComplete = -1), just the status
+    // text. For work whose total isn't known until late (e.g. two-phase chained fetches),
+    // where a growing denominator would make the bar's ceiling expand mid-run.
+    // statusDescription must be non-empty (PowerShell rejects an empty one).
+    public void WriteProgressIndeterminate(string statusDescription, string? activity = null)
+    {
+        progressRecord.PercentComplete = -1;
+        if (!string.IsNullOrEmpty(activity))
+        {
+            progressRecord.Activity = SafeText(activity)!;
+        }
+        progressRecord.StatusDescription = SafeText(statusDescription)!;
         WriteProgress();
     }
 
