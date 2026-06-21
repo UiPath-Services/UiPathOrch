@@ -124,7 +124,9 @@ public class AddFolderMachineCmdlet : OrchestratorPSCmdlet
             .ThenBy(kv => kv.Key.Folder.FullyQualifiedNameOrderable);
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var param in sortedParameters.WithCancellation(cancelHandler.Token))
+        foreach (var param in sortedParameters
+            .WithProgressBar(this, "Adding machines", p => p.Key.Folder.GetPSPath())
+            .WithCancellation(cancelHandler.Token))
         {
             var (drive, folder) = param.Key;
             var machinesPropagatesPairs = param.Value;

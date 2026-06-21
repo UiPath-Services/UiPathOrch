@@ -85,7 +85,8 @@ public class RemoveTestCaseCmdlet : OrchestratorPSCmdlet
         if (_pending is null || _folders is null) return;
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (key, approved) in _pending)
+        foreach (var (key, approved) in _pending
+            .WithProgressBar(this, "Removing test cases", kv => _folders[kv.Key].GetPSPath()))
         {
             if (approved.Count == 0) continue;
             var (drive, _) = key;

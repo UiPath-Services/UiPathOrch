@@ -31,7 +31,9 @@ public class RemoveFolderMachineCmdlet : OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
+        foreach (var (drive, folder) in drivesFolders
+            .WithProgressBar(this, "Removing folder machines", df => df.folder.GetPSPath())
+            .WithCancellation(cancelHandler.Token))
         {
             try
             {
