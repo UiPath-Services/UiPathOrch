@@ -79,39 +79,29 @@ public class GetProcessCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        // List-only path: emit shallow Release entries from each folder.
-        var folderList = drivesFolders.ToList();
+        // List-only path: fetch each folder's releases in parallel (cap=4), then emit the
+        // shallow Release entries. The bar fills with the true completed-folder count.
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, folderList.Count, "Getting processes");
-        int index = 0;
-        foreach (var (drive, folder) in folderList)
+        using var pool = OrchThreadPool.RunForEach(
+            drivesFolders,
+            df => df.folder.GetPSPath(),
+            df => (object)df.folder,
+            df => df.drive.Releases.Get(df.folder));
+
+        using var reporter = new ProgressReporter(this, 1, pool.Count, "Getting processes");
+        foreach (var task in pool)
         {
-            // Ctrl+C between folders: let the cancellation propagate (outside the try) so the
-            // pipeline stops AS CANCELLED, rather than returning partial results that look like a
-            // complete listing -- and without emitting one "operation was canceled" error per
-            // remaining folder.
-            cancelHandler.Token.ThrowIfCancellationRequested();
-            reporter.WriteProgress(++index, folder.GetPSPath());
             try
             {
-                var releases = drive.Releases.Get(folder);
-                var targetReleases = releases
+                var releases = pool.GetResultWithProgress(task, reporter, cancelHandler.Token);
+                WriteObject(releases!
                     .FilterByWildcards(r => r?.Name, wpName)
-                    .OrderBy(r => r.Name);
-                WriteObject(targetReleases, true);
+                    .OrderBy(r => r.Name),
+                    true);
             }
-            catch (OperationCanceledException)
+            catch (OrchException ex)
             {
-                // Ctrl+C while drive.Releases.Get(folder) is in flight (the data call observes the
-                // cancel and throws): propagate a single stop instead of a per-folder error here PLUS
-                // the loop's next ThrowIfCancellationRequested propagation -- which surfaced as two
-                // "operation was canceled" messages.
-                throw;
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetProcessError", ErrorCategory.InvalidOperation, folder));
-                continue;
+                WriteError(new ErrorRecord(ex, "GetProcessError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
     }
