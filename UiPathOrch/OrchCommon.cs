@@ -267,6 +267,57 @@ public static class CancellationExtensions
     }
 }
 
+/// <summary>
+/// Sugar for attaching a progress bar to a single-threaded loop, mirroring
+/// <see cref="CancellationExtensions.WithCancellation{T}"/>. Replaces the
+/// manual <c>reporter</c> + <c>++index</c> + <c>WriteProgress</c> boilerplate:
+/// write <c>foreach (var x in xs.WithProgressBar(this, "Doing things", n =&gt; n.Name)) { ... }</c>.
+/// Compose with <see cref="CancellationExtensions.WithCancellation{T}"/> on the OUTSIDE so the
+/// cancel check runs per body iteration: <c>xs.WithProgressBar(...).WithCancellation(token)</c>.
+/// For PARALLEL <c>RunForEach</c> loops use <see cref="OrchThreadPoolImpl{TSource,TResult}.GetResultWithProgress"/>
+/// instead (it shows true background-completion progress).
+/// </summary>
+public static class ProgressExtensions
+{
+    /// <summary>
+    /// Wraps a sequence so each element, as it is yielded, advances a bar showing
+    /// "{index}/{total} {name}". The bar auto-completes when enumeration ends or the iterator
+    /// is disposed (e.g. an early <c>break</c>). Width-unsafe names (PowerShell #21293) are
+    /// sanitized by <see cref="ProgressReporter"/>.
+    /// </summary>
+    /// <param name="host">The cmdlet / provider that renders the bar.</param>
+    /// <param name="activity">The activity line (operation, optionally with destination).</param>
+    /// <param name="getName">Per-item status name; null shows just "{index}/{total}".</param>
+    /// <param name="total">Item count for the percentage. Defaults to the source count,
+    /// materializing the source once if it isn't already an <see cref="ICollection{T}"/>.
+    /// Pass a known total to avoid materializing a lazy/expensive source.</param>
+    /// <param name="id">Progress activity id; give nested bars distinct ids (1, 2, 3...).</param>
+    public static IEnumerable<T> WithProgressBar<T>(
+        this IEnumerable<T> source,
+        IWritableHost host,
+        string activity,
+        Func<T, string?>? getName = null,
+        int total = -1,
+        int id = 1)
+    {
+        IEnumerable<T> sequence = source;
+        if (total < 0)
+        {
+            var materialized = source as ICollection<T> ?? source.ToList();
+            total = materialized.Count;
+            sequence = materialized;
+        }
+
+        using var reporter = new ProgressReporter(host, id, total, activity);
+        int index = 0;
+        foreach (var item in sequence)
+        {
+            reporter.WriteProgress(++index, getName?.Invoke(item));
+            yield return item;
+        }
+    }
+}
+
 public class OrchTask<TSource, TResult> : IDisposable
 {
     public ManualResetEventSlim CompletedEvent { get; }

@@ -14,11 +14,50 @@ public class ProgressTextWidthTests
     private sealed class CapturingHost(bool rendersWideProgress = false) : IWritableHost
     {
         public ProgressRecord? Last { get; private set; }
+        public List<ProgressRecord> All { get; } = new();
         public bool RendersWideProgress { get; } = rendersWideProgress;
-        public void WriteProgress(ProgressRecord progressRecord) => Last = progressRecord;
+        public void WriteProgress(ProgressRecord progressRecord)
+        {
+            Last = progressRecord;
+            // ProgressReporter mutates one shared record, so snapshot the fields we assert on.
+            All.Add(new ProgressRecord(progressRecord.ActivityId, progressRecord.Activity, progressRecord.StatusDescription)
+            {
+                RecordType = progressRecord.RecordType,
+            });
+        }
         public void WriteWarning(string text) { }
         public void WriteError(ErrorRecord errorRecord) { }
         public bool ShouldProcess(string target, string action) => true;
+    }
+
+    [Fact]
+    public void WithProgressBar_YieldsAllItems_ReportsIndexTotalName_AndCompletes()
+    {
+        var host = new CapturingHost();
+        var items = new[] { "a", "b", "c" };
+
+        var seen = items.WithProgressBar(host, "Doing things", x => x).ToList();
+
+        Assert.Equal(items, seen); // pass-through, unchanged order
+
+        var processing = host.All.FindAll(r => r.RecordType == ProgressRecordType.Processing);
+        Assert.Equal(3, processing.Count);
+        Assert.Equal("Doing things", processing[0].Activity);
+        Assert.Equal("1/3 a", processing[0].StatusDescription);
+        Assert.Equal("2/3 b", processing[1].StatusDescription);
+        Assert.Equal("3/3 c", processing[2].StatusDescription);
+        Assert.Contains(host.All, r => r.RecordType == ProgressRecordType.Completed);
+    }
+
+    [Fact]
+    public void WithProgressBar_NoGetName_ShowsIndexTotalOnly()
+    {
+        var host = new CapturingHost();
+
+        _ = new[] { 10, 20 }.WithProgressBar(host, "Counting").ToList();
+
+        var processing = host.All.FindAll(r => r.RecordType == ProgressRecordType.Processing);
+        Assert.Equal(new[] { "1/2", "2/2" }, processing.ConvertAll(r => r.StatusDescription));
     }
 
     [Theory]

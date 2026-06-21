@@ -61,7 +61,9 @@ public abstract class RemoveFolderEntityCmdletBase<TEntity> : OrchestratorPSCmdl
 
                 foreach (var entity in entities
                     .FilterByWildcards(getName, wpName)
-                    .OrderBy(getName).WithCancellation(cancelHandler.Token))
+                    .OrderBy(getName)
+                    .WithProgressBar(this, $"Removing {EntityNoun} in {folder.GetPSPath()}", getName)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(getPSPath(entity), $"Remove {EntityNoun}"))
                     {
