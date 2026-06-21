@@ -132,7 +132,9 @@ public class UpdateApiTriggerCmdlet : OrchestratorPSCmdlet
 
             var targetTriggers = triggers.SelectByWildcards(t => t?.Name, wpName).OrderBy(t => t.Name);
 
-            foreach (var trigger in targetTriggers.WithCancellation(cancelHandler.Token))
+            foreach (var trigger in targetTriggers
+                .WithProgressBar(this, $"Updating API triggers in {folder.GetPSPath()}", t => t.Name)
+                .WithCancellation(cancelHandler.Token))
             {
                 string target = trigger.GetPSPath();
 

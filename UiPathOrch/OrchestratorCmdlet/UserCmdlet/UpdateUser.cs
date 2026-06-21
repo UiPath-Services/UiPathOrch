@@ -184,7 +184,9 @@ public class UpdateUserCmdlet : OrchestratorPSCmdlet
                 // name" semantics of the former SelectByWildcards.)
                 var targetUsers = users.SelectByWildcardsAny([u => u?.UserName, u => u?.EmailAddress], wpUserName).OrderBy(u => u.UserName);
 
-                foreach (var user in targetUsers.WithCancellation(cancelHandler.Token))
+                foreach (var user in targetUsers
+                    .WithProgressBar(this, $"Updating users in {drive.NameColonSeparator}", u => u.UserName)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     string target = user.GetPSPath();
                     if (!string.IsNullOrEmpty(user.FullName))

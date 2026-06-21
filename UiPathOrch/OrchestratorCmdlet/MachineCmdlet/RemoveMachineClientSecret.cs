@@ -174,7 +174,8 @@ public class RemoveMachineClientSecretCmdlet : OrchestratorPSCmdlet
                 foreach (var secret in secrets
                     .Select(secret => (secret, secret.id.ToString()))
                     .FilterByWildcards(secret_id => secret_id.Item2, wpSecretId)
-                    .OrderBy(secret_id => secret_id.Item2))
+                    .OrderBy(secret_id => secret_id.Item2)
+                    .WithProgressBar(this, $"Removing client secrets of {m.GetPSPath()}", s => s.Item2))
                 {
                     cancelHandler.Token.ThrowIfCancellationRequested();
                     string target = System.IO.Path.Combine(m.GetPSPath(), secret.Item2!);

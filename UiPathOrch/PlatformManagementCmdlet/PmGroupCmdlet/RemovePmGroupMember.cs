@@ -154,7 +154,9 @@ public class RemovePmGroupMemberCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var param in _parameterSets
             .OrderBy(p => p.Key.drive.Name)
-            .ThenBy(p => p.Key.group.name).WithCancellation(cancelHandler.Token))
+            .ThenBy(p => p.Key.group.name)
+            .WithProgressBar(this, "Removing group members", p => p.Key.group.name)
+            .WithCancellation(cancelHandler.Token))
         {
             var (drive, group) = param.Key;
             var toBeRemoved = param.Value;

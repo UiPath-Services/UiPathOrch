@@ -40,7 +40,9 @@ public class RemoveTmTestCaseCmdlet : OrchestratorPSCmdlet
 
                 foreach (var testCase in entities
                     .FilterByWildcards(e => e?.name, wpName)
-                    .OrderBy(e => e.name).WithCancellation(cancelHandler.Token))
+                    .OrderBy(e => e.name)
+                    .WithProgressBar(this, $"Removing test cases in {project.GetPSPath()}", e => e.name)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(testCase.GetPSPath(), "Remove TmTestCase"))
                     {

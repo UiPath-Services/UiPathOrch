@@ -45,7 +45,9 @@ public class RemoveUserLicenseGroup : OrchestratorPSCmdlet
                 continue;
             }
 
-            foreach (var group in groups.WithCancellation(cancelHandler.Token))
+            foreach (var group in groups
+                .WithProgressBar(this, $"Removing licensed groups in {drive.NameColonSeparator}", g => g.name)
+                .WithCancellation(cancelHandler.Token))
             {
                 if (ShouldProcess(group.GetPSPath(drive.NameColonSeparator), "Remove PmLicensedGroup"))
                 {

@@ -127,7 +127,9 @@ public class RemoveCalendarDateCmdlet : OrchestratorPSCmdlet
     protected override void EndProcessing()
     {
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var p in _parameters.WithCancellation(cancelHandler.Token))
+        foreach (var p in _parameters
+            .WithProgressBar(this, "Updating calendars", kv => kv.Key.calendarName)
+            .WithCancellation(cancelHandler.Token))
         {
             var (drive, calendarName) = p.Key;
             var (calendar, excludedDates) = p.Value;

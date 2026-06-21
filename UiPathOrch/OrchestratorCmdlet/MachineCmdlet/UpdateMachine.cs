@@ -139,7 +139,9 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
             var existingMachines = drive.Machines.Get();
             var targetMachines = existingMachines.FilterByWildcards(m => m?.Name, wpName);
 
-            foreach (var machine in targetMachines.OrderBy(m => m.Name).WithCancellation(cancelHandler.Token))
+            foreach (var machine in targetMachines.OrderBy(m => m.Name)
+                .WithProgressBar(this, $"Updating machines in {drive.NameColonSeparator}", m => m.Name)
+                .WithCancellation(cancelHandler.Token))
             {
                 if (machine.Scope == "AutomationCloudRobot")
                 {

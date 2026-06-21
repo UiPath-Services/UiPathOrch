@@ -353,9 +353,10 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
                 proc => proc,
                 proc => drive.ReleasesDetailed.Get(folder, proc.Id!.Value));
 
+            using var reporter = new ProgressReporter(this, 1, results.Count, $"Updating processes in {folder.GetPSPath()}");
             foreach (var result in results.WithCancellation(cancelHandler.Token))
             {
-                var process = result.GetResult(cancelHandler.Token);
+                var process = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (process is null) continue;
 
                 string target = process.GetPSPath();

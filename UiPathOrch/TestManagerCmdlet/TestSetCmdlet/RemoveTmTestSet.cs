@@ -39,7 +39,9 @@ public class RemoveTmTestSetCmdlet : OrchestratorPSCmdlet
 
                 foreach (var testSet in entity
                     .FilterByWildcards(e => e?.name, wpName)
-                    .OrderBy(e => e.objKey!, ObjKeyComparer.Instance).WithCancellation(cancelHandler.Token))
+                    .OrderBy(e => e.objKey!, ObjKeyComparer.Instance)
+                    .WithProgressBar(this, $"Removing test sets in {project.GetPSPath()}", e => e.name)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(testSet.GetPSPath(), "Remove TmTestSet"))
                     {

@@ -90,7 +90,9 @@ public class RemoveJobMediaCmdlet : OrchestratorPSCmdlet
             try
             {
                 string path = folder.GetPSPath();
-                foreach (var jobId in JobId!.WithCancellation(cancelHandler.Token))
+                foreach (var jobId in JobId!
+                    .WithProgressBar(this, $"Removing job media in {path}", id => $"Job {id}")
+                    .WithCancellation(cancelHandler.Token))
                 {
                     string target = path + System.IO.Path.DirectorySeparatorChar + jobId;
                     if (ShouldProcess(target, "Remove JobMedia"))

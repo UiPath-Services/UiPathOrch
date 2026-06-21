@@ -40,7 +40,9 @@ public class RemoveTmRequirementCmdlet : OrchestratorPSCmdlet
 
                 foreach (var requirement in requirements
                     .FilterByWildcards(e => e?.name, wpName)
-                    .OrderBy(e => e.objKey!, ObjKeyComparer.Instance).WithCancellation(cancelHandler.Token))
+                    .OrderBy(e => e.objKey!, ObjKeyComparer.Instance)
+                    .WithProgressBar(this, $"Removing requirements in {project.GetPSPath()}", e => e.name)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     var target = requirement.GetPSPath();
                     if (ShouldProcess(target, "Remove TmRequirement"))

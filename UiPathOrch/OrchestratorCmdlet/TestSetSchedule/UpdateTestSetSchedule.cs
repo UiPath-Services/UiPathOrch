@@ -93,7 +93,9 @@ public class UpdateTestSetScheduleCmdlet : OrchestratorPSCmdlet
 
             var targetSchedules = schedules.SelectByWildcards(s => s?.Name, wpName).OrderBy(s => s.Name);
 
-            foreach (var schedule in targetSchedules.WithCancellation(cancelHandler.Token))
+            foreach (var schedule in targetSchedules
+                .WithProgressBar(this, $"Updating test schedules in {folder.GetPSPath()}", s => s.Name)
+                .WithCancellation(cancelHandler.Token))
             {
                 string target = schedule.GetPSPath();
 

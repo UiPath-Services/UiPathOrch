@@ -129,7 +129,8 @@ public class RemoveRoleFromUserCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
-            foreach (var user in users)
+            foreach (var user in users
+                .WithProgressBar(this, $"Removing roles from users in {drive.NameColonSeparator}", u => u.UserName))
             {
                 if (user.RolesList is null || user.RolesList.Length == 0) continue;
 

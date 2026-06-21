@@ -71,7 +71,9 @@ public class RemoveUserCmdlet : OrchestratorPSCmdlet
                     continue;
                 }
 
-                foreach (var user in targetUsers.OrderBy(u => u.UserName).WithCancellation(cancelHandler.Token))
+                foreach (var user in targetUsers.OrderBy(u => u.UserName)
+                    .WithProgressBar(this, $"Removing users in {drive.NameColonSeparator}", u => u.UserName)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     string target = user.GetPSPath();
                     if (!string.IsNullOrEmpty(user.FullName))

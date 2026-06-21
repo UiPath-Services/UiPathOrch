@@ -50,7 +50,9 @@ public class RemoveLibraryCmdlet : OrchestratorPSCmdlet
                             .FilterByWildcards(v => v?.Version, wpVersion);
                         //.OrderBy(v => v.Version!, VersionComparer.Instance);
 
-                        foreach (var matchingVersion in matchingVersions.WithCancellation(cancelHandler.Token))
+                        foreach (var matchingVersion in matchingVersions
+                            .WithProgressBar(this, $"Removing versions of {library.Id} in {drive.NameColonSeparator}", v => v.Version)
+                            .WithCancellation(cancelHandler.Token))
                         {
                             string target = $"{drive.NameColonSeparator}{matchingVersion.Id}:{matchingVersion.Version}";
                             if (ShouldProcess(target, "Remove Library"))

@@ -205,7 +205,9 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
             {
                 if (Id is not null && Id.Length != 0)
                 {
-                    foreach (var id in Id.WithCancellation(cancelHandler.Token))
+                    foreach (var id in Id
+                        .WithProgressBar(this, $"Updating process versions in {folder.GetPSPath()}", id => id.ToString())
+                        .WithCancellation(cancelHandler.Token))
                     {
                         string target = System.IO.Path.Combine(folder.GetPSPath(), id.ToString());
                         if (Version is null)

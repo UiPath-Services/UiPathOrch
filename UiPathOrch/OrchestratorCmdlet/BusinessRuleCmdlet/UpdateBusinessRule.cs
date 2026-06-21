@@ -68,7 +68,9 @@ class UpdateBusinessRuleCmdlet : OrchestratorPSCmdlet
                     .OrderBy(r => r.Name)
                     .ToList();
 
-                foreach (var existing in rules.WithCancellation(cancelHandler.Token))
+                foreach (var existing in rules
+                    .WithProgressBar(this, $"Updating business rules in {folder.GetPSPath()}", r => r.Name)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     if (string.IsNullOrEmpty(existing.Id)) continue;
 

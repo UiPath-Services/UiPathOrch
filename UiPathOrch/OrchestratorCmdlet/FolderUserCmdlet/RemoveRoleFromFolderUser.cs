@@ -230,7 +230,9 @@ public class RemoveRoleFromFolderUserCmdlet : OrchestratorPSCmdlet
                         .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
                         .ToList();
 
-                    foreach (var user in editingUsers.OrderBy(user => user.UserEntity!.FullName).WithCancellation(cancelHandler.Token))
+                    foreach (var user in editingUsers.OrderBy(user => user.UserEntity!.FullName)
+                        .WithProgressBar(this, $"Removing roles from folder users in {folder.GetPSPath()}", u => u.UserEntity?.UserName)
+                        .WithCancellation(cancelHandler.Token))
                     {
                         IEnumerable<SimpleRole> existingRoles = user.Roles;
 

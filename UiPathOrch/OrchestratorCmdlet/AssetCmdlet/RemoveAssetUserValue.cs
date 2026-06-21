@@ -152,7 +152,9 @@ public class RemoveAssetUserValueCmdlet : OrchestratorPSCmdlet
                     .ToHashSet();
             }
 
-            foreach (var existing in assets.WithCancellation(cancelHandler.Token))
+            foreach (var existing in assets
+                .WithProgressBar(this, $"Removing asset user values in {folder.GetPSPath()}", a => a.Name)
+                .WithCancellation(cancelHandler.Token))
             {
                 if (existing.UserValues is null || existing.UserValues.Count == 0) continue;
 

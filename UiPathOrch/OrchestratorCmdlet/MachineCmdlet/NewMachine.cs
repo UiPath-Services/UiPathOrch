@@ -104,7 +104,9 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
-            foreach (var name in Name!.WithCancellation(cancelHandler.Token))
+            foreach (var name in Name!
+                .WithProgressBar(this, $"Creating machines in {drive.NameColonSeparator}", name => name)
+                .WithCancellation(cancelHandler.Token))
             {
                 if (Scope == "PersonalWorkspace")
                 {

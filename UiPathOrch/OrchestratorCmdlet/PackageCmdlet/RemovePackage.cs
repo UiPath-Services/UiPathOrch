@@ -178,8 +178,9 @@ public class RemovePackageCmdlet : OrchestratorPSCmdlet
                         var versions = drive.GetPackageVersions(folder, package.Id!);
 
                         foreach (var version in versions
-                            .FilterByWildcards(v => v?.Version, wpVersion))
-                        //.OrderBy(v => v.Version!, VersionComparer.Instance))
+                            .FilterByWildcards(v => v?.Version, wpVersion)
+                            //.OrderBy(v => v.Version!, VersionComparer.Instance)
+                            .WithProgressBar(this, $"Removing versions of {package.Id} in {folder.GetPSPath()}", v => v.Version))
                         {
                             cancelHandler.Token.ThrowIfCancellationRequested();
 

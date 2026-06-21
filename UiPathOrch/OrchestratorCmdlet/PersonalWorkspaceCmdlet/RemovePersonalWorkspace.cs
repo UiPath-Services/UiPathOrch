@@ -130,7 +130,8 @@ public class RemovePersonalWorkspaceCmdlet : OrchestratorPSCmdlet
                     .Where(ws => ws is not null && ws.Id is not null)
                     .FilterByWildcards(ws => ws!.Name, wpName)
                     .FilterByWildcards(ws => ws!.OwnerName, wpOwnerName)
-                    .OrderBy(ws => ws.OwnerName))
+                    .OrderBy(ws => ws.OwnerName)
+                    .WithProgressBar(this, $"Removing personal workspaces in {drive.NameColonSeparator}", ws => ws.Name))
                 {
                     if (ShouldProcess(ws.GetPSPath(), "Remove PersonalWorkspace"))
                     {

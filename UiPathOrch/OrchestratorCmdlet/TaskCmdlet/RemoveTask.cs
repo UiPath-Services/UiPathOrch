@@ -40,7 +40,9 @@ public class RemoveTaskCmdlet : OrchestratorPSCmdlet
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
         foreach (var (drive, folder) in drivesFolders)
         {
-            foreach (var taskId in Id!.WithCancellation(cancelHandler.Token))
+            foreach (var taskId in Id!
+                .WithProgressBar(this, $"Removing tasks in {folder.GetPSPath()}", id => $"Task {id}")
+                .WithCancellation(cancelHandler.Token))
             {
                 RemoveOne(drive, folder, taskId);
             }

@@ -118,7 +118,8 @@ public class RemoveDuRoleFromDuUserCmdlet : OrchestratorPSCmdlet
                 foreach (var user in entities
                     .FilterByWildcards(u => u?.Name, wpName)
                     //.FilterByWildcards(u => u?.UserName, wpUserName)
-                    .OrderBy(u => u.Name))
+                    .OrderBy(u => u.Name)
+                    .WithProgressBar(this, $"Removing roles from DU users in {project.GetPSPath()}", u => u.Name))
                 {
                     var existingRoles = user.roleAssignmentDtos;
                     if (existingRoles is null || existingRoles.Length == 0) continue;
