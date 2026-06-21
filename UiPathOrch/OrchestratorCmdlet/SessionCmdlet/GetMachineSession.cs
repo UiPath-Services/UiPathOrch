@@ -130,11 +130,12 @@ public class GetMachineSessionCmdlet : OrchestratorPSCmdlet
             df => df.drive.MachineSessionRuntimesByFolder.Fetch(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting machine sessions");
         foreach (var result in results)
         {
             try
             {
-                var entities = result.GetResult(cancelHandler.Token);
+                var entities = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (entities is null) continue;
 
                 var (drive, folder) = result.Source;

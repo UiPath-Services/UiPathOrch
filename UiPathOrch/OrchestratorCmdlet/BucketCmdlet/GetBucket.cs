@@ -103,11 +103,12 @@ public class GetBucketCmdlet : OrchestratorPSCmdlet
             df => df.drive.Buckets.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting buckets");
         foreach (var result in results)
         {
             try
             {
-                var entities = result.GetResult(cancelHandler.Token);
+                var entities = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (entities is null) continue;
 
                 var targetEntities = entities

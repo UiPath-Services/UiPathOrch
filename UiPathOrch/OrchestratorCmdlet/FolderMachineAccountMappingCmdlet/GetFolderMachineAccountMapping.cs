@@ -93,11 +93,12 @@ public class GetFolderMachineAccountMappingCmdlet : OrchestratorPSCmdlet
             });
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting folder machine account mappings");
         foreach (var result in results.WithCancellation(cancelHandler.Token))
         {
             try
             {
-                var robotsList = result.GetResult(cancelHandler.Token);
+                var robotsList = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (robotsList is null) continue;
 
                 foreach (var robots in robotsList)

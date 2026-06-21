@@ -91,10 +91,11 @@ public static class EastAsianWidth
         return -1;
     }
 
-    // Returns s with every maximal run of wide code points replaced by a single ASCII "...",
-    // leaving the narrow (one-cell) segments intact. The result is therefore ENTIRELY narrow
-    // -- safe for the #21293 renderer -- while preserving the readable ASCII parts of a mixed
-    // name: "Invoice請求Folder" -> "Invoice...Folder", "請求書" -> "...", "A請B求C" -> "A...B...C".
+    // Returns s with every maximal run of wide code points replaced by "[N]" where N is the
+    // number of wide characters in that run, leaving the narrow (one-cell) segments intact.
+    // The result is therefore ENTIRELY narrow -- safe for the #21293 renderer -- while
+    // preserving the readable ASCII parts and signalling how much was hidden where:
+    // "請求書" -> "[3]", "Invoice請求Folder" -> "Invoice[2]Folder", "A請B求C" -> "A[1]B[1]C".
     // Returns the input unchanged when it is null/empty or already all-narrow.
     public static string? CollapseWide(string? s)
     {
@@ -104,25 +105,29 @@ public static class EastAsianWidth
         }
 
         var sb = new StringBuilder(s.Length);
-        bool inWideRun = false;
+        int runWidth = 0; // wide characters seen in the current run
         int offset = 0;
         foreach (Rune rune in s.EnumerateRunes())
         {
             int len = rune.Utf16SequenceLength;
             if (IsWide(rune.Value))
             {
-                if (!inWideRun)
-                {
-                    sb.Append("...");
-                    inWideRun = true;
-                }
+                runWidth++;
             }
             else
             {
+                if (runWidth > 0)
+                {
+                    sb.Append('[').Append(runWidth).Append(']');
+                    runWidth = 0;
+                }
                 sb.Append(s, offset, len);
-                inWideRun = false;
             }
             offset += len;
+        }
+        if (runWidth > 0)
+        {
+            sb.Append('[').Append(runWidth).Append(']');
         }
 
         return sb.ToString();

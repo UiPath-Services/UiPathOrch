@@ -86,11 +86,12 @@ public class GetTriggerCmdlet : OrchestratorPSCmdlet
         );
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting triggers");
         foreach (var result in results.WithCancellation(cancelHandler.Token))
         {
             try
             {
-                var entities = result.GetResult(cancelHandler.Token);
+                var entities = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (entities is null) continue;
 
                 var targetEntities = entities

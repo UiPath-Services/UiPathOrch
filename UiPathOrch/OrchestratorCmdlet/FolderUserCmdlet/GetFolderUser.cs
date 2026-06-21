@@ -199,11 +199,12 @@ public class GetFolderUserCmdlet : OrchestratorPSCmdlet
             });
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting folder users");
         foreach (var result in results)
         {
             try
             {
-                var userRoles = result.GetResult(cancelHandler.Token);
+                var userRoles = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (userRoles is null) continue;
 
                 var (drive, _) = result.Source;

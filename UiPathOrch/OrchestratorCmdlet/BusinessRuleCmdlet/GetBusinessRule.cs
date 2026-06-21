@@ -40,11 +40,12 @@ class GetBusinessRuleCmdlet : OrchestratorPSCmdlet
             df => df.drive.BusinessRules.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting business rules");
         foreach (var result in results)
         {
             try
             {
-                var rules = result.GetResult(cancelHandler.Token);
+                var rules = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (rules is null) continue;
 
                 WriteObject(rules

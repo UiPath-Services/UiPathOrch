@@ -129,11 +129,12 @@ public class GetTestSetScheduleCmdlet : OrchestratorPSCmdlet
             df => df.drive.TestSetSchedules.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting test schedules");
         foreach (var result in results)
         {
             try
             {
-                var entities = result.GetResult(cancelHandler.Token);
+                var entities = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (entities is null) continue;
 
                 var filtered = entities

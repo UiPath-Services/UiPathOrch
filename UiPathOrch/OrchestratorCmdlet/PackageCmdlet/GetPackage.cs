@@ -38,11 +38,12 @@ public class GetPackageCmdlet : OrchestratorPSCmdlet
             df => df.drive.GetPackages(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting packages");
         foreach (var result in results)
         {
             try
             {
-                var packages = result.GetResult(cancelHandler.Token);
+                var packages = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (packages is null) continue;
 
                 WriteObject(packages

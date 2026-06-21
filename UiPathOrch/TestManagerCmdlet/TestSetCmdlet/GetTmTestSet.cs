@@ -48,11 +48,12 @@ public class GetTmTestSetCmdlet : OrchestratorPSCmdlet
             dp => dp.drive.TmTestSets.Get(dp.project));
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting test sets");
         foreach (var result in results)
         {
             try
             {
-                var entity = result.GetResult(cancelHandler.Token);
+                var entity = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (entity is null) continue;
 
                 WriteObject(entity

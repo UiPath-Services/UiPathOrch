@@ -43,11 +43,12 @@ public class GetJobMediaCmdlet : OrchestratorPSCmdlet
             df => df.drive.JobsHavingExecutionMedia.Fetch(df.folder, skip: skip, first: first));
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting job media");
         foreach (var result in results)
         {
             try
             {
-                var recordings = result.GetResult(cancelHandler.Token);
+                var recordings = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (recordings is null) continue;
 
                 WriteObject(recordings, true);

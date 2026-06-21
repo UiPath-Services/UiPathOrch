@@ -54,11 +54,12 @@ public class GetTestSetDetailCmdlet : OrchestratorPSCmdlet
             df => df.drive.TestSets.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting test set details");
         foreach (var result in results.WithCancellation(cancelHandler.Token))
         {
             try
             {
-                var entities = result.GetResult(cancelHandler.Token);
+                var entities = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (entities is null) continue;
 
                 var (drive, folder) = result.Source;

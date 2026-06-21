@@ -49,11 +49,12 @@ public class GetTaskCmdlet : OrchestratorPSCmdlet
             df => df.drive.Tasks.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting tasks");
         foreach (var result in results)
         {
             try
             {
-                var tasks = result.GetResult(cancelHandler.Token);
+                var tasks = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (tasks is null) continue;
 
                 WriteObject(tasks

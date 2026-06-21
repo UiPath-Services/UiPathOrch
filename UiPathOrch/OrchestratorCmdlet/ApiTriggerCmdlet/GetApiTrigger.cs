@@ -137,11 +137,12 @@ public class GetApiTriggerCmdlet : OrchestratorPSCmdlet
             df => df.drive.ApiTriggers.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting API triggers");
         foreach (var result in results)
         {
             try
             {
-                var triggers = result.GetResult(cancelHandler.Token);
+                var triggers = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (triggers is null) continue;
 
                 var filtered = triggers

@@ -43,27 +43,27 @@ public class ProgressTextWidthTests
         => Assert.True(EastAsianWidth.ContainsWideChar(s));
 
     [Theory]
-    [InlineData("Invoice", "Invoice")]                 // all narrow -> unchanged
-    [InlineData("請求書", "...")]                       // all wide -> single "..."
-    [InlineData("請求Invoice", "...Invoice")]           // leading wide run
-    [InlineData("Invoice請求", "Invoice...")]           // trailing wide run
-    [InlineData("Invoice請求Folder", "Invoice...Folder")] // interior wide run keeps both sides
-    [InlineData("A請B求C", "A...B...C")]                // multiple wide runs
-    [InlineData("Folder 請求", "Folder ...")]           // narrow space before the run is kept
-    [InlineData("队列\U0001F600x", "...x")]             // surrogate-pair emoji collapses too
-    public void CollapseWide_ReplacesEachWideRunWithEllipsis(string input, string expected)
+    [InlineData("Invoice", "Invoice")]                  // all narrow -> unchanged
+    [InlineData("請求書", "[3]")]                         // all wide -> [count]
+    [InlineData("請求Invoice", "[2]Invoice")]            // leading wide run
+    [InlineData("Invoice請求", "Invoice[2]")]            // trailing wide run
+    [InlineData("Invoice請求Folder", "Invoice[2]Folder")] // interior wide run keeps both sides
+    [InlineData("A請B求C", "A[1]B[1]C")]                 // multiple wide runs, each counted
+    [InlineData("Folder 請求", "Folder [2]")]            // narrow space before the run is kept
+    [InlineData("队列\U0001F600x", "[3]x")]              // 2 CJK + 1 surrogate-pair emoji = one run of 3
+    public void CollapseWide_ReplacesEachWideRunWithCount(string input, string expected)
         => Assert.Equal(expected, EastAsianWidth.CollapseWide(input));
 
     [Fact]
-    public void WriteProgress_BuggyHost_LeadingWideName_ShowsBareEllipsis()
+    public void WriteProgress_BuggyHost_LeadingWideName_ShowsWideRunCount()
     {
         var host = new CapturingHost(rendersWideProgress: false);
         using var reporter = new ProgressReporter(host, id: 1, totalNum: 10, activity: "Copy");
 
         reporter.WriteProgress(3, "請求書キュー");
 
-        // Fully wide -> single "..." (still signals a hidden name, vs. passing none).
-        Assert.Equal("3/10 ...", host.Last!.StatusDescription);
+        // Fully wide (6 chars) -> "[6]" (still signals a hidden name, vs. passing none).
+        Assert.Equal("3/10 [6]", host.Last!.StatusDescription);
     }
 
     [Fact]
@@ -74,7 +74,7 @@ public class ProgressTextWidthTests
 
         reporter.WriteProgress(3);
 
-        // No name at all -> just index/total, no "..." (distinct from a hidden wide name).
+        // No name at all -> just index/total, no marker (distinct from a hidden wide name).
         Assert.Equal("3/10", host.Last!.StatusDescription);
     }
 
@@ -86,7 +86,7 @@ public class ProgressTextWidthTests
 
         reporter.WriteProgress(3, "Invoice請求Folder");
 
-        Assert.Equal("3/10 Invoice...Folder", host.Last!.StatusDescription);
+        Assert.Equal("3/10 Invoice[2]Folder", host.Last!.StatusDescription);
     }
 
     [Fact]
@@ -110,7 +110,7 @@ public class ProgressTextWidthTests
         // otherwise the bug just moves from the status line to the activity line.
         reporter.WriteProgress(3, "Invoice", "Copying assets to Orch2:\\営業");
 
-        Assert.Equal("Copying assets to Orch2:\\...", host.Last!.Activity);
+        Assert.Equal("Copying assets to Orch2:\\[2]", host.Last!.Activity);
         Assert.Equal("3/10 Invoice", host.Last!.StatusDescription);
     }
 
@@ -125,7 +125,7 @@ public class ProgressTextWidthTests
 
         reporter.WriteProgress(1, "A");
 
-        Assert.Equal("Copying assets to Orch2:\\...", host.Last!.Activity);
+        Assert.Equal("Copying assets to Orch2:\\[2]", host.Last!.Activity);
     }
 
     [Fact]

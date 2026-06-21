@@ -112,11 +112,12 @@ public class GetTriggerDetailCmdlet : OrchestratorPSCmdlet
         );
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(caller, 1, results.Count, "Getting trigger details");
         foreach (var result in results.WithCancellation(cancelHandler.Token))
         {
             try
             {
-                var entities = result.GetResult(cancelHandler.Token);
+                var entities = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (entities is null) continue;
 
                 var (drive, folder) = result.Source;

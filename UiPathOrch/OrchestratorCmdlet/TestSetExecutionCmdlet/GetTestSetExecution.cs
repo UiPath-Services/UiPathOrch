@@ -263,11 +263,12 @@ public class GetTestSetExecutionCmdlet : OrchestratorPSCmdlet
         );
 
         using var cancelHandler = new ConsoleCancelHandler();
+        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting test set executions");
         foreach (var result in results)
         {
             try
             {
-                var entities = result.GetResult(cancelHandler.Token);
+                var entities = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (entities is null) continue;
 
                 // This cmdlet supports -Skip and -First, so output must not be sorted here
