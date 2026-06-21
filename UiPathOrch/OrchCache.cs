@@ -1546,7 +1546,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
     // 1st key: folderId
     // 2nd key: TIndexEntity.Id
     // Inner must be ConcurrentDictionary too — cmdlets like Get-OrchTestDataQueueItem
-    // (ChainedThreadPool Phase2 over the queues in one folder) and
+    // (OrchThreadPool.RunForEach over the queues in one folder) and
     // Get-OrchProcessRequirement (OrchThreadPool.RunForEach over the releases in
     // one folder) hit the inner dict from multiple threads sharing the same
     // folderId. A plain Dictionary can throw InvalidOperationException on rehash
