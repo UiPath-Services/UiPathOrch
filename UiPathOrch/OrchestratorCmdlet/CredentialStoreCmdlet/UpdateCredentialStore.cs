@@ -61,7 +61,9 @@ public class UpdateCredentialStoreCmdlet : OrchestratorPSCmdlet
 
             foreach (var store in stores
                 .FilterByWildcards(s => s?.Name, wpName)
-                .OrderBy(s => s.Name).WithCancellation(cancelHandler.Token))
+                .OrderBy(s => s.Name)
+                .WithProgressBar(this, $"Updating credential stores in {drive.NameColonSeparator}", s => s.Name)
+                .WithCancellation(cancelHandler.Token))
             {
                 string target = store.GetPSPath();
 

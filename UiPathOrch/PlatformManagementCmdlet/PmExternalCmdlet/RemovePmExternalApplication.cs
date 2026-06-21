@@ -39,7 +39,9 @@ public class RemovePmExternalApplicationCmdlet : OrchestratorPSCmdlet
 
                 foreach (var app in entities
                     .FilterByWildcards(e => e?.name, wpName)
-                    .OrderBy(e => e.name).WithCancellation(cancelHandler.Token))
+                    .OrderBy(e => e.name)
+                    .WithProgressBar(this, $"Removing PmExternalApplications in {drive.NameColonSeparator}", e => e.name)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     string target = app.GetPSPath(drive.NameColonSeparator);
 

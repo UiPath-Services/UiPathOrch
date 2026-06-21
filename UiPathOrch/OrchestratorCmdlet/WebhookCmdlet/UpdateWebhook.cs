@@ -84,7 +84,9 @@ public class UpdateWebhookCmdlet : OrchestratorPSCmdlet
 
             foreach (var webhook in webhooks
                 .FilterByWildcards(e => e?.Name, wpName)
-                .OrderBy(e => e.Name).WithCancellation(cancelHandler.Token))
+                .OrderBy(e => e.Name)
+                .WithProgressBar(this, $"Updating webhooks in {drive.NameColonSeparator}", e => e.Name)
+                .WithCancellation(cancelHandler.Token))
             {
                 // Build a PATCH payload with only the properties that need updating.
                 // Properties left null are excluded from JSON serialization (WhenWritingNull).

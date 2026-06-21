@@ -35,7 +35,9 @@ public class RemovePmRobotAccountCmdlet : OrchestratorPSCmdlet
                 foreach (var robot in entities
                     .Where(r => r is not null)
                     .FilterByWildcards(r => r!.name!, wpName)
-                    .OrderBy(r => r!.name).WithCancellation(cancelHandler.Token))
+                    .OrderBy(r => r!.name)
+                    .WithProgressBar(this, $"Removing PmRobotAccounts in {drive.NameColonSeparator}", r => r!.name)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     string target = robot.GetPSPath(drive.NameColonSeparator);
                     if (ShouldProcess(target, "Remove PmRobotAccount"))

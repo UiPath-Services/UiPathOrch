@@ -67,7 +67,9 @@ public class UpdatePmUserCmdlet : OrchestratorPSCmdlet
             {
                 var users = drive.PmUsers.Get();
                 var targetUsers = users.SelectByWildcards(u => u?.email, wpEmail);
-                foreach (var user in targetUsers.OrderBy(u => u.email).WithCancellation(cancelHandler.Token))
+                foreach (var user in targetUsers.OrderBy(u => u.email)
+                    .WithProgressBar(this, $"Updating PmUsers in {drive.NameColonSeparator}", u => u.email)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     UiPath.PowerShell.Entities.UpdateUserCommand src = new()
                     {

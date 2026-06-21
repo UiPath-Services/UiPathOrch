@@ -38,7 +38,9 @@ public class RemovePmGroupCmdlet : OrchestratorPSCmdlet
                 foreach (var group in groups
                     .Where(g => g is not null)
                     .FilterByWildcards(g => g?.name!, wpGroupName)
-                    .OrderBy(g => g?.name).WithCancellation(cancelHandler.Token))
+                    .OrderBy(g => g?.name)
+                    .WithProgressBar(this, $"Removing PmGroups in {drive.NameColonSeparator}", g => g?.name)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     if (ShouldProcess(group!.GetPSPath(drive.NameColonSeparator), "Remove PmGroup"))
                     {

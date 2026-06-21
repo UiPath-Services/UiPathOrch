@@ -62,7 +62,9 @@ public class RemovePmUserCmdlet : OrchestratorPSCmdlet
                     continue;
                 }
 
-                foreach (var user in targetUsers.OrderBy(u => u.email).WithCancellation(cancelHandler.Token))
+                foreach (var user in targetUsers.OrderBy(u => u.email)
+                    .WithProgressBar(this, $"Removing PmUsers in {drive.NameColonSeparator}", u => u.email)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     if (user.id == currentUser?.Key) continue;
 
