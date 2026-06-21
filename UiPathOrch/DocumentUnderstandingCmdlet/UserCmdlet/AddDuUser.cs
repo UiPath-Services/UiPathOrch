@@ -270,7 +270,9 @@ public class AddDuRoleToDuUserCmdlet : OrchestratorPSCmdlet
             var drive = lines.Key;
             var (_, tenantKey) = drive.ParentDrive.GetTenantId();
 
-            foreach (var line in lines.WithCancellation(cancelHandler.Token))
+            foreach (var line in lines
+                .WithProgressBar(this, $"Adding DU users in {drive.NameColonSeparator}", l => l.Key.name)
+                .WithCancellation(cancelHandler.Token))
             {
                 var project = line.Key.Item1.Item2;
                 var type = line.Key.type;

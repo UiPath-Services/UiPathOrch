@@ -227,7 +227,8 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
         {
             var (drive, folder) = param.Key;
 
-            foreach (var groupByFolder in param)
+            foreach (var groupByFolder in param
+                .WithProgressBar(this, $"Adding users to {folder.GetPSPath()}", g => g.userName))
             {
                 var (type, userName, roles, _, _) = groupByFolder;
 
