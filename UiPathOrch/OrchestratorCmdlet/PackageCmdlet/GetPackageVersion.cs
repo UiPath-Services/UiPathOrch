@@ -51,11 +51,12 @@ public class GetPackageVersionCmdlet : OrchestratorPSCmdlet
             t => t.drive.GetPackageVersions(t.folder, t.package.Id!),
             cancelHandler.Token);
 
+        using var reporter = new ProgressReporter(this, 1, 0, "Getting package versions");
         foreach (var task in pool)
         {
             try
             {
-                var versions = task.GetResult(cancelHandler.Token);
+                var versions = pool.GetResultWithProgress(task, reporter, cancelHandler.Token);
                 WriteObject(versions!
                     .FilterByWildcards(v => v?.Version, wpVersion),
                     //.OrderBy(v => v.Version!, VersionComparer.Instance),
