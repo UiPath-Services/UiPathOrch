@@ -63,7 +63,7 @@ public class GetTestDataQueueItemCmdlet : OrchestratorPSCmdlet
         using var queuePool = OrchThreadPool.RunForEach(
             drivesFolders,
             df => df.folder.GetPSPath(),
-            df => (object)df.folder,
+            df => df.folder,
             df => df.drive.TestDataQueues.Get(df.folder)
                 .FilterByWildcards(e => e?.Name, wpName)
                 .Select(q => (df.drive, df.folder, queue: q))
@@ -90,7 +90,7 @@ public class GetTestDataQueueItemCmdlet : OrchestratorPSCmdlet
         using var itemPool = OrchThreadPool.RunForEach(
             queues,
             t => t.queue.GetPSPath(),
-            t => (object)t.queue,
+            t => t.queue,
             t => t.drive.TestDataQueueItems.Get(t.folder, t.queue));
 
         using var itemReporter = new ProgressReporter(this, 1, itemPool.Count, "Getting test data queue items");

@@ -44,7 +44,7 @@ public class GetLibraryVersionCmdlet : OrchestratorPSCmdlet
         using var libraryPool = OrchThreadPool.RunForEach(
             drives,
             drive => drive.NameColonSeparator,
-            drive => (object)drive,
+            drive => drive,
             drive => (HostFeed ? drive.LibrariesInHost.Get() : drive.LibrariesInTenant.Get())
                 .FilterByWildcards(l => l?.Id, wpId)
                 .Select(lib => (drive, lib))
@@ -71,7 +71,7 @@ public class GetLibraryVersionCmdlet : OrchestratorPSCmdlet
         using var versionPool = OrchThreadPool.RunForEach(
             libraries,
             t => t.lib.GetPSPath(),
-            t => (object)t.lib,
+            t => t.lib,
             t => (HostFeed ? t.drive.LibraryVersionsInHostFeed.Get(t.lib.Id!) : t.drive.LibraryVersions.Get(t.lib.Id!))
                 .FilterByWildcards(l => l?.Version, wpVersion));
 

@@ -81,7 +81,7 @@ public class GetPmGroupMemberCmdlet : OrchestratorPSCmdlet
         using var groupPool = OrchThreadPool.RunForEach(
             drives,
             drive => drive.NameColonSeparator,
-            drive => (object)drive,
+            drive => drive,
             drive => drive.PmGroups.Get()
                 .Where(g => g is not null)
                 .FilterByWildcards(g => g?.name!, wpGroupName)
@@ -109,7 +109,7 @@ public class GetPmGroupMemberCmdlet : OrchestratorPSCmdlet
         using var detailPool = OrchThreadPool.RunForEach(
             groups,
             t => t.group.GetPSPath(t.drive.NameColonSeparator),
-            t => (object)t.group,
+            t => t.group,
             t => t.drive.PmGroups.Get(t.group.id));
 
         using var detailReporter = new ProgressReporter(this, 1, detailPool.Count, "Getting group members");

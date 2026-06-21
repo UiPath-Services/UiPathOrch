@@ -47,7 +47,7 @@ public class GetPackageVersionCmdlet : OrchestratorPSCmdlet
         using var packagePool = OrchThreadPool.RunForEach(
             drivesFolders,
             df => df.folder.GetPSPath(),
-            df => (object)df.folder,
+            df => df.folder,
             df => df.drive.GetPackages(df.folder)
                 .FilterByWildcards(p => p?.Id, wpId)
                 .OrderBy(p => p.Id!.ToLower())
@@ -77,7 +77,7 @@ public class GetPackageVersionCmdlet : OrchestratorPSCmdlet
         using var versionPool = OrchThreadPool.RunForEach(
             packages,
             t => t.package.GetPSPath(),
-            t => (object)t.package,
+            t => t.package,
             t => t.drive.GetPackageVersions(t.folder, t.package.Id!));
 
         using var versionReporter = new ProgressReporter(this, 1, versionPool.Count, "Getting package versions");

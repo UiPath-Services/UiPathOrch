@@ -85,7 +85,7 @@ public class GetProcessCmdlet : OrchestratorPSCmdlet
         using var pool = OrchThreadPool.RunForEach(
             drivesFolders,
             df => df.folder.GetPSPath(),
-            df => (object)df.folder,
+            df => df.folder,
             df => df.drive.Releases.Get(df.folder));
 
         using var reporter = new ProgressReporter(this, 1, pool.Count, "Getting processes");

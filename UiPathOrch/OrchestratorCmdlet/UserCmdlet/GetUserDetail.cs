@@ -124,7 +124,7 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
         using var userPool = OrchThreadPool.RunForEach(
             drives,
             drive => drive.NameColonSeparator,
-            drive => (object)drive,
+            drive => drive,
             drive => drive.Users.Get()
                 .FilterByWildcards(u => u?.FullName, fullNameWildcards)
                 // Match both UserName (tenant form) and EmailAddress (canonical);
@@ -155,7 +155,7 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
         using var detailPool = OrchThreadPool.RunForEach(
             users,
             t => t.user.GetPSPath(),
-            t => (object)t.user,
+            t => t.user,
             t => t.drive.UsersDetailed.Get(t.user.Id!.Value));
 
         using var detailReporter = new ProgressReporter(caller, 1, detailPool.Count, "Getting user details");

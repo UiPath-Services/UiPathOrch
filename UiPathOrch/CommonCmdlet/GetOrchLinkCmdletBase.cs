@@ -103,7 +103,7 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
         using var entityPool = OrchThreadPool.RunForEach(
             drivesFolders,
             df => df.folder.GetPSPath(),
-            df => (object)df.folder,
+            df => df.folder,
             df => GetEntities(df.drive, df.folder)
                 .FilterByWildcards(e => GetEntityName(e), wpName)
                 .OrderBy(e => GetEntityName(e))
@@ -132,7 +132,7 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
         using var linkPool = OrchThreadPool.RunForEach(
             entities,
             t => t.folder.GetPSPath(),
-            t => (object)t.folder,
+            t => t.folder,
             t => GetFoldersForEntity(t.drive, t.folder, t.entity));
 
         using var linkReporter = new ProgressReporter(this, 1, linkPool.Count, "Getting links");

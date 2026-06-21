@@ -158,7 +158,7 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
             using var groupPool = OrchThreadPool.RunForEach(
                 drives,
                 drive => drive.NameColonSeparator,
-                drive => (object)drive,
+                drive => drive,
                 drive => drive.PmLicensedGroups.Get()
                     .FilterByWildcards(g => g?.name, wpGroupName)
                     .OrderBy(g => g?.name)
@@ -185,7 +185,7 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
             using var allocationPool = OrchThreadPool.RunForEach(
                 groups,
                 t => t.group.GetPSPath(t.drive.NameColonSeparator),
-                t => (object)t.group,
+                t => t.group,
                 t => t.drive.GetPmLicensedGroupAllocations(t.group));
 
             using var allocationReporter = new ProgressReporter(this, 1, allocationPool.Count, "Getting group allocations");
