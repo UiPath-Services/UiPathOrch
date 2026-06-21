@@ -97,7 +97,9 @@ public abstract class RemoveOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
 
             foreach (var entity in entities
                 .FilterByWildcards(e => GetEntityName(e), wpName)
-                .OrderBy(e => GetEntityName(e)).WithCancellation(cancelHandler.Token))
+                .OrderBy(e => GetEntityName(e))
+                .WithProgressBar(this, $"Removing {LinkNoun} in {folder.GetPSPath()}", e => GetEntityName(e))
+                .WithCancellation(cancelHandler.Token))
             {
                 // Batch all targets for this (folder, entity) into a single API call.
                 // The Share*ToFolders endpoint accepts both ToAdd and ToRemove arrays;
