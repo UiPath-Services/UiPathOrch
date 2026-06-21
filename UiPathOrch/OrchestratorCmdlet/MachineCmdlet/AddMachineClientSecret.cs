@@ -83,7 +83,9 @@ public class AddMachineClientSecretCmdlet : OrchestratorPSCmdlet
                 .FilterByWildcards(m => m?.Name, wpName)
                 .OrderBy(m => m.Name);
 
-            foreach (var m in targetMachines.WithCancellation(cancelHandler.Token))
+            foreach (var m in targetMachines
+                .WithProgressBar(this, $"Adding client secrets in {drive.NameColonSeparator}", m => m.Name)
+                .WithCancellation(cancelHandler.Token))
             {
                 if (ShouldProcess(m.GetPSPath(), "Add ClientSecret"))
                 {

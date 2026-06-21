@@ -213,7 +213,8 @@ public class AddPmGroupMemberCmdlet : OrchestratorPSCmdlet
 
         // Now the actual processing begins.
         // Add members to their groups.
-        foreach (var drivesGroups in _csvLines.GroupBy(g => (g.drive, g.group)))
+        foreach (var drivesGroups in _csvLines.GroupBy(g => (g.drive, g.group))
+            .WithProgressBar(this, "Adding group members", g => g.Key.group.name))
         {
             var (drive, group) = drivesGroups.Key;
 

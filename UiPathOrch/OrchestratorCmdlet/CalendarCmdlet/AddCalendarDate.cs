@@ -126,7 +126,7 @@ public class AddCalendarDateCmdlet : OrchestratorPSCmdlet
 
     protected override void EndProcessing()
     {
-        foreach (var p in _parameters)
+        foreach (var p in _parameters.WithProgressBar(this, "Updating calendars", p => p.Key.calendarName))
         {
             var (drive, calendarName) = p.Key;
             var (calendar, excludedDates) = p.Value;

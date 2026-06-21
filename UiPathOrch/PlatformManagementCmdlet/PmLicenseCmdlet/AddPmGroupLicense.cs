@@ -274,7 +274,9 @@ public class AddPmGroupLicenseCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var parameterSet in _parameterSets
             .OrderBy(p => p.Key.drive.Name)
-            .ThenBy(p => p.Key.groupNameKey).WithCancellation(cancelHandler.Token))
+            .ThenBy(p => p.Key.groupNameKey)
+            .WithProgressBar(this, "Adding licenses to PmGroups", p => p.Key.groupNameKey)
+            .WithCancellation(cancelHandler.Token))
         {
             var drive = parameterSet.Key.drive;
             var (group, codesToAdd) = parameterSet.Value;

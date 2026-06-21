@@ -243,7 +243,8 @@ public class AddRoleToFolderUserCmdlet : OrchestratorPSCmdlet
                     .FilterByWildcards(eu => eu?.UserEntity?.Type, wpType)
                     .ToList();
 
-                foreach (var user in editingUsers.OrderBy(user => user.UserEntity!.FullName))
+                foreach (var user in editingUsers.OrderBy(user => user.UserEntity!.FullName)
+                    .WithProgressBar(this, $"Adding roles to folder users in {folder.GetPSPath()}", u => u.UserEntity?.UserName))
                 {
                     IEnumerable<SimpleRole> existingRoles = user.Roles;
 

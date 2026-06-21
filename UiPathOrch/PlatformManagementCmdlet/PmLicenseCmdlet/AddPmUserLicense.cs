@@ -222,6 +222,7 @@ public class AddPmUserLicenseCmdlet : OrchestratorPSCmdlet
         foreach (var kvp in _parameterSets
             .OrderBy(p => p.Key.drive.Name)
             .ThenBy(p => p.Value.displayName, StringComparer.OrdinalIgnoreCase)
+            .WithProgressBar(this, "Adding licenses to PmUsers", p => p.Value.displayName)
             .WithCancellation(cancelHandler.Token))
         {
             var (drive, userId) = kvp.Key;
