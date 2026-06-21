@@ -93,7 +93,9 @@ public class RemovePmGroupLicenseAllocationCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
-            foreach (var group in targetGroups.OrderBy(g => g?.name).WithCancellation(cancelHandler.Token))
+            foreach (var group in targetGroups.OrderBy(g => g?.name)
+                .WithProgressBar(this, $"Removing allocations in {drive.NameColonSeparator}", g => g?.name)
+                .WithCancellation(cancelHandler.Token))
             {
                 var users = drive.GetPmLicensedGroupAllocations(group);
 
@@ -107,7 +109,9 @@ public class RemovePmGroupLicenseAllocationCmdlet : OrchestratorPSCmdlet
                     continue;
                 }
 
-                foreach (var user in targetUsers.OrderBy(u => u?.name).WithCancellation(cancelHandler.Token))
+                foreach (var user in targetUsers.OrderBy(u => u?.name)
+                    .WithProgressBar(this, $"Removing allocations from {group.GetPSPath(drive.NameColonSeparator)}", u => u?.name, id: 2)
+                    .WithCancellation(cancelHandler.Token))
                 {
                     string target = user.name;
                     if (!string.IsNullOrEmpty(user.displayName))

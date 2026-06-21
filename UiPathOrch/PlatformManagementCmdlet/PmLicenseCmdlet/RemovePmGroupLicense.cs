@@ -116,7 +116,8 @@ public class RemovePmGroupLicenseCmdlet : OrchestratorPSCmdlet
 
         foreach (var parameterSet in _parameterSets
             .OrderBy(p => p.Key.drive.Name)
-            .OrderBy(p => p.Key.group.name))
+            .OrderBy(p => p.Key.group.name)
+            .WithProgressBar(this, "Removing licenses from PmGroups", p => p.Key.group.name))
         {
             var (drive, group) = parameterSet.Key;
             var codesToRemove = parameterSet.Value;
