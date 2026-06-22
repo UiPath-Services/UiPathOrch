@@ -23,92 +23,140 @@ public class DeterministicApiException(string message, Exception? inner = null)
 
 internal static class ExceptionCachePolicy
 {
+    // 500/502 are usually transient (a server hiccup, gateway blip, or deploy) yet the retry
+    // layer deliberately does not replay them, and they can take minutes — not seconds — to
+    // clear. Caching them keeps tab-completion fast during the outage; a short TTL then lets the
+    // slot self-heal without Clear-OrchCache. Sized to match "recovers in a couple of minutes".
+    internal static readonly TimeSpan TransientServerTtl = TimeSpan.FromMinutes(2);
+
+    // Sentinel duration: cache until ClearCache (a deterministic failure that won't recover).
+    internal static readonly TimeSpan Permanent = TimeSpan.MaxValue;
+
+    // Injectable clock so the TTL/expiry logic is unit-testable without real time.
+    internal static Func<DateTime> Clock { get; set; } = () => DateTime.UtcNow;
+
     /// <summary>
-    /// True iff <paramref name="ex"/> will recur for the same inputs and is
-    /// therefore safe to cache and re-throw without re-attempting the API
-    /// call. Transient failures (network errors, timeouts, 5xx-transient,
-    /// 429 throttling, cancellation) return false.
+    /// How long <paramref name="ex"/> may be cached and re-thrown without re-attempting the API
+    /// call:
+    ///   <c>null</c> — do not cache (transient/recoverable; the next call must reach the API),
+    ///   <see cref="Permanent"/> — cache until ClearCache (deterministic; retrying is pointless),
+    ///   a finite span — cache then expire (transient-over-minutes; self-heals after the TTL).
     /// </summary>
-    public static bool IsDeterministic(Exception ex) => ex switch
+    internal static TimeSpan? CacheDuration(Exception ex) => ex switch
     {
-        HttpResponseException http => IsDeterministicStatus(http.StatusCode),
-        DeterministicApiException => true,
-        _ => false,
+        HttpResponseException http => DurationForStatus(http.StatusCode),
+        DeterministicApiException => Permanent,
+        _ => null,
     };
 
-    private static bool IsDeterministicStatus(HttpStatusCode code) => code switch
+    private static TimeSpan? DurationForStatus(HttpStatusCode code)
     {
-        HttpStatusCode.BadRequest => true,           // 400 — query is malformed; same query, same error
-        // 401 Unauthorized is deliberately NOT cached. EnsureSuccessStatusCode flips
-        // _isAuthenticated off on a 401, so the next call re-authenticates — a token that
-        // merely expired or was rotated server-side then recovers on its own. Caching the
-        // 401 would make the cache re-throw it before that re-auth ever runs, wedging the
-        // cache slot against a recoverable condition until Clear-OrchCache/Import-OrchConfig.
-        // (A genuinely bad credential fails at the token endpoint, not as an API 401.)
-        HttpStatusCode.Forbidden => true,            // 403 — permission won't auto-grant
-        HttpStatusCode.NotFound => true,             // 404 — resource isn't coming back
-        HttpStatusCode.Gone => true,                 // 410 — explicit permanent removal
-        HttpStatusCode.InternalServerError => true,  // 500 — kept for back-compat (could be transient)
-        HttpStatusCode.NotImplemented => true,       // 501 — feature absent on this server
-        HttpStatusCode.BadGateway => true,           // 502 — kept for back-compat (could be transient)
-        _ => false,                                  // 401/408/429/503/504/etc. — recoverable or transient, do not cache
-    };
+        // Stay consistent with the retry layer: anything HttpRetryPolicy retries as transient
+        // (429/503/504) is owned by retry+backoff — never cache it here, so a condition that
+        // survived the retries is re-probed on the next call. Deriving this from IsTransient
+        // (rather than re-listing those codes) keeps the two layers from drifting apart.
+        if (UiPath.OrchAPI.HttpRetryPolicy.IsTransient(code)) return null;
+
+        return code switch
+        {
+            HttpStatusCode.BadRequest => Permanent,      // 400 — query is malformed; same query, same error
+            HttpStatusCode.Forbidden => Permanent,       // 403 — permission won't auto-grant
+            HttpStatusCode.NotFound => Permanent,        // 404 — resource isn't coming back
+            HttpStatusCode.Gone => Permanent,            // 410 — explicit permanent removal
+            HttpStatusCode.NotImplemented => Permanent,  // 501 — feature absent on this server
+            // 500/502: the retry layer does NOT replay these (an immediate retry won't fix a
+            // server error), but they often clear over minutes — cache briefly, then self-heal.
+            HttpStatusCode.InternalServerError => TransientServerTtl,  // 500
+            HttpStatusCode.BadGateway => TransientServerTtl,           // 502
+            // 401 is deliberately NOT cached: the session flips _isAuthenticated off on a 401 and
+            // the next call re-authenticates (a token that merely expired/rotated then recovers);
+            // caching it would re-throw before that re-auth runs, wedging the slot until
+            // Clear-OrchCache. 408 and everything else are likewise not cached.
+            _ => null,
+        };
+    }
+
+    // Absolute expiry instant for a cacheable exception, or null when it must not be cached.
+    internal static DateTime? ExpiryFor(Exception ex)
+    {
+        if (CacheDuration(ex) is not { } span) return null;
+        return span == Permanent ? DateTime.MaxValue : Clock() + span;
+    }
+}
+
+// Holds a cached failure and when it expires. Kept a class (not a struct) so the cache field stays
+// a single atomic reference — ThrowCachedExceptionIfAny reads it without a lock, and a torn struct
+// read could otherwise surface a half-written entry.
+internal sealed class CachedError(Exception exception, DateTime expiresUtc)
+{
+    public Exception Exception { get; } = exception;
+    public DateTime ExpiresUtc { get; } = expiresUtc;
+    public bool IsExpired => ExceptionCachePolicy.Clock() >= ExpiresUtc;
 }
 
 public class ExceptionCachePerTenant
 {
-    private Exception? _exceptionCache;
+    private CachedError? _cached;
 
-    // Cache exceptions that will always fail for the same reason on subsequent
-    // API calls, to prevent making the same failing API call again. Non-
-    // deterministic exceptions are silently ignored (no cache write).
+    // Cache an exception that should short-circuit subsequent API calls, per ExceptionCachePolicy.
+    // Exceptions the policy declines (null duration) are silently ignored (no cache write).
     public void CacheException(Exception ex)
     {
-        if (ExceptionCachePolicy.IsDeterministic(ex))
+        if (ExceptionCachePolicy.ExpiryFor(ex) is { } expiresUtc)
         {
-            _exceptionCache = ex;
+            _cached = new CachedError(ex, expiresUtc);
         }
     }
 
-    // Throw the cached exception if one exists
+    // Re-throw the cached exception if one exists and is still within its TTL. An expired entry
+    // is dropped (self-heal) so the next call reaches the API again.
     public void ThrowCachedExceptionIfAny()
     {
-        if (_exceptionCache is not null)
+        var cached = _cached;
+        if (cached is null) return;
+        if (cached.IsExpired)
         {
-            throw _exceptionCache;
+            _cached = null;
+            return;
         }
+        throw cached.Exception;
     }
 
     public void ClearCache()
     {
-        _exceptionCache = null;
+        _cached = null;
     }
 }
 
 public class ExceptionsCachePer<T> where T : IEquatable<T>
 {
     // Note that Lazy<T> is thread-safe
-    private readonly Lazy<ConcurrentDictionary<T, Exception>> _exceptionsCache =
-        new(() => new ConcurrentDictionary<T, Exception>());
+    private readonly Lazy<ConcurrentDictionary<T, CachedError>> _exceptionsCache =
+        new(() => new ConcurrentDictionary<T, CachedError>());
 
-    // Cache exceptions that will always fail for the same reason on subsequent
-    // API calls, to prevent making the same failing API call again. Non-
-    // deterministic exceptions are silently ignored (no cache write).
+    // Cache an exception that should short-circuit subsequent API calls for this key, per
+    // ExceptionCachePolicy. Exceptions the policy declines (null duration) are silently ignored.
     public void CacheException(T key, Exception ex)
     {
-        if (ExceptionCachePolicy.IsDeterministic(ex))
+        if (ExceptionCachePolicy.ExpiryFor(ex) is { } expiresUtc)
         {
-            _exceptionsCache.Value[key] = ex;
+            _exceptionsCache.Value[key] = new CachedError(ex, expiresUtc);
         }
     }
 
-    // Throw the cached exception if one exists
+    // Re-throw the cached exception for this key if one exists and is still within its TTL. An
+    // expired entry is dropped (self-heal) so the next call for that key reaches the API again.
     public void ThrowCachedExceptionIfAny(T key)
     {
         if (_exceptionsCache.IsValueCreated &&
-            _exceptionsCache.Value.TryGetValue(key, out var ex))
+            _exceptionsCache.Value.TryGetValue(key, out var cached))
         {
-            throw ex;
+            if (cached.IsExpired)
+            {
+                _exceptionsCache.Value.TryRemove(key, out _);
+                return;
+            }
+            throw cached.Exception;
         }
     }
 
