@@ -35,7 +35,9 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
 
     private const string Default = "DefaultParameterSet";
 
-    public static readonly string[] ValidValueTypes = ["Text", "Integer", "Bool"];
+    // Single source of truth shared with the -ValueType tab-completer
+    // (StaticTextsCompleter<AssetTypeItems>) so validation and completion can't drift.
+    public static readonly string[] ValidValueTypes = AssetTypeItems.Items;
 
     [Parameter(ParameterSetName = Default, Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<AssetTypeItems>))]
