@@ -15,8 +15,9 @@
     This matches what `Get-Command -Module UiPathOrch` would show, without importing
     the module (no auth, no first-run config, no drive mounts).
 
-    The DLL is copied to a temp file before loading so the real build output is
-    never locked (a loaded assembly cannot be unloaded from a PowerShell session).
+    The DLL is loaded from its bytes (Assembly.Load(byte[])), which never locks the
+    build output and — unlike LoadFrom(path) — does not collide with an identical
+    assembly already loaded, so the script can be re-run in the same session.
 
     It then loads the manifest (Import-PowerShellDataFile) and reports:
       * the true cmdlet count, grouped by noun prefix (Orch / Pm / Du / Tm / Df / Cg)
@@ -38,7 +39,9 @@
 [CmdletBinding()]
 param(
     [string]$DllPath,
-    [string]$ManifestPath
+    [string]$ManifestPath,
+    # CI guard: exit non-zero if the manifest exports and the compiled cmdlets disagree.
+    [switch]$FailOnDrift
 )
 
 $ErrorActionPreference = 'Stop'
@@ -55,10 +58,9 @@ if (-not $DllPath -or -not (Test-Path $DllPath)) {
 }
 if (-not $ManifestPath) { $ManifestPath = Join-Path $repoRoot 'Staging\UiPathOrch.psd1' }
 
-# Load a temp copy so the real build output is never locked by this session.
-$tempDll = Join-Path ([IO.Path]::GetTempPath()) ("UiPathOrch.inventory.{0}.dll" -f [Guid]::NewGuid().ToString('N'))
-Copy-Item $DllPath $tempDll -Force
-$asm = [System.Reflection.Assembly]::LoadFrom($tempDll)
+# Load from bytes: never locks the build output, and re-running in the same
+# session won't throw "assembly with same name is already loaded".
+$asm = [System.Reflection.Assembly]::Load([System.IO.File]::ReadAllBytes($DllPath))
 
 $cmdletBase = [System.Management.Automation.Cmdlet]
 
@@ -107,8 +109,6 @@ $reflectedNames = $registrable.Name
 $compiledNotExported = $reflectedNames | Where-Object { $_ -notin $exported } | Sort-Object
 $exportedNotCompiled = $exported       | Where-Object { $_ -notin $reflectedNames } | Sort-Object
 
-Remove-Item $tempDll -Force -ErrorAction SilentlyContinue
-
 # ---- Report ----
 Write-Host ""
 Write-Host "UiPathOrch cmdlet inventory" -ForegroundColor Cyan
@@ -149,4 +149,9 @@ if (-not $compiledNotExported -and -not $exportedNotCompiled) {
     CompiledNotExported = $compiledNotExported
     ExportedNotCompiled = $exportedNotCompiled
     Cmdlets            = $reflectedNames
+}
+
+if ($FailOnDrift -and ($compiledNotExported -or $exportedNotCompiled)) {
+    Write-Host "::error::Cmdlet manifest drift detected (see lists above)."
+    exit 1
 }

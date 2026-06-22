@@ -52,6 +52,13 @@ jobs:
       - name: Test
         run: dotnet test --no-build --configuration Release --verbosity normal
 
+      - name: Verify cmdlet inventory (manifest drift)
+        shell: pwsh
+        # Reflects over the built DLL and reconciles the registrable cmdlets
+        # (public + concrete + [Cmdlet]) against the manifest's CmdletsToExport.
+        # Fails if a cmdlet was added/removed without updating the manifest.
+        run: ./Tests/Get-CmdletInventory.ps1 -DllPath ./UiPathOrch/bin/Release/net8.0/UiPathOrch.dll -FailOnDrift
+
   # Build + unit-test on Linux and macOS so the "Windows | Linux | macOS" claim is
   # exercised by CI and cross-platform regressions (path handling, browser launch,
   # CSV encoding) are caught. Formatting is verified by the Windows job only.
