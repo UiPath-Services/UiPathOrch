@@ -1,0 +1,45 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  schedule:
+    # Weekly, offset from common cron peaks to avoid queue contention.
+    - cron: '23 5 * * 1'
+
+jobs:
+  analyze:
+    name: Analyze (C#)
+    # windows-2022 to match ci.yml (pinned, not -latest, for reproducible tooling discovery).
+    runs-on: windows-2022
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          # Manual build (below) so analysis sees the real compiled graph, matching ci.yml.
+          build-mode: manual
+          queries: security-and-quality
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Build
+        run: |
+          dotnet restore --source https://api.nuget.org/v3/index.json --ignore-failed-sources
+          dotnet build --no-restore --configuration Release
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:csharp"
