@@ -125,8 +125,8 @@ if ($errors) { $errors }
 
 | ファイル | 対象 | マークダウンの `external help file` |
 |----------|------|-------------------------------------|
-| `UiPathOrch.dll-Help.xml` | C# cmdlet (231 個) | `UiPathOrch.dll-Help.xml` |
-| `UiPathOrch-Help.xml` | PS1 関数 (7 個) | `UiPathOrch-Help.xml` |
+| `UiPathOrch.dll-Help.xml` | C# cmdlet (312 個) | `UiPathOrch.dll-Help.xml` |
+| `UiPathOrch-Help.xml` | PS1 関数 (8 個) | `UiPathOrch-Help.xml` |
 
 PS1 関数 (8 個):
 - Enable-OrchPersonalWorkspace / Disable-OrchPersonalWorkspace
