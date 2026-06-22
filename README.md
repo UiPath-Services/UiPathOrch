@@ -41,7 +41,7 @@ Facilitate tenant migrations by copying various entities between tenants efficie
 ## Installation
 
 ### Prerequisites
-- PowerShell 7.4.2 or later
+- PowerShell 7.4.2 or later (running the latest 7.4.x patch is recommended — older 7.4 patches carry known PowerShell-runtime security fixes)
 - UiPath Orchestrator API access with appropriate OAuth scopes
 
 ### Install from PowerShell Gallery

@@ -6,7 +6,15 @@ If you discover a security vulnerability in UiPathOrch, please report it respons
 
 **Do not open a public GitHub issue for security vulnerabilities.**
 
-Instead, please email the maintainer directly at **ytsuda@gmail.com** with:
+**Preferred:** use GitHub's private vulnerability reporting. Open the repository's
+**Security** tab and click **"Report a vulnerability"**. The report stays private to
+the maintainers until a fix is released. *(If that button is not shown, private
+reporting has not been enabled for this repository yet — use the email fallback below.)*
+
+**Fallback (email):** if private reporting is unavailable, email the maintainer at
+**ytsuda@gmail.com**.
+
+Either way, please include:
 
 - A description of the vulnerability
 - Steps to reproduce

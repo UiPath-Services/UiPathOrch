@@ -16,6 +16,13 @@ LONG DESCRIPTION
         Du     Document Understanding API (7 cmdlets)
         Tm     Test Manager API (11 cmdlets)
 
+    Test Sets and Test Cases live on two different backends, so the prefix matters:
+    Orch* test cmdlets (Get-OrchTestSet, Start-OrchTestSet, Get-OrchTestCase, ...)
+    target Orchestrator's test-execution API (test sets/cases run inside folders),
+    while Tm* cmdlets (Get-TmTestSet, Get-TmTestCase, Get-TmRequirement, ...) target
+    the Test Manager API (Test Manager projects, requirements, and their artifacts).
+    Pick the prefix that matches the product surface you are working in.
+
 KEY FEATURES
     - Mount multiple tenants simultaneously, each as a separate drive.
     - Navigate Orchestrator folder hierarchy with cd, dir, mkdir, rmdir.
