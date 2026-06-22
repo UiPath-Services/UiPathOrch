@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 //   - Override Name to attach [ArgumentCompleter(typeof(XxxNameCompleter))]
 //   - Implement EntityNoun, GetEntities, Remove, GetName, GetPSPath
 //   - Optionally override PreFilter, ExcludePersonalWorkspace, ErrorCategory
-public abstract class RemoveFolderEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
+public abstract class RemoveFolderEntityCmdletBase<TEntity> : RemoveEntityCmdletBase<TEntity>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -30,15 +30,10 @@ public abstract class RemoveFolderEntityCmdletBase<TEntity> : OrchestratorPSCmdl
     [Parameter]
     public uint Depth { get; set; }
 
-    protected abstract string EntityNoun { get; }
     protected abstract IEnumerable<TEntity> GetEntities(OrchDriveInfo drive, Folder folder);
     protected abstract void Remove(OrchDriveInfo drive, Folder folder, TEntity entity);
-    protected abstract Func<TEntity?, string?> GetName { get; }
-    protected abstract Func<TEntity, string> GetPSPath { get; }
 
-    protected virtual Func<IEnumerable<TEntity>, IEnumerable<TEntity>>? PreFilter => null;
     protected virtual bool ExcludePersonalWorkspace => false;
-    protected virtual ErrorCategory ErrorCategory => ErrorCategory.InvalidOperation;
 
     protected sealed override void ProcessRecord()
     {
@@ -46,10 +41,7 @@ public abstract class RemoveFolderEntityCmdletBase<TEntity> : OrchestratorPSCmdl
             ? SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth)
             : SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
         var wpName = Name.ConvertToWildcardPatternList();
-        var getName = GetName;
-        var getPSPath = GetPSPath;
         var preFilter = PreFilter;
-        var errorCategory = ErrorCategory;
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
@@ -59,29 +51,12 @@ public abstract class RemoveFolderEntityCmdletBase<TEntity> : OrchestratorPSCmdl
                 IEnumerable<TEntity> entities = GetEntities(drive, folder);
                 if (preFilter is not null) entities = preFilter(entities);
 
-                foreach (var entity in entities
-                    .FilterByWildcards(getName, wpName)
-                    .OrderBy(getName)
-                    .WithProgressBar(this, $"Removing {EntityNoun} in {folder.GetPSPath()}", getName)
-                    .WithCancellation(cancelHandler.Token))
-                {
-                    if (ShouldProcess(getPSPath(entity), $"Remove {EntityNoun}"))
-                    {
-                        try
-                        {
-                            Remove(drive, folder, entity);
-                        }
-                        catch (Exception ex)
-                        {
-                            WriteError(new ErrorRecord(new OrchException(getPSPath(entity), ex), $"Remove{EntityNoun}Error", errorCategory, entity));
-                        }
-                    }
-                }
+                RemoveMatching(entities, wpName, folder.GetPSPath(), entity => Remove(drive, folder, entity), cancelHandler.Token);
             }
             catch (OperationCanceledException) { throw; }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), $"Get{EntityNoun}Error", errorCategory, folder));
+                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), $"Get{EntityNoun}Error", ErrorCategory, folder));
             }
         }
     }
