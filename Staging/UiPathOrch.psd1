@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.9.6'
+ModuleVersion = '1.9.7'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -502,28 +502,27 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.9.6
+1.9.7
 
-Added (cmdlets): Get-OrchQueueItem -Id fetches specific queue items by id. Accepts multiple
-comma-separated values, emitted as a single OData "Id in (...)" filter (one round trip). Tab
-completion suggests ids cached for the targeted queue(s), scoped to the bound -Name and excluding
-ids already typed on the same list.
+Added (cmdlets): Progress bars across the module, now naming the item being processed. The name was
+previously left off because showing wide characters (Japanese/Chinese/Korean/emoji) in a progress bar
+breaks its rendering (PowerShell #21293); this release works around that by replacing each run of wide
+characters with "[N]" (N = hidden char count), keeping the ASCII parts of a name visible. Read cmdlets
+that fan out over folders/drives show a real percentage as their parallel fetches complete, and
+mutation cmdlets (Set/Remove/Add/Update/New) show per-item progress as they write. A version gate
+restores full names once the upstream fix (PR #26185) ships.
 
-Changed (provider): Copy-OrchAsset per-user-value drop warnings are now actionable. When a value's
-user or machine isn't assigned to the destination folder it is dropped (the server would otherwise
-silently discard it); the warning now says the value "is dropped" and shows a copy-paste-ready
-Copy-OrchFolderUser / Copy-OrchFolderMachine command (paths/names quote-escaped). -WhatIf previews
-the same warnings without copying. After the 5th drop in one copy a single bulk hint is emitted and
-the rest are suppressed. Scoped to direct Copy-OrchAsset.
+Changed (cmdlets): Get-OrchProcess (list-only) fetches each folder's processes in parallel (cap=4)
+instead of one at a time. The two-phase Get cmdlets (PackageVersion, LibraryVersion, TestDataQueueItem,
+UserDetail, the *Link trio, PmGroupLicense, PmGroupMember) now run their two phases sequentially so each
+progress bar has a known denominator and shows a real percentage; Get-OrchUserDetail's bar becomes a
+real percentage instead of a running index. Output no longer streams during the listing phase
+(negligible for single/few-folder use).
 
-Fixed (cmdlets): Update-OrchQueue (and any queue edit) failed on Orchestrator v11-v13 because fields
-absent from the older DTO reached the request; those < v14 fields are now stripped on the edit path
-too. Get-OrchBucketLink could return stale folder-sharing after a folder move; ClearFolderCache now
-drops the folder's BucketLinks entry, symmetric with assets and queues.
-
-Internal: consolidated queue retention defaulting into OrchAPISession.CreateQueue; folded queue-item
-enrichment and the by-id fetch into the QueueItems cache (Id in filter, no by-id endpoint); refactored
-CopyAssets so the real copy and the -WhatIf preview share one drop path. Behavior-preserving.
+Internal: added WithProgressBar() (enumerable wrapper) and GetResultWithProgress() (parallel completion
+progress) helpers; removed ChainedThreadPool / RunForEachChained (~200 lines) now that all two-phase
+cmdlets use two sequential RunForEach passes; dropped redundant (object) casts on RunForEach target
+lambdas. Behavior-preserving.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

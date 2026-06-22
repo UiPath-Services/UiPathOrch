@@ -4,6 +4,47 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.9.7] - 2026-06-21
+
+### Added
+
+#### Cmdlets
+
+- **Progress bars across the module**, now naming the item currently being processed. The name was
+  previously left off because showing wide characters (Japanese/Chinese/Korean/emoji) in a progress
+  bar breaks its rendering (**PowerShell issue #21293**); this release works around that by replacing
+  each run of wide characters with `[N]` (N = hidden character count), keeping the narrow/ASCII parts
+  of a name visible (e.g. `Invoice請求Folder` → `Invoice[2]Folder`), so the bars can finally be
+  informative. Read cmdlets that fan out over folders/drives (e.g. `Get-OrchAsset`, `Get-OrchQueue`,
+  `Get-OrchProcess`, the `Get-Orch*Version` / `*Item` pairs, the Du/Df/Tm getters) show a **real
+  percentage** as their parallel fetches complete; mutation cmdlets (`Set`/`Remove`/`Add`/`Update`/
+  `New` across assets, queues, triggers, users, folder users/machines, licenses, …) show per-item
+  progress as they write. A version gate restores full names once the upstream fix (PR #26185) ships.
+
+### Changed
+
+#### Cmdlets
+
+- **`Get-OrchProcess` (list-only path) fetches each folder's processes in parallel** (cap=4) via
+  `OrchThreadPool.RunForEach`, instead of one folder at a time, matching the other folder-scoped Get
+  cmdlets.
+- **The two-phase Get cmdlets now show a real percentage.** `Get-OrchPackageVersion`,
+  `Get-OrchLibraryVersion`, `Get-OrchTestDataQueueItem`, `Get-OrchUserDetail`,
+  `Get-Orch{Asset,Bucket,Queue}Link`, `Get-PmGroupLicense`, and `Get-PmGroupMember` run their two
+  phases **sequentially** (list parents, then fetch children) so each phase's bar has a known
+  denominator. `Get-OrchUserDetail`'s bar in particular changes from a running index with no total to
+  a real percentage. Trade-off: output no longer streams during the listing phase — negligible for
+  the common single/few-folder case, a slightly later first object under a large `-Recurse`.
+
+### Internal
+
+- Added `ProgressExtensions.WithProgressBar<T>()` — an enumerable wrapper mirroring `WithCancellation`
+  — for single-threaded loops, and `OrchThreadPoolImpl.GetResultWithProgress()` for parallel
+  `RunForEach` loops (fills the bar with the true completed-count, names the item being awaited).
+- Removed `ChainedThreadPool` / `OrchThreadPool.RunForEachChained` (~200 lines of streaming
+  producer/queue/dual-phase-semaphore code): every two-phase cmdlet now uses two sequential
+  `RunForEach` passes, leaving a single parallel primitive.
+
 ## [1.9.6] - 2026-06-20
 
 ### Added
