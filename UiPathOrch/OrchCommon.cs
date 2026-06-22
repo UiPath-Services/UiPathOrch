@@ -356,6 +356,11 @@ public class OrchTask<TSource, TResult> : IDisposable
         CompletedEvent.Set(); // Signal that processing is complete
     }
 
+    // Blocks until this slot's background fetch completes, then returns its
+    // result (or rethrows the captured error as OrchException). Call this
+    // directly when no progress bar is needed; when you do want one, call
+    // OrchThreadPoolImpl.GetResultWithProgress() instead so the bar keeps
+    // advancing (with the true completed-count) while this slot is awaited.
     public TResult? GetResult(CancellationToken token)
     {
         // ManualResetEventSlim.Wait returns immediately if IsSet is already
@@ -426,7 +431,9 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
     // background fetches completed (CompletedCount) -- so it advances even while output is
     // blocked on an early-but-slow item, the rest fetching in parallel behind it. The status
     // name is this slot's label (what we are currently waiting on). Must be called from the
-    // pipeline thread, since it calls reporter.WriteProgress.
+    // pipeline thread, since it calls reporter.WriteProgress. When no progress bar is needed,
+    // call result.GetResult(token) directly instead -- it skips the polling wait and the
+    // WriteProgress calls.
     public TResult? GetResultWithProgress(OrchTask<TSource, TResult> result, ProgressReporter reporter, CancellationToken token)
     {
         while (!result.CompletedEvent.Wait(150, token))
