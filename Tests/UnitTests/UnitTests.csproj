@@ -14,7 +14,7 @@
          and drive the real engine globber). Test-only; the shipping module never references this.
          Pinned to the same SMA version UiPathOrch builds against (7.4.2). -->
     <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.2" />
-    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
