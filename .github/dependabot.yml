@@ -23,3 +23,15 @@ updates:
       nuget-minor-patch:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+    ignore:
+      # PowerShell SMA is a 3-knob lockstep: the shipping module builds against
+      # System.Management.Automation (UiPathOrch.csproj), declares PowerShellVersion
+      # in the manifest, and the test project hosts an in-process runspace via
+      # Microsoft.PowerShell.SDK pinned to the same SMA. A minor/major bump on either
+      # package desyncs that set (e.g. 7.4 -> 7.6 moves SMA to net9 and breaks the
+      # provider-host tests). Patches (7.4.x) still flow. Raise the floor deliberately
+      # — bump all three together — then loosen these rules.
+      - dependency-name: "Microsoft.PowerShell.SDK"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
+      - dependency-name: "System.Management.Automation"
+        update-types: ["version-update:semver-minor", "version-update:semver-major"]
