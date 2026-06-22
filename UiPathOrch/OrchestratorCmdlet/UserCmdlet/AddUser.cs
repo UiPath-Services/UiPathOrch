@@ -15,26 +15,28 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
 {
     // Needed for case-insensitive comparison of UserName
     // Should this be moved to OrchComparer.cs?
-    internal class CsvLineComparer : IEqualityComparer<(OrchDriveInfo drive, int type, string userName)>
+    internal class CsvLineComparer : IEqualityComparer<(OrchDriveInfo drive, int type, string userName, string? domain)>
     {
-        public bool Equals((OrchDriveInfo drive, int type, string userName) x, (OrchDriveInfo drive, int type, string userName) y)
+        public bool Equals((OrchDriveInfo drive, int type, string userName, string? domain) x, (OrchDriveInfo drive, int type, string userName, string? domain) y)
         {
             return EqualityComparer<OrchDriveInfo>.Default.Equals(x.drive, y.drive) &&
                    x.type == y.type &&
-                   string.Equals(x.userName, y.userName, StringComparison.OrdinalIgnoreCase);
+                   string.Equals(x.userName, y.userName, StringComparison.OrdinalIgnoreCase) &&
+                   string.Equals(x.domain, y.domain, StringComparison.OrdinalIgnoreCase);
         }
 
-        public int GetHashCode((OrchDriveInfo drive, int type, string userName) obj)
+        public int GetHashCode((OrchDriveInfo drive, int type, string userName, string? domain) obj)
         {
             return HashCode.Combine(
                 EqualityComparer<OrchDriveInfo>.Default.GetHashCode(obj.drive),
                 obj.type,
-                StringComparer.OrdinalIgnoreCase.GetHashCode(obj.userName)
+                StringComparer.OrdinalIgnoreCase.GetHashCode(obj.userName),
+                string.IsNullOrEmpty(obj.domain) ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj.domain)
             );
         }
     }
 
-    Dictionary<(OrchDriveInfo drive, int type, string userName), CsvLine>? _csvLines = null;
+    Dictionary<(OrchDriveInfo drive, int type, string userName, string? domain), CsvLine>? _csvLines = null;
 
     private class CsvLine : CsvLineBase
     {
@@ -65,6 +67,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
         public bool? ES_AutoDownloadProcess { get; set; }
 
         public HashSet<string>? Roles { get; set; }
+        public string? Domain { get; set; }
 
         public CsvLine(AddUserCmdlet cmdlet)
         {
@@ -95,6 +98,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
             ES_AutoDownloadProcess = cmdlet.ES_AutoDownloadProcess.ToNullableBool();
 
             Roles = new HashSet<string>(cmdlet.Roles?.Where(r => !string.IsNullOrEmpty(r)) ?? []);
+            Domain = cmdlet.Domain;
         }
 
         public void Update(AddUserCmdlet cmdl, OrchDriveInfo drive, string identityName)
@@ -211,6 +215,11 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
 
             this.Roles ??= [];
             this.Roles.UnionWith(cmdl.Roles?.Where(r => !string.IsNullOrEmpty(r)) ?? []);
+
+            AssignStringValue(cmdl, drive.Name, identityName,
+                this.Domain,
+                cmdl.Domain, v =>
+                this.Domain = v);
         }
     }
 
@@ -221,6 +230,46 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
         { 3, "DirectoryRobot" },
         { 4, "DirectoryExternalApplication" }
     };
+
+    internal static int[] ResolveSpecifiedTypes(IEnumerable<string?>? type)
+    {
+        var wpType = type.ConvertToWildcardPatternList();
+        return Types.SelectByWildcards(t => t.Value, wpType).Select(t => t.Key).ToArray();
+    }
+
+    internal static string ConvertToKind(string type)
+    {
+        return type switch
+        {
+            "DirectoryUser" => "User",
+            "DirectoryGroup" => "Group",
+            "DirectoryExternalApplication" => "Application",
+            _ => type
+        };
+    }
+
+    internal static DirectoryObject? CreateDirectoryObject(PmGroupMember? member, int type)
+    {
+        if (member is null || string.IsNullOrEmpty(member.identifier))
+        {
+            return null;
+        }
+
+        return new DirectoryObject()
+        {
+            type = type,
+            source = member.source,
+            identifier = member.identifier,
+            identityName = member.name ?? member.email ?? member.displayName,
+            displayName = member.displayName
+        };
+    }
+
+    internal static string ResolvePostingDomain(string? explicitDomain, string? resolvedDomain)
+    {
+        if (!string.IsNullOrEmpty(explicitDomain)) return explicitDomain;
+        return string.IsNullOrEmpty(resolvedDomain) ? "autogen" : resolvedDomain;
+    }
 
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -236,6 +285,11 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
     [Alias("TenantRoles")]
     [ArgumentCompleter(typeof(RolesCompleter))]
     public string[]? Roles { get; set; }
+
+    // Same escape hatch as Add-OrchFolderUser: use this for federated OnPrem
+    // tenants where the UI exposes a concrete domain instead of "autogen".
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public string? Domain { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
@@ -348,9 +402,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
 
             // Exclude user names that have already been selected via parameters
             var wpUserName = CreateSelfExclusionList(commandAst, "UserName", wordToComplete);
-            var wpType = GetFakeBoundParameters(fakeBoundParameters, "Type").ConvertToWildcardPatternList();
-
-            var specifiedTypes = Types.SelectByWildcards(t => t.Value, wpType).Select(t => t.Key);
+            var specifiedTypes = ResolveSpecifiedTypes(GetFakeBoundParameters(fakeBoundParameters, "Type"));
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
@@ -417,14 +469,13 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        _csvLines ??= new Dictionary<(OrchDriveInfo drive, int type, string userName), CsvLine>(new CsvLineComparer());
+        _csvLines ??= new Dictionary<(OrchDriveInfo drive, int type, string userName, string? domain), CsvLine>(new CsvLineComparer());
 
         // The first element may have been input from CSV, so split it by commas
         Roles = Roles.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();
 
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
-        var wpType = Type.ConvertToWildcardPatternList();
-        var specifiedTypes = Types.SelectByWildcards(t => t.Value, wpType).Select(t => t.Key);
+        var specifiedTypes = ResolveSpecifiedTypes(Type);
 
         foreach (var drive in drives)
         {
@@ -432,9 +483,9 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
             {
                 foreach (var userName in UserName!)
                 {
-                    if (!_csvLines.TryGetValue((drive, specifiedType, userName), out var line))
+                    if (!_csvLines.TryGetValue((drive, specifiedType, userName, Domain), out var line))
                     {
-                        _csvLines[(drive, specifiedType, userName)] = new CsvLine(this);
+                        _csvLines[(drive, specifiedType, userName, Domain)] = new CsvLine(this);
                     }
                     else
                     {
@@ -523,6 +574,27 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
         return false;
     }
 
+    private DirectoryObject? ResolveAddUserDirectoryObject(OrchDriveInfo drive, string userName, int type, string? domain)
+    {
+        if (type == 3)
+        {
+            return ResolveDirectoryName(this, drive, userName, type, domain);
+        }
+
+        var kind = ConvertToKind(Types[type]);
+        var resolvedMember = drive.PmBulkResolveByName(kind, [userName], u => u).FirstOrDefault().Value;
+        var user = CreateDirectoryObject(resolvedMember, type);
+        if (user is null)
+        {
+            WriteError(new ErrorRecord(
+                new OrchException(drive.NameColonSeparator, $"{Types[type]} '{userName}' was not found."),
+                "SearchForUsersAndGroupsError",
+                ErrorCategory.InvalidOperation,
+                drive));
+        }
+        return user;
+    }
+
     protected override void EndProcessing()
     {
         if (_csvLines is null) return;
@@ -545,6 +617,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
             var type = key_line.Key.type;
             var userName = key_line.Key.userName;
             var line = key_line.Value;
+            var domain = line.Domain;
 
             var targetRoles = ExcludeFolderRoles(drive, line.Roles, warnedNoMatchingRoles);
 
@@ -553,7 +626,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
             DirectoryObject? user = null;
             try
             {
-                user = ResolveDirectoryName(this, drive, userName, type);
+                user = ResolveAddUserDirectoryObject(drive, userName, type, domain);
             }
             catch (Exception ex)
             {
@@ -570,203 +643,207 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
 
             cancelHandler.Token.ThrowIfCancellationRequested();
 
+            reporter.WriteProgress(++index, System.IO.Path.Combine(drive.NameColonSeparator, userName));
+
+            var resolvedType = user.type ?? 0;
+
             string target = System.IO.Path.Combine(drive.NameColonSeparator, user.identityName ?? user.identifier!);
             if (!string.IsNullOrEmpty(user.displayName))
                 target += $" ({user.displayName})";
 
-            reporter.WriteProgress(++index, target);
-
-            if (UserAlreadyExists(existingUsersPerDrive, drive, userName))
+            if (UserAlreadyExists(existingUsersPerDrive, drive, user.identityName ?? userName))
             {
                 continue;
             }
 
-            if (ShouldProcess(target, $"Add {Types[type]}"))
+            if (!ShouldProcess(target, $"Add {Types[resolvedType]}"))
             {
-                Entities.User postingUser = new()
+                continue;
+            }
+
+            Entities.User postingUser = new()
+            {
+                DirectoryIdentifier = user.identifier!,
+                Domain = ResolvePostingDomain(domain, user.domain),
+                //FullName = "",
+                Type = Types[user.type ?? 0],
+                NotificationSubscription = new()
                 {
-                    DirectoryIdentifier = user.identifier!,
-                    Domain = "autogen",
-                    //FullName = "",
-                    Type = Types[user.type ?? 0],
-                    NotificationSubscription = new()
-                    {
-                        Queues = true,
-                        QueueItems = true,
-                        Robots = true,
-                        Jobs = true,
-                        Tasks = true,
-                        Schedules = true,
-                        Insights = true,
-                        CloudRobots = true,
-                        Export = true,
-                        RateLimitsDaily = true,
-                        RateLimitsRealTime = false
-                    },
-                    RolesList = targetRoles.ToArray()
-                };
+                    Queues = true,
+                    QueueItems = true,
+                    Robots = true,
+                    Jobs = true,
+                    Tasks = true,
+                    Schedules = true,
+                    Insights = true,
+                    CloudRobots = true,
+                    Export = true,
+                    RateLimitsDaily = true,
+                    RateLimitsRealTime = false
+                },
+                RolesList = targetRoles.ToArray()
+            };
 
-                //postingUser.RolesList ??= [];
+            //postingUser.RolesList ??= [];
 
-                postingUser.AssignBoolIfNotNull(line.MayHaveUserSession, (u, v) => u.MayHaveUserSession = v);
-                postingUser.AssignBoolIfNotNull(line.MayHaveRobotSession, (u, v) => u.MayHaveRobotSession = v);
-                postingUser.AssignBoolIfNotNull(line.MayHaveUnattendedSession, (u, v) => u.MayHaveUnattendedSession = v);
-                postingUser.AssignBoolIfNotNull(line.MayHavePersonalWorkspace, (u, v) => u.MayHavePersonalWorkspace = v);
+            postingUser.AssignBoolIfNotNull(line.MayHaveUserSession, (u, v) => u.MayHaveUserSession = v);
+            postingUser.AssignBoolIfNotNull(line.MayHaveRobotSession, (u, v) => u.MayHaveRobotSession = v);
+            postingUser.AssignBoolIfNotNull(line.MayHaveUnattendedSession, (u, v) => u.MayHaveUnattendedSession = v);
+            postingUser.AssignBoolIfNotNull(line.MayHavePersonalWorkspace, (u, v) => u.MayHavePersonalWorkspace = v);
 
-                // Use the per-row CsvLine value (like the other capability flags above), NOT the
-                // bare cmdlet parameter: in CSV/pipeline batch mode the parameter holds only the
-                // last row's value, so reading it here applied one row's IsExternalLicensed to every
-                // user. line.IsExternalLicensed is per-row and (via the CsvLine ctor) non-null, so it
-                // is sent consistently with MayHave*/RestrictToPersonalWorkspace.
-                postingUser.AssignBoolIfNotNull(line.IsExternalLicensed, (u, v) => u.IsExternalLicensed = v);
-                postingUser.AssignBoolIfNotNull(line.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
+            // Use the per-row CsvLine value (like the other capability flags above), NOT the
+            // bare cmdlet parameter: in CSV/pipeline batch mode the parameter holds only the
+            // last row's value, so reading it here applied one row's IsExternalLicensed to every
+            // user. line.IsExternalLicensed is per-row and (via the CsvLine ctor) non-null, so it
+            // is sent consistently with MayHave*/RestrictToPersonalWorkspace.
+            postingUser.AssignBoolIfNotNull(line.IsExternalLicensed, (u, v) => u.IsExternalLicensed = v);
+            postingUser.AssignBoolIfNotNull(line.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
 
-                postingUser.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
+            postingUser.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
 
-                if (!string.IsNullOrEmpty(line.UR_UserName) ||
-                    !string.IsNullOrEmpty(line.UR_CredentialStore) ||
-                    !string.IsNullOrEmpty(line.UR_Password) ||
-                    !string.IsNullOrEmpty(line.UR_CredentialExternalName) ||
-                    !string.IsNullOrEmpty(line.UR_CredentialType) ||
-                    line.UR_LimitConcurrentExecution is not null)
+            if (!string.IsNullOrEmpty(line.UR_UserName) ||
+                !string.IsNullOrEmpty(line.UR_CredentialStore) ||
+                !string.IsNullOrEmpty(line.UR_Password) ||
+                !string.IsNullOrEmpty(line.UR_CredentialExternalName) ||
+                !string.IsNullOrEmpty(line.UR_CredentialType) ||
+                line.UR_LimitConcurrentExecution is not null)
+            {
+                postingUser.UnattendedRobot = new();
+                postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_UserName, (u, v) => u.UserName = v);
+                postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_Password, (u, v) => u.Password = v);
+                postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_CredentialExternalName, (u, v) => u.CredentialExternalName = v);
+                postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_CredentialType, (u, v) => u.CredentialType = v);
+                postingUser.UnattendedRobot.AssignBoolIfNotNull(line.UR_LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
+
+                if (line.UR_CredentialStore is not null)
                 {
-                    postingUser.UnattendedRobot = new();
-                    postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_UserName, (u, v) => u.UserName = v);
-                    postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_Password, (u, v) => u.Password = v);
-                    postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_CredentialExternalName, (u, v) => u.CredentialExternalName = v);
-                    postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(line.UR_CredentialType, (u, v) => u.CredentialType = v);
-                    postingUser.UnattendedRobot.AssignBoolIfNotNull(line.UR_LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
-
-                    if (line.UR_CredentialStore is not null)
-                    {
-                        var credentialStores = drive.CredentialStores.Get();
-                        var targetStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, line.UR_CredentialStore, StringComparison.OrdinalIgnoreCase) == 0);
-                        postingUser.UnattendedRobot.CredentialStoreId = targetStore?.Id;
-                    }
-
-                    // If a password is specified, populate the CredentialStoreId
-                    if (postingUser.UnattendedRobot.Password is not null && postingUser.UnattendedRobot.CredentialStoreId is null)
-                    {
-                        var credentialStores = drive.CredentialStores.Get();
-                        var defaultStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, "Orchestrator Database", StringComparison.OrdinalIgnoreCase) == 0);
-                        postingUser.UnattendedRobot.CredentialStoreId = defaultStore?.Id;
-                    }
+                    var credentialStores = drive.CredentialStores.Get();
+                    var targetStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, line.UR_CredentialStore, StringComparison.OrdinalIgnoreCase) == 0);
+                    postingUser.UnattendedRobot.CredentialStoreId = targetStore?.Id;
                 }
 
-                void UpdateExecutionSettings(ExecutionSettings executionSettings)
+                // If a password is specified, populate the CredentialStoreId
+                if (postingUser.UnattendedRobot.Password is not null && postingUser.UnattendedRobot.CredentialStoreId is null)
                 {
-                    executionSettings.AssignStringIfNotNullOrEmpty(
-                        ES_TracingLevel, (es, v) =>
-                        es.TracingLevel = v);
-
-                    executionSettings.AssignBoolIfNotNull(
-                        ES_StudioNotifyServer, (es, v) =>
-                        es.StudioNotifyServer = v);
-
-                    executionSettings.AssignBoolIfNotNull(
-                        ES_LoginToConsole, (es, v) =>
-                        es.LoginToConsole = v);
-
-                    executionSettings.AssignNumberIfNotNull(
-                        ES_ResolutionWidth, (es, v) =>
-                        es.ResolutionWidth = v);
-
-                    executionSettings.AssignNumberIfNotNull(
-                        ES_ResolutionHeight, (es, v) =>
-                        es.ResolutionHeight = v);
-
-                    executionSettings.AssignNumberIfNotNull(
-                        ES_ResolutionDepth, (es, v) =>
-                        es.ResolutionDepth = v);
-
-                    executionSettings.AssignBoolIfNotNull(
-                        ES_FontSmoothing, (es, v) =>
-                        es.FontSmoothing = v);
-
-                    executionSettings.AssignBoolIfNotNull(
-                        ES_AutoDownloadProcess, (es, v) =>
-                        es.AutoDownloadProcess = v);
+                    var credentialStores = drive.CredentialStores.Get();
+                    var defaultStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, "Orchestrator Database", StringComparison.OrdinalIgnoreCase) == 0);
+                    postingUser.UnattendedRobot.CredentialStoreId = defaultStore?.Id;
                 }
+            }
 
-                if (!string.IsNullOrEmpty(line.ES_TracingLevel) ||
-                    line.ES_StudioNotifyServer is not null ||
-                    line.ES_LoginToConsole is not null ||
-                    (line.ES_ResolutionWidth is not null && line.ES_ResolutionWidth != 0) ||
-                    (line.ES_ResolutionHeight is not null && line.ES_ResolutionHeight != 0) ||
-                    (line.ES_ResolutionDepth is not null && line.ES_ResolutionDepth != 0) ||
-                    line.ES_FontSmoothing is not null ||
-                    line.ES_AutoDownloadProcess is not null)
+            void UpdateExecutionSettings(ExecutionSettings executionSettings)
+            {
+                executionSettings.AssignStringIfNotNullOrEmpty(
+                    ES_TracingLevel, (es, v) =>
+                    es.TracingLevel = v);
+
+                executionSettings.AssignBoolIfNotNull(
+                    ES_StudioNotifyServer, (es, v) =>
+                    es.StudioNotifyServer = v);
+
+                executionSettings.AssignBoolIfNotNull(
+                    ES_LoginToConsole, (es, v) =>
+                    es.LoginToConsole = v);
+
+                executionSettings.AssignNumberIfNotNull(
+                    ES_ResolutionWidth, (es, v) =>
+                    es.ResolutionWidth = v);
+
+                executionSettings.AssignNumberIfNotNull(
+                    ES_ResolutionHeight, (es, v) =>
+                    es.ResolutionHeight = v);
+
+                executionSettings.AssignNumberIfNotNull(
+                    ES_ResolutionDepth, (es, v) =>
+                    es.ResolutionDepth = v);
+
+                executionSettings.AssignBoolIfNotNull(
+                    ES_FontSmoothing, (es, v) =>
+                    es.FontSmoothing = v);
+
+                executionSettings.AssignBoolIfNotNull(
+                    ES_AutoDownloadProcess, (es, v) =>
+                    es.AutoDownloadProcess = v);
+            }
+
+            if (!string.IsNullOrEmpty(line.ES_TracingLevel) ||
+                line.ES_StudioNotifyServer is not null ||
+                line.ES_LoginToConsole is not null ||
+                (line.ES_ResolutionWidth is not null && line.ES_ResolutionWidth != 0) ||
+                (line.ES_ResolutionHeight is not null && line.ES_ResolutionHeight != 0) ||
+                (line.ES_ResolutionDepth is not null && line.ES_ResolutionDepth != 0) ||
+                line.ES_FontSmoothing is not null ||
+                line.ES_AutoDownloadProcess is not null)
+            {
+                //  0: User, 1: Group, 2: Machine, 3: Robot, 4: ExternalApplication
+                // UnattendedRobot can be configured for User and Robot.
+                if (user.type == 0 || user.type == 3)
                 {
-                    //  0: User, 1: Group, 2: Machine, 3: Robot, 4: ExternalApplication
-                    // UnattendedRobot can be configured for User and Robot.
-                    if (user.type == 0 || user.type == 3)
-                    {
-                        postingUser.UnattendedRobot ??= new();
-                        postingUser.UnattendedRobot.ExecutionSettings ??= new();
-                        UpdateExecutionSettings(postingUser.UnattendedRobot.ExecutionSettings);
-                    }
-
-                    // RobotProvision is Attended, so it can only be configured for User.
-                    if (user.type == 0)
-                    {
-                        postingUser.RobotProvision ??= new();
-                        postingUser.RobotProvision.ExecutionSettings ??= new();
-                        UpdateExecutionSettings(postingUser.RobotProvision.ExecutionSettings);
-                    }
-                }
-
-                if (user.type == 3) // For robot type
-                {
-                    postingUser.MayHaveUserSession = false; // prohibit 'Standard Interface'
-                    postingUser.MayHaveUnattendedSession = true; // Must be true.
-                    postingUser.MayHavePersonalWorkspace = false; // Always false is fine.
-                    postingUser.MayHaveRobotSession = false; // Required or it will fail
-
                     postingUser.UnattendedRobot ??= new();
-
-                    postingUser.UnattendedRobot.LimitConcurrentExecution ??= false;
-
-                    postingUser.RestrictToPersonalWorkspace ??= false;
-                    //postingUser.UnattendedRobot.ExecutionSettings ??= new();
-
-                    //postingUser.UpdatePolicy ??= new();
-                    //postingUser.UpdatePolicy.Type ??= "None";
-                }
-                else if (user.type == 4) // For application type
-                {
-                    postingUser.MayHaveUserSession ??= false; // prohibit 'Standard Interface'
+                    postingUser.UnattendedRobot.ExecutionSettings ??= new();
+                    UpdateExecutionSettings(postingUser.UnattendedRobot.ExecutionSettings);
                 }
 
-                if (user.type == 0 || user.type == 3) // For user or robot type
+                // RobotProvision is Attended, so it can only be configured for User.
+                if (user.type == 0)
                 {
-                    if (postingUser.UnattendedRobot is not null)
+                    postingUser.RobotProvision ??= new();
+                    postingUser.RobotProvision.ExecutionSettings ??= new();
+                    UpdateExecutionSettings(postingUser.RobotProvision.ExecutionSettings);
+                }
+            }
+
+            if (user.type == 3) // For robot type
+            {
+                postingUser.MayHaveUserSession = false; // prohibit 'Standard Interface'
+                postingUser.MayHaveUnattendedSession = true; // Must be true.
+                postingUser.MayHavePersonalWorkspace = false; // Always false is fine.
+                postingUser.MayHaveRobotSession = false; // Required or it will fail
+
+                postingUser.UnattendedRobot ??= new();
+
+                postingUser.UnattendedRobot.LimitConcurrentExecution ??= false;
+
+                postingUser.RestrictToPersonalWorkspace ??= false;
+                //postingUser.UnattendedRobot.ExecutionSettings ??= new();
+
+                //postingUser.UpdatePolicy ??= new();
+                //postingUser.UpdatePolicy.Type ??= "None";
+            }
+            else if (user.type == 4) // For application type
+            {
+                postingUser.MayHaveUserSession ??= false; // prohibit 'Standard Interface'
+            }
+
+            if (user.type == 0 || user.type == 3) // For user or robot type
+            {
+                if (postingUser.UnattendedRobot is not null)
+                {
+                    if (string.IsNullOrEmpty(postingUser.UnattendedRobot.Password))
                     {
-                        if (string.IsNullOrEmpty(postingUser.UnattendedRobot.Password))
-                        {
-                            postingUser.UnattendedRobot.CredentialType ??= "NoCredential";
-                        }
-                        else
-                        {
-                            postingUser.UnattendedRobot.CredentialType ??= "Default";
-                        }
+                        postingUser.UnattendedRobot.CredentialType ??= "NoCredential";
+                    }
+                    else
+                    {
+                        postingUser.UnattendedRobot.CredentialType ??= "Default";
                     }
                 }
+            }
 
-                try
+            try
+            {
+                var createdUser = drive.OrchAPISession.PostUser(postingUser);
+                if (createdUser is not null)
                 {
-                    var createdUser = drive.OrchAPISession.PostUser(postingUser);
-                    if (createdUser is not null)
-                    {
-                        createdUser.Path = drive.NameColonSeparator;
-                        WriteObject(createdUser);
-                    }
-                    drive.Users.ClearCache();
-                    drive.UsersDetailed.ClearCache();
+                    createdUser.Path = drive.NameColonSeparator;
+                    WriteObject(createdUser);
                 }
-                catch (Exception ex)
-                {
-                    WriteError(new ErrorRecord(new OrchException(target, ex), "AddUserError", ErrorCategory.InvalidOperation, drive));
-                }
+                drive.Users.ClearCache();
+                drive.UsersDetailed.ClearCache();
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(target, ex), "AddUserError", ErrorCategory.InvalidOperation, drive));
             }
         }
     }
