@@ -4,6 +4,22 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+#### Cmdlets
+
+- **A transient server error no longer wedges the cache for the rest of the session.** HTTP **500**
+  and **502** responses were treated as deterministic and cached per slot, so after a single transient
+  blip every later call for that entity — including tab-completion — re-threw the cached error without
+  retrying, until `Clear-OrchCache` / `Import-OrchConfig`. They are now cached only briefly (a
+  **2-minute TTL**) and then expire, so the slot self-heals once the server recovers: tab-completion
+  stays fast during the outage but recovers on its own afterward. Genuinely deterministic statuses
+  (400/403/404/410/501) still cache until explicitly cleared, and statuses the retry layer already
+  treats as transient (429/503/504) are still never cached — keeping the cache and retry layers
+  consistent about what "transient" means.
+
 ## [1.9.7] - 2026-06-21
 
 ### Added
