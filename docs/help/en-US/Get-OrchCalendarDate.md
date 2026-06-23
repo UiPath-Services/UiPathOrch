@@ -51,7 +51,7 @@ Required permissions:
 ### Example 1: Excluded dates for all calendars on the current drive
 
 ```powershell
-PS Orch1:\> Get-OrchCalendarDate -Name '*'
+PS Orch1:\> Get-OrchCalendarDate -Name *
 ```
 
 Lists every excluded date (from today onward) on every calendar in `Orch1:\`. The explicit `*` reminds the user that the operation fans out across every calendar; omitting `-Name` would prompt instead of silently fetching everything.
@@ -67,7 +67,7 @@ Returns every excluded date on `MyCalendar1`, including dates that have already 
 ### Example 3: Export to CSV (round-trips with Add-OrchCalendarDate)
 
 ```powershell
-PS C:\> Get-OrchCalendarDate -Path Orch1: -Name '*' -ExportCsv C:\temp
+PS C:\> Get-OrchCalendarDate -Path Orch1: -Name * -ExportCsv C:\temp
 ```
 
 Exports every excluded date on `Orch1:` to `C:\temp\ExportedCalendarDates.csv`. The CSV columns (`Path`, `Name`, `ExcludedDate`) match the `Add-OrchCalendarDate` import shape — the file can be piped directly to `Import-Csv | Add-OrchCalendarDate`.

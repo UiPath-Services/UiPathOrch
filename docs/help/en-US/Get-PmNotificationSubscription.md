@@ -33,6 +33,10 @@ Lists the connected user's notification subscriptions from the notification serv
 
 The cmdlet always acts on the connected user's *own* subscriptions — the service takes no user id, so there is no `-UserName`. The output groups by publisher in the default view. Pipe it to `Set-PmNotificationSubscription` (the property names line up) to round-trip.
 
+Primary Endpoint: GET /{partitionGlobalId}/notificationservice_/usersubscriptionservice/api/v1/UserSubscription
+
+OAuth required scopes: (Notification Service API - no per-endpoint scopes)
+
 ## EXAMPLES
 
 ### Example 1: List all subscriptions

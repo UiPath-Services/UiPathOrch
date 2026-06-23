@@ -36,6 +36,8 @@ The configuration file can be opened with the Edit-OrchConfig cmdlet.
 
 Primary Endpoint: GET /{partitionGlobalId}/pap_/api/roles?scopeType=project&serviceName=DocumentUnderstanding
 
+OAuth required scopes: (Document Understanding PAP API)
+
 ## EXAMPLES
 
 ### Example 1: Get all Document Understanding roles

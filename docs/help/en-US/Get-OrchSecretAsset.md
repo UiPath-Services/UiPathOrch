@@ -98,7 +98,7 @@ Flattens Global and PerRobot values into a single stream of AssetUserValue rows.
 ### Example 7: Search recursively from a drive root
 
 ```powershell
-PS Orch1:\> Get-OrchSecretAsset -Path Orch1:\ -Recurse
+PS Orch1:\> Get-OrchSecretAsset -Recurse
 ```
 
 Recursively lists Secret assets across all folders accessible from the drive root.

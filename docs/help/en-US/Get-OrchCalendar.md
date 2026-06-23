@@ -75,7 +75,7 @@ PS Orch1:\> Get-OrchCalendar -ExpandExcludedDate -IncludePastDate
 PS C:\>     Get-OrchCalendar -Path Orch1: -ExportCsv C:\temp
 ```
 
-Both invocations emit a deprecation warning and route through the new `Get-OrchCalendarDate` cmdlet. Use `Get-OrchCalendarDate -Name '*' -IncludePastDate` or `Get-OrchCalendarDate -Name '*' -ExportCsv C:\temp` directly instead.
+Both invocations emit a deprecation warning and route through the new `Get-OrchCalendarDate` cmdlet. Use `Get-OrchCalendarDate -Name * -IncludePastDate` or `Get-OrchCalendarDate -Name * -ExportCsv C:\temp` directly instead.
 
 ## PARAMETERS
 

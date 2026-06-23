@@ -33,6 +33,10 @@ Sets the connected user's subscription for one notification `(topic, mode)` pair
 
 The cmdlet always acts on the connected user's *own* subscriptions (there is no `-UserName`). Each pipeline row is one `(topic, mode)`; rows for the same drive are accumulated and sent as a single request, so `Get-PmNotificationSubscription | ... | Set-PmNotificationSubscription` coalesces into one call per drive.
 
+Primary Endpoint: POST /{partitionGlobalId}/notificationservice_/usersubscriptionservice/api/v1/UserSubscription
+
+OAuth required scopes: (Notification Service API - no per-endpoint scopes)
+
 ## EXAMPLES
 
 ### Example 1: Turn off an email notification

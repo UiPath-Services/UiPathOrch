@@ -34,6 +34,10 @@ The cmdlet always acts on the connected user's *own* preferences — there is no
 
 The column names line up with the `Set-PmUserPreference` parameters, so `Get-PmUserPreference -ExportCsv` round-trips through `Import-Csv | Set-PmUserPreference`. `Copy-PmUserPreference` migrates your preferences to another organization.
 
+Primary Endpoint: GET /api/Setting (Identity Server)
+
+OAuth required scopes: PM.Setting or PM.Setting.Read
+
 ## EXAMPLES
 
 ### Example 1: Read your preferences

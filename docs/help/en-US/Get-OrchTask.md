@@ -59,7 +59,7 @@ Gets Pending tasks whose Title starts with "Invoice".
 ### Example 3: Recurse with priority filter
 
 ```powershell
-PS Orch1:\> Get-OrchTask -Path Orch1:\ -Recurse -Priority High, Critical
+PS Orch1:\> Get-OrchTask -Recurse -Priority High, Critical
 ```
 
 Gets High and Critical tasks across every subfolder of the Orch1 drive.

@@ -34,6 +34,10 @@ Topics are matched **by name** (e.g. `Apps.Shared`), because their GUIDs differ 
 
 Self-only: the notification service uses each drive's token user, so there is no `-UserName`. This is an Automation Cloud feature.
 
+Primary Endpoint: GET, POST /{partitionGlobalId}/notificationservice_/usersubscriptionservice/api/v1/UserSubscription
+
+OAuth required scopes: (Notification Service API - no per-endpoint scopes)
+
 ## EXAMPLES
 
 ### Example 1: Migrate your subscriptions to another org

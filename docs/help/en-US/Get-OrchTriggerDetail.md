@@ -48,7 +48,7 @@ Required permissions: ProcessSchedules.View
 ### Example 1: Detail for all triggers in the current folder
 
 ```powershell
-PS Orch1:\Shared> Get-OrchTriggerDetail -Name '*'
+PS Orch1:\Shared> Get-OrchTriggerDetail -Name *
 ```
 
 Returns the detailed payload for every trigger in `Orch1:\Shared`. The explicit `*` reminds the user that the operation fans out across every trigger; omitting `-Name` would prompt instead of silently fetching everything.
@@ -64,7 +64,7 @@ Returns the detailed payload for the named trigger. `-Name` is positional (Posit
 ### Example 3: Recursive across a folder tree
 
 ```powershell
-PS Orch1:\> Get-OrchTriggerDetail -Path Shared -Name '*' -Recurse
+PS Orch1:\> Get-OrchTriggerDetail -Path Shared -Name * -Recurse
 ```
 
 Walks every folder under `Shared` (recursively) and emits detail for every matched trigger.
@@ -72,7 +72,7 @@ Walks every folder under `Shared` (recursively) and emits detail for every match
 ### Example 4: Export to CSV
 
 ```powershell
-PS C:\> Get-OrchTriggerDetail -Path Orch1:\Shared -Name '*' -ExportCsv C:\temp
+PS C:\> Get-OrchTriggerDetail -Path Orch1:\Shared -Name * -ExportCsv C:\temp
 ```
 
 Exports the detailed payload of every trigger in `Orch1:\Shared` to `C:\temp\ExportedTriggers.csv`. ExecutorRobots and MachineRobots IDs are resolved to human-readable names in the CSV.

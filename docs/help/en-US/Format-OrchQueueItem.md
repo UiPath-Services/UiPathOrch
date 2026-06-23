@@ -54,7 +54,7 @@ Emits one Format-Table block per queue. Each block uses that queue's specific co
 ### Example 3: Combine with wildcards and filters
 
 ```powershell
-PS Orch1:\> Get-OrchQueueItem -Path Orch1:\ -Recurse -Name '*' -Status Failed | Format-OrchQueueItem
+PS Orch1:\> Get-OrchQueueItem -Recurse -Name * -Status Failed | Format-OrchQueueItem
 ```
 
 Surveys all failed items across every queue in every folder, grouped per queue.

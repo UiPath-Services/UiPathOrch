@@ -35,6 +35,8 @@ The configuration file can be opened with the Edit-OrchConfig cmdlet.
 
 Primary Endpoint: GET /testmanager_/api/serverinfo
 
+OAuth required scopes: (Test Manager API - no per-endpoint scopes)
+
 ## EXAMPLES
 
 ### Example 1: Get the Test Manager server information

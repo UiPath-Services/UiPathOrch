@@ -74,7 +74,7 @@ Resolves the named credential store on the destination drive and updates the buc
 ### Example 4: Bulk re-tag
 
 ```powershell
-PS Destination:\Shared> Update-OrchBucket -Name '*' -Tags 'tier:archive','migrated:2026'
+PS Destination:\Shared> Update-OrchBucket -Name * -Tags 'tier:archive','migrated:2026'
 ```
 
 Adds the same tags to every bucket in the current folder. Tag normalization follows the same rules as `New-OrchBucket`.

@@ -90,7 +90,7 @@ Flattens Global and PerRobot values into AssetUserValue rows. Use this when down
 ### Example 6: Search recursively from a drive root
 
 ```powershell
-PS Orch1:\> Get-OrchCredentialAsset -Path Orch1:\ -Recurse
+PS Orch1:\> Get-OrchCredentialAsset -Recurse
 ```
 
 Recursively lists credential assets across all folders accessible from the drive root.

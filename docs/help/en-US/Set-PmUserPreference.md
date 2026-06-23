@@ -36,6 +36,10 @@ Each pipeline row is one key/value. Rows for the same drive are accumulated and 
 
 `-Key` tab-completes the known portal keys; `-Value` adapts to the chosen `-Key` (for example `-Key UserLanguage.Language` lists `ja`, `en`, `de`, ...; `-Key UserTheme.Theme` lists `light`, `dark`, `dark-hc`) and shows a friendly label. The completion inserts the raw value, so the friendly labels never reach the command line or CSV. Any key/value is accepted, not only the suggested ones.
 
+Primary Endpoint: PUT /api/Setting (Identity Server)
+
+OAuth required scopes: PM.Setting or PM.Setting.Write
+
 ## EXAMPLES
 
 ### Example 1: Set the UI language

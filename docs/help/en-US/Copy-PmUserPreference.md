@@ -32,6 +32,10 @@ Reads your own portal preferences (theme, language, ...) in the source organizat
 
 Copying within the same organization is a no-op.
 
+Primary Endpoint: GET /api/Setting, PUT /api/Setting (Identity Server)
+
+OAuth required scopes: PM.Setting or PM.Setting.Read (source); PM.Setting or PM.Setting.Write (destination)
+
 ## EXAMPLES
 
 ### Example 1: Migrate your preferences to another org

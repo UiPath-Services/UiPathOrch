@@ -99,7 +99,7 @@ Shows which UserValue removals would occur without executing them.
 ### Example 6: Recursive removal across folders
 
 ```powershell
-PS Orch1:\> Remove-OrchAssetUserValue -Path Orch1:\ -Recurse -Name '*' -UserName retired-user@example.com -Confirm:$false
+PS Orch1:\> Remove-OrchAssetUserValue -Recurse -Name * -UserName retired-user@example.com -Confirm:$false
 ```
 
 Removes all UserValues for a retired user across every folder on the drive.
