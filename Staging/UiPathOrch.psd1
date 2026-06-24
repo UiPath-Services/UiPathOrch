@@ -514,8 +514,10 @@ remains the tool for local backup/inspection/editing). Name/FullPath/Destination
 positional (matching Export-OrchBucketItem); pass * to mean all. -DestinationBucket retargets a single
 source bucket to a differently-named destination bucket and tab-completes against the destination
 folder's buckets. Copying a bucket onto itself is a no-op; a same-folder copy to a different bucket is
-allowed. The copied source files are emitted, so Copy-OrchBucketItem ... | Remove-OrchBucketItem
-performs a copy-then-delete move.
+allowed; and a copy is skipped per file when source and destination resolve to the same physical
+storage object (e.g. two Orchestrator buckets backed by the same external S3/Azure bucket). The copied
+source files are emitted, so Copy-OrchBucketItem ... | Remove-OrchBucketItem performs a
+copy-then-delete move.
 
 Changed (cmdlets): BREAKING -- Remove-OrchBucketItem now requires -Name and -FullPath. Both were
 optional, so a bare Remove-OrchBucketItem -Recurse (or Remove-OrchBucketItem MyBucket without

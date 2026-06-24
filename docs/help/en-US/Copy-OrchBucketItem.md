@@ -347,6 +347,8 @@ For Orchestrator-hosted buckets (StorageProvider = Orchestrator), this transfers
 
 Unlike `Export-OrchBucketItem` / `Import-OrchBucketItem`, which stage files on local disk, this cmdlet streams source to destination directly. Use the Export/Import pair when you need the files on disk (backup, inspection, or editing before upload).
 
+A copy is skipped (with a warning, once per bucket) when the source and destination resolve to the same physical storage object — for example two Orchestrator buckets, even in different tenants, backed by the same external S3 / Azure bucket. This is detected by comparing the resolved pre-signed read and write URIs, so a file is never streamed onto itself.
+
 ## RELATED LINKS
 
 [Copy-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchBucket.md)

@@ -24,8 +24,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   there is no silent "copy everything" default, so pass `*` to mean all buckets or all files.
   `-DestinationBucket` retargets a single source bucket to a differently-named destination bucket and
   tab-completes against the destination folder's buckets. Copying a bucket onto itself is a no-op (it
-  warns), while a same-folder copy to a *different* bucket is allowed. The source content-type is
-  preserved. The successfully-copied source files are emitted, so
+  warns), while a same-folder copy to a *different* bucket is allowed; a copy is also skipped per file
+  when the source and destination resolve to the same physical storage object (e.g. two Orchestrator
+  buckets — even in different tenants — backed by the same external S3/Azure bucket), so a file is
+  never streamed onto itself. The source content-type is preserved. The successfully-copied source files are emitted, so
   `Copy-OrchBucketItem … | Remove-OrchBucketItem` performs a transaction-safe copy-then-delete move.
 
 - **The bucket-item cmdlets compose via the pipeline.** `Get-OrchBucketItem`, `Export-OrchBucketItem`,

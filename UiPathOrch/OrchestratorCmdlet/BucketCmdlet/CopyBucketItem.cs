@@ -176,6 +176,10 @@ public class CopyBucketItemCmdlet : OrchestratorPSCmdlet
                 reporter.TotalNum = files.Count;
                 reporter.Activity = $"Copying files to {dstBucket.GetPSPath()}";
 
+                // When source and destination resolve to the SAME external storage object, copying a
+                // file would stream it onto itself. Warn once per bucket (the check below is per-file).
+                bool warnedSameTarget = false;
+
                 int index = 0;
                 foreach (var file in files.WithCancellation(cancelHandler.Token))
                 {
@@ -196,6 +200,20 @@ public class CopyBucketItemCmdlet : OrchestratorPSCmdlet
                         if (writeAccess is null)
                         {
                             WriteError(new ErrorRecord(new OrchException(target, new InvalidOperationException("The destination did not return a writable URI.")), "CopyBucketItemError", ErrorCategory.InvalidOperation, dstBucket));
+                            continue;
+                        }
+
+                        // Two different Orchestrator buckets (even across tenants) can be backed by the
+                        // same external storage; when the resolved read and write URIs point to the same
+                        // physical object, copying would stream the file onto itself (pointless, and a
+                        // concurrent read+write of one object). Skip it.
+                        if (BlobUriHelper.SamePhysicalObject(readAccess?.Uri, writeAccess.Uri))
+                        {
+                            if (!warnedSameTarget)
+                            {
+                                WriteWarning($"'{srcBucket.GetPSPath()}': source and destination resolve to the same external storage; nothing to copy.");
+                                warnedSameTarget = true;
+                            }
                             continue;
                         }
 
