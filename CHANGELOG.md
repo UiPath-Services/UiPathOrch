@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-06-24
+
+### Added
+
+#### Cmdlets
+
+- **`Copy-OrchBucketItem` — copy the files inside storage buckets directly from one folder, drive, or
+  tenant to another.** The bucket-file counterpart of `Copy-OrchQueueItem`: a folder copy
+  (`Copy-Item -Recurse`) and `Copy-OrchBucket` reproduce only the bucket *definition*, while this
+  carries the *contents*. Each file is streamed from the source's pre-signed read URI straight into the
+  destination's pre-signed write URI with **no local staging** — the read runs through the source
+  drive's connection and the write through the destination's, so each side's proxy/SSL applies. (The
+  `Export-OrchBucketItem` → disk → `Import-OrchBucketItem` round-trip remains the right tool when you
+  need the files on local disk for backup, inspection, or editing.) `-Name`, `-FullPath` and
+  `-Destination` are mandatory and positional (matching the `Export-OrchBucketItem` argument order);
+  there is no silent "copy everything" default, so pass `*` to mean all buckets or all files.
+  `-DestinationBucket` retargets a single source bucket to a differently-named destination bucket and
+  tab-completes against the destination folder's buckets. Copying a bucket onto itself is a no-op (it
+  warns), while a same-folder copy to a *different* bucket is allowed. The source content-type is
+  preserved. The successfully-copied source files are emitted, so
+  `Copy-OrchBucketItem … | Remove-OrchBucketItem` performs a transaction-safe copy-then-delete move.
+
+### Changed
+
+#### Cmdlets
+
+- **BREAKING: `Remove-OrchBucketItem` now requires `-Name` and `-FullPath`.** Both were previously
+  optional, so a bare `Remove-OrchBucketItem -Recurse` — or `Remove-OrchBucketItem MyBucket` without
+  `-FullPath` — would delete files by omission, in the worst case every file in every bucket. They are
+  now mandatory, aligning the cmdlet with the rest of the `Remove-Orch*` family (which all require a
+  mandatory `-Name`) and closing that footgun. To delete all files in a bucket, pass `*` explicitly:
+  `Remove-OrchBucketItem MyBucket *`.
+
 ### Fixed
 
 #### Cmdlets

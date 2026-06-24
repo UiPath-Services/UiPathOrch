@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.9.7'
+ModuleVersion = '1.10.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,27 +503,29 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.9.7
+1.10.0
 
-Added (cmdlets): Progress bars across the module, now naming the item being processed. The name was
-previously left off because showing wide characters (Japanese/Chinese/Korean/emoji) in a progress bar
-breaks its rendering (PowerShell #21293); this release works around that by replacing each run of wide
-characters with "[N]" (N = hidden char count), keeping the ASCII parts of a name visible. Read cmdlets
-that fan out over folders/drives show a real percentage as their parallel fetches complete, and
-mutation cmdlets (Set/Remove/Add/Update/New) show per-item progress as they write. A version gate
-restores full names once the upstream fix (PR #26185) ships.
+Added (cmdlets): Copy-OrchBucketItem copies the FILES inside storage buckets directly from one folder,
+drive, or tenant to another -- the bucket-file counterpart of Copy-OrchQueueItem. A folder copy
+(Copy-Item -Recurse) and Copy-OrchBucket reproduce only the bucket definition; this carries the
+contents. Each file is streamed from the source's pre-signed read URI straight into the destination's
+pre-signed write URI with no local staging (Export-OrchBucketItem -> disk -> Import-OrchBucketItem
+remains the tool for local backup/inspection/editing). Name/FullPath/Destination are mandatory
+positional (matching Export-OrchBucketItem); pass * to mean all. -DestinationBucket retargets a single
+source bucket to a differently-named destination bucket and tab-completes against the destination
+folder's buckets. Copying a bucket onto itself is a no-op; a same-folder copy to a different bucket is
+allowed. The copied source files are emitted, so Copy-OrchBucketItem ... | Remove-OrchBucketItem
+performs a copy-then-delete move.
 
-Changed (cmdlets): Get-OrchProcess (list-only) fetches each folder's processes in parallel (cap=4)
-instead of one at a time. The two-phase Get cmdlets (PackageVersion, LibraryVersion, TestDataQueueItem,
-UserDetail, the *Link trio, PmGroupLicense, PmGroupMember) now run their two phases sequentially so each
-progress bar has a known denominator and shows a real percentage; Get-OrchUserDetail's bar becomes a
-real percentage instead of a running index. Output no longer streams during the listing phase
-(negligible for single/few-folder use).
+Changed (cmdlets): BREAKING -- Remove-OrchBucketItem now requires -Name and -FullPath. Both were
+optional, so a bare Remove-OrchBucketItem -Recurse (or Remove-OrchBucketItem MyBucket without
+-FullPath) would delete files by omission, in the worst case every file in every bucket. They are now
+mandatory, aligning with the rest of the Remove-Orch* family and closing that footgun. To delete all
+files in a bucket, pass * explicitly: Remove-OrchBucketItem MyBucket *.
 
-Internal: added WithProgressBar() (enumerable wrapper) and GetResultWithProgress() (parallel completion
-progress) helpers; removed ChainedThreadPool / RunForEachChained (~200 lines) now that all two-phase
-cmdlets use two sequential RunForEach passes; dropped redundant (object) casts on RunForEach target
-lambdas. Behavior-preserving.
+Fixed (cmdlets): a transient server error (HTTP 500/502) no longer wedges the cache for the rest of the
+session; such statuses now cache only briefly (2-minute TTL) and the slot self-heals once the server
+recovers.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
