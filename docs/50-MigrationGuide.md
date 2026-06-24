@@ -156,7 +156,7 @@ Get-OrchSetting -Path Destination: 'Deployment.Libraries.FeedScope'
 |---|---|
 | `Host` | Only host feed (libraries cannot be copied) |
 | `Tenant` | Only tenant feed |
-| `Both` | Both host and tenant feeds |
+| `All` | Both host and tenant feeds |
 
 After confirming with the user:
 
@@ -876,7 +876,7 @@ re-set cmdlet for each entity, plus details on credential assets.
   |---|---|
   | `Host` | Only host feed (libraries cannot be copied) |
   | `Tenant` | Only tenant feed |
-  | `Both` | Both host and tenant feeds |
+  | `All` | Both host and tenant feeds |
 - **Entity dependencies**: Some entities reference other entities, so copy
   order matters. For example, processes depend on packages, so packages must
   be copied first.
