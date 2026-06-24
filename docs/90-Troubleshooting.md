@@ -12,6 +12,7 @@ permalink: /troubleshooting/
 - [Reading Logs](#reading-logs)
 - [Calling Endpoints Directly](#calling-endpoints-directly)
 - [API Reference](#api-reference)
+- [A PmUserPreference Change Doesn't Show in the Web UI](#a-pmuserpreference-change-doesnt-show-in-the-web-ui)
 - [Common Investigation Workflow](#common-investigation-workflow)
 - [Last Resort: Extracting the Access Token](#last-resort-extracting-the-access-token)
 
@@ -46,6 +47,31 @@ Get-OrchPSDrive Orch2: | Select-Object Root, Edition, AppId, Scope, RedirectUrl,
 | `Scope` | Must not exceed scopes granted to the external application |
 | `RedirectUrl` | Auto-configured. Verify it matches the Redirect URL registered in the external application |
 | `IdentityUrl` | Auto-configured for all editions. For Automation Suite the canonical pattern is `https://{host}/identity_` at the host root — pin it explicitly in the config if the auto-derived value doesn't reach your AS identity service |
+
+### Scope category must match the application type
+
+UiPath external applications come in two types, and the OAuth scopes granted on
+the Orchestrator admin page must match the type. A category mismatch leaves
+UiPathOrch unable to connect to the tenant (it surfaces as a token /
+authorization failure, not an obvious "wrong scope" message):
+
+- A **confidential application** (has an App Secret; authenticates as the
+  application via client credentials) requires **application scopes**.
+  Accidentally granting **user scopes** to a confidential app breaks the
+  connection.
+- A **non-confidential application** (PKCE; authenticates as the signed-in
+  user) requires **user scopes**. Granting **application scopes** to a
+  non-confidential app likewise breaks the connection.
+
+Check the drive's type and re-register the external application with the
+matching scope category if they disagree:
+
+```powershell
+Get-OrchPSDrive Orch2: | Select-Object IsConfidential, Scope
+```
+
+`IsConfidential = True` must be paired with application scopes; `False` (PKCE)
+must be paired with user scopes.
 
 ### Edition mis-detection
 
@@ -153,10 +179,10 @@ Example log entry:
 
 ```
 23:23:24.171 #0001 GET https://cloud.uipath.com/org/tenant/odata/Folders
-  REQ HEAD {"User-Agent":"UiPathOrch/1.0.0.0","Authorization":"Bearer ***"}
-  RSP 200 OK (0.234s)
-  RSP HEAD {"Content-Type":"application/json; odata.metadata=minimal"}
-  RSP BODY {"@odata.context":"...","@odata.count":5,"value":[...]}
+  REQ HEAD {"User-Agent":"UiPathOrch/1.0.0.0","Authorization":"***"}
+  RES Status: 200 OK
+  RES HEAD {"Content-Type":"application/json; odata.metadata=minimal"}
+  RES BODY {"@odata.context":"...","@odata.count":5,"value":[...]}
 ```
 
 To find errors in the latest log:
@@ -164,10 +190,14 @@ To find errors in the latest log:
 ```powershell
 $logDir = Get-OrchLogLocation
 $latest = Get-ChildItem $logDir | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-Show-TextFiles $latest.FullName -Contains 'RSP 4'    # 4xx errors
-Show-TextFiles $latest.FullName -Contains 'RSP 5'    # 5xx errors
-Show-TextFiles $latest.FullName -Contains 'EXCEPTION' # Exceptions
+Show-TextFiles $latest.FullName -Contains 'RES Status: 4'    # 4xx errors
+Show-TextFiles $latest.FullName -Contains 'RES Status: 5'    # 5xx errors
 ```
+
+Only requests that received an HTTP response are logged. A connection-level
+failure — DNS, TLS, proxy, or timeout, where no response arrives — is not
+written to the log; it surfaces as a terminating PowerShell error from the
+cmdlet instead.
 
 ## Calling Endpoints Directly
 
@@ -306,7 +336,7 @@ showing the old value even after a normal refresh.
 
 This is expected. The cmdlet writes the preference to the identity
 Setting store exactly as the web UI does (a single
-`PUT /api/identity/Setting` with the `UserLanguage.Language` /
+`PUT /api/Setting` with the `UserLanguage.Language` /
 `UserLanguage.Date` pair) — `Get-PmUserPreference` confirms the new
 value is stored. But the portal renders the *active* language/theme
 from a client-side cache (browser local storage) that is updated only
