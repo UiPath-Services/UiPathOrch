@@ -742,7 +742,10 @@ Notes:
   *configuration*. After copying, reset the bucket's credential with `Update-OrchBucket` —
   the copy sets a placeholder `Password` and warns you — and confirm the destination bucket
   points at the correct external storage. Files already in external storage do not need
-  re-uploading unless you are also moving the underlying storage.
+  re-uploading unless you are also moving the underlying storage. `Copy-OrchBucketItem`
+  handles this for you: when the source and destination buckets resolve to the **same**
+  external storage object it skips each file (warning once per bucket) instead of streaming
+  it onto itself, and it only transfers bytes when they point to **different** storage.
 - **Need the files on local disk** (backup, inspection, or editing before upload)? Use
   `Export-OrchBucketItem` to download them and `Import-OrchBucketItem` to upload them back,
   instead of the direct `Copy-OrchBucketItem`. The export layout
