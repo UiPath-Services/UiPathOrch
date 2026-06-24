@@ -357,6 +357,7 @@ CmdletsToExport = @(
 'Remove-OrchBucket',
 
 'Get-OrchBucketItem',
+'Copy-OrchBucketItem',
 'Export-OrchBucketItem',
 'Import-OrchBucketItem',
 'Remove-OrchBucketItem',

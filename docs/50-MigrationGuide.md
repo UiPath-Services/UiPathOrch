@@ -698,6 +698,62 @@ See [`Copy-OrchQueueItem`](help/en-US/Copy-OrchQueueItem.md) and
 [`Import-OrchQueueItem`](help/en-US/Import-OrchQueueItem.md) for the full
 parameter reference.
 
+### Copying Bucket Files
+
+Storage bucket **definitions** are copied along with their folders by
+`copy -Recurse` (or selectively with `Copy-OrchBucket`), but the **files
+inside** them are not — `copy` recreates the bucket *configuration* on the
+destination, not its contents. After the buckets are in place, copy the files
+separately with `Copy-OrchBucketItem`.
+
+The procedure, end to end:
+
+1. **Copy the folders and bucket definitions first.** `copy Source:\ Destination:\ -Recurse`
+   brings the folder tree and the bucket *definitions* across (or copy them selectively
+   with `Copy-OrchBucket -Recurse`). The destination buckets must exist before files are
+   added.
+2. **Copy the files** with `Copy-OrchBucketItem`. It streams each file straight from the
+   source to the destination — no local staging — preserving the folder/bucket structure
+   and each file's full in-bucket path.
+
+```powershell
+# 1. Copy folder tree + bucket definitions (also done by the master copy -Recurse)
+Copy-OrchBucket     -Path Source:\ -Destination Destination:\ -Recurse
+
+# 2. Copy the files into them, drive-to-drive (* * = all buckets, all files)
+Copy-OrchBucketItem -Path Source:\ * * -Destination Destination:\ -Recurse
+```
+
+Preview first with `-WhatIf`; it lists each file that would be copied without
+transferring anything.
+
+Notes:
+
+- **The destination bucket must already exist** (step 1). A file whose destination bucket
+  is missing is reported as a warning and skipped — create the bucket first with
+  `Copy-OrchBucket`.
+- **`-DestinationBucket`** redirects a single source bucket's files into a differently-named
+  destination bucket (it cannot be combined with `-Recurse`).
+- **`Copy-OrchBucketItem` emits the source files it copied**, so you can pipe into
+  `Remove-OrchBucketItem` for a copy-then-delete move:
+  `Copy-OrchBucketItem MyBucket * Destination:\Shared | Remove-OrchBucketItem`.
+- **External storage providers** (Amazon S3, Azure Blob, MinIO, etc.): the files live in
+  the customer's own storage, not in Orchestrator, so the copy recreates only the bucket
+  *configuration*. After copying, reset the bucket's credential with `Update-OrchBucket` —
+  the copy sets a placeholder `Password` and warns you — and confirm the destination bucket
+  points at the correct external storage. Files already in external storage do not need
+  re-uploading unless you are also moving the underlying storage.
+- **Need the files on local disk** (backup, inspection, or editing before upload)? Use
+  `Export-OrchBucketItem` to download them and `Import-OrchBucketItem` to upload them back,
+  instead of the direct `Copy-OrchBucketItem`. The export layout
+  (`<folder path>\<bucket name>\<file>`) is exactly what `Import-OrchBucketItem -Recurse`
+  expects, so the two round-trip without reshuffling the staging folder.
+
+See [`Copy-OrchBucketItem`](help/en-US/Copy-OrchBucketItem.md),
+[`Export-OrchBucketItem`](help/en-US/Export-OrchBucketItem.md) and
+[`Import-OrchBucketItem`](help/en-US/Import-OrchBucketItem.md) for the full
+parameter reference.
+
 ### Copying via CSV
 
 Export entities to CSV, edit as needed, then import into a Copy cmdlet.
@@ -849,6 +905,10 @@ Copy-OrchAsset -Path "Source:\user1's workspace" * -Destination "Destination:\ne
   copied when copying folders. Copy them separately using
   `Copy-OrchQueueItem` (only Status=New items can be copied). See
   [Copying Queue Items](#copying-queue-items) for the procedure and examples.
+- **Storage bucket files**: Like queue items, the files inside a bucket are not
+  copied when copying folders — only the bucket definition is. Copy the files
+  separately with `Copy-OrchBucketItem` (drive-to-drive, no local staging). See
+  [Copying Bucket Files](#copying-bucket-files) for the procedure and examples.
 - **Logs**: Due to API constraints, logs cannot be copied.
 - **Choosing between Case A and Case B**: If usernames are the same on source
   and destination, use Case A. If usernames differ, always use Case B with

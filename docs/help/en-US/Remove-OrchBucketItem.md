@@ -4,7 +4,7 @@ external help file: UiPathOrch.dll-Help.xml
 HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchBucketItem.md'
 Locale: en-US
 Module Name: UiPathOrch
-ms.date: 03/06/2026
+ms.date: 06/24/2026
 PlatyPS schema version: 2024-05-01
 title: Remove-OrchBucketItem
 ---
@@ -20,8 +20,8 @@ Removes files from storage buckets in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Remove-OrchBucketItem [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
- [[-FullPath] <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
+Remove-OrchBucketItem [-Name] <string[]> [-FullPath] <string[]> [-Path <string[]>] [-LiteralPath <string[]>]
+ [-Recurse] [-Depth <uint>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -29,6 +29,8 @@ Remove-OrchBucketItem [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-
 ## DESCRIPTION
 
 Removes (deletes) files from UiPath Orchestrator storage buckets. The -Name parameter selects which buckets to target, and the -FullPath parameter specifies which files to remove within those buckets. Both parameters support wildcards, allowing batch deletion of multiple files.
+
+-Name and -FullPath are both **mandatory**. As a destructive cmdlet it follows the Remove-Orch* convention of a mandatory selector, and this closes a dangerous omission default — there is no silent "delete everything" when the selector is left off. To delete all files in a bucket, pass `*` explicitly (e.g. `Remove-OrchBucketItem DataBucket *`).
 
 The -Name and -FullPath parameters support tab completion. Press [Ctrl+Space] or [Tab] to see available bucket names and file paths dynamically populated from the target folders. Multiple values can be specified using comma-separated text that includes wildcards.
 
@@ -205,7 +207,7 @@ HelpMessage: ''
 
 ### -FullPath
 
-Specifies the FullPath of the files to remove from the storage buckets. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests file paths from the target buckets.
+Specifies the FullPath of the files to remove from the storage buckets. Mandatory — pass `*` to remove all files in the bucket. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests file paths from the target buckets.
 
 ```yaml
 Type: System.String[]
@@ -215,7 +217,7 @@ Aliases: []
 ParameterSets:
 - Name: (All)
   Position: 1
-  IsRequired: false
+  IsRequired: true
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true
   ValueFromRemainingArguments: false
@@ -226,7 +228,7 @@ HelpMessage: ''
 
 ### -Name
 
-Specifies the names of storage buckets to remove files from. If not specified, all storage buckets in the target folder are processed. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests bucket names from the target folders.
+Specifies the names of storage buckets to remove files from. Mandatory — pass `*` to target all storage buckets in the target folder. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests bucket names from the target folders.
 
 ```yaml
 Type: System.String[]
@@ -236,7 +238,7 @@ Aliases: []
 ParameterSets:
 - Name: (All)
   Position: 0
-  IsRequired: false
+  IsRequired: true
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true
   ValueFromRemainingArguments: false

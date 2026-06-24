@@ -1200,6 +1200,25 @@ internal class BucketNameCompleter<WritableOnly> : FolderScopedCompleter<Bucket>
     protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
 
+// Completes -DestinationBucket on Copy-OrchBucketItem: lists the (writable) buckets in the
+// folder named by -Destination, NOT -Path. Resolving against -Destination is the whole point —
+// the rename target must already exist on the destination drive, so the candidates come from
+// there. Falls back to no completions until -Destination is supplied (ResolvePath yields nothing
+// for a missing path).
+internal class DestinationBucketNameCompleter : FolderScopedCompleter<Bucket>
+{
+    protected override List<(OrchDriveInfo drive, Folder folder)> ResolveFolders(
+        CommandAst commandAst, IDictionary fakeBoundParameters)
+        => ResolvePath(commandAst, fakeBoundParameters, false, "Destination");
+
+    protected override IEnumerable<Bucket> GetEntities(OrchDriveInfo drive, Folder folder)
+        => drive.Buckets.Get(folder)
+            .Where(b => !(b.Options?.Contains("ReadOnly") ?? false));
+    protected override string GetName(Bucket e) => e.Name!;
+    protected override string GetTipHelp(Bucket e) => e.GetPSPath();
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
+}
+
 internal class BucketFullPathCompleter : OrchArgumentCompleter
 {
     public override IEnumerable<CompletionResult> CompleteArgumentCore(

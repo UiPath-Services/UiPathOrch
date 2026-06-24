@@ -2368,6 +2368,129 @@ public partial class OrchAPISession : IDisposable
         EnsureBlobSuccess(res);
     }
 
+    // Holds an open streaming bucket-item read: keeps the HTTP response alive so its
+    // body Stream stays readable until the caller has finished piping it into a write.
+    // Dispose releases the stream and the underlying response/connection.
+    public sealed class BucketItemReadStream : IDisposable
+    {
+        private readonly HttpResponseMessage _response;
+        public Stream Stream { get; }
+        public long? Length { get; }
+        public string? ContentType { get; }
+
+        internal BucketItemReadStream(HttpResponseMessage response, Stream stream, long? length, string? contentType)
+        {
+            _response = response;
+            Stream = stream;
+            Length = length;
+            ContentType = contentType;
+        }
+
+        public void Dispose()
+        {
+            Stream?.Dispose();
+            _response?.Dispose();
+        }
+    }
+
+    // Open a bucket item for streaming read. The response (and its body Stream) stay open
+    // inside the returned holder so the caller can pipe the bytes STRAIGHT into a destination
+    // write without staging to local disk. The GET runs through THIS session's bucket-item
+    // client, so the SOURCE drive's proxy / SSL config applies — which is why a cross-drive
+    // copy must open the read on the source session and the write on the destination session
+    // (their proxy/SSL settings can differ). Returns null on empty access (mirrors
+    // ReadBucketItem's no-op). Used by Copy-OrchBucketItem.
+    public BucketItemReadStream? OpenBucketItemRead(BlobFileAccess? access, CancellationToken cancelToken = default)
+    {
+        cancelToken.ThrowIfCancellationRequested();
+
+        if (access == null || string.IsNullOrWhiteSpace(access.Verb) || string.IsNullOrWhiteSpace(access.Uri))
+            return null;
+
+        HttpMethod method = access.Verb.Equals("POST", StringComparison.OrdinalIgnoreCase)
+            ? HttpMethod.Post
+            : HttpMethod.Get;
+
+        if (!Uri.TryCreate(access.Uri, UriKind.Absolute, out var _))
+            throw new ArgumentException($"Invalid Uri: {access.Uri}", nameof(access));
+
+        using var req = new HttpRequestMessage(method, access.Uri);
+        AddHeaders(req, access);
+
+        // Dedicated bucket-item client (no Authorization default header) — same rationale
+        // as ReadBucketItem: the presigned blob URI must not carry the session bearer.
+        EnsureBucketItemHttpClient();
+
+        // HttpClient_Send returns on ResponseHeadersRead, so the body is still streaming here.
+        var res = HttpClient_Send(req, _httpClientForBucketItem, cancelToken);
+        try
+        {
+            EnsureBlobSuccess(res);
+            var stream = res.Content.ReadAsStream();
+            return new BucketItemReadStream(res, stream, res.Content.Headers.ContentLength, res.Content.Headers.ContentType?.MediaType);
+        }
+        catch
+        {
+            res.Dispose();
+            throw;
+        }
+    }
+
+    // Upload a bucket item from an already-open stream (e.g. the body of a source read), so a
+    // cross-drive copy never lands the bytes on local disk. The PUT runs through THIS session's
+    // bucket-item client, so the DESTINATION drive's proxy / SSL config applies. A presigned PUT
+    // (S3 / Azure Blob) generally needs Content-Length and rejects chunked transfer, so we send
+    // the known length; when the source length is unknown we buffer once to a temp file to obtain
+    // it rather than risk a chunked PUT the backend refuses. Used by Copy-OrchBucketItem.
+    public void WriteBucketItemFromStream(BlobFileAccess access, Stream body, long? length, string? contentType, string fullPath, CancellationToken cancelToken)
+    {
+        cancelToken.ThrowIfCancellationRequested();
+
+        // For now, only PUT is supported (mirrors WriteBucketItem).
+        if (access.Verb!.ToUpperInvariant() != "PUT") throw new NotImplementedException();
+
+        if (!Uri.TryCreate(access.Uri, UriKind.Absolute, out var _))
+            throw new ArgumentException($"Invalid Uri: {access.Uri}", nameof(access));
+
+        if (length.HasValue)
+        {
+            PutBucketStream(access, body, length.Value, contentType, fullPath, cancelToken);
+            return;
+        }
+
+        // Unknown source length: buffer once to a temp file to obtain a Content-Length.
+        string temp = Path.GetTempFileName();
+        try
+        {
+            using (var tmp = new FileStream(temp, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 1024 * 128, options: FileOptions.SequentialScan))
+            {
+                body.CopyTo(tmp);
+            }
+            using var readBack = File.OpenRead(temp);
+            PutBucketStream(access, readBack, readBack.Length, contentType, fullPath, cancelToken);
+        }
+        finally
+        {
+            TryDeleteFileQuiet(temp);
+        }
+    }
+
+    private void PutBucketStream(BlobFileAccess access, Stream body, long length, string? contentType, string fullPath, CancellationToken cancelToken)
+    {
+        using var content = new StreamContent(body);
+        content.Headers.ContentType = new MediaTypeHeaderValue(
+            string.IsNullOrWhiteSpace(contentType) ? MimeTypeHelper.GetMimeType(fullPath) : contentType);
+        content.Headers.ContentLength = length;
+
+        using var req = new HttpRequestMessage(HttpMethod.Put, access.Uri) { Content = content };
+        AddHeaders(req, access);
+
+        EnsureBucketItemHttpClient();
+
+        using var res = HttpClient_Send(req, _httpClientForBucketItem, cancelToken);
+        EnsureBlobSuccess(res);
+    }
+
 
     // TODO
     //public void GetBucketsAcrossFolders(Int64 folderId)

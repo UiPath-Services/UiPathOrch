@@ -8,12 +8,16 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Remove, "OrchBucketItem", SupportsShouldProcess = true)]
 public class RemoveBucketItemCmdlet : OrchestratorPSCmdlet
 {
-    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    // -Name and -FullPath are mandatory: as a destructive cmdlet this follows the Remove-Orch*
+    // convention of a mandatory selector (every other Remove-Orch* makes -Name mandatory), and it
+    // closes a dangerous omission default — without it, a bare `Remove-OrchBucketItem -Recurse`
+    // would delete every file in every bucket. To delete all files in a bucket, pass * explicitly.
+    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
-    [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
+    [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BucketFullPathCompleter))]
     [SupportsWildcards]
     public string[]? FullPath { get; set; }
