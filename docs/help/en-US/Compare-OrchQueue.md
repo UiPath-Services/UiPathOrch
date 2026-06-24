@@ -46,7 +46,7 @@ Required permissions: Queues.View (both sides)
 ### Example 1: Verify queues migrated to another tenant
 
 ```powershell
-PS C:\> Compare-OrchQueue Orch1:\Finance Orch2:\Finance
+PS C:\> Compare-OrchQueue * Orch2:\Finance -Path Orch1:\Finance
 ```
 
 Compares every queue in Finance on Orch1 against the same-named queue in Finance on Orch2, showing only the differences.
@@ -54,7 +54,7 @@ Compares every queue in Finance on Orch1 against the same-named queue in Finance
 ### Example 2: Check only the schemas
 
 ```powershell
-PS C:\> Compare-OrchQueue Orch1:\Finance Orch2:\Finance -Property SpecificDataJsonSchema,OutputDataJsonSchema
+PS C:\> Compare-OrchQueue * Orch2:\Finance -Path Orch1:\Finance -Property SpecificDataJsonSchema,OutputDataJsonSchema
 ```
 
 Restricts the comparison to the queue JSON schemas, surfacing schema drift while ignoring unrelated settings.
@@ -62,7 +62,7 @@ Restricts the comparison to the queue JSON schemas, surfacing schema drift while
 ### Example 3: Inspect the differences
 
 ```powershell
-PS C:\> Compare-OrchQueue Orch1:\Finance Orch2:\Finance | Where-Object SideIndicator -eq '<>' |
+PS C:\> Compare-OrchQueue * Orch2:\Finance -Path Orch1:\Finance | Where-Object SideIndicator -eq '<>' |
     Select-Object Name -ExpandProperty Differences
 ```
 

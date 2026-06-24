@@ -39,7 +39,7 @@ Primary Endpoint: GET /odata/Settings
 
 OAuth required scopes: OR.Settings or OR.Settings.Read
 
-Required permissions:
+Required permissions: Settings.View
 
 ## EXAMPLES
 

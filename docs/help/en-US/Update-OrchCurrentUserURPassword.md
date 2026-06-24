@@ -30,7 +30,7 @@ Update-OrchCurrentUserURPassword [[-Path] <string[]>] [-LiteralPath <string[]>] 
 
 Updates the unattended robot (UR) password for the currently authenticated user in UiPath Orchestrator. Both -Password and -Confirmation are mandatory and must match; if they do not match, an error is returned.
 
-The passwords are SecureString parameters with DontShow set, so they will not appear in command history or logging. PowerShell will prompt interactively for these values if they are not provided on the command line.
+The passwords are SecureString parameters, so their values do not appear in command history or logging. PowerShell will prompt interactively for these values if they are not provided on the command line.
 
 This cmdlet first retrieves the current user via the GetCurrentUser API to determine the user ID, then calls the UpdateCurrentUserURPassword endpoint.
 
@@ -224,7 +224,7 @@ This cmdlet does not produce output. The password is updated on the server.
 
 Both -Password and -Confirmation must contain identical values. If they do not match, an error is returned with the message "Password does not match."
 
-The SecureString values are converted to plain text internally for the API call. The DontShow attribute prevents the values from appearing in command-line help or tab completion suggestions.
+The SecureString values are converted to plain text internally for the API call.
 
 ## RELATED LINKS
 

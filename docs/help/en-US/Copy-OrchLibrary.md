@@ -45,10 +45,10 @@ Required permissions: Libraries.View (source), Libraries.Create (destination)
 ### Example 1: Copy all libraries to another tenant
 
 ```powershell
-PS Orch1:\> Copy-OrchLibrary * Orch2:\
+PS Orch1:\> Copy-OrchLibrary * -Destination Orch2:\
 ```
 
-Copies all versions of all libraries from Orch1 to Orch2. The -Id (position 0) and -Destination (position 2) parameters are positional. Since -Version (position 1) is omitted, all versions are copied. Libraries that already exist in the destination are skipped.
+Copies all versions of all libraries from Orch1 to Orch2. -Id is positional (Position 0); -Destination must be named because the second positional argument would otherwise bind to -Version (Position 1). With -Version omitted, all versions are copied. Libraries that already exist in the destination are skipped.
 
 ### Example 2: Copy a specific version to another tenant
 

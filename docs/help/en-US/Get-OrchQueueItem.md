@@ -38,7 +38,7 @@ Gets queue items (transactions) from UiPath Orchestrator queues. Queue items rep
 
 This cmdlet supports extensive filtering by status, priority, robot, reviewer, exception type, various date ranges, and specific item ids (-Id, emitted as an OData `Id in (...)` filter). When no filter parameters are specified, the cmdlet outputs cached items and displays a warning. Use -First to limit the number of results returned.
 
-Results are ordered by DeferDate in descending order by default. Use -OrderBy to change the sort field and -OrderAscending to reverse the sort direction.
+Results are ordered by Id in descending order by default. Use -OrderBy to change the sort field and -OrderAscending to reverse the sort direction.
 
 The -Name parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see available queue names dynamically populated from the target folders. The -Status, -Revision, -Priority, and -Exception parameters also support tab completion with predefined values.
 
@@ -671,7 +671,7 @@ The cmdlet enforces a 600ms delay between API calls to respect Orchestrator rate
 
 When no filter parameters are specified, the cmdlet returns cached items and displays a warning. Specify at least one filter parameter (such as -Name, -Status, or -First) to query the server directly.
 
-The default sort order is by DeferDate in descending order. Use -OrderBy and -OrderAscending to customize sorting.
+The default sort order is by Id in descending order. Use -OrderBy and -OrderAscending to customize sorting.
 
 For viewing items as a flat table, use the Expanded ScriptProperty (single queue) or Format-OrchQueueItem (multiple queues). See the Description and Examples 9-10.
 

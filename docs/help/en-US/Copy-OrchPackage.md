@@ -52,10 +52,10 @@ Required permissions: (Packages.View or FolderPackages.View - source) and (Packa
 ### Example 1: Copy a package to another folder
 
 ```powershell
-PS Orch1:\Shared> Copy-OrchPackage BlankProcess19 Orch1:\Dept#2
+PS Orch1:\Shared> Copy-OrchPackage BlankProcess19 -Destination Orch1:\Dept#2
 ```
 
-Copies all versions of "BlankProcess19" from the current folder (Shared) to the Dept#2 folder. Because -Id is at position 0 and -Destination is at position 2, the parameter names can be omitted when -Version is not specified.
+Copies all versions of "BlankProcess19" from the current folder (Shared) to the Dept#2 folder. -Id is positional (Position 0); -Destination is named here because the second positional argument would otherwise bind to -Version (Position 1), leaving the mandatory -Destination unset.
 
 ### Example 2: Copy a specific version to another folder
 

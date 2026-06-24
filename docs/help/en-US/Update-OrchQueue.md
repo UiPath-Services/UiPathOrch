@@ -89,10 +89,10 @@ Displays what would happen if all queues matching "Test*" were updated, without 
 ### Example 5: Update multiple queues by name
 
 ```powershell
-PS Orch1:\Shared> Update-OrchQueue TestQueue2,TestQueue123 -EnforceUniqueReference true
+PS Orch1:\Shared> Update-OrchQueue TestQueue2,TestQueue123 -MaxNumberOfRetries 3
 ```
 
-Enables unique reference enforcement on two specified queues in the current folder. Multiple queue names can be specified as comma-separated values.
+Sets the maximum retry count on two specified queues in the current folder. Multiple queue names can be specified as comma-separated values.
 
 ### Example 6: Import updates from CSV
 

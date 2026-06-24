@@ -55,7 +55,7 @@ Required permissions: Assets.View (both sides)
 ### Example 1: Verify a folder migrated correctly
 
 ```powershell
-PS C:\> Compare-OrchAsset Orch1:\Finance Orch2:\Finance
+PS C:\> Compare-OrchAsset * Orch2:\Finance -Path Orch1:\Finance
 ```
 
 Compares every asset in Finance on Orch1 against the same-named asset in Finance on Orch2. Only differences are shown: "<=" for assets missing on Orch2, "=>" for extra assets on Orch2, and "<>" for assets whose values differ.
@@ -63,7 +63,7 @@ Compares every asset in Finance on Orch1 against the same-named asset in Finance
 ### Example 2: Include matching assets
 
 ```powershell
-PS C:\> Compare-OrchAsset Orch1:\Finance Orch2:\Finance -IncludeEqual
+PS C:\> Compare-OrchAsset * Orch2:\Finance -Path Orch1:\Finance -IncludeEqual
 ```
 
 Adds "==" rows for assets that match on every compared property, giving a full side-by-side picture.
@@ -71,7 +71,7 @@ Adds "==" rows for assets that match on every compared property, giving a full s
 ### Example 3: Inspect the per-property differences
 
 ```powershell
-PS C:\> Compare-OrchAsset Orch1:\Finance Orch2:\Finance | Where-Object SideIndicator -eq '<>' |
+PS C:\> Compare-OrchAsset * Orch2:\Finance -Path Orch1:\Finance | Where-Object SideIndicator -eq '<>' |
     Select-Object Name -ExpandProperty Differences
 ```
 
@@ -104,7 +104,7 @@ Broadcast mode with a wildcard reference. Compares every Conn* asset against the
 ### Example 7: Cross-tenant comparison with user mapping
 
 ```powershell
-PS C:\> Compare-OrchAsset Orch1:\Shared Orch2:\Shared -UserMappingCsv c:user-mapping.csv
+PS C:\> Compare-OrchAsset * Orch2:\Shared -Path Orch1:\Shared -UserMappingCsv c:user-mapping.csv
 ```
 
 Compares across tenants and translates reference per-user value owners to their difference-side user names via the CSV, so remapped users do not show up as spurious UserValues differences. The mapping has no effect within one tenant. Use New-OrchUserMappingCsv to generate the file.

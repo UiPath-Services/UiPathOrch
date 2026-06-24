@@ -40,9 +40,9 @@ This cmdlet supports ShouldProcess. Use -WhatIf to preview which calendars would
 
 The -Name, -ExcludedDate, and -Path parameters support tab completion. Press [Ctrl+Space] or [Tab] to see available values. The -Name completion is dynamically populated from actual calendar names. The -ExcludedDate completion suggests dates one week after the last specified date.
 
-Primary Endpoint: GET /odata/Calendars, GET /odata/Calendars({calendarId}), POST /odata/Calendar, PUT /odata/Calendars({calendarId})
+Primary Endpoint: GET /odata/Calendars, GET /odata/Calendars({calendarId}), POST /odata/Calendars, PUT /odata/Calendars({calendarId})
 
-OAuth required scopes: OR.Settings or OR.Settings.Read
+OAuth required scopes: OR.Settings or OR.Settings.Write
 
 Required permissions: Settings.Create Settings.Edit
 
@@ -171,7 +171,7 @@ HelpMessage: ''
 
 ### -IncludePastDate
 
-Allows the addition of dates earlier than yesterday.
+Allows the addition of dates earlier than today.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter

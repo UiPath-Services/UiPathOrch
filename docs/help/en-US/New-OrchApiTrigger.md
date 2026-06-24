@@ -54,7 +54,7 @@ Required permissions: HttpTriggers.Create
 PS Orch1:\Shared> New-OrchApiTrigger -Name MyTrigger -Release MyProcess
 ```
 
-Creates an API trigger named `MyTrigger` bound to release `MyProcess` in the current folder. Method defaults to `Get`, CallingMode to `AsyncRequestReply`, Enabled to true, and Slug to the trigger Name.
+Creates an API trigger named `MyTrigger` bound to release `MyProcess` in the current folder. Method defaults to `Post`, CallingMode to `AsyncRequestReply`, Enabled to true, and Slug to the trigger Name.
 
 ### Example 2: Create a trigger with explicit fields
 

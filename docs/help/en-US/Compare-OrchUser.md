@@ -48,7 +48,7 @@ Required permissions: Users.View (both sides)
 ### Example 1: Verify users migrated between tenants
 
 ```powershell
-PS C:\> Compare-OrchUser Orch1: Orch2:
+PS C:\> Compare-OrchUser * Orch2: -Path Orch1:
 ```
 
 Compares every user on Orch1 against the same-named user on Orch2, showing only the differences (for example a different role set or license type).
@@ -56,7 +56,7 @@ Compares every user on Orch1 against the same-named user on Orch2, showing only 
 ### Example 2: Cross-directory comparison with a user-name mapping
 
 ```powershell
-PS C:\> Compare-OrchUser Orch1: Orch2: -UserMappingCsv c:user-mapping.csv
+PS C:\> Compare-OrchUser * Orch2: -Path Orch1: -UserMappingCsv c:user-mapping.csv
 ```
 
 Translates reference user names to their difference-side equivalents before matching, so users renamed across directories are paired instead of appearing as missing/extra. Use New-OrchUserMappingCsv to generate the file.

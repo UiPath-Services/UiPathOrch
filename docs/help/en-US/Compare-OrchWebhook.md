@@ -46,7 +46,7 @@ Required permissions: Webhooks.View (both sides)
 ### Example 1: Verify webhooks migrated between tenants
 
 ```powershell
-PS C:\> Compare-OrchWebhook Orch1: Orch2:
+PS C:\> Compare-OrchWebhook * Orch2: -Path Orch1:
 ```
 
 Compares every webhook on Orch1 against the same-named webhook on Orch2, showing only the differences (for example a different Url or a changed event subscription).
@@ -54,7 +54,7 @@ Compares every webhook on Orch1 against the same-named webhook on Orch2, showing
 ### Example 2: Check only the subscribed events
 
 ```powershell
-PS C:\> Compare-OrchWebhook Orch1: Orch2: -Property Events,SubscribeToAllEvents
+PS C:\> Compare-OrchWebhook * Orch2: -Path Orch1: -Property Events,SubscribeToAllEvents
 ```
 
 Restricts the comparison to the event subscription.

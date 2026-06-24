@@ -176,7 +176,7 @@ HelpMessage: ''
 
 ### -Name
 
-Specifies the Name(s) of the entity. For Update-, wildcards match against existing entities in the target.
+Specifies the name of the webhook to create.
 
 ```yaml
 Type: System.String[]
@@ -197,7 +197,7 @@ HelpMessage: ''
 
 ### -Path
 
-Specifies the target. Webhooks are drive-scoped (e.g. Orch1:); TestSetSchedules are folder-scoped. Supports wildcards.
+Specifies the target. Webhooks are drive-scoped (e.g. Orch1:). Supports wildcards.
 
 ```yaml
 Type: System.String[]

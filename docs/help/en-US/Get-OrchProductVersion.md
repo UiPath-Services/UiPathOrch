@@ -29,7 +29,7 @@ Get-OrchProductVersion [[-Path] <string[]>] [-LiteralPath <string[]>] [<CommonPa
 
 Returns the Orchestrator product version information for one or more Orch drives. Useful for confirming which Orchestrator release a drive is talking to — for example, when troubleshooting version-specific behavior, validating a customer environment before reproducing an issue, or comparing versions across multiple environments in one command.
 
-The cmdlet runs in parallel across the targeted drives and caches the result per drive, so repeated calls in the same session are cheap.
+The cmdlet runs in parallel across the targeted drives and caches the result per organization (one fetch shared by all drives/tenants in the same org), so repeated calls in the same session are cheap.
 
 The -Path parameter selects which drive(s) to query. If omitted, all connected Orch drives are queried. Tab completion lists the available Orch drives.
 

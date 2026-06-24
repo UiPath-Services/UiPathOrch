@@ -185,13 +185,6 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### CommonParameters
-
-This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
--InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
--ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
-[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
-
 ### -CsvEncoding
 
 Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
@@ -233,6 +226,13 @@ DontShow: false
 AcceptedValues: []
 HelpMessage: ''
 ```
+
+### CommonParameters
+
+This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
+-InformationAction, -InformationVariable, -OutBuffer, -OutVariable, -PipelineVariable,
+-ProgressAction, -Verbose, -WarningAction, and -WarningVariable. For more information, see
+[about_CommonParameters](https://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 

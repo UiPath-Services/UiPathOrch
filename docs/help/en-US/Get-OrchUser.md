@@ -87,7 +87,7 @@ Gets all robot accounts registered in the tenant. Valid values for -Type are Dir
 PS Orch1:\> Get-OrchUser -ExpandDetails
 ```
 
-Emits a deprecation warning and routes through `Get-OrchUserDetail`. Use `Get-OrchUserDetail -UserName '*'` directly instead.
+Emits a deprecation warning and routes through `Get-OrchUserDetail`. Use `Get-OrchUserDetail -UserName *` directly instead.
 
 ### Example 6: Get a user from a specific drive
 
@@ -194,7 +194,7 @@ HelpMessage: ''
 
 ### -ExportCsv
 
-Exports users to the specified CSV file path. The CSV includes columns for Path, UserName, FullName, Type, license settings, unattended robot configuration, execution settings, and Roles. When this parameter is specified, -ExpandDetails is implied automatically. Requires a filesystem path (not an Orch: drive path).
+Exports users to the specified CSV file path. The CSV includes columns for Path, UserName, FullName, Type, license settings, unattended robot configuration, execution settings, and Roles. When this parameter is specified, the per-user detail fetch runs automatically. Requires a filesystem path (not an Orch: drive path).
 
 ```yaml
 Type: System.String

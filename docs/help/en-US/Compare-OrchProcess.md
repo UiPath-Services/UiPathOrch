@@ -46,7 +46,7 @@ Required permissions: Processes.View (both sides)
 ### Example 1: Verify processes migrated to another tenant
 
 ```powershell
-PS C:\> Compare-OrchProcess Orch1:\Finance Orch2:\Finance
+PS C:\> Compare-OrchProcess * Orch2:\Finance -Path Orch1:\Finance
 ```
 
 Compares every process in Finance on Orch1 against the same-named process in Finance on Orch2, showing only the differences.
@@ -63,7 +63,7 @@ Walks Shared and all its subfolders and lists only the processes that differ (fo
 ### Example 3: Include matching processes
 
 ```powershell
-PS C:\> Compare-OrchProcess Orch1:\Finance Orch2:\Finance -IncludeEqual
+PS C:\> Compare-OrchProcess * Orch2:\Finance -Path Orch1:\Finance -IncludeEqual
 ```
 
 Adds "==" rows for processes that match on every compared property.

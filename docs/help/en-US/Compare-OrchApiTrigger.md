@@ -46,7 +46,7 @@ Required permissions: Triggers.View (both sides)
 ### Example 1: Verify API triggers migrated to another tenant
 
 ```powershell
-PS C:\> Compare-OrchApiTrigger Orch1:\Finance Orch2:\Finance
+PS C:\> Compare-OrchApiTrigger * Orch2:\Finance -Path Orch1:\Finance
 ```
 
 Compares every API trigger in Finance on Orch1 against the same-named trigger in Finance on Orch2, showing only the differences.

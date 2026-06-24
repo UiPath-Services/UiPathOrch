@@ -49,7 +49,7 @@ Required permissions: Users.View
 ### Example 1: Detail for all users on the current drive
 
 ```powershell
-PS Orch1:\> Get-OrchUserDetail -UserName '*'
+PS Orch1:\> Get-OrchUserDetail -UserName *
 ```
 
 Returns the detailed payload for every user on `Orch1:\`. The explicit `*` reminds the user that the operation fans out across every user; omitting `-UserName` would prompt instead of silently fetching everything.
@@ -65,7 +65,7 @@ Returns the detailed payload for the named user. `-UserName` is positional (Posi
 ### Example 3: Detail for robots only
 
 ```powershell
-PS Orch1:\> Get-OrchUserDetail -UserName '*' -Type DirectoryRobot
+PS Orch1:\> Get-OrchUserDetail -UserName * -Type DirectoryRobot
 ```
 
 Combines the mandatory selector with a `-Type` filter to fetch detail only for robot accounts.
@@ -73,7 +73,7 @@ Combines the mandatory selector with a `-Type` filter to fetch detail only for r
 ### Example 4: Export to CSV (round-trips with Add-OrchUser)
 
 ```powershell
-PS C:\> Get-OrchUserDetail -Path Orch1: -UserName '*' -ExportCsv C:\temp
+PS C:\> Get-OrchUserDetail -Path Orch1: -UserName * -ExportCsv C:\temp
 ```
 
 Exports the detailed payload of every user on `Orch1:` to `C:\temp\ExportedUsers.csv`. The CSV columns match `Add-OrchUser`'s import shape — the file can be piped via `Import-Csv | Add-OrchUser`.

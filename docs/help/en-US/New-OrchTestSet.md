@@ -21,7 +21,8 @@ Creates a new TestSet in UiPath Orchestrator.
 
 ```
 New-OrchTestSet [-Path <string[]>] [-LiteralPath <string[]>] [-Name] <string[]> [-Confirm]
- [-Description <string>] [-Enabled <string>] [-WhatIf] [<CommonParameters>]
+ [-Description <string>] [-Enabled <string>] [-Packages <TestSetPackage[]>]
+ [-TestCases <TestCase[]>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -119,6 +120,48 @@ Whether the entity is enabled at creation. Accepts "true" or "false". The server
 
 ```yaml
 Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Packages
+
+The TestSet's package entries as a typed `TestSetPackage[]` array (each with PackageIdentifier and VersionMask). The server requires this together with -TestCases; creation fails with errorCode 3204 if either is empty. Binds by property name, so a `Copy-OrchTestSet` object's Packages flow in on the pipeline.
+
+```yaml
+Type: UiPath.PowerShell.Entities.TestSetPackage[]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -TestCases
+
+The TestSet's test-case entries as a typed `TestCase[]` array (each with DefinitionId, ReleaseId, VersionNumber, Enabled). The server requires this together with -Packages; creation fails with errorCode 3204 if either is empty. Binds by property name.
+
+```yaml
+Type: UiPath.PowerShell.Entities.TestCase[]
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []

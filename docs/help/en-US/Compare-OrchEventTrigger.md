@@ -46,7 +46,7 @@ Required permissions: Triggers.View (both sides)
 ### Example 1: Verify event triggers migrated to another tenant
 
 ```powershell
-PS C:\> Compare-OrchEventTrigger Orch1:\Finance Orch2:\Finance
+PS C:\> Compare-OrchEventTrigger * Orch2:\Finance -Path Orch1:\Finance
 ```
 
 Compares every event trigger in Finance on Orch1 against the same-named trigger in Finance on Orch2, showing only the differences.

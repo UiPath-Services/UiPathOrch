@@ -128,7 +128,7 @@ HelpMessage: ''
 
 ### -Depth
 
-Depth limit for -Recurse. 0 means unlimited.
+Depth limit for recursion. A depth of 0 targets only the current folder, with no subfolders included.
 
 ```yaml
 Type: System.UInt32

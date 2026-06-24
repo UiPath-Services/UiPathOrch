@@ -235,7 +235,7 @@ HelpMessage: ''
 
 ### -Enabled
 
-Whether the entity is enabled at creation. Accepts "true" or "false". The server defaults to true when omitted.
+Whether the trigger is enabled. Accepts "true" or "false".
 
 ```yaml
 Type: System.String

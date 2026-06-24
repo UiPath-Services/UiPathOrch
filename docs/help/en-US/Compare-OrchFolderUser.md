@@ -46,7 +46,7 @@ Required permissions: Subfolders.View, Units.View (both sides)
 ### Example 1: Verify folder access migrated to another tenant
 
 ```powershell
-PS C:\> Compare-OrchFolderUser Orch1:\Finance Orch2:\Finance
+PS C:\> Compare-OrchFolderUser * Orch2:\Finance -Path Orch1:\Finance
 ```
 
 Compares the user assignments of Finance on Orch1 against Finance on Orch2, showing only the differences (missing users, extra users, or changed role sets).

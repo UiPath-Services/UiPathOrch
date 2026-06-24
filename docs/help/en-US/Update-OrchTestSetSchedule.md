@@ -242,7 +242,7 @@ HelpMessage: ''
 
 ### -Path
 
-Specifies the target. Webhooks are drive-scoped (e.g. Orch1:); TestSetSchedules are folder-scoped. Supports wildcards.
+Specifies the target folder(s). TestSet schedules are folder-scoped. Supports wildcards.
 
 ```yaml
 Type: System.String[]

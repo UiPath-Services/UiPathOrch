@@ -46,7 +46,7 @@ Required permissions: Machines.View (both sides)
 ### Example 1: Verify machine assignments migrated to another tenant
 
 ```powershell
-PS C:\> Compare-OrchFolderMachine Orch1:\Finance Orch2:\Finance
+PS C:\> Compare-OrchFolderMachine * Orch2:\Finance -Path Orch1:\Finance
 ```
 
 Compares the machine assignments of Finance on Orch1 against Finance on Orch2, showing only the differences.

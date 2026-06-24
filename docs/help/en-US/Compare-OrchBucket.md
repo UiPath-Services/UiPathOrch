@@ -46,7 +46,7 @@ Required permissions: Buckets.View (both sides)
 ### Example 1: Verify buckets migrated to another tenant
 
 ```powershell
-PS C:\> Compare-OrchBucket Orch1:\Finance Orch2:\Finance
+PS C:\> Compare-OrchBucket * Orch2:\Finance -Path Orch1:\Finance
 ```
 
 Compares every bucket in Finance on Orch1 against the same-named bucket in Finance on Orch2, showing only the differences.

@@ -46,7 +46,7 @@ Required permissions: Calendars.View (both sides)
 ### Example 1: Verify calendars migrated between tenants
 
 ```powershell
-PS C:\> Compare-OrchCalendar Orch1: Orch2:
+PS C:\> Compare-OrchCalendar * Orch2: -Path Orch1:
 ```
 
 Compares every calendar on Orch1 against the same-named calendar on Orch2, showing only the differences (for example a changed set of excluded dates).
@@ -54,7 +54,7 @@ Compares every calendar on Orch1 against the same-named calendar on Orch2, showi
 ### Example 2: Inspect the differences
 
 ```powershell
-PS C:\> Compare-OrchCalendar Orch1: Orch2: | Where-Object SideIndicator -eq '<>' |
+PS C:\> Compare-OrchCalendar * Orch2: -Path Orch1: | Where-Object SideIndicator -eq '<>' |
     Select-Object Name -ExpandProperty Differences
 ```
 

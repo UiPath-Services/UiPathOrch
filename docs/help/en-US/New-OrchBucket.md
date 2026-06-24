@@ -262,7 +262,7 @@ HelpMessage: ''
 
 ### -StorageContainer
 
-Specifies the storage container name. Tab completion dynamically suggests available credential store names.
+Specifies the storage container name.
 
 ```yaml
 Type: System.String

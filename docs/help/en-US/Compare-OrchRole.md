@@ -46,7 +46,7 @@ Required permissions: Roles.View (both sides)
 ### Example 1: Verify roles migrated between tenants
 
 ```powershell
-PS C:\> Compare-OrchRole Orch1: Orch2:
+PS C:\> Compare-OrchRole * Orch2: -Path Orch1:
 ```
 
 Compares every role on Orch1 against the same-named role on Orch2, showing only the differences. A "<>" on Permissions means the granted-permission set differs.
@@ -54,7 +54,7 @@ Compares every role on Orch1 against the same-named role on Orch2, showing only 
 ### Example 2: See which roles are missing on the target
 
 ```powershell
-PS C:\> Compare-OrchRole Orch1: Orch2: | Where-Object SideIndicator -eq '<='
+PS C:\> Compare-OrchRole * Orch2: -Path Orch1: | Where-Object SideIndicator -eq '<='
 ```
 
 Lists roles that exist on Orch1 but not on Orch2.

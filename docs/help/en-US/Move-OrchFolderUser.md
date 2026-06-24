@@ -63,7 +63,7 @@ Assigns the user "ytsuda@gmail.com" to the Dept#2 folder with the same roles, wh
 ### Example 3: Move all users to another folder
 
 ```powershell
-PS Orch1:\Shared> Move-OrchFolderUser '*' Orch1:\Dept#2
+PS Orch1:\Shared> Move-OrchFolderUser * Orch1:\Dept#2
 ```
 
 Moves all users from the Shared folder to the Dept#2 folder.

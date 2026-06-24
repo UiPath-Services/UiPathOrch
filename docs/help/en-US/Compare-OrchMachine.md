@@ -46,7 +46,7 @@ Required permissions: Machines.View (both sides)
 ### Example 1: Verify machines exist on the target with matching capacity
 
 ```powershell
-PS C:\> Compare-OrchMachine Orch1: Orch2:
+PS C:\> Compare-OrchMachine * Orch2: -Path Orch1:
 ```
 
 Compares every machine on Orch1 against the same-named machine on Orch2, showing only the differences. A "<=" means the machine is missing on Orch2.
@@ -54,7 +54,7 @@ Compares every machine on Orch1 against the same-named machine on Orch2, showing
 ### Example 2: Check only slot capacity
 
 ```powershell
-PS C:\> Compare-OrchMachine Orch1: Orch2: -Property UnattendedSlots,HeadlessSlots,TestAutomationSlots
+PS C:\> Compare-OrchMachine * Orch2: -Path Orch1: -Property UnattendedSlots,HeadlessSlots,TestAutomationSlots
 ```
 
 Restricts the comparison to the runtime slot counts.

@@ -36,7 +36,7 @@ The -GroupName parameter supports wildcards and tab completion. Press [Ctrl+Spac
 
 When -ExportCsv is specified, the output is written to a CSV file instead of the pipeline. The CSV includes columns: Path and GroupName, sorted by group name.
 
-The -Path parameter specifies the target Orchestrator drives. If -Path is omitted, the current drive is targeted.
+The -Path parameter specifies the target Pm: drives (organizations). If -Path is omitted, the current drive is targeted.
 
 Primary Endpoint: GET /api/Group/{partitionGlobalId} (Identity Server)
 

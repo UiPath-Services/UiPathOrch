@@ -46,7 +46,7 @@ Required permissions: CredentialStores.View (both sides)
 ### Example 1: Verify credential stores migrated between tenants
 
 ```powershell
-PS C:\> Compare-OrchCredentialStore Orch1: Orch2:
+PS C:\> Compare-OrchCredentialStore * Orch2: -Path Orch1:
 ```
 
 Compares every credential store on Orch1 against the same-named store on Orch2, showing only the differences.
@@ -54,7 +54,7 @@ Compares every credential store on Orch1 against the same-named store on Orch2, 
 ### Example 2: Include matching stores
 
 ```powershell
-PS C:\> Compare-OrchCredentialStore Orch1: Orch2: -IncludeEqual
+PS C:\> Compare-OrchCredentialStore * Orch2: -Path Orch1: -IncludeEqual
 ```
 
 Adds "==" rows for stores that match on every compared property.
