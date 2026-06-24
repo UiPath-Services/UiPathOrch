@@ -104,13 +104,14 @@ Shows which files would be copied without transferring anything.
 
 ### -Name
 
-Specifies the names of the source storage buckets to copy files from. Mandatory — pass `*` to select all buckets in the source folder. Supports wildcards and multiple comma-separated values. Tab completion suggests bucket names from the source folders.
+Specifies the names of the source storage buckets to copy files from. Mandatory — pass `*` to select all buckets in the source folder. Supports wildcards and multiple comma-separated values. Tab completion suggests bucket names from the source folders. Aliased as `-Bucket`, so files piped from `Get-OrchBucketItem` bind it by property name (e.g. `Get-OrchBucketItem reports *.csv | Copy-OrchBucketItem -Destination Cloud:\Reports`).
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: true
-Aliases: []
+Aliases:
+- Bucket
 ParameterSets:
 - Name: (All)
   Position: 0

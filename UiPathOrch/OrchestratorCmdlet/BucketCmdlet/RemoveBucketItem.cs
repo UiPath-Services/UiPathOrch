@@ -12,7 +12,12 @@ public class RemoveBucketItemCmdlet : OrchestratorPSCmdlet
     // convention of a mandatory selector (every other Remove-Orch* makes -Name mandatory), and it
     // closes a dangerous omission default — without it, a bare `Remove-OrchBucketItem -Recurse`
     // would delete every file in every bucket. To delete all files in a bucket, pass * explicitly.
+    // Alias "Bucket" so a piped BlobFile binds -Name from its Bucket property. This is what makes the
+    // copy-then-delete move work: Copy-OrchBucketItem ... | Remove-OrchBucketItem. The emitted source
+    // files carry Path (folder), Bucket (bucket name), and FullPath (file); without the alias the
+    // now-mandatory -Name could not bind from the pipe.
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [Alias("Bucket")]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }

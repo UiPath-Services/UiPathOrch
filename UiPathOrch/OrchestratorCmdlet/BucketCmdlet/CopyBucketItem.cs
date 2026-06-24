@@ -26,7 +26,10 @@ public class CopyBucketItemCmdlet : OrchestratorPSCmdlet
     // of an explicit selector — there is no silent "copy everything" default; pass * to mean all.
     // Making all three mandatory also removes any positional ambiguity (a 2-argument call can't
     // bind the destination into the FullPath slot).
+    // Alias "Bucket" so a piped BlobFile binds -Name from its Bucket property:
+    // Get-OrchBucketItem ... | Copy-OrchBucketItem -Destination <dst>.
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [Alias("Bucket")]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }

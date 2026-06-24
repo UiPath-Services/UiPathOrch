@@ -28,6 +28,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   preserved. The successfully-copied source files are emitted, so
   `Copy-OrchBucketItem … | Remove-OrchBucketItem` performs a transaction-safe copy-then-delete move.
 
+- **The bucket-item cmdlets compose via the pipeline.** `Get-OrchBucketItem`, `Export-OrchBucketItem`,
+  `Copy-OrchBucketItem`, and `Remove-OrchBucketItem` now alias `-Name` as `-Bucket`, so a piped
+  bucket-file object binds the bucket/folder/file by property name. This makes `Get-OrchBucketItem` a
+  filterable file-selector front end: select with the full power of `Where-Object` (by size,
+  content-type, date, … — beyond what a `-FullPath` wildcard can express) and pipe the exact set into
+  `Export-` (download), `Copy-` (copy), or `Remove-OrchBucketItem` (delete). For example,
+  `Get-OrchBucketItem docs * | Where-Object ContentType -eq 'application/pdf' | Export-OrchBucketItem -Destination C:\pdfs`.
+
 ### Changed
 
 #### Cmdlets

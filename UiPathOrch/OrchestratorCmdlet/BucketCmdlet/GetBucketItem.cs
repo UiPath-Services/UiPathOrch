@@ -10,7 +10,10 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(BlobFile))]
 public class GetBucketItemCmdlet : OrchestratorPSCmdlet
 {
+    // Alias "Bucket" so a piped BlobFile binds -Name from its Bucket property, letting the
+    // bucket-item cmdlets compose: Get-OrchBucketItem ... | (Export|Copy|Remove)-OrchBucketItem.
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [Alias("Bucket")]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }

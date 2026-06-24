@@ -228,13 +228,14 @@ HelpMessage: ''
 
 ### -Name
 
-Specifies the names of storage buckets to remove files from. Mandatory — pass `*` to target all storage buckets in the target folder. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests bucket names from the target folders.
+Specifies the names of storage buckets to remove files from. Mandatory — pass `*` to target all storage buckets in the target folder. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests bucket names from the target folders. Aliased as `-Bucket`, so a piped bucket-file object (e.g. from `Get-OrchBucketItem` or `Copy-OrchBucketItem`) binds this parameter from its `Bucket` property — which is what makes the `Copy-OrchBucketItem … | Remove-OrchBucketItem` copy-then-delete move work.
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: true
-Aliases: []
+Aliases:
+- Bucket
 ParameterSets:
 - Name: (All)
   Position: 0

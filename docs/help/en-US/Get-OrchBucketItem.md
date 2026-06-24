@@ -202,13 +202,14 @@ HelpMessage: ''
 
 ### -Name
 
-Specifies the names of storage buckets to query. If not specified, all storage buckets in the target folder are queried. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests bucket names from the target folders.
+Specifies the names of storage buckets to query. If not specified, all storage buckets in the target folder are queried. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests bucket names from the target folders. Aliased as `-Bucket`, so the emitted bucket-file objects pipe by property name into `Export-`/`Copy-`/`Remove-OrchBucketItem`.
 
 ```yaml
 Type: System.String[]
 DefaultValue: None
 SupportsWildcards: true
-Aliases: []
+Aliases:
+- Bucket
 ParameterSets:
 - Name: (All)
   Position: 0

@@ -222,13 +222,14 @@ HelpMessage: ''
 
 ### -Name
 
-Specifies the names of storage buckets to export from. If not specified, all storage buckets in the target folder are processed. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests bucket names from the target folders.
+Specifies the names of storage buckets to export from. If not specified, all storage buckets in the target folder are processed. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests bucket names from the target folders. Aliased as `-Bucket`, so files piped from `Get-OrchBucketItem` bind it by property name (e.g. `Get-OrchBucketItem docs *.pdf | Export-OrchBucketItem -Destination C:\out`).
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: true
-Aliases: []
+Aliases:
+- Bucket
 ParameterSets:
 - Name: (All)
   Position: 0

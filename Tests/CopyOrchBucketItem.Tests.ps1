@@ -182,3 +182,57 @@ Describe 'Copy-OrchBucketItem same-folder / same-bucket' {
         ($w -join "`n") | Should -Match 'same bucket'
     }
 }
+
+Describe 'Copy-OrchBucketItem move (pipe to Remove-OrchBucketItem)' {
+    It 'copies to the destination and deletes the copied files from the source' {
+        # Dedicated buckets so the move does not disturb the other tests. The piped BlobFiles must
+        # bind Remove-OrchBucketItem's mandatory -Name from their Bucket property (Alias("Bucket")),
+        # -Path from Path, and -FullPath from FullPath -- otherwise the move silently fails to delete.
+        New-OrchBucket -Path $script:Src -Name 'zzMoveSrc' | Out-Null
+        New-OrchBucket -Path $script:Dst -Name 'zzMoveSrc' | Out-Null
+        Import-OrchBucketItem -Path $script:Src -Name 'zzMoveSrc' -Source (Join-Path $script:Stage 'meta.json')
+        Import-OrchBucketItem -Path $script:Src -Name 'zzMoveSrc' -Source (Join-Path $script:Stage 'readme.txt')
+        Clear-OrchCache $script:DriveColon | Out-Null
+
+        Copy-OrchBucketItem 'zzMoveSrc' * $script:Dst -Path $script:Src | Remove-OrchBucketItem -Confirm:$false
+        Clear-OrchCache $script:DriveColon | Out-Null
+
+        # Destination got the files...
+        @((Get-OrchBucketItem -Path $script:Dst -Name 'zzMoveSrc').FullPath | Where-Object { $_ }).Count | Should -Be 2
+        # ...and the source is now empty (the move deleted the copied files).
+        @((Get-OrchBucketItem -Path $script:Src -Name 'zzMoveSrc').FullPath | Where-Object { $_ }).Count | Should -Be 0
+    }
+}
+
+Describe 'Bucket-item pipe composition (Get-OrchBucketItem | Copy/Export via Bucket alias)' {
+    BeforeAll {
+        # A source bucket with two differently-typed files, plus a same-named destination bucket.
+        New-OrchBucket -Path $script:Src -Name 'zzPipe' | Out-Null
+        New-OrchBucket -Path $script:Dst -Name 'zzPipe' | Out-Null
+        Import-OrchBucketItem -Path $script:Src -Name 'zzPipe' -Source (Join-Path $script:Stage 'meta.json')
+        Import-OrchBucketItem -Path $script:Src -Name 'zzPipe' -Source (Join-Path $script:Stage 'readme.txt')
+        Clear-OrchCache $script:DriveColon | Out-Null
+    }
+
+    It 'Get-OrchBucketItem | Copy-OrchBucketItem copies a Where-Object-filtered set' {
+        # Filter by ContentType -- something the cmdlet's own -FullPath wildcard cannot express --
+        # then copy exactly those files. The piped BlobFile binds Copy's -Name from its Bucket alias.
+        Get-OrchBucketItem -Path $script:Src -Name 'zzPipe' * |
+            Where-Object ContentType -eq 'application/json' |
+            Copy-OrchBucketItem -Destination $script:Dst
+        Clear-OrchCache $script:DriveColon | Out-Null
+
+        $files = @((Get-OrchBucketItem -Path $script:Dst -Name 'zzPipe').FullPath | Where-Object { $_ })
+        $files | Should -Contain 'meta.json'
+        $files | Should -Not -Contain 'readme.txt'
+    }
+
+    It 'Get-OrchBucketItem | Export-OrchBucketItem downloads the piped files' {
+        $out = Join-Path $script:Stage 'pipe_export'
+        New-Item -Path $out -ItemType Directory -Force | Out-Null
+        Get-OrchBucketItem -Path $script:Src -Name 'zzPipe' * | Export-OrchBucketItem -Destination $out
+        $dl = @(Get-ChildItem $out -Recurse -File | ForEach-Object { $_.Name })
+        $dl | Should -Contain 'meta.json'
+        $dl | Should -Contain 'readme.txt'
+    }
+}

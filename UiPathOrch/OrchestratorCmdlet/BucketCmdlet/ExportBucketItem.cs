@@ -8,7 +8,10 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsData.Export, "OrchBucketItem", SupportsShouldProcess = true)]
 public class ExportBucketItemCmdlet : OrchestratorPSCmdlet
 {
+    // Alias "Bucket" so a piped BlobFile binds -Name from its Bucket property:
+    // Get-OrchBucketItem ... | Export-OrchBucketItem -Destination <dir>.
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [Alias("Bucket")]
     [ArgumentCompleter(typeof(BucketNameCompleter<False>))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
