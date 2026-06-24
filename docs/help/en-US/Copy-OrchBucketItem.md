@@ -343,11 +343,11 @@ The source files that were successfully copied. Pipe them into `Remove-OrchBucke
 
 The destination bucket must exist before running this cmdlet — copy the bucket definitions first with `Copy-OrchBucket` (or `Copy-Item -Recurse`, which copies definitions but not contents). A missing destination bucket is a warning, not an error.
 
-For Orchestrator-hosted buckets (StorageProvider = Orchestrator), this transfers the file contents. For external-storage buckets (Amazon S3, Azure Blob, MinIO, etc.) the files reside in the customer's own storage; in that case copy the bucket definition and reset its credential with `Update-OrchBucket` rather than re-uploading content.
+For Orchestrator-hosted buckets (StorageProvider = Orchestrator), this transfers the file contents. For external-storage buckets (Amazon S3, Azure Blob, MinIO, etc.) the files reside in the customer's own storage — copy the bucket definition and reset its credential with `Update-OrchBucket`. Whether the *contents* are also transferred depends on the target: see the note below on the same vs. a different external storage object.
 
 Unlike `Export-OrchBucketItem` / `Import-OrchBucketItem`, which stage files on local disk, this cmdlet streams source to destination directly. Use the Export/Import pair when you need the files on disk (backup, inspection, or editing before upload).
 
-A copy is skipped (with a warning, once per bucket) when the source and destination resolve to the same physical storage object — for example two Orchestrator buckets, even in different tenants, backed by the same external S3 / Azure bucket. This is detected by comparing the resolved pre-signed read and write URIs, so a file is never streamed onto itself.
+A copy is skipped (with a warning, once per bucket) when the source and destination resolve to the same physical storage object — for example two Orchestrator buckets, even in different tenants, backed by the same external S3 / Azure bucket. This is detected by comparing the resolved pre-signed read and write URIs, so a file is never streamed onto itself. When the destination points to a *different* external storage object, the bytes are transferred across as usual.
 
 ## RELATED LINKS
 
