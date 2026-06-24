@@ -523,9 +523,15 @@ optional, so a bare Remove-OrchBucketItem -Recurse (or Remove-OrchBucketItem MyB
 mandatory, aligning with the rest of the Remove-Orch* family and closing that footgun. To delete all
 files in a bucket, pass * explicitly: Remove-OrchBucketItem MyBucket *.
 
-Fixed (cmdlets): a transient server error (HTTP 500/502) no longer wedges the cache for the rest of the
-session; such statuses now cache only briefly (2-minute TTL) and the slot self-heals once the server
-recovers.
+Fixed (cmdlets): Import-OrchBucketItem now sets a correct content-type for many more file extensions
+(text/config/code: .md, .markdown, .yaml/.yml, .log, .tsv, .ini, .conf, .properties, .toml, .sql,
+.mjs, .xaml; images: .avif, .heic/.heif, .jfif; audio/video: .m4a, .aac, .ogg, .opus, .wma, .webm,
+.mkv, .m4v, .mpeg/.mpg, .3gp; archives: .tgz, .bz2, .xz; OpenDocument/EPUB: .odt, .ods, .odp, .epub;
+fonts: .woff, .woff2, .ttf, .otf, .eot) -- previously missing from the extension->MIME table, so they
+uploaded as application/octet-stream. .js was also updated from the deprecated application/javascript
+to text/javascript (RFC 9239), matching .mjs. Also: a transient server error (HTTP 500/502) no longer wedges
+the cache for the rest of the session; such statuses now cache only briefly (2-minute TTL) and the
+slot self-heals once the server recovers.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

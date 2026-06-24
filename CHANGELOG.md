@@ -43,6 +43,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### Cmdlets
 
+- **`Import-OrchBucketItem` now sets a correct content-type for many more file extensions.** A range of
+  common formats were missing from the extension → MIME-type table, so they were uploaded as
+  `application/octet-stream`. Added mappings for text/config/code (`.md`, `.markdown`, `.yaml`/`.yml`,
+  `.log`, `.tsv`, `.ini`, `.conf`, `.properties`, `.toml`, `.sql`, `.mjs`, `.xaml`), modern images
+  (`.avif`, `.heic`/`.heif`, `.jfif`), audio/video (`.m4a`, `.aac`, `.ogg`, `.opus`, `.wma`, `.webm`,
+  `.mkv`, `.m4v`, `.mpeg`/`.mpg`, `.3gp`), archives (`.tgz`, `.bz2`, `.xz`), OpenDocument/EPUB
+  (`.odt`, `.ods`, `.odp`, `.epub`), and fonts (`.woff`, `.woff2`, `.ttf`, `.otf`, `.eot`). `.js` was also
+  updated from the deprecated `application/javascript` to `text/javascript` (RFC 9239), matching `.mjs`.
+  Files whose extension is still unknown remain `application/octet-stream`, and `Copy-OrchBucketItem`
+  continues to preserve the source's content-type.
+
 - **A transient server error no longer wedges the cache for the rest of the session.** HTTP **500**
   and **502** responses were treated as deterministic and cached per slot, so after a single transient
   blip every later call for that entity — including tab-completion — re-threw the cached error without
