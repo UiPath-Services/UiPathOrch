@@ -289,8 +289,19 @@ Copy-PmRobotAccount -Path Source: * Destination:
 
 - `Copy-PmUser` automatically creates the groups that the copied users belong
   to. Therefore, there is no need to explicitly copy groups.
-- If the source organization is integrated with Active Directory, local user
-  copy is unnecessary — only directory users need to exist in the destination.
+- **When to skip `Copy-PmUser`:** if the destination organization is
+  AD / Entra ID integrated (no local users needed), or if the source is
+  AD-integrated, local-user copy is unnecessary — only directory users need to
+  exist in the destination.
+- **Cross-edition caveat (OnPrem → Cloud):** `Copy-PmUser` between different
+  Orchestrator editions (e.g., on-prem → Cloud) is **not yet verified**. As a
+  more controllable alternative, export the source local users and recreate
+  them at the destination explicitly:
+  ```powershell
+  Get-PmUser -Path Source: -ExportCsv C:\Migration\local-users.csv
+  # Review/edit the CSV, then recreate the users at the destination
+  Import-Csv C:\Migration\local-users.csv | New-PmUser -Path Destination:
+  ```
 - Directory users (AD / Entra ID) cannot be copied via API. They must be
   added to the destination organization through the identity provider.
 
@@ -351,9 +362,22 @@ Import-Csv c:\cred-assets.csv | Set-OrchCredentialAsset
 
 ### Case B: Username Mapping Required
 
+> **Maturity note.** The `-UserMappingCsv` workflow (`New-OrchUserMappingCsv`,
+> `Test-OrchUserMappingCsv`, and `-UserMappingCsv` on the copy cmdlets) has had
+> limited real-world validation so far. Before relying on it for a production
+> migration, **rehearse on a non-production destination**, run
+> `Test-OrchUserMappingCsv`, and verify a small sample of migrated entities
+> (a few folder-user assignments and per-user assets) before the full run.
+
 When source and destination username formats differ (e.g., AD username
 `DOMAIN\jsmith` -> Entra ID email `jsmith@contoso.com`), use the user mapping
 CSV to correctly translate user references during migration.
+
+> **Scope of the mapping CSV.** `New-OrchUserMappingCsv` enumerates **directory
+> users only** (AD / Entra ID). Local org users are *not* included — they are
+> handled separately in Step 1-2. Consequently the mapping CSV translates
+> **directory-user references inside tenant/folder entities** (folder-user
+> assignments, per-user assets, etc.); it is not used to copy local users.
 
 #### B-1: Generate User Mapping CSV
 
@@ -403,14 +427,14 @@ This cmdlet checks:
 
 Fix any errors and re-validate until all entries pass.
 
-#### B-4: Copy Organization-Level Entities with User Mapping
+#### B-4: Organization-Level Users
 
-When copying organization-level entities across organizations, use
-`-UserMappingCsv` to map users:
-
-```powershell
-Copy-PmUser -Path Source: * Destination: -UserMappingCsv C:\Migration\UserMapping.csv
-```
+Organization-level **local users** are handled as in Step 1-2 (the mapping CSV
+does not apply to them — it contains directory users only). **Directory users**
+are not copied via API; they must already exist in the destination organization
+through the identity provider. The mapping CSV is consumed in the next step,
+when tenant- and folder-level entities that *reference* those directory users
+are copied.
 
 #### B-5: Copy Tenant and Folder Entities with User Mapping
 

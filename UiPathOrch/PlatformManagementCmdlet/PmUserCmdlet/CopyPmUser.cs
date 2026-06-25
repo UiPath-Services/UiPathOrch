@@ -133,10 +133,19 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                 Dictionary<string, PmUser> dstUsers = null;
                 try
                 {
-                    dstUsers = dstDrive.PmUsers.Get().ToDictionary(
-                        u => u.email!,
-                        u => u,
-                        StringComparer.OrdinalIgnoreCase);
+                    // Build the "already taken" lookup defensively: a plain
+                    // ToDictionary(u => u.email) throws "an item with the same key
+                    // has already been added" when the destination has two+ users
+                    // sharing a key — in practice empty-email entries (key ""),
+                    // which collide. That exception was swallowed into a warning,
+                    // leaving dstUsers null and the duplicate check silently
+                    // disabled. Drop empty emails (they can't be a meaningful dup
+                    // target for an email-keyed create) and collapse duplicates so
+                    // the lookup is built reliably.
+                    dstUsers = dstDrive.PmUsers.Get()
+                        .Where(u => !string.IsNullOrEmpty(u.email))
+                        .GroupBy(u => u.email!, StringComparer.OrdinalIgnoreCase)
+                        .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
                 }
                 catch (Exception ex)
                 {
@@ -147,8 +156,24 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                 #region Add srcUsers belonging to the same srcGroups into a single payload
                 foreach (var srcUser in srcUsers)
                 {
+                    #region Skip users without an email address
+                    // Destination orgs key local users by email and reject creation
+                    // without one. On-prem MSI sources often have local users with
+                    // an alphabetic userName and an EMPTY email (observed: "" not
+                    // null). Previously these were sent through with email="" and,
+                    // because the BulkCreate response is not inspected, were silently
+                    // dropped by the server — no error, no warning, user not told.
+                    // Skip them explicitly with an actionable warning instead;
+                    // recreate via Get-PmUser -ExportCsv -> set the email -> New-PmUser.
+                    if (string.IsNullOrEmpty(srcUser.email))
+                    {
+                        WriteWarning($"{dstDrive.NameColonSeparator}: Skipping user '{srcUser.userName}' because it has no email address. Local users without an email cannot be created at the destination; recreate them manually (Get-PmUser -ExportCsv -> set the email -> New-PmUser).");
+                        continue;
+                    }
+                    #endregion
+
                     #region Skip if a user with the same name already exists in dstDrive
-                    if (dstUsers?.ContainsKey(srcUser.email!) ?? false)
+                    if (dstUsers?.ContainsKey(srcUser.email) ?? false)
                     {
                         WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"Username '{srcUser.email}' is already taken."), "GetPmGroupError", ErrorCategory.InvalidOperation, srcDrive));
                         continue;
@@ -194,6 +219,21 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                     var response = dstDrive.CreatePmUserBulk(payload);
                     dstDrive.PmUsers.ClearCache();
                     dstDrive.PmGroups.ClearCache();
+
+                    // BulkCreate can refuse some or all users (e.g. invalid /
+                    // duplicate / email-constraint) WITHOUT throwing. The previous
+                    // code ignored the response, so such rejections were silently
+                    // dropped — the operator never learned a user wasn't migrated.
+                    // Surface an explicit non-success the way NewPmUserBulk gates on
+                    // result.succeeded. Only act on an explicit `false` so a null
+                    // result (API-shape variance) doesn't produce a false alarm.
+                    if (response?.result?.succeeded == false)
+                    {
+                        var detail = response.result.errors is { Length: > 0 } errs
+                            ? string.Join("; ", errs)
+                            : "no detail returned by the server";
+                        WriteWarning($"{dstDrive.NameColonSeparator}: BulkCreate did not fully succeed for {payload.users.Count} user(s) in this group. Server reported: {detail}");
+                    }
                 }
                 catch (Exception ex)
                 {
