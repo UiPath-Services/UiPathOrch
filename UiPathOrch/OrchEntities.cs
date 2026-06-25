@@ -1026,7 +1026,10 @@ public class DirectoryObject
     public int? type { get; set; }
     public string? source { get; set; }
     public string? domain { get; set; }
-    public string? identifier { get; set; } // "source|guid"
+    // Opaque directory id ("source|guid", e.g. aad|<guid>; bare GUID on Cloud/22.10.1).
+    // Never parse/split or branch on its format — the contract is Search -> Resolve, and only
+    // Resolve's bare GUID is the stable internal id. String (not Guid): composite forms occur.
+    public string? identifier { get; set; }
     public string? identityName { get; set; }
     public string? displayName { get; set; }
 }
@@ -4205,12 +4208,14 @@ public class UpdateGroupCommand
     public List<string>? directoryUserIDsToRemove { get; set; } // Guid
 }
 
-// BulkResolveByNameCommand
+// BulkResolveByNameCommand — body for POST /api/Directory/BulkResolveByName/{partitionGlobalId}.
+// The API also accepts a "scope" field, but per the Identity directory-controller owner it must
+// be omitted ("does not apply to aad"). Intentionally not modeled here so it can't be set by
+// mistake; only entityNames + entityType are sent.
 public class BulkResolveByNameCommand
 {
     public string[]? entityNames { get; set; }
     public string? entityType { get; set; }
-    public string? scope { get; set; }
 }
 
 public abstract class PmGroupMember

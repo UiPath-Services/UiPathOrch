@@ -3355,7 +3355,9 @@ public partial class OrchAPISession : IDisposable
 
     // entityType: "user", "group", or "application"
     // Passing "robot" causes an error.
-    // No "PM.xxx" scope needed
+    // No "PM.xxx" OAuth scope needed for this endpoint.
+    // The request body intentionally omits the "scope" field (does not apply to aad).
+    // Resolve returns a bare GUID = UiPath's internal id, the id 1st parties should consume.
     public Dictionary<string, PmGroupMember> PmBulkResolveByName(string partitionGlobalId, string entityType, IEnumerable<string> names)
     {
         var postData = new BulkResolveByNameCommand()
