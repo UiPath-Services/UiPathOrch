@@ -142,10 +142,7 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                     // disabled. Drop empty emails (they can't be a meaningful dup
                     // target for an email-keyed create) and collapse duplicates so
                     // the lookup is built reliably.
-                    dstUsers = dstDrive.PmUsers.Get()
-                        .Where(u => !string.IsNullOrEmpty(u.email))
-                        .GroupBy(u => u.email!, StringComparer.OrdinalIgnoreCase)
-                        .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+                    dstUsers = Core.OrchProvider.BuildDstUserLookup(dstDrive.PmUsers.Get());
                 }
                 catch (Exception ex)
                 {
@@ -165,7 +162,7 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                     // dropped by the server — no error, no warning, user not told.
                     // Skip them explicitly with an actionable warning instead;
                     // recreate via Get-PmUser -ExportCsv -> set the email -> New-PmUser.
-                    if (string.IsNullOrEmpty(srcUser.email))
+                    if (Core.OrchProvider.HasNoEmail(srcUser))
                     {
                         WriteWarning($"{dstDrive.NameColonSeparator}: Skipping user '{srcUser.userName}' because it has no email address. Local users without an email cannot be created at the destination; recreate them manually (Get-PmUser -ExportCsv -> set the email -> New-PmUser).");
                         continue;
@@ -173,7 +170,7 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                     #endregion
 
                     #region Skip if a user with the same name already exists in dstDrive
-                    if (dstUsers?.ContainsKey(srcUser.email) ?? false)
+                    if (dstUsers?.ContainsKey(srcUser.email!) ?? false)
                     {
                         WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"Username '{srcUser.email}' is already taken."), "GetPmGroupError", ErrorCategory.InvalidOperation, srcDrive));
                         continue;
@@ -227,9 +224,9 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                     // Surface an explicit non-success the way NewPmUserBulk gates on
                     // result.succeeded. Only act on an explicit `false` so a null
                     // result (API-shape variance) doesn't produce a false alarm.
-                    if (response?.result?.succeeded == false)
+                    if (Core.OrchProvider.IsBulkCreateFailure(response))
                     {
-                        var detail = response.result.errors is { Length: > 0 } errs
+                        var detail = response?.result?.errors is { Length: > 0 } errs
                             ? string.Join("; ", errs)
                             : "no detail returned by the server";
                         WriteWarning($"{dstDrive.NameColonSeparator}: BulkCreate did not fully succeed for {payload.users.Count} user(s) in this group. Server reported: {detail}");

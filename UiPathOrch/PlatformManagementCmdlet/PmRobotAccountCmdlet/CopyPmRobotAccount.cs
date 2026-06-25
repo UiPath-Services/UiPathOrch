@@ -45,6 +45,23 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
                 .OrderBy(r => r!.displayName)
                 .ToList();
 
+            // Pre-fetch existing destination robot-account names so an account
+            // that already exists is skipped with a clear message, instead of
+            // surfacing a raw server error on create (mirrors Copy-PmUser's
+            // "already taken" guard). Keyed by destination drive.
+            var dstExistingNames = new Dictionary<OrchDriveInfo, HashSet<string>>();
+            foreach (var dstDrive in dstDrives)
+            {
+                try
+                {
+                    dstExistingNames[dstDrive] = Core.OrchProvider.BuildExistingRobotNameSet(dstDrive.PmRobotAccounts.Get());
+                }
+                catch (Exception ex)
+                {
+                    WriteWarning($"{dstDrive.NameColonSeparator}: Failed to read existing robot accounts; the skip-existing check is disabled for this destination. {ex.Message}");
+                }
+            }
+
             using var reporter = new ProgressReporter(this, 1, 100, "Copying PmRobotAccount");
 
             using var cancelHandler = new ConsoleCancelHandler();
@@ -59,6 +76,16 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
 
                     // Do nothing if source and destination are the same
                     if (srcPartitionGlobalId == dstPartitionGlobalId) continue;
+
+                    // Skip if a robot account with the same name already exists at
+                    // the destination, rather than letting the create surface a raw
+                    // server conflict.
+                    if (dstExistingNames.TryGetValue(dstDrive, out var existingNames)
+                        && Core.OrchProvider.RobotNameAlreadyExists(existingNames, srcRobotAccount.name))
+                    {
+                        WriteWarning($"{dstDrive.NameColonSeparator}: Skipping robot account '{srcRobotAccount.displayName}' because an account named '{srcRobotAccount.name}' already exists at the destination.");
+                        continue;
+                    }
 
                     try
                     {
