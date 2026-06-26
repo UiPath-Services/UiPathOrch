@@ -1026,9 +1026,11 @@ public class DirectoryObject
     public int? type { get; set; }
     public string? source { get; set; }
     public string? domain { get; set; }
-    // Opaque directory id ("source|guid", e.g. aad|<guid>; bare GUID on Cloud/22.10.1).
-    // Never parse/split or branch on its format — the contract is Search -> Resolve, and only
-    // Resolve's bare GUID is the stable internal id. String (not Guid): composite forms occur.
+    // Opaque directory id; its shape is source-driven, NOT platform-driven (same on Cloud & on-prem):
+    //   source=local -> bare GUID (== the internal id)
+    //   source=aad   -> "aad|<AAD objectid>" (== externalId, NOT the internal id)
+    // Never parse/split or branch on it — the contract is Search -> Resolve, and only Resolve's
+    // bare GUID is the stable internal id. String (not Guid): composite forms occur.
     public string? identifier { get; set; }
     public string? identityName { get; set; }
     public string? displayName { get; set; }
