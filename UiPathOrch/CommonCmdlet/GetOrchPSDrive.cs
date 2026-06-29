@@ -35,9 +35,24 @@ public class GetOrchPSDriveCmdlet : OrchestratorPSCmdlet
     //    }
     //}
 
+    // Decision rule (factored out for unit testing) for whether Get-OrchPSDrive
+    // should actively fetch the org-global ProductVersion (/api/Status/Version):
+    //   -Force                            -> yes (the full connect authenticates the drive).
+    //   no -Force, already authenticated  -> yes (one cheap call on the existing token;
+    //                                         fills ProductVersion for connected drives).
+    //   no -Force, cold drive             -> NO (fetching would trigger auth/PKCE for a
+    //                                         drive the user merely listed).
+    internal static bool ShouldFetchProductVersion(bool force, bool isAuthenticated)
+        => force || isAuthenticated;
+
     private void ConnectToOrchDrive(OrchDriveInfo drive)
     {
-        if (Force.IsPresent)
+        bool force = Force.IsPresent;
+
+        // -Force performs a full connect first (auth + identity) so the drive ends up
+        // authenticated and every column is populated. Without -Force we never touch a
+        // cold drive's network — that would pop PKCE for a drive the user merely listed.
+        if (force)
         {
             try
             {
@@ -48,35 +63,31 @@ public class GetOrchPSDriveCmdlet : OrchestratorPSCmdlet
                 // /odata/Users + /odata/Users(id) fallback explicitly so -Force returns
                 // a fully populated OrchPSDrive for both Conf and Non-Conf apps.
                 drive.GetTenantId();
-                // Populate the product-version cache so the ProductVersion column is
-                // filled under -Force. The OrchPSDrive ctor reads it passively (CachedValue).
-                drive.ProductVersion.Get();
             }
             catch (Exception ex)
             {
                 WriteError(new ErrorRecord(new OrchException(drive.NameColon, ex), "GetOrchPSDriveError", ErrorCategory.InvalidOperation, drive));
+                return;
             }
-            return;
         }
 
-        // No -Force: never trigger auth on a cold drive (that would pop PKCE for a drive
-        // the user merely listed). But a drive that is ALREADY authenticated can fetch the
-        // org-global /api/Status/Version with one cheap call on the existing token — do it,
-        // otherwise ProductVersion stays blank for connected drives because the OrchPSDrive
-        // ctor only reads the cache passively. IsAuthenticated is a side-effect-free
-        // token-presence check (no PKCE) — the same gate Clear-OrchCache uses.
-        if (drive.IsAuthenticated)
+        // IsAuthenticated is a side-effect-free token-presence check (no PKCE) — the same
+        // gate Clear-OrchCache uses. The OrchPSDrive ctor only reads ProductVersion
+        // passively (CachedValue), so this Get() is what fills it for connected drives.
+        if (!ShouldFetchProductVersion(force, drive.IsAuthenticated)) return;
+
+        try
         {
-            try
-            {
-                drive.ProductVersion.Get();
-            }
-            catch (Exception ex)
-            {
-                // Best-effort enrichment: leave ProductVersion blank for this drive
-                // rather than failing the whole listing over a transient version fetch.
+            drive.ProductVersion.Get();
+        }
+        catch (Exception ex)
+        {
+            // Under -Force a failure is a real error; without it the fetch is best-effort
+            // enrichment, so leave ProductVersion blank rather than failing the listing.
+            if (force)
+                WriteError(new ErrorRecord(new OrchException(drive.NameColon, ex), "GetOrchPSDriveError", ErrorCategory.InvalidOperation, drive));
+            else
                 WriteVerbose($"{drive.NameColon}: could not fetch ProductVersion: {ex.Message}");
-            }
         }
     }
 
