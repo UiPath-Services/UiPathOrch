@@ -1697,7 +1697,6 @@ internal class DomainCompleter : OrchArgumentCompleter
         IDictionary fakeBoundParameters)
     {
         var drives = ResolveOrchDrives(fakeBoundParameters);
-        var wp = CreateWPFromWordToComplete(wordToComplete);
 
         foreach (var drive in drives)
         {
@@ -1707,14 +1706,25 @@ internal class DomainCompleter : OrchArgumentCompleter
             try { domains = drive.Domains.Get().ToArray(); }
             catch { continue; }
 
-            foreach (var d in domains
-                .Where(d => !string.IsNullOrEmpty(d.name) && wp.IsMatch(d.name))
-                .OrderByDescending(d => d.isDefault == true)
-                .ThenBy(d => d.name))
-            {
-                string tiphelp = d.isDefault == true ? $"{d.name} (default)" : d.name!;
-                yield return new CompletionResult(PathTools.EscapePSText(d.name), d.name, CompletionResultType.ParameterValue, tiphelp);
-            }
+            foreach (var cr in BuildDomainCompletions(domains, wordToComplete)) yield return cr;
+        }
+    }
+
+    // Pure candidate selection/ordering/rendering, factored out for unit testing
+    // (the live path needs a drive, this doesn't): drop blank names, keep names
+    // matching the typed word, surface the isDefault domain first then
+    // alphabetical, and mark the default in the tooltip.
+    internal static IEnumerable<CompletionResult> BuildDomainCompletions(
+        IEnumerable<DirectoryDomain> domains, string? wordToComplete)
+    {
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+        foreach (var d in (domains ?? [])
+            .Where(d => !string.IsNullOrEmpty(d?.name) && wp.IsMatch(d!.name!))
+            .OrderByDescending(d => d.isDefault == true)
+            .ThenBy(d => d.name, StringComparer.OrdinalIgnoreCase))
+        {
+            string tiphelp = d.isDefault == true ? $"{d.name} (default)" : d.name!;
+            yield return new CompletionResult(PathTools.EscapePSText(d.name), d.name, CompletionResultType.ParameterValue, tiphelp);
         }
     }
 }
