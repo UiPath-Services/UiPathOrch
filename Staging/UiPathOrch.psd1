@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.10.0'
+ModuleVersion = '1.11.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,37 +503,28 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.10.0
+1.11.0
 
-Added (cmdlets): Copy-OrchBucketItem copies the FILES inside storage buckets directly from one folder,
-drive, or tenant to another -- the bucket-file counterpart of Copy-OrchQueueItem. A folder copy
-(Copy-Item -Recurse) and Copy-OrchBucket reproduce only the bucket definition; this carries the
-contents. Each file is streamed from the source's pre-signed read URI straight into the destination's
-pre-signed write URI with no local staging (Export-OrchBucketItem -> disk -> Import-OrchBucketItem
-remains the tool for local backup/inspection/editing). Name/FullPath/Destination are mandatory
-positional (matching Export-OrchBucketItem); pass * to mean all. -DestinationBucket retargets a single
-source bucket to a differently-named destination bucket and tab-completes against the destination
-folder's buckets. Copying a bucket onto itself is a no-op; a same-folder copy to a different bucket is
-allowed; and a copy is skipped per file when source and destination resolve to the same physical
-storage object (e.g. two Orchestrator buckets backed by the same external S3/Azure bucket). The copied
-source files are emitted, so Copy-OrchBucketItem ... | Remove-OrchBucketItem performs a
-copy-then-delete move.
+Added (cmdlets): Get-OrchPSDrive now shows a ProductVersion column (between Root and ApiVer) with the
+Orchestrator product version from /api/Status/Version. It is a passive cached read -- listing every
+drive never triggers a network call or an interactive sign-in, so the value appears only after it has
+been fetched by Get-OrchProductVersion or by Get-OrchPSDrive -Force (which now warms the cache). It is
+also exposed as the ProductVersion property on the output object.
 
-Changed (cmdlets): BREAKING -- Remove-OrchBucketItem now requires -Name and -FullPath. Both were
-optional, so a bare Remove-OrchBucketItem -Recurse (or Remove-OrchBucketItem MyBucket without
--FullPath) would delete files by omission, in the worst case every file in every bucket. They are now
-mandatory, aligning with the rest of the Remove-Orch* family and closing that footgun. To delete all
-files in a bucket, pass * explicitly: Remove-OrchBucketItem MyBucket *.
+Changed (cmdlets): BREAKING -- Import-OrchConfig now always re-reads the configuration file and
+re-mounts the drives, and the -Force switch has been removed. Previously the cmdlet silently did
+nothing when the file was unchanged since the last mount, which was confusing; the saved work is
+negligible. Re-mounting clears each drive's cached sign-in, so the next use re-authenticates -- which
+is how you pick up a fresh directory sign-in after signing in to the org URL in the browser. Scripts
+that passed Import-OrchConfig -Force should drop the switch. The local-user advisory shown for an
+Entra-ID-integrated organization was also reworded to match the Orchestrator web banner: it names the
+organization-specific sign-in URL and the sign-out -> org-URL -> Import-OrchConfig recovery steps.
 
-Fixed (cmdlets): Import-OrchBucketItem now sets a correct content-type for many more file extensions
-(text/config/code: .md, .markdown, .yaml/.yml, .log, .tsv, .ini, .conf, .properties, .toml, .sql,
-.mjs, .xaml; images: .avif, .heic/.heif, .jfif; audio/video: .m4a, .aac, .ogg, .opus, .wma, .webm,
-.mkv, .m4v, .mpeg/.mpg, .3gp; archives: .tgz, .bz2, .xz; OpenDocument/EPUB: .odt, .ods, .odp, .epub;
-fonts: .woff, .woff2, .ttf, .otf, .eot) -- previously missing from the extension->MIME table, so they
-uploaded as application/octet-stream. .js was also updated from the deprecated application/javascript
-to text/javascript (RFC 9239), matching .mjs. Also: a transient server error (HTTP 500/502) no longer wedges
-the cache for the rest of the session; such statuses now cache only briefly (2-minute TTL) and the
-slot self-heals once the server recovers.
+Fixed (cmdlets): The Entra-ID local-user advisory is now actually displayed. It was detected correctly
+but a gate latched shut before it could be shown -- a probe taken before the token/partition-id/auth
+setting were available, or an unrelated advisory (e.g. the IgnoreSslErrors notice) draining first,
+would permanently suppress it. The gate now latches only on a conclusive outcome and is re-armed on
+Switch-OrchCurrentUser.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

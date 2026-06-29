@@ -6,6 +6,45 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-06-29
+
+### Added
+
+#### Cmdlets
+
+- **`Get-OrchPSDrive` now shows a `ProductVersion` column** (between `Root` and `ApiVer`) with the
+  Orchestrator product version reported by `/api/Status/Version`, also exposed as the `ProductVersion`
+  property on the output object. It is a passive, cached read: a plain `Get-OrchPSDrive` that lists
+  every drive never triggers a network call or an interactive sign-in, so the value appears only once it
+  has been fetched — by `Get-OrchProductVersion` or by `Get-OrchPSDrive -Force` (which now warms the
+  cache). Drives whose version has not been fetched show an empty value.
+
+### Changed
+
+#### Cmdlets
+
+- **BREAKING — `Import-OrchConfig` now always re-reads the configuration file and re-mounts the drives,
+  and the `-Force` switch has been removed.** Previously the cmdlet silently did nothing when the file
+  was unchanged since the last mount, which was confusing — running `Import-OrchConfig` and seeing
+  nothing happen — and the work saved is negligible. Re-mounting clears each drive's cached sign-in, so
+  the next use of a drive re-authenticates; that is intentional, and is how you pick up a fresh
+  directory sign-in after signing in to the organization URL in the browser. Scripts that passed
+  `Import-OrchConfig -Force` should drop the switch.
+
+- **The local-user advisory shown for an Entra-ID-integrated organization was reworded** to match the
+  Orchestrator web banner: it now names the organization-specific sign-in URL and the
+  sign-out → org-URL → `Import-OrchConfig` recovery steps.
+
+### Fixed
+
+#### Cmdlets
+
+- **The Entra-ID local-user advisory is now actually displayed.** It was detected correctly, but a gate
+  latched shut before the advisory could be shown: a probe taken before the token / partition id / auth
+  setting were available, or an unrelated advisory (e.g. the `IgnoreSslErrors` notice) draining first,
+  would permanently suppress it for the rest of the session. The gate now latches only on a conclusive
+  outcome and is re-armed on `Switch-OrchCurrentUser`.
+
 ## [1.10.0] - 2026-06-24
 
 ### Added
