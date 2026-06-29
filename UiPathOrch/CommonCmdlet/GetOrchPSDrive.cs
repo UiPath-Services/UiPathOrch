@@ -56,6 +56,27 @@ public class GetOrchPSDriveCmdlet : OrchestratorPSCmdlet
             {
                 WriteError(new ErrorRecord(new OrchException(drive.NameColon, ex), "GetOrchPSDriveError", ErrorCategory.InvalidOperation, drive));
             }
+            return;
+        }
+
+        // No -Force: never trigger auth on a cold drive (that would pop PKCE for a drive
+        // the user merely listed). But a drive that is ALREADY authenticated can fetch the
+        // org-global /api/Status/Version with one cheap call on the existing token — do it,
+        // otherwise ProductVersion stays blank for connected drives because the OrchPSDrive
+        // ctor only reads the cache passively. IsAuthenticated is a side-effect-free
+        // token-presence check (no PKCE) — the same gate Clear-OrchCache uses.
+        if (drive.IsAuthenticated)
+        {
+            try
+            {
+                drive.ProductVersion.Get();
+            }
+            catch (Exception ex)
+            {
+                // Best-effort enrichment: leave ProductVersion blank for this drive
+                // rather than failing the whole listing over a transient version fetch.
+                WriteVerbose($"{drive.NameColon}: could not fetch ProductVersion: {ex.Message}");
+            }
         }
     }
 
