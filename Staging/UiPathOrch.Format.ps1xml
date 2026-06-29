@@ -209,6 +209,9 @@
             <Label>Root</Label>
           </TableColumnHeader>
           <TableColumnHeader>
+            <Label>ProductVersion</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
             <Label>ApiVer</Label>
           </TableColumnHeader>
           <TableColumnHeader>
@@ -229,6 +232,9 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Root</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>ProductVersion</PropertyName>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>ApiVersion</PropertyName>

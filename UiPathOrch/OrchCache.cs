@@ -550,6 +550,22 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
         return entity;
     }
 
+    // Passive read of the org-cached value: returns the entry already fetched for
+    // this drive's partition, or null when the partition isn't known yet or nothing
+    // has been fetched. Never forces a partition lookup or an API call (mirrors
+    // ClearCache's passive _drive.PartitionGlobalId read), so it is safe to call
+    // while listing drives — e.g. Get-OrchPSDrive showing a cached product version
+    // without provoking PKCE on drives the user hasn't authenticated.
+    public T? CachedValue
+    {
+        get
+        {
+            var partitionGlobalId = _drive.PartitionGlobalId;
+            if (string.IsNullOrEmpty(partitionGlobalId)) return null;
+            return _cache.TryGetValue(partitionGlobalId, out var entity) ? entity : null;
+        }
+    }
+
     public void ClearCache()
     {
         var partitionGlobalId = _drive.PartitionGlobalId;

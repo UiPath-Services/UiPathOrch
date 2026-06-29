@@ -48,6 +48,9 @@ public class GetOrchPSDriveCmdlet : OrchestratorPSCmdlet
                 // /odata/Users + /odata/Users(id) fallback explicitly so -Force returns
                 // a fully populated OrchPSDrive for both Conf and Non-Conf apps.
                 drive.GetTenantId();
+                // Populate the product-version cache so the ProductVersion column is
+                // filled under -Force. The OrchPSDrive ctor reads it passively (CachedValue).
+                drive.ProductVersion.Get();
             }
             catch (Exception ex)
             {

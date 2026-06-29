@@ -63,6 +63,7 @@ public class OrchPSDrive
     public string? HttpListener { get; set; }
     public ProxySettings? ProxySettings { get; set; }
     public double? ApiVersion { get; set; }
+    public string? ProductVersion { get; set; }
     public string? CurrentUser { get; set; }
     public string? CurrentLocation { get; set; }
     public string? PartitionGlobalId { get; set; }
@@ -84,6 +85,11 @@ public class OrchPSDrive
         RedirectUrl = drive._psDrive.RedirectUrl;
         HttpListener = drive._psDrive.HttpListener;
         ApiVersion = drive.OrchAPISession.ApiVersion;
+        // Passive read (no API call / no PKCE) so listing every drive stays cheap,
+        // mirroring ApiVersion / CurrentUser. The org-global /api/Status/Version is
+        // only present here once it has been fetched — by Get-OrchProductVersion or
+        // by this cmdlet's own -Force path (ConnectToOrchDrive).
+        ProductVersion = drive.ProductVersion.CachedValue?.version;
         CurrentLocation = drive.CurrentLocation;
         PartitionGlobalId = drive._partitionGlobalId;
         TenantId = drive._tenantId;
