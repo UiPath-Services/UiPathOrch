@@ -15,26 +15,28 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
 {
     // Needed for case-insensitive comparison of UserName
     // Should this be moved to OrchComparer.cs?
-    internal class CsvLineComparer : IEqualityComparer<(OrchDriveInfo drive, int type, string userName)>
+    internal class CsvLineComparer : IEqualityComparer<(OrchDriveInfo drive, int type, string userName, string? domain)>
     {
-        public bool Equals((OrchDriveInfo drive, int type, string userName) x, (OrchDriveInfo drive, int type, string userName) y)
+        public bool Equals((OrchDriveInfo drive, int type, string userName, string? domain) x, (OrchDriveInfo drive, int type, string userName, string? domain) y)
         {
             return EqualityComparer<OrchDriveInfo>.Default.Equals(x.drive, y.drive) &&
                    x.type == y.type &&
-                   string.Equals(x.userName, y.userName, StringComparison.OrdinalIgnoreCase);
+                   string.Equals(x.userName, y.userName, StringComparison.OrdinalIgnoreCase) &&
+                   string.Equals(x.domain, y.domain, StringComparison.OrdinalIgnoreCase);
         }
 
-        public int GetHashCode((OrchDriveInfo drive, int type, string userName) obj)
+        public int GetHashCode((OrchDriveInfo drive, int type, string userName, string? domain) obj)
         {
             return HashCode.Combine(
                 EqualityComparer<OrchDriveInfo>.Default.GetHashCode(obj.drive),
                 obj.type,
-                StringComparer.OrdinalIgnoreCase.GetHashCode(obj.userName)
+                StringComparer.OrdinalIgnoreCase.GetHashCode(obj.userName),
+                string.IsNullOrEmpty(obj.domain) ? 0 : StringComparer.OrdinalIgnoreCase.GetHashCode(obj.domain)
             );
         }
     }
 
-    Dictionary<(OrchDriveInfo drive, int type, string userName), CsvLine>? _csvLines = null;
+    Dictionary<(OrchDriveInfo drive, int type, string userName, string? domain), CsvLine>? _csvLines = null;
 
     private class CsvLine : CsvLineBase
     {
@@ -65,6 +67,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
         public bool? ES_AutoDownloadProcess { get; set; }
 
         public HashSet<string>? Roles { get; set; }
+        public string? Domain { get; set; }
 
         public CsvLine(AddUserCmdlet cmdlet)
         {
@@ -95,6 +98,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
             ES_AutoDownloadProcess = cmdlet.ES_AutoDownloadProcess.ToNullableBool();
 
             Roles = new HashSet<string>(cmdlet.Roles?.Where(r => !string.IsNullOrEmpty(r)) ?? []);
+            Domain = cmdlet.Domain;
         }
 
         public void Update(AddUserCmdlet cmdl, OrchDriveInfo drive, string identityName)
@@ -211,6 +215,11 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
 
             this.Roles ??= [];
             this.Roles.UnionWith(cmdl.Roles?.Where(r => !string.IsNullOrEmpty(r)) ?? []);
+
+            AssignStringValue(cmdl, drive.Name, identityName,
+                this.Domain,
+                cmdl.Domain, v =>
+                this.Domain = v);
         }
     }
 
@@ -236,6 +245,14 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
     [Alias("TenantRoles")]
     [ArgumentCompleter(typeof(RolesCompleter))]
     public string[]? Roles { get; set; }
+
+    // Same federated-OnPrem escape hatch as Add-OrchFolderUser -Domain: when the web
+    // UI exposes a concrete domain (e.g. "frc"/"root") instead of "autogen", pass it
+    // here so the directory lookup and the posted Domain both use it. Defaults to the
+    // historical "autogen" (Automation Cloud / non-federated OnPrem) when omitted.
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(DomainCompleter))]
+    public string? Domain { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(BoolCompleter))]
@@ -417,7 +434,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
-        _csvLines ??= new Dictionary<(OrchDriveInfo drive, int type, string userName), CsvLine>(new CsvLineComparer());
+        _csvLines ??= new Dictionary<(OrchDriveInfo drive, int type, string userName, string? domain), CsvLine>(new CsvLineComparer());
 
         // The first element may have been input from CSV, so split it by commas
         Roles = Roles.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();
@@ -432,9 +449,9 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
             {
                 foreach (var userName in UserName!)
                 {
-                    if (!_csvLines.TryGetValue((drive, specifiedType, userName), out var line))
+                    if (!_csvLines.TryGetValue((drive, specifiedType, userName, Domain), out var line))
                     {
-                        _csvLines[(drive, specifiedType, userName)] = new CsvLine(this);
+                        _csvLines[(drive, specifiedType, userName, Domain)] = new CsvLine(this);
                     }
                     else
                     {
@@ -545,6 +562,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
             var type = key_line.Key.type;
             var userName = key_line.Key.userName;
             var line = key_line.Value;
+            var domain = line.Domain;
 
             var targetRoles = ExcludeFolderRoles(drive, line.Roles, warnedNoMatchingRoles);
 
@@ -553,7 +571,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
             DirectoryObject? user = null;
             try
             {
-                user = ResolveDirectoryName(this, drive, userName, type);
+                user = ResolveDirectoryName(this, drive, userName, type, domain);
             }
             catch (Exception ex)
             {
@@ -586,7 +604,11 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
                 Entities.User postingUser = new()
                 {
                     DirectoryIdentifier = user.identifier!,
-                    Domain = "autogen",
+                    // Priority: explicit -Domain (federated-tenant override) > the
+                    // directory-lookup result > "autogen" historical default. Mirrors
+                    // Add-OrchFolderUser's Domain resolution.
+                    Domain = !string.IsNullOrEmpty(domain) ? domain
+                        : (string.IsNullOrEmpty(user.domain) ? "autogen" : user.domain),
                     //FullName = "",
                     Type = Types[user.type ?? 0],
                     NotificationSubscription = new()

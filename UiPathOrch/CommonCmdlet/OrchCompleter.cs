@@ -1681,6 +1681,44 @@ internal class TimeZoneIdCompleter : OrchArgumentCompleter
     }
 }
 
+// Completes -Domain on directory-assignment cmdlets (Add-OrchFolderUser; and
+// Add-OrchUser once it gains -Domain). EntraID-federated OnPrem requires the real
+// partition domain (e.g. "frc"/"root") for directory search/assign instead of the
+// "autogen" default; the candidate list comes from /api/DirectoryService/GetDomains
+// with the isDefault entry surfaced first. Non-federated tenants / Automation Cloud
+// return nothing, so the field stays empty and the autogen default remains in force.
+internal class DomainCompleter : OrchArgumentCompleter
+{
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var drives = ResolveOrchDrives(fakeBoundParameters);
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        foreach (var drive in drives)
+        {
+            // GetDomains is unavailable on some Orchestrator versions; a failure here
+            // must not surface as a completion error, so degrade to no candidates.
+            DirectoryDomain[] domains;
+            try { domains = drive.Domains.Get().ToArray(); }
+            catch { continue; }
+
+            foreach (var d in domains
+                .Where(d => !string.IsNullOrEmpty(d.name) && wp.IsMatch(d.name))
+                .OrderByDescending(d => d.isDefault == true)
+                .ThenBy(d => d.name))
+            {
+                string tiphelp = d.isDefault == true ? $"{d.name} (default)" : d.name!;
+                yield return new CompletionResult(PathTools.EscapePSText(d.name), d.name, CompletionResultType.ParameterValue, tiphelp);
+            }
+        }
+    }
+}
+
 internal class TriggerNameCompleter : FolderScopedCompleter<ProcessSchedule>
 {
     protected override IEnumerable<ProcessSchedule> GetEntities(OrchDriveInfo drive, Folder folder)

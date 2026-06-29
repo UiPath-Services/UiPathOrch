@@ -836,6 +836,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly ListCachePerTenant<ResponseDictionaryItem> AuthenticationSettings;
     public readonly ListCachePerTenant<CredentialStore> CredentialStores;
     public readonly ListCachePerTenant<Robot> Robots;
+    public readonly ListCachePerTenant<DirectoryDomain> Domains;
     public readonly ListCachePerTenant<Role> Roles;
     public readonly ListCachePerTenant<Library> LibrariesInTenant;
     public readonly ListCachePerTenant<Library> LibrariesInHost;
@@ -1066,6 +1067,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         AllRobotsAcrossFolders = new(this, OrchAPISession.FindAllRobotsAcrossFolders, e => e.Path = NameColonSeparator);
         PersonalWorkspaces = new(this, OrchAPISession.GetPersonalWorkspaces, e => e.Path = NameColonSeparator);
         Roles = new(this, OrchAPISession.GetRoles, e => e.Path = NameColonSeparator);
+        Domains = new(this, OrchAPISession.GetDomains);
 
         LibrariesInTenant = new(this, () => OrchAPISession.GetLibraries(null), e => e.Path = NameColonSeparator);
         LibrariesInHost = new(this, () => OrchAPISession.GetLibraries(LibraryHostFeedId), e => e.Path = NameColonSeparator);

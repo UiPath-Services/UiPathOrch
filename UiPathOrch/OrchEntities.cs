@@ -1042,6 +1042,16 @@ public class DirectoryObject
     public string? displayName { get; set; }
 }
 
+// /api/DirectoryService/GetDomains response element. EntraID-federated OnPrem
+// tenants expose multiple partition domains (e.g. "frc", "root"); one is flagged
+// isDefault. Lowercase field names mirror the wire JSON, consistent with
+// DirectoryObject. Used to complete the -Domain parameter.
+public class DirectoryDomain
+{
+    public string? name { get; set; }
+    public bool? isDefault { get; set; }
+}
+
 // DirectoryEntityInfo
 public class PmDirectoryEntityInfo
 {

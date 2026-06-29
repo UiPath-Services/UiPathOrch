@@ -2769,6 +2769,13 @@ public partial class OrchAPISession : IDisposable
         return HttpRequest<DirectoryObject[]>(HttpMethod.Get, $"/api/DirectoryService/SearchForUsersAndGroups?domain={HttpUtility.UrlEncode(effectiveDomain)}&prefix={HttpUtility.UrlEncode(prefix)}&searchContext=All") ?? [];
     }
 
+    // Lists the directory partition domains the tenant can search/assign against
+    // (EntraID-federated OnPrem returns e.g. "frc"/"root" with one isDefault; non-
+    // federated tenants and Automation Cloud typically return an empty list). Feeds
+    // the -Domain completer. Bare JSON array, not OData, so deserialize directly.
+    public IEnumerable<DirectoryDomain> GetDomains()
+        => HttpRequest<DirectoryDomain[]>(HttpMethod.Get, "/api/DirectoryService/GetDomains") ?? [];
+
     #endregion
 
     #region License

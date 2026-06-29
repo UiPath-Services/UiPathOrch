@@ -51,6 +51,7 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
     // resolution) and the AssignDomainUser payload (Domain field) so an
     // explicit value overrides the autogen default end-to-end.
     [Parameter]
+    [ArgumentCompleter(typeof(DomainCompleter))]
     public string? Domain { get; set; }
 
     private class UserNameCompleter : OrchArgumentCompleter
