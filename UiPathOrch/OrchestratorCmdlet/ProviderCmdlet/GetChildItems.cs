@@ -128,7 +128,7 @@ public partial class OrchProvider
                         drive.OrchAPISession.EntraIdWarningChecked = true;
                         break;
 
-                    // Unknown: no parseable token yet — leave un-latched and retry.
+                        // Unknown: no parseable token yet — leave un-latched and retry.
                 }
             }
             catch { } // Swallow - don't block navigation for a warning
