@@ -788,17 +788,26 @@ internal class OrchestratorAuthManager
         EntraOrNotApplicable // signed in via Entra ID, or a principal the advisory doesn't apply to
     }
 
+    /// Classify this session's signed-in principal (reads the current access token).
+    internal EntraUserKind GetEntraUserKind() => ClassifyEntraUserKind(_access_token);
+
     /// Classify the signed-in principal from the JWT's ext_idp_disp_name claim.
     /// "aad" means the directory (Entra ID); any other display name (e.g.
     /// "GlobalIdp" for a local / social account) means a local user. A missing
     /// claim (Confidential App, robot account) is not applicable. No / unparseable
-    /// token yields Unknown so the caller can retry instead of latching.
-    internal EntraUserKind GetEntraUserKind()
+    /// token yields Unknown so the caller can retry instead of latching. Pure /
+    /// static so the classification is unit-testable without a live token
+    /// (see EntraAdvisoryTests).
+    internal static EntraUserKind ClassifyEntraUserKind(string? accessToken)
     {
-        if (string.IsNullOrEmpty(_access_token)) return EntraUserKind.Unknown;
+        if (string.IsNullOrEmpty(accessToken)) return EntraUserKind.Unknown;
+
+        var parts = accessToken.Split('.');
+        if (parts.Length != 3) return EntraUserKind.Unknown;
+
         try
         {
-            using JsonDocument doc = ParseJwtPayload();
+            using JsonDocument doc = JsonDocument.Parse(Jwt.DecodePayloadJson(parts[1]));
             if (doc.RootElement.TryGetProperty("ext_idp_disp_name", out JsonElement element))
             {
                 return element.GetString() == "aad"
@@ -810,6 +819,37 @@ internal class OrchestratorAuthManager
         catch
         {
             return EntraUserKind.Unknown;
+        }
+    }
+
+    /// The once-per-session Entra-advisory gate decision: whether to QUEUE the
+    /// advisory now, and whether to LATCH the gate so the probe doesn't repeat.
+    internal readonly record struct EntraAdvisoryDecision(bool QueueWarning, bool Latch);
+
+    /// Decide the Entra-ID local-user advisory from the classified principal and
+    /// what the probe has resolved so far. The gate latches ONLY on a CONCLUSIVE
+    /// outcome — a probe taken before the token, partition id, or org auth setting
+    /// are available (Unknown / partition-unknown / setting-not-fetched) is left
+    /// un-latched so a later enumeration retries it instead of permanently
+    /// suppressing the advisory. Pure / static so every path is unit-testable
+    /// without driving the provider or any API (see EntraAdvisoryTests).
+    internal static EntraAdvisoryDecision DecideEntraAdvisory(
+        EntraUserKind kind, bool partitionKnown, bool authSettingFetched, string? authenticationSettingType)
+    {
+        switch (kind)
+        {
+            case EntraUserKind.LocalUser:
+                if (!partitionKnown || !authSettingFetched)
+                    return new EntraAdvisoryDecision(QueueWarning: false, Latch: false); // inconclusive: retry
+                return authenticationSettingType == "aad"
+                    ? new EntraAdvisoryDecision(QueueWarning: true, Latch: true)   // org Entra-integrated: warn once
+                    : new EntraAdvisoryDecision(QueueWarning: false, Latch: true); // org not Entra: conclusive no-warn
+
+            case EntraUserKind.EntraOrNotApplicable:
+                return new EntraAdvisoryDecision(QueueWarning: false, Latch: true); // conclusive no-warn
+
+            default: // Unknown — no parseable token yet
+                return new EntraAdvisoryDecision(QueueWarning: false, Latch: false); // retry
         }
     }
 

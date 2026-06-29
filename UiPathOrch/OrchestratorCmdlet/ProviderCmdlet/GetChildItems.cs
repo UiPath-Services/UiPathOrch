@@ -103,33 +103,28 @@ public partial class OrchProvider
         {
             try
             {
-                switch (drive.OrchAPISession.AuthManager.GetEntraUserKind())
+                // Resolve only what each stage needs: classify the principal first, and
+                // probe the partition id / org auth setting (network calls) ONLY for a
+                // local user. DecideEntraAdvisory turns that into the queue/latch
+                // decision, latching the gate only on a conclusive outcome.
+                var kind = drive.OrchAPISession.AuthManager.GetEntraUserKind();
+                bool partitionKnown = false, authSettingFetched = false;
+                string? authenticationSettingType = null;
+                if (kind == OrchestratorAuthManager.EntraUserKind.LocalUser)
                 {
-                    case OrchestratorAuthManager.EntraUserKind.LocalUser:
-                        if (drive.GetPartitionGlobalId() is not null)
-                        {
-                            var authSetting = drive.PmAuthenticationSetting.Get();
-                            if (authSetting is not null) // only conclusive once fetched
-                            {
-                                drive.OrchAPISession.EntraIdWarningChecked = true;
-                                if (authSetting.authenticationSettingType == "aad")
-                                {
-                                    drive.OrchAPISession.AppendPendingWarning(BuildEntraIdSignInWarning(drive));
-                                }
-                            }
-                            // authSetting null (transient / missing scope): retry on a later enumeration.
-                        }
-                        // partition id not yet known: retry on a later enumeration.
-                        break;
-
-                    case OrchestratorAuthManager.EntraUserKind.EntraOrNotApplicable:
-                        // Conclusive: signed in via Entra ID, or a principal (Confidential
-                        // App / robot) the advisory doesn't apply to.
-                        drive.OrchAPISession.EntraIdWarningChecked = true;
-                        break;
-
-                        // Unknown: no parseable token yet — leave un-latched and retry.
+                    partitionKnown = drive.GetPartitionGlobalId() is not null;
+                    if (partitionKnown)
+                    {
+                        var authSetting = drive.PmAuthenticationSetting.Get();
+                        authSettingFetched = authSetting is not null;
+                        authenticationSettingType = authSetting?.authenticationSettingType;
+                    }
                 }
+
+                var decision = OrchestratorAuthManager.DecideEntraAdvisory(
+                    kind, partitionKnown, authSettingFetched, authenticationSettingType);
+                if (decision.Latch) drive.OrchAPISession.EntraIdWarningChecked = true;
+                if (decision.QueueWarning) drive.OrchAPISession.AppendPendingWarning(BuildEntraIdSignInWarning(drive));
             }
             catch { } // Swallow - don't block navigation for a warning
         }
