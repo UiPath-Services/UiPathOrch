@@ -35,6 +35,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `/api/Status/Version` for drives that are already authenticated (one cheap call on the existing token);
   cold drives are still left untouched, so listing every drive never triggers an interactive sign-in.
 
+- **A malformed `-MachineRobots` JSON value now fails with a clear, actionable error and skips the
+  trigger** instead of being reported under a generic "deserialize" message and then still issuing the
+  update. The error names the offending value and the expected shape
+  (`'[{"UserName":"<account>","MachineName":"<machine>"}]'`); the trigger is left untouched. Applies to
+  `New-OrchTrigger`, `Update-OrchTrigger`, `New-OrchApiTrigger` and `Update-OrchApiTrigger`.
+
 ## [1.11.0] - 2026-06-29
 
 ### Added

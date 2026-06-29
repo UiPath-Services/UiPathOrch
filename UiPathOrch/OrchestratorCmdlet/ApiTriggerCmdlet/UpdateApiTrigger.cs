@@ -168,7 +168,9 @@ public class UpdateApiTriggerCmdlet : OrchestratorPSCmdlet
 
                 if (MachineRobots is not null)
                 {
-                    postTrigger.MachineRobots = DeserializeMachineRobotSessions(this, drive, folder, target, MachineRobots);
+                    var mr = DeserializeMachineRobotSessions(this, drive, folder, target, MachineRobots, out bool mrParseFailed);
+                    if (mrParseFailed) continue; // malformed -MachineRobots: error already written, skip this trigger
+                    postTrigger.MachineRobots = mr;
                     dirty = true;
                 }
 

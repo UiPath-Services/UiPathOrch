@@ -326,7 +326,9 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
                 schedule.ExecutorRobots = DeserializeExecutorRobots(this, drive, folder, schedule.GetPSPath(), ExecutorRobots);
 
                 // Deserialize MachineRobots
-                schedule.MachineRobots = DeserializeMachineRobotSessions(this, drive, folder, schedule.GetPSPath(), MachineRobots);
+                var mr = DeserializeMachineRobotSessions(this, drive, folder, schedule.GetPSPath(), MachineRobots, out bool mrParseFailed);
+                if (mrParseFailed) continue; // malformed -MachineRobots: error already written, skip this trigger
+                schedule.MachineRobots = mr;
 
                 if (ShouldProcess(target, "New Trigger"))
                 {

@@ -147,7 +147,8 @@ public class NewApiTriggerCmdlet : OrchestratorPSCmdlet
                 newTrigger.AssignNumberIfNotNullOrZero(ConsecutiveJobFailuresThreshold, (t, v) => t.ConsecutiveJobFailuresThreshold = v);
                 newTrigger.AssignStringIfNotNullOrEmpty(InputArguments, (t, v) => t.InputArguments = v);
 
-                newTrigger.MachineRobots = DeserializeMachineRobotSessions(this, drive, folder, target, MachineRobots);
+                newTrigger.MachineRobots = DeserializeMachineRobotSessions(this, drive, folder, target, MachineRobots, out bool mrParseFailed);
+                if (mrParseFailed) continue; // malformed -MachineRobots: error already written, skip this trigger
                 // The server requires Tags, MachineRobots, and Slug to be
                 // present on the body, even when empty. Observed against
                 // POST /odata/HttpTriggers on yotsuda 2026-05-21: omitting

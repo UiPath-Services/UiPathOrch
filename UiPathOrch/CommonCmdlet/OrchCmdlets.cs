@@ -612,9 +612,32 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
     }
 
-    internal MachineRobotSession[]? DeserializeMachineRobotSessions(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string target, string[]? machineRobots)
+    internal MachineRobotSession[]? DeserializeMachineRobotSessions(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string target, string[]? machineRobots, out bool parseFailed)
     {
+        parseFailed = false;
         if (machineRobots is null || machineRobots.All(string.IsNullOrEmpty)) return null;
+
+        // Parse the JSON first, in its own scope. A malformed -MachineRobots value is a
+        // user-input error: report it clearly (offending value + expected shape) and set
+        // parseFailed so the caller skips this trigger instead of proceeding to a PUT with
+        // a null binding — which would otherwise attempt to update the trigger anyway.
+        MachineRobotSessionForSerialize?[] mrss;
+        try
+        {
+            // A single "[...]" element is the CSV/array form; otherwise each element is one object.
+            mrss = (machineRobots.Length == 1 && machineRobots[0].StartsWith('['))
+                ? (JsonSerializer.Deserialize<MachineRobotSessionForSerialize[]>(machineRobots[0]) ?? [])
+                : machineRobots.Select(mr => JsonSerializer.Deserialize<MachineRobotSessionForSerialize>(mr)).ToArray();
+        }
+        catch (JsonException ex)
+        {
+            parseFailed = true;
+            string bad = machineRobots.Length == 1 ? machineRobots[0] : string.Join(" | ", machineRobots);
+            _this?.WriteError(new ErrorRecord(
+                new OrchException(target, $"-MachineRobots is not valid JSON ({ex.Message}). Value: {bad}. Expected an array of objects, e.g. '[{{\"UserName\":\"<account>\",\"MachineName\":\"<machine>\"}}]'."),
+                "MachineRobotsParseError", ErrorCategory.InvalidArgument, target));
+            return null;
+        }
 
         try
         {
@@ -627,21 +650,9 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
             // was dropped and the trigger PUT carried MachineId only.
             var robots = drive.Robots.Get();
 
-            // These may contain wildcards, so expand all of them
-            IEnumerable<MachineRobotSessionForSerialize?> mrss = null;
-            if (machineRobots.Length == 1 && machineRobots[0].StartsWith('[')) // && machineRobots[0].EndsWith(']'))
-            {
-                // When imported from CSV, deserialize as an array
-                mrss = JsonSerializer.Deserialize<MachineRobotSessionForSerialize[]>(machineRobots[0]);
-            }
-            else
-            {
-                mrss = machineRobots.Select(mr => JsonSerializer.Deserialize<MachineRobotSessionForSerialize>(mr));
-            }
-
             List<MachineRobotSession> targets = [];
 
-            foreach (var mrs in mrss ?? [])
+            foreach (var mrs in mrss)
             {
                 // Resolve UserName to a robot by an exact (case-insensitive) match
                 // against the merged Robot.Username (UnattendedRobot ?? RobotProvision)
@@ -733,7 +744,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
         catch (Exception ex)
         {
-            _this?.WriteError(new ErrorRecord(new OrchException(target, "Failed to deserialize MachineRobots.", ex), "DeserializeMachineRobotsError", ErrorCategory.InvalidOperation, target));
+            _this?.WriteError(new ErrorRecord(new OrchException(target, "Failed to resolve MachineRobots.", ex), "ResolveMachineRobotsError", ErrorCategory.InvalidOperation, target));
             return null;
         }
     }
