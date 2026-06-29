@@ -27,6 +27,11 @@ public class SwitchOrchCurrentUserCmdlet : OrchestratorPSCmdlet
                 {
                     // Clear existing authentication and cache, then re-authenticate
                     drive.OrchAPISession.ClearAuthentication();
+                    // Re-arm the Entra-ID advisory so the NEW principal is re-evaluated
+                    // (account switch is the one place a re-auth changes who is signed
+                    // in — the 401 re-auth path renews the same user and must not reset).
+                    drive.OrchAPISession.EntraIdWarningChecked = false;
+                    drive.OrchAPISession.ClearPendingWarning();
                     drive.ClearAllCache();
                     drive.OrchAPISession.AuthManager.UseInPrivate = true;
 

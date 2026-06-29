@@ -254,14 +254,23 @@ If the user signs in with a local account instead of Entra ID, a warning is
 displayed:
 
 ```
-WARNING: [Orch1:] You are not signed in to the organization via Entra ID.
-Some operations may require organization-level access.
-Use Switch-OrchCurrentUser to sign in with a different account.
+WARNING: [Orch1:] You are signed in with a local user account. This
+organization supports Entra ID directory integration and single sign on. To
+take advantage of all directory capabilities, like directory search and
+directory groups please sign out and sign in through the organization-specific
+URL: https://cloud.uipath.com/<org> in your browser — then run
+'Import-OrchConfig' here to sign in again with that account.
 ```
 
 This warning appears when the JWT token indicates GlobalIdp authentication
 instead of Entra ID (aad). Organization-level operations (Platform Management
 cmdlets, Active Directory user search) may fail without Entra ID login.
+
+To switch: sign out in your browser, sign in at the organization-specific URL
+shown in the warning, then run `Import-OrchConfig`. Re-importing clears the
+cached sign-in and re-runs the browser PKCE flow, which now picks up the
+directory account. (`Switch-OrchCurrentUser` does not help here — its private
+browser session can't inherit the directory sign-in you just made.)
 
 ### Switching Accounts
 

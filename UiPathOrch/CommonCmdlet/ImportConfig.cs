@@ -12,21 +12,17 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsData.Import, "OrchConfig", SupportsShouldProcess = true)]
 public class ImportOrchConfigCmdlet : PSCmdlet
 {
-    [Parameter]
-    public SwitchParameter Force { get; set; }
-
     protected override void ProcessRecord()
     {
-        // If -Force is not specified, skip if the config file has not changed since the last mount
+        // Always re-read the config and re-mount. A prior optimization skipped this
+        // when the file was unchanged since the last mount (to avoid a redundant
+        // second read right after Import-Module's InitializeDefaultDrives), but the
+        // silent no-op confused users — running Import-OrchConfig and seeing nothing
+        // happen — and the saved work is negligible. Re-mounting recreates the drives,
+        // which clears their cached sign-ins; the next use of each drive
+        // re-authenticates. That is intentional: it is how a user picks up a fresh
+        // sign-in (e.g. after signing in to the org's directory in the browser).
         string configFilePath = Core.OrchProvider.GetConfigFilePath();
-        if (!Force
-            && Core.OrchProvider.ConfigLastWriteTimeUtc is not null
-            && System.IO.File.Exists(configFilePath)
-            && System.IO.File.GetLastWriteTimeUtc(configFilePath) == Core.OrchProvider.ConfigLastWriteTimeUtc)
-        {
-            WriteVerbose("Configuration file has not changed since the last mount. Skipping. Use -Force to override.");
-            return;
-        }
 
         if (!System.IO.File.Exists(configFilePath))
         {
@@ -165,7 +161,6 @@ public class ImportOrchConfigCmdlet : PSCmdlet
             }
         }
 
-        Core.OrchProvider.ConfigLastWriteTimeUtc = System.IO.File.GetLastWriteTimeUtc(configFilePath);
         WriteVerbose($"{driveCount} drive(s) mounted from '{configFilePath}'.");
     }
 }

@@ -776,22 +776,40 @@ internal class OrchestratorAuthManager
         return Convert.ToBase64String(data).TrimEnd('=').Replace("+", "-").Replace("/", "_");
     }
 
-    /// Check whether the current user is NOT signed in via Entra ID.
-    /// Returns true if the user is a local (non-Entra ID) user.
-    public bool IsNonEntraIdUser()
+    /// Tri-state classification of the signed-in principal for the Entra-ID
+    /// local-user advisory. The third state (Unknown) is the whole point: a
+    /// probe taken before the token is available must NOT be mistaken for
+    /// "not a local user", or the caller would latch a premature "no warning"
+    /// decision and suppress the advisory for the rest of the session.
+    internal enum EntraUserKind
     {
+        Unknown,             // no parseable token yet — retry on a later probe
+        LocalUser,           // signed in with a local (non-directory) account
+        EntraOrNotApplicable // signed in via Entra ID, or a principal the advisory doesn't apply to
+    }
+
+    /// Classify the signed-in principal from the JWT's ext_idp_disp_name claim.
+    /// "aad" means the directory (Entra ID); any other display name (e.g.
+    /// "GlobalIdp" for a local / social account) means a local user. A missing
+    /// claim (Confidential App, robot account) is not applicable. No / unparseable
+    /// token yields Unknown so the caller can retry instead of latching.
+    internal EntraUserKind GetEntraUserKind()
+    {
+        if (string.IsNullOrEmpty(_access_token)) return EntraUserKind.Unknown;
         try
         {
             using JsonDocument doc = ParseJwtPayload();
             if (doc.RootElement.TryGetProperty("ext_idp_disp_name", out JsonElement element))
             {
-                return element.GetString() != "aad";
+                return element.GetString() == "aad"
+                    ? EntraUserKind.EntraOrNotApplicable
+                    : EntraUserKind.LocalUser;
             }
-            return false; // No ext_idp_disp_name (e.g., Confidential App) — not applicable
+            return EntraUserKind.EntraOrNotApplicable; // No ext_idp_disp_name — not applicable
         }
         catch
         {
-            return false;
+            return EntraUserKind.Unknown;
         }
     }
 

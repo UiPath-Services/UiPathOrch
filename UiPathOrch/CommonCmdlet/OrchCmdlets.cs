@@ -253,7 +253,11 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
             if (warning is null) continue;
 
             drive.OrchAPISession.ClearPendingWarning();
-            drive.OrchAPISession.EntraIdWarningChecked = true;
+            // NOTE: do NOT set EntraIdWarningChecked here. That gate is owned solely
+            // by the Entra probe in GetChildItems, which latches it on a conclusive
+            // outcome. Setting it on every drain made any unrelated advisory (e.g.
+            // the IgnoreSslErrors notice) close the gate and suppress the Entra
+            // advisory before it was ever evaluated.
             // Producers concatenate multiple warnings with "\n\n". A single
             // WriteWarning() with embedded newlines would render the blank
             // separator as a stray "WARNING:" line, so emit each paragraph

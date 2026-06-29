@@ -176,16 +176,25 @@ or Entra ID, additional setup is required to enable directory user operations:
    during PKCE authentication. After connecting, UiPathOrch checks whether
    you are signed in via Entra ID. If not, a warning is displayed:
    ```
-   WARNING: [Orch1:] You are not signed in to the organization via Entra ID.
+   WARNING: [Orch1:] You are signed in with a local user account. This
+   organization supports Entra ID directory integration and single sign on.
+   ... please sign out and sign in through the organization-specific URL:
+   https://cloud.uipath.com/<org> in your browser — then run
+   'Import-OrchConfig' here to sign in again with that account.
    ```
    This warning typically appears when the user signs in with a local account
    instead of Entra ID.
-3. **Switch account if needed**: If the warning appears and you need
-   organization-level access, use `Switch-OrchCurrentUser` to re-authenticate
-   with the correct account:
+3. **Sign in with the directory account**: If the warning appears and you need
+   organization-level access, follow the warning's own instructions — in your
+   browser, sign out and sign in again through the organization-specific URL,
+   then re-trigger the PowerShell sign-in:
    ```powershell
-   Switch-OrchCurrentUser Orch1:
+   Import-OrchConfig
    ```
+   `Import-OrchConfig` clears the cached sign-in and re-runs the browser PKCE
+   flow, which now picks up the directory account. (`Switch-OrchCurrentUser`
+   does not work for this — it re-authenticates in a private browser session
+   that cannot inherit the directory sign-in you just made.)
    This opens an InPrivate browser window where you can select the appropriate
    identity provider (e.g., Microsoft/Entra ID, Google) and account.
 

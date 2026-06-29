@@ -1,6 +1,7 @@
 using System.Data;
 using System.Management.Automation;
 using System.Text;
+using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
 
@@ -64,6 +65,20 @@ public partial class OrchProvider
         return providerCsvPath;
     }
 
+    // The Entra-ID local-user advisory, worded to match the banner the Orchestrator
+    // web UI shows for the same condition. AuthManager.BaseUrl is the org-scoped
+    // sign-in URL (cloud: "https://cloud.uipath.com/{org}"); the "[drive:]" prefix
+    // disambiguates which drive the notice is about when several are mounted.
+    private static string BuildEntraIdSignInWarning(OrchDriveInfo drive)
+    {
+        string orgUrl = drive.OrchAPISession.AuthManager.BaseUrl;
+        return $"[{drive.NameColon}] You are signed in with a local user account. "
+            + "This organization supports Entra ID directory integration and single sign on. "
+            + "To take advantage of all directory capabilities, like directory search and directory groups "
+            + $"please sign out and sign in through the organization-specific URL: {orgUrl} in your browser "
+            + "— then run 'Import-OrchConfig' here to sign in again with that account.";
+    }
+
     protected override void GetChildItems(string path, bool recurse, uint depth)
     {
         var drive = GetOrchDriveInfo(path);
@@ -74,33 +89,46 @@ public partial class OrchProvider
 
         drive.OrchAPISession.EnsureAuthenticated();
 
-        // Check Entra ID warning (once per drive session).
-        // The warning is set to PendingWarning (not displayed here) because GetChildItems
-        // is also called during tab completion, where WriteWarning output would be silently lost.
-        // PendingWarning is flushed by OrchCmdlets.BeginProcessing, which also sets EntraIdWarningChecked.
-        if (!drive.OrchAPISession.EntraIdWarningChecked && drive.OrchAPISession.PendingWarning is null)
+        // Entra-ID local-user advisory (once per drive session). It is QUEUED into
+        // PendingWarning, never WriteWarning'd here, because GetChildItems also runs
+        // during `dir <path>` tab completion where a direct warning is lost; the
+        // next OrchestratorPSCmdlet's BeginProcessing drains it.
+        //
+        // EntraIdWarningChecked latches the probe, but ONLY on a conclusive outcome.
+        // A probe taken before the token / partition id / auth setting are available
+        // is left un-latched so a later enumeration retries it — previously any of
+        // those transient gaps (or an unrelated pending warning) permanently
+        // suppressed the advisory.
+        if (!drive.OrchAPISession.EntraIdWarningChecked)
         {
             try
             {
-                if (drive.OrchAPISession.AuthManager.IsNonEntraIdUser())
+                switch (drive.OrchAPISession.AuthManager.GetEntraUserKind())
                 {
-                    var prtId = drive.GetPartitionGlobalId();
-                    if (prtId is not null)
-                    {
-                        var authSetting = drive.PmAuthenticationSetting.Get();
-                        if (authSetting?.authenticationSettingType == "aad")
+                    case OrchestratorAuthManager.EntraUserKind.LocalUser:
+                        if (drive.GetPartitionGlobalId() is not null)
                         {
-                            drive.OrchAPISession.PendingWarning = $"[{drive.NameColon}] You are not signed in to the organization via Entra ID. Some operations may require organization-level access. Use Switch-OrchCurrentUser to sign in with a different account.";
+                            var authSetting = drive.PmAuthenticationSetting.Get();
+                            if (authSetting is not null) // only conclusive once fetched
+                            {
+                                drive.OrchAPISession.EntraIdWarningChecked = true;
+                                if (authSetting.authenticationSettingType == "aad")
+                                {
+                                    drive.OrchAPISession.AppendPendingWarning(BuildEntraIdSignInWarning(drive));
+                                }
+                            }
+                            // authSetting null (transient / missing scope): retry on a later enumeration.
                         }
-                        else
-                        {
-                            drive.OrchAPISession.EntraIdWarningChecked = true;
-                        }
-                    }
-                }
-                else
-                {
-                    drive.OrchAPISession.EntraIdWarningChecked = true;
+                        // partition id not yet known: retry on a later enumeration.
+                        break;
+
+                    case OrchestratorAuthManager.EntraUserKind.EntraOrNotApplicable:
+                        // Conclusive: signed in via Entra ID, or a principal (Confidential
+                        // App / robot) the advisory doesn't apply to.
+                        drive.OrchAPISession.EntraIdWarningChecked = true;
+                        break;
+
+                    // Unknown: no parseable token yet — leave un-latched and retry.
                 }
             }
             catch { } // Swallow - don't block navigation for a warning

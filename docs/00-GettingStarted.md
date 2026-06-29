@@ -134,8 +134,11 @@ Steps for a non-confidential application:
    Get-PSDrive
    ```
 
-`Import-OrchConfig` can be run repeatedly. If the configuration file has
-been updated, it remounts the drives. If unchanged, it does nothing.
+`Import-OrchConfig` can be run repeatedly. Each run re-reads the
+configuration file and remounts the drives, which also clears their cached
+sign-ins — so the next use of each drive re-authenticates (interactive
+drives prompt to sign in; Confidential App / PAT / username-password drives
+re-authenticate without prompting).
 
 ### AI-Assisted Configuration
 

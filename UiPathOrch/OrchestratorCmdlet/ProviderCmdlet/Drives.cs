@@ -223,7 +223,6 @@ public partial class OrchProvider
                         "NewPSDriveError", ErrorCategory.InvalidData, drive.Name));
                 }
             }
-            ConfigLastWriteTimeUtc = File.GetLastWriteTimeUtc(configFilePath);
             return ret;
         }
         else

@@ -20,7 +20,7 @@ Imports the UiPathOrch configuration file and creates PSDrives.
 ### __AllParameterSets
 
 ```
-Import-OrchConfig [-Confirm] [-Force] [-WhatIf] [<CommonParameters>]
+Import-OrchConfig [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -29,7 +29,7 @@ Import-OrchConfig [-Confirm] [-Force] [-WhatIf] [<CommonParameters>]
 
 The `Import-OrchConfig` cmdlet reads the UiPathOrchConfig.json configuration file and creates PSDrives for all enabled Orchestrator tenants. All existing UiPathOrch drives (including Document Understanding and Test Manager drives) are removed and re-created. Cached data in the existing drives is discarded.
 
-If the configuration file has not changed since the last import, the cmdlet skips re-creation. Use `-Force` to override this check.
+The configuration file is always re-read and the drives are always re-created, every time the cmdlet runs. Re-creating the drives also clears their cached sign-ins, so each drive re-authenticates the next time it is used: interactive (Non-Confidential App) drives prompt to sign in, while Confidential App, Personal Access Token, and username/password drives re-authenticate without prompting. This makes `Import-OrchConfig` the way to pick up a fresh sign-in — for example, after signing in to the organization's directory in the browser so a local-user drive can switch to a directory account.
 
 Use this cmdlet to apply configuration changes after editing UiPathOrchConfig.json with `Edit-OrchConfig`, without restarting the PowerShell session.
 
@@ -60,13 +60,15 @@ PS C:\> Import-OrchConfig
 
 Opens the configuration file for editing, then reloads it to apply the changes.
 
-### Example 3: Force re-creation
+### Example 3: Switch a local-user drive to a directory account
 
 ```powershell
-PS C:\> Import-OrchConfig -Force
+PS C:\> # 1. In the browser: sign out, then sign in at the organization URL (e.g. https://cloud.uipath.com/<org>)
+PS C:\> # 2. Back in PowerShell:
+PS C:\> Import-OrchConfig
 ```
 
-Forces re-creation of all drives even if the configuration file has not changed since the last import.
+Clears the cached sign-ins and re-creates the drives. The next use of an interactive drive re-runs the browser sign-in, which now picks up the directory account established in step 1.
 
 ### Example 4: Preview with -WhatIf
 
@@ -77,27 +79,6 @@ PS C:\> Import-OrchConfig -WhatIf
 Shows the configuration file path that would be loaded without actually removing or creating any drives.
 
 ## PARAMETERS
-
-### -Force
-
-Forces re-creation of all drives even if the configuration file has not changed since the last import. Without this switch, the cmdlet skips when the file's last write time matches the previous import.
-
-```yaml
-Type: System.Management.Automation.SwitchParameter
-DefaultValue: False
-SupportsWildcards: false
-Aliases: []
-ParameterSets:
-- Name: (All)
-  Position: Named
-  IsRequired: false
-  ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
-  ValueFromRemainingArguments: false
-DontShow: false
-AcceptedValues: []
-HelpMessage: ''
-```
 
 ### -Confirm
 

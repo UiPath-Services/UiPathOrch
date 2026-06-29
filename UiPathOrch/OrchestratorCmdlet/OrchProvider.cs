@@ -93,13 +93,6 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
     /// </summary>
     internal static void SetConfig(UiPathOrchConfig config) => _config = config;
 
-    /// <summary>
-    /// The last write time of the configuration file when InitializeDefaultDrives() mounted drives.
-    /// Import-OrchConfig compares this value with the current file's last write time,
-    /// and skips remounting if they are the same.
-    /// </summary>
-    internal static DateTime? ConfigLastWriteTimeUtc { get; set; }
-
     #region CmdletProvider overrides
 
     protected override ProviderInfo Start(ProviderInfo providerInfo)

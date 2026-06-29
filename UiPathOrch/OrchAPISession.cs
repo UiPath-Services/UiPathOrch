@@ -389,6 +389,16 @@ public partial class OrchAPISession : IDisposable
     internal string? PendingWarning { get; set; }
     internal void ClearPendingWarning() => PendingWarning = null;
 
+    // Append a paragraph to the deferred warning. Producers concatenate with
+    // "\n\n"; the BeginProcessing drain splits on that and emits each paragraph
+    // as its own WriteWarning. Appending (not overwriting) lets independent
+    // advisories — e.g. the IgnoreSslErrors notice and the Entra-ID local-user
+    // notice — coexist on the same drive instead of clobbering each other.
+    internal void AppendPendingWarning(string warning)
+        => PendingWarning = string.IsNullOrEmpty(PendingWarning)
+            ? warning
+            : PendingWarning + "\n\n" + warning;
+
     // Whether the Entra ID warning check has been performed
     internal bool EntraIdWarningChecked { get; set; }
 
@@ -406,9 +416,7 @@ public partial class OrchAPISession : IDisposable
             "(IgnoreSslErrors = true). Man-in-the-middle attacks on this connection would " +
             "not be detected. Use only on trusted networks (VPN / internal LAN).";
 
-        PendingWarning = string.IsNullOrEmpty(PendingWarning)
-            ? warning
-            : PendingWarning + "\n\n" + warning;
+        AppendPendingWarning(warning);
     }
 
     #region Authentication
