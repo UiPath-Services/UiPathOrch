@@ -57,6 +57,7 @@ public class GetFolderUserCmdlet : OrchestratorPSCmdlet
     private static readonly string[] CsvHeaders = [
         "Path",
         "Type",
+        "Domain",
         "UserName",
         "FullName",
         "FolderRoles",
@@ -155,14 +156,27 @@ public class GetFolderUserCmdlet : OrchestratorPSCmdlet
         }
     }
 
-    private static void WriteCsvContent(StreamWriter writer, IEnumerable<Entities.UserRoles> output)
+    private static void WriteCsvContent(StreamWriter writer, OrchDriveInfo drive, IEnumerable<Entities.UserRoles> output)
     {
+        // The folder-user DTO (UserEntity) doesn't carry Domain, so resolve it
+        // from the tenant user list by Id. This lets the column round-trip into
+        // Add-OrchFolderUser -Domain. Empty on non-federated tenants (no
+        // partition domain) and for any user not found in the tenant list.
+        var domainById = drive.Users.Get()
+            .Where(u => u.Id is not null)
+            .GroupBy(u => u.Id!.Value)
+            .ToDictionary(g => g.Key, g => g.First().Domain);
+
         // Write data rows for each folder user
         foreach (var p in output)
         {
+            string? domain = null;
+            if (p?.UserEntity?.Id is not null) domainById.TryGetValue(p.UserEntity.Id.Value, out domain);
+
             string[] line = [
-                EscapeCsvValue(p.Path, true),
+                EscapeCsvValue(p?.Path, true),
                 EscapeCsvValue(p?.UserEntity?.Type),
+                EscapeCsvValue(domain),
 
                 // For DirectoryGroup, output FullName in the UserName column...
                 // This is because PmBulkResolveByName() is case-sensitive.
@@ -221,7 +235,7 @@ public class GetFolderUserCmdlet : OrchestratorPSCmdlet
 
                 if (writer is not null)
                 {
-                    WriteCsvContent(writer, targets);
+                    WriteCsvContent(writer, drive, targets);
                 }
                 else
                 {
