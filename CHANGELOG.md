@@ -6,6 +6,35 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+#### Cmdlets
+
+- **`Add-OrchUser` gains a `-Domain` parameter**, mirroring `Add-OrchFolderUser -Domain`: on an
+  EntraID-federated OnPrem organization where the web UI exposes a concrete domain (e.g. `frc` / `root`)
+  instead of `autogen`, pass it here so the directory lookup and the posted user both use it. It stays
+  opt-in — omit it and the historical `autogen` default applies (Automation Cloud / non-federated OnPrem).
+
+- **`-Domain` now has argument completion** on `Add-OrchUser` and `Add-OrchFolderUser`. Candidates come
+  from `/api/DirectoryService/GetDomains` with the default domain offered first. Non-federated tenants and
+  Automation Cloud return no domains, so the completer is silently empty there and `autogen` continues to
+  apply.
+
+- **`Get-OrchUser`, `Get-OrchUserDetail` and `Get-OrchFolderUser` `-ExportCsv` now include a `Domain`
+  column** (after `Type`). It round-trips back into `Add-OrchUser -Domain` / `Add-OrchFolderUser -Domain`
+  on `Import-Csv | Add-Orch…`. The value is the user's directory domain where the server reports one (the
+  partition domain on federated OnPrem) and is empty on non-federated tenants / Automation Cloud.
+
+### Fixed
+
+#### Cmdlets
+
+- **`Get-OrchPSDrive` now fills `ProductVersion` for already-connected drives** without `-Force`. The
+  column added in 1.11.0 only populated under `-Force` (or after `Get-OrchProductVersion`), so a drive
+  that was already signed in still showed it blank. A plain `Get-OrchPSDrive` now fetches
+  `/api/Status/Version` for drives that are already authenticated (one cheap call on the existing token);
+  cold drives are still left untouched, so listing every drive never triggers an interactive sign-in.
+
 ## [1.11.0] - 2026-06-29
 
 ### Added
