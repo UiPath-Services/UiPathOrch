@@ -1508,14 +1508,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         TestSets = new(this, OrchAPISession.GetTestSets, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
 
         Releases = new(this,
-            folderId =>
-            {
-                // The list endpoint accepts an OData $expand string. v12+ adds EntryPoint.
-                string query = OrchAPISession.ApiVersion >= 12
-                    ? "&$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint"
-                    : "&$expand=Environment,CurrentVersion,ReleaseVersions";
-                return OrchAPISession.GetReleases(folderId, query);
-            },
+            OrchAPISession.GetReleases,
             (release, folderPath) => release.Path = folderPath);
 
         ReleasesDetailed = new(this,

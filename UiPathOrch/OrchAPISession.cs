@@ -1936,7 +1936,20 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<Release> ListReleases(Int64 folderId) => GetEnumerable<Release>("/odata/Releases/UiPath.Server.Configuration.OData.ListReleases", folderId, "&$filter=ProcessType eq '1'");
 
-    public IEnumerable<Release> GetReleases(Int64 folderId, string? query = null) => GetEnumerable<Release>("/odata/Releases", folderId, query);
+    public IEnumerable<Release> GetReleases(Int64 folderId)
+    {
+        // The list endpoint accepts an OData $expand string. v12+ adds EntryPoint. Environment is a
+        // classic-folder navigation dropped from ReleaseDto in v20 (swagger v20 removes Environment/
+        // EnvironmentName/EnvironmentId; 26.3/staging rejects the $expand: "Could not find a property
+        // named 'Environment'"). Nothing here reads the nested object and modern folders always
+        // returned it null, so drop it at v20+ while keeping it below where classic on-prem may still
+        // populate it (unknown version keeps it, staying safe).
+        string env = ApiVersion >= 20 ? "" : "Environment,";
+        string query = ApiVersion >= 12
+            ? $"&$expand={env}CurrentVersion,ReleaseVersions,EntryPoint"
+            : $"&$expand={env}CurrentVersion,ReleaseVersions";
+        return GetEnumerable<Release>("/odata/Releases", folderId, query);
+    }
 
     public Release? GetReleaseById(Int64 folderId, Int64 releaseId, string? query = null)
     {

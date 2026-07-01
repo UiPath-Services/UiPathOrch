@@ -29,6 +29,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### Cmdlets
 
+- **`Get-OrchProcess` no longer fails with "OData query options are invalid" on API v20+
+  Orchestrator.** The `/odata/Releases` list unconditionally requested `$expand=Environment`, but the
+  `Environment` navigation (along with `EnvironmentName` / `EnvironmentId`) was removed from `ReleaseDto`
+  in API v20 — so newer builds (confirmed on staging `26.3.0-s197`) rejected the query with a `400`
+  ("Could not find a property named 'Environment' on type ...ReleaseDto"). The expand now includes
+  `Environment` only below v20, where classic-folder deployments may still populate it; an unknown API
+  version keeps it, preserving legacy behavior. Nothing consumed the nested `Environment` object, and
+  `EnvironmentName` (used by `Compare-OrchProcess`) is a flat field returned independently of the expand.
+
 - **`Get-OrchPSDrive` now fills `ProductVersion` for already-connected drives** without `-Force`. The
   column added in 1.11.0 only populated under `-Force` (or after `Get-OrchProductVersion`), so a drive
   that was already signed in still showed it blank. A plain `Get-OrchPSDrive` now fetches
