@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.11.0'
+ModuleVersion = '1.11.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,28 +503,23 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.11.0
+1.11.1
 
-Added (cmdlets): Get-OrchPSDrive now shows a ProductVersion column (between Root and ApiVer) with the
-Orchestrator product version from /api/Status/Version. It is a passive cached read -- listing every
-drive never triggers a network call or an interactive sign-in, so the value appears only after it has
-been fetched by Get-OrchProductVersion or by Get-OrchPSDrive -Force (which now warms the cache). It is
-also exposed as the ProductVersion property on the output object.
+Added (cmdlets): Add-OrchUser gains a -Domain parameter (mirroring Add-OrchFolderUser -Domain) for
+EntraID-federated OnPrem organizations that expose a concrete partition domain instead of autogen;
+omit it and the historical autogen default applies. -Domain now has argument completion on both
+Add-OrchUser and Add-OrchFolderUser (candidates from /api/DirectoryService/GetDomains, default first).
+Get-OrchUser, Get-OrchUserDetail and Get-OrchFolderUser -ExportCsv now include a Domain column that
+round-trips back into Add-OrchUser -Domain / Add-OrchFolderUser -Domain.
 
-Changed (cmdlets): BREAKING -- Import-OrchConfig now always re-reads the configuration file and
-re-mounts the drives, and the -Force switch has been removed. Previously the cmdlet silently did
-nothing when the file was unchanged since the last mount, which was confusing; the saved work is
-negligible. Re-mounting clears each drive's cached sign-in, so the next use re-authenticates -- which
-is how you pick up a fresh directory sign-in after signing in to the org URL in the browser. Scripts
-that passed Import-OrchConfig -Force should drop the switch. The local-user advisory shown for an
-Entra-ID-integrated organization was also reworded to match the Orchestrator web banner: it names the
-organization-specific sign-in URL and the sign-out -> org-URL -> Import-OrchConfig recovery steps.
-
-Fixed (cmdlets): The Entra-ID local-user advisory is now actually displayed. It was detected correctly
-but a gate latched shut before it could be shown -- a probe taken before the token/partition-id/auth
-setting were available, or an unrelated advisory (e.g. the IgnoreSslErrors notice) draining first,
-would permanently suppress it. The gate now latches only on a conclusive outcome and is re-armed on
-Switch-OrchCurrentUser.
+Fixed (cmdlets): Get-OrchProcess no longer fails with "OData query options are invalid" on API v20+
+Orchestrator. The /odata/Releases list unconditionally expanded the Environment navigation, which was
+removed from ReleaseDto in API v20 (confirmed on staging 26.3.0-s197); it is now expanded only below
+v20, where classic-folder deployments may still populate it. Get-OrchPSDrive now fills ProductVersion
+for already-connected drives without -Force (a cheap read on the existing token; cold drives stay
+untouched). A malformed -MachineRobots JSON value now fails with a clear, actionable error and skips
+the trigger instead of reporting a generic "deserialize" message and then still issuing the update;
+applies to New-OrchTrigger, Update-OrchTrigger, New-OrchApiTrigger and Update-OrchApiTrigger.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
