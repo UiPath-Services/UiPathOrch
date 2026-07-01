@@ -44,7 +44,7 @@ AI can directly read and edit this file to assist with configuration:
 ```powershell
 $configPath = Get-OrchConfigPath
 Get-Content $configPath             # Read current configuration
-Edit-OrchConfig Default             # Or open in default editor
+Edit-OrchConfig -UseDefaultEditor   # Or open in default editor
 ```
 
 4. Review basic usage of UiPathOrch:
@@ -140,7 +140,7 @@ Based on the interview results, create a migration plan that includes:
 - **It is strongly recommended to use descriptive drive names to prevent
   operational mistakes** (e.g., `Source:` and `Destination:`). Numbered names
   like `Orch1:` and `Orch2:` risk confusing the source and destination. Drive
-  names can be changed in the configuration file (`Edit-OrchConfig Default`).
+  names can be changed in the configuration file (`Edit-OrchConfig -UseDefaultEditor`).
 
 ### Library Feed Setting
 
@@ -230,7 +230,7 @@ If the scopes include write permissions, edit the configuration file to change
 the source drive scopes to read-only:
 
 ```powershell
-Edit-OrchConfig Default
+Edit-OrchConfig -UseDefaultEditor
 ```
 
 Find the source drive's PSDrive entry and change the `Scope` value:
