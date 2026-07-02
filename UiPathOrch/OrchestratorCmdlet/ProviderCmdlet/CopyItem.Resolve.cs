@@ -126,7 +126,7 @@ public partial class OrchProvider
                     _this.WriteWarning($"{msg}: {srcDrive.NameColon} does not have machine with Id = {srcMachineId}.");
                     return null;
                 case FindDstByNameResult.DstNotFound:
-                    WarnDrop(_this, budget, $"{msg}: the machine '{srcMachine!.Name}' is dropped because it is not assigned in '{dstFolder.GetPSPath()}'. To keep it, copy the assignment from the source folder, e.g.: Copy-OrchFolderMachine -Path {PsLiteral(srcFolder.GetPSPath())} -Name {PsLiteral(srcMachine!.Name)} -Destination {PsLiteral(dstFolder.GetPSPath())}");
+                    WarnDrop(_this, budget, $"machine '{srcMachine!.Name}'", $"{msg}: the machine '{srcMachine!.Name}' is dropped because it is not assigned in '{dstFolder.GetPSPath()}'. To keep it, copy the assignment from the source folder, e.g.: Copy-OrchFolderMachine -Path {PsLiteral(srcFolder.GetPSPath())} -Name {PsLiteral(srcMachine!.Name)} -Destination {PsLiteral(dstFolder.GetPSPath())}");
                     return null;
             }
             return dstMachineFolder;
@@ -626,7 +626,10 @@ public partial class OrchProvider
             switch (result)
             {
                 case FindDstUserResult.NotFound:
-                    _this.WriteWarning($"{msg}: {dstDrive.NameColon} does not have user with Name = '{searchName}'.");
+                    // Routed through the budget too: during an asset copy the same missing
+                    // user repeats for every asset that references them, and the summary
+                    // should list not-found owners alongside not-assigned ones.
+                    WarnDrop(_this, budget, $"user '{searchName}'", $"{msg}: {dstDrive.NameColon} does not have user with Name = '{searchName}'.");
                     return null;
 
                 case FindDstUserResult.NotAssignedToFolder:
@@ -634,7 +637,7 @@ public partial class OrchProvider
                     // with a UserId that the destination folder doesn't own; the
                     // server returns 200 but silently drops the UserValue (and can
                     // wipe the asset's Global Value as a side effect).
-                    WarnDrop(_this, budget, $"{msg}: the per-user value for user '{searchName}' is dropped because the user is not assigned in '{newFolder.GetPSPath()}'. To keep it, copy the assignment from the source folder, e.g.: Copy-OrchFolderUser -Path {PsLiteral(srcFolder.GetPSPath())} -UserName {PsLiteral(searchName)} -Destination {PsLiteral(newFolder.GetPSPath())}");
+                    WarnDrop(_this, budget, $"user '{searchName}'", $"{msg}: the per-user value for user '{searchName}' is dropped because the user is not assigned in '{newFolder.GetPSPath()}'. To keep it, copy the assignment from the source folder, e.g.: Copy-OrchFolderUser -Path {PsLiteral(srcFolder.GetPSPath())} -UserName {PsLiteral(searchName)} -Destination {PsLiteral(newFolder.GetPSPath())}");
                     return null;
 
                 default:

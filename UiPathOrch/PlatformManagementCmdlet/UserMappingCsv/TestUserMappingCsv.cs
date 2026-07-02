@@ -27,6 +27,18 @@ public class TestUserMappingCsvCmdlet : OrchestratorPSCmdlet
         public string? DisplayName { get; set; }
     }
 
+    // Mirrors the tenant-user matching ResolveDstUserPure applies during the asset copy
+    // (mapped-name match first, then source-email fallback) minus the folder-assignment
+    // check, which is folder-scoped and cannot be judged at CSV level.
+    internal static bool IsDestinationTenantUser(string destinationUserName, string? sourceEmail,
+        IEnumerable<UiPath.PowerShell.Entities.User> dstUsers)
+    {
+        return dstUsers.Any(u =>
+            string.Compare(u.UserName, destinationUserName, StringComparison.OrdinalIgnoreCase) == 0
+            || (!string.IsNullOrEmpty(sourceEmail)
+                && string.Compare(u.UserName, sourceEmail, StringComparison.OrdinalIgnoreCase) == 0));
+    }
+
     private List<MappingEntry> ReadMappingCsv(string physicalPath)
     {
         var entries = new List<MappingEntry>();
@@ -99,6 +111,12 @@ public class TestUserMappingCsvCmdlet : OrchestratorPSCmdlet
         // Get the user list from the source tenant
         var srcUsers = srcDrive.Users.Get();
 
+        // Tenant-level user list from the destination. Directory resolution alone is not
+        // enough: per-user asset values are re-homed against the destination *tenant* user
+        // list (ResolveDstUserPure), so a name that resolves in the directory but has no
+        // tenant user yet still drops during the asset copy.
+        var dstUsers = dstDrive.Users.Get();
+
         int okCount = 0;
         int warningCount = 0;
         int errorCount = 0;
@@ -157,7 +175,15 @@ public class TestUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
                 if (resolved is not null && resolved.Count > 0)
                 {
-                    okCount++;
+                    if (IsDestinationTenantUser(destinationUserName, srcUser?.EmailAddress, dstUsers))
+                    {
+                        okCount++;
+                    }
+                    else
+                    {
+                        WriteWarning($"[WARNING] DestinationUserName '{destinationUserName}' (mapped from '{sourceUserName}') resolves in the destination directory but is not yet a tenant user in '{dstDrive.NameColon}'. Per-user asset values referencing this user will be dropped unless the user is assigned to the destination folder before assets are copied (folder-user copy assigns directory users automatically, e.g.: Copy-OrchFolderUser ... -UserMappingCsv).");
+                        warningCount++;
+                    }
                 }
                 else
                 {

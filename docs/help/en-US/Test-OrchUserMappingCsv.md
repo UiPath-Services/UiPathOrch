@@ -35,6 +35,7 @@ The validation performs the following checks for each entry in the CSV:
 1. Verifies that the SourceUserName exists in the source tenant as either a tenant user or a folder user.
 2. Checks that the DestinationUserName is not empty.
 3. Searches the destination directory to confirm that the DestinationUserName exists. If the user is not found in the directory but Name/DisplayName columns are provided, it reports a warning indicating that a local user can be created using New-PmUser.
+4. Verifies that the DestinationUserName is also reachable as a destination tenant user (the copy cmdlets re-home per-user asset values against the tenant user list, not the directory). A directory user who is not yet a tenant user triggers a warning: per-user asset values referencing them will be dropped unless the user is assigned to the destination folder before assets are copied — copying folder users (Copy-OrchFolderUser with -UserMappingCsv) assigns directory users automatically.
 
 After validation, the cmdlet outputs a summary showing the count of OK, Warning, and Error results.
 

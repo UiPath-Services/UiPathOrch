@@ -783,6 +783,8 @@ public partial class OrchProvider
             reporter.WriteProgress(++index, asset.Name);
             CopyOneAsset(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, userMapping, dropBudget);
         }
+
+        dropBudget.WriteSummary();
     }
 
     // Maximum number of per-value "owner not assigned, value dropped" warnings emitted in full
@@ -791,11 +793,11 @@ public partial class OrchProvider
 
     // Routes a drop warning through the budget when one is supplied (asset copy), otherwise writes
     // it directly (other FindDstMachine callers, e.g. session / robot migration, pass no budget).
-    private static void WarnDrop(IWritableHost host, DropWarningBudget? budget, string message)
+    private static void WarnDrop(IWritableHost host, DropWarningBudget? budget, string owner, string message)
     {
         if (budget is not null)
         {
-            budget.Warn(message);
+            budget.Warn(owner, message);
         }
         else
         {
@@ -2002,6 +2004,7 @@ public partial class OrchProvider
         private readonly string _srcPath;
         private readonly string _dstPath;
         private readonly int _threshold;
+        private readonly HashSet<string> _owners = new(StringComparer.OrdinalIgnoreCase);
         private int _count;
         private bool _summarized;
 
@@ -2013,8 +2016,9 @@ public partial class OrchProvider
             _threshold = threshold;
         }
 
-        public void Warn(string detailedMessage)
+        public void Warn(string owner, string detailedMessage)
         {
+            _owners.Add(owner);
             _count++;
             if (_count <= _threshold)
             {
@@ -2026,6 +2030,21 @@ public partial class OrchProvider
                 _summarized = true;
                 _host.WriteWarning($"More than {_threshold} per-user values were dropped because their user / machine is not assigned in '{_dstPath}'; further per-value warnings are suppressed. To assign all of the source folder's users / machines at once, e.g.: Copy-OrchFolderUser -Path {PsLiteral(_srcPath)} * -Destination {PsLiteral(_dstPath)}  (and Copy-OrchFolderMachine * for machines).");
             }
+        }
+
+        // Maximum number of distinct owners spelled out in the end-of-copy summary before the
+        // rest collapse into a "+N more" tail.
+        private const int SummaryOwnerLimit = 20;
+
+        // Emitted once after a folder's asset loop: the distinct owners whose per-user values
+        // were dropped, so a large run ends with one actionable list even when the per-value
+        // warnings above were throttled away.
+        public void WriteSummary()
+        {
+            if (_count == 0) return;
+            var listed = _owners.OrderBy(o => o, StringComparer.OrdinalIgnoreCase).Take(SummaryOwnerLimit).ToList();
+            string more = _owners.Count > SummaryOwnerLimit ? $", ... (+{_owners.Count - SummaryOwnerLimit} more)" : "";
+            _host.WriteWarning($"Summary: {_count} per-user value(s) were dropped copying assets from '{_srcPath}' to '{_dstPath}'. Unresolved owner(s): {string.Join(", ", listed)}{more}. Assets whose values all dropped and that have no global default value were skipped entirely. Ensure these users / machines exist in the destination tenant and are assigned to '{_dstPath}' (e.g.: Copy-OrchFolderUser / Copy-OrchFolderMachine, with -UserMappingCsv if names differ), then re-run the asset copy.");
         }
     }
 }
