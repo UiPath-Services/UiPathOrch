@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.11.2'
+ModuleVersion = '1.11.3'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,15 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.11.3
+
+Added: Test-OrchUserMappingCsv now also verifies each DestinationUserName is reachable as a destination
+tenant user, not just resolvable in the destination directory — a mapping that only resolved at
+directory level validated clean and then dropped every per-user asset value at copy time; such entries
+now warn up front. Asset copies now end with a one-line drop summary listing the distinct users /
+machines that failed to resolve, even after per-value warnings hit the throttle; the "does not have
+user with Name" warning is throttled through the same budget and its users are included in the summary.
+
 1.11.2
 
 Fixed (cmdlets): Add-OrchUser batch import no longer applies the last CSV row's UpdatePolicy and ES_*

@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.11.3] - 2026-07-02
+
+### Added
+
+#### Cmdlets
+
+- **`Test-OrchUserMappingCsv` now also verifies each `DestinationUserName` is reachable as a destination
+  *tenant* user**, not just resolvable in the destination directory. The copy cmdlets re-home per-user
+  asset values against the destination tenant user list, so a mapping that only resolved at directory
+  level validated clean and then dropped every per-user value at copy time. Such entries now warn up
+  front, with a pointer at copying folder users (which auto-assigns directory users) before assets.
+
+#### Provider
+
+- **Asset copies now end with a one-line drop summary** — the total number of dropped per-user values
+  and the distinct users / machines that failed to resolve — so the unresolved owners are listed even
+  after the per-value warnings hit the throttle. The repeated "does not have user with Name" warning
+  (destination tenant lacks the user entirely) is now throttled through the same budget as the
+  "not assigned" one, and its users are included in the summary.
+
 ## [1.11.2] - 2026-07-02
 
 ### Fixed
