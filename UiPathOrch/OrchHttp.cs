@@ -144,7 +144,7 @@ internal static class OrchHttp
         using var winnerFound = new CancellationTokenSource();
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, winnerFound.Token);
 
-        var pending = new List<Task<SslStream?>>();
+        var pending = new List<Task<(SslStream? stream, Exception? error)>>();
         int nextIndex = 0;
         Exception? lastError = null;
 
@@ -173,23 +173,28 @@ internal static class OrchHttp
                 completed = await Task.WhenAny(pending).ConfigureAwait(false);
             }
 
-            var attempt = (Task<SslStream?>)completed;
+            var attempt = (Task<(SslStream? stream, Exception? error)>)completed;
             pending.Remove(attempt);
 
-            if (attempt.Status == TaskStatus.RanToCompletion && attempt.Result is not null)
+            var (stream, error) = attempt.Result;
+            if (stream is not null)
             {
                 winnerFound.Cancel(); // tear down the slower / black-holed attempts
-                return attempt.Result;
+                return stream;
             }
 
-            if (attempt.Exception?.InnerException is { } ex)
-                lastError = ex;
+            // A cancellation is our own teardown / the caller's timeout, not a diagnosis;
+            // keep the last real socket/TLS error so e.g. an untrusted-certificate failure
+            // isn't reported as a generic connect failure.
+            if (error is not null and not OperationCanceledException)
+                lastError = error;
         }
 
         // If we got here because the caller cancelled (e.g. HttpClient.Timeout), surface that
         // rather than a generic connect failure.
         cancellationToken.ThrowIfCancellationRequested();
-        throw new IOException($"Could not connect to {host}:{port} on any of {addresses.Count} address(es).", lastError);
+        string lastErrorSummary = lastError is null ? "" : $" Last error: {lastError.Message}";
+        throw new IOException($"Could not connect to {host}:{port} on any of {addresses.Count} address(es).{lastErrorSummary}", lastError);
     }
 
     // RFC 8305 §4: interleave addresses by family so attempts alternate IPv6 / IPv4 instead of
@@ -215,7 +220,10 @@ internal static class OrchHttp
         return ordered;
     }
 
-    private static async Task<SslStream?> ConnectAndAuthenticateAsync(
+    // Never faults: a failed attempt returns its exception in the tuple so the racing
+    // loop can harvest it for the final "could not connect" diagnosis without leaving
+    // abandoned faulted tasks behind (the losers are dropped when a winner returns).
+    private static async Task<(SslStream? stream, Exception? error)> ConnectAndAuthenticateAsync(
         IPAddress ip, string host, int port, bool ignoreSslErrors, CancellationToken cancellationToken)
     {
         var socket = new Socket(ip.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { NoDelay = true };
@@ -227,12 +235,12 @@ internal static class OrchHttp
             if (ignoreSslErrors)
                 sslOptions.RemoteCertificateValidationCallback = AcceptAnyCertificate;
             await ssl.AuthenticateAsClientAsync(sslOptions, cancellationToken).ConfigureAwait(false);
-            return ssl;
+            return (ssl, null);
         }
-        catch
+        catch (Exception ex)
         {
             socket.Dispose();
-            return null;
+            return (null, ex);
         }
     }
 }
