@@ -985,7 +985,11 @@ public partial class OrchAPISession : IDisposable
 
     public QueueDefinition? GetQueue(Int64 folderId, Int64 queueId)
     {
-        // TODO: Which one should be called when ApiVersion is 17 or 18?
+        // GetQueue(id=) measured working on 16.0 (23.4.0) and 17.0 (25.10.2) — the action
+        // exists well below the current floor, so 17/18 answer "legacy path, though the
+        // action would also work". The floor stays at 19 (the value this table was seeded
+        // with); lowering it to 16 would collapse the legacy GET + retention-merge into one
+        // call for 16-18 — a deliberate behavior change, not taken as comment-evidence work.
         if (Supports(OrchApiFloor.QueueGetAction))
         {
             return HttpRequest<QueueDefinition>(HttpMethod.Get, $"/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetQueue(id={queueId})", folderId);

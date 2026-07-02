@@ -908,7 +908,7 @@ public class User
     public bool? MayHaveUnattendedSession { get; set; }
     public bool? MayHavePersonalWorkspace { get; set; }
     public bool? RestrictToPersonalWorkspace { get; set; }
-    public bool? BypassBasicAuthRestriction { get; set; } // TODO: Huh? Was this removed in api v18.0? Is it safe to exclude?
+    public bool? BypassBasicAuthRestriction { get; set; } // In UserDto's $metadata up to 17.0 (25.10.2); gone on Cloud (v20 measured). Nullable, so it round-trips on old servers and stays null on new ones — keep.
     public UpdatePolicy? UpdatePolicy { get; set; }
     public string? AccountId { get; set; }
     public bool? HasOnlyInheritedPrivileges { get; set; }
