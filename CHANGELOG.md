@@ -16,6 +16,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   automatically), so per-row warnings drowned the report in expected noise. When only Pending entries
   remain, the closing verdict now says to copy folder users before assets instead of flagging the CSV.
 
+- **Cmdlets that need an endpoint the connected Orchestrator predates now say so.** `Get-OrchLibrary` /
+  `Get-OrchLibraryVersion` with `-HostFeed` on Orchestrator below API v17 (the library-feeds endpoint is
+  absent through 23.4 and present from 25.10, measured) and `Get-OrchProductVersion` below API v12
+  (`/api/Status/Version` is absent on 20.10.16) used to surface a bare `Not Found`; both now report
+  "Orchestrator API Version N does not support this operation." `Get-OrchPSDrive` is unchanged — it
+  already tolerated the failure and leaves the ProductVersion column blank.
+
+#### Diagnostics & robustness
+
+- **Every Orchestrator-version gate now carries live measurements.** The remaining "does this work on
+  v12 / v14 / v15?" TODO comments were replaced with evidence measured against 20.10.16, 21.10.4,
+  22.4.4, 22.10.0, 23.4.0, and 25.10.2 (plus Automation Cloud), and the API-trigger copy gate was
+  aligned with the cache floor it already deferred to. No behavior changes beyond the error messages
+  above.
+
 ## [1.11.3] - 2026-07-02
 
 ### Added
