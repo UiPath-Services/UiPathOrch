@@ -6,6 +6,41 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+#### Cmdlets
+
+- **`Add-OrchUser` batch import no longer applies the last row's `UpdatePolicyType`/`UpdatePolicyVersion`
+  and `ES_*` execution settings to every user.** In `Import-Csv | Add-OrchUser`, those values were read
+  from the bare cmdlet parameters after the pipeline had drained (so every user got the final row's
+  settings, or none when the final row left them blank) even though each row's values were already
+  captured per row. They now post per row, consistent with `IsExternalLicensed` / `UR_*` / `MayHave*`.
+
+- **`Set-OrchAsset` with a mix of existing and new names now creates the new assets.** The
+  create-vs-update decision matched each name against the combined pattern list of *all* `-Name`
+  arguments, so as soon as any one name matched an existing asset, every name took the update branch and
+  new assets were silently never created (`Set-OrchAsset Text Existing,BrandNew -Value x` updated
+  `Existing` and dropped `BrandNew`). Each name now decides on its own match.
+
+- **`Get-OrchFolderUser -ExportCsv`'s `Domain` column now actually round-trips into
+  `Add-OrchFolderUser`.** `-Domain` did not bind from the pipeline by property name, so
+  `Import-Csv | Add-OrchFolderUser` silently posted the `autogen` default for every row regardless of the
+  CSV's `Domain` values. It now binds per row (captured in `ProcessRecord`, like `Add-OrchUser -Domain`),
+  so mixed-domain CSVs post each row's own domain.
+
+#### Authentication
+
+- **On-prem user/password drives now populate the `AccessToken` / `Claims` diagnostics and
+  `IsAuthenticated`.** The user/password flow returned the token to the session without storing it in the
+  auth manager, so `Get-OrchPSDrive` showed empty diagnostics for a successfully authenticated drive (and
+  the `Remove-OrchPackage -Path` completer excluded it).
+
+- **A failed on-prem user/password sign-in now reports the server's actual error.** The
+  `/api/Account/Authenticate` response's status code and error envelope were ignored, so a wrong password
+  surfaced as the generic "Authentication returned an empty access token." and a proxy's HTML error page
+  as a raw JSON parse error. The flow now fails with `Authentication failed: <status> — <server message>`
+  (response body is not dumped, matching the OAuth token-endpoint handling).
+
 ## [1.11.1] - 2026-07-01
 
 ### Added
