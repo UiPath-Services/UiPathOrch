@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.11.1'
+ModuleVersion = '1.11.2'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,23 +503,26 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.11.1
+1.11.2
 
-Added (cmdlets): Add-OrchUser gains a -Domain parameter (mirroring Add-OrchFolderUser -Domain) for
-EntraID-federated OnPrem organizations that expose a concrete partition domain instead of autogen;
-omit it and the historical autogen default applies. -Domain now has argument completion on both
-Add-OrchUser and Add-OrchFolderUser (candidates from /api/DirectoryService/GetDomains, default first).
-Get-OrchUser, Get-OrchUserDetail and Get-OrchFolderUser -ExportCsv now include a Domain column that
-round-trips back into Add-OrchUser -Domain / Add-OrchFolderUser -Domain.
+Fixed (cmdlets): Add-OrchUser batch import no longer applies the last CSV row's UpdatePolicy and ES_*
+execution settings to every user; they now post per row like the other per-row fields. Set-OrchAsset
+with a mix of existing and new names now creates the new assets instead of silently skipping them.
+The Domain column exported by Get-OrchFolderUser -ExportCsv now actually round-trips into
+Add-OrchFolderUser: -Domain binds from the pipeline by property name and is captured per row.
 
-Fixed (cmdlets): Get-OrchProcess no longer fails with "OData query options are invalid" on API v20+
-Orchestrator. The /odata/Releases list unconditionally expanded the Environment navigation, which was
-removed from ReleaseDto in API v20 (confirmed on staging 26.3.0-s197); it is now expanded only below
-v20, where classic-folder deployments may still populate it. Get-OrchPSDrive now fills ProductVersion
-for already-connected drives without -Force (a cheap read on the existing token; cold drives stay
-untouched). A malformed -MachineRobots JSON value now fails with a clear, actionable error and skips
-the trigger instead of reporting a generic "deserialize" message and then still issuing the update;
-applies to New-OrchTrigger, Update-OrchTrigger, New-OrchApiTrigger and Update-OrchApiTrigger.
+Fixed (provider): Remove-Item on an Orchestrator folder resolves the path literally like every other
+single-item operation (a leftover leaf-only wildcard unescape turned folder names containing a literal
+backtick-escaped wildcard into a silent no-op delete) and reports ObjectNotFound instead of silently
+succeeding when the folder cannot be resolved. DU/TM drives no longer accept nested garbage paths
+(Test-Path Du1:\NoSuchThing\RealProject returned true) and tolerate a null PSDriveInfo.
+
+Fixed (diagnostics): connection failures now carry the underlying socket/TLS error, so an untrusted
+certificate no longer masquerades as a generic "could not connect". Import-OrchConfig reports a clear
+error for a config file without a "PSDrives" array instead of a NullReferenceException. -UseInPrivate
+sign-ins sweep the throwaway Edge profiles earlier sign-ins left in %TEMP%. On-prem user/password
+drives now populate the AccessToken/Claims diagnostics and IsAuthenticated, and a failed sign-in
+reports the server's actual error message instead of a generic one.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
