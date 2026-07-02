@@ -46,6 +46,16 @@ public class ImportOrchConfigCmdlet : PSCmdlet
             return;
         }
 
+        // A hand-edited config without a "PSDrives" array deserializes fine but has no
+        // drives to mount — fail clearly instead of NRE-ing in the mount loop below.
+        if (config.PSDrives is null)
+        {
+            WriteError(new ErrorRecord(
+                new System.Exception("The configuration file has no \"PSDrives\" array. Run Edit-OrchConfig to define at least one drive."),
+                "ConfigMissingPSDrives", ErrorCategory.InvalidData, configFilePath));
+            return;
+        }
+
         if (!ShouldProcess(configFilePath, "Import OrchConfig"))
         {
             return;
