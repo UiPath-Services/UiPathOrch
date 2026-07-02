@@ -34,7 +34,10 @@ public partial class OrchProvider
         Action<Int64, Int64, Int64> share)
         where T : class
     {
-        // TODO: Is this version number correct? There likely aren't any Orchestrators older than v12 anymore.
+        // Measured: GetFoldersForAsset(id=) is 404 on 11.1 (20.10.16), so linked-entity copying
+        // cannot work below 12; the link APIs are exercised routinely on Cloud (v20) by the
+        // cross-tenant suites. API v12 has no obtainable on-prem build — the gate stays at 12,
+        // bracketed by those measurements.
         if (srcDrive.OrchAPISession.ApiVersion < 12) return false;
         if (dstDrive.OrchAPISession.ApiVersion < 12) return false;
 
