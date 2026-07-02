@@ -1597,9 +1597,10 @@ public partial class OrchAPISession : IDisposable
         }
 
         string expand;
-        // TODO: Is this number correct?
         // Confirmed that Machine must not be included when ApiVersion == 11
-        // Confirmed that Machine can be included when ApiVersion == 13
+        // Confirmed that Machine can be included when ApiVersion == 13 (21.10.4)
+        // No obtainable on-prem build serves API v12, so the boundary itself is
+        // unverifiable; the gate stays at 12, bracketed by the two measurements above.
         if (ApiVersion < 12)
         {
             expand = "&$expand=Robot,Release";

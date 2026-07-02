@@ -243,8 +243,10 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
         #endregion
 
         #region ProcessType
-        // TODO: Are these numbers correct?
         // Confirmed that when ApiVersion == 11, ProcessType should be null
+        // Confirmed on 13.0 (21.10.4) that the ProcessType filter is accepted.
+        // No obtainable on-prem build serves API v12, so the boundary itself is
+        // unverifiable; the gate stays at 12, bracketed by the two measurements above.
         if (drive.OrchAPISession.ApiVersion >= 12)
         {
             var processType = ProcessType ?? ["Process"];

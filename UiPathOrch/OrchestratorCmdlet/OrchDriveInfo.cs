@@ -1092,7 +1092,8 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
                 else
                 {
                     // In 11.1, the robot listing did not produce an API call.. Try building something similar from users.
-                    // TODO: How does this work in version 12 and later?
+                    // The >= 12 branch is verified: on 13.0 (21.10.4) GetRobots
+                    // (GET /odata/Robots/...GetConfiguredRobots?$expand=User) returns 200 with robots.
                     // Null-forgiving on Users / UsersDetailed: this lambda runs only after the
                     // constructor has finished, by which time both fields are initialized. The
                     // analyzer can't see that, since these caches are initialized later in the
@@ -1480,7 +1481,10 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             });
 
         // Non-indexed folder entities
-        // Confirmed that the below returns an error in 11.1. TODO: How do we get feedId? How does this work in version 12 and later?
+        // Confirmed that GetEntitiesSummary returns an error in 11.1 and works on 13.0 (21.10.4).
+        // feedId comes from GetFolderFeedId (GET /api/PackageFeeds/GetFolderFeed): on 21.10.4 it
+        // returns 200 with a null body when the folder has no dedicated feed — handled by the
+        // null path in GetFolderFeedId.
         EntitiesSummary = new(this, fid => OrchAPISession.GetEntitiesSummary(fid!.Value), (e, folderPath) => e.Path = folderPath);
         FolderFeedId = new(this, OrchAPISession.GetFolderFeedId, null, 12);
         ActionCatalogs = new(this, OrchAPISession.GetTaskCatalogs, (e, folderPath) => e.Path = folderPath, 16); // Confirmed no error is returned in v16
