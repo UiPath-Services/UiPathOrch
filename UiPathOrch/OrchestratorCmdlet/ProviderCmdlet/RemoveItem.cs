@@ -14,14 +14,12 @@ public partial class OrchProvider
             return;
         }
 
-        int index = path.LastIndexOf(System.IO.Path.DirectorySeparatorChar);
-        if (index != -1)
-        {
-            string parentPart = path.Substring(0, index);
-            string childPart = path.Substring(index);
-            path = parentPart + UnescapeWildcard(childPart);
-        }
-
+        // Resolve the path literally, like every other single-item resolution site
+        // (GetItem/Rename/Move/GetProperty all use PSPathToOrchPath with no unescape —
+        // see the GetItem contract comment). A leaf-only UnescapeWildcard here was the
+        // last survivor of the retired unescape pass (NewItem/RenameItem carry it only
+        // commented out): it corrupted a leaf containing a literal backtick-escaped
+        // wildcard, and engine-resolved paths arrive as raw child names anyway.
         string ocPath = OrchDriveInfo.PSPathToOrchPath(path);
         Folder folder = drive.GetFolder(ocPath);
         if (folder is null)
@@ -29,7 +27,13 @@ public partial class OrchProvider
             drive.ClearAllCache();
             folder = drive.GetFolder(ocPath);
         }
-        if (folder is null) return;
+        if (folder is null)
+        {
+            // Emit ObjectNotFound like MoveItem / Get-ItemProperty do — silently
+            // returning here read as a successful delete.
+            WriteError(new ErrorRecord(new OrchException(path, $"{drive.NameColon} does not have folder '{path}'."), "RemoveItemError", ErrorCategory.ObjectNotFound, path));
+            return;
+        }
 
         if (ShouldProcess(path, "Remove Folder"))
         {

@@ -12,7 +12,10 @@ public partial class OrchProvider
 {
     protected override void GetChildItems(string path, bool recurse)
     {
-        GetChildItems(path, recurse, 0);
+        // uint.MaxValue is the engine's own encoding of "plain -Recurse" in the 3-arg
+        // overload — delegate faithfully (a hardcoded 0 would cap a recurse:true call
+        // at direct children). The 3-arg override forces depth to 0 when !recurse.
+        GetChildItems(path, recurse, uint.MaxValue);
     }
 
     // Returns the depth of the folder (number of slashes + 1)
@@ -264,15 +267,18 @@ public partial class OrchProvider
     //        //.Replace("]", "`]");
     //}
 
-    private static string UnescapeWildcard(string path)
-    {
-        return path
-            //.Replace("``", "`")
-            .Replace("`*", "*")
-            .Replace("`?", "?");
-        //.Replace("[", "`[") // no need to unescape [ and ]
-        //.Replace("]", "`]");
-    }
+    // Retired: RemoveItem was the last caller (NewItem/RenameItem already carried it only
+    // commented out). Single-item resolution sites resolve literally — see the GetItem
+    // contract comment and commit ada1c5c1.
+    //private static string UnescapeWildcard(string path)
+    //{
+    //    return path
+    //        //.Replace("``", "`")
+    //        .Replace("`*", "*")
+    //        .Replace("`?", "?");
+    //    //.Replace("[", "`[") // no need to unescape [ and ]
+    //    //.Replace("]", "`]");
+    //}
 
     // GetChildNames backs `Get-ChildItem -Name` and wildcard resolution (`cd t*`, `rmdir *`).
     // Per the provider contract it writes ONLY the child's name string as the item (not the
