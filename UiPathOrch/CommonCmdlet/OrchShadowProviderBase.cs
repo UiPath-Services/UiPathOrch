@@ -55,23 +55,37 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
 
     // ----- shared helpers -----------------------------------------------------
 
-    protected TDrive ShadowDrive => (TDrive)this.PSDriveInfo;
+    // PSDriveInfo can be null in some engine contexts — the hierarchical OrchProvider
+    // documents the same hazard and routes everything through GetOrchDriveInfo(path).
+    // Mirror that here: fall back to resolving the drive from the path spec instead of
+    // letting an unguarded PSDriveInfo cast surface as a raw NullReferenceException.
+    protected TDrive? ResolveShadowDrive(string path)
+        => this.PSDriveInfo as TDrive ?? EnumShadowDrives(path)?.FirstOrDefault();
 
     protected TProject? GetProject(string path)
     {
-        var leaf = System.IO.Path.GetFileName(path);
-        if (leaf == "") return null;
+        var drive = ResolveShadowDrive(path);
+        if (drive is null) return null;
 
-        var projects = ProjectsCache(ShadowDrive).Get();
-        return projects?.FirstOrDefault(p => string.Compare(GetName(p), leaf, StringComparison.OrdinalIgnoreCase) == 0);
+        // Reduce to the drive-relative Orchestrator path (qualifier stripped, separators
+        // normalized/trimmed) — the same reduction IsValidProviderPath uses. A flat
+        // provider's item path has exactly ONE segment under the drive root; matching
+        // only the leaf accepted nested garbage — `Test-Path Du1:\NoSuchThing\RealProject`
+        // returned true (and cd succeeded) because the leaf matched a cached project.
+        string orchPath = OrchDriveInfo.PSPathToOrchPath(path);
+        if (orchPath.Length == 0) return null;   // drive root: not a project
+        if (orchPath.Contains('/')) return null; // nested path: no such item on a flat drive
+
+        var projects = ProjectsCache(drive).Get();
+        return projects?.FirstOrDefault(p => string.Compare(GetName(p), orchPath, StringComparison.OrdinalIgnoreCase) == 0);
     }
 
     // Per-call clone stamped with this drive's drive-qualified path, so the emitted object's
     // Path/FullName (hence GetPSPath()) are this drive's and never leak another drive's value.
     // Emitting the bare shared cache entity would leave FullName empty or carry a stale value.
-    private (TProject clone, string fullName) CloneStamped(TProject project)
+    private (TProject clone, string fullName) CloneStamped(TDrive drive, TProject project)
     {
-        string sep = ShadowDrive.NameColonSeparator;
+        string sep = drive.NameColonSeparator;
         string fullName = sep + GetName(project);
         var clone = Clone(project);
         clone.Path = sep;
@@ -153,7 +167,9 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
             }
 
             Collection<PSDriveInfo> ret = base.InitializeDefaultDrives();
-            foreach (var drive in config!.PSDrives!)
+            // A config without a "PSDrives" array is Import-OrchConfig's problem to
+            // report; here just mount nothing instead of NRE-ing during provider init.
+            foreach (var drive in config!.PSDrives ?? [])
             {
                 if (drive.Enabled is null || drive.Enabled.GetValueOrDefault())
                 {
@@ -201,10 +217,13 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
 
     protected override void GetItem(string path)
     {
+        var drive = ResolveShadowDrive(path);
+        if (drive is null) return;
+
         var project = GetProject(path);
         if (project is not null)
         {
-            var (clone, fullName) = CloneStamped(project);
+            var (clone, fullName) = CloneStamped(drive, project);
             WriteItemObject(clone, fullName, true);
         }
         // Root path or non-existent path: output nothing (no error)
@@ -239,7 +258,10 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
 
     protected override void GetChildItems(string path, bool recurse)
     {
-        GetChildItems(path, recurse, 0);
+        // uint.MaxValue is the engine's own encoding of "plain -Recurse" in the 3-arg
+        // overload — delegate faithfully. (Depth is moot for this flat provider, but a
+        // hardcoded 0 would silently mean "no recursion" to any future caller.)
+        GetChildItems(path, recurse, uint.MaxValue);
     }
 
     protected override void GetChildItems(string path, bool recurse, uint depth)
@@ -248,10 +270,12 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
         {
             return;
         }
-        foreach (var project in ProjectsCache(ShadowDrive).Get().OrderBy(GetName))
+        var drive = ResolveShadowDrive(path);
+        if (drive is null) return;
+        foreach (var project in ProjectsCache(drive).Get().OrderBy(GetName))
         {
             if (Stopping) return;
-            var (clone, fullName) = CloneStamped(project);
+            var (clone, fullName) = CloneStamped(drive, project);
             WriteItemObject(clone, fullName, true);
         }
     }
@@ -261,8 +285,10 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
     // The first argument (name string) is matched against the wildcard pattern by LocationGlobber.
     protected override void GetChildNames(string path, ReturnContainers returnContainers)
     {
-        string sep = ShadowDrive.NameColonSeparator;
-        foreach (var project in ProjectsCache(ShadowDrive).Get().OrderBy(GetName))
+        var drive = ResolveShadowDrive(path);
+        if (drive is null) return;
+        string sep = drive.NameColonSeparator;
+        foreach (var project in ProjectsCache(drive).Get().OrderBy(GetName))
         {
             if (Stopping) return;
             var name = GetName(project);
@@ -271,7 +297,7 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
     }
 
     protected override bool HasChildItems(string path)
-        => path == ShadowDrive.NameColonSeparator;
+        => ResolveShadowDrive(path) is { } drive && path == drive.NameColonSeparator;
 
     // ----- NavigationCmdletProvider overrides ---------------------------------
 
