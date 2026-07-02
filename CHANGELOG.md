@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+#### Cmdlets
+
+- **`Test-OrchUserMappingCsv` aggregates its "not yet a tenant user" findings into one warning and a
+  separate Pending count** instead of warning per row — on a fresh cross-org destination nearly every
+  directory-user row is in that state until folder users are copied (assignment creates the tenant user
+  automatically), so per-row warnings drowned the report in expected noise. When only Pending entries
+  remain, the closing verdict now says to copy folder users before assets instead of flagging the CSV.
+
 ## [1.11.3] - 2026-07-02
 
 ### Added

@@ -39,6 +39,21 @@ public class TestUserMappingCsvCmdlet : OrchestratorPSCmdlet
                 && string.Compare(u.UserName, sourceEmail, StringComparison.OrdinalIgnoreCase) == 0));
     }
 
+    // Maximum number of pending entries spelled out in the aggregated warning before the
+    // rest collapse into a "+N more" tail.
+    internal const int PendingAssignmentListLimit = 20;
+
+    // Aggregated once per run instead of per row: on a fresh cross-org destination most
+    // directory users are not tenant users yet, so per-row warnings would drown the report
+    // in expected noise. Pending = resolves in the destination directory but no tenant user
+    // record yet; folder-user copy creates that record automatically on assignment.
+    internal static string FormatPendingAssignmentWarning(IReadOnlyList<string> entries, string dstName)
+    {
+        var listed = string.Join(", ", entries.Take(PendingAssignmentListLimit));
+        string more = entries.Count > PendingAssignmentListLimit ? $", ... (+{entries.Count - PendingAssignmentListLimit} more)" : "";
+        return $"{entries.Count} DestinationUserName(s) resolve in the destination directory but are not yet tenant users in '{dstName}': {listed}{more}. This is expected before folder users are copied — folder-user copy (Copy-OrchFolderUser with -UserMappingCsv, or copy -Recurse) assigns directory users and creates the tenant user automatically. Investigate only if per-user asset values still drop after folder users are copied.";
+    }
+
     private List<MappingEntry> ReadMappingCsv(string physicalPath)
     {
         var entries = new List<MappingEntry>();
@@ -120,6 +135,7 @@ public class TestUserMappingCsvCmdlet : OrchestratorPSCmdlet
         int okCount = 0;
         int warningCount = 0;
         int errorCount = 0;
+        var pendingAssignment = new List<string>();
 
         foreach (var entry in entries.OrderBy(e => e.SourceUserName))
         {
@@ -181,8 +197,7 @@ public class TestUserMappingCsvCmdlet : OrchestratorPSCmdlet
                     }
                     else
                     {
-                        WriteWarning($"[WARNING] DestinationUserName '{destinationUserName}' (mapped from '{sourceUserName}') resolves in the destination directory but is not yet a tenant user in '{dstDrive.NameColon}'. Per-user asset values referencing this user will be dropped unless the user is assigned to the destination folder before assets are copied (folder-user copy assigns directory users automatically, e.g.: Copy-OrchFolderUser ... -UserMappingCsv).");
-                        warningCount++;
+                        pendingAssignment.Add($"'{destinationUserName}' (mapped from '{sourceUserName}')");
                     }
                 }
                 else
@@ -217,12 +232,25 @@ public class TestUserMappingCsvCmdlet : OrchestratorPSCmdlet
             }
         }
 
+        if (pendingAssignment.Count > 0)
+        {
+            WriteWarning(FormatPendingAssignmentWarning(pendingAssignment, dstDrive.NameColon));
+        }
+
         // Output summary
-        WriteObject($"Validation complete: {okCount} OK, {warningCount} Warning(s), {errorCount} Error(s) out of {entries.Count} entries.");
+        string pendingPart = pendingAssignment.Count > 0 ? $", {pendingAssignment.Count} Pending (not yet tenant users)" : "";
+        WriteObject($"Validation complete: {okCount} OK{pendingPart}, {warningCount} Warning(s), {errorCount} Error(s) out of {entries.Count} entries.");
 
         if (errorCount == 0 && warningCount == 0)
         {
-            WriteObject("All mappings are valid. The CSV is ready to use.");
+            if (pendingAssignment.Count == 0)
+            {
+                WriteObject("All mappings are valid. The CSV is ready to use.");
+            }
+            else
+            {
+                WriteObject("All mappings resolve. Copy folder users before assets so the pending users are assigned automatically (see the warning above).");
+            }
         }
         else if (errorCount == 0)
         {

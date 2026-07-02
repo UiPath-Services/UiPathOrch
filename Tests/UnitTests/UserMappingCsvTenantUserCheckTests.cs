@@ -55,4 +55,34 @@ public class UserMappingCsvTenantUserCheckTests
     {
         Assert.False(TestUserMappingCsvCmdlet.IsDestinationTenantUser("jsmith@contoso.com", "jsmith@contoso.com", Array.Empty<User>()));
     }
+
+    // --- FormatPendingAssignmentWarning: the aggregated once-per-run line replacing
+    // per-row warnings (fresh cross-org destinations would otherwise warn on nearly
+    // every directory-user row). ---
+
+    [Fact]
+    public void PendingWarning_ListsAllEntries_UnderLimit()
+    {
+        var entries = new[] { "'a@x.com' (mapped from 'A\\a')", "'b@x.com' (mapped from 'A\\b')" };
+        var text = TestUserMappingCsvCmdlet.FormatPendingAssignmentWarning(entries, "Dst:");
+
+        Assert.StartsWith("2 DestinationUserName(s)", text);
+        Assert.Contains("not yet tenant users in 'Dst:'", text);
+        Assert.Contains("'a@x.com' (mapped from 'A\\a')", text);
+        Assert.Contains("'b@x.com' (mapped from 'A\\b')", text);
+        Assert.DoesNotContain("more)", text);
+        Assert.Contains("Copy-OrchFolderUser", text);
+    }
+
+    [Fact]
+    public void PendingWarning_CollapsesEntriesBeyondLimitIntoMoreTail()
+    {
+        var entries = Enumerable.Range(1, 25).Select(i => $"'u{i:00}@x.com'").ToList();
+        var text = TestUserMappingCsvCmdlet.FormatPendingAssignmentWarning(entries, "Dst:");
+
+        Assert.StartsWith("25 DestinationUserName(s)", text);
+        Assert.Contains("'u20@x.com'", text);
+        Assert.DoesNotContain("'u21@x.com'", text);
+        Assert.Contains("(+5 more)", text);
+    }
 }
