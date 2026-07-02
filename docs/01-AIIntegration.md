@@ -19,7 +19,7 @@ This page is about **wiring an AI to UiPathOrch**. For the rules the AI should f
 
 - [Why PowerShell.MCP](#why-powershellmcp)
 - [Setup](#setup)
-- [The four tools](#the-four-tools)
+- [The six tools](#the-six-tools)
 - [How the AI drives UiPathOrch](#how-the-ai-drives-uipathorch)
 - [Authentication in a shared session](#authentication-in-a-shared-session)
 - [Transparency, auditing, and safety](#transparency-auditing-and-safety)
@@ -29,7 +29,7 @@ This page is about **wiring an AI to UiPathOrch**. For the rules the AI should f
 ## Why PowerShell.MCP
 
 A service-specific MCP server would have to wrap each cmdlet as a bespoke tool. PowerShell.MCP takes
-the opposite approach: it hands the AI a real shell, so **all 256 UiPathOrch cmdlets — plus
+the opposite approach: it hands the AI a real shell, so **all UiPathOrch cmdlets — plus
 `Get-Help`, the providers, tab-completion metadata, and any other module or CLI on the box — are
 available immediately**, with no per-cmdlet tool definitions to maintain.
 
@@ -73,22 +73,25 @@ For driving a **live production Orchestrator**, three properties matter most:
    On first run, complete any browser sign-in in the console window. After that the session stays
    authenticated.
 
-## The four tools
+## The six tools
 
-PowerShell.MCP exposes only four tools — the AI uses `invoke_expression` for essentially every
+PowerShell.MCP exposes six tools — the AI uses `execute_command` for essentially every
 UiPathOrch command:
 
 | Tool | Purpose |
 |------|---------|
-| `start_console` | Launch (or attach to) the client's persistent console |
+| `execute_command` | Run any PowerShell command — `Get-OrchProcess`, `Start-OrchJob`, a pipeline, a CLI tool. `var1`–`var4` inject literal strings past the parser (safe for `$`, backticks, quotes) |
+| `start_console` | Ensure a console is available, reusing a standby one; a `reason` forces an additional console |
 | `get_current_location` | Report the current directory and available drives (incl. `Orch1:` …) |
-| `invoke_expression` | Run any PowerShell command — `Get-OrchProcess`, `Start-OrchJob`, a pipeline, a CLI tool |
-| `wait_for_completion` | Block until a long-running command finishes |
+| `wait_for_completion` | Wait for a long-running command and retrieve its cached result |
+| `cancel` | Interrupt the running command (pipeline stop + Ctrl+C for native CLIs) |
+| `close_console` | Force-close a console by PID — the escape hatch for a stuck prompt or a non-cooperative command |
 
 A single client can launch **multiple** consoles (each titled e.g. `#12345 Taxi`), but only **one is
-active at a time** — the MCP server switches to the right console automatically when needed.
-`Get-MCPOwner` shows which client owns the current console. (Separate client instances also run in
-parallel, each with its own console.)
+active at a time** — the MCP server switches to the right console automatically when needed, and
+routes around a busy console by spawning a new one in the same call. Sub-agents get isolated
+consoles of their own via `is_subagent=true` / `agent_id`. `Get-MCPOwner` shows which client owns
+the current console. (Separate client instances also run in parallel, each with its own console.)
 
 ## How the AI drives UiPathOrch
 
@@ -167,13 +170,13 @@ Register-MdpToClaudeDesktop    # Claude Desktop
 
 ## Limitations and gotchas
 
-- **AI commands can't be Ctrl+C'd.** A command the AI started is cancelled by closing the console,
-  not from the keyboard.
+- **Interrupting a running command.** The `cancel` tool stops a runaway pipeline and sends Ctrl+C
+  to native CLIs. What it can't cancel is a PowerShell **host prompt** (`Read-Host`,
+  `Get-Credential`, a missing mandatory parameter) — answer it in the console, or abandon the
+  console with `close_console`.
 - **Multiple consoles, one active.** A client can launch several consoles, but only one is operable
   at a time; the MCP server switches to the needed console automatically. (Truly simultaneous work
   uses separate client instances.)
-- **stderr from CLI tools** isn't captured by default — use `$out = & tool.exe 2>&1` when you need
-  it. (UiPathOrch cmdlets are unaffected; this only concerns external CLIs.)
 - **Rebuilding the module from source?** Windows locks a loaded DLL, so every `pwsh` that imported
   UiPathOrch (including the PowerShell.MCP console) must be stopped before redeploying — see
   [Contributing Guide → DLL Lock](99-ContributingGuide.md). PowerShell.MCP prints its `pwsh` PID for
