@@ -643,7 +643,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
                 postingUser.AssignBoolIfNotNull(line.IsExternalLicensed, (u, v) => u.IsExternalLicensed = v);
                 postingUser.AssignBoolIfNotNull(line.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
 
-                postingUser.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
+                postingUser.AssignUpdatePolicy(line.UpdatePolicyType, line.UpdatePolicyVersion);
 
                 if (!string.IsNullOrEmpty(line.UR_UserName) ||
                     !string.IsNullOrEmpty(line.UR_CredentialStore) ||
@@ -678,35 +678,35 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
                 void UpdateExecutionSettings(ExecutionSettings executionSettings)
                 {
                     executionSettings.AssignStringIfNotNullOrEmpty(
-                        ES_TracingLevel, (es, v) =>
+                        line.ES_TracingLevel, (es, v) =>
                         es.TracingLevel = v);
 
                     executionSettings.AssignBoolIfNotNull(
-                        ES_StudioNotifyServer, (es, v) =>
+                        line.ES_StudioNotifyServer, (es, v) =>
                         es.StudioNotifyServer = v);
 
                     executionSettings.AssignBoolIfNotNull(
-                        ES_LoginToConsole, (es, v) =>
+                        line.ES_LoginToConsole, (es, v) =>
                         es.LoginToConsole = v);
 
                     executionSettings.AssignNumberIfNotNull(
-                        ES_ResolutionWidth, (es, v) =>
+                        line.ES_ResolutionWidth, (es, v) =>
                         es.ResolutionWidth = v);
 
                     executionSettings.AssignNumberIfNotNull(
-                        ES_ResolutionHeight, (es, v) =>
+                        line.ES_ResolutionHeight, (es, v) =>
                         es.ResolutionHeight = v);
 
                     executionSettings.AssignNumberIfNotNull(
-                        ES_ResolutionDepth, (es, v) =>
+                        line.ES_ResolutionDepth, (es, v) =>
                         es.ResolutionDepth = v);
 
                     executionSettings.AssignBoolIfNotNull(
-                        ES_FontSmoothing, (es, v) =>
+                        line.ES_FontSmoothing, (es, v) =>
                         es.FontSmoothing = v);
 
                     executionSettings.AssignBoolIfNotNull(
-                        ES_AutoDownloadProcess, (es, v) =>
+                        line.ES_AutoDownloadProcess, (es, v) =>
                         es.AutoDownloadProcess = v);
                 }
 
