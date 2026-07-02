@@ -21,7 +21,7 @@ Adds users to UiPath Orchestrator tenants.
 
 ```
 Add-OrchUser [-Path <string[]>] [-LiteralPath <string[]>] [[-Type] <string[]>] [-UserName] <string[]>
- [[-Roles] <string[]>] [-Confirm] [-ES_AutoDownloadProcess <string>]
+ [[-Roles] <string[]>] [-Confirm] [-Domain <string>] [-ES_AutoDownloadProcess <string>]
  [-ES_FontSmoothing <string>] [-ES_LoginToConsole <string>] [-ES_ResolutionDepth <int>]
  [-ES_ResolutionHeight <int>] [-ES_ResolutionWidth <int>]
  [-ES_StudioNotifyServer <string>] [-ES_TracingLevel <string>]
@@ -50,7 +50,7 @@ This cmdlet supports pipeline input from CSV files exported by Get-OrchUser -Exp
 
 The -Type, -Roles, -UserName, and -Path parameters support tab completion. Press [Ctrl+Space] or [Tab] to see available values.
 
-Primary Endpoint: GET /odata/Users?$expand=OrganizationUnits,UserRoles, GET /odata/Roles?$expand=Permissions, GET /api/DirectoryService/SearchForUsersAndGroups?domain=autogen&prefix={prefix}&searchContext=All, POST /odata/Users
+Primary Endpoint: GET /odata/Users?$expand=OrganizationUnits,UserRoles, GET /odata/Roles?$expand=Permissions, GET /api/DirectoryService/SearchForUsersAndGroups?domain={-Domain or autogen}&prefix={prefix}&searchContext=All, POST /odata/Users
 
 OAuth required scopes: OR.Users
 
@@ -147,6 +147,29 @@ DefaultValue: ''
 SupportsWildcards: false
 Aliases:
 - PSPath
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -Domain
+
+Overrides the directory partition domain used for the directory lookup and posted with the created user. The default is `autogen`, which works for Automation Cloud and for non-federated OnPrem tenants. On an EntraID-federated OnPrem organization the web UI exposes a concrete domain (e.g. `frc` / `root`) instead of `autogen` — pass that value so the directory search and the posted user both use it. Mirrors `Add-OrchFolderUser -Domain`. Tab completion suggests the tenant's available domains (from `/api/DirectoryService/GetDomains`, default domain first); non-federated tenants and Automation Cloud return none.
+
+Binds from the pipeline by property name and is captured per row, so the Domain column exported by `Get-OrchUser` / `Get-OrchUserDetail` `-ExportCsv` round-trips through `Import-Csv | Add-OrchUser` with each row's own domain.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
 ParameterSets:
 - Name: (All)
   Position: Named

@@ -35,7 +35,7 @@ By default, only directly assigned users are returned. When -IncludeInherited is
 
 The cmdlet supports filtering by -UserName, -FullName, and -Type parameters. All three support wildcards and multiple comma-separated values. The -Type parameter accepts the following values: DirectoryUser, DirectoryGroup, DirectoryRobot, and DirectoryExternalApplication. Tab completion dynamically suggests values from actual data in the target folders. Press [Ctrl+Space] or [Tab] to see available values.
 
-Results can be exported to a CSV file using -ExportCsv. The CSV includes columns: Path, Type, UserName, FullName, and FolderRoles. The exported CSV can be used with Add-OrchFolderUser for import.
+Results can be exported to a CSV file using -ExportCsv. The CSV includes columns: Path, Type, Domain, UserName, FullName, and FolderRoles. The exported CSV can be used with Add-OrchFolderUser for import.
 
 When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
 
@@ -197,7 +197,7 @@ HelpMessage: ''
 
 ### -ExportCsv
 
-Exports folder user assignments to the specified CSV file path. The CSV includes columns: Path, Type, UserName, FullName, and FolderRoles. When -ExportCsv is specified, no objects are written to the pipeline. The exported CSV can be used with Add-OrchFolderUser for import. Requires a filesystem path (not an Orch: drive path). If a directory path is specified, the default filename ExportedFolderUsers.csv is used.
+Exports folder user assignments to the specified CSV file path. The CSV includes columns: Path, Type, Domain, UserName, FullName, and FolderRoles. When -ExportCsv is specified, no objects are written to the pipeline. The exported CSV can be used with Add-OrchFolderUser for import. Requires a filesystem path (not an Orch: drive path). If a directory path is specified, the default filename ExportedFolderUsers.csv is used.
 
 ```yaml
 Type: System.String
@@ -325,7 +325,7 @@ Folder users are folder-scoped entities. You must navigate to a folder on the Or
 
 Personal workspace folders are included in the enumeration. To exclude them, filter by folder type or use specific -Path values.
 
-The -ExportCsv parameter exports data with columns: Path, Type, UserName, FullName, FolderRoles. For DirectoryGroup entries, the UserName column contains the FullName value to ensure correct resolution when importing with Add-OrchFolderUser.
+The -ExportCsv parameter exports data with columns: Path, Type, Domain, UserName, FullName, FolderRoles. The Domain column carries the user's directory partition domain where the server reports one (the partition domain on an EntraID-federated OnPrem tenant) and is empty on non-federated tenants / Automation Cloud; it round-trips into Add-OrchFolderUser -Domain on Import-Csv. For DirectoryGroup entries, the UserName column contains the FullName value to ensure correct resolution when importing with Add-OrchFolderUser.
 
 ## RELATED LINKS
 

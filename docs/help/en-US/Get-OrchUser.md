@@ -103,7 +103,7 @@ Gets the specified user from the Orch1 drive. When -Path uses an absolute path (
 PS Orch1:\> Get-OrchUser -ExportCsv C:\temp\users.csv
 ```
 
-Exports all users in the current tenant to a CSV file. The CSV includes columns for Path, UserName, FullName, Type, license settings, unattended robot configuration, execution settings, and Roles. The exported CSV can be used with Add-OrchUser for import.
+Exports all users in the current tenant to a CSV file. The CSV includes columns for Path, UserName, FullName, Type, Domain, license settings, unattended robot configuration, execution settings, and Roles. The exported CSV can be used with Add-OrchUser for import.
 
 ## PARAMETERS
 
@@ -194,7 +194,7 @@ HelpMessage: ''
 
 ### -ExportCsv
 
-Exports users to the specified CSV file path. The CSV includes columns for Path, UserName, FullName, Type, license settings, unattended robot configuration, execution settings, and Roles. When this parameter is specified, the per-user detail fetch runs automatically. Requires a filesystem path (not an Orch: drive path).
+Exports users to the specified CSV file path. The CSV includes columns for Path, UserName, FullName, Type, Domain, license settings, unattended robot configuration, execution settings, and Roles. The Domain column is the user's directory partition domain where the server reports one (federated OnPrem) and is empty otherwise; it round-trips into Add-OrchUser -Domain on Import-Csv. When this parameter is specified, the per-user detail fetch runs automatically. Requires a filesystem path (not an Orch: drive path).
 
 ```yaml
 Type: System.String

@@ -38,7 +38,7 @@ The -Name parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see 
 
 When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
 
-Primary Endpoint: GET /odata/Releases/?$expand=Environment,CurrentVersion,ReleaseVersions,EntryPoint
+Primary Endpoint: GET /odata/Releases/?$expand=CurrentVersion,ReleaseVersions,EntryPoint (Environment is added to the expand only below API v20 — the navigation was removed from ReleaseDto in v20, and only classic-folder deployments on older builds still populate it)
 
 OAuth required scopes: OR.Execution or OR.Execution.Read
 
