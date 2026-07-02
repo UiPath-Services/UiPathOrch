@@ -527,7 +527,9 @@ public abstract partial class OrchArgumentCompleter : IArgumentCompleter
             _ => "unknown: "
         };
 
-        tiphelp += (entity.Path + entity.identityName ?? entity.identifier);
+        // Parenthesize the ??: `a + b ?? c` binds as `(a + b) ?? c`, and string
+        // concatenation never yields null, so the identifier fallback could not fire.
+        tiphelp += entity.Path + (entity.identityName ?? entity.identifier);
         if (!string.IsNullOrEmpty(entity.displayName))
             tiphelp += $" ({entity.displayName})";
         return tiphelp;
