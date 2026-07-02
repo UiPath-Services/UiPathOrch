@@ -1386,10 +1386,12 @@ public partial class OrchProvider
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
-        // Measured: GET /odata/HttpTriggers is 404 on 15.0 (22.4.4); on v17 it executes without
-        // error though the web UI only exposes API triggers from 18 (see the ApiTriggers cache
-        // note in OrchDriveInfo). The ApiTriggers cache floor (18) already yields [] below 18,
-        // so this early-out is behavior-neutral; it is aligned with that floor.
+        // Measured: GET /odata/HttpTriggers is 404 on 22.4.4 and 400 "Invalid OData query
+        // options" (even bare, no query options at all) on 22.10.0 — BOTH report ApiVersion 15,
+        // a concrete instance of the version number not being a schema key. On v17 it executes
+        // without error, though the web UI only exposes API triggers from 18 (see the ApiTriggers
+        // cache note in OrchDriveInfo). The ApiTriggers cache floor (18) already yields [] below
+        // 18, so this early-out is behavior-neutral; it is aligned with that floor.
         if (srcDrive.OrchAPISession.ApiVersion < 18) return;
 
         string target = srcFolder.GetPSPath();
