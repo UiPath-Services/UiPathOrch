@@ -28,6 +28,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   CSV's `Domain` values. It now binds per row (captured in `ProcessRecord`, like `Add-OrchUser -Domain`),
   so mixed-domain CSVs post each row's own domain.
 
+#### Provider
+
+- **`Remove-Item` on a nonexistent Orchestrator folder now reports ObjectNotFound instead of
+  silently succeeding**, matching `Move-Item` / `Get-ItemProperty`. It also resolves the path
+  literally like every other single-item resolution site: a leftover leaf-only wildcard unescape
+  (the last survivor of the pass retired in 2.5's `Get-Item` fix) corrupted folder names containing
+  a literal backtick-escaped wildcard, turning the delete into a silent no-op.
+
+- **`dir` on a DU/TM drive no longer accepts nested garbage paths**: `Test-Path Du1:\NoSuchThing\RealProject`
+  returned true (and `cd` into it succeeded, showing an empty listing) because only the last path
+  segment was matched against the project list. The shadow providers now require the flat
+  `<drive>:\<project>` shape.
+
+- **DU/TM shadow providers now tolerate a null `PSDriveInfo`** in the engine contexts the
+  Orchestrator provider already defends against, resolving the drive from the path instead of
+  failing with a raw `NullReferenceException`. Their 2-arg `GetChildItems` (and the Orchestrator
+  provider's) also now delegates plain `-Recurse` as unlimited depth instead of a hardcoded 0 —
+  unreachable through the current engine, but a faithful delegation either way.
+
+#### Diagnostics & robustness
+
+- **Connection failures now carry the underlying socket/TLS error.** The Happy-Eyeballs dialer
+  swallowed every attempt's exception, so e.g. an untrusted-certificate failure on a direct on-prem
+  connection surfaced only as "Could not connect to host:443 on any of N address(es)" — misdirecting
+  the user to network debugging. The last real error is now included in the message and as the
+  inner exception.
+
+- **`Import-OrchConfig` reports a clear error for a config file without a `"PSDrives"` array**
+  instead of throwing a raw `NullReferenceException`; the DU/TM providers' drive bootstrap likewise
+  mounts nothing instead of failing during provider initialization.
+
+- **`-UseInPrivate` sign-ins no longer accumulate throwaway Edge profiles in `%TEMP%`.** Each
+  launch now sweeps profiles left by earlier sign-ins (skipping any younger than an hour or still
+  in use); previously every InPrivate sign-in leaked a `UiPathOrch_*` directory of tens of MB.
+
+- **Directory-object completion tooltips fall back to the identifier again** when the identity
+  name is null — an operator-precedence slip (`a + b ?? c`) made the fallback unreachable.
+
 #### Authentication
 
 - **On-prem user/password drives now populate the `AccessToken` / `Claims` diagnostics and
