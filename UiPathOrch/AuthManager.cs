@@ -544,6 +544,7 @@ internal class OrchestratorAuthManager
             }
             if (File.Exists(edgePath))
             {
+                CleanUpStaleInPrivateProfiles();
                 string tempProfile = Path.Combine(Path.GetTempPath(), "UiPathOrch_" + Guid.NewGuid().ToString("N")[..8]);
                 Process.Start(new ProcessStartInfo(edgePath, $"--inprivate --user-data-dir=\"{tempProfile}\" \"{authUrl}\"") { UseShellExecute = false });
             }
@@ -555,6 +556,36 @@ internal class OrchestratorAuthManager
         else
         {
             Process.Start(new ProcessStartInfo(authUrl) { UseShellExecute = true });
+        }
+    }
+
+    // Best-effort sweep of throwaway profiles left by earlier -UseInPrivate sign-ins:
+    // Edge populates each --user-data-dir with tens of MB and nothing removes it when
+    // the browser closes (Windows does not clean %TEMP% automatically). The current
+    // sign-in's dir can't be deleted here — Edge may outlive the auth round-trip — so
+    // each launch sweeps its predecessors instead. Skip dirs younger than an hour (a
+    // concurrent sign-in's Edge may not have locked its dir yet); an in-use dir just
+    // fails the delete and is picked up by a later sweep.
+    private static void CleanUpStaleInPrivateProfiles()
+    {
+        try
+        {
+            foreach (var dir in Directory.EnumerateDirectories(Path.GetTempPath(), "UiPathOrch_*"))
+            {
+                try
+                {
+                    if (Directory.GetCreationTimeUtc(dir) < DateTime.UtcNow.AddHours(-1))
+                        Directory.Delete(dir, recursive: true);
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"InPrivate profile sweep skipped '{dir}': {ex.GetType().Name}");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"InPrivate profile sweep failed: {ex.GetType().Name}: {ex.Message}");
         }
     }
 
