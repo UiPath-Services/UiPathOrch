@@ -944,10 +944,13 @@ public partial class OrchAPISession : IDisposable
         // partitionGlobalId satisfies the per-org cache getter contract; the
         // endpoint itself is org-global (no tenant/partition in the URL).
         if (string.IsNullOrEmpty(partitionGlobalId)) return null;
-        // Measured: 404 on 11.1 (20.10.16); 200 from 13.0 (21.10.4) onward. API v12 has no
-        // obtainable on-prem build — gated at 12 like the other v12 brackets. The gate turns
-        // Get-OrchProductVersion's bare "Not Found" into a version error; Get-OrchPSDrive's
-        // enrichment already tolerates any failure and leaves the column blank.
+        // Measured: 404 on 11.1 (20.10.16); 200 from 13.0 (21.10.4) onward. The true lower
+        // bound is UNKNOWN — it lies somewhere in (11.1, 13.0], and API v12 has no obtainable
+        // on-prem build to pin it. The gate at 12 follows the other v12 brackets and encodes
+        // only the measurements: an actual v12 server would pass this gate and might still
+        // get the raw 404. The gate turns Get-OrchProductVersion's bare "Not Found" into a
+        // version error; Get-OrchPSDrive's enrichment already tolerates any failure and
+        // leaves the column blank.
         EnsureVersionSupport(12);
         return HttpRequest<OrchProductVersion>(HttpMethod.Get, "/api/Status/Version");
     }
