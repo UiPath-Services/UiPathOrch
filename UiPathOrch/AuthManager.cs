@@ -222,7 +222,33 @@ internal class OrchestratorAuthManager
                     using var cts = new ConsoleCancelHandler();
                     using var response = SendWithLogging(request, cts.Token);
                     var body = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
-                    return JsonSerializer.Deserialize<AjaxResponse>(body)?.result ?? "";
+
+                    AjaxResponse? ajax = null;
+                    try
+                    {
+                        ajax = JsonSerializer.Deserialize<AjaxResponse>(body);
+                    }
+                    catch (JsonException)
+                    {
+                        // Non-JSON body (e.g. a proxy's HTML error page). Don't dump it into
+                        // the exception message (same PII/log rationale as GetAccessToken);
+                        // the status line below carries the user-facing story.
+                    }
+
+                    if (!response.IsSuccessStatusCode || ajax?.error is not null)
+                    {
+                        string summary = $"Authentication failed: {(int)response.StatusCode} {response.StatusCode}";
+                        if (!string.IsNullOrEmpty(ajax?.error?.message))
+                            summary += $" — {ajax.error.message}";
+                        throw new Exception(summary);
+                    }
+
+                    // Store the token like the other flows do, so IsAuthenticated /
+                    // AccessToken / Claims diagnostics work for user-password drives.
+                    // An absent `result` on a 200 stays "" — the session's SetToken /
+                    // empty-token guard rejects it downstream.
+                    _access_token = ajax?.result ?? "";
+                    return _access_token;
                 }
         }
     }
