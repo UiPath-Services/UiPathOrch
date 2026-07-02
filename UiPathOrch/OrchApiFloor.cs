@@ -23,7 +23,7 @@ internal static class OrchApiFloor
     // --- Queues ---
     public const double QueueV14Fields = 14;           // QueueDefinitionDto Tags / Encrypted / IsProcessInCurrentFolder / FoldersCount (absent v11-v13; live-confirmed Tags rejected on 21.10.4 / v13)
     public const double QueueCreateAction = 16;        // POST .../OData.CreateQueue (vs legacy POST /odata/QueueDefinitions)
-    public const double QueueGetAction = 19;           // GET  .../OData.GetQueue(id=)
+    public const double QueueGetAction = 19;           // GET  .../OData.GetQueue(id=). The action itself answers from 16 (measured 200 on 23.4.0 and 25.10.2), but v16's QueueGetModel is not field-complete (CreationTime came back zeroed on a just-created queue), so the floor stays at the field-parity-verified value — do not lower on route existence alone.
     public const double QueueRetentionMerge = 16;      // merge QueueRetention into the legacy GET result
     public const double QueueRetryAbandonedItems = 18; // QueueDefinitionDto.RetryAbandonedItems field
     public const double QueueStaleRetention = 19;      // QueueDefinitionDto.StaleRetention* fields

@@ -1454,7 +1454,17 @@ public partial class OrchAPISession : IDisposable
         HttpRequest(HttpMethod.Put, endPoint);
     }
 
-    public LibraryFeed[]? GetLibraryFeeds() => HttpRequest<LibraryFeed[]>(HttpMethod.Get, "/api/PackageFeeds/GetLibraryFeeds");
+    // Measured: 404 on 13.0 (21.10.4), 15.0 (22.4.4 and 22.10.0), and 16.0 (23.4.0); works on
+    // 17.0 (25.10.2) and Cloud (v20) — all standalone builds, Automation Suite unverified.
+    // The gate turns the bare 404 into a self-explaining version error with the same
+    // permanent-cache semantics (DeterministicApiException). It must stay an error, not an
+    // empty result: a null LibraryHostFeedId would silently reroute the host-feed queries
+    // (LibrariesInHost / LibraryVersionsInHostFeed) to the tenant feed.
+    public LibraryFeed[]? GetLibraryFeeds()
+    {
+        EnsureVersionSupport(17);
+        return HttpRequest<LibraryFeed[]>(HttpMethod.Get, "/api/PackageFeeds/GetLibraryFeeds");
+    }
 
     // This method should not return ""
     // The caller needs to convert null to "" as necessary
