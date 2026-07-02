@@ -590,9 +590,6 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
-            // expand Asset Name
-            List<WildcardPattern> wpName = param.Name!.ConvertToWildcardPatternList();
-
             // expand UserName and MachineName
             List<WildcardPattern> wpUserName = null;
             List<WildcardPattern> wpMachineName = null;
@@ -674,6 +671,10 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
 
                 foreach (var name in param.Name!.WithCancellation(cancelHandler.Token))
                 {
+                    // Match against this name only: deciding with the all-names pattern
+                    // list would send every name down the update branch as soon as any
+                    // one of them matched an existing asset.
+                    var wpName = new[] { name }.ConvertToWildcardPatternList();
                     var matchingAssets = existingAssets.FilterByWildcards(n => n?.Name, wpName);
                     if (matchingAssets.Any())
                     {
