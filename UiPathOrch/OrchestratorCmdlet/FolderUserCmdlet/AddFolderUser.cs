@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Add, "OrchFolderUser", SupportsShouldProcess = true)]
 public class AddFolderUserCmdlet : OrchestratorPSCmdlet
 {
-    List<(string type, string userName, string[] roles, OrchDriveInfo drive, Folder folder)>? parameters = null;
+    List<(string type, string userName, string[] roles, string? domain, OrchDriveInfo drive, Folder folder)>? parameters = null;
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
@@ -49,8 +49,10 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
     // web UI presents a Domain dropdown (`frc`, `root`, etc.); set -Domain to
     // the same value here. Affects both the directory Search call (Robot
     // resolution) and the AssignDomainUser payload (Domain field) so an
-    // explicit value overrides the autogen default end-to-end.
-    [Parameter]
+    // explicit value overrides the autogen default end-to-end. Also binds from
+    // the pipeline so the Domain column of Get-OrchFolderUser -ExportCsv
+    // round-trips through Import-Csv; captured per row in ProcessRecord.
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DomainCompleter))]
     public string? Domain { get; set; }
 
@@ -166,6 +168,7 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
                     Type,
                     userName,
                     Roles?.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray(),
+                    Domain,
                     drive, folder)!
                 );
             }
@@ -231,7 +234,7 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
             foreach (var groupByFolder in param
                 .WithProgressBar(this, $"Adding users to {folder.GetPSPath()}", g => g.userName))
             {
-                var (type, userName, roles, _, _) = groupByFolder;
+                var (type, userName, roles, domain, _, _) = groupByFolder;
 
                 string foundUserName = null;
                 string foundUserDisplayName = null;
@@ -251,9 +254,9 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
                     {
                         // 3 refers to Robot. See DirectoryTypeItems.
                         // Domain is null by default (=> "autogen" in the API call),
-                        // overridable by the cmdlet's -Domain parameter for
+                        // overridable per row by the cmdlet's -Domain parameter for
                         // EntraID-federated OnPrem tenants.
-                        member = ResolveDirectoryName(this, drive, userName, 3, Domain);
+                        member = ResolveDirectoryName(this, drive, userName, 3, domain);
                     }
                     catch (Exception ex)
                     {
@@ -348,10 +351,11 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
                     DomainUserAssignment assignment = new()
                     {
                         // Priority: explicit -Domain (user override for federated
-                        // tenants) > directory-lookup result (DirectoryRobot path
-                        // captures `member.domain`) > "autogen" historical default
-                        // (Automation Cloud and non-federated OnPrem).
-                        Domain = !string.IsNullOrEmpty(Domain) ? Domain
+                        // tenants, per row when piped from CSV) > directory-lookup
+                        // result (DirectoryRobot path captures `member.domain`) >
+                        // "autogen" historical default (Automation Cloud and
+                        // non-federated OnPrem).
+                        Domain = !string.IsNullOrEmpty(domain) ? domain
                             : (string.IsNullOrEmpty(foundUserDomain) ? "autogen" : foundUserDomain),
                         DirectoryIdentifier = foundUserIdentifier,
                         UserType = type,

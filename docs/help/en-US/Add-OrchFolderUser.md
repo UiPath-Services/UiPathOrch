@@ -159,6 +159,8 @@ Overrides the directory `domain` parameter used in the Robot resolution call. De
 
 Affects both the directory Search call (-Type DirectoryRobot path) and the AssignDomainUser payload's `Domain` field, so an explicit value overrides the autogen default end-to-end. DirectoryUser / Group / ExternalApplication resolve via a different endpoint that doesn't take a domain parameter; -Domain still flows into the assignment payload for those types.
 
+Binds from the pipeline by property name, so the Domain column exported by `Get-OrchFolderUser -ExportCsv` round-trips through `Import-Csv | Add-OrchFolderUser`.
+
 ```yaml
 Type: System.String
 DefaultValue: ''
@@ -169,7 +171,7 @@ ParameterSets:
   Position: Named
   IsRequired: false
   ValueFromPipeline: false
-  ValueFromPipelineByPropertyName: false
+  ValueFromPipelineByPropertyName: true
   ValueFromRemainingArguments: false
 DontShow: false
 AcceptedValues: []

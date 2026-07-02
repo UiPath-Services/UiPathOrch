@@ -47,4 +47,19 @@ public class AddFolderUserDomainShapeTests
             Assert.Equal(int.MinValue, a.Position);
         });
     }
+
+    [Fact]
+    public void DomainBindsFromPipelineByPropertyName()
+    {
+        // The Domain column exported by Get-OrchFolderUser -ExportCsv must
+        // round-trip through Import-Csv | Add-OrchFolderUser. Binding alone
+        // isn't enough — the value is captured per row in ProcessRecord, so
+        // rows with different domains don't collapse to the last row's value.
+        var prop = typeof(AddFolderUserCmdlet).GetProperty("Domain")!;
+        var attrs = prop.GetCustomAttributes<ParameterAttribute>().ToList();
+        Assert.NotEmpty(attrs);
+        Assert.All(attrs, a =>
+            Assert.True(a.ValueFromPipelineByPropertyName,
+                "-Domain must bind ByPropertyName for the CSV round-trip."));
+    }
 }
