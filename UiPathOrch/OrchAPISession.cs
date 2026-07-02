@@ -2053,7 +2053,11 @@ public partial class OrchAPISession : IDisposable
         {
             // Confirmed that non-null SpecificPriorityValue causes an error on 11.1
             // Confirmed that non-null SpecificPriorityValue causes an error on 13.0
-            // TODO: What about 14 and later?
+            // Confirmed on 15.0 (22.4.4) that this legacy POST /odata/Releases accepts
+            // SpecificPriorityValue (47 round-trips intact), matching the
+            // ReleaseSpecificPriority = 14 floor. API v14 has no obtainable on-prem build;
+            // the floor stays at 14, bracketed by the 13.0 (rejected) / 15.0 (accepted)
+            // measurements.
             if (Below(OrchApiFloor.ReleaseSpecificPriority) && release.SpecificPriorityValue is not null)
             {
                 if (release.SpecificPriorityValue >= 61) release.JobPriority = "High";

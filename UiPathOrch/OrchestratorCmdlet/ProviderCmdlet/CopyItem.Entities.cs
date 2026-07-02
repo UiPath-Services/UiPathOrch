@@ -1386,9 +1386,11 @@ public partial class OrchProvider
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
-        // TODO: Does this succeed in v14?
-        // TODO: Does this succeed in v15?
-        if (srcDrive.OrchAPISession.ApiVersion < 14) return;
+        // Measured: GET /odata/HttpTriggers is 404 on 15.0 (22.4.4); on v17 it executes without
+        // error though the web UI only exposes API triggers from 18 (see the ApiTriggers cache
+        // note in OrchDriveInfo). The ApiTriggers cache floor (18) already yields [] below 18,
+        // so this early-out is behavior-neutral; it is aligned with that floor.
+        if (srcDrive.OrchAPISession.ApiVersion < 18) return;
 
         string target = srcFolder.GetPSPath();
         string msg = $"Copying API triggers";
@@ -1886,8 +1888,10 @@ public partial class OrchProvider
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
-        // TODO: Is this version number needed?
-        //if (srcDrive.OrchAPISession.ApiVersion < 14) return;
+        // No version gate needed here: the ActionCatalogs cache floor (16) yields [] below 16.
+        // Measured: GET /odata/TaskCatalogs already returns 200 on 15.0 (22.4.4), so that floor
+        // is conservative; lowering it to 15 would need a POST probe on 22.4 to confirm the
+        // whole copy path.
 
         string msg = $"Copying action catalogs";
 
