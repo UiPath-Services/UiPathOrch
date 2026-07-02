@@ -330,6 +330,28 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
                 if (mrParseFailed) continue; // malformed -MachineRobots: error already written, skip this trigger
                 schedule.MachineRobots = mr;
 
+                // Mirror the web POST: -MachineRobots alone must still write the robot
+                // relation, or the trigger screen shows an empty Account and
+                // RobotUserName reads back null (see DeriveExecutorRobotsFromMachineRobots).
+                schedule.ExecutorRobots ??= DeriveExecutorRobotsFromMachineRobots(mr);
+
+                // Modern Orchestrator (API v12+) assigns trigger execution as
+                // account+machine pairs; -ExecutorRobots alone writes the robot relation
+                // but no machine mapping — a shape the web dialog never produces. Warn on
+                // the likely mix-up. Not an error: it is the only assignment form API v11
+                // has, and a CSV round-trip can legitimately carry an ExecutorRobots-only
+                // value.
+                if (ExecutorRobots is not null && MachineRobots is null && drive.OrchAPISession.ApiVersion >= 12)
+                {
+                    WriteWarning($"'{schedule.GetPSPath()}': -ExecutorRobots alone does not set the account+machine pairs modern Orchestrator uses. The web trigger dialog assigns robot+machine pairs — use -MachineRobots (ExecutorRobots is then sent automatically) unless you intend a robot-only assignment.");
+                }
+
+                // ProcessScheduleDto below API v12 has no MachineRobots member (swagger
+                // v11): classic robots are already user+machine-bound, so the derived
+                // ExecutorRobots above carries the whole assignment there. Strip the
+                // member the old surface doesn't know. Unknown version sends both.
+                if (drive.OrchAPISession.ApiVersion < 12) schedule.MachineRobots = null;
+
                 if (ShouldProcess(target, "New Trigger"))
                 {
                     try

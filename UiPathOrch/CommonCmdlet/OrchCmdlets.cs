@@ -612,6 +612,27 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
     }
 
+    // The web trigger dialog never sends MachineRobots alone: it always includes an
+    // ExecutorRobots array ({Id} per distinct robot) in the same PUT/POST. The server
+    // persists the schedule-to-robot relation — which feeds RobotUserName, the trigger
+    // screen's Account column, and GetRobotIdsForSchedule — from ExecutorRobots, NOT
+    // from the MachineRobots rows. HAR-verified against OnPrem 22.10: a PUT carrying
+    // only MachineRobots stores RobotId but reads back with RobotUserName null and an
+    // empty Account display. ExecutorRobots is also the only assignment field API v11
+    // (20.10-era) has — MachineRobots joined ProcessScheduleDto later (present in
+    // swagger v15). Pure/static so the derivation is unit-testable.
+    internal static RobotExecutor[]? DeriveExecutorRobotsFromMachineRobots(MachineRobotSession[]? machineRobots)
+    {
+        var ids = machineRobots?
+            .Where(m => m?.RobotId is not null)
+            .Select(m => m!.RobotId!.Value)
+            .Distinct()
+            .ToArray();
+        return ids is { Length: > 0 }
+            ? ids.Select(id => new RobotExecutor { Id = id }).ToArray()
+            : null;
+    }
+
     internal MachineRobotSession[]? DeserializeMachineRobotSessions(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string target, string[]? machineRobots, out bool parseFailed)
     {
         parseFailed = false;

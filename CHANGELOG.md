@@ -24,6 +24,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   new assets were silently never created (`Set-OrchAsset Text Existing,BrandNew -Value x` updated
   `Existing` and dropped `BrandNew`). Each name now decides on its own match.
 
+- **`New-OrchTrigger` / `Update-OrchTrigger` `-MachineRobots` now writes the robot relation the
+  trigger screen displays.** The web trigger dialog never sends `MachineRobots` alone — the same
+  request always carries an `ExecutorRobots` array ({Id} per distinct robot), and the server persists
+  the schedule-robot relation (`RobotUserName`, the screen's Account column, `GetRobotIdsForSchedule`)
+  from that array, not from the pairs. A UiPathOrch request carrying only `MachineRobots` stored the
+  RobotId/MachineId pair but read back with `RobotUserName` null and an empty Account display
+  (HAR-verified against OnPrem 22.10). `-MachineRobots` now derives and sends the array automatically
+  unless `-ExecutorRobots` is explicitly specified. Below API v12 — where `ProcessScheduleDto` has no
+  `MachineRobots` member (swagger v11) and classic robots are already machine-bound — the pairs are
+  stripped and the derived `ExecutorRobots` carries the whole assignment, so `-MachineRobots` degrades
+  gracefully on old servers. Specifying `-ExecutorRobots` alone on a modern tenant (API v12+) now warns
+  about the likely `-MachineRobots` mix-up; it stays warning-only because it is the valid form on API
+  v11 and CSV round-trips can legitimately carry it.
+
 - **`Get-OrchFolderUser -ExportCsv`'s `Domain` column now actually round-trips into
   `Add-OrchFolderUser`.** `-Domain` did not bind from the pipeline by property name, so
   `Import-Csv | Add-OrchFolderUser` silently posted the `autogen` default for every row regardless of the

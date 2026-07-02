@@ -352,6 +352,8 @@ HelpMessage: ''
 
 Specifies the names of the robots that should execute the triggered jobs. Multiple robot names can be specified as a string array.
 
+Normally not needed on modern Orchestrator (API v12+): the web trigger dialog assigns execution as robot+machine pairs — use -MachineRobots, and the ExecutorRobots array is derived from the pairs and sent automatically. Specifying -ExecutorRobots alone on a modern tenant emits a warning, because it writes the robot relation without any machine mapping (a shape the web UI never produces). On API v11 (2020.10-era) this is the only assignment field — classic robots are already bound to a machine.
+
 ```yaml
 Type: System.String[]
 DefaultValue: ''
@@ -498,6 +500,8 @@ HelpMessage: ''
 ### -MachineRobots
 
 Specifies the names of the machine-robot mappings that should execute the triggered jobs. Multiple values can be specified as a string array.
+
+The request also carries an ExecutorRobots array derived from the pairs' robots, matching the web trigger dialog, unless -ExecutorRobots is explicitly specified. Without that array the server stores the RobotId/MachineId pair but does not write the robot relation, so 22.10-era trigger screens show an empty Account and RobotUserName reads back null. Below API v12 the server DTO has no MachineRobots member; the pairs are not sent and the derived ExecutorRobots carries the assignment.
 
 ```yaml
 Type: System.String[]

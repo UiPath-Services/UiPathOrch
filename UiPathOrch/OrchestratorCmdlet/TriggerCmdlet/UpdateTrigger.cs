@@ -315,6 +315,26 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
                 {
                     postTrigger.ExecutorRobots = DeserializeExecutorRobots(this, drive, folder, postTrigger.GetPSPath(), ExecutorRobots);
                     dirty = true;
+
+                    // Modern Orchestrator (API v12+) assigns trigger execution as
+                    // account+machine pairs; -ExecutorRobots alone writes the robot
+                    // relation but no machine mapping — a shape the web dialog never
+                    // produces. Warn on the likely mix-up. Not an error: it is the only
+                    // assignment form API v11 has, and a CSV round-trip can legitimately
+                    // carry an ExecutorRobots-only value.
+                    if (MachineRobots is null && drive.OrchAPISession.ApiVersion >= 12)
+                    {
+                        WriteWarning($"'{postTrigger.GetPSPath()}': -ExecutorRobots alone does not set the account+machine pairs modern Orchestrator uses. The web trigger dialog assigns robot+machine pairs — use -MachineRobots (ExecutorRobots is then sent automatically) unless you intend a robot-only assignment.");
+                    }
+                }
+                else if (MachineRobots is not null)
+                {
+                    // Mirror the web PUT: -MachineRobots alone must still write the
+                    // robot relation, or the trigger screen shows an empty Account and
+                    // RobotUserName reads back null (see
+                    // DeriveExecutorRobotsFromMachineRobots). No dirty flag needed — it
+                    // rides on the -MachineRobots change above.
+                    postTrigger.ExecutorRobots = DeriveExecutorRobotsFromMachineRobots(postTrigger.MachineRobots);
                 }
                 #endregion
 
@@ -351,6 +371,12 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
                 postTrigger.Key = null;
                 postTrigger.TimeZoneIana = null;
                 postTrigger.Tags = null;
+
+                // ProcessScheduleDto below API v12 has no MachineRobots member (swagger
+                // v11): classic robots are already user+machine-bound, so the derived
+                // ExecutorRobots above carries the whole assignment there. Strip the
+                // member the old surface doesn't know. Unknown version sends both.
+                if (drive.OrchAPISession.ApiVersion < 12) postTrigger.MachineRobots = null;
                 #endregion
 
                 if (ShouldProcess(target, "Update Trigger"))
