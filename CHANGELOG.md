@@ -12,88 +12,62 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### Cmdlets
 
-- **`Add-OrchUser` batch import no longer applies the last row's `UpdatePolicyType`/`UpdatePolicyVersion`
-  and `ES_*` execution settings to every user.** In `Import-Csv | Add-OrchUser`, those values were read
-  from the bare cmdlet parameters after the pipeline had drained (so every user got the final row's
-  settings, or none when the final row left them blank) even though each row's values were already
-  captured per row. They now post per row, consistent with `IsExternalLicensed` / `UR_*` / `MayHave*`.
+- **`Add-OrchUser` batch import no longer applies the last CSV row's `UpdatePolicyType`/`UpdatePolicyVersion`
+  and `ES_*` execution settings to every user.** Rows with different values collapsed to the final row's
+  settings (or to none, when the final row left them blank); they now post per row, like the other
+  per-row fields.
 
-- **`Set-OrchAsset` with a mix of existing and new names now creates the new assets.** The
-  create-vs-update decision matched each name against the combined pattern list of *all* `-Name`
-  arguments, so as soon as any one name matched an existing asset, every name took the update branch and
-  new assets were silently never created (`Set-OrchAsset Text Existing,BrandNew -Value x` updated
-  `Existing` and dropped `BrandNew`). Each name now decides on its own match.
+- **`Set-OrchAsset` with a mix of existing and new names now creates the new assets.** Once any `-Name`
+  matched an existing asset, every name took the update branch — `Set-OrchAsset Text Existing,BrandNew
+  -Value x` updated `Existing` and silently never created `BrandNew`.
 
-- **`New-OrchTrigger` / `Update-OrchTrigger` `-MachineRobots` now writes the robot relation the
-  trigger screen displays.** The web trigger dialog never sends `MachineRobots` alone — the same
-  request always carries an `ExecutorRobots` array ({Id} per distinct robot), and the server persists
-  the schedule-robot relation (`RobotUserName`, the screen's Account column, `GetRobotIdsForSchedule`)
-  from that array, not from the pairs. A UiPathOrch request carrying only `MachineRobots` stored the
-  RobotId/MachineId pair but read back with `RobotUserName` null and an empty Account display
-  (HAR-verified against OnPrem 22.10). `-MachineRobots` now derives and sends the array automatically
-  unless `-ExecutorRobots` is explicitly specified. Below API v12 — where `ProcessScheduleDto` has no
-  `MachineRobots` member (swagger v11) and classic robots are already machine-bound — the pairs are
-  stripped and the derived `ExecutorRobots` carries the whole assignment, so `-MachineRobots` degrades
-  gracefully on old servers. Specifying `-ExecutorRobots` alone on a modern tenant (API v12+) now warns
-  about the likely `-MachineRobots` mix-up; it stays warning-only because it is the valid form on API
-  v11 and CSV round-trips can legitimately carry it.
+- **`New-OrchTrigger` / `Update-OrchTrigger` `-MachineRobots` now writes the robot relation the trigger
+  screen displays.** The server persists that relation from the `ExecutorRobots` array the web dialog
+  always sends alongside the pairs; without it the assignment saved but read back with an empty Account /
+  `RobotUserName` null (observed on 22.10). The array is now derived from the pairs automatically unless
+  `-ExecutorRobots` is given explicitly. Below API v12 the pairs are stripped (the DTO has no
+  `MachineRobots` member there) and the derived `ExecutorRobots` carries the whole assignment;
+  `-ExecutorRobots` alone on API v12+ now warns about the likely mix-up.
 
-- **`Get-OrchFolderUser -ExportCsv`'s `Domain` column now actually round-trips into
-  `Add-OrchFolderUser`.** `-Domain` did not bind from the pipeline by property name, so
-  `Import-Csv | Add-OrchFolderUser` silently posted the `autogen` default for every row regardless of the
-  CSV's `Domain` values. It now binds per row (captured in `ProcessRecord`, like `Add-OrchUser -Domain`),
-  so mixed-domain CSVs post each row's own domain.
+- **`Get-OrchFolderUser -ExportCsv`'s `Domain` column now round-trips into `Add-OrchFolderUser`.**
+  `-Domain` did not bind from the pipeline, so re-imports silently posted the `autogen` default for
+  every row; it now binds per row, like `Add-OrchUser -Domain`.
 
 #### Provider
 
-- **`Remove-Item` on a nonexistent Orchestrator folder now reports ObjectNotFound instead of
-  silently succeeding**, matching `Move-Item` / `Get-ItemProperty`. It also resolves the path
-  literally like every other single-item resolution site: a leftover leaf-only wildcard unescape
-  (the last survivor of the pass retired in 2.5's `Get-Item` fix) corrupted folder names containing
-  a literal backtick-escaped wildcard, turning the delete into a silent no-op.
+- **`Remove-Item` on an Orchestrator folder it cannot resolve now reports ObjectNotFound instead of
+  silently succeeding**, and resolves the path literally like every other single-item operation — a
+  leftover leaf-only wildcard unescape turned deleting a folder whose name contains a literal
+  backtick-escaped wildcard into a silent no-op.
 
-- **`dir` on a DU/TM drive no longer accepts nested garbage paths**: `Test-Path Du1:\NoSuchThing\RealProject`
-  returned true (and `cd` into it succeeded, showing an empty listing) because only the last path
-  segment was matched against the project list. The shadow providers now require the flat
-  `<drive>:\<project>` shape.
-
-- **DU/TM shadow providers now tolerate a null `PSDriveInfo`** in the engine contexts the
-  Orchestrator provider already defends against, resolving the drive from the path instead of
-  failing with a raw `NullReferenceException`. Their 2-arg `GetChildItems` (and the Orchestrator
-  provider's) also now delegates plain `-Recurse` as unlimited depth instead of a hardcoded 0 —
-  unreachable through the current engine, but a faithful delegation either way.
+- **DU/TM drives no longer accept nested garbage paths** (`Test-Path Du1:\NoSuchThing\RealProject`
+  returned true because only the last segment was matched) **and tolerate a null `PSDriveInfo`** by
+  resolving the drive from the path. Their 2-arg `GetChildItems` (and the Orchestrator provider's) now
+  delegates plain `-Recurse` as unlimited depth instead of 0 (unreachable via the current engine).
 
 #### Diagnostics & robustness
 
-- **Connection failures now carry the underlying socket/TLS error.** The Happy-Eyeballs dialer
-  swallowed every attempt's exception, so e.g. an untrusted-certificate failure on a direct on-prem
-  connection surfaced only as "Could not connect to host:443 on any of N address(es)" — misdirecting
-  the user to network debugging. The last real error is now included in the message and as the
-  inner exception.
+- **Connection failures now carry the underlying socket/TLS error** in the message and inner exception —
+  an untrusted certificate no longer surfaces as a bare "Could not connect … on any of N address(es)".
 
-- **`Import-OrchConfig` reports a clear error for a config file without a `"PSDrives"` array**
-  instead of throwing a raw `NullReferenceException`; the DU/TM providers' drive bootstrap likewise
-  mounts nothing instead of failing during provider initialization.
+- **`Import-OrchConfig` reports a clear error for a config file without a `"PSDrives"` array** instead of
+  a raw `NullReferenceException`; the DU/TM drive bootstrap likewise mounts nothing instead of failing.
 
-- **`-UseInPrivate` sign-ins no longer accumulate throwaway Edge profiles in `%TEMP%`.** Each
-  launch now sweeps profiles left by earlier sign-ins (skipping any younger than an hour or still
-  in use); previously every InPrivate sign-in leaked a `UiPathOrch_*` directory of tens of MB.
+- **`-UseInPrivate` sign-ins no longer accumulate throwaway Edge profiles in `%TEMP%`** — each launch
+  sweeps the profiles earlier sign-ins left behind (recent or in-use ones are skipped).
 
-- **Directory-object completion tooltips fall back to the identifier again** when the identity
-  name is null — an operator-precedence slip (`a + b ?? c`) made the fallback unreachable.
+- **Directory-object completion tooltips fall back to the identifier again** when the identity name is
+  null (an operator-precedence slip made the fallback unreachable).
 
 #### Authentication
 
-- **On-prem user/password drives now populate the `AccessToken` / `Claims` diagnostics and
-  `IsAuthenticated`.** The user/password flow returned the token to the session without storing it in the
-  auth manager, so `Get-OrchPSDrive` showed empty diagnostics for a successfully authenticated drive (and
-  the `Remove-OrchPackage -Path` completer excluded it).
+- **On-prem user/password drives now populate `AccessToken` / `Claims` / `IsAuthenticated`.** The flow
+  never stored the token in the auth manager, so `Get-OrchPSDrive` showed empty diagnostics for a
+  successfully signed-in drive.
 
-- **A failed on-prem user/password sign-in now reports the server's actual error.** The
-  `/api/Account/Authenticate` response's status code and error envelope were ignored, so a wrong password
-  surfaced as the generic "Authentication returned an empty access token." and a proxy's HTML error page
-  as a raw JSON parse error. The flow now fails with `Authentication failed: <status> — <server message>`
-  (response body is not dumped, matching the OAuth token-endpoint handling).
+- **A failed on-prem user/password sign-in now reports the server's actual error**
+  (`Authentication failed: <status> — <server message>`) instead of the generic empty-token message — or
+  a raw JSON parse error on a proxy's HTML page. The response body is still never dumped.
 
 ## [1.11.1] - 2026-07-01
 
