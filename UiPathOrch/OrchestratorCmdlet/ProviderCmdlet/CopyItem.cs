@@ -134,10 +134,12 @@ namespace UiPath.PowerShell.Core;
 //   you have a behavioural reason; widening / removing one of these will
 //   change failure semantics for the user.
 //
-// * TODOs in this file (grep "TODO:") flag spots where the author was
-//   unsure -- mostly version-gating (`// TODO: Is this version number
-//   correct?`) and resolver completeness (`// TODO: Is this implementation
-//   incomplete?`). They are diligence flags, not known defects.
+// * TODOs in this file family (grep "TODO:") flag spots where the author was
+//   unsure -- resolver completeness (`// TODO: Is this implementation
+//   incomplete?`). They are diligence flags, not known defects. The former
+//   version-gating TODOs were all closed in 2026-07 by live measurements
+//   against 20.10.16 / 21.10.4 / 22.4.4 / 22.10.0 / 23.4.0 / 25.10.2; the
+//   gates now carry their evidence inline.
 //
 // =============================================================================
 
