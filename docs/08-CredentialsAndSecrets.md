@@ -60,11 +60,19 @@ A credential asset stores a username plus a password, and has:
 
 The convenient pattern for the **CSV-resettable** entities — credential assets and secret assets — is
 to export a CSV on the **destination** tenant, type the secret into its column, and import it back.
-The exact commands (`-ExportCredentialCsv` → `Set-OrchCredentialAsset`, and `-ExportCsv` →
-`Set-OrchSecretAsset`) are in [CSV Export & Import](05-CsvExportImport.md). For a user's
-Unattended-Robot password, use `Update-OrchUser -UR_Password`. Entities without a pipeline re-set
-cmdlet (buckets, webhooks, credential stores) must be re-set in the web UI or recreated — see the
-table above.
+The exact commands (`Get-OrchCredentialAsset -ExportCsv` → `Set-OrchCredentialAsset`, and
+`Get-OrchSecretAsset -ExportCsv` → `Set-OrchSecretAsset`) are in
+[CSV Export & Import](05-CsvExportImport.md). For a user's Unattended-Robot password, use
+`Update-OrchUser -UR_Password`. Entities without a pipeline re-set cmdlet (buckets, webhooks,
+credential stores) must be re-set in the web UI or recreated — see the table above.
+
+> **You may not need the copy at all.** `Set-OrchCredentialAsset` / `Set-OrchSecretAsset` are
+> create-or-update: importing a CSV creates any missing assets and per-user values directly, real
+> secrets included. If you already maintain the credentials in a CSV (common, since the API cannot
+> read secrets out of the source tenant anyway), import it and skip copying those assets — see the
+> [shortcut in the Migration Guide](50-MigrationGuide.md#post-processing-for-entities-containing-passwords).
+> Per-user rows still require the owning user / robot account to be assigned to the destination
+> folder first.
 
 ### Folder-copy caveat
 
