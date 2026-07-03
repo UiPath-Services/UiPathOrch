@@ -364,10 +364,20 @@ passwords migrated during copy. Address this with the following steps:
 Example (credential assets):
 
 ```powershell
-Get-OrchAsset -Path Destination: -Recurse -ExportCredentialCsv c:\cred-assets.csv
+Get-OrchCredentialAsset -Path Destination: -Recurse -ExportCsv c:\cred-assets.csv
 # User edits the CredentialPassword column in the CSV
 Import-Csv c:\cred-assets.csv | Set-OrchCredentialAsset
 ```
+
+> **Shortcut — already maintain the credentials in a CSV?** Then you do not need
+> to copy those assets at all. `Set-OrchCredentialAsset` (like the other
+> `Set-Orch*Asset` cmdlets) is create-or-update: `Import-Csv | Set-OrchCredentialAsset`
+> creates any missing credential assets and per-user values directly, with the real
+> passwords, in one pass — no placeholder round-trip. Since the Web API cannot read
+> passwords out of the source tenant anyway, a maintained CSV is often the actual
+> source of truth for credentials; copying is only useful for these assets when the
+> source tenant is your only record of their structure. Per-user rows still require
+> the owning user / robot account to be assigned to the destination folder first.
 
 ### Case B: Username Mapping Required
 
