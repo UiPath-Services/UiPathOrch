@@ -56,7 +56,11 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
     private static void WriteCsvContent(StreamWriter writer, Dictionary<string, MappingCsvLine> userMapping)
     {
-        foreach (var user in userMapping.OrderBy(l => l.Key).Select(u => u.Value))
+        // Directory users first, then robot accounts, each block sorted by name —
+        // the two kinds are filled in differently (users resolve via the directory,
+        // robots via the tenant user list / manual mapping), so keeping them grouped
+        // makes the manual-edit pass much easier than a single name sort.
+        foreach (var user in userMapping.OrderBy(l => l.Value.IsRobot).ThenBy(l => l.Key).Select(u => u.Value))
         {
             string[] line = [
                 EscapeCsvValue(user.SourceUserName),
