@@ -404,6 +404,10 @@ CSV to correctly translate user references during migration.
 > robot's values are not needed). Robot accounts own most per-user asset values in
 > practice, so filling these rows is what keeps per-user credentials from being
 > dropped during the asset copy.
+> Directory **groups** and **external applications** are not generated, but the
+> name translation itself is type-agnostic — if such a reference needs renaming
+> (e.g., a folder-user assignment to a group whose name differs in the
+> destination), add a row for it by hand and the copy cmdlets will apply it.
 
 #### B-1: Generate User Mapping CSV
 
