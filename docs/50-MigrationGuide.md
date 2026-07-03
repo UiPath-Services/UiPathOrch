@@ -277,7 +277,7 @@ User types:
 |---|---|---|
 | `DirectoryUser` | AD / Entra ID user | Create in destination directory, or map with UserMappingCsv |
 | `DirectoryGroup` | AD / Entra ID group | Create in destination directory |
-| `DirectoryRobot` | Robot account | Copy with `Copy-PmRobotAccount` |
+| `DirectoryRobot` | Robot account | Copy with `Copy-PmRobotAccount`; map with UserMappingCsv if names differ |
 | `DirectoryExternalApplication` | External app | Recreate manually |
 | `User` | Local user (on-prem) | Copy with `Copy-PmUser` |
 
@@ -383,10 +383,15 @@ When source and destination username formats differ (e.g., AD username
 CSV to correctly translate user references during migration.
 
 > **Scope of the mapping CSV.** `New-OrchUserMappingCsv` enumerates **directory
-> users only** (AD / Entra ID). Local org users are *not* included — they are
-> handled separately in Step 1-2. Consequently the mapping CSV translates
-> **directory-user references inside tenant/folder entities** (folder-user
+> users (AD / Entra ID) and robot accounts**. Local org users are *not* included —
+> they are handled separately in Step 1-2. The mapping CSV translates
+> **directory-user and robot references inside tenant/folder entities** (folder-user
 > assignments, per-user assets, etc.); it is not used to copy local users.
+> Robot rows resolve against the destination *tenant user list*: same-named robots
+> auto-fill, renamed ones are left empty to map by hand (delete the row if that
+> robot's values are not needed). Robot accounts own most per-user asset values in
+> practice, so filling these rows is what keeps per-user credentials from being
+> dropped during the asset copy.
 
 #### B-1: Generate User Mapping CSV
 

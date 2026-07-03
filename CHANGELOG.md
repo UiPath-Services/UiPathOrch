@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+#### Cmdlets
+
+- **`New-OrchUserMappingCsv` now also enumerates robot accounts** (Type `DirectoryRobot`), not just
+  directory users — robot accounts own most per-user asset values in practice, and their names
+  routinely differ between tenants, so leaving them out meant discovering the missing rows one drop
+  warning at a time. Robot rows resolve against the destination *tenant user list* (the directory
+  search may not return robot accounts; the tenant list is also what the copy matches per-user
+  values against): same-named robots auto-fill, renamed ones are left empty to map by hand, and
+  the row can simply be deleted when that robot's values are not needed. Robot rows carry "robot"
+  in the SourceSource column. `Test-OrchUserMappingCsv` now checks tenant-user reachability first
+  for every row — which both validates robot rows correctly and makes the check order match what
+  the copy actually does.
+
 ### Fixed
 
 #### Cmdlets

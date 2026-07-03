@@ -32,10 +32,11 @@ Generates a user mapping CSV file that maps directory users from a source tenant
 
 The cmdlet performs the following steps:
 
-1. Enumerates directory users from the source tenant by scanning PmGroup members, tenant users, and folder user assignments.
-2. Resolves source user details (email, source/provider) from the source directory.
-3. Searches the destination directory to find matching users, first by user name, then by email address.
-4. Exports the results to a CSV file with columns: SourceUserName, SourceEmail, SourceDisplayName, SourceSource, DestinationUserName, Name, SurName, DisplayName.
+1. Enumerates directory users and robot accounts from the source tenant by scanning PmGroup members, tenant users, and folder user assignments.
+2. Resolves source user details (email, source/provider) from the source directory. Robot account rows carry "robot" in the SourceSource column instead.
+3. Resolves each robot account against the destination tenant user list by name (robot accounts may not be returned by the directory search; the tenant user list is also what the copy cmdlets match per-user asset values against). Robots with the same name on both sides auto-fill; renamed robots are left empty for manual mapping — or delete the row when the robot's values are not needed.
+4. Searches the destination directory to find matching directory users, first by user name, then by email address.
+5. Exports the results to a CSV file with columns: SourceUserName, SourceEmail, SourceDisplayName, SourceSource, DestinationUserName, Name, SurName, DisplayName.
 
 If all destination users are automatically resolved, the CSV is ready to use. Otherwise, you must manually fill in the DestinationUserName column for unresolved entries and validate the file using Test-OrchUserMappingCsv.
 
@@ -172,7 +173,7 @@ Outputs status messages indicating whether the user mapping is complete or requi
 
 ## NOTES
 
-This cmdlet only enumerates directory users (Type = "DirectoryUser"). Local users are not included in the mapping because they can be recreated directly using New-PmUser.
+This cmdlet enumerates directory users (Type = "DirectoryUser") and robot accounts (Type = "DirectoryRobot") — robot accounts own most per-user asset values in practice, and their names routinely differ between tenants. Local users are not included in the mapping because they can be recreated directly using New-PmUser.
 
 If the source and destination tenants are the same drive, a warning is issued. If they belong to the same organization (same partition global ID), a warning indicates that user mapping is not needed.
 

@@ -40,7 +40,19 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
         public string? Name { get; set; }
         public string? SurName { get; set; }
         public string? DisplayName { get; set; }
+        // Not a CSV column. Routes destination resolution: robot accounts are matched
+        // against the destination TENANT user list (the directory search may not return
+        // them), mirroring how the copy cmdlets re-home per-user asset values.
+        public bool IsRobot { get; set; }
     }
+
+    // Pure core of the robot-row destination resolution, separated for unit testing.
+    // Name match only, no type filter — mirrors the copy-time policy (ResolveDstUserPure),
+    // which matches any tenant user by UserName. Returns the destination tenant's own
+    // spelling of the name (casing may differ from the source).
+    internal static string? ResolveRobotDestination(string? sourceUserName, IEnumerable<User> dstUsers) =>
+        dstUsers.FirstOrDefault(u =>
+            string.Compare(u.UserName, sourceUserName, StringComparison.OrdinalIgnoreCase) == 0)?.UserName;
 
     private static void WriteCsvContent(StreamWriter writer, Dictionary<string, MappingCsvLine> userMapping)
     {
@@ -130,7 +142,10 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
         }
         if (users is null) return;
 
-        foreach (var user in users.Where(u => u.Type == "DirectoryUser"))
+        // DirectoryRobot too: robot accounts own most per-user asset values in practice,
+        // and their names routinely differ between tenants — leaving them out of the CSV
+        // meant the rows had to be discovered by watching the copy's drop warnings.
+        foreach (var user in users.Where(u => u.Type == "DirectoryUser" || u.Type == "DirectoryRobot"))
         {
             cancelToken.ThrowIfCancellationRequested();
 
@@ -138,10 +153,14 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
             if (!userMappings.ContainsKey(user.UserName))
             {
+                bool isRobot = user.Type == "DirectoryRobot";
                 MappingCsvLine l = new()
                 {
                     SourceUserName = user.UserName,
-                    SourceEmail = user.EmailAddress
+                    SourceEmail = user.EmailAddress,
+                    // Informational: lets the operator spot robot rows in the CSV.
+                    SourceSource = isRobot ? "robot" : null,
+                    IsRobot = isRobot
                 };
                 userMappings[user.UserName] = l;
             }
@@ -168,7 +187,7 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
                 if (folderUsers is null) continue;
 
-                foreach (var folderUser in folderUsers.Where(u => u.UserEntity?.Type == "DirectoryUser"))
+                foreach (var folderUser in folderUsers.Where(u => u.UserEntity?.Type == "DirectoryUser" || u.UserEntity?.Type == "DirectoryRobot"))
                 {
                     cancelToken.ThrowIfCancellationRequested();
 
@@ -176,9 +195,12 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
                     if (!userMappings.ContainsKey(folderUser.UserEntity.UserName))
                     {
+                        bool isRobot = folderUser.UserEntity.Type == "DirectoryRobot";
                         MappingCsvLine l = new()
                         {
-                            SourceUserName = folderUser.UserEntity.UserName
+                            SourceUserName = folderUser.UserEntity.UserName,
+                            SourceSource = isRobot ? "robot" : null,
+                            IsRobot = isRobot
                         };
                         userMappings[folderUser.UserEntity.UserName] = l;
                     }
@@ -296,9 +318,33 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
             //using ProgressReporter reporterAssets = new(this, 400, Int32.MaxValue, msg);
             //EnumerateAssetUsers(srcDrive, userMappings, reporterAssets, cancelHandler.Token);
 
+            // Robot rows never go through the directory searches below — robot accounts
+            // may not be returned by them. Resolve against the destination TENANT user
+            // list instead, which is what the copy cmdlets match per-user values against
+            // (robot accounts do appear there). Same-named robots auto-fill; the rest are
+            // left empty for the operator to map (or delete when not needed).
+            msg = $"Resolving robots against destination tenant users...";
+            var robotRows = userMappings.Values.Where(l => l.IsRobot && string.IsNullOrEmpty(l.DestinationUserName)).ToList();
+            if (robotRows.Count > 0)
+            {
+                List<User> dstUsers = [];
+                try
+                {
+                    dstUsers = dstDrive.Users.Get();
+                }
+                catch (Exception ex)
+                {
+                    WriteWarning($"'{dstDrive.NameColonSeparator}': Failed to get destination tenant users; robot rows are left for manual mapping. {ex.Message}");
+                }
+                foreach (var row in robotRows)
+                {
+                    row.DestinationUserName = ResolveRobotDestination(row.SourceUserName, dstUsers);
+                }
+            }
+
             msg = $"Searching Source directory...          ";
             var srcResolvedUsers = srcDrive.PmBulkResolveByName("user",
-                userMappings.Where(u => string.IsNullOrEmpty(u.Value.SourceEmail) || string.IsNullOrEmpty(u.Value.SourceSource)),
+                userMappings.Where(u => !u.Value.IsRobot && (string.IsNullOrEmpty(u.Value.SourceEmail) || string.IsNullOrEmpty(u.Value.SourceSource))),
                 u => u.Key);
 
             foreach (var srcResolvedUser in srcResolvedUsers)
@@ -311,7 +357,7 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
             msg = $"Searching Destination directory...     ";
             #region First, search by UserName
             var dstResolvedUsersByUserName = dstDrive.PmBulkResolveByName("user",
-                userMappings.Where(u => string.IsNullOrEmpty(u.Value.DestinationUserName)),
+                userMappings.Where(u => !u.Value.IsRobot && string.IsNullOrEmpty(u.Value.DestinationUserName)),
                 u => u.Key);
 
             foreach (var dstResolvedUser in dstResolvedUsersByUserName)
@@ -322,7 +368,7 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
             #region Search by Email for users not found
             var dstResolvedUsersByEmail = dstDrive.PmBulkResolveByName("user",
-                userMappings.Where(u => string.IsNullOrEmpty(u.Value.DestinationUserName) && !string.IsNullOrEmpty(u.Value.SourceEmail)),
+                userMappings.Where(u => !u.Value.IsRobot && string.IsNullOrEmpty(u.Value.DestinationUserName) && !string.IsNullOrEmpty(u.Value.SourceEmail)),
                 u => u.Value.SourceEmail!);
 
             // Better to convert to a dictionary first.

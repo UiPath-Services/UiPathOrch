@@ -182,7 +182,18 @@ public class TestUserMappingCsvCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
-            // Check if DestinationUserName exists in the destination directory
+            // Reachable as a destination tenant user? This is the check that predicts copy
+            // behavior — per-user values are re-homed against the tenant user list — and it
+            // also covers robot accounts, which the directory search below may not return.
+            if (IsDestinationTenantUser(destinationUserName, srcUser?.EmailAddress, dstUsers))
+            {
+                okCount++;
+                continue;
+            }
+
+            // Not a tenant user yet — check the destination directory: a directory user
+            // becomes a tenant user automatically when folder users are copied (Pending),
+            // while a name found in neither place needs fixing.
             try
             {
                 var resolved = dstDrive.SearchDirectory(destinationUserName)?
@@ -191,14 +202,7 @@ public class TestUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
                 if (resolved is not null && resolved.Count > 0)
                 {
-                    if (IsDestinationTenantUser(destinationUserName, srcUser?.EmailAddress, dstUsers))
-                    {
-                        okCount++;
-                    }
-                    else
-                    {
-                        pendingAssignment.Add($"'{destinationUserName}' (mapped from '{sourceUserName}')");
-                    }
+                    pendingAssignment.Add($"'{destinationUserName}' (mapped from '{sourceUserName}')");
                 }
                 else
                 {

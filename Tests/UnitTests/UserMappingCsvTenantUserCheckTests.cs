@@ -56,6 +56,25 @@ public class UserMappingCsvTenantUserCheckTests
         Assert.False(TestUserMappingCsvCmdlet.IsDestinationTenantUser("jsmith@contoso.com", "jsmith@contoso.com", Array.Empty<User>()));
     }
 
+    // --- ResolveRobotDestination: New-OrchUserMappingCsv's robot rows resolve against
+    // the destination TENANT user list (the directory search may not return robot
+    // accounts) — same-named robots auto-fill with the destination's own spelling. ---
+
+    [Fact]
+    public void RobotResolution_SameName_AutoFills_WithDestinationCasing()
+    {
+        var dst = new[] { U(1, "ALVA-RPAAEU01"), U(2, "other") };
+        Assert.Equal("ALVA-RPAAEU01", NewUserMappingCsvCmdlet.ResolveRobotDestination("alva-rpaaeu01", dst));
+    }
+
+    [Fact]
+    public void RobotResolution_NoMatch_LeavesNull()
+    {
+        var dst = new[] { U(1, "alva-rpaaeu01") };
+        Assert.Null(NewUserMappingCsvCmdlet.ResolveRobotDestination("migrated aeu_alva-rpaaeu01", dst));
+        Assert.Null(NewUserMappingCsvCmdlet.ResolveRobotDestination(null, dst));
+    }
+
     // --- FormatPendingAssignmentWarning: the aggregated once-per-run line replacing
     // per-row warnings (fresh cross-org destinations would otherwise warn on nearly
     // every directory-user row). ---
