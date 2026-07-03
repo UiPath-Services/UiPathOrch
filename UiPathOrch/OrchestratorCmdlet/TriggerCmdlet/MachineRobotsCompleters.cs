@@ -52,7 +52,7 @@ internal class MachineRobotsCompleter : OrchArgumentCompleter
         var wpMachineRobots = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        var usersPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
+        var usersPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetFolderUsersUnion(df.folder));
         var robotsPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
         var sessionsPerFolders = ParallelResults.GroupBy(drivesFolders, df => df.drive.MachineSessionRuntimesByFolder.Fetch(df.folder));
 

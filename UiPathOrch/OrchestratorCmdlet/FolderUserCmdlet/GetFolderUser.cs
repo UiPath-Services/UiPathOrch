@@ -89,7 +89,7 @@ public class GetFolderUserCmdlet : OrchestratorPSCmdlet
             var results = ParallelResults.GroupBy(drivesFolders, df =>
             {
                 return IncludeInherited
-                    ? df.drive.FolderUsersWithInherited.Get(df.folder)
+                    ? df.drive.GetFolderUsersUnion(df.folder)
                     : df.drive.FolderUsersWithNoInherited.Get(df.folder);
             });
 
@@ -136,7 +136,7 @@ public class GetFolderUserCmdlet : OrchestratorPSCmdlet
             var results = ParallelResults.GroupBy(drivesFolders, df =>
             {
                 return IncludeInherited
-                    ? df.drive.FolderUsersWithInherited.Get(df.folder)
+                    ? df.drive.GetFolderUsersUnion(df.folder)
                     : df.drive.FolderUsersWithNoInherited.Get(df.folder);
             });
 
@@ -208,7 +208,7 @@ public class GetFolderUserCmdlet : OrchestratorPSCmdlet
             df =>
             {
                 return IncludeInherited
-                    ? df.drive.FolderUsersWithInherited.Get(df.folder)
+                    ? df.drive.GetFolderUsersUnion(df.folder)
                     : df.drive.FolderUsersWithNoInherited.Get(df.folder);
             });
 

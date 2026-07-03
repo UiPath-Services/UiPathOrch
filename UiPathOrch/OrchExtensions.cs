@@ -1420,7 +1420,11 @@ internal static class SessionStateExtensions
         string physicalPath = sessionState?.Path.GetUnresolvedProviderPathFromPSPath(path);
         if (string.IsNullOrEmpty(physicalPath)) return null;
 
-        var userMapping = new Dictionary<string, string>();
+        // Ignore-case: every UserName comparison downstream (ResolveDstUserPure, directory
+        // resolution, Test-OrchUserMappingCsv) is OrdinalIgnoreCase, so the CSV lookup key
+        // must be too — otherwise a hand-typed SourceUserName that differs from the tenant's
+        // casing silently fails to map.
+        var userMapping = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
         try
         {

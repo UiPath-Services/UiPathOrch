@@ -909,6 +909,39 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly ListCachePerFolder<MachineFolder> FolderMachinesAssignable;
     public readonly ListCachePerFolder<UserRoles> FolderUsersWithNoInherited;
     public readonly ListCachePerFolder<UserRoles> FolderUsersWithInherited;
+
+    // In one customer Automation Cloud environment (2026-07-03) GetUsersForFolder's
+    // includeInherited=true form omitted a directly-assigned robot account that the false
+    // form returned — the true form was NOT a superset, and the asset copy dropped that
+    // robot's per-user values as "not assigned" despite a visible direct assignment. The
+    // asymmetry did not reproduce on our own org (both forms returned the robot, root and
+    // subfolder alike), so treat it as environment-dependent server behavior. Consumers
+    // that want "everyone assigned to this folder, directly or via inheritance" union both
+    // cached views: correct by construction regardless of which form the server trims, and
+    // it makes -IncludeInherited mean "inherited IN ADDITION to direct" rather than
+    // "whatever the true form returns". Deduplicated by UserEntity.Id, inherited-view
+    // entries first.
+    public List<UserRoles> GetFolderUsersUnion(Folder folder) =>
+        UnionFolderUsers(FolderUsersWithInherited.Get(folder), FolderUsersWithNoInherited.Get(folder));
+
+    // Pure merge behind GetFolderUsersUnion, separated for unit testing. Entries without a
+    // UserEntity.Id are unusable by every consumer (gates match by Id, completers by the
+    // names on the entity) and cannot be deduplicated, so they are skipped.
+    internal static List<UserRoles> UnionFolderUsers(
+        IEnumerable<UserRoles?> withInherited, IEnumerable<UserRoles?> directOnly)
+    {
+        var union = new List<UserRoles>();
+        var seen = new HashSet<long>();
+        foreach (var ur in withInherited.Concat(directOnly))
+        {
+            long? id = ur?.UserEntity?.Id;
+            if (id is not null && seen.Add(id.Value))
+            {
+                union.Add(ur!);
+            }
+        }
+        return union;
+    }
     public readonly IncrementalCachePerFolder<long, MachineSessionRuntime> MachineSessionRuntimesByFolder;
     public readonly ListCachePerFolder<SimpleUser> Reviewers;
     public readonly ListCachePerFolder<QueueDefinition> Queues;

@@ -153,7 +153,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetFolderUsersUnion(df.folder));
 
             foreach (var result in results)
             {
@@ -538,7 +538,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
                 if (wpUserName is not null)
                 {
                     // See SetAsset.cs UserName expansion — the same scope-tightening fix.
-                    var assignedUserIds = drive.FolderUsersWithInherited.Get(folder)
+                    var assignedUserIds = drive.GetFolderUsersUnion(folder)
                         .Where(ur => ur?.UserEntity?.Id is not null)
                         .Select(ur => ur.UserEntity!.Id!.Value)
                         .ToHashSet();

@@ -587,8 +587,10 @@ public partial class OrchProvider
             }
 
             // Folder assignment fetch is auth-protected and the same on both
-            // attempts, so fetch once outside the retry loop.
-            var assignedFolderUserIds = dstDrive.FolderUsersWithInherited.Get(newFolder)
+            // attempts, so fetch once outside the retry loop. Union of both views —
+            // includeInherited=true alone omits directly-assigned robot accounts
+            // (see OrchDriveInfo.GetFolderUsersUnion).
+            var assignedFolderUserIds = dstDrive.GetFolderUsersUnion(newFolder)
                 .Where(ur => ur?.UserEntity?.Id is not null)
                 .Select(ur => ur.UserEntity!.Id!.Value)
                 .ToHashSet();
@@ -633,12 +635,20 @@ public partial class OrchProvider
                     return null;
 
                 case FindDstUserResult.NotAssignedToFolder:
+                {
                     // Without this check, the cmdlet would PUT a per-Robot UserValue
                     // with a UserId that the destination folder doesn't own; the
                     // server returns 200 but silently drops the UserValue (and can
                     // wipe the asset's Global Value as a side effect).
-                    WarnDrop(_this, budget, $"user '{searchName}'", $"{msg}: the per-user value for user '{searchName}' is dropped because the user is not assigned in '{newFolder.GetPSPath()}'. To keep it, copy the assignment from the source folder, e.g.: Copy-OrchFolderUser -Path {PsLiteral(srcFolder.GetPSPath())} -UserName {PsLiteral(searchName)} -Destination {PsLiteral(newFolder.GetPSPath())}");
+                    // The e.g. hint filters the SOURCE folder, so it must use the source
+                    // user name — searchName may already be the CSV-mapped destination
+                    // name. When a mapping renamed the user, the folder-user copy needs
+                    // the same CSV to resolve the destination side.
+                    string mappingHint = string.Compare(searchName, srcUser.UserName, StringComparison.OrdinalIgnoreCase) == 0
+                        ? "" : " -UserMappingCsv <your-mapping.csv>";
+                    WarnDrop(_this, budget, $"user '{searchName}'", $"{msg}: the per-user value for user '{searchName}' is dropped because the user is not assigned in '{newFolder.GetPSPath()}'. To keep it, copy the assignment from the source folder, e.g.: Copy-OrchFolderUser -Path {PsLiteral(srcFolder.GetPSPath())} -UserName {PsLiteral(srcUser.UserName ?? "")} -Destination {PsLiteral(newFolder.GetPSPath())}{mappingHint}");
                     return null;
+                }
 
                 default:
                     return dstUser;

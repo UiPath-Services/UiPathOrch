@@ -239,7 +239,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderUsersWithInherited.Get(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetFolderUsersUnion(df.folder));
 
             foreach (var result in results)
             {
@@ -617,7 +617,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                     // server silently dropped the per-User UserValue AND wiped the asset's
                     // Global Value when the cmdlet PUT the result — see SetAsset.cs MachineName
                     // expansion below for the same pattern and the regression test R9 / R13.
-                    var assignedUserIds = drive.FolderUsersWithInherited.Get(folder)
+                    var assignedUserIds = drive.GetFolderUsersUnion(folder)
                         .Where(ur => ur?.UserEntity?.Id is not null)
                         .Select(ur => ur.UserEntity!.Id!.Value)
                         .ToHashSet();

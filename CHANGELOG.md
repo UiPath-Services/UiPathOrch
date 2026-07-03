@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+#### Cmdlets
+
+- **Folder-assignment checks and listings now read the union of `GetUsersForFolder`'s
+  `includeInherited=true` and `false` forms** instead of trusting the `true` form to be a superset.
+  In one customer Automation Cloud environment the `true` form omitted a directly-assigned robot
+  account that the `false` form returned, so the asset copy dropped that robot's per-user values as
+  "not assigned" (skipping per-user-only assets entirely), `Set-OrchAsset` / `Set-OrchCredentialAsset`
+  / `Set-OrchSecretAsset -UserName` would have refused it, name completion (including
+  `New/Update-OrchTrigger -MachineRobots`) missed it, and `Get-OrchFolderUser -IncludeInherited`
+  paradoxically hid an assignment the no-switch form showed. The asymmetry is environment-dependent
+  (it does not reproduce everywhere), but the union is correct by construction either way:
+  `-IncludeInherited` now means "inherited in addition to direct" rather than "whatever the server's
+  `true` form returns". Workaround on older versions: assign the account to a parent folder (the
+  inherited entry is visible to the `true` form).
+
+- **User mapping CSV lookups are no longer case-sensitive on `SourceUserName`** — every other
+  UserName comparison in the pipeline ignores case, so a hand-typed row whose casing differed from
+  the tenant's spelling silently failed to map.
+
+- **The "not assigned" drop warning's `Copy-OrchFolderUser` example now uses the source user name**
+  in `-UserName` — it previously showed the CSV-mapped destination name, which filters the source
+  folder and would have matched nothing; when a mapping renamed the user the example now also
+  points at passing the same `-UserMappingCsv`.
+
 ### Changed
 
 #### Cmdlets
