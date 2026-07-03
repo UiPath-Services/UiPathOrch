@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.11.3'
+ModuleVersion = '1.11.4'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,26 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.11.4
+
+Added: New-OrchUserMappingCsv now also enumerates robot accounts — robot rows resolve against the
+destination tenant user list (same-named robots auto-fill, renamed ones stay empty for manual
+mapping), carry "robot" in the SourceSource column, and the CSV lists directory users first, then
+robots. Test-OrchUserMappingCsv checks tenant-user reachability first (which validates robot rows
+correctly), reports directory-only entries once as an aggregated Pending warning instead of per-row
+noise, and shows a per-entry progress bar.
+
+Fixed: folder-assignment checks and listings now read the union of GetUsersForFolder's
+includeInherited true/false forms — in one customer Automation Cloud environment the true form
+omitted a directly-assigned robot account, so the asset copy dropped its per-user values as
+"not assigned" and skipped per-user-only assets entirely; Set-OrchAsset / Set-OrchCredentialAsset /
+Set-OrchSecretAsset -UserName, name completion, and Get-OrchFolderUser -IncludeInherited read the
+same view and are all fixed by the union. User-mapping CSV lookups are no longer case-sensitive on
+SourceUserName, and the "not assigned" drop warning's example command now uses the source user name.
+Cmdlets that need an endpoint the connected Orchestrator predates now report that instead of a bare
+Not Found, and every Orchestrator-version gate now carries live measurements (20.10.16 through
+25.10.2 plus Automation Cloud).
+
 1.11.3
 
 Added: Test-OrchUserMappingCsv now also verifies each DestinationUserName is reachable as a destination
