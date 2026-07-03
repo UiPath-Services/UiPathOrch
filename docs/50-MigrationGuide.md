@@ -382,11 +382,13 @@ Import-Csv c:\cred-assets.csv | Set-OrchCredentialAsset
 ### Case B: Username Mapping Required
 
 > **Maturity note.** The `-UserMappingCsv` workflow (`New-OrchUserMappingCsv`,
-> `Test-OrchUserMappingCsv`, and `-UserMappingCsv` on the copy cmdlets) has had
-> limited real-world validation so far. Before relying on it for a production
-> migration, **rehearse on a non-production destination**, run
-> `Test-OrchUserMappingCsv`, and verify a small sample of migrated entities
-> (a few folder-user assignments and per-user assets) before the full run.
+> `Test-OrchUserMappingCsv`, and `-UserMappingCsv` on the copy cmdlets) has now
+> been exercised in a real cross-organization migration (AD on-prem to Automation
+> Cloud), which drove the robot-account support and validation improvements
+> described below. It is still prudent to **rehearse on a non-production
+> destination**, run `Test-OrchUserMappingCsv`, and verify a small sample of
+> migrated entities (a few folder-user assignments and per-user assets) before
+> the full run.
 
 When source and destination username formats differ (e.g., AD username
 `DOMAIN\jsmith` -> Entra ID email `jsmith@contoso.com`), use the user mapping
@@ -413,17 +415,20 @@ New-OrchUserMappingCsv Source: Destination: C:\Migration\UserMapping.csv
 ```
 
 This cmdlet:
-1. Enumerates all directory users from the source tenant (scanning PmGroup
-   members, tenant users, and folder user assignments)
-2. Resolves each source user's details (email, source/provider)
-3. Searches the destination directory to find matching users (by username,
-   then by email)
+1. Enumerates all directory users **and robot accounts** from the source tenant
+   (scanning PmGroup members, tenant users, and folder user assignments)
+2. Resolves each source user's details (email, source/provider); robot rows
+   carry `robot` in the SourceSource column instead
+3. Resolves robot accounts against the destination **tenant user list**
+   (same-named robots auto-fill), and searches the destination directory for
+   matching directory users (by username, then by email)
 4. Exports the mapping to a CSV with columns: SourceUserName, SourceEmail,
    SourceDisplayName, SourceSource, DestinationUserName, Name, SurName,
-   DisplayName
+   DisplayName — directory users first, then robot accounts, each block
+   sorted by name
 
-> **Note**: Only directory users are included. Local users are not mapped
-> because they can be recreated directly using `New-PmUser`.
+> **Note**: Local users are not mapped because they can be recreated directly
+> using `New-PmUser`.
 
 #### B-2: Review and Edit User Mapping CSV
 
@@ -444,21 +449,32 @@ Validate the completed CSV to ensure all mappings are correct:
 Test-OrchUserMappingCsv C:\Migration\UserMapping.csv Source: Destination:
 ```
 
-This cmdlet checks:
-- Each SourceUserName exists in the source tenant
-- Each DestinationUserName is not empty
-- Each DestinationUserName exists in the destination directory
+This cmdlet checks, for each row:
+- SourceUserName exists in the source tenant
+- DestinationUserName is not empty
+- DestinationUserName is reachable as a destination **tenant user** — the check
+  that predicts the copy's per-user value resolution, and the one that covers
+  robot accounts (which the directory search may not return). Reachable rows
+  count as **OK**.
+- Otherwise, whether it resolves in the destination **directory** — counted as
+  **Pending**: expected before folder users are copied, since folder-user copy
+  assigns directory users (and creates their tenant user record) automatically
+- A name found in neither place is an error, or a warning when the Name /
+  DisplayName columns are filled in for `New-PmUser` creation
 
-Fix any errors and re-validate until all entries pass.
+Fix any errors and re-validate. Pending entries are fine to proceed with, as
+long as folder users are copied before assets (see B-5).
 
 #### B-4: Organization-Level Users
 
 Organization-level **local users** are handled as in Step 1-2 (the mapping CSV
-does not apply to them — it contains directory users only). **Directory users**
-are not copied via API; they must already exist in the destination organization
-through the identity provider. The mapping CSV is consumed in the next step,
-when tenant- and folder-level entities that *reference* those directory users
-are copied.
+does not apply to them). **Directory users** are not copied via API; they must
+already exist in the destination organization through the identity provider.
+**Robot accounts** must likewise exist in the destination before entities that
+reference them are copied — create them with `Copy-PmRobotAccount` (or
+`New-PmRobotAccount`) and fill in their mapping rows when the names differ.
+The mapping CSV is consumed in the next step, when tenant- and folder-level
+entities that *reference* those directory users and robots are copied.
 
 #### B-5: Copy Tenant and Folder Entities with User Mapping
 
@@ -477,9 +493,15 @@ Alternatively, copy individual entity types with user mapping:
 
 ```powershell
 Copy-OrchUser -Path Source: * Destination: -UserMappingCsv C:\Migration\UserMapping.csv
-Copy-OrchAsset -Recurse -Path Source:\ * -Destination Destination:\ -UserMappingCsv C:\Migration\UserMapping.csv
 Copy-OrchFolderUser -Recurse -Path Source:\ * -Destination Destination:\ -UserMappingCsv C:\Migration\UserMapping.csv
+Copy-OrchAsset -Recurse -Path Source:\ * -Destination Destination:\ -UserMappingCsv C:\Migration\UserMapping.csv
 ```
+
+> **Order matters** when copying entity types individually: folder users must be
+> assigned **before** assets are copied, otherwise per-user asset values cannot
+> be re-homed and are dropped with a warning — and an asset whose values all
+> drop and that has no global default value is skipped entirely. `copy -Recurse`
+> runs the stages in the correct order automatically.
 
 #### B-6: Post-Processing for Entities Containing Passwords
 
@@ -487,10 +509,15 @@ Same as Case A -- since the Web API cannot retrieve passwords, entities
 containing passwords require post-processing via CSV:
 
 ```powershell
-Get-OrchAsset -Path Destination: -Recurse -ExportCredentialCsv c:\cred-assets.csv
+Get-OrchCredentialAsset -Path Destination: -Recurse -ExportCsv c:\cred-assets.csv
 # User sets the CredentialPassword column in the CSV
 Import-Csv c:\cred-assets.csv | Set-OrchCredentialAsset
 ```
+
+The Case A shortcut applies here too: when the credential values are already
+maintained in a CSV, importing it with `Set-OrchCredentialAsset` creates the
+missing assets and per-user values directly — no copy / placeholder round-trip
+for those assets.
 
 ---
 
