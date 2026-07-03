@@ -51,6 +51,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### Cmdlets
 
+- **`Test-OrchUserMappingCsv` shows a per-entry progress bar** — rows whose source user needs the
+  folder-by-folder fallback scan, or whose destination hits the directory search, can take a while
+  on large CSVs.
+
 - **`Test-OrchUserMappingCsv` aggregates its "not yet a tenant user" findings into one warning and a
   separate Pending count** instead of warning per row — on a fresh cross-org destination nearly every
   directory-user row is in that state until folder users are copied (assignment creates the tenant user

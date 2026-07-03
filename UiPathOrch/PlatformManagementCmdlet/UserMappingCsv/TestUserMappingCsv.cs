@@ -137,7 +137,11 @@ public class TestUserMappingCsvCmdlet : OrchestratorPSCmdlet
         int errorCount = 0;
         var pendingAssignment = new List<string>();
 
-        foreach (var entry in entries.OrderBy(e => e.SourceUserName))
+        // Per-row work can be slow (source rows missing from the tenant user list fall
+        // back to scanning every folder's users; unresolved destinations hit the
+        // directory search), so show per-entry progress.
+        foreach (var entry in entries.OrderBy(e => e.SourceUserName)
+            .WithProgressBar(this, "Validating user mapping CSV...", e => e.SourceUserName, entries.Count))
         {
             string sourceUserName = entry.SourceUserName;
             string? destinationUserName = entry.DestinationUserName;
