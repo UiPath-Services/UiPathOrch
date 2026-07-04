@@ -1392,6 +1392,15 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<Folder> GetFolders() => GetEnumerable<Folder>("/odata/Folders");
 
+    // Unlike /odata/Folders, this navigation endpoint DOES include folders nested under
+    // personal workspaces (e.g. the Solution folders a solution deploy creates there) —
+    // /odata/Folders omits that whole subtree even with $filter=ParentId eq <pwId>, and
+    // /odata/Folders(<pwSubfolderId>) 404s (verified live on Cloud, ApiVersion 20).
+    // Callable from OAuth external apps — it is the /api/FoldersNavigation/* variants
+    // below that 403 for them; a confidential app gets 200 with an empty list.
+    public List<Folder> GetAllFoldersForCurrentUser()
+        => HttpRequest<FolderPage>(HttpMethod.Get, "/api/Folders/GetAllForCurrentUser")?.PageItems ?? [];
+
     // This endpoint cannot be called from OAuth external app..
     //public void GetAllFoldersForCurrentUser()
     //{

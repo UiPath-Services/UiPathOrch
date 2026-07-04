@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+#### Provider
+
+- **Subfolders under a personal workspace are visible again** — `dir` / `cd` / `Get-Item` /
+  wildcard resolution / `Remove-Item` now see the folders a solution deploy creates inside a
+  personal workspace (`FolderType` `Solution`). Orchestrator changed this server-side: these
+  subfolders used to arrive through `/odata/Folders` tagged `FeedType` `PersonalWorkspace` (their
+  `-Recurse` ordering was fixed back in 0.9.12.2), but the endpoint no longer returns them at all —
+  `$filter=ParentId eq <pwId>` comes back empty and `/odata/Folders(<subfolderId>)` 404s — so the
+  whole subtree had become invisible. The folder catalog now also grafts these in from
+  `/api/Folders/GetAllForCurrentUser`. Confidential-app connections skip the extra call (the
+  endpoint returns an empty list for them anyway), and older Orchestrator versions that predate it
+  degrade gracefully. Note: this restores *visibility*; deleting a `Solution` folder may still be
+  refused server-side depending on the solution's lifecycle.
+
 ## [1.11.4] - 2026-07-03
 
 ### Added

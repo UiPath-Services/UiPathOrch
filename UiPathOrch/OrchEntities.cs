@@ -1334,6 +1334,15 @@ public class Folder
     public string? FeedType { get; set; }
 }
 
+// Response envelope of GET /api/Folders/GetAllForCurrentUser (PageItems + Count).
+// Items carry Key/DisplayName/FullyQualifiedName/Description/FolderType/ParentId/
+// ParentKey/Id only — no FeedType/FullyQualifiedNameOrderable/IsActive.
+public class FolderPage
+{
+    public List<Folder>? PageItems { get; set; }
+    public int? Count { get; set; }
+}
+
 // MachineRuntimeDto
 public class MachineRuntime
 {

@@ -1736,6 +1736,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         // get current user to get my own personal workspace
         ExtendedUser user = null;
         List<PersonalWorkspace> personalWorkspaces = null;
+        List<Folder> foldersForCurrentUser = null;
         if (!OrchAPISession.AuthManager.IsConfidentialApp)
         {
             tasks.Add(Task.Run(() =>
@@ -1753,6 +1754,15 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
                 // Auxiliary fetch — see comment on the GetCurrentUser task above.
                 try { personalWorkspaces = PersonalWorkspaces.Get(); }
                 catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"PersonalWorkspaces.Get failed: {ex.Message}"); }
+            }));
+
+            // get the navigation folder list, the only source of personal-workspace SUBFOLDERS
+            tasks.Add(Task.Run(() =>
+            {
+                // Auxiliary fetch — see comment on the GetCurrentUser task above. Also
+                // non-fatal for servers that predate /api/Folders/GetAllForCurrentUser.
+                try { foldersForCurrentUser = OrchAPISession.GetAllFoldersForCurrentUser(); }
+                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"GetAllFoldersForCurrentUser failed: {ex.Message}"); }
             }));
         }
 
@@ -1819,6 +1829,17 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         }
         #endregion
 
+        // Graft personal-workspace subfolders into the API folder list. /odata/Folders
+        // never returns folders nested under a personal workspace (verified: even
+        // $filter=ParentId eq <pwId> is empty), but deploying a solution to a personal
+        // workspace creates such subfolders (FolderType=Solution) — without this graft
+        // they are invisible to navigation. newDicFolders holds exactly the PW roots
+        // added above (own + explored), so their FQNs are the subtree prefixes.
+        if (folders is not null)
+        {
+            GraftPersonalWorkspaceSubtrees(folders, newDicFolders, foldersForCurrentUser);
+        }
+
         // Process the folders result
         foreach (var folder in folders ?? [])
         {
@@ -1845,6 +1866,34 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         }
 
         return (newDicFolders, newDicFoldersForEnumFolders);
+    }
+
+    // Appends to apiFolders every navigation-list folder that lives UNDER one of the
+    // personal-workspace roots (FQN prefix match) and is not already present (by Id —
+    // /odata/Folders omits the PW subtree today, but a future server may not). Pure over
+    // its inputs so it is unit-testable without a live drive — see
+    // PersonalWorkspaceSubtreeTests. The navigation items lack FeedType and
+    // FullyQualifiedNameOrderable; stamp "Processes" (what /odata/Folders reports for
+    // Solution folders elsewhere in the tree) and the FQN respectively, so the
+    // FullName-stamping loop and BuildFolderViews below treat them like API folders.
+    internal static void GraftPersonalWorkspaceSubtrees(
+        List<Folder> apiFolders, IReadOnlyList<Folder> pwRoots, IEnumerable<Folder>? foldersForCurrentUser)
+    {
+        if (foldersForCurrentUser is null || pwRoots.Count == 0) return;
+
+        var pwPrefixes = pwRoots.Select(r => r.FullyQualifiedName + "/").ToList();
+        var knownIds = apiFolders.Select(f => f.Id).ToHashSet();
+
+        foreach (var folder in foldersForCurrentUser)
+        {
+            if (folder.FullyQualifiedName is null) continue;
+            if (!pwPrefixes.Any(p => folder.FullyQualifiedName.StartsWith(p, StringComparison.OrdinalIgnoreCase))) continue;
+            if (!knownIds.Add(folder.Id)) continue;
+
+            folder.FullyQualifiedNameOrderable ??= folder.FullyQualifiedName;
+            folder.FeedType ??= "Processes";
+            apiFolders.Add(folder);
+        }
     }
 
     // Pure ordering core of GetFolders(), extracted so the two folder "views" and
