@@ -4,7 +4,7 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.11.5] - 2026-07-07
 
 ### Fixed
 
@@ -21,6 +21,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   endpoint returns an empty list for them anyway), and older Orchestrator versions that predate it
   degrade gracefully. Note: this restores *visibility*; deleting a `Solution` folder may still be
   refused server-side depending on the solution's lifecycle.
+- **All personal-workspace subfolders are fetched, not just the first page** —
+  `/api/Folders/GetAllForCurrentUser` (the source of the personal-workspace subtree) is a paged
+  endpoint whose `take` is capped at 1000; the folder catalog issued a single un-paged request, so
+  a tenant with more folders than one page would have silently dropped the tail (and any personal-
+  workspace subfolders in it). It now pages on `skip` until the response's `Count` total is reached.
+- **`-Recurse` lists a personal workspace's subfolders right after the workspace, not scattered
+  among regular folders** — the grafted subfolders used to sort alphabetically by name in among
+  every other folder's subtree instead of following their personal-workspace root. Both folder
+  orderings now group personal-workspace subtrees with their root: `dir -Recurse` places them
+  right after the root-level listing, and the folder walk behind the `-Recurse` entity cmdlets
+  (`Get-OrchAsset -Recurse`, `Get-OrchCredentialAsset`, `Get-OrchProcess`, … — everything that
+  uses `EnumFolders`) groups each workspace's subtree immediately after it, so e.g. a workspace
+  subfolder's assets now list right after the workspace's own. Matches the non-recurse view and
+  the Orchestrator web UI.
+
+#### Platform Management
+
+- **`Get-PmGroupLicense -ExpandAllocation` no longer truncates a group's members at 50** — the
+  Automation Cloud license *allocations* endpoint began capping each page at 50 regardless of the
+  requested page size, so a group with more than 50 licensed members silently returned only the
+  first 50 (a group with 50 or fewer was unaffected, which is why the truncation looked
+  intermittent). The cmdlet now keeps paging on `skip` until the server returns an empty page.
+  Verified live on Automation Cloud — the endpoint honors `skip` and reports `totalCount`.
+- **The Automation-Cloud-only licensing cmdlets now fail with a clear message on on-prem
+  Orchestrator** — `Get-PmGroupLicense` / `Get-PmUserLicense` / `Get-PmLicense` /
+  `Get-PmLicenseAllocation` / `Get-PmLicenseContract` / `Get-PmLicenseInventory` call license
+  endpoints that exist only on Automation Cloud. On-prem Orchestrator answers the unknown route
+  with its SPA `index.html` (HTTP 200), which the cmdlets used to deserialize as JSON and surface
+  as a cryptic `'<' is an invalid start of a value`. They now report that the operation is
+  available only on Automation Cloud.
 
 ## [1.11.4] - 2026-07-03
 

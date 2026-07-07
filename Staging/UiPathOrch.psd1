@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.11.4'
+ModuleVersion = '1.11.5'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,25 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.11.5
+
+Fixed: Get-PmGroupLicense -ExpandAllocation no longer stops at 50 members. The Automation Cloud
+license allocations endpoint now caps each page at 50, and the cmdlet was treating that short page
+as the last one, so a group with more than 50 licensed members was truncated to 50 (a group with 50
+or fewer looked fine, which made it seem intermittent); it now pages through all of them. The
+Automation-Cloud-only licensing cmdlets (Get-PmGroupLicense / Get-PmUserLicense / Get-PmLicense /
+Get-PmLicenseAllocation / Get-PmLicenseContract / Get-PmLicenseInventory) also report a clear
+"available only on Automation Cloud" message when run against on-prem Orchestrator, instead of a
+cryptic "'<' is an invalid start of a value" JSON parse error. Subfolders that a solution deploy
+creates inside a personal workspace are visible again to dir / cd / Get-Item / wildcard resolution /
+Remove-Item — Orchestrator stopped returning them from /odata/Folders, so the folder catalog now
+grafts them in from /api/Folders/GetAllForCurrentUser. That navigation endpoint is paged (take is
+capped at 1000), so it is now read page by page until its Count total is reached — a tenant with
+more folders than one page no longer drops the tail. And under -Recurse a personal workspace's
+subfolders now group right after the workspace instead of sorting in among every other folder by
+name — for dir -Recurse and for the entity cmdlets that walk EnumFolders (Get-OrchAsset -Recurse,
+etc.), so e.g. a workspace subfolder's assets list right after the workspace's own.
+
 1.11.4
 
 Added: New-OrchUserMappingCsv now also enumerates robot accounts — robot rows resolve against the
