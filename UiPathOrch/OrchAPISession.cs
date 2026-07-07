@@ -1440,8 +1440,33 @@ public partial class OrchAPISession : IDisposable
     // /odata/Folders(<pwSubfolderId>) 404s (verified live on Cloud, ApiVersion 20).
     // Callable from OAuth external apps — it is the /api/FoldersNavigation/* variants
     // below that 403 for them; a confidential app gets 200 with an empty list.
+    //
+    // This is a PAGED endpoint: `take` is capped at 1000 (a larger value 400s) and the
+    // `FolderPage.Count` envelope field carries the true total, so a single un-paged GET
+    // silently truncates any tenant with more folders than one page — dropping the
+    // personal-workspace subfolders that live past it. Page on `skip` (take=1000) until we
+    // have collected `Count` items, or a page comes back empty. `skip` is honored server-side
+    // (verified live), and the Count check plus the empty-page break both terminate the loop.
     public List<Folder> GetAllFoldersForCurrentUser()
-        => HttpRequest<FolderPage>(HttpMethod.Get, "/api/Folders/GetAllForCurrentUser")?.PageItems ?? [];
+    {
+        const int PageSize = 1000;
+        var all = new List<Folder>();
+        int skip = 0;
+        while (true)
+        {
+            var page = HttpRequest<FolderPage>(HttpMethod.Get,
+                $"/api/Folders/GetAllForCurrentUser?take={PageSize}&skip={skip}");
+            var items = page?.PageItems;
+            if (items is null || items.Count == 0) break;
+
+            all.AddRange(items);
+            // Count is the authoritative total; when it's absent, stop after this page rather
+            // than risk looping (matches the old single-request behavior for that edge).
+            if (all.Count >= (page!.Count ?? all.Count)) break;
+            skip += items.Count;
+        }
+        return all;
+    }
 
     // This endpoint cannot be called from OAuth external app..
     //public void GetAllFoldersForCurrentUser()

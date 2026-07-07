@@ -1919,15 +1919,26 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             .Where(f => f.FullyQualifiedName!.Contains('/'))
             .OrderBy(f => f.FullyQualifiedNameOrderable));
 
-        // enum view (OrchDriveInfo.EnumFolders): the prepended PW folders plus ALL
-        // PersonalWorkspace-feed folders are re-sorted together, then every non-PW
-        // folder is appended in order. Sort order differs slightly from the main view.
-        enumView.AddRange(apiFolders.Where(f => f.FeedType == "PersonalWorkspace"));
+        // enum view (OrchDriveInfo.EnumFolders): a personal workspace's roots AND their
+        // subtrees are sorted together so each subtree follows its own root (FQN sort puts
+        // "PW" immediately before "PW/child"), then every other folder is appended in order.
+        // This groups a workspace's subfolders right after it for -Recurse entity cmdlets
+        // (Get-OrchAsset -Recurse, …) instead of scattering the grafted subfolders in among
+        // regular folders by name. enumView currently holds exactly the prepended PW roots,
+        // so their FQNs are the subtree prefixes.
+        var pwRootFqns = enumView
+            .Where(r => r.FullyQualifiedName is not null)
+            .Select(r => r.FullyQualifiedName!)
+            .ToList();
+        bool underPw(Folder f) => f.FullyQualifiedName is not null && pwRootFqns.Any(r =>
+            f.FullyQualifiedName.StartsWith(r + "/", StringComparison.OrdinalIgnoreCase));
+
+        enumView.AddRange(apiFolders.Where(f => f.FeedType == "PersonalWorkspace" || underPw(f)));
         enumView = enumView
             .OrderBy(f => f.FullyQualifiedNameOrderable)
             .ToList();
         enumView.AddRange(apiFolders
-            .Where(f => f.FeedType != "PersonalWorkspace")
+            .Where(f => f.FeedType != "PersonalWorkspace" && !underPw(f))
             .OrderBy(f => f.FullyQualifiedNameOrderable));
 
         return (main, enumView);

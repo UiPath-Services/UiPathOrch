@@ -233,8 +233,27 @@ public partial class OrchProvider
         uint currentDepth = FolderDepth(orchPath);
         string? orchPathStart = orchPath == "" ? null : orchPath + "/";
 
+        var all = folders as IReadOnlyCollection<Folder> ?? folders.ToList();
+
+        // Personal-workspace roots (FolderType "Personal"). Under -Recurse their subtrees are
+        // grouped immediately after the root-level listing — ahead of regular folders' subtrees —
+        // so a personal workspace's (Solution) subfolders follow the root instead of sorting
+        // alphabetically among all parents. This mirrors the non-recurse view, which lists
+        // personal workspaces first (like the Orchestrator web UI).
+        var pwRootFqns = all
+            .Where(f => f.FolderType == "Personal" && f.FullyQualifiedName is not null)
+            .Select(f => f.FullyQualifiedName!)
+            .ToList();
+
+        bool UnderPw(string parentFqn) => pwRootFqns.Any(r =>
+            parentFqn.Equals(r, StringComparison.OrdinalIgnoreCase) ||
+            parentFqn.StartsWith(r + "/", StringComparison.OrdinalIgnoreCase));
+
+        // 0 = root-level (no parent), 1 = under a personal workspace, 2 = every other nested folder.
+        int GroupRank(string parentFqn) => parentFqn.Length == 0 ? 0 : UnderPw(parentFqn) ? 1 : 2;
+
         var matched = new List<Folder>();
-        foreach (var folder in folders)
+        foreach (var folder in all)
         {
             if (orchPathStart is not null &&
                 !folder.FullyQualifiedName!.StartsWith(orchPathStart, StringComparison.OrdinalIgnoreCase))
@@ -247,8 +266,11 @@ public partial class OrchProvider
             }
         }
 
+        // Stable sort: group rank first (root, then PW subtrees, then the rest), then parent path.
+        // Sibling order within one parent stays the catalog sequence (personal workspaces first).
         return matched
-            .OrderBy(f => FqnParent(f.FullyQualifiedName!), StringComparer.OrdinalIgnoreCase)
+            .OrderBy(f => GroupRank(FqnParent(f.FullyQualifiedName!)))
+            .ThenBy(f => FqnParent(f.FullyQualifiedName!), StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
 

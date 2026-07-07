@@ -65,6 +65,30 @@ public class FolderViewOrderingTests
     }
 
     [Fact]
+    public void Enum_view_groups_grafted_pw_subfolders_with_their_workspace()
+    {
+        // A grafted personal-workspace subfolder (FeedType != "PersonalWorkspace" — a Solution
+        // deploy stamps "Processes") must follow its workspace root in the enum view, not sort in
+        // among regular folders by name. That is what makes Get-OrchAsset -Recurse (and the other
+        // -Recurse entity cmdlets, which walk EnumFolders) list a workspace's subfolder assets
+        // right after the workspace instead of scattering them mid-listing.
+        var pw = new List<Folder> { F("MyWS", "MyWS", "FolderHierarchy") };
+        var api = new List<Folder>
+        {
+            F("Alpha", "Alpha", "Standard"),
+            F("Zebra", "Zebra", "Standard"),
+            F("Sol", "MyWS/Sol", "Processes"),          // grafted PW subfolder (NOT PersonalWorkspace feed)
+            F("SolDeep", "MyWS/Sol/Deep", "Processes"),  // deeper grafted PW subfolder
+            F("AlphaChild", "Alpha/Child", "Standard"),
+        };
+
+        var (_, enumView) = OrchDriveInfo.BuildFolderViews(new List<Folder>(pw), new List<Folder>(pw), api);
+
+        // MyWS root + its whole subtree grouped first (FQN order), then everything else sorted.
+        Assert.Equal(new[] { "MyWS", "Sol", "SolDeep", "Alpha", "AlphaChild", "Zebra" }, Names(enumView));
+    }
+
+    [Fact]
     public void Sort_key_is_orderable_not_display_name_or_fqn()
     {
         var api = new List<Folder>
