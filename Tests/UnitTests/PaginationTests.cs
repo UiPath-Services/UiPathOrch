@@ -62,6 +62,26 @@ public class PaginationTests
         Assert.Equal(4, calls.Count);        // ...followed by one empty page to confirm the end
     }
 
+    // Pins the exact customer-reported scenario: the portal group /allocations endpoint began
+    // capping pages at 50 (server-side, ~2026-03), so a group with >50 licensed members was
+    // silently truncated to 50 under stopOnPartialPage:true (its short first page read as the
+    // end). GetPmLicenseGroupAllocations therefore pages with stopOnPartialPage:false: pages of
+    // 50 must accumulate to the full 130 and then confirm the end with one empty page.
+    [Fact]
+    public void AllocationsCap50_returns_all_130_under_empty_page_mode()
+    {
+        var data = Enumerable.Range(0, 130).ToArray();
+        var calls = new List<ulong>();
+        var result = OrchAPISession.Paginate<int>(Server(data, serverCap: 50, calls), 0, ulong.MaxValue, stopOnPartialPage: false).ToList();
+
+        Assert.Equal(data, result);   // 50 + 50 + 30, none dropped
+        Assert.Equal(4, calls.Count); // ...plus one empty page to confirm the end
+
+        // ...and the pre-fix mode (stopOnPartialPage:true) would have truncated to the first 50.
+        var truncated = OrchAPISession.Paginate<int>(Server(data, serverCap: 50), 0, ulong.MaxValue, stopOnPartialPage: true).ToList();
+        Assert.Equal(50, truncated.Count);
+    }
+
     [Fact]
     public void Respects_the_first_limit_mid_page()
     {

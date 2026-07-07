@@ -728,6 +728,44 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
+    // True when the body's first meaningful character is '<' (BOM / whitespace skipped) —
+    // i.e. an HTML document, never a JSON API response (which starts with { [ " digit t f n).
+    internal static bool LooksLikeHtml(string body)
+    {
+        foreach (char c in body)
+        {
+            if (c == (char)0xFEFF || char.IsWhiteSpace(c)) continue; // 0xFEFF = BOM / ZWNBSP
+            return c == '<';
+        }
+        return false;
+    }
+
+    // A portal / identity API path that doesn't exist on this deployment — e.g. an
+    // Automation-Cloud-only Platform Management / licensing endpoint called against an
+    // on-prem Orchestrator — is NOT answered with a 404: the SPA web app serves its
+    // index.html (HTTP 200, Content-Type text/html). Deserializing that as JSON throws a
+    // cryptic "'<' is an invalid start of a value". Detect the HTML page and fail with a
+    // clear, deterministic message instead (cached like a 404 — the endpoint will not
+    // materialize for this connection's lifetime).
+    private static void EnsureNotHtmlFallback(string body)
+    {
+        if (LooksLikeHtml(body))
+        {
+            throw new DeterministicApiException(
+                "This operation is not available on this Orchestrator: the server returned an HTML page "
+                + "instead of JSON. Platform Management / licensing endpoints like this one are available "
+                + "only on Automation Cloud.");
+        }
+    }
+
+    // Deserialize an API JSON response body, first guarding against the SPA index.html that a
+    // portal / identity endpoint absent on this deployment returns (see EnsureNotHtmlFallback).
+    private static T? DeserializeApiJson<T>(string body)
+    {
+        EnsureNotHtmlFallback(body);
+        return JsonSerializer.Deserialize<T>(body);
+    }
+
     // Single offset-paging loop shared by the OData / identity / portal enumerators.
     // `fetchPage(top, skip)` performs one request and returns that page's items (null/empty
     // = no more); `first` caps the total yielded; `startSkip` is the initial offset.
@@ -784,7 +822,7 @@ public partial class OrchAPISession : IDisposable
             using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            return JsonSerializer.Deserialize<HttpBodyValues<T>>(strBody)?.value;
+            return DeserializeApiJson<HttpBodyValues<T>>(strBody)?.value;
         }, skip, first, stopOnPartialPage: true);
 
     // identity uses non-$ "top"/"skip" (see Paginate for the page-size assumption).
@@ -800,13 +838,17 @@ public partial class OrchAPISession : IDisposable
             using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            return JsonSerializer.Deserialize<HttpBodyResults<T>>(strBody)?.results;
+            return DeserializeApiJson<HttpBodyResults<T>>(strBody)?.results;
         }, skip, first, stopOnPartialPage: true);
 
     private static StringContent CreateEmptyContent() => new("", Encoding.UTF8, @"application/json");
 
     // portal uses non-$ "top"/"skip" and requires a (possibly empty) request body.
-    private IEnumerable<T> GetEnumerablePortal<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
+    // stopOnPartialPage defaults true (see Paginate). Pass false for endpoints that cap a
+    // page below the requested top while still holding more — e.g. the group /allocations
+    // endpoint, which the server caps at 50 regardless of top: a first short page there is
+    // NOT the last, so paging must continue on skip until an empty page.
+    private IEnumerable<T> GetEnumerablePortal<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue, bool stopOnPartialPage = true)
         => Paginate<T>((top, pageSkip) =>
         {
             string url = BuildPagedUrl(_base_url_portal, endPoint, top, pageSkip, query, odataStyle: false);
@@ -823,8 +865,8 @@ public partial class OrchAPISession : IDisposable
             using var response = HttpClient_Send(request);
             EnsureSuccessStatusCode(response);
             string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            return JsonSerializer.Deserialize<HttpBodyResults<T>>(strBody)?.results;
-        }, skip, first, stopOnPartialPage: true);
+            return DeserializeApiJson<HttpBodyResults<T>>(strBody)?.results;
+        }, skip, first, stopOnPartialPage);
 
     // No pagination support
     private TColl? GetEnumerableWithoutPagingImpl<TColl>(string baseUrl, string endPoint, Int64? folderId = null, string? query = null)
@@ -845,7 +887,7 @@ public partial class OrchAPISession : IDisposable
         EnsureSuccessStatusCode(response);
 
         string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-        return JsonSerializer.Deserialize<TColl>(strBody);
+        return DeserializeApiJson<TColl>(strBody);
     }
 
     private T[]? GetEnumerableWithoutPaging<T>(string endPoint, Int64? folderId = null, string? query = null)
@@ -908,19 +950,19 @@ public partial class OrchAPISession : IDisposable
             ? HttpRequest(method, endPoint, folderId, strQuery)
             : HttpRequest(method, endPoint, folderId, query);
         if (string.IsNullOrEmpty(body)) return default;
-        return JsonSerializer.Deserialize<T>(body);
+        return DeserializeApiJson<T>(body);
     }
 
     public T? HttpRequestIdentity<T>(HttpMethod method, string endPoint, Int64? folderId = null, object? query = null)
     {
         string body = HttpRequestIdentity(method, endPoint, folderId, query);
-        return JsonSerializer.Deserialize<T>(body);
+        return DeserializeApiJson<T>(body);
     }
 
     public T? HttpRequestPortal<T>(HttpMethod method, string endPoint, Int64? folderId = null, object? query = null)
     {
         string body = HttpRequestPortal(method, endPoint, folderId, query);
-        return JsonSerializer.Deserialize<T>(body);
+        return DeserializeApiJson<T>(body);
     }
 
     // Public hook used by Invoke-OrchApi: send a fully-prepared HttpRequestMessage through
@@ -3509,7 +3551,7 @@ public partial class OrchAPISession : IDisposable
         using var response = HttpClient_Send(request);
         EnsureSuccessStatusCode(response);
         var body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-        return string.IsNullOrEmpty(body) ? default : JsonSerializer.Deserialize<T>(body);
+        return string.IsNullOrEmpty(body) ? default : DeserializeApiJson<T>(body);
     }
 
     // Extracts the JWT `sub` claim, which the Portal API uses as `accountUserId`.
@@ -3591,7 +3633,10 @@ public partial class OrchAPISession : IDisposable
     }
 
     // This is an undocumented API.
-    public IEnumerable<NuLicensedGroupMember> GetPmLicenseGroupAllocations(string? groupId) => GetEnumerablePortal<NuLicensedGroupMember>($"/api/license/accountant/UserLicense/group/{groupId}/allocations");
+    // The server caps this endpoint at 50 results per page regardless of the requested top,
+    // so a first short page is NOT the last one: stopOnPartialPage:false keeps paging on skip
+    // until an empty page (otherwise groups with >50 allocations silently truncate to 50).
+    public IEnumerable<NuLicensedGroupMember> GetPmLicenseGroupAllocations(string? groupId) => GetEnumerablePortal<NuLicensedGroupMember>($"/api/license/accountant/UserLicense/group/{groupId}/allocations", stopOnPartialPage: false);
 
     // This is an undocumented API.
     public UpdateLicensedGroupResponse? PutPmLicenseGroup(UpdateLicensedGroupCommand command) => HttpRequestPortal<UpdateLicensedGroupResponse>(HttpMethod.Put, "/api/license/accountant/UserLicense/group", null, command);
