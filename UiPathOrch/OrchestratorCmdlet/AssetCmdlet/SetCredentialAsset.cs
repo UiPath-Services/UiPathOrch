@@ -319,7 +319,16 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
             if (asset is null)
             {
                 if (string.IsNullOrEmpty(param.CredentialPassword) && string.IsNullOrEmpty(param.ExternalName))
+                {
+                    // Creating a new credential asset requires a secret (password or an
+                    // ExternalName that references a credential store). ExternalName-backed
+                    // assets are excluded by the condition above, so reaching here always
+                    // means an attempt to create a credential with no secret — warn and skip
+                    // rather than silently doing nothing (also surfaces mistyped names in a
+                    // bulk-update CSV, which fall through to this create path).
+                    WriteWarning($"Skipped '{name}': creating a new credential asset requires a password.");
                     return null;
+                }
 
                 isDirty = true;
                 // Create a new asset in memory. Description is intentionally omitted here;

@@ -849,6 +849,36 @@ Describe 'Credential Asset' {
         $a.HasDefaultValue | Should -Be $true
     }
 
+    It 'Set-OrchCredentialAsset warns and skips a new credential given a username but no password' {
+        $newName = "${script:CredName}_NoPass"
+        Set-OrchCredentialAsset -Name $newName -CredentialUsername 'user1' -WarningVariable w -WarningAction SilentlyContinue
+        $w | Should -Not -BeNullOrEmpty
+        ($w -join "`n") | Should -Match 'requires a password'
+        Clear-OrchCache
+        Get-OrchAsset -Name $newName -ErrorAction SilentlyContinue | Should -BeNullOrEmpty
+    }
+
+    It 'Set-OrchCredentialAsset warns and skips a bulk-CSV row for a new name with no password' {
+        # The guard fires regardless of whether a username is supplied. A mistyped or
+        # since-deleted name in a bulk-update CSV falls through to the create path; with
+        # the password masked (empty) it must warn and skip, not silently no-op. Piped
+        # (ValueFromPipelineByPropertyName) so it binds the Plain set, as Import-Csv does.
+        $newName = "${script:CredName}_NoSecret"
+        [pscustomobject]@{ Path = $script:RootFolder; Name = $newName; CredentialUsername = ''; CredentialPassword = '' } |
+            Set-OrchCredentialAsset -WarningVariable w -WarningAction SilentlyContinue
+        $w | Should -Not -BeNullOrEmpty
+        ($w -join "`n") | Should -Match 'requires a password'
+        Clear-OrchCache
+        Get-OrchAsset -Name $newName -ErrorAction SilentlyContinue | Should -BeNullOrEmpty
+    }
+
+    It 'Set-OrchCredentialAsset does not warn when creating a new credential with a password' {
+        Set-OrchCredentialAsset -Name "${script:CredName}_WithPass" -CredentialUsername 'u' -CredentialPassword 'p' -WarningVariable w -WarningAction SilentlyContinue
+        ($w | Where-Object { $_ -match 'requires a password' }) | Should -BeNullOrEmpty
+        Clear-OrchCache
+        (Get-OrchAsset -Name "${script:CredName}_WithPass").CredentialUsername | Should -Be 'u'
+    }
+
     It 'Get-OrchAsset -ExportCredentialCsv exports credential CSV' {
         $csv = Join-Path $script:TempDir 'creds.csv'
         Get-OrchAsset -Name "${script:CredName}_Basic" -ExportCredentialCsv $csv

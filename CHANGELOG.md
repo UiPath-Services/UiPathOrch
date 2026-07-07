@@ -4,6 +4,22 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+#### Assets
+
+- **`Set-OrchCredentialAsset` now warns instead of silently skipping when a new credential
+  asset is requested without a password** — a credential asset cannot exist without a secret
+  (a password, or an `ExternalName` that references a credential store), so a create request
+  that supplies neither used to be dropped with no output at all. It now emits a warning
+  (`Skipped '<name>': creating a new credential asset requires a password.`) and skips the row,
+  which also surfaces a mistyped or since-deleted asset name in a bulk-update CSV — those fall
+  through to the create path with the password column masked (empty). Updating an *existing*
+  credential is unchanged: omitting the password preserves the stored one, and changing the
+  username without a password is still rejected server-side (`errorCode 1500`).
+
 ## [1.11.5] - 2026-07-07
 
 ### Fixed
