@@ -587,12 +587,12 @@ public partial class OrchProvider
             }
 
             // Folder assignment fetch is auth-protected and the same on both
-            // attempts, so fetch once outside the retry loop. Union of both views —
-            // includeInherited=true alone omits directly-assigned robot accounts
-            // (see OrchDriveInfo.GetFolderUsersUnion).
-            var assignedFolderUserIds = dstDrive.GetFolderUsersUnion(newFolder)
-                .Where(ur => ur?.UserEntity?.Id is not null)
-                .Select(ur => ur.UserEntity!.Id!.Value)
+            // attempts, so fetch once outside the retry loop. Include users covered
+            // by assigned DirectoryGroups; asset UserValues are valid for those
+            // accounts even when the account is not directly assigned to the folder.
+            var assignedFolderUserIds = dstDrive.GetFolderAssetUsers(newFolder)
+                .Where(u => u?.Id is not null)
+                .Select(u => u.Id!.Value)
                 .ToHashSet();
 
             // First attempt: try name match, then email fallback against the

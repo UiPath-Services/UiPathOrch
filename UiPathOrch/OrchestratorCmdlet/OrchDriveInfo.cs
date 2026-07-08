@@ -924,6 +924,77 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public List<UserRoles> GetFolderUsersUnion(Folder folder) =>
         UnionFolderUsers(FolderUsersWithInherited.Get(folder), FolderUsersWithNoInherited.Get(folder));
 
+    public List<User> GetFolderAssetUsers(Folder folder)
+    {
+        var tenantUsers = Users.Get()
+            .Where(u => u?.Id is not null)
+            .ToList();
+        var tenantUsersById = tenantUsers
+            .GroupBy(u => u.Id!.Value)
+            .ToDictionary(g => g.Key, g => g.First());
+        var tenantUsersByDirectoryIdentifier = tenantUsers
+            .Where(u => !string.IsNullOrEmpty(u.DirectoryIdentifier))
+            .GroupBy(u => u.DirectoryIdentifier!, StringComparer.OrdinalIgnoreCase)
+            .ToDictionary(g => g.Key, g => g.First(), StringComparer.OrdinalIgnoreCase);
+
+        var ret = new Dictionary<long, User>();
+        var assignedGroups = new List<User>();
+
+        foreach (var userRole in GetFolderUsersUnion(folder))
+        {
+            long? id = userRole?.UserEntity?.Id;
+            if (id is null || !tenantUsersById.TryGetValue(id.Value, out var tenantUser)) continue;
+
+            if (string.Equals(tenantUser.Type, "DirectoryGroup", StringComparison.OrdinalIgnoreCase))
+            {
+                assignedGroups.Add(tenantUser);
+            }
+            else
+            {
+                ret[tenantUser.Id!.Value] = tenantUser;
+            }
+        }
+
+        if (assignedGroups.Count == 0) return ret.Values.ToList();
+
+        try
+        {
+            var pmGroups = PmGroups.Get();
+            foreach (var assignedGroup in assignedGroups)
+            {
+                var group = pmGroups.FirstOrDefault(g =>
+                    string.Equals(g.id, assignedGroup.DirectoryIdentifier, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(g.name, assignedGroup.UserName, StringComparison.OrdinalIgnoreCase) ||
+                    string.Equals(g.displayName, assignedGroup.FullName, StringComparison.OrdinalIgnoreCase));
+                if (group?.id is null) continue;
+
+                var detailedGroup = PmGroups.Get(group.id);
+                foreach (var member in detailedGroup?.members ?? [])
+                {
+                    if (string.Equals(member.objectType, "DirectoryGroup", StringComparison.OrdinalIgnoreCase)) continue;
+                    if (string.IsNullOrEmpty(member.identifier)) continue;
+                    if (!tenantUsersByDirectoryIdentifier.TryGetValue(member.identifier, out var tenantUser)) continue;
+                    if (tenantUser.Id is null || string.Equals(tenantUser.Type, "DirectoryGroup", StringComparison.OrdinalIgnoreCase)) continue;
+
+                    ret[tenantUser.Id.Value] = tenantUser;
+                }
+            }
+        }
+        catch
+        {
+            // Some Orchestrator-only configurations cannot call the Identity group APIs
+            // used by PmGroups. In that case, preserve server-side group semantics by
+            // allowing non-group tenant users through the client-side preflight; the
+            // Orchestrator API remains the final authority for the submitted UserValue.
+            foreach (var tenantUser in tenantUsers.Where(u => !string.Equals(u.Type, "DirectoryGroup", StringComparison.OrdinalIgnoreCase)))
+            {
+                ret[tenantUser.Id!.Value] = tenantUser;
+            }
+        }
+
+        return ret.Values.ToList();
+    }
+
     // Pure merge behind GetFolderUsersUnion, separated for unit testing. Entries without a
     // UserEntity.Id are unusable by every consumer (gates match by Id, completers by the
     // names on the entity) and cannot be deduplicated, so they are skipped.

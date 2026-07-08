@@ -239,18 +239,17 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetFolderUsersUnion(df.folder));
+            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.GetFolderAssetUsers(df.folder));
 
             foreach (var result in results)
             {
-                foreach (var userRoles in result
-                    .Where(u => u.UserEntity!.Type != "DirectoryGroup")
-                    .Where(ur => wp.IsMatch(ur.UserEntity!.UserName))
-                    .ExcludeByWildcards(ur => ur?.UserEntity?.UserName, wpUserName)
-                    .OrderBy(ur => ur.UserEntity!.UserName))
+                foreach (var user in result
+                    .Where(u => wp.IsMatch(u.UserName))
+                    .ExcludeByWildcards(u => u?.UserName, wpUserName)
+                    .OrderBy(u => u.UserName))
                 {
-                    string tiphelp = TipHelp(userRoles);
-                    yield return new CompletionResult(PathTools.EscapePSText(userRoles.UserEntity!.UserName), userRoles.UserEntity!.UserName, CompletionResultType.ParameterValue, tiphelp);
+                    string tiphelp = $"{user.GetPSPath()} ({user.Type})";
+                    yield return new CompletionResult(PathTools.EscapePSText(user.UserName), user.UserName, CompletionResultType.ParameterValue, tiphelp);
                 }
             }
         }
@@ -617,12 +616,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                     // server silently dropped the per-User UserValue AND wiped the asset's
                     // Global Value when the cmdlet PUT the result — see SetAsset.cs MachineName
                     // expansion below for the same pattern and the regression test R9 / R13.
-                    var assignedUserIds = drive.GetFolderUsersUnion(folder)
-                        .Where(ur => ur?.UserEntity?.Id is not null)
-                        .Select(ur => ur.UserEntity!.Id!.Value)
-                        .ToHashSet();
-                    var tenantUsers = drive.Users.Get()
-                        .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
+                    var tenantUsers = drive.GetFolderAssetUsers(folder);
                     // Match both UserName (tenant form) and EmailAddress (canonical)
                     // so Azure AD B2B guests resolve regardless of which form the
                     // caller supplies — see FilterByWildcards multi-selector overload.

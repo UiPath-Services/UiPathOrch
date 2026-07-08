@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+#### Cmdlets
+
+- **Asset per-user values now honor folder access through assigned directory groups.**
+  `Set-OrchAsset`, `Set-OrchCredentialAsset`, `Set-OrchSecretAsset`, and `Copy-OrchAsset`
+  used to require the concrete user or robot account to be assigned directly to the target
+  folder. If the account only had access through an assigned `DirectoryGroup`, the setters
+  rejected `-UserName` as "not assigned" and asset copy dropped the UserValue. The folder-user
+  preflight now expands assigned groups before validating asset UserValues, while keeping the
+  existing server-side protection against users that are genuinely outside the destination folder.
+
 #### Provider
 
 - **Subfolders under a personal workspace are visible again** — `dir` / `cd` / `Get-Item` /
@@ -4850,5 +4860,4 @@ dir Orch1:\ -Recurse | ForEach-Object {
 
 
 ## [0.8.0.0] - 2023-11-03
-
 
