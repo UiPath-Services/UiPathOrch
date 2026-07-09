@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.11.5'
+ModuleVersion = '1.11.6'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,27 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.11.6
+
+Fixed: Per-user asset values now honor folder access granted through an assigned
+directory group or tenant role. Set-OrchAsset, Set-OrchCredentialAsset, Set-OrchSecretAsset
+and Copy-OrchAsset used to require the -UserName account to be directly assigned to the
+target folder, and rejected it as "not assigned" (or dropped the copied per-user value)
+whenever the account only reached the folder through a group or a tenant role. The
+client-side folder-scope check has been removed: the cmdlets now resolve -UserName against
+the tenant user list and let Orchestrator decide, which accepts a per-user value for any
+existing tenant user regardless of direct folder assignment. A directory user who is not
+yet a tenant user still cannot be referenced -- add them to the destination first with
+Add-OrchFolderUser / Copy-OrchFolderUser (as you would copy a package before a process),
+then re-run.
+
+Changed: Set-OrchCredentialAsset now warns instead of silently skipping when a new
+credential asset is requested without a password. A credential asset cannot exist without
+a secret (a password, or an ExternalName that references a credential store), so a create
+request that supplies neither is skipped with a clear warning instead of no output at all,
+which also surfaces a mistyped or since-deleted asset name in a bulk-update CSV. Updating
+an existing credential is unchanged.
+
 1.11.5
 
 Fixed: Get-PmGroupLicense -ExpandAllocation no longer stops at 50 members. The Automation Cloud
