@@ -463,13 +463,11 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
 
                 if (wpUserName is not null)
                 {
-                    // See SetAsset.cs UserName expansion — the same scope-tightening fix.
-                    var assignedUserIds = drive.GetFolderUsersUnion(folder)
-                        .Where(ur => ur?.UserEntity?.Id is not null)
-                        .Select(ur => ur.UserEntity!.Id!.Value)
-                        .ToHashSet();
+                    // See SetAsset.cs UserName expansion — folder-scope authorization is delegated
+                    // to the API (2026-07-09 probes; PR #20). Resolve against the whole tenant user
+                    // list, not the folder-assigned subset.
                     var tenantUsers = drive.Users.Get()
-                        .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
+                        .Where(u => u.Type != "DirectoryGroup" && u.Id is not null);
                     // Match both UserName and EmailAddress; see SetAsset.cs.
                     specifiedUsers = tenantUsers.FilterByWildcardsAny(
                         [u => u?.UserName, u => u?.EmailAddress],
@@ -477,7 +475,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
                     if (!specifiedUsers.Any())
                     {
                         string strUserNames = string.Join(", ", param.UserName!);
-                        Exception e = new($"UserName '{strUserNames}' is not assigned to the folder '{folder.GetPSPath()}'.");
+                        Exception e = new($"UserName '{strUserNames}' was not found among the tenant users of '{drive.NameColon}'. If this is a directory user not yet in the tenant, add them to the destination folder first (e.g.: Add-OrchFolderUser), then retry.");
                         var errorRecord = new ErrorRecord(new OrchException(targetFolder, e), "SetAssetError", ErrorCategory.InvalidOperation, targetFolder);
                         WriteError(errorRecord);
                         continue;

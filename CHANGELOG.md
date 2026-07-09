@@ -20,6 +20,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   credential is unchanged: omitting the password preserves the stored one, and changing the
   username without a password is still rejected server-side (`errorCode 1500`).
 
+### Fixed
+
+#### Assets
+
+- **Per-user asset values now honor folder access through directory groups / tenant roles.**
+  `Set-OrchAsset`, `Set-OrchCredentialAsset`, `Set-OrchSecretAsset` and `Copy-OrchAsset` used to
+  require the `-UserName` account to be **directly** assigned to the target folder — rejecting
+  `-UserName` as "not assigned" (or dropping the copied per-user value) whenever the account only
+  reached the folder through an assigned `DirectoryGroup` or a tenant role. The client-side
+  folder-scope preflight has been removed: the cmdlets now resolve `-UserName` against the tenant
+  user list and let Orchestrator decide. Direct PUT probes against cloud Orchestrator and on-prem
+  22.10.1 confirmed the server accepts a per-user value for any existing tenant user regardless of
+  direct folder assignment, and rejects a genuinely-invalid user atomically (HTTP 400) without the
+  silent value-drop / Global-Value wipe the preflight was originally built to avoid. A directory
+  user who is not yet a tenant user still has no per-user identity to reference; add them to the
+  destination first with `Add-OrchFolderUser` / `Copy-OrchFolderUser` (as you would copy a package
+  before a process), then re-run the asset set/copy.
+
 ## [1.11.5] - 2026-07-07
 
 ### Fixed

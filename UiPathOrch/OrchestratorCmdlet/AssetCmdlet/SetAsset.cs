@@ -611,18 +611,25 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                 // expand UserName
                 if (wpUserName is not null)
                 {
-                    // Restrict the candidate set to users actually assigned to this folder
-                    // (directly or via inheritance) so that asset per-User values cannot
-                    // reference users outside the folder's scope. Without this filter the
-                    // server silently dropped the per-User UserValue AND wiped the asset's
-                    // Global Value when the cmdlet PUT the result — see SetAsset.cs MachineName
-                    // expansion below for the same pattern and the regression test R9 / R13.
-                    var assignedUserIds = drive.GetFolderUsersUnion(folder)
-                        .Where(ur => ur?.UserEntity?.Id is not null)
-                        .Select(ur => ur.UserEntity!.Id!.Value)
-                        .ToHashSet();
+                    // Folder-scope authorization is DELEGATED TO THE ORCHESTRATOR API here:
+                    // resolve -UserName against the whole tenant user list, not a folder-assigned
+                    // subset. Rationale (direct raw-PUT probes on cloud Orch1 and on-prem 22.10.1,
+                    // 2026-07-09): the server accepts a per-User UserValue for ANY existing tenant
+                    // user regardless of folder assignment — incl. group-/tenant-role-reachable
+                    // users, and even a real DirectoryUser with zero access to the target folder
+                    // (PUT -> 200, value persisted, Global Value intact). A non-existent user id is
+                    // rejected with an atomic 400 that leaves the asset UNCHANGED. The old
+                    // GetFolderUsersUnion filter (once kept for R9 / R13) was pure OVER-rejection:
+                    // it blocked group-reachable users the server would accept, guarding an
+                    // R13-era silent drop + Global-wipe that neither tested server exhibits.
+                    // See PR #20. (The MachineName filter below is a SEPARATE axis and stays.)
+                    //
+                    // NB a directory user not yet materialized in the tenant has no integer UserId
+                    // to reference, so they don't resolve here; add them first with
+                    // Add-OrchFolderUser (materialization is that cmdlet's job — like copying a
+                    // package before a process), then retry.
                     var tenantUsers = drive.Users.Get()
-                        .Where(u => u.Type != "DirectoryGroup" && u.Id is not null && assignedUserIds.Contains(u.Id!.Value));
+                        .Where(u => u.Type != "DirectoryGroup" && u.Id is not null);
                     // Match both UserName (tenant form) and EmailAddress (canonical)
                     // so Azure AD B2B guests resolve regardless of which form the
                     // caller supplies — see FilterByWildcards multi-selector overload.
@@ -632,7 +639,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                     if (!specifiedUsers.Any())
                     {
                         string strUserNames = string.Join(", ", param.UserName!);
-                        Exception e = new Exception($"UserName '{strUserNames}' is not assigned to the folder '{folder.GetPSPath()}'.");
+                        Exception e = new Exception($"UserName '{strUserNames}' was not found among the tenant users of '{drive.NameColon}'. If this is a directory user not yet in the tenant, add them to the destination folder first (e.g.: Add-OrchFolderUser), then retry.");
                         var errorRecord = new ErrorRecord(new OrchException(targetFolder, e), "SetAssetError", ErrorCategory.InvalidOperation, targetFolder);
                         WriteError(errorRecord);
                         continue;

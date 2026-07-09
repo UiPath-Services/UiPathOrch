@@ -26,7 +26,7 @@ public class DropWarningBudgetTests
     public void UnderThreshold_AllWarningsForwardedVerbatim()
     {
         var host = new CapturingHost();
-        var budget = new DropWarningBudget(host, "Orch1:\\Src", "Orch1:\\Dst", threshold: 3);
+        var budget = new DropWarningBudget(host, null, "Orch1:\\Src", "Orch1:\\Dst", threshold: 3);
 
         budget.Warn("user 'u1'", "drop-1");
         budget.Warn("user 'u2'", "drop-2");
@@ -39,7 +39,7 @@ public class DropWarningBudgetTests
     public void ExactlyThreshold_NoSummary()
     {
         var host = new CapturingHost();
-        var budget = new DropWarningBudget(host, "s", "d", threshold: 2);
+        var budget = new DropWarningBudget(host, null, "s", "d", threshold: 2);
 
         budget.Warn("user 'a'", "a");
         budget.Warn("user 'b'", "b");
@@ -52,7 +52,7 @@ public class DropWarningBudgetTests
     public void OverThreshold_EmitsSingleBulkSummaryThenSuppresses()
     {
         var host = new CapturingHost();
-        var budget = new DropWarningBudget(host, "Orch1:\\Src", "Orch1:\\Dst", threshold: 3);
+        var budget = new DropWarningBudget(host, null, "Orch1:\\Src", "Orch1:\\Dst", threshold: 3);
 
         for (int i = 1; i <= 7; i++)
         {
@@ -73,7 +73,7 @@ public class DropWarningBudgetTests
     public void Summary_DoublesSingleQuotesInPaths_ForCopyPasteSafety()
     {
         var host = new CapturingHost();
-        var budget = new DropWarningBudget(host, "Orch1:\\O'Brien", "Orch1:\\D'Ept", threshold: 1);
+        var budget = new DropWarningBudget(host, null, "Orch1:\\O'Brien", "Orch1:\\D'Ept", threshold: 1);
 
         budget.Warn("user 'a'", "d1");
         budget.Warn("user 'b'", "d2"); // crosses the threshold, emits the summary
@@ -87,7 +87,7 @@ public class DropWarningBudgetTests
     public void WriteSummary_NoDrops_EmitsNothing()
     {
         var host = new CapturingHost();
-        var budget = new DropWarningBudget(host, "s", "d", threshold: 3);
+        var budget = new DropWarningBudget(host, null, "s", "d", threshold: 3);
 
         budget.WriteSummary();
 
@@ -98,7 +98,7 @@ public class DropWarningBudgetTests
     public void WriteSummary_ListsDistinctOwners_IncludingThrottledOnes()
     {
         var host = new CapturingHost();
-        var budget = new DropWarningBudget(host, "Orch1:\\Src", "Orch1:\\Dst", threshold: 2);
+        var budget = new DropWarningBudget(host, null, "Orch1:\\Src", "Orch1:\\Dst", threshold: 2);
 
         // 5 drops over 3 distinct owners; drops 3..5 are past the threshold, so
         // "machine 'm1'" never appears in a per-value warning — only the summary names it.
@@ -121,7 +121,7 @@ public class DropWarningBudgetTests
     public void WriteSummary_CollapsesOwnersBeyondLimitIntoMoreTail()
     {
         var host = new CapturingHost();
-        var budget = new DropWarningBudget(host, "s", "d", threshold: 1);
+        var budget = new DropWarningBudget(host, null, "s", "d", threshold: 1);
 
         for (int i = 1; i <= 25; i++)
         {

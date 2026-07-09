@@ -759,7 +759,7 @@ public partial class OrchProvider
         // One budget shared across every asset in this folder so that copying many assets that
         // all reference the same unassigned users / machines collapses into a few warnings plus a
         // single bulk-remediation hint instead of flooding the warning stream.
-        var dropBudget = new DropWarningBudget(_this, srcFolder.GetPSPath(), newFolder.GetPSPath(), DropWarningThreshold);
+        var dropBudget = new DropWarningBudget(_this, dstDrive, srcFolder.GetPSPath(), newFolder.GetPSPath(), DropWarningThreshold);
 
         int index = 0;
         foreach (var asset in srcAssets.OrderBy(a => a.Name))
@@ -1006,6 +1006,16 @@ public partial class OrchProvider
             // Decided to clear the cache in each Copy-OrchXxx. Not doing it here.
             // When copying folders, the destination new folder's cache is empty anyway.
             //dstDrive._dicAssets?.TryRemove(newFolder.Id.Value!, out _);
+        }
+        catch (HttpResponseException hre) when (hre.StatusCode == System.Net.HttpStatusCode.BadRequest)
+        {
+            // The server rejected the whole PUT atomically — it leaves the asset unchanged (see
+            // the EMPIRICAL note in SetAsset.cs). This is the path a per-user value hits when the
+            // destination genuinely rejects a referenced user: the API is the authority and does
+            // not say WHICH user, and the write is all-or-nothing, so we cannot retry selectively.
+            // Warn and skip THIS asset so a batch migration is never aborted (R16) — including
+            // under $ErrorActionPreference='Stop', where a WriteError would terminate the run.
+            _this.WriteWarning($"{msg}: skipped — the destination rejected the request ({hre.Message}). If it carries a per-user value for a user the destination does not accept, add the user first (e.g.: Copy-OrchFolderUser -Path {PsLiteral(srcFolder.GetPSPath())} * -Destination {PsLiteral(newFolder.GetPSPath())}), then re-copy.");
         }
         catch (Exception ex)
         {
@@ -2007,16 +2017,19 @@ public partial class OrchProvider
     internal sealed class DropWarningBudget
     {
         private readonly IWritableHost _host;
+        private readonly OrchDriveInfo? _dstDrive;
         private readonly string _srcPath;
         private readonly string _dstPath;
         private readonly int _threshold;
         private readonly HashSet<string> _owners = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _droppedUserNames = new(StringComparer.OrdinalIgnoreCase);
         private int _count;
         private bool _summarized;
 
-        public DropWarningBudget(IWritableHost host, string srcPath, string dstPath, int threshold)
+        public DropWarningBudget(IWritableHost host, OrchDriveInfo? dstDrive, string srcPath, string dstPath, int threshold)
         {
             _host = host;
+            _dstDrive = dstDrive;
             _srcPath = srcPath;
             _dstPath = dstPath;
             _threshold = threshold;
@@ -2038,6 +2051,14 @@ public partial class OrchProvider
             }
         }
 
+        // Records the bare destination user name behind a dropped per-user value so the
+        // end-of-batch summary can bulk-resolve them against the directory and tell
+        // "exists in the directory, just not a tenant user yet" apart from "no such user".
+        public void NoteDroppedUserName(string? userName)
+        {
+            if (!string.IsNullOrEmpty(userName)) _droppedUserNames.Add(userName!);
+        }
+
         // Maximum number of distinct owners spelled out in the end-of-copy summary before the
         // rest collapse into a "+N more" tail.
         private const int SummaryOwnerLimit = 20;
@@ -2051,6 +2072,40 @@ public partial class OrchProvider
             var listed = _owners.OrderBy(o => o, StringComparer.OrdinalIgnoreCase).Take(SummaryOwnerLimit).ToList();
             string more = _owners.Count > SummaryOwnerLimit ? $", ... (+{_owners.Count - SummaryOwnerLimit} more)" : "";
             _host.WriteWarning($"Summary: {_count} per-user value(s) were dropped copying assets from '{_srcPath}' to '{_dstPath}'. Unresolved owner(s): {string.Join(", ", listed)}{more}. Assets whose values all dropped and that have no global default value were skipped entirely. Ensure these users / machines exist in the destination tenant and are assigned to '{_dstPath}' (e.g.: Copy-OrchFolderUser / Copy-OrchFolderMachine, with -UserMappingCsv if names differ), then re-run the asset copy.");
+
+            // Best-effort directory diagnostic: one bulk resolve classifies the dropped USER
+            // names into "in the destination directory but not a tenant user yet" (bring them
+            // over, then re-copy) vs "not found in the directory at all" (a typo, a removed
+            // account, or a name that only exists in the source). Identity may be unavailable
+            // (Orchestrator-only / older builds), so any failure just skips this refinement.
+            if (_droppedUserNames.Count == 0 || _dstDrive is null) return;
+            try
+            {
+                var pgid = _dstDrive.GetPartitionGlobalId();
+                if (string.IsNullOrEmpty(pgid)) return;
+                var resolved = _dstDrive.OrchAPISession.PmBulkResolveByName(pgid!, "User", _droppedUserNames);
+                var found = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                foreach (var kv in resolved)
+                {
+                    if (!string.IsNullOrEmpty(kv.Key)) found.Add(kv.Key);
+                    if (!string.IsNullOrEmpty(kv.Value?.name)) found.Add(kv.Value!.name!);
+                    if (!string.IsNullOrEmpty(kv.Value?.email)) found.Add(kv.Value!.email!);
+                }
+                var inDir = _droppedUserNames.Where(found.Contains).OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
+                var notInDir = _droppedUserNames.Where(n => !found.Contains(n)).OrderBy(n => n, StringComparer.OrdinalIgnoreCase).ToList();
+                if (inDir.Count > 0)
+                {
+                    _host.WriteWarning($"  -> In the destination directory but not tenant users yet (add them, then re-copy, e.g.: Copy-OrchFolderUser -Path {PsLiteral(_srcPath)} * -Destination {PsLiteral(_dstPath)}): {string.Join(", ", inDir)}.");
+                }
+                if (notInDir.Count > 0)
+                {
+                    _host.WriteWarning($"  -> NOT found in the destination directory (check for a typo, a removed account, or a name that only exists in the source): {string.Join(", ", notInDir)}.");
+                }
+            }
+            catch
+            {
+                // Directory lookup unavailable — the generic summary above still stands.
+            }
         }
     }
 }

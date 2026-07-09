@@ -2812,18 +2812,19 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         $err.Exception.Message | Should -Match 'Valid values are'
     }
 
-    It 'R13: Set-OrchAsset -UserName for an unassigned tenant user errors out without corrupting the asset' {
-        # Same critical bug pattern as R9, but on the User axis instead of Machine.
-        # Pre-fix: -UserName candidate set was drive.GetUsers() (entire tenant). A user that
-        # exists in the tenant but is NOT assigned to the folder PUT through with a per-User
-        # UserValue → server returned 200 → server silently dropped the UserValue AND wiped
-        # the asset's Global Value. Verified against Orch1 directly.
-        # Post-fix: candidate set intersects with drive.FolderUsersWithInherited.Get(folder).
+    It 'R13: Set-OrchAsset -UserName for a folder-unassigned tenant user now succeeds (delegated to the API)' {
+        # PR #20: the client-side folder-scope preflight was REMOVED. A user that exists in the
+        # tenant but is NOT directly assigned to the folder used to be rejected as "not assigned"
+        # (the old R13 assertion). Direct PUT probes on cloud Orchestrator and on-prem 22.10.1
+        # showed the server accepts a per-User value for any existing tenant user regardless of
+        # folder assignment (200, value persisted, Global Value intact), so the cmdlet now
+        # delegates the decision. This test pins the new behaviour: the per-User value is set and
+        # the Global default is preserved.
         $assigned = @(Get-OrchFolderUser -Path $script:RootFolder -ErrorAction SilentlyContinue |
             ForEach-Object { $_.UserEntity.UserName })
-        $allTenant = @(Get-OrchUser -Path "${script:Drive}:\" -ErrorAction SilentlyContinue |
-            Where-Object Type -ne 'DirectoryGroup' | Select-Object -ExpandProperty UserName)
-        $unassigned = $allTenant | Where-Object { $_ -and $_ -notin $assigned } | Select-Object -First 1
+        $unassigned = Get-OrchUser -Path "${script:Drive}:\" -ErrorAction SilentlyContinue |
+            Where-Object { $_.Type -ne 'DirectoryGroup' -and $_.Id -and $_.UserName -and $_.UserName -notin $assigned } |
+            Select-Object -First 1
         if (-not $unassigned) {
             Set-ItResult -Skipped -Because 'no tenant user is unassigned to the test folder; cannot exercise the path'
             return
@@ -2835,37 +2836,36 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
             Clear-OrchCache
             $before = Get-OrchAsset -Name $name
             $before.Value | Should -Be 'init_value'
-            $before.ValueScope | Should -Be 'Global'
             $before.HasDefaultValue | Should -Be $true
 
-            $err = $null
-            try {
-                Set-OrchAsset -Name $name -ValueType Text -Value 'peruser_X' -UserName $unassigned -ErrorAction Stop
-            } catch { $err = $_ }
-            $err | Should -Not -BeNullOrEmpty -Because "user '$unassigned' is not assigned to '$($script:RootFolder)' so the cmdlet must reject it"
-            $err.Exception.Message | Should -Match 'is not assigned to the folder'
+            # No longer rejected: the per-user value is accepted for the folder-unassigned user.
+            { Set-OrchAsset -Name $name -ValueType Text -Value 'peruser_X' -UserName $unassigned.UserName -ErrorAction Stop } |
+                Should -Not -Throw -Because 'the API accepts a per-user value for any existing tenant user; the cmdlet no longer pre-rejects folder-unassigned users'
 
             Clear-OrchCache
             $after = Get-OrchAsset -Name $name
-            $after.Value           | Should -Be $before.Value           -Because 'asset Value must NOT be wiped by a failed Set-OrchAsset (pre-fix bug erased Value silently)'
-            $after.ValueScope      | Should -Be $before.ValueScope      -Because 'asset ValueScope must NOT flip to PerRobot on a failed Set-OrchAsset'
-            $after.HasDefaultValue | Should -Be $before.HasDefaultValue -Because 'HasDefaultValue must NOT flip to false on a failed Set-OrchAsset'
+            $after.Value           | Should -Be 'init_value' -Because 'the Global value must be preserved'
+            $after.HasDefaultValue | Should -Be $true        -Because 'the Global default must be preserved'
+            ($after.UserValues | Where-Object UserId -eq $unassigned.Id).Value |
+                Should -Be 'peruser_X' -Because 'the per-user value for the folder-unassigned tenant user is now persisted'
         } finally {
             Remove-OrchAsset -Name $name -Confirm:$false -ErrorAction SilentlyContinue
         }
     }
 
-    It 'R14: Set-OrchSecretAsset -MachineName / -UserName scope tightening' {
-        # Smoke that the same scope-tightening fix is in place for SetSecretAsset; the
-        # R9 / R13 corruption-property guards are exercised on SetAsset, this just confirms
-        # the parallel cmdlets reject the call up front.
+    It 'R14: Set-OrchSecretAsset scope — machine still gated, user delegated to the API' {
+        # SetSecretAsset mirrors SetAsset: the MACHINE folder-scope preflight is UNCHANGED (an
+        # unassigned machine is still rejected up front), while the USER folder-scope preflight
+        # was REMOVED (PR #20) — a per-User value for a folder-unassigned tenant user is now
+        # accepted (delegated to the API) rather than rejected.
         $assignedM = @(Get-OrchFolderMachine -Path $script:RootFolder -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
         $allTenantM = @(Get-OrchMachine -Path "${script:Drive}:\" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
         $unassignedM = $allTenantM | Where-Object { $_ -and $_ -notin $assignedM } | Select-Object -First 1
 
         $assignedU = @(Get-OrchFolderUser -Path $script:RootFolder -ErrorAction SilentlyContinue | ForEach-Object { $_.UserEntity.UserName })
-        $allTenantU = @(Get-OrchUser -Path "${script:Drive}:\" -ErrorAction SilentlyContinue | Where-Object Type -ne 'DirectoryGroup' | Select-Object -ExpandProperty UserName)
-        $unassignedU = $allTenantU | Where-Object { $_ -and $_ -notin $assignedU } | Select-Object -First 1
+        $unassignedU = Get-OrchUser -Path "${script:Drive}:\" -ErrorAction SilentlyContinue |
+            Where-Object { $_.Type -ne 'DirectoryGroup' -and $_.Id -and $_.UserName -and $_.UserName -notin $assignedU } |
+            Select-Object -First 1
 
         if (-not $unassignedM -and -not $unassignedU) {
             Set-ItResult -Skipped -Because 'no unassigned machine or user available'
@@ -2880,30 +2880,26 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
             if ($unassignedM) {
                 $err = $null
                 try { Set-OrchSecretAsset -Name $name -SecretValue 's' -MachineName $unassignedM -ErrorAction Stop } catch { $err = $_ }
-                $err | Should -Not -BeNullOrEmpty
+                $err | Should -Not -BeNullOrEmpty -Because 'the machine folder-scope preflight is unchanged'
                 $err.Exception.Message | Should -Match 'MachineName.*is not assigned to the folder'
             }
             if ($unassignedU) {
-                $err = $null
-                try { Set-OrchSecretAsset -Name $name -SecretValue 's' -UserName $unassignedU -ErrorAction Stop } catch { $err = $_ }
-                $err | Should -Not -BeNullOrEmpty
-                $err.Exception.Message | Should -Match 'UserName.*is not assigned to the folder'
+                # User axis is now delegated to the API: a per-user secret value for a
+                # folder-unassigned tenant user succeeds instead of being rejected up front.
+                { Set-OrchSecretAsset -Name $name -SecretValue 's' -UserName $unassignedU.UserName -ErrorAction Stop } |
+                    Should -Not -Throw -Because 'the user folder-scope preflight was removed in PR #20'
             }
         } finally {
             Remove-OrchAsset -Name $name -Confirm:$false -ErrorAction SilentlyContinue
         }
     }
 
-    It 'R15: Copy-OrchAsset drops UserValues for users not assigned to destination folder (no silent corruption)' {
-        # The same scope-tightening fix applied to Set-OrchAsset also exists in
-        # CopyItem.FindDstUser, which previously resolved -UserName via dstDrive.GetUsers()
-        # tenant-wide (mirroring the SetAsset bug). When CopyAssets carried over a per-User
-        # UserValue and the resolved user was not assigned to the destination folder, the
-        # POST returned 200 but the server silently dropped the UserValue — same silent
-        # corruption family as R9 / R13.
-        # FindDstUser now intersects with FolderUsersWithInherited(dstFolder) and emits
-        # WriteWarning + returns null when not found, mirroring FindDstMachine. The caller
-        # then drops just that UserValue, not the whole asset.
+    It 'R15: Copy-OrchAsset copies a per-user value for a tenant user not assigned to the destination folder' {
+        # PR #20 REMOVED the folder-scope drop in CopyItem.FindDstUser. Previously a per-User
+        # UserValue whose (tenant) user was not directly assigned to the destination folder was
+        # dropped client-side. The server accepts such a value for any existing tenant user
+        # (verified by direct PUT probes on cloud + on-prem 22.10.1), so the copy now PERSISTS it
+        # and the Global default is unaffected.
         #
         # Test setup needs a destination folder where TestUserA has NO access (neither
         # direct nor inherited). The fixture's CopyFolder is a child of RootFolder, so
@@ -2934,16 +2930,17 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
             $src.Value | Should -Be 'global_value' -Because 'sanity: source has Global value'
             ($src.UserValues | Measure-Object).Count | Should -BeGreaterOrEqual 1 -Because 'sanity: source has at least one per-User UserValue'
 
-            # Copy to the sibling. FindDstUser must WriteWarning and drop the per-User
-            # UserValue rather than passing it through and corrupting the destination asset.
+            # Copy to the sibling. FindDstUser resolves TestUserA (a tenant user) and includes
+            # the per-User value; the server accepts it even though TestUserA is not assigned here.
             Copy-OrchAsset -Name $name -Path $script:RootFolder -Destination $siblingFolder -WarningAction SilentlyContinue
             Clear-OrchCache
 
             $dst = Get-OrchAsset -Name $name -Path $siblingFolder
-            $dst | Should -Not -BeNullOrEmpty -Because 'copy must succeed; only the unassigned UserValue should be dropped, not the asset itself'
-            $dst.Value | Should -Be 'global_value' -Because 'Global value must survive the copy (pre-fix bug could erase it)'
-            $dst.HasDefaultValue | Should -Be $true -Because 'HasDefaultValue must NOT flip to false when all per-User UserValues were dropped'
-            ($dst.UserValues | Measure-Object).Count | Should -Be 0 -Because 'TestUserA is not assigned to the sibling folder so the per-User UserValue is dropped'
+            $dst | Should -Not -BeNullOrEmpty -Because 'copy must succeed'
+            $dst.Value | Should -Be 'global_value' -Because 'Global value must survive the copy'
+            $dst.HasDefaultValue | Should -Be $true
+            ($dst.UserValues | Where-Object UserId -eq $script:TestUserAId).Value |
+                Should -Be 'user_value' -Because 'the per-user value now persists even though TestUserA is not assigned to the destination folder (delegated to the API)'
         } finally {
             # Remove children explicitly first; OrchProvider's Remove-Item -Recurse on a
             # folder with asset children can still emit an interactive Y/N prompt (the
@@ -2957,7 +2954,7 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         }
     }
 
-    It 'R16: Copy-OrchAsset emits Warning (not Error) for missing dst resources, even under $ErrorActionPreference=Stop' {
+    It 'R16: Copy-OrchAsset batch under $ErrorActionPreference=Stop persists per-user values without aborting' {
         # Companion to R15. When Copy-OrchAsset cannot map a referenced user /
         # machine / etc. to the destination folder, the cmdlet should warn and
         # skip just the affected piece — never abort the whole batch. This
@@ -2965,15 +2962,12 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         # only partially overlap, and especially under
         # $ErrorActionPreference='Stop' where any WriteError would terminate.
         #
-        # Three guarantees verified together:
-        #   (a) An asset that has a Global default plus a per-User value for
-        #       an unmappable user is still copied — the Global value survives
-        #       and the unmappable per-User entry is dropped with a Warning.
-        #   (b) An asset whose only value is per-User for an unmappable user
-        #       (no Global default) is skipped with a Warning — there is
-        #       nothing to POST.
-        #   (c) Under $ErrorActionPreference='Stop' the batch still processes
-        #       every source asset; no terminating exception is raised.
+        # Post-PR#20 (TestUserA is a tenant user not assigned to the sibling; the server accepts
+        # their per-user value). Three guarantees verified together:
+        #   (a) An asset with a Global default plus a per-User value keeps BOTH after the copy.
+        #   (b) An asset whose only value is that per-User value is still copied (not skipped).
+        #   (c) Under $ErrorActionPreference='Stop' the batch processes every source asset with
+        #       no terminating exception and no error.
         $assetGlobal = "${script:Prefix}Reg_R16_Global"
         $assetUserOnly = "${script:Prefix}Reg_R16_UserOnly"
         $siblingFolder = "${script:Drive}:\${script:Prefix}Reg_R16_Sibling"
@@ -3019,21 +3013,22 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
                 $ErrorActionPreference = $saved
             }
 
-            $caught | Should -BeNullOrEmpty -Because '$ErrorActionPreference=Stop must NOT terminate the batch when only Warnings fire'
-            ($errors | Measure-Object).Count | Should -Be 0 -Because 'missing-resource paths must emit Warning, not Error'
-            ($warnings | Measure-Object).Count | Should -BeGreaterOrEqual 2 -Because 'at least one Warning per missing-user lookup, plus the "no applicable per-user values" Warning'
+            $caught | Should -BeNullOrEmpty -Because '$ErrorActionPreference=Stop must NOT terminate the batch'
+            ($errors | Measure-Object).Count | Should -Be 0 -Because 'accepting a per-user value for a folder-unassigned tenant user is not an error'
 
             Clear-OrchCache
 
-            # === (a) Asset with Global default survives ===
+            # === (a) Asset with Global default keeps BOTH values ===
             $dstGlobal = Get-OrchAsset -Name $assetGlobal -Path $siblingFolder
-            $dstGlobal | Should -Not -BeNullOrEmpty -Because 'asset with Global default must be POSTed even when its per-User UserValue is unmappable'
+            $dstGlobal | Should -Not -BeNullOrEmpty
             $dstGlobal.Value | Should -Be 'global_default'
-            ($dstGlobal.UserValues | Measure-Object).Count | Should -Be 0 -Because 'unassigned per-User UserValue must be dropped'
+            ($dstGlobal.UserValues | Where-Object UserId -eq $script:TestUserAId).Value |
+                Should -Be 'user_value' -Because 'the per-user value now persists (delegated to the API)'
 
-            # === (b) per-User-only asset is skipped (Warning, no POST) ===
+            # === (b) per-User-only asset is now copied (not skipped) ===
             $dstUserOnly = Get-OrchAsset -Name $assetUserOnly -Path $siblingFolder -ErrorAction SilentlyContinue
-            $dstUserOnly | Should -BeNullOrEmpty -Because 'per-User-only asset with no mappable user and no Global default must be skipped (Warning), not POSTed'
+            $dstUserOnly | Should -Not -BeNullOrEmpty -Because 'the per-user value is accepted, so the asset is copied rather than skipped'
+            ($dstUserOnly.UserValues | Where-Object UserId -eq $script:TestUserAId).Value | Should -Be 'user_only_value'
         } finally {
             Remove-OrchAsset -Name "${script:Prefix}Reg_R16_*" -Path $script:RootFolder -Confirm:$false -ErrorAction SilentlyContinue
             Remove-OrchAsset -Name "${script:Prefix}Reg_R16_*" -Path $siblingFolder -Confirm:$false -ErrorAction SilentlyContinue
@@ -3041,15 +3036,10 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         }
     }
 
-    It 'R18: Copy-OrchAsset -WhatIf warns about per-user values that would be dropped, without copying' {
-        # Companion to R15. The real copy already warns + drops a per-User UserValue
-        # whose user is not assigned to the destination folder. -WhatIf must surface
-        # the SAME "... is not assigned in '<dst>'." warning so the operator sees the
-        # loss before committing — yet must NOT actually create the asset.
-        #
-        # Setup mirrors R15: a top-level sibling folder where TestUserA has no access
-        # (neither direct nor inherited), and a source asset carrying a per-User value
-        # for TestUserA.
+    It 'R18: Copy-OrchAsset -WhatIf previews without creating the asset' {
+        # Post-PR#20: a per-user value for a folder-unassigned tenant user now PERSISTS (it is no
+        # longer dropped client-side), so -WhatIf has no per-user drop to warn about. The core
+        # -WhatIf guarantee remains: it must only preview — no asset may be created.
         $name = "${script:Prefix}Reg_WhatIfDrop"
         $siblingFolder = "${script:Drive}:\${script:Prefix}Reg_WhatIfSibling"
         try {
@@ -3057,35 +3047,15 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
             $null = mkdir $siblingFolder -ErrorAction Stop
             Clear-OrchCache
 
-            $siblingUsers = @(Get-OrchFolderUser -Path $siblingFolder -ErrorAction SilentlyContinue |
-                ForEach-Object { $_.UserEntity.UserName })
-            if ($siblingUsers -contains $script:TestUserA) {
-                Set-ItResult -Skipped -Because "TestUserA ($script:TestUserA) is unexpectedly present in the sibling folder; cannot exercise the unassigned path"
-                return
-            }
-
             # Source asset in RootFolder with Global value + per-User UserValue for TestUserA.
             Set-OrchAsset -Name $name -ValueType Text -Value 'global_value' -Path $script:RootFolder | Out-Null
             Set-OrchAsset -Name $name -ValueType Text -Value 'user_value' -UserName $script:TestUserA -Path $script:RootFolder | Out-Null
             Clear-OrchCache
 
-            $src = Get-OrchAsset -Name $name -Path $script:RootFolder
-            ($src.UserValues | Measure-Object).Count | Should -BeGreaterOrEqual 1 -Because 'sanity: source has at least one per-User UserValue'
-
-            # === -WhatIf: must warn, must NOT copy ===
-            $warnings = $null
+            # -WhatIf must NOT create anything in the destination.
             Copy-OrchAsset -Name $name -Path $script:RootFolder -Destination $siblingFolder `
-                -WhatIf -WarningVariable warnings -WarningAction SilentlyContinue
+                -WhatIf -WarningAction SilentlyContinue
             Clear-OrchCache
-
-            $dropWarn = $warnings | Where-Object { $_ -match "is not assigned in" }
-            ($dropWarn | Measure-Object).Count |
-                Should -BeGreaterOrEqual 1 -Because '-WhatIf must surface the per-user drop the real copy would warn about'
-            # Warning must state the value is dropped and show the concrete remediation cmdlet.
-            ($dropWarn | Where-Object { $_ -match "is dropped" }) |
-                Should -Not -BeNullOrEmpty -Because 'the warning must say the value is dropped'
-            ($dropWarn | Where-Object { $_ -match "Copy-OrchFolderUser -Path" }) |
-                Should -Not -BeNullOrEmpty -Because 'the warning must show the Copy-OrchFolderUser remediation example'
 
             $dst = Get-OrchAsset -Name $name -Path $siblingFolder -ErrorAction SilentlyContinue
             $dst | Should -BeNullOrEmpty -Because '-WhatIf must only preview — no asset may be created in the destination'

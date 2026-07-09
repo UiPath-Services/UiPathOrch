@@ -514,15 +514,19 @@ public partial class OrchProvider
     // Lets the IO wrapper emit the right warning per case without re-checking.
     internal enum FindDstUserResult
     {
-        Found,                  // dstUser is non-null AND assigned to the target folder
-        NotFound,               // no matching user in dstUsers (by name or email)
-        NotAssignedToFolder,    // matched a user but they're not on newFolder's assigned-users list
+        Found,      // dstUser resolved by name or email (folder-scope authz is the API's job)
+        NotFound,   // no matching user in dstUsers (by name or email)
     }
 
-    // Pure name-resolution + folder-assignment check. Extracted from FindDstUser
-    // so the matching policy is unit-testable without standing up a real
-    // OrchDriveInfo / OrchAPISession / AuthManager. The IO wrapper below does
-    // the cache fetch / cache-clear retry / warning emission.
+    // Pure name-resolution. Extracted from FindDstUser so the matching policy is
+    // unit-testable without standing up a real OrchDriveInfo / OrchAPISession /
+    // AuthManager. The IO wrapper below does the cache fetch / cache-clear retry /
+    // warning emission.
+    //
+    // Folder-scope authorization is NO LONGER checked here: it is delegated to the
+    // Orchestrator API, which accepts a per-user value for any existing tenant user
+    // regardless of folder assignment (see EMPIRICAL note in SetAsset.cs / PR #20).
+    // This resolver only maps src -> dst user by name/email (+ UserMappingCsv).
     //
     // Matching order (preserved from the original implementation):
     //   1. UserMappingCsv lookup -- if userMapping[srcUser.UserName] exists
@@ -531,14 +535,10 @@ public partial class OrchProvider
     //   2. Case-insensitive UserName match against dstUsers.
     //   3. Case-insensitive UserName-equals-srcUser.EmailAddress match
     //      against dstUsers (only when allowEmailFallback is true).
-    //   4. If a user is found, verify their Id is in assignedFolderUserIds;
-    //      if not, return (user, NotAssignedToFolder) -- the caller should
-    //      treat the user as unusable on this folder.
     internal static (Entities.User? user, FindDstUserResult result) ResolveDstUserPure(
         Entities.User srcUser,
         IEnumerable<Entities.User> dstUsers,
         Dictionary<string, string>? userMapping,
-        HashSet<long> assignedFolderUserIds,
         bool allowEmailFallback = true)
     {
         string searchName = srcUser.UserName ?? "";
@@ -560,10 +560,10 @@ public partial class OrchProvider
 
         if (dstUser is null) return (null, FindDstUserResult.NotFound);
 
-        if (dstUser.Id is null || !assignedFolderUserIds.Contains(dstUser.Id.Value))
-        {
-            return (dstUser, FindDstUserResult.NotAssignedToFolder);
-        }
+        // A matched user with no Id cannot be referenced in a per-user value (the
+        // UserValue is keyed by integer UserId), so treat it as unresolved rather
+        // than handing back an unusable user.
+        if (dstUser.Id is null) return (null, FindDstUserResult.NotFound);
 
         return (dstUser, FindDstUserResult.Found);
     }
@@ -586,19 +586,12 @@ public partial class OrchProvider
                 return null;
             }
 
-            // Folder assignment fetch is auth-protected and the same on both
-            // attempts, so fetch once outside the retry loop. Union of both views —
-            // includeInherited=true alone omits directly-assigned robot accounts
-            // (see OrchDriveInfo.GetFolderUsersUnion).
-            var assignedFolderUserIds = dstDrive.GetFolderUsersUnion(newFolder)
-                .Where(ur => ur?.UserEntity?.Id is not null)
-                .Select(ur => ur.UserEntity!.Id!.Value)
-                .ToHashSet();
-
             // First attempt: try name match, then email fallback against the
-            // currently-cached dstUsers list.
+            // currently-cached dstUsers list. Folder-scope authorization is delegated
+            // to the API (see ResolveDstUserPure / PR #20), so there is no folder-user
+            // fetch here anymore — any resolved tenant user is a valid target.
             var (dstUser, result) = ResolveDstUserPure(
-                srcUser, dstDrive.Users.Get(), userMapping, assignedFolderUserIds,
+                srcUser, dstDrive.Users.Get(), userMapping,
                 allowEmailFallback: true);
 
             // Retry once after clearing the tenant user cache. This handles the
@@ -612,7 +605,7 @@ public partial class OrchProvider
             {
                 dstDrive.Users.ClearCache();
                 (dstUser, result) = ResolveDstUserPure(
-                    srcUser, dstDrive.Users.Get(), userMapping, assignedFolderUserIds,
+                    srcUser, dstDrive.Users.Get(), userMapping,
                     allowEmailFallback: true);
             }
 
@@ -628,25 +621,21 @@ public partial class OrchProvider
             switch (result)
             {
                 case FindDstUserResult.NotFound:
-                    // Routed through the budget too: during an asset copy the same missing
-                    // user repeats for every asset that references them, and the summary
-                    // should list not-found owners alongside not-assigned ones.
-                    WarnDrop(_this, budget, $"user '{searchName}'", $"{msg}: {dstDrive.NameColon} does not have user with Name = '{searchName}'.");
-                    return null;
-
-                case FindDstUserResult.NotAssignedToFolder:
                     {
-                        // Without this check, the cmdlet would PUT a per-Robot UserValue
-                        // with a UserId that the destination folder doesn't own; the
-                        // server returns 200 but silently drops the UserValue (and can
-                        // wipe the asset's Global Value as a side effect).
-                        // The e.g. hint filters the SOURCE folder, so it must use the source
-                        // user name — searchName may already be the CSV-mapped destination
-                        // name. When a mapping renamed the user, the folder-user copy needs
-                        // the same CSV to resolve the destination side.
+                        // The dst user could not be resolved by name or email. Either they
+                        // don't exist in the destination at all, OR they exist in the directory
+                        // but were never materialized as a tenant user (e.g. an AD user never
+                        // assigned to a folder there) — in both cases there is no integer UserId
+                        // to reference, so the value is dropped. Bring the user over first, like
+                        // copying a package before a process. The e.g. hint filters the SOURCE
+                        // folder, so it uses the source user name — searchName may already be the
+                        // CSV-mapped destination name, and a renamed user needs the same CSV on
+                        // the folder-user copy. The end-of-batch DropWarningBudget summary refines
+                        // "doesn't exist" vs "exists in directory, not yet in tenant" in bulk.
+                        budget?.NoteDroppedUserName(searchName);
                         string mappingHint = string.Compare(searchName, srcUser.UserName, StringComparison.OrdinalIgnoreCase) == 0
                             ? "" : " -UserMappingCsv <your-mapping.csv>";
-                        WarnDrop(_this, budget, $"user '{searchName}'", $"{msg}: the per-user value for user '{searchName}' is dropped because the user is not assigned in '{newFolder.GetPSPath()}'. To keep it, copy the assignment from the source folder, e.g.: Copy-OrchFolderUser -Path {PsLiteral(srcFolder.GetPSPath())} -UserName {PsLiteral(srcUser.UserName ?? "")} -Destination {PsLiteral(newFolder.GetPSPath())}{mappingHint}");
+                        WarnDrop(_this, budget, $"user '{searchName}'", $"{msg}: the per-user value for user '{searchName}' is dropped because {dstDrive.NameColon} has no tenant user matching that name. To keep it, add the user to the destination first, e.g.: Copy-OrchFolderUser -Path {PsLiteral(srcFolder.GetPSPath())} -UserName {PsLiteral(srcUser.UserName ?? "")} -Destination {PsLiteral(newFolder.GetPSPath())}{mappingHint}");
                         return null;
                     }
 
