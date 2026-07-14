@@ -248,23 +248,20 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
         basePath ??= string.Empty;
 
         char sep = System.IO.Path.DirectorySeparatorChar;
-        string result;
+        string? result;
 
         // FileSystemProvider relativizes by STRING PREFIX (NormalizeRelativePathHelper compares the
         // path and base, both ended with a separator), not via the base NavigationCmdletProvider's
-        // GetParentPath parent-walk. That walk breaks at the DRIVE ROOT: a top-level item's
-        // GetParentPath returns "Orch1:\" (with a trailing separator — required so PSParentPath and
-        // the `dir` "Directory:" header read "Orch1:\"), which never string-equals the walk's trimmed
-        // base "Orch1:", so it fails to relativize and returns the full "Orch1:\Autopilot" — which the
-        // tab completer then renders as ".\Orch1:\Autopilot". Mirror FileSystemProvider for the
-        // drive-root base (relative path = the whole orch path); every other base path already
-        // relativizes correctly through the base (nested -> child, self/sibling -> "..\leaf").
-        if (!string.IsNullOrEmpty(path) && !string.IsNullOrEmpty(basePath) &&
-            PSDriveInfo is OrchDriveInfo && OrchDriveInfo.PSPathToOrchPath(basePath).Length == 0)
-        {
-            result = OrchDriveInfo.PSPathToOrchPath(path).Replace('/', sep);
-        }
-        else
+        // GetParentPath parent-walk — that walk breaks at the DRIVE ROOT against our re-rooted
+        // parent. PathTools.RelativizeFromDriveRoot is that string-prefix case, shared with the
+        // DU/TM shadow providers (which regressed once by taking the re-rooting without it); it
+        // returns null for every other base path, which already relativizes correctly through the
+        // base (nested -> child, self/sibling -> "..\leaf").
+        result = PSDriveInfo is OrchDriveInfo
+            ? PathTools.RelativizeFromDriveRoot(path, basePath)
+            : null;
+
+        if (result is null)
         {
             result = base.NormalizeRelativePath(path, basePath);
             if (result.StartsWith(sep) && result.Length > 1)

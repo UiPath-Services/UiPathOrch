@@ -129,9 +129,24 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
                 nameof(path));
         }
 
-        string result = base.NormalizeRelativePath(path, basePath);
-        if (result.StartsWith(System.IO.Path.DirectorySeparatorChar) && result.Length > 1)
-            result = result[1..];
+        // The engine passes a NULL basePath in some contexts even though the inherited signature
+        // types it as non-nullable; the base NavigationCmdletProvider defends with the same `??=`.
+        basePath ??= string.Empty;
+
+        char sep = System.IO.Path.DirectorySeparatorChar;
+
+        // Relativize against the drive root by string prefix — the base provider's parent-walk
+        // cannot, because we re-root the parent of a top-level item (see PathTools). On a flat
+        // provider every item is a single segment under the root, so the drive-relative path IS
+        // the relative path. Null = not the drive-root case; the base handles it.
+        string? result = PathTools.RelativizeFromDriveRoot(path, basePath);
+
+        if (result is null)
+        {
+            result = base.NormalizeRelativePath(path, basePath);
+            if (result.StartsWith(sep) && result.Length > 1)
+                result = result[1..];
+        }
 
         // Canonicalize the single-segment project name's casing from cache. Passive read — it
         // must NOT trigger a fetch (this runs on every path op, including tab completion).

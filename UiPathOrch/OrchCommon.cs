@@ -108,6 +108,30 @@ public static class PathTools
             ? parentPath + Path.DirectorySeparatorChar
             : parentPath;
 
+    // The drive-root half of NormalizeRelativePath, shared by OrchProvider and the DU/TM shadow
+    // providers. Returns the relative path when `basePath` IS the drive root, else null to mean
+    // "not my case — fall through to the base NavigationCmdletProvider".
+    //
+    // This is the mandatory counterpart to ParentPathWithDriveRoot above. The base provider
+    // relativizes by walking up GetParentPath and comparing against the base; that walk compares
+    // against the TRIMMED base ("Orch1:"), while our GetParentPath deliberately returns the ROOTED
+    // "Orch1:\" — so the walk never matches, gives up, and hands back the path unrelativized. Tab
+    // completion then renders the result as ".\Orch1:\Autopilot" instead of ".\Autopilot".
+    // FileSystemProvider avoids the whole problem by relativizing on a string prefix; do the same.
+    //
+    // Any provider that adopts ParentPathWithDriveRoot MUST also call this, or its relative paths
+    // (hence its tab completion) break. Keeping both halves here is what stops the pair from
+    // drifting apart again — the shadow providers once took the re-rooting without this.
+    public static string? RelativizeFromDriveRoot(string? path, string? basePath)
+    {
+        if (string.IsNullOrEmpty(path) || string.IsNullOrEmpty(basePath)) return null;
+
+        // Not the drive root (a nested base) — the base provider's walk handles it correctly.
+        if (OrchDriveInfo.PSPathToOrchPath(basePath).Length != 0) return null;
+
+        return OrchDriveInfo.PSPathToOrchPath(path).Replace('/', Path.DirectorySeparatorChar);
+    }
+
     // Normalize Rename-Item's -NewName, matching the FileSystem provider. PowerShell passes the raw
     // argument straight to RenameItem; tab completion commonly yields ".\Foo" (which would otherwise
     // be stored verbatim, so `ren .\Shared .\Shared2` would name the folder ".\Shared2"). Strip a

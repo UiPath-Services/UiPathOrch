@@ -4,6 +4,23 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+#### Providers
+
+- **Tab completion on a Document Understanding or Test Manager drive offered unusable paths.**
+  `cd `<kbd>Ctrl+Space</kbd> at `Orch1Du:\` completed to `.\Orch1Du:\MyProject` (a `.\` prefix
+  glued onto the full drive-qualified path) instead of `.\MyProject`. The DU/TM providers adopted
+  `GetParentPath`'s drive-root re-rooting (`Orch1Du:` -> `Orch1Du:\`, which `PSParentPath` and the
+  `dir` "Directory:" header need) without the relativization that has to accompany it: the base
+  `NavigationCmdletProvider` relativizes by walking up parents and comparing against the *trimmed*
+  base `Orch1Du:`, never matches the re-rooted parent, and gives up — handing back the path
+  unrelativized. `OrchProvider` already carried the compensating string-prefix branch; that logic
+  now lives in one shared place (`PathTools.RelativizeFromDriveRoot`) that all three providers call,
+  so the halves cannot drift apart again.
+
 ## [1.11.6] - 2026-07-09
 
 ### Changed
