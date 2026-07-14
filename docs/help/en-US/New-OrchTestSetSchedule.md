@@ -252,6 +252,27 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -CalendarName
+
+Specifies the name of the calendar to associate with the schedule. Supports wildcards. Tab completion dynamically suggests available calendar names.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -WhatIf
 
 Runs the command in a mode that only reports what would happen without performing the actions.

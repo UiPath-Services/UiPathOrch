@@ -63,6 +63,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   a unit test (`FunctionCompleterAttributeTests`) checks every completer named by a shipped function
   against the assembly so this cannot happen again.
 
+#### Help
+
+- **`New-PmRobotAccount` / `Set-PmRobotAccount` help documented a `-UserName` parameter that does
+  not exist and omitted the real one, `-Name`** (`UserName` is an alias of it). Also filled in four
+  parameters that were missing from their help entirely: `-Recurse` and `-Depth` on
+  `Add-OrchAssetLink`, `-OrderDescending` on `Get-OrchUserSession` (whose `-OrderBy` still claimed
+  results are always ascending), and `-CalendarName` on `New-OrchTestSetSchedule`.
+  `PlatyPS\Test-Help.ps1` now validates cleanly across all 321 files.
+
+- **`PlatyPS\Test-Help.ps1` no longer demands help for `DontShow` parameters.** They are hidden from
+  help and tab completion on purpose (the deprecated `GroupName0..GroupName9` CSV columns
+  `New-`/`Set-PmRobotAccount` still accept), but PowerShell still lists them, so the validator
+  reported all ten of them, per cmdlet, as undocumented. They are now neutral: documenting one is
+  fine, and so is not documenting one.
+
 #### Providers
 
 - **Tab completion on a Document Understanding or Test Manager drive offered unusable paths.**

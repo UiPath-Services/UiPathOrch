@@ -20,14 +20,14 @@ Creates a new robot account in a UiPath organization, erroring if one with the n
 ### ConsoleInput (Default)
 
 ```
-New-PmRobotAccount [-Path <string[]>] [-LiteralPath <string[]>] [-UserName] <string[]> [[-GroupName] <string[]>]
+New-PmRobotAccount [-Path <string[]>] [-LiteralPath <string[]>] [-Name] <string[]> [[-GroupName] <string[]>]
  [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ### CsvInput
 
 ```
-New-PmRobotAccount [-Path <string[]>] [-LiteralPath <string[]>] -UserName <string[]> [-GroupName <string[]>]
+New-PmRobotAccount [-Path <string[]>] [-LiteralPath <string[]>] -Name <string[]> [-GroupName <string[]>]
  [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
@@ -41,7 +41,7 @@ For create-or-update (update the account if it exists, create it if it doesn't),
 
 `New-PmRobotAccount` shares all parameters and the create path with `Set-PmRobotAccount`; only the already-exists case differs. The optional `-GroupName` sets the new account's initial group memberships (a new account starts empty, so this is unambiguous). `Get-PmRobotAccount -ExportCsv` writes a single comma-separated `GroupName` column that imports straight back through `-GroupName`.
 
-The -UserName and -GroupName parameters support wildcards. The -Path parameter supports tab completion.
+The -Name and -GroupName parameters support wildcards. The -Path parameter supports tab completion. `-Name` has a `UserName` alias, which is the column an exported CSV carries (see the -Name parameter).
 
 Primary Endpoint: POST /api/RobotAccount (Identity Server)
 
@@ -57,7 +57,7 @@ Required permissions: (managed by Identity Server)
 PS Orch1:\> New-PmRobotAccount MyRobot1
 ```
 
-Creates a robot account named "MyRobot1" with no group membership. Because -UserName is positional (position 0), the parameter name can be omitted.
+Creates a robot account named "MyRobot1" with no group membership. Because -Name is positional (position 0), the parameter name can be omitted.
 
 ### Example 2: Create a robot account with initial group membership
 
@@ -129,15 +129,18 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -UserName
+### -Name
 
 Specifies the name(s) of the robot account(s) to create. Supports wildcards. In the ConsoleInput parameter set, this is a positional parameter at position 0.
+
+`-Name` matches the entity's own field and the other robot-account cmdlets (`Get-PmRobotAccount`, `Remove-PmRobotAccount`), so `Get-PmRobotAccount | Set-PmRobotAccount` binds by object. The `UserName` alias exists because a robot account is surfaced as a *principal* — "UserName" — wherever it acts as one: the `UserName` column of `Get-PmRobotAccount -ExportCsv`, and the `-UserName` parameter of the identity cmdlets (`Add-PmGroupMember`, the license cmdlets). The alias is what lets one exported CSV both import here and feed those cmdlets.
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: true
-Aliases: []
+Aliases:
+- UserName
 ParameterSets:
 - Name: ConsoleInput
   Position: 0

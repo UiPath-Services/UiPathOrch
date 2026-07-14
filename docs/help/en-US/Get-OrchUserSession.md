@@ -166,11 +166,32 @@ HelpMessage: ''
 
 ### -OrderBy
 
-Specifies the field to sort the returned sessions by. Tab completion suggests available orderable fields. Results are sorted in ascending order.
+Specifies the field(s) to sort the returned sessions by. Tab completion suggests the orderable fields. Sorting is ascending unless -OrderDescending is specified.
 
 ```yaml
 Type: System.String[]
 DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -OrderDescending
+
+Sorts descending instead of ascending. Applies to every field named by -OrderBy; it has no effect on its own. Ascending is the default because the orderable session fields are categorical (User, Domain, Hostname, Type, Version).
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:

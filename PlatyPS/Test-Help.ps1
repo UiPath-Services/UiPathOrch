@@ -116,9 +116,20 @@ foreach ($f in $files) {
     $cmdParams = $cmd.Parameters.Keys | Where-Object { $_ -notin $commonParams } | Sort-Object
     $mdParams  = $help.Parameters.Name | Where-Object { $_ -notin @('WhatIf', 'Confirm') } | Sort-Object
 
+    # A DontShow parameter is deliberately kept out of help and tab completion -- e.g. the
+    # deprecated GroupName0..GroupName9 columns New-/Set-PmRobotAccount still accept so that CSVs
+    # exported by older versions keep importing. PowerShell still lists them in .Parameters, so
+    # they are treated as NEUTRAL: documenting one is fine, and not documenting one is fine.
+    # Requiring them would demand help for exactly the parameters the cmdlet hides; forbidding them
+    # would flag the ones that are documented today.
+    $dontShow = $cmdParams | Where-Object {
+        $cmd.Parameters[$_].Attributes |
+            Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] -and $_.DontShow }
+    }
+
     # Check for missing/extra parameters
     foreach ($p in $cmdParams) {
-        if ($p -notin $mdParams) {
+        if ($p -notin $mdParams -and $p -notin $dontShow) {
             $issues.Add([PSCustomObject]@{ File = $f.Name; Issue = "Missing param: $p" })
         }
     }
