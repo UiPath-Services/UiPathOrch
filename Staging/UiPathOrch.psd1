@@ -527,6 +527,20 @@ well as by tab completion, so a template pasted from the swagger docs runs as wr
 {projectId} the context cannot supply is refused with the -Path that would supply it rather
 than sent as a literal.
 
+Fixed: Get-PmGroupLicense -ExportCsv produced a CSV that could not be re-imported. A dangling
+license allocation -- a group deleted from the directory that still holds a bundle -- comes back
+with an empty name, and was exported as a row with an empty GroupName, which Add-PmGroupLicense
+then refused ("Cannot bind argument to parameter 'GroupName' because it is an empty string"). One
+such allocation broke the whole export/import round trip. Orphans are now left out of the export,
+as they already were for users; Get-PmGroupLicense still emits them as objects.
+
+Fixed: New-PSDrive -PSProvider UiPathOrchDu / UiPathOrchTm crashed with an InvalidCastException,
+so the configuration file was the only way a Document Understanding or Test Manager drive could
+exist. The provider now builds its typed drive from the one the engine passes. A DU/TM drive also
+links to its parent Orchestrator drive regardless of which provider PowerShell initialized first
+(the parent is resolved by name on first use), and a drive whose parent is genuinely absent now
+reports that instead of throwing a NullReferenceException.
+
 Fixed: Enable-OrchUserAttended, Disable-OrchUserAttended, Enable-OrchPersonalWorkspace and
 Disable-OrchPersonalWorkspace could not be invoked at all -- every call failed with "Multiple
 ambiguous overloads found for .ctor", their -UserName / -Path tab completion fell back to

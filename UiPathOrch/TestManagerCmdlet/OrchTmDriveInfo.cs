@@ -31,51 +31,20 @@ public class OrchTmDriveInfo : OrchDriveInfoBase
     private OrchDriveInfo? _parentDrive;
     internal OrchDriveInfo ParentDrive
     {
-        get => _parentDrive!;
-        set
+        // Resolved by NAME on first USE, not at mount. Each provider mounts its own drives from the
+        // config file and the order PowerShell initializes the providers in is not ours to control:
+        // the TM provider can come up before UiPathOrch, when the parent does not exist yet. Linking
+        // eagerly there would leave this drive permanently parentless — which is why it is resolved
+        // lazily instead, and correct under either order (see ResolveParentDriveByName).
+        get
         {
-            _parentDrive = value ?? throw new ArgumentNullException(nameof(value));
+            if (_parentDrive is not null) return _parentDrive;
 
-            #region initialize test entity caches
-
-            // Caches need to be initialized after ParentDrive is set.
-            // TmProjects is per-tenant — Path/FullName stamping in the
-            // initializer is safe (no cross-drive sharing).
-            TmProjects = new(this, OrchAPISession.GetTmProjects, e =>
-            {
-                e.Path = NameColonSeparator;
-                e.FullName = NameColonSeparator + e.projectPrefix;
-            });
-
-            TmServerInformation = new(this, OrchAPISession.GetTmServerInfo, e => e.Path = NameColonSeparator);
-            TmConfiguration = new(this, OrchAPISession.GetTmConfiguration, e => e.Path = NameColonSeparator);
-            TmProjectSetting = new(this, project => OrchAPISession.GetTmProjectSettings(project.id!),
-                (e, project) =>
-                {
-                    e.Path = NameColonSeparator + e.projectPrefix;
-                });
-
-            TmTestCases = new(this, project => OrchAPISession.GetTmTestCases(project.id!), (e, project) => e.Path = project.GetPSPath());
-            TmTestSets = new(this, project => OrchAPISession.GetTmTestSets(project.id!), (e, project) => e.Path = project.GetPSPath());
-            TmTestExecutions = new(this, project => OrchAPISession.GetTmTestExecutions(project.id!), (e, project) => e.Path = project.GetPSPath());
-            TmRequirements = new(this, project => OrchAPISession.GetTmRequirements(project.id!), (e, project) => e.Path = project.GetPSPath());
-
-            TmProjectPermissions = new(this, project => OrchAPISession.GetTmProjectPermission(project.id!),
-                (e, project) =>
-                {
-                    e.Path = project.GetPSPath();
-                    e.Project = project.name;
-                    e.PathProject = e.Path + '\\' + e.Project;
-                });
-
-            // Incremental cache
-            TmTestExecutionResults = new(this,
-                OrchAPISession.GetTmTestExecutionsResult,
-                e => e.id,
-                (e, project) => e.Path = project.GetPSPath());
-
-            #endregion
+            var parent = ResolveParentDriveByName("Tm") ?? throw NoParentDriveException("Tm");
+            _parentDrive = parent;
+            return parent;
         }
+        set => _parentDrive = value ?? throw new ArgumentNullException(nameof(value));
     }
 
     internal override OrchAPISession OrchAPISession => ParentDrive.OrchAPISession;
@@ -86,10 +55,55 @@ public class OrchTmDriveInfo : OrchDriveInfoBase
     // OrchDriveInfoBase. The base implementation of ClearAllCache iterates
     // _allTenantCache and _allFolderCache, which is all Tm needs.
 
-    // At the time this constructor runs, NameColonSeparator is not yet available
     public OrchTmDriveInfo(ProviderInfo provider, string driveName, string description, string root) :
         base(driveName, provider, driveName + ':' + Path.DirectorySeparatorChar, description, null, root)
     {
+        #region initialize test entity caches
+
+        // The caches are built HERE, not when ParentDrive is assigned. Every getter below reaches
+        // the parent through a DEFERRED lambda (OrchAPISession / NameColonSeparator are evaluated
+        // when the cache actually fetches), so none of them needs the parent to exist yet — and
+        // building them at mount is what makes this drive usable no matter which provider PowerShell
+        // initialized first. Note the lambdas: a method group (OrchAPISession.GetTmProjects) would
+        // bind its target NOW and defeat the whole point. Passing `this` registers each cache in
+        // _allTenantCache, so ClearAllCache keeps finding all of them.
+
+        // TmProjects is per-tenant — Path/FullName stamping in the initializer is safe
+        // (no cross-drive sharing).
+        TmProjects = new(this, () => OrchAPISession.GetTmProjects(), e =>
+        {
+            e.Path = NameColonSeparator;
+            e.FullName = NameColonSeparator + e.projectPrefix;
+        });
+
+        TmServerInformation = new(this, () => OrchAPISession.GetTmServerInfo(), e => e.Path = NameColonSeparator);
+        TmConfiguration = new(this, () => OrchAPISession.GetTmConfiguration(), e => e.Path = NameColonSeparator);
+        TmProjectSetting = new(this, project => OrchAPISession.GetTmProjectSettings(project.id!),
+            (e, project) =>
+            {
+                e.Path = NameColonSeparator + e.projectPrefix;
+            });
+
+        TmTestCases = new(this, project => OrchAPISession.GetTmTestCases(project.id!), (e, project) => e.Path = project.GetPSPath());
+        TmTestSets = new(this, project => OrchAPISession.GetTmTestSets(project.id!), (e, project) => e.Path = project.GetPSPath());
+        TmTestExecutions = new(this, project => OrchAPISession.GetTmTestExecutions(project.id!), (e, project) => e.Path = project.GetPSPath());
+        TmRequirements = new(this, project => OrchAPISession.GetTmRequirements(project.id!), (e, project) => e.Path = project.GetPSPath());
+
+        TmProjectPermissions = new(this, project => OrchAPISession.GetTmProjectPermission(project.id!),
+            (e, project) =>
+            {
+                e.Path = project.GetPSPath();
+                e.Project = project.name;
+                e.PathProject = e.Path + '\\' + e.Project;
+            });
+
+        // Incremental cache
+        TmTestExecutionResults = new(this,
+            (project, ids) => OrchAPISession.GetTmTestExecutionsResult(project, ids),
+            e => e.id,
+            (e, project) => e.Path = project.GetPSPath());
+
+        #endregion
     }
 
     // Backward-compat thin wrapper for callers that still spell the legacy

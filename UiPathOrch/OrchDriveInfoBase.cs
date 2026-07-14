@@ -64,6 +64,53 @@ public abstract class OrchDriveInfoBase : PSDriveInfo
     // because PartitionGlobalId was doing the fetch.
     internal abstract string? GetPartitionGlobalId();
 
+    // Resolves the parent Orchestrator drive of a shadow (DU / TM) drive by name: this drive's
+    // name minus its 2-char suffix, so "Orch1Du" -> "Orch1".
+    //
+    // It is deliberately LAZY, and the shadow drives call it from their ParentDrive getter.
+    // Each provider mounts its own default drives from the config file, and the ORDER in which
+    // PowerShell initializes the providers is not ours to control: the DU provider can come up
+    // before UiPathOrch, in which case the parent does not exist yet at the moment the DU drive is
+    // created. Linking eagerly there would leave the drive permanently parentless (and unusable),
+    // or -- worse -- make mounting it fail outright, depending on which provider happened to load
+    // first. Resolving on first USE instead is correct under either order, because by the time any
+    // cmdlet touches the drive every provider has finished initializing.
+    //
+    // Returns null when no such drive is mounted; the caller decides how to report that.
+    private protected OrchDriveInfo? ResolveParentDriveByName(string driveSuffix)
+    {
+        if (Name.Length <= driveSuffix.Length ||
+            !Name.EndsWith(driveSuffix, StringComparison.OrdinalIgnoreCase))
+        {
+            return null;
+        }
+
+        string parentName = Name[..^driveSuffix.Length];
+
+        // Drive.Get throws (rather than returning null) on an unknown name.
+        try { return OrchDriveInfo.SessionState?.Drive.Get(parentName) as OrchDriveInfo; }
+        catch { return null; }
+    }
+
+    // The exception a shadow drive raises when its parent cannot be resolved on first use. The
+    // drive is a view onto the parent -- auth, base URLs, partition and every cache come from it --
+    // so there is nothing useful the drive can do without one. Two distinct causes, and the message
+    // says which: the name doesn't follow the convention at all, or it does and the parent isn't
+    // mounted. (Naming a drive off-convention must NOT produce a made-up parent name in the text.)
+    private protected InvalidOperationException NoParentDriveException(string driveSuffix)
+    {
+        bool named = Name.Length > driveSuffix.Length &&
+                     Name.EndsWith(driveSuffix, StringComparison.OrdinalIgnoreCase);
+
+        string detail = named
+            ? $"'{Name[..^driveSuffix.Length]}:' is not mounted. Run Import-OrchConfig, or mount it first."
+            : $"'{Name}:' does not follow that convention — name it '<orchestrator drive>{driveSuffix}'.";
+
+        return new InvalidOperationException(
+            $"'{Name}:' has no parent UiPathOrch drive. A {driveSuffix} drive is a view onto an Orchestrator " +
+            $"drive and is named after it with the '{driveSuffix}' suffix, so {detail}");
+    }
+
     // Auth-state probe that never triggers a token request. True iff the
     // AuthManager already holds an access token from a prior cmdlet (or from
     // a static AccessToken specified at drive creation that's been promoted

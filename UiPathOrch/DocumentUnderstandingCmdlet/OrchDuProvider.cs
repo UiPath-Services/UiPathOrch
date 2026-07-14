@@ -14,18 +14,10 @@ namespace UiPath.PowerShell.Core;
 [OutputType(typeof(DuProject), ProviderCmdlet = ProviderCmdlet.GetItem)]
 public class OrchDuProvider : OrchShadowProviderBase<OrchDuDriveInfo, DuProject>
 {
-    protected OrchDriveInfo OrchDriveInfo => ((OrchDuDriveInfo)this.PSDriveInfo).ParentDrive;
-    protected OrchDuDriveInfo OrchDuDriveInfo => (OrchDuDriveInfo)this.PSDriveInfo;
-
-    protected OrchDuDriveInfo? GetOrchDuDriveInfo(string path)
-    {
-        if (OrchDriveInfo is not null)
-        {
-            return OrchDuDriveInfo;
-        }
-        string driveName = OrchDriveInfo.ExtractDriveName(path);
-        return SessionState.Drive.Get(driveName) as OrchDuDriveInfo;
-    }
+    // (A drive accessor used to live here, casting this.PSDriveInfo unconditionally. PSDriveInfo is
+    // the ENGINE's plain PSDriveInfo while a drive is being created, so New-PSDrive -PSProvider
+    // UiPathOrchDu died on that cast. The base class's null-safe ResolveShadowDrive(path) -- which
+    // falls back to resolving the drive from the path -- is what every operation uses now.)
 
     // ----- per-provider hooks -------------------------------------------------
 
@@ -41,8 +33,6 @@ public class OrchDuProvider : OrchShadowProviderBase<OrchDuDriveInfo, DuProject>
 
     protected override OrchDuDriveInfo CreateShadowDrive(ProviderInfo provider, string name, string description, string root)
         => new(provider, name, description, root);
-
-    protected override void LinkParentDrive(OrchDuDriveInfo drive, OrchDriveInfo parent) => drive.ParentDrive = parent;
 
     protected override string BuildBrowseUrl(OrchDuDriveInfo drive, DuProject? project)
     {
@@ -84,7 +74,7 @@ public class OrchDuProvider : OrchShadowProviderBase<OrchDuDriveInfo, DuProject>
     {
         if (ShouldProcess(path, "New Project"))
         {
-            var drive = GetOrchDuDriveInfo(path);
+            var drive = ResolveShadowDrive(path);
             if (drive is null) return;
 
             var dynamicParameters = DynamicParameters as NewItem_DynamicParameters;

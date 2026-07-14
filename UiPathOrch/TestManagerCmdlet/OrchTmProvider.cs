@@ -27,8 +27,6 @@ public class OrchTmProvider : OrchShadowProviderBase<OrchTmDriveInfo, TmProject>
     protected override OrchTmDriveInfo CreateShadowDrive(ProviderInfo provider, string name, string description, string root)
         => new(provider, name, description, root);
 
-    protected override void LinkParentDrive(OrchTmDriveInfo drive, OrchDriveInfo parent) => drive.ParentDrive = parent;
-
     protected override string BuildBrowseUrl(OrchTmDriveInfo drive, TmProject? project)
     {
         string endpoint = drive.OrchAPISession._base_url + "/testmanager_/";

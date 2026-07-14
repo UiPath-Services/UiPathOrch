@@ -46,8 +46,10 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
     protected abstract string RootSuffix { get; }      // "du_" / "testmanager_"
     protected abstract string DriveSuffix { get; }     // "Du" / "Tm"
 
+    // The parent Orchestrator drive is NOT linked here. It is resolved by name on first use
+    // (OrchDriveInfoBase.ResolveParentDriveByName) precisely because provider initialization order
+    // is not controllable -- see NewDrive.
     protected abstract TDrive CreateShadowDrive(ProviderInfo provider, string name, string description, string root);
-    protected abstract void LinkParentDrive(TDrive drive, OrchDriveInfo parent);
 
     // Web URL opened by Invoke-Item (browse the project), and the project-delete API call.
     protected abstract string BuildBrowseUrl(TDrive drive, TProject? project);
@@ -209,23 +211,30 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
 
     protected override PSDriveInfo NewDrive(PSDriveInfo drive)
     {
-        var shadowDrive = (TDrive)drive;
+        // InitializeDefaultDrives builds the typed drive itself and hands it back here. But
+        // `New-PSDrive -PSProvider UiPathOrchDu` comes through the ENGINE, which has no way to
+        // construct our type and passes a plain PSDriveInfo -- and casting that threw
+        // InvalidCastException, so the config file was the only way a DU/TM drive could ever
+        // exist. Build the typed drive from the engine's, as OrchProvider does for its own.
+        var shadowDrive = drive as TDrive
+            ?? CreateShadowDrive(drive.Provider, drive.Name, drive.Description ?? "", EnsureServiceRoot(drive.Root));
 
-        // Depending on the provider class loading order, the UiPathOrch provider may not be
-        // registered yet at this point. By linking the parent drive in every shadow provider's
-        // NewDrive, we ensure UiPathOrch and the shadow drive are reliably associated.
-        try
-        {
-            // Strip the 2-char drive suffix ("Du"/"Tm") to find the parent Orchestrator drive.
-            var orchDrive = SessionState.Drive.Get(drive.Name.Substring(0, drive.Name.Length - 2)) as OrchDriveInfo;
-            LinkParentDrive(shadowDrive, orchDrive!);
-        }
-        catch (Exception ex)
-        {
-            System.Diagnostics.Debug.WriteLine($"{DriveSuffix} drive parent linking failed for '{drive.Name}': {ex.Message}");
-        }
+        // The parent is NOT required here. Each provider mounts its own default drives and the
+        // order PowerShell initializes the providers in is not ours to control, so the parent
+        // Orchestrator drive may not exist yet at this moment -- refusing to mount, or mounting a
+        // permanently parentless drive, would make DU/TM drives come and go with the load order.
+        // The drives resolve their parent lazily on first use instead (OrchDuDriveInfo.ParentDrive
+        // -> OrchDriveInfoBase.ResolveParentDriveByName), which is correct under either order.
+        return shadowDrive;
+    }
 
-        return drive;
+    // The gateway routes a shadow service by a segment under the tenant root ("/du_", "/testmanager_"),
+    // which InitializeDefaultDrives appends to the configured root. Do the same for a root typed at
+    // New-PSDrive, so both entry points build the same drive whether or not the caller spelled it.
+    private string EnsureServiceRoot(string? root)
+    {
+        string r = (root ?? "").TrimEnd('/');
+        return r.EndsWith("/" + RootSuffix, StringComparison.OrdinalIgnoreCase) ? r : r + "/" + RootSuffix;
     }
 
     // ----- ItemCmdletProvider overrides ---------------------------------------

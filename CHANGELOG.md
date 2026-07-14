@@ -63,6 +63,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   a unit test (`FunctionCompleterAttributeTests`) checks every completer named by a shipped function
   against the assembly so this cannot happen again.
 
+#### Licensing
+
+- **`Get-PmGroupLicense -ExportCsv` produced a CSV that could not be re-imported.** A dangling
+  license allocation — a group deleted from the directory that still holds a bundle — comes back
+  with an empty name and `orphan = true`, and was exported as a row with an EMPTY `GroupName`.
+  `Add-PmGroupLicense` then refused the whole file (`Cannot bind argument to parameter 'GroupName'
+  because it is an empty string`), so ONE such allocation broke the export→import round trip the
+  cmdlet pair exists for. Orphans are now left out of the export, matching what
+  `Get-PmLicensedUser` already did for users; they are still emitted as objects (with `orphan`),
+  so nothing is hidden from `Get-PmGroupLicense` itself.
+
+#### Providers
+
+- **`New-PSDrive -PSProvider UiPathOrchDu` / `UiPathOrchTm` crashed** with
+  `Unable to cast object of type 'System.Management.Automation.PSDriveInfo'`. The engine hands the
+  provider a plain `PSDriveInfo` — it cannot construct the module's typed drive — and the provider
+  cast it unconditionally, so the config file was the ONLY way a DU/TM drive could ever exist. The
+  provider now builds the typed drive itself (as the UiPathOrch provider already did for its own),
+  appending the service segment (`/du_`, `/testmanager_`) to the root if the caller didn't.
+
+- **A DU/TM drive now links to its parent Orchestrator drive regardless of provider load order.**
+  Each provider mounts its own drives from the config file and the order PowerShell initializes the
+  providers in is not controllable, so the parent may not exist yet when the shadow drive is created.
+  The parent is therefore resolved by name on first USE, and the drive's caches — which reach the
+  parent only through deferred lambdas — are built at construction rather than when the parent is
+  attached. A shadow drive whose parent is genuinely absent now says so (`'Orch1Tm:' has no parent
+  UiPathOrch drive...`) instead of throwing a NullReferenceException.
+
 #### Help
 
 - **`New-PmRobotAccount` / `Set-PmRobotAccount` help documented a `-UserName` parameter that does

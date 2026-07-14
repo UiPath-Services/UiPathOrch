@@ -29,43 +29,20 @@ public class OrchDuDriveInfo : OrchDriveInfoBase
     private OrchDriveInfo? _parentDrive;
     internal OrchDriveInfo ParentDrive
     {
-        get => _parentDrive!;
-        set
+        // Resolved by NAME on first USE, not at mount. Each provider mounts its own drives from the
+        // config file and the order PowerShell initializes the providers in is not ours to control:
+        // the DU provider can come up before UiPathOrch, when the parent does not exist yet. Linking
+        // eagerly there would leave this drive permanently parentless — which is why it is resolved
+        // lazily instead, and correct under either order (see ResolveParentDriveByName).
+        get
         {
-            _parentDrive = value ?? throw new ArgumentNullException(nameof(value));
+            if (_parentDrive is not null) return _parentDrive;
 
-            // Caches need ParentDrive (for OrchAPISession and partitionGlobalId).
-            // Initialize after the field is set; pass `this` so the cache classes
-            // register into _allTenantCache for uniform ClearAllCache.
-
-            // Org-scoped: no initializer — Path is set by the cmdlet on the
-            // per-emit ShallowClone() copy (per-org caches are shared across
-            // drives, so drive-local Path on the cached singleton would be
-            // raced/wrong, matching the PM* 1.4.2 fix rationale).
-            DuRoles = new(this, partitionGlobalId => OrchAPISession.GetDuRoles(partitionGlobalId));
-
-            DuUsers = new(this, (partitionGlobalId, key) => OrchAPISession.GetDuUsers(partitionGlobalId, key.TenantKey, key.ProjectId));
-
-            // Per-tenant: Path/FullName stamped in the initializer, because
-            // DuProject is consumed AS INPUT by other cmdlets (e.g.,
-            // GetDuDocumentType receives the project via EnumDuFolders and
-            // calls project.GetPSPath() on it). If we left Path unstamped
-            // here and relied on clone+stamp at the OrchDuProvider emit
-            // site only, the project handed to downstream cmdlets would
-            // have Path = null and PathProject would degrade to just the
-            // project name. Per-tenant scope means there's no cross-drive
-            // sharing, so init-time stamping is safe (unlike DuRoles /
-            // DuUsers which are per-org and must clone+stamp on emit).
-            DuProjects = new(this,
-                () => OrchAPISession.GetDuProjects().OrderBy(p => p.name),
-                p => { p.Path = NameColonSeparator; p.FullName = NameColonSeparator + p.name; });
-
-            DuDocumentTypes = new(this, project => OrchAPISession.GetDuDocumentTypes(project.id!));
-
-            DuClassifiers = new(this, project => OrchAPISession.GetDuClassifiers(project.id!));
-
-            DuExtractors = new(this, project => OrchAPISession.GetDuExtractors(project.id!));
+            var parent = ResolveParentDriveByName("Du") ?? throw NoParentDriveException("Du");
+            _parentDrive = parent;
+            return parent;
         }
+        set => _parentDrive = value ?? throw new ArgumentNullException(nameof(value));
     }
 
     internal override OrchAPISession OrchAPISession => ParentDrive.OrchAPISession;
@@ -76,10 +53,43 @@ public class OrchDuDriveInfo : OrchDriveInfoBase
     // OrchDriveInfoBase. The base implementation of ClearAllCache iterates
     // _allTenantCache and _allFolderCache, which is all DU needs.
 
-    // At the time this constructor runs, NameColonSeparator is not yet available
     public OrchDuDriveInfo(ProviderInfo provider, string driveName, string description, string root) :
         base(driveName, provider, driveName + ':' + Path.DirectorySeparatorChar, description, null, root)
     {
+        // The caches are built HERE, not when ParentDrive is assigned. Every one of them reaches the
+        // parent only through a deferred lambda (OrchAPISession / NameColonSeparator are evaluated
+        // when the cache actually fetches), so none of them needs the parent to exist yet — and
+        // building them at mount is what makes this drive usable no matter which provider PowerShell
+        // initialized first. Passing `this` registers each cache in _allTenantCache, so
+        // ClearAllCache keeps finding all of them.
+
+        // Org-scoped: no initializer — Path is set by the cmdlet on the
+        // per-emit ShallowClone() copy (per-org caches are shared across
+        // drives, so drive-local Path on the cached singleton would be
+        // raced/wrong, matching the PM* 1.4.2 fix rationale).
+        DuRoles = new(this, partitionGlobalId => OrchAPISession.GetDuRoles(partitionGlobalId));
+
+        DuUsers = new(this, (partitionGlobalId, key) => OrchAPISession.GetDuUsers(partitionGlobalId, key.TenantKey, key.ProjectId));
+
+        // Per-tenant: Path/FullName stamped in the initializer, because
+        // DuProject is consumed AS INPUT by other cmdlets (e.g.,
+        // GetDuDocumentType receives the project via EnumDuFolders and
+        // calls project.GetPSPath() on it). If we left Path unstamped
+        // here and relied on clone+stamp at the OrchDuProvider emit
+        // site only, the project handed to downstream cmdlets would
+        // have Path = null and PathProject would degrade to just the
+        // project name. Per-tenant scope means there's no cross-drive
+        // sharing, so init-time stamping is safe (unlike DuRoles /
+        // DuUsers which are per-org and must clone+stamp on emit).
+        DuProjects = new(this,
+            () => OrchAPISession.GetDuProjects().OrderBy(p => p.name),
+            p => { p.Path = NameColonSeparator; p.FullName = NameColonSeparator + p.name; });
+
+        DuDocumentTypes = new(this, project => OrchAPISession.GetDuDocumentTypes(project.id!));
+
+        DuClassifiers = new(this, project => OrchAPISession.GetDuClassifiers(project.id!));
+
+        DuExtractors = new(this, project => OrchAPISession.GetDuExtractors(project.id!));
     }
 
     // Wrappers preserve the legacy array return type so existing call sites
