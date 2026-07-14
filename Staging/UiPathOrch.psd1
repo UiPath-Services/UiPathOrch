@@ -527,6 +527,16 @@ well as by tab completion, so a template pasted from the swagger docs runs as wr
 {projectId} the context cannot supply is refused with the -Path that would supply it rather
 than sent as a literal.
 
+Fixed: Enable-OrchUserAttended, Disable-OrchUserAttended, Enable-OrchPersonalWorkspace and
+Disable-OrchPersonalWorkspace could not be invoked at all -- every call failed with "Multiple
+ambiguous overloads found for .ctor", their -UserName / -Path tab completion fell back to
+file-system paths, and Get-Help on them failed. These four are PowerShell functions rather
+than compiled cmdlets, and their [ArgumentCompleter([...])] attributes still named a completer
+shape that no longer exists (a generic completer with a type argument that had been removed).
+A compiled typeof() would not have built; a PowerShell type literal resolves only at run time,
+so the break shipped unnoticed. The attributes now name the real completers, and a unit test
+checks every completer a shipped function names against the assembly.
+
 Fixed: tab completion on a Document Understanding or Test Manager drive offered unusable
 paths. `cd `<Ctrl+Space> at Orch1Du:\ completed to ".\Orch1Du:\MyProject" -- a ".\" prefix
 glued onto the full drive-qualified path -- instead of ".\MyProject". The DU/TM providers

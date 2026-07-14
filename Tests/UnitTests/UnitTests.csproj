@@ -25,4 +25,15 @@
     <ProjectReference Include="..\..\UiPathOrch\UiPathOrch.csproj" />
   </ItemGroup>
 
+  <!-- The repo root, so a test can read the SHIPPED PowerShell sources (Staging\Functions\*.ps1).
+       Their [ArgumentCompleter([...])] type literals resolve at RUNTIME, so nothing but a test that
+       reads the files can catch one that stopped naming a real type — see
+       FunctionCompleterAttributeTests. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
+      <_Parameter1>RepoRoot</_Parameter1>
+      <_Parameter2>$(MSBuildThisFileDirectory)..\..</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+
 </Project>

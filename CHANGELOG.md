@@ -48,6 +48,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+#### Users
+
+- **`Enable-OrchUserAttended`, `Disable-OrchUserAttended`, `Enable-OrchPersonalWorkspace` and
+  `Disable-OrchPersonalWorkspace` could not be invoked at all.** Every call failed with
+  `Multiple ambiguous overloads found for ".ctor" and the argument count: "1"`, tab completion on
+  their `-UserName` / `-Path` fell back to file-system paths, and `Get-Help` on them failed. These
+  four are PowerShell functions rather than compiled cmdlets, and their
+  `[ArgumentCompleter([...])]` attributes still named a completer shape that no longer exists —
+  `[UiPath.PowerShell.Completer.DriveCompleter[UiPath.PowerShell.Positional.UserName]]`, whose type
+  argument refers to a type that was removed and whose completers are not generic. A C# cmdlet's
+  `typeof(...)` would have failed to compile; a PowerShell type literal is only resolved at run
+  time, so the break shipped silently. The attributes now name the real, non-generic completers, and
+  a unit test (`FunctionCompleterAttributeTests`) checks every completer named by a shipped function
+  against the assembly so this cannot happen again.
+
 #### Providers
 
 - **Tab completion on a Document Understanding or Test Manager drive offered unusable paths.**

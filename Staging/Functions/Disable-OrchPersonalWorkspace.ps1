@@ -2,12 +2,12 @@ function Disable-OrchPersonalWorkspace {
     [CmdletBinding(SupportsShouldProcess = $true)]
     Param (
         [Parameter(Position = 0, Mandatory = $true, ValueFromPipelineByPropertyName = $true)]
-        [ArgumentCompleter([UiPath.PowerShell.Completer.TenantUserUserNameCompleter[UiPath.PowerShell.Positional.UserName]])]
+        [ArgumentCompleter([UiPath.PowerShell.Completer.TenantUserUserNameCompleter])]
         [SupportsWildcards()]
         [string[]]$UserName,
 
         [Parameter(ValueFromPipelineByPropertyName = $true)]
-        [ArgumentCompleter([UiPath.PowerShell.Completer.DriveCompleter[UiPath.PowerShell.Positional.UserName]])]
+        [ArgumentCompleter([UiPath.PowerShell.Completer.DriveCompleter])]
         [string[]]$Path
     )
 
