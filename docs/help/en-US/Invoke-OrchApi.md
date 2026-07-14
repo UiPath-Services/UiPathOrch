@@ -13,7 +13,7 @@ title: Invoke-OrchApi
 
 ## SYNOPSIS
 
-Invokes an arbitrary Orchestrator, Identity Server, or Portal API endpoint using the authentication and folder context bound to a UiPathOrch PSDrive.
+Invokes an arbitrary Orchestrator, Identity Server, Portal, Test Manager, or Document Understanding API endpoint using the authentication and context bound to a UiPathOrch PSDrive.
 
 ## SYNTAX
 
@@ -34,6 +34,12 @@ Invoke-OrchApi [-ApiPath] <string> [-Body <Object>] [-Confirm] [-ContentType <st
 Invokes an arbitrary Orchestrator API endpoint through the same authenticated HTTP session that the typed cmdlets use. Designed as a superset of `Invoke-RestMethod` for the parameters that make sense in this context — auth, proxy, certificate, and session parameters are intentionally omitted because the drive owns those settings.
 
 The drive supplied via `-Path` selects the tenant and (when a folder is included) the folder context that is sent as the `X-UIPATH-OrganizationUnitId` header. The `-Uri` parameter accepts either an absolute URL or a relative path; relative paths are resolved against the drive's base URL. The `-Identity` and `-Portal` switches retarget the request at the Identity Server or Portal base URLs respectively.
+
+`-Path` also accepts a Document Understanding or Test Manager drive (`Orch1Du:`, `Orch1Tm:`), as does the current location. A DU/TM drive is a view onto the same tenant, so the request runs against its parent Orchestrator drive's authentication and base URLs — every Orchestrator, Identity, and Portal endpoint remains reachable from there. What the DU/TM drive adds is the project: the project the path points at supplies the `{projectId}` that scopes the DU and Test Manager endpoints. DU/TM drives have no Orchestrator folders, so no folder-context header is sent from them.
+
+Ids the drive context knows are substituted into `-Uri` before the request goes out: `{partitionGlobalId}` from the drive, and `{projectId}` from the DU/TM project. This applies to a path written by hand or pasted from the swagger docs, not only to one produced by tab completion. A `{projectId}` is only ever substituted into a path of its own service — a Test Manager location says nothing about which Document Understanding project is meant — and a `{projectId}` the context cannot supply is refused with the `-Path` that would supply it, rather than sent as a literal.
+
+`-Uri` tab-completes from a catalog of known endpoints (Orchestrator, Identity, Portal, Test Manager, Document Understanding, AI Center), generated from UiPath's swagger documents. The candidates are filtered to the tenant: Orchestrator endpoints are matched against the tenant's Web API version, so an endpoint the target Orchestrator does not have is never offered. `-Identity` and `-Portal` select their own endpoint sets, `-Method` narrows to the endpoints serving that verb, and the completion tooltip carries the endpoint's HTTP verbs, its version range, and its swagger summary. As elsewhere in the module, a plain word completes as a prefix and an explicit wildcard (`*du*`) searches anywhere in the path.
 
 JSON responses are converted to `PSCustomObject` so they integrate cleanly with `Format-Table`, `Select-Object`, and `Sort-Object`. For OData collection responses (`{ "value": [...] }`), the wrapper is unwrapped and each item is emitted with an injected `Path` property indicating the originating drive context. The default formatter groups output by `Path`. Use `-Raw` to keep the unparsed response, including the OData envelope.
 
@@ -127,7 +133,28 @@ PS C:\> Invoke-OrchApi -Path Orch1: -Uri "/odata/Libraries/UiPath.Server.Configu
 
 `-OutFile` streams the response body directly to a file without parsing it as JSON. No object output is emitted on success.
 
-### Example 7: Compare a cmdlet output with the raw API
+### Example 7: Call a Test Manager endpoint from a Test Manager project
+
+```powershell
+PS C:\> cd Orch1Tm:\MyProject
+PS Orch1Tm:\MyProject> Invoke-OrchApi -Uri '/testmanager_/api/v2/{projectId}/testcases'
+```
+
+A DU/TM drive is a view onto the same tenant, so the call runs against the parent Orchestrator drive's authentication and base URLs. The project the location points at supplies `{projectId}`, so the endpoint template can be used as written. `-Path Orch1Tm:\MyProject` does the same thing from anywhere. Run the same URI from a UiPathOrch drive — which has no project — and the cmdlet refuses it, naming the `-Path` that would resolve it, instead of sending a literal `{projectId}` and returning a 404.
+
+### Example 8: Discover an endpoint with tab completion
+
+```powershell
+PS Orch1:\> Invoke-OrchApi -Identity -Uri /api/Group<Ctrl+Space>
+/api/Group
+/api/Group/{groupId}
+/api/Group/baa40998-d374-4814-b765-77d7b0551ae7
+/api/Group/baa40998-d374-4814-b765-77d7b0551ae7/{groupId}
+```
+
+`-Uri` completes from the known endpoints of the target tenant, with `{partitionGlobalId}` already substituted. Type an explicit wildcard to search anywhere in the path (`*testsets*<Ctrl+Space>`); the tooltip shows the endpoint's HTTP verbs, the Orchestrator version range it exists in, and its swagger summary. Completion never signs the drive in: an id that is not known yet is left as its placeholder.
+
+### Example 9: Compare a cmdlet output with the raw API
 
 ```powershell
 PS C:\> Get-OrchAsset -Path Orch1:\Shared -Name TestAsset1 | Format-List
@@ -143,6 +170,10 @@ When a cmdlet returns unexpected results, reproducing the call with `Invoke-Orch
 The API endpoint to invoke. Accepts either an absolute URL (`https://...`) or a relative path. Relative paths are resolved against the drive's base URL — `_base_url_orchestrator` (the Orchestrator service base) by default, or `_base_url_identity` / `_base_url_portal` when `-Identity` or `-Portal` is set. Use `-Uri` as the alias when porting `Invoke-RestMethod` snippets.
 
 For Automation Suite drives, `_base_url_orchestrator` includes the `/orchestrator_/` service prefix automatically, so `-ApiPath /odata/Folders` resolves to `https://{host}/{org}/{tenant}/orchestrator_/odata/Folders` without you having to spell the prefix out. For Cloud and on-premises drives the prefix isn't required and isn't added.
+
+`{partitionGlobalId}` and `{projectId}` placeholders are substituted from the drive context before the request is sent, so an endpoint template can be used as written: `-Uri '/api/Group/{partitionGlobalId}' -Identity`, or `-Uri '/testmanager_/api/v2/{projectId}/testcases'` from a Test Manager project. A `{projectId}` the context cannot supply (a UiPathOrch drive has no project; a DU/TM drive's root names no single one) is an error naming the `-Path` that would supply it — the request is not sent with the placeholder in it.
+
+Tab completion offers the known endpoints for this drive, with the ids already substituted. See the DESCRIPTION for how the candidates are filtered.
 
 ```yaml
 Type: System.String
@@ -333,7 +364,7 @@ HelpMessage: ''
 
 ### -Path
 
-The drive (and optional folder) that supplies the authenticated session, base URL, and folder context for the request. Examples: `Orch1:` (tenant root), `Orch1:\Shared` (Shared folder context). When omitted, the current PowerShell location is used and must be on a UiPathOrch drive. Tab completion lists known drives and folders.
+The drive (and optional folder or project) that supplies the authenticated session, base URL, and request context. Examples: `Orch1:` (tenant root), `Orch1:\Shared` (Shared folder context), `Orch1Tm:\MyProject` / `Orch1Du:\MyProject` (a Test Manager or Document Understanding project, which supplies `{projectId}`). When omitted, the current PowerShell location is used and must be on a UiPathOrch, Document Understanding, or Test Manager drive. Tab completion lists known drives and folders.
 
 ```yaml
 Type: System.String
