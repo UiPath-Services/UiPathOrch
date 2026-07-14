@@ -117,4 +117,36 @@ public class PmLicensedGroupCsvTests
             new[] { "Action Center - Named User", "Attended - Named User" },
             parsed.Select(f => f[License]).OrderBy(x => x));
     }
+
+    // ---- orphan exclusion ----
+    //
+    // An orphan is a dangling license allocation whose group was deleted from the directory:
+    // the licensing side still holds the bundle, the identity side cannot resolve the id, and
+    // the group comes back with an empty name. Exporting one wrote a row with an EMPTY
+    // GroupName, and Add-PmGroupLicense refuses to bind an empty -GroupName -- so ONE dangling
+    // allocation made the entire exported CSV un-importable, which is the whole point of the
+    // export. Mirrors the user-side rule (GetPmUserLicenseCmdlet.IsExportableUser).
+
+    [Fact]
+    public void IsExportableGroup_RealGroup_IsExported()
+    {
+        Assert.True(GetPmGroupLicenseCmdlet.IsExportableGroup(
+            new NuLicensedGroup { name = "Ops", orphan = false }));
+    }
+
+    [Fact]
+    public void IsExportableGroup_NullOrphan_IsExported()
+    {
+        // Defensive: a missing orphan flag is treated as a real group.
+        Assert.True(GetPmGroupLicenseCmdlet.IsExportableGroup(
+            new NuLicensedGroup { name = "Ops", orphan = null }));
+    }
+
+    [Fact]
+    public void IsExportableGroup_Orphan_IsNotExported()
+    {
+        // The shape seen live: orphan = true, name empty, but still holding a bundle.
+        Assert.False(GetPmGroupLicenseCmdlet.IsExportableGroup(
+            new NuLicensedGroup { name = "", orphan = true, userBundleLicenses = ["RPADEVNU"] }));
+    }
 }

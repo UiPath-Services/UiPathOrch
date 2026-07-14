@@ -61,6 +61,15 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
         "License"
     ];
 
+    // True for rows that represent a real, re-importable group. orphan=true rows are
+    // dangling license pools whose group no longer exists in the directory (deleted in
+    // CIS while still holding an allocation); their 'name' comes back empty. Exporting
+    // one wrote a row with an EMPTY GroupName, which Add-PmGroupLicense then refused to
+    // bind ("Cannot bind argument to parameter 'GroupName' because it is an empty
+    // string") — one dangling allocation made the whole exported CSV un-importable.
+    // Mirrors GetPmUserLicenseCmdlet.IsExportableUser. Pure / static for testing.
+    internal static bool IsExportableGroup(NuLicensedGroup group) => !(group.orphan ?? false);
+
     // One row per license the group holds, ordered by display name. The group's
     // userBundleLicenses are short codes (e.g. "ATTUNU"); convert each to the
     // display name the -License parameter expects. Unknown codes (a newer server
@@ -86,6 +95,7 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
 
     private static void WriteCsvContent(StreamWriter writer, string drivePath, NuLicensedGroup group)
     {
+        if (!IsExportableGroup(group)) return;
         foreach (var license in BuildLicenseDisplayNames(group))
         {
             writer.WriteCsvLine(BuildLicenseCsvRow(drivePath, group.name, license));

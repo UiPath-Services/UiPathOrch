@@ -56,7 +56,11 @@ BeforeAll {
     $script:unheld2Codes = $null
     if ($script:hasDrive) {
         Clear-OrchCache -Path $script:drive -ErrorAction SilentlyContinue | Out-Null
-        foreach ($g in (Get-PmGroupLicense -Path $script:drive)) {
+        # Skip orphans: a dangling license allocation whose group was deleted from the directory.
+        # It has no group to ask about, so the licensing endpoint 404s on its id ("Cannot resolve
+        # groupIds=[...] in CIS") and the whole setup dies with it. Get-PmGroupLicense flags them
+        # (orphan = true, empty name) and leaves them out of -ExportCsv for the same reason.
+        foreach ($g in (Get-PmGroupLicense -Path $script:drive | Where-Object { -not $_.orphan })) {
             $held   = @($g.userBundleLicenses)
             $unheld = @(script:AvailableCodes $g.id |
                 Where-Object { $_ -and $_ -notin $held -and $script:codeToName.ContainsKey($_) })
