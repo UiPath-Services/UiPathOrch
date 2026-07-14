@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.11.6'
+ModuleVersion = '1.11.7'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,37 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.11.7
+
+Added: Invoke-OrchApi -Uri now tab-completes the known API endpoints -- 873 of them, from a
+catalog generated out of UiPath's swagger documents (Orchestrator, Identity, Portal, Test
+Manager, Document Understanding, AI Center), with each endpoint's HTTP verbs and summary in
+the tooltip. The candidates are filtered to the target tenant: an Orchestrator endpoint is
+offered only if the tenant's Web API version actually has it, so an old on-prem tenant is
+never shown an endpoint it cannot serve. -Identity / -Portal select their own endpoint sets
+and -Method narrows to the endpoints serving that verb. Ids the drive context knows are
+substituted into the completed URI -- {partitionGlobalId}, and {projectId} when the location
+is a Document Understanding or Test Manager project -- so the completion is ready to send.
+An id that cannot be resolved without an API call is left as its placeholder, with the
+tooltip naming the -Path that would fill it; completion never triggers a sign-in.
+
+Added: Invoke-OrchApi now runs from a Document Understanding or Test Manager drive, which it
+used to reject. A DU/TM drive is a view onto the same tenant, so the call runs against its
+parent Orchestrator drive's authentication and base URLs, with the project the location
+points at supplying {projectId}: cd Orch1Tm:\MyProject, then
+Invoke-OrchApi -Uri '/testmanager_/api/v2/{projectId}/testcases'. Orchestrator, Identity and
+Portal endpoints remain reachable from there too. Placeholders are filled by the cmdlet as
+well as by tab completion, so a template pasted from the swagger docs runs as written, and a
+{projectId} the context cannot supply is refused with the -Path that would supply it rather
+than sent as a literal.
+
+Fixed: tab completion on a Document Understanding or Test Manager drive offered unusable
+paths. `cd `<Ctrl+Space> at Orch1Du:\ completed to ".\Orch1Du:\MyProject" -- a ".\" prefix
+glued onto the full drive-qualified path -- instead of ".\MyProject". The DU/TM providers
+had taken the drive-root re-rooting that PSParentPath and the dir "Directory:" header need,
+without the path relativization that has to accompany it; both halves now live in one shared
+place that all three providers call.
+
 1.11.6
 
 Fixed: Per-user asset values now honor folder access granted through an assigned
