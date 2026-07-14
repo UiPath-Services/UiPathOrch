@@ -627,32 +627,6 @@ now warn up front. Asset copies now end with a one-line drop summary listing the
 machines that failed to resolve, even after per-value warnings hit the throttle; the "does not have
 user with Name" warning is throttled through the same budget and its users are included in the summary.
 
-1.11.2
-
-Fixed (cmdlets): Add-OrchUser batch import no longer applies the last CSV row's UpdatePolicy and ES_*
-execution settings to every user; they now post per row like the other per-row fields. Set-OrchAsset
-with a mix of existing and new names now creates the new assets instead of silently skipping them.
-The Domain column exported by Get-OrchFolderUser -ExportCsv now actually round-trips into
-Add-OrchFolderUser: -Domain binds from the pipeline by property name and is captured per row.
-New/Update-OrchTrigger -MachineRobots now also sends the derived ExecutorRobots array the web trigger
-dialog always includes, so the robot relation behind RobotUserName and the trigger screen's Account
-display is written (HAR-verified on OnPrem 22.10, where it previously read back empty); on API v11 the
-pairs degrade to the ExecutorRobots-only form that old surface understands, and -ExecutorRobots alone
-on a modern tenant now warns about the likely -MachineRobots mix-up.
-
-Fixed (provider): Remove-Item on an Orchestrator folder resolves the path literally like every other
-single-item operation (a leftover leaf-only wildcard unescape turned folder names containing a literal
-backtick-escaped wildcard into a silent no-op delete) and reports ObjectNotFound instead of silently
-succeeding when the folder cannot be resolved. DU/TM drives no longer accept nested garbage paths
-(Test-Path Du1:\NoSuchThing\RealProject returned true) and tolerate a null PSDriveInfo.
-
-Fixed (diagnostics): connection failures now carry the underlying socket/TLS error, so an untrusted
-certificate no longer masquerades as a generic "could not connect". Import-OrchConfig reports a clear
-error for a config file without a "PSDrives" array instead of a NullReferenceException. -UseInPrivate
-sign-ins sweep the throwaway Edge profiles earlier sign-ins left in %TEMP%. On-prem user/password
-drives now populate the AccessToken/Claims diagnostics and IsAuthenticated, and a failed sign-in
-reports the server's actual error message instead of a generic one.
-
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
 
