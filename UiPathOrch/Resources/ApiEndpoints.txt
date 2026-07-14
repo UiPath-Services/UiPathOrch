@@ -1,0 +1,878 @@
+# UiPathOrch known-API-endpoint catalog. GENERATED -- DO NOT EDIT BY HAND.
+# Regenerate: Tools\Update-ApiEndpointCatalog.ps1 -SwaggerDir <swagger corpus>
+# base<TAB>path<TAB>methods<TAB>versions<TAB>summary
+#   base: O=Orchestrator  I=Identity(-Identity)  P=Portal(-Portal)  S=service(tenant-root relative)
+#   versions: Orchestrator Web API version range the path appears in (empty = not version-tagged)
+I	/api/Account/ChangePassword	POST		Account_ChangePassword
+I	/api/Account/ClientAccessToken	GET		Get the user profile.
+I	/api/Account/EmailConfirmation	POST		Confirms the email address.
+I	/api/Account/ForgotPassword	POST		Account_ForgotPassword
+I	/api/Account/Login	GET,POST		Get the necessary information required to display the login page.
+I	/api/Account/Logout	POST		Handle logout page postback
+I	/api/Account/Profile	GET		Get the user profile.
+I	/api/Account/ResetPassword	POST		Account_ResetPassword
+I	/api/Antiforgery/generate	GET		AntiForgery_Generate
+I	/api/Antiforgery/generatelogout	GET		AntiForgery_GenerateForLogout
+I	/api/Antiforgery/generateswagger	GET		AntiForgery_GenerateForSwagger
+I	/api/ApiResource	GET,POST		Get the full list of identity server API Resources.
+I	/api/ApiResource/{apiResourceName}	DELETE,GET,PUT		Get the identity server API Resource that matches the provided name.
+I	/api/AuditQuery/{partitionGlobalId}	GET		AuditQuery_GetAuditEvents
+I	/api/AuditQuery/{partitionGlobalId}/download	GET		AuditQuery_DownloadAuditEvents
+I	/api/AuthenticationInformation/{organizationName}	GET		AuthenticationInformation_GetAuthenticationProviders
+I	/api/AuthenticationSetting	POST,PUT		Deletes current authentication settings if exist and creates new ones.
+I	/api/AuthenticationSetting/{partitionGlobalId}	DELETE,GET		Gets the current authentication setting.
+I	/api/AuthenticationSetting/DirectoryIntegration	POST,PUT		Creates new authentication settings for directory integration.
+I	/api/AuthenticationSetting/DirectoryIntegration/{partitionGlobalId}	DELETE		Deletes the directory integration Authentication setttings for a partition.
+I	/api/AuthenticationSetting/DirectoryIntegration/Scim/{partitionGlobalId}	PUT		Enable or disable SCIM for the active directory connection in the partition. Only IsScimE…
+I	/api/AuthenticationSetting/GenerateTemplateSettings	POST		Generate a template configuration for a new authentication Settings For example get Saml2…
+I	/api/AuthenticationSetting/getAll/{partitionGlobalId}	GET		Gets all current authentication settings.
+I	/api/AuthenticationSetting/IDP	POST		Creates or updates IDP setting.
+I	/api/AuthenticationSetting/IDP/{partitionGlobalId}	DELETE		Deletes the IDP Authentication setttings for a partition.
+I	/api/CheckSession	GET		CheckSession_Get
+I	/api/CisKmsConfig	POST		CisKmsConfig_UpdateKmsConfig
+I	/api/CisKmsConfig/{partitionGlobalId}	GET		CisKmsConfig_GetKmsConfig
+I	/api/CisKmsConfig/cmkstatus/{partitionGlobalId}	GET		CisKmsConfig_GetCmkStatus
+I	/api/Client	GET,POST		Get the full list of identity server clients.
+I	/api/Client/{clientId}	DELETE,GET,PUT		Get the identity server client that matches the provided client id.
+I	/api/Client/info	GET		Get the well known identity server clients.
+I	/api/Client/trace	GET		Temporary method to trace request headers, needed to check if client IP address is availa…
+I	/api/ClientSecret/{requestClientId}/{emergencyRollout}	GET		ClientSecret_GetClientSecret
+I	/api/ClientSecret/CreateNow/{clientID}	POST		ClientSecret_CreateSecret
+I	/api/ClientSecret/DisableExpiredSecret/{isDryRun}	POST		ClientSecret_DisableSecret
+I	/api/ClientSecret/DisableExpiredSecretForClient/{isDryRun}/{targetClientId}	POST		ClientSecret_DisableSecretForClient
+I	/api/ClientSecret/SyncAll	POST		ClientSecret_SyncAllSecrets
+I	/api/ClientSecret/SyncNow/{clientID}	POST		ClientSecret_SyncSecret
+I	/api/ClientSecret/SyncNow/{clientID}/{enableDelete}	POST		ClientSecret_SyncSecret
+I	/api/ClientSecret/testsecret/{clientID}	POST		ClientSecret_TestSecret
+I	/api/ClientTemplate	POST		ClientTemplate_CreateClientFromTemplate
+I	/api/ClientTemplate/{clientId}	PUT		ClientTemplate_UpdateClient
+I	/api/ClientTemplate/{partitionGlobalId}/{clientId}	DELETE,GET		ClientTemplate_GetClient
+I	/api/ClientTemplate/{partitionGlobalId}/secrets/{secretId}	DELETE		ClientTemplate_DeleteSecret
+I	/api/ClientTemplate/GenerateSecret	POST		ClientTemplate_GenerateSecret
+I	/api/ClientTemplate/templates	GET		ClientTemplate_GetClientTemplates
+I	/api/Consent/user	POST		Consent_Consent
+I	/api/ConsentExport	GET		ConsentExport_GetExportHistory
+I	/api/ConsentExport/{consentTermId}	POST		ConsentExport_Export
+I	/api/ConsentExport/{exportId}	GET		ConsentExport_GetExportLink
+I	/api/Directory/BulkResolve/{partitionGlobalId}	POST		Directory_BulkResolve
+I	/api/Directory/BulkResolveByName/{partitionGlobalId}	POST		Resolves multiple directory entities
+I	/api/Directory/GroupMembership/{partitionGlobalId}	POST		For a given user and list of groups, returns a subset of groups where the user is a membe…
+I	/api/Directory/Resolve/{partitionGlobalId}	POST		Resolve a directory entry
+I	/api/Directory/ResolveByName/{partitionGlobalId}	POST		Resolve a directory entry
+I	/api/Directory/Scopes/{partitionGlobalId}	GET		Returns all active directory domains.
+I	/api/Directory/Search/{partitionGlobalId}	GET		Get directory entries in the partition.
+I	/api/Directory/Tenant/{partitionGlobalId}	GET		Gets the current external tenant information
+I	/api/Directory/TransitiveDirectoryGroupMembers/{partitionGlobalId}/{groupId}	GET		Gets a paginated list of directory group members including nested members if supported by…
+I	/api/DirectoryConnection	POST		Create new directory connection.
+I	/api/DirectoryConnection/{connectionId}	DELETE,GET,PUT		Get directory connection by Id.
+I	/api/DirectoryConnection/AvailableDirectoryTypes	GET		DirectoryConnection_GetAvailableDirectoryConnectionTypes
+I	/api/DirectoryConnection/connections/{partitionGlobalId}	GET		Get all directory connections defined for the partition.
+I	/api/DirectoryConnection/DirectoryConfiguration	GET		DirectoryConnection_GetDirectoryConnectionConfiguration
+I	/api/DirectoryConnection/TestConfig	POST		Validate (LDAP) directory connection configuration.
+I	/api/ExternalApiResource	GET		Get the full list of external API Resources.
+I	/api/ExternalClient	POST		Create a new external client.
+I	/api/ExternalClient/{partitionGlobalId}	GET		Get the full list of external clients for given partition.
+I	/api/ExternalClient/{partitionGlobalId}/{clientId}	DELETE,GET,PUT		Get the external client given client id.
+I	/api/ExternalClient/{partitionGlobalId}/{clientId}/GenerateSecret	GET		Generate a new client secret for the given client.
+I	/api/ExternalClient/{partitionGlobalId}/secrets/{secretId}	DELETE		Delete an old secret.
+I	/api/ExternalClient/GenerateSecret	POST		Generate a new client secret for the given client.
+I	/api/ExternalIdentityProvider	GET,POST		Get the list of external identity providers filtered based on the partition global id.
+I	/api/ExternalIdentityProvider/{externalIdentityProviderId}	DELETE,GET,PUT		Get the external identity provider that matches the provided id.
+I	/api/ExternalIdentityProvider/{externalIdentityProviderId}/IsExclusive	PUT		Sets the external identity provider as exclusive. If another external identity provider i…
+I	/api/ExternalIdentityProvider/GenerateTemplateProvider	POST		Generates a template configuration for a new external identity provider. For example get …
+I	/api/GlobalExternalClient	POST		Create a new global external client.
+I	/api/GlobalExternalClient/{partitionGlobalId}/{clientId}	DELETE,GET,PUT		Get the GlobalExternalClient with given clientId and partitionId.
+I	/api/GlobalExternalClient/{partitionGlobalId}/{clientId}/GenerateSecret	POST		Generate a new client secret for the give client.
+I	/api/GlobalExternalClient/{partitionGlobalId}/secrets/{secretId}	DELETE		GlobalExternalClient_DeleteSecret
+I	/api/GlobalExternalClient/all	GET		Get all GlobalExternalClients
+I	/api/GlobalExternalClient/GenerateSecret	POST		Generate a new client secret for the give client.
+I	/api/GlobalExternalClient/Register	POST		Register the give client in partition.
+I	/api/GlobalExternalClient/Registrations/{partitionGlobalId}	GET		Unregister the give client for the partition.
+I	/api/GlobalExternalClient/Unregister	POST		Unregister the give client for the partition.
+I	/api/Group	POST		Creates a new local group
+I	/api/Group/{groupId}	PUT		Updates a local group information.
+I	/api/Group/{partitionGlobalId}	DELETE,GET		Get all local and built-in groups from a partition
+I	/api/Group/{partitionGlobalId}/{groupId}	DELETE,GET		Get local or built-in group by partition and group Id
+I	/api/Group/{partitionGlobalId}/{groupId}/CheckMembers	POST		Gets a list of local members of specified group, filtered by specified IDs
+I	/api/Group/{partitionGlobalId}/{groupId}/Members	GET		Gets a list of local memberships of specified group
+I	/api/Group/BulkLoadByIds/{partitionGlobalId}	POST		Get a list of local groups for specified IDs
+I	/api/IdentityResource	GET,POST		Get the full list of Identity Resources (Identity Server).
+I	/api/IdentityResource/{identityResourceName}	DELETE,GET,PUT		Get the Identity Resource (Identity Server) that matches the provided name.
+I	/api/Language	GET		Get the full list of languages.
+I	/api/Language/{languageCode}/translations	GET		Get the list of client translations based on the specified language.
+I	/api/Liveness	GET		Liveness_Get
+I	/api/MessageTemplate	GET,POST		Get a message template using the provided filter.
+I	/api/MessageTemplate/{templateId}	DELETE,GET,PUT		Get a message template by Id.
+I	/api/migration/{partitionId}/compatibility_report/destination	POST		PartitionMove_GenerateDataCompatibilityReportOnDestination
+I	/api/migration/{partitionId}/compatibility_report/source	POST		PartitionMove_GenerateDataCompatibilityReportOnSource
+I	/api/migration/{partitionId}/data_move/destination	POST		PartitionMove_RunDataMoveOnDestination
+I	/api/migration/{partitionId}/data_move/source	POST		PartitionMove_RunDataMoveOnSource
+I	/api/migration/{partitionId}/delete/source	DELETE		PartitionMove_DeletePartitionFromSource
+I	/api/migration/{partitionId}/finalize/destination	POST		PartitionMove_FinalizeOnDestination
+I	/api/migration/{partitionId}/finalize/source	POST		PartitionMove_FinalizeOnSource
+I	/api/migration/{partitionId}/maintenance_mode/destination	POST		PartitionMove_StartMaintenanceModeOnDestination
+I	/api/migration/{partitionId}/maintenance_mode/source	POST		PartitionMove_StartMaintenanceModeOnSource
+I	/api/migration/{partitionId}/pre_maintenance_data_move/destination	POST		PartitionMove_RunPreMaintenanceDataMoveOnDestination
+I	/api/migration/{partitionId}/pre_maintenance_data_move/source	POST		PartitionMove_RunPreMaintenanceDataMoveOnSource
+I	/api/migration/{partitionId}/properties/destination	GET		PartitionMove_GetPartitionMigrationPropertiesForDestination
+I	/api/migration/{partitionId}/properties/source	GET		PartitionMove_GetPartitionMigrationPropertiesForSource
+I	/api/migration/{partitionId}/rollback/destination	POST		PartitionMove_RollbackMigrationOnDestination
+I	/api/migration/{partitionId}/rollback/source	POST		PartitionMove_RollbackMigrationOnSource
+I	/api/Partition	POST		Creates a new partition.
+I	/api/Partition/{partitionGlobalId}	DELETE,GET,PUT		Get a single partition by its global Id.
+I	/api/Partition/{partitionGlobalId}/restore	POST		Restore a partition by its global Id.
+I	/api/Partition/{partitionGlobalId}/UpdateAllowedIdp	PATCH		Updates the allowed idp
+I	/api/PartitionAccessPolicy/{partitionGlobalId}	GET,PUT		Updates the partition access policy
+I	/api/PartitionConsent/{partitionGlobalId}	GET,POST		Creates a new partition consent term.
+I	/api/PartitionConsent/{partitionGlobalId}/{partitionConsentId}	DELETE,GET,PUT		Updates a partition consent term.
+I	/api/PartitionConsent/{partitionGlobalId}/{partitionConsentId}/Download	GET		Download all the user consent records for the specified parition consent.
+I	/api/PartitionConsent/{partitionGlobalId}/{partitionConsentId}/UserConsents	GET		Get all the user consent records for the specified consent term.
+I	/api/PartitionConsent/{partitionGlobalId}/all	GET		Get all parition consent terms by partition Id, ordered by priority ascending. Smaller va…
+I	/api/ProtectedExternalClient	POST		Create a new protected external client.
+I	/api/ProtectedExternalClient/{partitionGlobalId}	GET		Get the full list of protected external clients for given partition.
+I	/api/ProtectedExternalClient/{partitionGlobalId}/{clientId}	DELETE,GET,PUT		Get the protected external client given client id.
+I	/api/ProtectedExternalClient/{partitionGlobalId}/secrets/{secretId}	DELETE		Delete the client secret given secret Id.
+I	/api/ProtectedExternalClient/GenerateSecret	POST		Generate a new client secret for the give client.
+I	/api/ReferenceToken	DELETE,GET,POST		ReferenceToken_CreateToken
+I	/api/ReferenceToken/{referenceTokenId}	DELETE,GET,PUT		ReferenceToken_GetToken
+I	/api/ReferenceToken/Exchange	POST		ReferenceToken_ExchangeReferenceToken
+I	/api/ReferenceToken/partition/{partitionGlobalId}	GET		ReferenceToken_GetTokensForPartition
+I	/api/ReferenceToken/Revoke	DELETE		ReferenceToken_DeleteTokenByValue
+I	/api/RobotAccount	POST		Creates a new robot account
+I	/api/RobotAccount/{partitionGlobalId}	DELETE,GET		Get all robot accounts from a partition
+I	/api/RobotAccount/{partitionGlobalId}/{robotAccountId}	DELETE,GET		Get robot account by partition and robot account Id
+I	/api/RobotAccount/{robotAccountId}	PUT		Updates a robot account information.
+I	/api/RobotProperties	DELETE,POST		RobotProperties_CreateRobotProperties
+I	/api/Rule	DELETE,POST,PUT		Rule_CreateRule
+I	/api/Rule/{partitionGlobalId}	GET		Rule_BulkGetRules
+I	/api/Rule/{partitionGlobalId}/{ruleId}	DELETE,GET		Rule_GetRule
+I	/api/SamlCertificate/{partitionGlobalId}/{certificateId}	DELETE		Delete a certificate by its ID.
+I	/api/SamlCertificate/{partitionGlobalId}/certificates	GET		Get the certificate pair for the partition.
+I	/api/SamlCertificate/{partitionGlobalId}/switch	POST		Switch the secondary certificate to be the primary certificate.
+I	/api/SamlCertificate/primary	PUT		Add or update the primary certificate.
+I	/api/SamlCertificate/secondary	PUT		Add or update the secondary certificate.
+I	/api/ScimToken/{partitionGlobalId}	DELETE,GET,POST		ScimToken_CreateScimToken
+I	/api/Setting	DELETE,GET,PUT		Get an application settings for a list of keys in a tenant
+I	/api/Setting/{settingId}	DELETE		Deletes the specified setting.
+I	/api/Setting/VerifySmtpSettings	POST		Verify whether the given SMTP settings are correct or not by sending an email to a recipi…
+I	/api/SigningCredential/keys	GET		SigningCredential_Keys
+I	/api/SigningCredential/primary	POST		SigningCredential_SetPrimary
+I	/api/SigningCredential/sync	POST		SigningCredential_Sync
+I	/api/telemetry	POST		Telemetry_RecordTelemetry
+I	/api/TokenEndpoint/AgenticWorkerToken	POST		TokenEndpoint_AgenticWorkerToken
+I	/api/TokenEndpoint/AssumeUserIdentity	POST		Create new Assume User Identity Token.
+I	/api/User	DELETE,POST		Creates a new user. This API will fail if a user with the same email or username already …
+I	/api/User/{userId}	DELETE,GET,PUT		Get the user at the specified location
+I	/api/User/{userId}/changepassword	POST		Changes the user's password.
+I	/api/User/{userId}/loginAttempts	GET		Get the login attempts of a user
+I	/api/User/BulkCreate	POST		Creates users in bulk.
+I	/api/User/InviteUsers	POST		Invite users in bulk.
+I	/api/User/users/{partitionGlobalId}	GET		User_GetUsers
+I	/api/UserInvite/{partitionGlobalId}	DELETE,POST		Confirms the email invitation
+I	/api/UserOrgs/OrgInfoLocalByAuth0Token/{organizationId}	GET		UserOrgs_OrgInfoLocalByAuth0Token
+I	/api/UserOrgs/userOrgs	GET		UserOrgs_UserOrgs
+I	/api/UserOrgs/userOrgsLocalByAADB2CToken	GET		UserOrgs_UserOrgsLocalByAADB2CToken
+I	/api/UserOrgs/userOrgsLocalByAADToken	GET		UserOrgs_UserOrgsLocalByAADToken
+I	/api/UserOrgs/userOrgsLocalByAuth0Token	GET		UserOrgs_UserOrgsLocalByAuth0Token
+I	/api/UserPartition	DELETE,POST		Add user to the target partition
+I	/api/UserPartition/partitions/{userId}	GET		Get a list of partitions that the target user is member of
+I	/api/UserPartition/users/{partitionGlobalId}	GET		Get a list of users that the target partition has
+O	/api/Account/Authenticate	POST	11-17	Authenticates the user based on user name and password
+O	/api/auth/oauth/token	GET,POST	11	Gets access token
+O	/api/Buckets/{id}/ListFiles	GET	20	Gets all files in a directory and subdirectories, with continuation token support.
+O	/api/DirectoryService/GetDirectoryPermissions	GET	11-20	Gets directory permissions
+O	/api/DirectoryService/GetDomains	GET	11-20	Gets domains
+O	/api/DirectoryService/GetDomainUserId	GET	18-20	Gets an orchestrator user Id by searching for the domain user information.
+O	/api/DirectoryService/SearchForUsersAndGroups	GET	11-20	Search users and groups
+O	/api/Folders/DeleteByKey	DELETE	17-20	Deletes a folder. Succeeds only if no entities or user associations exist in this folder …
+O	/api/Folders/GetAllForCurrentUser	GET	18-20	Returns a subset (paginated) of the folders the current user has access to. The response …
+O	/api/Folders/PatchNameDescription	PATCH	17-20	Edits a folder.
+O	/api/FoldersNavigation/GetAllFoldersForCurrentUser	GET	11-20	Returns the folders the current user has access to. The response will be a list of folder…
+O	/api/FoldersNavigation/GetAllRolesForUser	GET	11-20	Returns a page of the user-folder assignments for the input user, including the roles for…
+O	/api/FoldersNavigation/GetFolderNavigationContextForCurrentUser	GET	11-20	Returns a subset (paginated) of direct children for a given folder, which are accessible …
+O	/api/FoldersNavigation/GetFoldersForCurrentUser	GET	11-20	Returns a filtered subset (paginated) of the folders the current user has access to.
+O	/api/JobTriggers/DeliverPayload/{inboxId}	POST	18-20	Deliver payload for trigger inboxId.
+O	/api/JobTriggers/GetPayload/{inboxId}	GET	18-20	Get payload for trigger inboxId.
+O	/api/Licensing/Acquire	POST	11-20	Acquire license units
+O	/api/Licensing/Release	PUT	11-20	Release acquired license units
+O	/api/Logs	POST	11-20	Inserts a log entry with a specified message in JSON format.
+O	/api/Logs/SubmitLogs	POST	11-20	Inserts a collection of log entries, each in a specific JSON format.
+O	/api/Maintenance/End	POST	11-20	Ends a maintenance window
+O	/api/Maintenance/Get	GET	11-20	Gets the host admin logs.
+O	/api/Maintenance/Start	POST	11-20	Starts a maintenance window
+O	/api/PackageFeeds/GetFolderFeed	GET	15-20	Returns the feed id for a user assigned folder having specific feed
+O	/api/Releases/DeleteByKey	DELETE	17-20	Releases_DeleteByKey
+O	/api/RobotsService/BeginSession	POST	11	Begins a front-office session.
+O	/api/RobotsService/EndSession	POST	11	Ends the front-office session.
+O	/api/RobotsService/GetConnectionData	GET	11	Called by RobotSvc to connect the Robots on the machine it is running on to Orchestrator …
+O	/api/RobotsService/GetProcesses	POST	11	Gets from the server all the processes associated with a Robot.
+O	/api/RobotsService/GetSharedConnectionData	GET	11	Called by RobotSvc to connect the Robots on the machine it is running on to Orchestrator …
+O	/api/RobotsService/Heartbeat	POST	11	Post to the server a collection of heartbeat messages generated by the Robots from a Mach…
+O	/api/RobotsService/HeartbeatV2	POST	11	Acquires licensing runtimes, updates machine's session state and reporting time.
+O	/api/RobotsService/StartService	POST	11	Gets from the server all the Robots associated with a Machine and having the specified li…
+O	/api/RobotsService/StopService	POST	11	Called by RobotSvc to disconnect all Robots.
+O	/api/RobotsService/SubmitJobState	POST	11	Post to the server a heartbeat collection with jobs information
+O	/api/RobotsService/UploadScreenshot	POST	11	Uploads a screenshot for the given jobKey and robotKey.
+O	/api/Stats/GetConsumptionLicenseStats	GET	11-20	Gets the consumption licensing usage statistics
+O	/api/Stats/GetCountStats	GET	11-20	Gets the total number of various entities registered in Orchestrator
+O	/api/Stats/GetJobsStats	GET	11-20	Gets the total number of jobs aggregated by Job State
+O	/api/Stats/GetLicenseStats	GET	11-20	Gets the licensing usage statistics
+O	/api/Stats/GetSessionsStats	GET	11-20	Gets the total number of robots aggregated by Robot State
+O	/api/Status/Get	GET	11-20	Returns whether the current endpoint should be serving traffic
+O	/api/Status/VerifyHostAvailibility	GET	11-20	Status_VerifyHostAvailibility
+O	/api/TestAutomation/CancelTestCaseExecution	POST	11-20	Cancels the specified test case execution.
+O	/api/TestAutomation/CancelTestSetExecution	POST	11-20	Cancels the specified test set execution.
+O	/api/TestAutomation/CreateTestSetForReleaseVersion	POST	11-20	This will create a test set with source type API.This endpoint it is supposed to be used …
+O	/api/TestAutomation/GetAssertionScreenshot	GET,HEAD	11-20	Get the screenshot for the specified test case assertion.
+O	/api/TestAutomation/GetPackageInfoByTestCaseUniqueId	GET	11-20	Get the package identifier and the latest version for the specified test case.
+O	/api/TestAutomation/GetReleasesForPackageVersion	GET	11-20	This will list all the processes filtered by package identifier and version cross-folder …
+O	/api/TestAutomation/GetTestCaseExecutionAttachment	GET	15-20	Get the attachment for the specified test case execution attachment.
+O	/api/TestAutomation/GetTestCaseExecutionAttachments	POST	15-20	This will list all test case execution attachments filtered by identifier and tags
+O	/api/TestAutomation/GetTestSetExecutionAttachment	GET	15-20	Get the attachment for the specified test set execution attachment.
+O	/api/TestAutomation/GetTestSetExecutionAttachments	POST	15-20	This will list all test set execution attachments filtered by identifier and tags
+O	/api/TestAutomation/ReexecuteTestCases	POST	15-20	Re-execute the specified test case executions within the same test set execution.
+O	/api/TestAutomation/StartTestSetExecution	POST	11-20	Start a test set execution.
+O	/api/TestAutomation/StartTestSetExecutionWithOptions	POST	11-20	Start a test set execution with additional options.
+O	/api/TestDataQueueActions/AddItem	POST	11-20	Add a new test data queue item
+O	/api/TestDataQueueActions/BulkAddItems	POST	11-20	Bulk adds an array of data queue items
+O	/api/TestDataQueueActions/DeleteAllItems	DELETE	11-20	Delete all items from a test data queue
+O	/api/TestDataQueueActions/DeleteItems	DELETE	11-20	Delete specific test data queue items
+O	/api/TestDataQueueActions/GetNextItem	POST	11-20	Get the next unconsumed test data queue item
+O	/api/TestDataQueueActions/SetAllItemsConsumed	POST	11-20	Set the IsConsumed flag for all items from a test data queue
+O	/api/TestDataQueueActions/SetItemsConsumed	POST	11-20	Set the IsConsumed flag for specific test data queue items
+O	/api/Translations/GetTranslations	GET	11-20	Returns a json with translation resources
+O	/forms/TaskForms/BulkCompleteTasks	POST	15-20	Bulk Complete the task by merging form data and action taken
+O	/forms/TaskForms/BulkUpdateTasks	PUT	15-20	Bulk Update Task data by merging data.
+O	/forms/TaskForms/CompleteTask	POST	11-20	Complete the task by saving form data and action taken
+O	/forms/TaskForms/CreateFormTask	POST	11-20	Creates a new Form Task.
+O	/forms/TaskForms/GetTaskDataById	GET	11-20	Returns task data dto
+O	/forms/TaskForms/GetTaskFormById	GET	11-20	Returns form dto to render task form
+O	/forms/TaskForms/SaveAndReassignTask	POST	15-20	Save changes done by the current user and Reassign Task to another user
+O	/forms/TaskForms/SaveTaskData	PUT	11-20	Save task data
+O	/odata/Alerts	GET	11-20	Gets alerts.
+O	/odata/Alerts/UiPath.Server.Configuration.OData.GetUnreadCount	GET	11-20	Returns the total number of alerts, per tenant, that haven't been read by the current use…
+O	/odata/Alerts/UiPath.Server.Configuration.OData.MarkAsRead	POST	11-20	Marks alerts as read and returns the remaining number of unread notifications.
+O	/odata/Alerts/UiPath.Server.Configuration.OData.RaiseProcessAlert	POST	11-20	Creates a Process Alert
+O	/odata/Assets	GET,POST	11-20	Get Assets
+O	/odata/Assets({key})	DELETE,GET,PUT	11-20	Gets a single asset based on its id
+O	/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders	GET	15-20	Get the assets from all the folders in which the current user has the Assets.View permiss…
+O	/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered	GET	15-20	Get Filtered Assets
+O	/odata/Assets/UiPath.Server.Configuration.OData.GetFoldersForAsset(id={id})	GET	15-20	Get all accesible folders where the asset is shared, and the total count of folders where…
+O	/odata/Assets/UiPath.Server.Configuration.OData.GetRobotAsset(robotId='{robotId}',assetName='{assetName}')	GET	11-20	Returns the named asset associated to the given robot key.
+O	/odata/Assets/UiPath.Server.Configuration.OData.GetRobotAssetByNameForRobotKey	POST	11-20	Returns the named asset associated to the given robot key.
+O	/odata/Assets/UiPath.Server.Configuration.OData.GetRobotAssetByRobotId(robotId={robotId},assetName='{assetName}')	GET	11-20	Returns the named asset associated to the given robot Id.
+O	/odata/Assets/UiPath.Server.Configuration.OData.SetRobotAssetByRobotKey	POST	15-20	Set the asset value associated to the given robot key.
+O	/odata/Assets/UiPath.Server.Configuration.OData.ShareToFolders	POST	15-20	Adds the assets to the folders specified in 'ToAddFolderIds'. Removes the assets from the…
+O	/odata/Attachments	POST	20	Create Attachment
+O	/odata/Attachments({key})	DELETE,GET	20	Get Attachment by key
+O	/odata/AuditLogs	GET	11-20	Gets Audit logs.
+O	/odata/AuditLogs/UiPath.Server.Configuration.OData.Export	POST	16-20	Requests a CSV export of filtered items.
+O	/odata/AuditLogs/UiPath.Server.Configuration.OData.GetAuditLogDetails(auditLogId={auditLogId})	GET	11-20	Returns audit log details by audit log id
+O	/odata/AuditLogs/UiPath.Server.Configuration.OData.Reports	GET	11-16	Returns a CSV containing the filtered audit.
+O	/odata/Buckets	GET,POST	11-20	Creates an Bucket
+O	/odata/Buckets({key})	DELETE,GET,PUT	11-20	Gets a single Bucket.
+O	/odata/Buckets({key})/UiPath.Server.Configuration.OData.DeleteFile	DELETE	11-20	Deletes a file.
+O	/odata/Buckets({key})/UiPath.Server.Configuration.OData.GetDirectories	GET	11-20	Gets the child directories in a directory.
+O	/odata/Buckets({key})/UiPath.Server.Configuration.OData.GetFile	GET	11-20	Gets a file metadata.
+O	/odata/Buckets({key})/UiPath.Server.Configuration.OData.GetFiles	GET	11-20	Gets the files in a directory. Optionally returns all files in all child directories (rec…
+O	/odata/Buckets({key})/UiPath.Server.Configuration.OData.GetReadUri	GET	11-20	Gets a direct download URL for BlobFile.
+O	/odata/Buckets({key})/UiPath.Server.Configuration.OData.GetWriteUri	GET	11-20	Gets a direct upload URL for BlobFile.
+O	/odata/Buckets/UiPath.Server.Configuration.OData.GetBucketsAcrossFolders	GET	15-20	Get the buckets from all the folders in which the current user has the Buckets.View permi…
+O	/odata/Buckets/UiPath.Server.Configuration.OData.GetFoldersForBucket(id={id})	GET	15-20	Get all accessible folders where the bucket is shared, and the total count of folders whe…
+O	/odata/Buckets/UiPath.Server.Configuration.OData.ShareToFolders	POST	15-20	Adds the buckets to the folders specified in 'ToAddFolderIds'. Removes the buckets from t…
+O	/odata/BusinessRules	GET,POST	18-20	Get Filtered Business Rules
+O	/odata/BusinessRules({key})	DELETE,GET,PATCH,PUT	18-20	Get Business Rule by key
+O	/odata/BusinessRules/UiPath.Server.Configuration.OData.GetBusinessRulesAcrossFolders	GET	19-20	Get the business rules from all the folders in which the current user has the BusinessRul…
+O	/odata/BusinessRules/UiPath.Server.Configuration.OData.GetByKey(identifier={identifier})	GET	18	Get Business Rule by key
+O	/odata/BusinessRules/UiPath.Server.Configuration.OData.GetFoldersForBusinessRule(id={id})	GET	19-20	Get all accesible folders where the business rule is shared, and the total count of folde…
+O	/odata/BusinessRules/UiPath.Server.Configuration.OData.GetReadUri(name='{name}')	GET	18-20	Get Read URI by Name
+O	/odata/BusinessRules/UiPath.Server.Configuration.OData.GetVersionList(id={id})	GET	19-20	Get Versions of Business Rule
+O	/odata/BusinessRules/UiPath.Server.Configuration.OData.GetVersionList(name='{name}')	GET	18	Get Versions of Business Rule
+O	/odata/BusinessRules/UiPath.Server.Configuration.OData.ShareToFolders	POST	18-20	Makes the business rule visible in the specified folders.
+O	/odata/Calendars	GET,POST	11-20	Gets calendars for current tenant.
+O	/odata/Calendars({key})	DELETE,GET,PUT	11-20	Gets calendar based on its id.
+O	/odata/Calendars/UiPath.Server.Configuration.OData.CalendarExists	POST	11-20	Validate calendar name, and check if it already exists.
+O	/odata/CredentialStores	GET,POST	11-20	Gets all Credential Stores.
+O	/odata/CredentialStores({key})	DELETE,GET,PUT	11-20	Gets a single Credential Store by its key.
+O	/odata/CredentialStores({key})/UiPath.Server.Configuration.OData.SetDefaultStoreForResourceType	POST	11-20	Sets a credential store as the default for the given credential type.
+O	/odata/CredentialStores/UiPath.Server.Configuration.OData.GetAvailableCredentialStoreTypes	GET	11-20	Gets available Credential Store types.
+O	/odata/CredentialStores/UiPath.Server.Configuration.OData.GetDefaultStoreForResourceType(resourceType='{resourceType}')	GET	11-20	Get the default credential store for the given resource type.
+O	/odata/CredentialStores/UiPath.Server.Configuration.OData.GetResourcesForCredentialsProxyResourceTypes(key={key},resourceType='{resourceType}')	GET	16-20	Gets available resources robots (and later assets) for a credential store.
+O	/odata/CredentialStores/UiPath.Server.Configuration.OData.GetResourcesForCredentialStoreTypes(key={key},resourceType='{resourceType}')	GET	11-20	Gets available resources robots (and later assets) for a credential store.
+O	/odata/Environments	GET,POST	11-19	Gets Environments.
+O	/odata/Environments({key})	DELETE,GET,PUT	11-19	Gets a single environment.
+O	/odata/Environments({key})/UiPath.Server.Configuration.OData.AddRobot	POST	11-19	Associates a robot with the given environment.
+O	/odata/Environments({key})/UiPath.Server.Configuration.OData.RemoveRobot	POST	11-19	Dissociates a robot from the given environment.
+O	/odata/Environments({key})/UiPath.Server.Configuration.OData.SetRobots	POST	11-19	Associates a group of robots with and dissociates another group of robots from the given …
+O	/odata/Environments/UiPath.Server.Configuration.OData.GetRobotIdsForEnvironment(key={key})	GET	11-19	Returns a collection of all the ids of the robots associated to an environment based on e…
+O	/odata/Environments/UiPath.Server.Configuration.OData.GetRobotsForEnvironment(key={key})	GET	11-19	Returns a collection of all robots and, if no other sorting is provided, will place first…
+O	/odata/ExecutionMedia	GET	11-20	ExecutionMedia_Get
+O	/odata/ExecutionMedia({key})	GET	11-20	Get by id
+O	/odata/ExecutionMedia/UiPath.Server.Configuration.OData.DeleteMediaByJobId	POST	11-20	Deletes the execution media for the given job key.
+O	/odata/ExecutionMedia/UiPath.Server.Configuration.OData.DownloadMediaByJobId(jobId={jobId})	GET	11-20	Downloads execution media by job id
+O	/odata/Exports({key})	GET	17-20	Exports_GetById
+O	/odata/Exports({key})/UiPath.Server.Configuration.OData.GetDownloadLink	GET	17-20	Exports_GetDownloadLinkById
+O	/odata/Folders	GET,POST	11-20	Gets folders.
+O	/odata/Folders({folderId})/UiPath.Server.Configuration.OData.MoveFolder	PUT	15-20	Move a folder.
+O	/odata/Folders({key})	DELETE,GET,PUT	11-20	Gets a single folder, based on its Id.
+O	/odata/Folders({key})/UiPath.Server.Configuration.OData.RemoveMachinesFromFolder	POST	11-20	Remove user assignment from a folder.
+O	/odata/Folders({key})/UiPath.Server.Configuration.OData.RemoveUserFromFolder	POST	11-20	Remove user assignment from a folder.
+O	/odata/Folders({key})/UiPath.Server.Configuration.OData.RemoveUserFromFolderByKey	POST	18-20	Remove user assignment from a folder.
+O	/odata/Folders/UiPath.Server.Configuration.OData.AssignDomainUser	POST	11-20	Assigns a directory user or group to a set of folders with an optional set of roles per f…
+O	/odata/Folders/UiPath.Server.Configuration.OData.AssignMachines	POST	11-20	Assigns one or more machines to a set of folders.
+O	/odata/Folders/UiPath.Server.Configuration.OData.AssignUsers	POST	11-20	Assigns one or more users to a set of folders with an optional set of roles per folder.
+O	/odata/Folders/UiPath.Server.Configuration.OData.GetAllRolesForUser(username='{username}',skip={skip},take={take})	GET	11-20	Returns a page of the user-folder assignments for the input user, including the roles for…
+O	/odata/Folders/UiPath.Server.Configuration.OData.GetByKey(identifier={identifier})	GET	15-20	Gets a single folder, based on its Key.
+O	/odata/Folders/UiPath.Server.Configuration.OData.GetMachinesForFolder(key={key})	GET	11-20	Returns the machines assigned to a folder.
+O	/odata/Folders/UiPath.Server.Configuration.OData.GetMoveFolderMachinesChanges	GET	15-20	Gets the machine changes when moving a folder
+O	/odata/Folders/UiPath.Server.Configuration.OData.GetSubfoldersWithAssignedMachine	GET	15-20	Gets direct machine assignments for all subfolders of the specific folder
+O	/odata/Folders/UiPath.Server.Configuration.OData.GetUsersForFolder(key={key},includeInherited={includeInherited})	GET	11-20	Returns the users who have access to a folder and optionally the fine-grained roles each …
+O	/odata/Folders/UiPath.Server.Configuration.OData.ToggleFolderMachineInherit	POST	15-20	Toggle machine propagation for a folder to all subfolders.
+O	/odata/Folders/UiPath.Server.Configuration.OData.UpdateMachinesToFolderAssociations	POST	15-20	Add and remove machine associations to a folder
+O	/odata/HostLicenses	GET	11-17	Gets host licenses.
+O	/odata/HostLicenses({key})	DELETE,GET	11-17	Gets a single host license based on its key.
+O	/odata/HostLicenses/UiPath.Server.Configuration.OData.ActivateLicenseOffline	POST	11-17	Uploads a new offline license activation. The content of the license is sent as a file em…
+O	/odata/HostLicenses/UiPath.Server.Configuration.OData.ActivateLicenseOnline	POST	11-17	Activate the license for the host
+O	/odata/HostLicenses/UiPath.Server.Configuration.OData.DeactivateLicenseOnline	POST	11-17	Deactivate the license for the host
+O	/odata/HostLicenses/UiPath.Server.Configuration.OData.DeleteTenantLicense	POST	11-17	Deletes a tenant license based on its key.
+O	/odata/HostLicenses/UiPath.Server.Configuration.OData.GetDeactivateLicenseOffline	POST	11-17	Deactivate the license offline for the host
+O	/odata/HostLicenses/UiPath.Server.Configuration.OData.GetLicenseOffline	POST	11-17	Create the offline activation request for the host
+O	/odata/HostLicenses/UiPath.Server.Configuration.OData.GetTenantLicense(tenantId={tenantId})	GET	11-17	Gets a single tenant license based on its id.
+O	/odata/HostLicenses/UiPath.Server.Configuration.OData.SetTenantLicense	POST	11-17	Sets the license for a specific tenant
+O	/odata/HostLicenses/UiPath.Server.Configuration.OData.UpdateLicenseOnline	POST	11-17	Update the license for the host
+O	/odata/HostLicenses/UiPath.Server.Configuration.OData.UploadLicense	POST	11-17	Uploads a new host license file that was previously generated with Regutil. The content o…
+O	/odata/Jobs	GET	11-20	Gets Jobs.
+O	/odata/Jobs({key})	GET	11-20	Gets a single job.
+O	/odata/Jobs({key})/UiPath.Server.Configuration.OData.StopJob	POST	11-20	Cancels or terminates the specified job.
+O	/odata/Jobs({key})/UiPath.Server.Configuration.OData.ValidateExistingJob	POST	15-20	Validates an existing job.
+O	/odata/Jobs/UiPath.Server.Configuration.OData.Export	POST	16-20	Requests a CSV export of filtered items.
+O	/odata/Jobs/UiPath.Server.Configuration.OData.RestartJob	POST	15-20	Restarts the specified job.
+O	/odata/Jobs/UiPath.Server.Configuration.OData.ResumeJob	POST	11-20	Resumes the specified job.
+O	/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs	POST	11-20	Adds a new job and sets it in Pending state for each robot based on the input parameters …
+O	/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs	POST	11-20	Cancels or terminates the specified jobs.
+O	/odata/Jobs/UiPath.Server.Configuration.OData.ValidateDynamicJob	POST	15-20	Validates the input which would start a job.
+O	/odata/JobTriggers	GET	11-20	Gets JobTriggers.
+O	/odata/JobTriggers/UiPath.Server.Configuration.OData.GetByJobKey(jobKey={jobKey})	GET	20	Gets Trigger option for a job instance along with wait event details .
+O	/odata/JobTriggers/UiPath.Server.Configuration.OData.GetWithWaitEvents(jobId={jobId})	GET	15-20	Gets Trigger option for a job instance along with wait event details .
+O	/odata/Libraries	GET	11-20	Gets the library packages.
+O	/odata/Libraries('{key}')	DELETE	11-20	Deletes a package.
+O	/odata/Libraries/UiPath.Server.Configuration.OData.DownloadPackage(key='{key}')	GET	11-20	Downloads the .nupkg file of a Package.
+O	/odata/Libraries/UiPath.Server.Configuration.OData.GetVersions(packageId='{packageId}')	GET	11-20	Returns a collection of all available versions of a given package. Allows odata query opt…
+O	/odata/Libraries/UiPath.Server.Configuration.OData.UploadPackage	POST	11-20	Uploads a new package or a new version of an existing package. The content of the package…
+O	/odata/LicensesNamedUser/UiPath.Server.Configuration.OData.GetLicensesNamedUser(robotType='{robotType}')	GET	11-20	Gets named-user licenses.
+O	/odata/LicensesRuntime('{key}')/UiPath.Server.Configuration.OData.ToggleEnabled	POST	11-20	Toggles machine licensing on/off.
+O	/odata/LicensesRuntime/UiPath.Server.Configuration.OData.GetLicensesRuntime(robotType='{robotType}')	GET	11-20	Gets runtime licenses.
+O	/odata/Machines	GET,POST	11-20	Gets machines.
+O	/odata/Machines({key})	DELETE,GET,PATCH,PUT	11-20	Gets a single machine based on its id.
+O	/odata/Machines/UiPath.Server.Configuration.OData.DeleteBulk	POST	11-20	Deletes multiple machines based on their keys.
+O	/odata/Machines/UiPath.Server.Configuration.OData.GetAssignedMachines(folderId={folderId})	GET	15-20	Gets machines assigned to folder and robot
+O	/odata/Machines/UiPath.Server.Configuration.OData.GetRuntimesForFolder(folderId={folderId})	GET	11-20	Gets runtimes for the specified folder
+O	/odata/MessageTemplates	GET	11-16	Gets the message templates.
+O	/odata/MessageTemplates('{key}')	PUT	11-16	Edits a message template.
+O	/odata/OrganizationUnits	GET,POST	11-20	Gets the organization units.
+O	/odata/OrganizationUnits({key})	DELETE,GET,PUT	11-20	Gets an organization unit.
+O	/odata/OrganizationUnits({key})/UiPath.Server.Configuration.OData.SetUsers	POST	11-20	Associates a group of users with and dissociates another group of users from the given un…
+O	/odata/OrganizationUnits/UiPath.Server.Configuration.OData.GetUserIdsForUnit(key={key})	GET	11-20	Returns a collection of all the ids of the users associated to an unit based on unit Id.
+O	/odata/OrganizationUnits/UiPath.Server.Configuration.OData.GetUsersForUnit(key={key})	GET	11-20	Returns a collection of all non robot users and, if no other sorting is provided, will pl…
+O	/odata/Permissions	GET	11-20	Gets permissions.
+O	/odata/PersonalWorkspaces	GET	16-20	Gets Personal Workspaces.
+O	/odata/PersonalWorkspaces({key})/UiPath.Server.Configuration.OData.ConvertToFolder	POST	16-20	Converts a Personal Workspace to a standard Folder.
+O	/odata/PersonalWorkspaces({key})/UiPath.Server.Configuration.OData.StartExploring	POST	16-20	Assigns the current User to explore a Personal Workspace.
+O	/odata/PersonalWorkspaces({key})/UiPath.Server.Configuration.OData.StopExploring	POST	16-20	Unassigns the current User from exploring a Personal Workspace.
+O	/odata/PersonalWorkspaces/UiPath.Server.Configuration.OData.GetPersonalWorkspace	GET	16-20	Gets Personal Workspace for current User
+O	/odata/Processes	GET	11-20	Gets the processes.
+O	/odata/Processes('{key}')	DELETE	11-20	Deletes a package.
+O	/odata/Processes/UiPath.Server.Configuration.OData.DownloadPackage(key='{key}')	GET	11-20	Downloads the .nupkg file of a Package.
+O	/odata/Processes/UiPath.Server.Configuration.OData.GetArguments(key='{key}')	GET	11-20	Get process parameters
+O	/odata/Processes/UiPath.Server.Configuration.OData.GetProcessVersions(processId='{processId}')	GET	11-20	Returns a collection of all available versions of a given process. Allows odata query opt…
+O	/odata/Processes/UiPath.Server.Configuration.OData.SetArguments	POST	11-18	Saves process arguments
+O	/odata/Processes/UiPath.Server.Configuration.OData.UploadPackage	POST	11-20	Uploads a new package or a new version of an existing package. The content of the package…
+O	/odata/ProcessSchedules	GET,POST	11-20	Gets the process schedules.
+O	/odata/ProcessSchedules({key})	DELETE,GET,PUT	11-20	Gets a single process schedule based on its key.
+O	/odata/ProcessSchedules({key})/UiPath.Server.Configuration.OData.Activate	POST	11-20	Activates a process schedule associated with a queue
+O	/odata/ProcessSchedules/UiPath.Server.Configuration.OData.GetRobotIdsForSchedule(key={key})	GET	11-20	Returns a collection of all the ids of the robots associated to an schedule based on sche…
+O	/odata/ProcessSchedules/UiPath.Server.Configuration.OData.SetEnabled	POST	11-20	Enables/disables a group of schedules.
+O	/odata/ProcessSchedules/UiPath.Server.Configuration.OData.ValidateProcessSchedule	POST	15-20	Validates the input which would be used to create a process schedule.
+O	/odata/QueueDefinitions	GET,POST	11-20	Gets the list of queue definitions.
+O	/odata/QueueDefinitions({key})	DELETE,GET,PUT	11-20	Gets a single queue definition based on its Id.
+O	/odata/QueueDefinitions({key})/UiPathODataSvc.Export	POST	16-20	Requests a CSV export of filtered items.
+O	/odata/QueueDefinitions({key})/UiPathODataSvc.GetJsonSchemaDefinition(jsonSchemaType='{jsonSchemaType}')	GET	11-20	Gets a given queue item JSON schema as a .json file, based on queue definition id.
+O	/odata/QueueDefinitions({key})/UiPathODataSvc.Reports	GET	11-16	Returns an Excel file containing all the items in the given queue.
+O	/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetByKey(identifier={identifier})	GET	20	Gets a single queue definition by its GUID key.
+O	/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetFoldersForQueue(id={id})	GET	15-20	Get all accessible folders where the queue is shared, and the total count of folders wher…
+O	/odata/QueueDefinitions/UiPath.Server.Configuration.OData.GetQueuesAcrossFolders	GET	15-20	Get the queues from all the folders in which the current user has the Queues.View permiss…
+O	/odata/QueueDefinitions/UiPath.Server.Configuration.OData.ShareToFolders	POST	15-20	Makes the queue visible in the specified folders.
+O	/odata/QueueItemComments	GET,POST	11-20	Gets the QueueItemComments.
+O	/odata/QueueItemComments({key})	DELETE,GET,PUT	11-20	Gets a QueueItemComment by Id.
+O	/odata/QueueItemComments/UiPath.Server.Configuration.OData.GetQueueItemCommentsHistory(queueItemId={queueItemId})	GET	11-20	Returns a collection of Queue Item Comments associated to a Queue Item and all its relate…
+O	/odata/QueueItemEvents	GET	11-20	Gets the QueueItemEvents.
+O	/odata/QueueItemEvents({key})	GET	11-20	Gets a QueueItemEvent by Id.
+O	/odata/QueueItemEvents/UiPath.Server.Configuration.OData.GetQueueItemEventsHistory(queueItemId={queueItemId})	GET	11-20	Returns a collection of Queue Item Events associated to a Queue Item and all its related …
+O	/odata/QueueItems	GET	11-20	Gets a collection of queue items.
+O	/odata/QueueItems({key})	DELETE,GET,PUT	11-20	Gets a queue item by Id.
+O	/odata/QueueItems({key})/UiPath.Server.Configuration.OData.GetItemLastRetry	GET	11-20	Returns the last retry of a queue item.
+O	/odata/QueueItems({key})/UiPathODataSvc.GetItemProcessingHistory	GET	11-20	Returns data about the processing history of the given queue item. Allows odata query opt…
+O	/odata/QueueItems({key})/UiPathODataSvc.SetTransactionProgress	POST	11-20	Updates the progress field of a queue item with the status 'In Progress'.
+O	/odata/QueueItems/UiPath.Server.Configuration.OData.GetReviewers	GET	11-20	Returns a collection of users having the permission for Queue Items review. Allows odata …
+O	/odata/QueueItems/UiPathODataSvc.DeleteBulk	POST	11-20	Sets the given queue items' status to Deleted.
+O	/odata/QueueItems/UiPathODataSvc.GetItemLastRetryByKey(key={key})	GET	18-20	Returns the last retry of a queue item by uniqueKey.
+O	/odata/QueueItems/UiPathODataSvc.SetItemReviewer	POST	11-20	Sets the reviewer for multiple queue items
+O	/odata/QueueItems/UiPathODataSvc.SetItemReviewStatus	POST	11-20	Updates the review status of the specified queue items to an indicated state.
+O	/odata/QueueItems/UiPathODataSvc.UnsetItemReviewer	POST	11-20	Unsets the reviewer for multiple queue items
+O	/odata/QueueProcessingRecords/UiPathODataSvc.RetrieveLastDaysProcessingRecords(daysNo={daysNo},queueDefinitionId={queueDefinitionId})	GET	11-20	Returns the computed processing status for a given queue in the last specified days.
+O	/odata/QueueProcessingRecords/UiPathODataSvc.RetrieveQueuesProcessingStatus	GET	11-20	Returns the processing status for all queues. Allows odata query options.
+O	/odata/QueueRetention	GET	16-20	QueueRetention_Get
+O	/odata/QueueRetention({key})	DELETE,GET,PUT	16-20	QueueRetention_GetById
+O	/odata/Queues({key})/UiPathODataSvc.SetTransactionResult	POST	11-20	Sets the result of a transaction.
+O	/odata/Queues/UiPathODataSvc.AddQueueItem	POST	11-20	Adds a new queue item
+O	/odata/Queues/UiPathODataSvc.BulkAddQueueItems	POST	11-20	Bulk adds queue items
+O	/odata/Queues/UiPathODataSvc.StartTransaction	POST	11-20	Starts a transaction
+O	/odata/ReleaseRetention	GET	16-20	ReleaseRetention_Get
+O	/odata/ReleaseRetention({key})	DELETE,GET,PUT	16-20	ReleaseRetention_GetById
+O	/odata/Releases	GET,POST	11-20	Gets multiple releases.
+O	/odata/Releases({key})	DELETE,GET,PATCH,PUT	11-20	Gets a release by id.
+O	/odata/Releases({key})/UiPath.Server.Configuration.OData.RollbackToPreviousReleaseVersion	POST	11-20	Reverts the package versions for the given release to the last version it had before the …
+O	/odata/Releases({key})/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersion	POST	11-20	Updates the package version for the given release to the latest available.
+O	/odata/Releases({key})/UiPath.Server.Configuration.OData.UpdateToSpecificPackageVersion	POST	11-20	Updates the package version for the given release.
+O	/odata/Releases/UiPath.Server.Configuration.OData.RollbackToPreviousReleaseVersionByKey(identifier={identifier})	POST	20	Reverts the package versions for the given release to the last version it had before the …
+O	/odata/Releases/UiPath.Server.Configuration.OData.UpdateByKey	POST	17-20	Updates the package entry point for the given release.
+O	/odata/Releases/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersionBulk	POST	11-20	Updates the package versions for the given releases to the latest available.
+O	/odata/Releases/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersionBulkByKey	POST	20	Updates the package versions for the given releases to the latest available.
+O	/odata/Releases/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersionByKey(identifier={identifier})	POST	20	Updates the package version for the given release to the latest available.
+O	/odata/Releases/UiPath.Server.Configuration.OData.UpdateToSpecificPackageVersionByKey(identifier={identifier})	POST	20	Updates the package version for the given release by its GUID key.
+O	/odata/RobotLogs	GET	11-20	Gets the robot logs.
+O	/odata/RobotLogs/UiPath.Server.Configuration.OData.Export	POST	16-20	Requests a CSV export of filtered items.
+O	/odata/RobotLogs/UiPath.Server.Configuration.OData.GetTotalCount	GET	11-20	Gets the total count of robot logs. This might be different than the size of the count re…
+O	/odata/RobotLogs/UiPath.Server.Configuration.OData.Reports	GET	11-16	Reports.
+O	/odata/Robots	GET,POST	11-20	Gets robots.
+O	/odata/Robots({key})	DELETE,GET,PATCH,PUT	11-20	Gets a single robot based on its key.
+O	/odata/Robots/UiPath.Server.Configuration.OData.ConvertToFloating	POST	11-20	Convert a Standard Attended Robot to a Floating Robot.
+O	/odata/Robots/UiPath.Server.Configuration.OData.DeleteBulk	POST	11-20	Deletes multiple robots based on their keys.
+O	/odata/Robots/UiPath.Server.Configuration.OData.FindAllAcrossFolders	GET	15-20	Get robots across all accessible folders.
+O	/odata/Robots/UiPath.Server.Configuration.OData.GetConfiguredRobots	GET	15-20	Gets robots autoprovisioned from users
+O	/odata/Robots/UiPath.Server.Configuration.OData.GetFolderRobots(folderId={folderId},machineId={machineId})	GET	15-20	Get folder robots
+O	/odata/Robots/UiPath.Server.Configuration.OData.GetMachineNameToLicenseKeyMappings	GET	11-20	Gets machine name to license key mapping.
+O	/odata/Robots/UiPath.Server.Configuration.OData.GetRobotsForProcess(processId='{processId}')	GET	11-20	Returns a collection of all robots that can execute the process with the provided Id.
+O	/odata/Robots/UiPath.Server.Configuration.OData.GetRobotsFromFolder(folderId={folderId})	GET	15-20	Gets all robots from a folder
+O	/odata/Robots/UiPath.Server.Configuration.OData.GetUsernames	GET	11-20	Gets usernames.
+O	/odata/Robots/UiPath.Server.Configuration.OData.ToggleEnabledStatus	POST	11-20	Toggles the status of the robots (enabled/disabled)
+O	/odata/Roles	GET,POST	11-20	Gets roles.
+O	/odata/Roles({key})	DELETE,GET,PUT	11-20	Gets role based on its id.
+O	/odata/Roles({key})/UiPath.Server.Configuration.OData.SetUsers	POST	11-20	Associates a group of users with and dissociates another group of users from the given ro…
+O	/odata/Roles/UiPath.Server.Configuration.OData.GetUserIdsForRole(key={key})	GET	11-20	Returns a collection of all the ids of the users associated to a role based on role Id.
+O	/odata/Roles/UiPath.Server.Configuration.OData.GetUsersForRole(key={key})	GET	11-20	Returns a collection of all users and, if no other sorting is provided, will place first …
+O	/odata/Sessions	GET	11-20	Gets the sessions for the current folder.
+O	/odata/Sessions({key})/UiPath.Server.Configuration.OData.ToggleMachineSessionDebugMode	POST	15-20	Toggles the debug mode for the specified machine session
+O	/odata/Sessions/UiPath.Server.Configuration.OData.DeleteInactiveUnattendedSessions	POST	15-20	Deletes disconnected or unresponsive sessions
+O	/odata/Sessions/UiPath.Server.Configuration.OData.GetGlobalSessions	GET	11-20	Gets all the tenant sessions.
+O	/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimes	GET	15-20	Gets machine runtime sessions
+O	/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessionRuntimesByFolderId(folderId={folderId})	GET	15-20	Gets machine runtime sessions by folder id
+O	/odata/Sessions/UiPath.Server.Configuration.OData.GetMachineSessions(key={key})	GET	11-20	Get sessions for a machine
+O	/odata/Sessions/UiPath.Server.Configuration.OData.GetUsernames	GET	11-20	Gets usernames.
+O	/odata/Sessions/UiPath.Server.Configuration.OData.SetMaintenanceMode	POST	17-20	Sets the execution capabilities for a specified host
+O	/odata/Settings	GET	11-20	Gets the settings.
+O	/odata/Settings('{key}')	GET,PUT	11-20	Gets a settings value based on its key.
+O	/odata/Settings/UiPath.Server.Configuration.OData.ActivateLicenseOffline	POST	11-18	Uploads a new offline license activation. The content of the license is sent as a file em…
+O	/odata/Settings/UiPath.Server.Configuration.OData.ActivateLicenseOnline	POST	11-18	Activate the license for a specific tenant
+O	/odata/Settings/UiPath.Server.Configuration.OData.DeactivateLicenseOnline	POST	11-18	Deactivate the license for a specific tenant
+O	/odata/Settings/UiPath.Server.Configuration.OData.DeleteBulk	POST	15-20	Deletes values for the specified settings in the Tenant scope.
+O	/odata/Settings/UiPath.Server.Configuration.OData.DeleteLicense	POST	11-18	Removes the license
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetActivitySettings	GET	11-20	Returns Orchestrator settings used by activities
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetAuthenticationSettings	GET	11-20	Gets the authentication settings
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetCalendar	GET	11-20	Gets custom calendar, with excluded dates in UTC, for current tenant
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetConnectionString	GET	11-18	Gets the connection string
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetDeactivateLicenseOffline	POST	11-18	Deactivate the license offline for a specific tenant
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetExecutionSettingsConfiguration(scope={scope})	GET	11-20	Gets the execution settings configuration (display name, value type, etc.). If scope is 0…
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetLanguages	GET	11-20	Gets supported languages
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetLicense	GET	11-20	Retrieves the current license information.
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetLicenseOffline	POST	11-18	Create the offline activation request for a specific tenant
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetSecureStoreConfiguration(storeTypeName='{storeTypeName}')	GET	11-20	Gets the configuration format for a Secure store
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetServicesSettings	GET	11	Returns a collection of key value pairs representing all service settings used by a robot…
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetTimezones	GET	11-20	Gets timezones.
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetUpdateSettings	GET	15-20	Gets the update settings
+O	/odata/Settings/UiPath.Server.Configuration.OData.GetWebSettings	GET	11-20	Returns a collection of key value pairs representing settings used by Orchestrator web cl…
+O	/odata/Settings/UiPath.Server.Configuration.OData.SetCalendar	POST	11-20	Sets custom calendar, with excluded dates in UTC, for current tenant
+O	/odata/Settings/UiPath.Server.Configuration.OData.UpdateBulk	POST	11-20	Updates the current settings.
+O	/odata/Settings/UiPath.Server.Configuration.OData.UpdateLicenseOnline	POST	11-18	Update the license for a specific tenant
+O	/odata/Settings/UiPath.Server.Configuration.OData.UpdateUserSetting	POST	11-20	Edits a user setting.
+O	/odata/Settings/UiPath.Server.Configuration.OData.UploadLicense	POST	11-18	Uploads a new license file that was previously generated with Regutil. The content of the…
+O	/odata/Settings/UiPath.Server.Configuration.OData.VerifySmtpSetting	POST	11-20	Verify whether the given SMTP settings are correct or not by sending an email to a recipi…
+O	/odata/TaskActivities/UiPath.Server.Configuration.OData.GetByTaskId(taskId={taskId})	GET	15-20	Gets Task Activities for a Task
+O	/odata/TaskCatalogs	GET	11-20	Gets Task Catalog objects with the given OData queries.
+O	/odata/TaskCatalogs({key})	DELETE,GET	11-20	Gets a Task Catalog item by Id.
+O	/odata/TaskCatalogs({key})/UiPath.Server.Configuration.OData.UpdateTaskCatalog	POST	11-20	Updates Task Catalog.
+O	/odata/TaskCatalogs/UiPath.Server.Configuration.OData.CreateTaskCatalog	POST	11-20	Creates a new Task Catalog.
+O	/odata/TaskCatalogs/UiPath.Server.Configuration.OData.GetFoldersForTaskCatalog(id={id})	GET	15-20	Get all accessible folders where the task catalog is shared, and the total count of folde…
+O	/odata/TaskCatalogs/UiPath.Server.Configuration.OData.GetTaskCatalogExtendedDetails(taskCatalogId={taskCatalogId})	GET	16-20	Validates task catalog deletion request.
+O	/odata/TaskCatalogs/UiPath.Server.Configuration.OData.GetTaskCatalogsFromFoldersWithPermissions	GET	15-20	Gets Task Catalogs across folders having given permission with the given OData queries .
+O	/odata/TaskCatalogs/UiPath.Server.Configuration.OData.ShareToFolders	POST	15-20	Makes the task catalogs visible in the specified folders.
+O	/odata/TaskDefinitions	GET	17-20	Gets Task Definition objects with the given OData queries.
+O	/odata/TaskDefinitions({key})	DELETE,GET	17-20	Gets a Task Definition item by Id.
+O	/odata/TaskDefinitions({key})/UiPath.Server.Configuration.OData.UpdateTaskDefinition	POST	17-20	Updates Task Definition.
+O	/odata/TaskDefinitions/UiPath.Server.Configuration.OData.CreateTaskDefinition	POST	17-20	Creates a new Task Definition.
+O	/odata/TaskDefinitions/UiPath.Server.Configuration.OData.GetTaskDefinitionVersions(id={id})	GET	17-20	Get all versions of Task Definition.
+O	/odata/TaskNotes/UiPath.Server.Configuration.OData.CreateTaskNote	POST	15-20	Adds a task note.
+O	/odata/TaskNotes/UiPath.Server.Configuration.OData.GetByTaskId(taskId={taskId})	GET	15-20	Gets Task Notes for a Task
+O	/odata/TaskRetention	GET	18-20	TaskRetention_Get
+O	/odata/TaskRetention({key})	DELETE,GET,PUT	18-20	TaskRetention_GetById
+O	/odata/Tasks	GET	11-20	Gets Task objects from classic folders with the given OData queries.
+O	/odata/Tasks({key})	GET	11-20	Gets a Task with the given primary key.
+O	/odata/Tasks/UiPath.Server.Configuration.OData.AssignTasks	POST	11-20	Assigns the tasks to given users.
+O	/odata/Tasks/UiPath.Server.Configuration.OData.DeleteTasks	POST	15-20	Deletes the tasks.
+O	/odata/Tasks/UiPath.Server.Configuration.OData.EditTaskMetadata	POST	15-20	Edits the metadata of a task
+O	/odata/Tasks/UiPath.Server.Configuration.OData.GetByKey(identifier={identifier})	GET	18-20	Gets a Task with the given guid.
+O	/odata/Tasks/UiPath.Server.Configuration.OData.GetTaskPermissions	GET	11-20	Gets all the tasks related permissions for the logged in user on the folder in session
+O	/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders	GET	11-20	Gets Task objects across folders (including Modern folders) with the given OData queries.
+O	/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFoldersForAdmin	GET	11-20	Gets Task objects across folders (including Modern folders) where the current user has ta…
+O	/odata/Tasks/UiPath.Server.Configuration.OData.GetTaskUsers(organizationUnitId={organizationUnitId})	GET	11-20	Gets users in given Organization Unit, who have Tasks.View and Tasks.Edit permissions
+O	/odata/Tasks/UiPath.Server.Configuration.OData.ReassignTasks	POST	11-20	Reassigns the tasks to given users.
+O	/odata/Tasks/UiPath.Server.Configuration.OData.UnassignTasks	POST	11-20	Unassigns the tasks from the users.
+O	/odata/Tenants	GET,POST	11-20	Gets tenants.
+O	/odata/Tenants({key})	DELETE,GET,PATCH	11-20	Gets a single tenant based on its id.
+O	/odata/Tenants/UiPath.Server.Configuration.OData.SetActive	POST	11-18	Toggles the active status of tenants
+O	/odata/TestCaseDefinitions	GET	11-20	Returns a list of Test Case Definitions
+O	/odata/TestCaseExecutions	GET	11-20	Returns a list of Test Case Executions
+O	/odata/TestCaseExecutions({key})	GET	11-20	Return a specific Test Case Execution identified by key
+O	/odata/TestDataQueueItems	GET	11-20	Return a list of test data queue items
+O	/odata/TestDataQueueItems({key})	GET	11-20	Return a specific test data queue item identified by key
+O	/odata/TestDataQueues	GET,POST	11-20	Return a list of test data queues
+O	/odata/TestDataQueues({key})	DELETE,GET,PUT	11-20	Return a specific test data queue identified by key
+O	/odata/TestSetExecutions	GET	11-20	Returns a list of Test Set Executions cross-folder when no current folder is sent by head…
+O	/odata/TestSetExecutions({key})	GET	11-20	Return a specific Test Set Execution identified by key
+O	/odata/TestSets	GET,POST	11-20	Returns a list of Test Sets cross-folder when no current folder is sent by header. It wil…
+O	/odata/TestSets({key})	DELETE,GET,PUT	11-20	Return a specific Test Set identified by key
+O	/odata/TestSetSchedules	GET,POST	11-20	Returns a list of test set execution schedules
+O	/odata/TestSetSchedules({key})	DELETE,GET,PUT	11-20	Return a specific test set execution schedule identified by key
+O	/odata/TestSetSchedules/UiPath.Server.Configuration.OData.SetEnabled	POST	11-20	Enables / disables a list of test set execution schedules.
+O	/odata/UserLoginAttempts({key})	GET	11-16	Gets the user's login attempts
+O	/odata/Users	GET,POST	11-20	Gets users.
+O	/odata/Users({key})	DELETE,GET,PATCH,PUT	11-20	Gets a user based on its id.
+O	/odata/Users({key})/UiPath.Server.Configuration.OData.AssignRoles	POST	15-20	Users_AssignRolesById
+O	/odata/Users({key})/UiPath.Server.Configuration.OData.ChangePassword	POST	11-16	Changes the password of the user.
+O	/odata/Users({key})/UiPath.Server.Configuration.OData.ChangeUserCulture	POST	11-20	Changes the culture for the specified user
+O	/odata/Users({key})/UiPath.Server.Configuration.OData.SetActive	POST	11-19	Activate or deactivate a user
+O	/odata/Users({key})/UiPath.Server.Configuration.OData.ToggleOrganizationUnit	POST	11-18	Associates/dissociates the given user with/from an organization unit based on toggle para…
+O	/odata/Users({key})/UiPath.Server.Configuration.OData.ToggleRole	POST	11-20	Associates/dissociates the given user with/from a role based on toggle parameter.
+O	/odata/Users/UiPath.Server.Configuration.OData.ChangeCulture	POST	11-20	Changes the culture for the current user
+O	/odata/Users/UiPath.Server.Configuration.OData.GetCurrentPermissions	GET	11-20	Returns a user permission collection containing data about the current user and all the p…
+O	/odata/Users/UiPath.Server.Configuration.OData.GetCurrentUser	GET	11-20	Returns details about the user currently logged into Orchestrator.
+O	/odata/Users/UiPath.Server.Configuration.OData.ImportUsers	POST	11	Imports from AD all users from the given group and associates them with given roles.
+O	/odata/Users/UiPath.Server.Configuration.OData.UpdatePassword	POST	11-16	Updates the user password for the provided Username and Tenancy Name. This endpoint is in…
+O	/odata/Users/UiPath.Server.Configuration.OData.Validate(userIds=[{userIds}])	GET	16-20	Validates if the robots for the given users are busy
+O	/odata/Webhooks	GET,POST	11-20	List webhooks
+O	/odata/Webhooks({key})	DELETE,GET,PATCH,PUT	11-20	Gets a single webhook
+O	/odata/Webhooks({key})/UiPath.Server.Configuration.OData.Ping	POST	11-20	Sends a Ping request to webhook endpoint. Used for testing connectivity and availability …
+O	/odata/Webhooks/UiPath.Server.Configuration.OData.GetEventTypes	GET	11-20	Gets the list of event types a webhook can subscribe to
+O	/odata/Webhooks/UiPath.Server.Configuration.OData.TriggerCustom	POST	11-20	Triggers an event of type "custom"
+O	/tasks/AppTasks/CompleteAppTask	POST	17-20	Complete the task by saving app task data and action taken
+O	/tasks/AppTasks/CreateAppTask	POST	17-20	Creates a new App Task.
+O	/tasks/AppTasks/GetAppTaskById	GET	17-20	Returns dto to render app task
+O	/tasks/AppTasks/GetAppTaskByKey	GET	19-20	Returns dto to render app task
+O	/tasks/AppTasks/SaveAndReassignAppTasks	POST	17-20	Save changes done by the current user and Reassign Task to another user
+O	/tasks/AppTasks/SaveAppTasksData	PUT	17-20	Save task data
+O	/tasks/GenericTasks/CompleteTask	POST	11-20	Complete the task by saving task data and action taken
+O	/tasks/GenericTasks/CreateTask	POST	11-20	Creates a new Generic Task.
+O	/tasks/GenericTasks/GetTaskDataById	GET	11-20	Returns task data dto
+O	/tasks/GenericTasks/GetTaskDataByKey	GET	20	Returns task data dto
+O	/tasks/GenericTasks/SaveAndReassignTask	POST	15-20	Save changes done by the current user and Reassign Task to another user
+O	/tasks/GenericTasks/SaveTaskData	PUT	11-20	Save Task data
+O	/tasks/GenericTasks/SaveTaskTags	PUT	15-20	Save tags for a task
+P	/api/auditLog/{partitionGlobalId}	GET		
+P	/api/identity/PartitionAccessPolicy/{partitionGlobalId}	GET		
+P	/api/identity/User	GET		
+P	/api/identity/User/users/licenses	GET		
+P	/api/identity/UserPartition/licenses	GET		
+P	/api/license/accountant/UserLicense	GET		
+P	/api/license/accountant/UserLicense/group	GET		
+P	/api/license/accountant/UserLicense/group/{groupId}/allocations	GET		
+P	/api/license/accountant/UserLicense/group/{groupId}/user/{userId}	GET		
+P	/api/license/accountant/UserLicense/group/page	GET		
+P	/api/license/accountant/UserLicense/user/page	GET		
+P	/api/license/accountant/UserLicense/users	GET		
+P	/api/licensing/tenantAllocations	GET		
+S	/aifabric_/ai-deployer/v1/mlskills	GET,POST		getMLSkills_1
+S	/aifabric_/ai-deployer/v1/mlskills/{mlSkillId}	DELETE,POST		updateMLSkill_1
+S	/aifabric_/ai-deployer/v1/mlskills/{mlSkillId}/rollback	POST		rollBackMLSkill_1
+S	/aifabric_/ai-deployer/v1/mlskills/stop/{mlSkillId}	PUT		stopMLSkill_1
+S	/aifabric_/ai-deployer/v2/mlskills	GET,POST		getMLSkills
+S	/aifabric_/ai-deployer/v2/mlskills/{mlSkillId}	DELETE,POST		updateMLSkill
+S	/aifabric_/ai-deployer/v2/mlskills/{mlSkillId}/rollback	POST		rollBackMLSkill
+S	/aifabric_/ai-deployer/v2/mlskills/stop/{mlSkillId}	PUT		stopMLSkill
+S	/aifabric_/ai-pkgmanager/v1/mlpackages	GET,POST		getMLPackages
+S	/aifabric_/ai-pkgmanager/v1/mlpackages/{mlPackageId}/versions	DELETE,GET		getVersions
+S	/aifabric_/ai-pkgmanager/v1/mlpackages/{mlPackageId}/versions/allundeployed	DELETE		deleteAllUndeployed
+S	/aifabric_/ai-pkgmanager/v1/mlpackages/import	POST		importMLPackage
+S	/aifabric_/ai-pkgmanager/v1/mlpackages/versions/{versionId}	DELETE		deleteMLPackageVersion
+S	/aifabric_/ai-pkgmanager/v1/projects	GET		getProjects
+S	/aifabric_/ai-trainer/v1/datasets	GET		getDatasets
+S	/aifabric_/ai-trainer/v1/datasets/{datasetId}	GET		getDatasetById
+S	/aifabric_/ai-trainer/v1/datasets/listDataset	GET		getListDataset
+S	/aifabric_/ai-trainer/v1/datasets/listPipelineArtifacts	GET		listPipelineArtifacts
+S	/aifabric_/ai-trainer/v1/pipelines	GET,POST		getPipelines
+S	/aifabric_/ai-trainer/v1/pipelines/{pipelineId}	GET		getPipelineById
+S	/aifabric_/ai-trainer/v1/runs	GET		getRuns
+S	/aifabric_/ai-trainer/v1/runs/{runId}	DELETE,GET,PUT		getRunById
+S	/aifabric_/ai-trainer/v1/signedURL	GET		getSignedURL
+S	/du_/api/framework/projects	GET		Retrieve all projects
+S	/du_/api/framework/projects/{projectId}	GET		Retrieve project details
+S	/du_/api/framework/projects/{projectId}/{tag}/classification	POST		Classify document
+S	/du_/api/framework/projects/{projectId}/{tag}/classification/result/{operationId}	GET		Retrieve classification result
+S	/du_/api/framework/projects/{projectId}/{tag}/classification/start	POST		Start classification by tag
+S	/du_/api/framework/projects/{projectId}/{tag}/classifiers/validation/result/{operationId}	GET		Retrieve classification validation result
+S	/du_/api/framework/projects/{projectId}/{tag}/classifiers/validation/start	POST		Start classification validation
+S	/du_/api/framework/projects/{projectId}/{tag}/document-types/{documentTypeId}/extraction	POST		Start extraction
+S	/du_/api/framework/projects/{projectId}/{tag}/document-types/{documentTypeId}/extraction/result/{operationId}	GET		Retrieve extraction result
+S	/du_/api/framework/projects/{projectId}/{tag}/document-types/{documentTypeId}/extraction/start	POST		Start extraction
+S	/du_/api/framework/projects/{projectId}/{tag}/document-types/{documentTypeId}/validation/result/{operationId}	GET		Retrieve the extraction validation result
+S	/du_/api/framework/projects/{projectId}/{tag}/document-types/{documentTypeId}/validation/start	POST		Start extraction validation
+S	/du_/api/framework/projects/{projectId}/classifiers	GET		Retrieve classifiers
+S	/du_/api/framework/projects/{projectId}/classifiers/{classifierId}	GET		Retrieve classifier details
+S	/du_/api/framework/projects/{projectId}/classifiers/{classifierId}/classification	POST		Classify document
+S	/du_/api/framework/projects/{projectId}/classifiers/{classifierId}/classification/result/{operationId}	GET		Retrieve classification result
+S	/du_/api/framework/projects/{projectId}/classifiers/{classifierId}/classification/start	POST		Start classification
+S	/du_/api/framework/projects/{projectId}/classifiers/{classifierId}/validation/result/{operationId}	GET		Retrieve classification validation result
+S	/du_/api/framework/projects/{projectId}/classifiers/{classifierId}/validation/start	POST		Start classification validation
+S	/du_/api/framework/projects/{projectId}/digitization/result/{documentId}	GET		Get digitization result
+S	/du_/api/framework/projects/{projectId}/digitization/start	POST		Digitize document
+S	/du_/api/framework/projects/{projectId}/document-types	GET		Retrieve document types
+S	/du_/api/framework/projects/{projectId}/document-types/{documentTypeId}	GET		Retrieve document type details
+S	/du_/api/framework/projects/{projectId}/extractors	GET		Retrieve extractors
+S	/du_/api/framework/projects/{projectId}/extractors/{extractorId}	GET		Retrieve extractor details
+S	/du_/api/framework/projects/{projectId}/extractors/{extractorId}/extraction	POST		Extract document fields
+S	/du_/api/framework/projects/{projectId}/extractors/{extractorId}/extraction/result/{operationId}	GET		Retrieve extraction result
+S	/du_/api/framework/projects/{projectId}/extractors/{extractorId}/extraction/start	POST		Start extraction
+S	/du_/api/framework/projects/{projectId}/extractors/{extractorId}/validation/result/{operationId}	GET		Retrieve extraction validation result
+S	/du_/api/framework/projects/{projectId}/extractors/{extractorId}/validation/start	POST		Start extraction validation
+S	/du_/api/framework/projects/{projectId}/tags	GET		Retrieve tags
+S	/testmanager_/api	GET		ServerInfo_Get
+S	/testmanager_/api/azuredevopsconnector/{token}/isalive	GET		AzureDevOpsWebHook_IsAlive
+S	/testmanager_/api/azuredevopsconnector/{token}/requirements	POST		AzureDevOpsWebHook_Requirement
+S	/testmanager_/api/azuredevopsconnector/{token}/testcases	POST		AzureDevOpsWebHook_TestCase
+S	/testmanager_/api/configuration	GET		Configuration_GetCurrentConfiguration
+S	/testmanager_/api/configuration/featureflags	GET		Configuration_GetFeatureFlags
+S	/testmanager_/api/configuration/telemetry	GET		Configuration_GetTelemetryConfiguration
+S	/testmanager_/api/jiraconnector/{token}/webhook	POST		JiraConnectorWebHooks_TriggerWebhook
+S	/testmanager_/api/serverinfo	GET		ServerInfo_Get
+S	/testmanager_/api/servicenowconnector/{token}/isalive	POST		ServiceNowWebHook_IsAlive
+S	/testmanager_/api/servicenowconnector/{token}/requirements	POST		ServiceNowWebHook_Requirement
+S	/testmanager_/api/servicenowconnector/{token}/testcases	POST		ServiceNowWebHook_TestCase
+S	/testmanager_/api/usermanagement/getuserdata	GET		Users_GetLegacyUserData
+S	/testmanager_/api/users	GET		Users_GetUsers
+S	/testmanager_/api/users/{id}	GET,PATCH,PUT		Users_GetById
+S	/testmanager_/api/users/request-access	POST		Users_RequestAccess
+S	/testmanager_/api/usersettings/{id}	GET,PATCH,PUT		UserSettings_Get
+S	/testmanager_/api/v2/{projectId}/{objectType}/{objectId}/parameters	GET,POST		Parameters_GetAllByObjectId
+S	/testmanager_/api/v2/{projectId}/{objectType}/{objectId}/parameters/{id}	DELETE,GET,PUT		Parameters_GetById
+S	/testmanager_/api/v2/{projectId}/{objectType}/{objectId}/parameters/delete	POST		Use this endpoint to delete multiple parameters.
+S	/testmanager_/api/v2/{projectId}/attachments/{id}	DELETE,PATCH		Attachments_DeleteAttachment
+S	/testmanager_/api/v2/{projectId}/attachments/{id}/download	GET		Attachments_DownloadAttachment
+S	/testmanager_/api/v2/{projectId}/attachments/{objectType}/{id}	DELETE,GET,PATCH		Attachments_DeleteAttachment
+S	/testmanager_/api/v2/{projectId}/attachments/{objectType}/{id}/all	GET		Attachments_GetAttachmentsByObjectId
+S	/testmanager_/api/v2/{projectId}/attachments/{objectType}/{id}/download	GET		Attachments_DownloadAttachment
+S	/testmanager_/api/v2/{projectId}/attachments/{objectType}/{id}/upload	POST		Attachments_UploadAttachment
+S	/testmanager_/api/v2/{projectId}/attachments/{objectType}/objects	POST		Attachments_GetAttachmentsByObjectIds
+S	/testmanager_/api/v2/{projectId}/attachments/object/{id}/all	GET		Attachments_GetAttachmentsByObjectId
+S	/testmanager_/api/v2/{projectId}/attachments/object/{id}/upload	POST		Attachments_UploadAttachment
+S	/testmanager_/api/v2/{projectId}/attachments/objects	POST		Attachments_GetAttachmentsByObjectIds
+S	/testmanager_/api/v2/{projectId}/customfielddefinitions	GET,POST		CustomFieldDefinitions_Get
+S	/testmanager_/api/v2/{projectId}/customfielddefinitions/{id}	DELETE,GET,PATCH,PUT		CustomFieldDefinitions_GetById
+S	/testmanager_/api/v2/{projectId}/customfielddefinitions/{name}/types	GET		CustomFieldDefinitions_GetObjectTypesByName
+S	/testmanager_/api/v2/{projectId}/customfielddefinitions/delete	POST		Use this endpoint to delete multiple custom field definitions.
+S	/testmanager_/api/v2/{projectId}/customfielddefinitions/filtered	POST		CustomFieldDefinitions_GetFilteredCustomFieldDefinitions
+S	/testmanager_/api/v2/{projectId}/customfieldlabels/{objectType}	POST		CustomFieldLabels_Create
+S	/testmanager_/api/v2/{projectId}/customfieldlabels/{objectType}/{id}	GET		CustomFieldLabels_GetById
+S	/testmanager_/api/v2/{projectId}/customfieldlabels/{objectType}/filtered	POST		CustomFieldLabels_GetCustomFieldLabelsFiltered
+S	/testmanager_/api/v2/{projectId}/customfieldvalues	GET,POST,PUT		CustomFieldValues_Get
+S	/testmanager_/api/v2/{projectId}/customfieldvalues/{id}	DELETE,GET,PUT		CustomFieldValues_GetById
+S	/testmanager_/api/v2/{projectId}/customfieldvalues/{objectType}	POST		CustomFieldValues_Create
+S	/testmanager_/api/v2/{projectId}/customfieldvalues/{objectType}/{id}	DELETE,GET,PUT		CustomFieldValues_GetById
+S	/testmanager_/api/v2/{projectId}/customfieldvalues/{objectType}/all	GET		CustomFieldValues_Get
+S	/testmanager_/api/v2/{projectId}/customfieldvalues/{objectType}/updatebyname	PUT		CustomFieldValues_UpdateByName
+S	/testmanager_/api/v2/{projectId}/datafabric/entities	POST		DataFabric_GetAllEntities
+S	/testmanager_/api/v2/{projectId}/defects	GET,POST		Defects_GetAll
+S	/testmanager_/api/v2/{projectId}/defects/{id}	DELETE,GET,PATCH		Defects_Get
+S	/testmanager_/api/v2/{projectId}/defects/{id}/affectedrequirements	GET		Defects_GetRequirementsByDefectId
+S	/testmanager_/api/v2/{projectId}/defects/{id}/attachments	GET		Defects_GetAttachments
+S	/testmanager_/api/v2/{projectId}/defects/{id}/attachments/{attachmentId}/download	GET		Defects_DownloadAttachment
+S	/testmanager_/api/v2/{projectId}/defects/{id}/connectordefect	GET		Defects_GetById
+S	/testmanager_/api/v2/{projectId}/defects/{id}/testcase	GET		Defects_GetTestCaseByDefectId
+S	/testmanager_/api/v2/{projectId}/defects/{id}/testcaselog	GET		Defects_GetTestCaseLogByDefectId
+S	/testmanager_/api/v2/{projectId}/defects/{id}/testexecution	GET		Defects_GetTestExecutionByDefectId
+S	/testmanager_/api/v2/{projectId}/fileexportjobs/{fileExportJobId}/{objectType}	GET		FileExportJobs_GetFileExportJob
+S	/testmanager_/api/v2/{projectId}/loadgroup	POST		LoadGroup_Create
+S	/testmanager_/api/v2/{projectId}/loadgroup/{id}	DELETE,GET,PUT		LoadGroup_GetById
+S	/testmanager_/api/v2/{projectId}/loadgroup/scenario/{scenarioId}	GET		LoadGroup_GetAllByScenarioId
+S	/testmanager_/api/v2/{projectId}/loadgrouplog	POST		LoadGroupLog_Create
+S	/testmanager_/api/v2/{projectId}/loadgrouplog/{id}	DELETE,GET		LoadGroupLog_GetById
+S	/testmanager_/api/v2/{projectId}/loadgrouplog/overrideresult	POST		LoadGroupLog_CreateOverrideStatusForLoadGroupLog
+S	/testmanager_/api/v2/{projectId}/loadgrouplog/overrideresult/{loadGroupLogId}	DELETE,GET		LoadGroupLog_GetOverrideStatusByLoadGroupLogId
+S	/testmanager_/api/v2/{projectId}/loadgrouplog/scenarioexecution/{scenarioExecutionId}	GET		LoadGroupLog_GetAllByScenarioExecutionId
+S	/testmanager_/api/v2/{projectId}/migration/attachment	POST		ProjectMigrationAttachment_UploadAttachment
+S	/testmanager_/api/v2/{projectId}/migration/attachment/{id}	GET		ProjectMigrationAttachment_GetById
+S	/testmanager_/api/v2/{projectId}/migration/attachment/{id}/download	GET		ProjectMigrationAttachment_DownloadAttachment
+S	/testmanager_/api/v2/{projectId}/migration/attachment/job/{migrationJobId}/projectpackage/download	GET		ProjectMigrationAttachment_DownloadProjectPackage
+S	/testmanager_/api/v2/{projectId}/migration/job/{id}	GET		ProjectMigrationJob_GetById
+S	/testmanager_/api/v2/{projectId}/migration/job/export/create	POST		ProjectMigrationJob_CreateProjectExportJob
+S	/testmanager_/api/v2/{projectId}/migration/job/import/create	POST		ProjectMigrationJob_CreateProjectImportJob
+S	/testmanager_/api/v2/{projectId}/migration/job/import/create/basic	POST		Use this endpoint to create a project import job with project package file (.tmh) having …
+S	/testmanager_/api/v2/{projectId}/migration/job/update	POST		ProjectMigrationJob_UpdateMigrationJob
+S	/testmanager_/api/v2/{projectId}/objectfilters/{objectType}/{objectId}/{filterType}	GET		ObjectFilters_GetObjectFilter
+S	/testmanager_/api/v2/{projectId}/objectfilters/{objectType}/{objectId}/assign	POST		ObjectFilters_AssignObjectFilter
+S	/testmanager_/api/v2/{projectId}/objectlabels/{id}	GET		ObjectLabels_GetById
+S	/testmanager_/api/v2/{projectId}/objectlabels/{objectType}/{id}	GET		ObjectLabels_GetById
+S	/testmanager_/api/v2/{projectId}/objectlabels/{objectType}/{objectId}/all	GET		ObjectLabels_GetAllObjectLabelsByObjectId
+S	/testmanager_/api/v2/{projectId}/objectlabels/{objectType}/{objectId}/assign	POST		ObjectLabels_AssignObjectLabel
+S	/testmanager_/api/v2/{projectId}/objectlabels/{objectType}/{objectId}/unassign	POST		ObjectLabels_UnassignObjectLabel
+S	/testmanager_/api/v2/{projectId}/objectlabels/{objectType}/addlabels	POST		Use this endpoint to add multiple labels to multiple objects.
+S	/testmanager_/api/v2/{projectId}/objectlabels/{objectType}/filtered	POST		ObjectLabels_GetAllObjectLabelsFiltered
+S	/testmanager_/api/v2/{projectId}/objectlabels/{objectType}/objects	POST		ObjectLabels_GetAllObjectLabelsByObjectIds
+S	/testmanager_/api/v2/{projectId}/objectlabels/{objectType}/removelabels	POST		Use this endpoint to remove multiple labels from multiple objects.
+S	/testmanager_/api/v2/{projectId}/objectlabels/addlabels	POST		Use this endpoint to add multiple labels to multiple objects.
+S	/testmanager_/api/v2/{projectId}/objectlabels/all	GET		ObjectLabels_GetAllObjectLabels
+S	/testmanager_/api/v2/{projectId}/objectlabels/filtered	POST		ObjectLabels_GetAllObjectLabelsFiltered
+S	/testmanager_/api/v2/{projectId}/objectlabels/object/{objectId}/all	GET		ObjectLabels_GetAllObjectLabelsByObjectId
+S	/testmanager_/api/v2/{projectId}/objectlabels/object/{objectId}/assign	POST		ObjectLabels_AssignObjectLabel
+S	/testmanager_/api/v2/{projectId}/objectlabels/object/{objectId}/unassign	POST		ObjectLabels_UnassignObjectLabel
+S	/testmanager_/api/v2/{projectId}/objectlabels/objects	POST		ObjectLabels_GetAllObjectLabelsByObjectIds
+S	/testmanager_/api/v2/{projectId}/objectlabels/removelabels	POST		Use this endpoint to remove multiple labels from multiple objects.
+S	/testmanager_/api/v2/{projectId}/orchestrator/automation/{id}/start	POST		Orchestrator_StartTestCaseExecution
+S	/testmanager_/api/v2/{projectId}/orchestrator/link/{linkId}/externalurl	GET		Orchestrator_GetExternalTestSetUrl
+S	/testmanager_/api/v2/{projectId}/orchestrator/testexecution/{id}/coverage	GET		Orchestrator_GetTestExecutionCoverage
+S	/testmanager_/api/v2/{projectId}/orchestrator/testexecution/{id}/downloadattachment	GET		Orchestrator_DownloadTestCaseExecutionAttachment
+S	/testmanager_/api/v2/{projectId}/orchestrator/testexecution/{id}/downloadscreenshot	GET		Orchestrator_GetScreenshot
+S	/testmanager_/api/v2/{projectId}/orchestrator/testexecution/{id}/result	GET		Orchestrator_GetTestCaseExecutionResult
+S	/testmanager_/api/v2/{projectId}/orchestrator/testexecution/{id}/robotlogs	GET		This endpoint is to be deprecated. Use :- /api/v2/{projectId}/orchestrator/testexecution/…
+S	/testmanager_/api/v2/{projectId}/orchestrator/testexecution/{id}/robotlogs/paged	GET		Orchestrator_GetPagedRobotLogs
+S	/testmanager_/api/v2/{projectId}/orchestrator/testexecution/{id}/testcaseexecution	POST		Orchestrator_GetOrchestratorTestCaseExecution
+S	/testmanager_/api/v2/{projectId}/orchestrator/testsets	GET		Orchestrator_GetTestSets
+S	/testmanager_/api/v2/{projectId}/orchestrator/testsets/{id}/link	POST		Orchestrator_LinkTestSet
+S	/testmanager_/api/v2/{projectId}/orchestrator/testsets/enabled	GET		Orchestrator_GetTestSetsEnabled
+S	/testmanager_/api/v2/{projectId}/permissions/project	GET		ProjectPermissions_GetByProjectId
+S	/testmanager_/api/v2/{projectId}/permissions/project/assignroles	POST		ProjectPermissions_Assign
+S	/testmanager_/api/v2/{projectId}/permissions/project/delete	POST		ProjectPermissions_Delete
+S	/testmanager_/api/v2/{projectId}/permissions/project/editroles	POST		ProjectPermissions_Edit
+S	/testmanager_/api/v2/{projectId}/permissions/project/roles	GET		ProjectPermissions_GetAllRoles
+S	/testmanager_/api/v2/{projectId}/permissions/project/userpermissions	GET		ProjectPermissions_GetUserPermissionByProjectId
+S	/testmanager_/api/v2/{projectId}/projectsettings	GET,PUT		ProjectSettings_GetProjectSettings
+S	/testmanager_/api/v2/{projectId}/requirements	GET,POST		Requirements_GetRequirements
+S	/testmanager_/api/v2/{projectId}/requirements/{id}	DELETE,GET,PATCH,PUT		Requirements_GetById
+S	/testmanager_/api/v2/{projectId}/requirements/{id}/assignedtestcaseids	GET		Requirements_GetAssignedTestCaseIds
+S	/testmanager_/api/v2/{projectId}/requirements/{id}/assigntestcases	POST		Requirements_AssignTestCases
+S	/testmanager_/api/v2/{projectId}/requirements/{id}/relateddefects	GET		Requirements_GetDefectsByRequirementId
+S	/testmanager_/api/v2/{projectId}/requirements/{id}/unassigntestcases	POST		Requirements_UnAssignTestCases
+S	/testmanager_/api/v2/{projectId}/requirements/{id}/unlinkconnector	POST		Requirements_UnLinkConnector
+S	/testmanager_/api/v2/{projectId}/requirements/clone	POST		Requirements_Clone
+S	/testmanager_/api/v2/{projectId}/requirements/delete	POST		Use this endpoint to delete multiple requirements.
+S	/testmanager_/api/v2/{projectId}/requirements/export	POST		Requirements_Export
+S	/testmanager_/api/v2/{projectId}/requirements/filtered	POST		Requirements_GetFilteredRequirements
+S	/testmanager_/api/v2/{projectId}/requirements/getbytestexecutionid/{testexecutionId}	GET,POST		Requirements_GetByTestExecution
+S	/testmanager_/api/v2/{projectId}/requirements/objkey/{objKey}	GET		Requirements_GetRequirementByObjKeyAndProjectId
+S	/testmanager_/api/v2/{projectId}/requirements/searchbylabel	POST		Use this endpoint to find requirements having given labels.
+S	/testmanager_/api/v2/{projectId}/scenario	POST		Scenario_Create
+S	/testmanager_/api/v2/{projectId}/scenario/{id}	DELETE,GET,PATCH		Scenario_GetById
+S	/testmanager_/api/v2/{projectId}/scenario/clone	POST		Scenario_Clone
+S	/testmanager_/api/v2/{projectId}/scenario/delete	POST		Use this endpoint to delete multiple performance testing scenarios.
+S	/testmanager_/api/v2/{projectId}/scenario/filtered	POST		Scenario_GetFilteredScenarios
+S	/testmanager_/api/v2/{projectId}/scenario/objkey/{objKey}	GET		Scenario_GetScenarioByObjKey
+S	/testmanager_/api/v2/{projectId}/scenario/performancetestinglicenses	GET		Scenario_GetPerformanceLicenses
+S	/testmanager_/api/v2/{projectId}/scenarioexecution	POST		ScenarioExecution_Create
+S	/testmanager_/api/v2/{projectId}/scenarioexecution/{id}	GET		ScenarioExecution_GetById
+S	/testmanager_/api/v2/{projectId}/scenarioexecution/delete	POST		Use this endpoint to delete multiple performance testing scenario executions.
+S	/testmanager_/api/v2/{projectId}/scenarioexecution/filtered	POST		ScenarioExecution_GetFilteredScenarioExecutions
+S	/testmanager_/api/v2/{projectId}/scenarioexecution/stopexecution	POST		ScenarioExecution_StopScenarioExecution
+S	/testmanager_/api/v2/{projectId}/testcaselogartifacts/{id}/assertions	GET		TestCaseLogArtifacts_GetAssertions
+S	/testmanager_/api/v2/{projectId}/testcaselogartifacts/{id}/assertions/{assertionId}/downloadscreenshot	GET		TestCaseLogArtifacts_DownloadScreenshot
+S	/testmanager_/api/v2/{projectId}/testcaselogs	GET,POST		TestCaseLogs_GetAllTestCaseLogs
+S	/testmanager_/api/v2/{projectId}/testcaselogs/{id}	GET		TestCaseLogs_GetTestCaseLogById
+S	/testmanager_/api/v2/{projectId}/testcaselogs/{id}/assertions	GET		TestCaseLogs_GetAssertionsByTestCaseLogId
+S	/testmanager_/api/v2/{projectId}/testcaselogs/{id}/assertions/markdown	GET		Use this endpoint to get assertions of a TestCaseLog in markdown format
+S	/testmanager_/api/v2/{projectId}/testcaselogs/{id}/logs	GET		TestCaseLogs_GetLogsFileByTestCaseLogId
+S	/testmanager_/api/v2/{projectId}/testcaselogs/{id}/override-result	GET,POST		TestCaseLogs_CreateOverrideResultForTestCaseLog
+S	/testmanager_/api/v2/{projectId}/testcaselogs/{id}/override-result/{testCaseLogResultOverrideId}	DELETE,PUT		TestCaseLogs_UpdateOverrideResultForTestCaseLog
+S	/testmanager_/api/v2/{projectId}/testcaselogs/{id}/robotlogs/info	GET		TestCaseLogs_GetRobotLogsInfoByTestCaseLogId
+S	/testmanager_/api/v2/{projectId}/testcaselogs/assign	POST		Use this endpoint to bulk assign user to testcaselogs.
+S	/testmanager_/api/v2/{projectId}/testcaselogs/defect/unlink	POST		TestCaseLogs_UnlinkFromDefect
+S	/testmanager_/api/v2/{projectId}/testcaselogs/filtered	POST		TestCaseLogs_GetFilteredTestCaseLogs
+S	/testmanager_/api/v2/{projectId}/testcaselogs/re-execute	POST		TestCaseLogs_ReExecute
+S	/testmanager_/api/v2/{projectId}/testcaselogs/testcase/{testCaseId}/history	GET		TestCaseLogs_GetExecutionHistory
+S	/testmanager_/api/v2/{projectId}/testcaselogs/testcase/{testCaseId}/paged	GET		TestCaseLogs_GetTestCaseLogsByTestCaseId
+S	/testmanager_/api/v2/{projectId}/testcaselogs/testcase/batch/latest	POST		Use this endpoint to find latest test case logs for test cases.
+S	/testmanager_/api/v2/{projectId}/testcaselogs/testexecution/{id}	GET		TestCaseLogs_GetByIds
+S	/testmanager_/api/v2/{projectId}/testcaselogs/testexecution/{id}/finish	POST		TestCaseLogs_FinishTestCaseExecution
+S	/testmanager_/api/v2/{projectId}/testcaselogs/testexecution/{id}/start	POST		TestCaseLogs_StartTestCaseExecution
+S	/testmanager_/api/v2/{projectId}/testcaselogs/testexecution/{testExecutionId}/export	POST		TestCaseLogs_ExportTestCaseLog
+S	/testmanager_/api/v2/{projectId}/testcaselogs/testexecution/{testExecutionId}/paged	GET		TestCaseLogs_GetTestCaseLogsByTestExecutionId
+S	/testmanager_/api/v2/{projectId}/testcaselogs/testexecution/{testExecutionId}/paged/export	POST		TestCaseLogs_Export
+S	/testmanager_/api/v2/{projectId}/testcases	GET,POST		TestCases_GetTestCases
+S	/testmanager_/api/v2/{projectId}/testcases/{id}	DELETE,GET,PATCH		TestCases_GetById
+S	/testmanager_/api/v2/{projectId}/testcases/{id}/assignedrequirementids	GET		TestCases_GetAssignedRequirementIds
+S	/testmanager_/api/v2/{projectId}/testcases/{id}/assignedrequirements	GET		TestCases_GetRequirementsByTestCaseId
+S	/testmanager_/api/v2/{projectId}/testcases/{id}/assignedtestsets	GET		TestCases_GetTestSetsByTestCaseId
+S	/testmanager_/api/v2/{projectId}/testcases/{id}/updateautomation	POST		TestCases_UpdateTestCaseAutomation
+S	/testmanager_/api/v2/{projectId}/testcases/automation/{id}	GET		TestCases_GetTestCaseByAutomationId
+S	/testmanager_/api/v2/{projectId}/testcases/batch	POST		TestCases_GetTestCaseBatch
+S	/testmanager_/api/v2/{projectId}/testcases/bulkcreate	POST		TestCases_BulkCreate
+S	/testmanager_/api/v2/{projectId}/testcases/clone	POST		TestCases_Clone
+S	/testmanager_/api/v2/{projectId}/testcases/delete	POST		Use this endpoint to delete multiple test cases.
+S	/testmanager_/api/v2/{projectId}/testcases/export	POST		TestCases_Export
+S	/testmanager_/api/v2/{projectId}/testcases/filtered	POST		TestCases_GetFilteredTestCases
+S	/testmanager_/api/v2/{projectId}/testcases/filteredautomatedtestcasesforfolder	POST		TestCases_GetFilteredAutomatedTestCasesForFolder
+S	/testmanager_/api/v2/{projectId}/testcases/objkey/{objKey}	GET		TestCases_GetTestCaseByObjKeyAndProjectId
+S	/testmanager_/api/v2/{projectId}/testcases/searchbylabel	POST		Use this endpoint to find test cases having given labels
+S	/testmanager_/api/v2/{projectId}/testcases/studioprojectnames	POST		TestCases_GetAllStudioProjectNames
+S	/testmanager_/api/v2/{projectId}/testcases/testsetsbytestcaselabels	POST		TestCases_GetTestSetsByTestCaseLabels
+S	/testmanager_/api/v2/{projectId}/testexecutions	GET,POST		TestExecutions_Get
+S	/testmanager_/api/v2/{projectId}/testexecutions/{id}	DELETE,GET		TestExecutions_GetById
+S	/testmanager_/api/v2/{projectId}/testexecutions/{id}/execute	POST		TestExecutions_Execute
+S	/testmanager_/api/v2/{projectId}/testexecutions/{id}/finish	POST		TestExecutions_Finish
+S	/testmanager_/api/v2/{projectId}/testexecutions/{id}/setreportingdate	POST		TestExecutions_SetReportingDate
+S	/testmanager_/api/v2/{projectId}/testexecutions/{id}/start	POST		TestExecutions_Start
+S	/testmanager_/api/v2/{projectId}/testexecutions/{id}/withstats	GET		TestExecutions_GetByIdWithStats
+S	/testmanager_/api/v2/{projectId}/testexecutions/delete	POST		Use this endpoint to delete multiple test executions.
+S	/testmanager_/api/v2/{projectId}/testexecutions/filtered	POST		TestExecutions_GetFilteredTestExecutions
+S	/testmanager_/api/v2/{projectId}/testexecutions/re-execute	POST		TestExecutions_ReExecute
+S	/testmanager_/api/v2/{projectId}/testexecutions/withstats	GET		TestExecutions_GetWithStats
+S	/testmanager_/api/v2/{projectId}/testexecutions/withstats/export	POST		TestExecutions_Export
+S	/testmanager_/api/v2/{projectId}/testsets	GET,POST		TestSets_GetTestSets
+S	/testmanager_/api/v2/{projectId}/testsets/{id}	DELETE,GET,PATCH,PUT		TestSets_GetById
+S	/testmanager_/api/v2/{projectId}/testsets/{id}/assignedtestcaseids	GET		TestSets_GetAssignedTestCaseIds
+S	/testmanager_/api/v2/{projectId}/testsets/{id}/assigntestcases	POST		TestSets_AssignTestCases
+S	/testmanager_/api/v2/{projectId}/testsets/{id}/bulkoverrideparameters	PUT		TestSets_BulkOverrideParametersForTestSet
+S	/testmanager_/api/v2/{projectId}/testsets/{id}/fetchparameters	GET		TestSets_GetAllOverrideParameters
+S	/testmanager_/api/v2/{projectId}/testsets/{id}/pendingexecution	POST		TestSets_CreatePendingExecution
+S	/testmanager_/api/v2/{projectId}/testsets/{id}/startexecute	POST		TestSets_StartExecute
+S	/testmanager_/api/v2/{projectId}/testsets/{id}/unassigntestcases	POST		TestSets_UnAssignTestCases
+S	/testmanager_/api/v2/{projectId}/testsets/clone	POST		TestSets_Clone
+S	/testmanager_/api/v2/{projectId}/testsets/delete	POST		Use this endpoint to delete multiple test sets.
+S	/testmanager_/api/v2/{projectId}/testsets/filtered	POST		TestSets_GetFilteredTestSets
+S	/testmanager_/api/v2/{projectId}/testsets/objkey/{objKey}	GET		TestSets_GetTestSetByObjKeyAndProjectId
+S	/testmanager_/api/v2/{projectId}/testsets/searchbylabel	POST		Use this endpoint to find test sets having given labels.
+S	/testmanager_/api/v2/{projectId}/teststeplogs	GET		TestStepLogs_GetByTestCaseLogId
+S	/testmanager_/api/v2/{projectId}/teststeplogs/{id}	GET		TestStepLogs_GetById
+S	/testmanager_/api/v2/{projectId}/teststeps	POST		TestSteps_Create
+S	/testmanager_/api/v2/{projectId}/teststeps/{id}	DELETE,GET,PATCH,PUT		TestSteps_GetById
+S	/testmanager_/api/v2/{projectId}/teststeps/{id}/setposition	POST		TestSteps_MoveToPosition
+S	/testmanager_/api/v2/{projectId}/teststeps/createfromtaskcapturerecording	POST		TestSteps_CreateFromTaskCaptureRecording
+S	/testmanager_/api/v2/{projectId}/teststeps/testcase/{id}	GET		TestSteps_GetTestStepsByTestCase
+S	/testmanager_/api/v2/{projectId}/teststeps/testcase/{testCaseId}/any	GET		TestSteps_GetTestCaseHasTestSteps
+S	/testmanager_/api/v2/migration/jobs	GET		ProjectMigrationJob_Get
+S	/testmanager_/api/v2/migration/schema/{schemaVersion}	GET		ProjectMigrationSchema_GetProjectImportSchema
+S	/testmanager_/api/v2/migration/schema/versions	GET		ProjectMigrationSchema_GetSupportedVersions
+S	/testmanager_/api/v2/permissions/tenant	GET		TenantPermissions_GetUserListWithRoles
+S	/testmanager_/api/v2/permissions/tenant/assignroles	POST		TenantPermissions_Assign
+S	/testmanager_/api/v2/permissions/tenant/delete	POST		TenantPermissions_Delete
+S	/testmanager_/api/v2/permissions/tenant/editroles	POST		TenantPermissions_Edit
+S	/testmanager_/api/v2/permissions/tenant/roles	GET		TenantPermissions_GetAllRoles
+S	/testmanager_/api/v2/permissions/tenant/userpermissions	GET		TenantPermissions_GetUserPermissionsByTenantId
+S	/testmanager_/api/v2/projects	GET,POST		Projects_GetProjects
+S	/testmanager_/api/v2/projects/{id}	DELETE,GET,PUT		Projects_GetById
+S	/testmanager_/api/v2/projects/fetchowners	POST		Projects_GetProjectOwners
+S	/testmanager_/api/v2/projects/prefix/{projectPrefix}	GET		Projects_GetProjectByProjectPrefix
+S	/testmanager_/api/v2/roles	GET		Roles_GetAllRoles
+S	/testmanager_/api/v2/roles/{id}	DELETE,GET		Roles_GetRoleData
+S	/testmanager_/api/v2/roles/create	POST		Roles_Create
+S	/testmanager_/api/v2/roles/delete	POST		Use this endpoint to delete multiple roles.
+S	/testmanager_/api/v2/roles/update	PUT		Roles_Update
+S	/testmanager_/api/webhookconnector/{token}/defects	POST		WebHookConnector_Defect
+S	/testmanager_/api/webhookconnector/{token}/isalive	POST		WebHookConnector_IsAlive
+S	/testmanager_/api/xrayconnector/{token}/webhook	POST		XRayConnectorWebhooks_TriggerWebhook

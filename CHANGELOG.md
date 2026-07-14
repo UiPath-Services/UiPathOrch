@@ -6,6 +6,39 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+#### API
+
+- **`Invoke-OrchApi -Uri` now tab-completes the known API endpoints.** The candidates come from
+  an embedded catalog generated from UiPath's swagger corpus (`Tools\Update-ApiEndpointCatalog.ps1`):
+  Orchestrator, Identity, Portal, Test Manager, Document Understanding and AI Center — 873 endpoints,
+  each with its HTTP verbs and summary in the completion tooltip.
+  - **Version-aware.** Orchestrator endpoints are tagged with the Web API version range they appear
+    in across the v11-v20 swagger documents, and filtered against the target tenant's `ApiVersion`
+    (the `api-supported-versions` header the drive already learned), so an old on-prem tenant is
+    never offered an endpoint it doesn't have. Endpoints still current in the newest known version
+    stay visible on tenants newer than the catalog.
+  - **Context-aware.** The ids the drive context knows are substituted into the completed URI:
+    `{partitionGlobalId}` (`/api/Group/{partitionGlobalId}`, `/api/auditLog/{partitionGlobalId}`, ...)
+    and, on a Document Understanding or Test Manager drive, `{projectId}` — the project the location
+    points at (`/testmanager_/api/v2/{projectId}/testcases` completes with that project's id). The
+    context comes from the drive named by `-Path`, or from the current location when `-Path` is
+    absent. An id the context can't supply without an API call is left as its `{placeholder}`:
+    completion never triggers a sign-in.
+  - `-Identity` / `-Portal` select their own endpoint sets, `-Method` narrows to the endpoints
+    serving that verb, and the usual wildcard convention applies (`*du*`<kbd>Ctrl+Space</kbd>).
+
+- **`Invoke-OrchApi` now runs from a Document Understanding or Test Manager drive.** It used to
+  require a UiPathOrch drive and fail with "the current location is not on a UiPathOrch drive".
+  A DU/TM drive is a view onto the same tenant, so the call now runs against its parent
+  Orchestrator drive's auth and base URLs, with the project the location points at supplying
+  `{projectId}` — `cd Orch1Tm:\MyProject` then
+  `Invoke-OrchApi -Uri '/testmanager_/api/v2/{projectId}/testcases'` works, as does any
+  Orchestrator, Identity or Portal endpoint from that same location. Placeholders are filled by
+  the cmdlet as well as by tab completion, so a template pasted from the swagger docs runs as-is.
+  DU/TM drives have no Orchestrator folders, so no `X-UIPATH-OrganizationUnitId` header is sent.
+
 ### Fixed
 
 #### Providers

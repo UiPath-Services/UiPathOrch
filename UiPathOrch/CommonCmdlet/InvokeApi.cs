@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
+using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Entities.JsonConverter;
@@ -31,6 +32,7 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
 
     [Parameter(Mandatory = true, Position = 0)]
     [Alias("Uri")]
+    [ArgumentCompleter(typeof(ApiPathCompleter))]
     public string ApiPath { get; set; } = null!;
 
     [Parameter]
@@ -97,34 +99,19 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        // Resolve drive + folder. With no -Path, fall back to the current PowerShell location
-        // which must be on a UiPathOrch drive.
+        // Resolve the drive context: the UiPathOrch drive named by -Path or, with no -Path, the
+        // current location. A DU or TM drive resolves too — it is a view onto the same tenant, so
+        // the call runs against its parent Orchestrator drive's auth and base URLs, and the project
+        // the location points at becomes the {projectId} of the DU/TM endpoints (see ApiContext).
         var effectivePath = EffectivePath(Path, LiteralPath);
-        string resolvePath;
-        if (string.IsNullOrEmpty(effectivePath))
-        {
-            var current = SessionState.Path.CurrentLocation;
-            if (current.Drive is not OrchDriveInfo)
-            {
-                ThrowTerminatingError(new ErrorRecord(
-                    new InvalidOperationException(
-                        "No -Path specified and the current location is not on a UiPathOrch drive. " +
-                        "Pass -Path explicitly or cd into an Orch drive."),
-                    "InvokeOrchApiNoPath", ErrorCategory.InvalidOperation, null));
-                return;
-            }
-            resolvePath = current.Path;
-        }
-        else
-        {
-            resolvePath = effectivePath;
-        }
+        string resolvePath = string.IsNullOrEmpty(effectivePath)
+            ? SessionState.Path.CurrentLocation.Path
+            : effectivePath;
 
-        OrchDriveInfo drive;
-        Folder folder;
+        ApiContext? context;
         try
         {
-            (drive, folder) = SessionState.ResolveToSingleFolder(resolvePath);
+            context = ApiContextResolver.Resolve(SessionState, effectivePath, allowFetch: true);
         }
         catch (Exception ex)
         {
@@ -133,24 +120,42 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
             return;
         }
 
+        if (context is null)
+        {
+            ThrowTerminatingError(new ErrorRecord(
+                new InvalidOperationException(
+                    $"'{resolvePath}' is not on a UiPathOrch, DU or TM drive. " +
+                    "Pass -Path explicitly or cd into one of those drives."),
+                "InvokeOrchApiNoPath", ErrorCategory.InvalidOperation, null));
+            return;
+        }
+
+        OrchDriveInfo drive = context.Drive;
+        Folder? folder = context.Folder;
+
+        // Fill the ids the context knows ({partitionGlobalId}, {projectId}). Tab completion already
+        // emits them substituted, so this is for the paths that don't come from it — a template
+        // pasted from the swagger docs, or one written into a script.
+        string apiPath = ApiEndpointCatalog.FillPlaceholders(ApiPath, context);
+
         string baseUrl;
         if (Identity.IsPresent) baseUrl = drive.OrchAPISession._base_url_identity;
         else if (Portal.IsPresent) baseUrl = drive.OrchAPISession._base_url_portal;
         else baseUrl = drive.OrchAPISession._base_url_orchestrator;
 
         string url;
-        if (ApiPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-            ApiPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+        if (apiPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+            apiPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
         {
             // An absolute URL is accepted only if it points at the same origin
             // (scheme + host + port) the drive already talks to — its Orchestrator,
             // Identity, or Portal base URL. Otherwise the drive's live bearer token
             // would be sent to an arbitrary (and possibly http-downgraded) host.
-            if (!Uri.TryCreate(ApiPath, UriKind.Absolute, out var absUri))
+            if (!Uri.TryCreate(apiPath, UriKind.Absolute, out var absUri))
             {
                 ThrowTerminatingError(new ErrorRecord(
-                    new ArgumentException($"'{ApiPath}' is not a valid absolute URI."),
-                    "InvokeOrchApiInvalidUri", ErrorCategory.InvalidArgument, ApiPath));
+                    new ArgumentException($"'{apiPath}' is not a valid absolute URI."),
+                    "InvokeOrchApiInvalidUri", ErrorCategory.InvalidArgument, apiPath));
                 return;
             }
             var session = drive.OrchAPISession;
@@ -164,22 +169,23 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
                         $"Absolute URL origin '{absUri.Scheme}://{absUri.Authority}' does not match the drive's " +
                         "Orchestrator, Identity, or Portal origin. The drive's access token is only sent to its own " +
                         "deployment; pass a relative API path (e.g. 'odata/Releases'), or use -Identity / -Portal."),
-                    "InvokeOrchApiCrossHostUri", ErrorCategory.InvalidArgument, ApiPath));
+                    "InvokeOrchApiCrossHostUri", ErrorCategory.InvalidArgument, apiPath));
                 return;
             }
-            url = ApiPath;
+            url = apiPath;
         }
         else
         {
             url = baseUrl.TrimEnd('/') +
-                  (ApiPath.StartsWith('/') ? ApiPath : "/" + ApiPath);
+                  (apiPath.StartsWith('/') ? apiPath : "/" + apiPath);
         }
 
         var httpMethod = new HttpMethod(Method.ToUpperInvariant());
         using var request = new HttpRequestMessage(httpMethod, url);
 
         // Folder context: only on the Orchestrator base URL. Identity/Portal endpoints don't
-        // accept it, and the root folder has no Id.
+        // accept it, and the root folder has no Id. A DU/TM drive has no folder at all
+        // (context.Folder is null there), so the header is simply not sent.
         bool injectFolder = !Identity.IsPresent && !Portal.IsPresent && !SkipFolderContext.IsPresent;
         if (injectFolder && folder?.Id is long folderId && folderId != 0)
         {
@@ -335,7 +341,7 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
             using (doc)
             {
                 object? converted = ConvertJson(doc.RootElement);
-                EmitWithPathInjection(converted, folder!.GetPSPath());
+                EmitWithPathInjection(converted, context.ContextPath);
             }
         }
         finally

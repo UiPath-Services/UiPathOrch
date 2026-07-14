@@ -19,6 +19,9 @@
     <EmbeddedResource Include="bot\receiving.png" />
     <EmbeddedResource Include="bot\recording.png" />
     <EmbeddedResource Include="bot\searching.png" />
+    <!-- Known-endpoint catalog for Invoke-OrchApi -Uri completion.
+         Generated from the swagger corpus by Tools\Update-ApiEndpointCatalog.ps1. -->
+    <EmbeddedResource Include="Resources\ApiEndpoints.txt" />
     <EmbeddedResource Include="Resources\de\MountSuccessNotification.html" />
     <EmbeddedResource Include="Resources\en\MountSuccessNotification.html" />
     <EmbeddedResource Include="Resources\fr\MountSuccessNotification.html" />
