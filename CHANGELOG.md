@@ -24,8 +24,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     and, on a Document Understanding or Test Manager drive, `{projectId}` — the project the location
     points at (`/testmanager_/api/v2/{projectId}/testcases` completes with that project's id). The
     context comes from the drive named by `-Path`, or from the current location when `-Path` is
-    absent. An id the context can't supply without an API call is left as its `{placeholder}`:
-    completion never triggers a sign-in.
+    absent. A project id is only ever substituted into a path of **its own service**: a Test Manager
+    location says nothing about which DU project is meant, so a `/du_` path keeps its placeholder.
+  - **An id the context can't supply stays a `{placeholder}`, and the tooltip says how to fill it.**
+    From a UiPathOrch drive, `/testmanager_/api/v2/{projectId}/...` completes with the tooltip
+    `{projectId}: fills in from a Test Manager project — cd Orch1Tm:\<project>, or pass -Path
+    Orch1Tm:\<project>`, naming the DU/TM drive actually mounted for that tenant. The endpoint stays
+    discoverable instead of being hidden, and the completion carries its own remedy. Running such a
+    URI without resolving it is refused with the same guidance rather than sent as a literal
+    `{projectId}` (which would come back a 404). Completion still never triggers a sign-in.
   - `-Identity` / `-Portal` select their own endpoint sets, `-Method` narrows to the endpoints
     serving that verb, and the usual wildcard convention applies (`*du*`<kbd>Ctrl+Space</kbd>).
 

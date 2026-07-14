@@ -135,8 +135,32 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
 
         // Fill the ids the context knows ({partitionGlobalId}, {projectId}). Tab completion already
         // emits them substituted, so this is for the paths that don't come from it — a template
-        // pasted from the swagger docs, or one written into a script.
+        // pasted from the swagger docs, or one written into a script. A project id is only ever
+        // substituted into a path of ITS OWN service (see ApiEndpointCatalog.FillPlaceholders).
         string apiPath = ApiEndpointCatalog.FillPlaceholders(ApiPath, context);
+
+        // A {projectId} the context couldn't supply would go out as a literal and come back a 404.
+        // Say which -Path would have filled it instead — the same thing the completer's tooltip says.
+        if (apiPath.Contains(ApiEndpointCatalog.ProjectPlaceholder, StringComparison.Ordinal))
+        {
+            var service = ApiEndpointCatalog.ServiceOf(apiPath);
+            string label = ApiContextResolver.ServiceLabel(service);
+            string? shadowDrive = ApiContextResolver.ShadowDriveNameFor(SessionState, drive, service);
+
+            string remedy = shadowDrive is not null
+                ? $"cd {shadowDrive}:{System.IO.Path.DirectorySeparatorChar}<project>, or pass -Path {shadowDrive}:{System.IO.Path.DirectorySeparatorChar}<project>."
+                : label.Length > 0
+                    ? $"This tenant has no {label} drive mounted."
+                    : "Substitute it yourself, or run from the drive that scopes it.";
+
+            ThrowTerminatingError(new ErrorRecord(
+                new ArgumentException(
+                    $"'{ApiPath}' is scoped by a {(label.Length > 0 ? label + " " : "")}project, and " +
+                    $"'{context.ContextPath}' does not name one, so {ApiEndpointCatalog.ProjectPlaceholder} " +
+                    $"could not be filled. {remedy}"),
+                "InvokeOrchApiUnresolvedProjectId", ErrorCategory.InvalidArgument, ApiPath));
+            return;
+        }
 
         string baseUrl;
         if (Identity.IsPresent) baseUrl = drive.OrchAPISession._base_url_identity;

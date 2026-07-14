@@ -21,6 +21,20 @@ internal enum ApiEndpointBase
 }
 
 /// <summary>
+/// Which project-scoped service an endpoint belongs to. A {projectId} is only meaningful within
+/// its own service: a Test Manager project id in a /du_ path addresses nothing.
+/// </summary>
+internal enum ApiService
+{
+    /// Not project-scoped (Orchestrator, Identity, Portal, AI Center).
+    None,
+    /// Document Understanding — /du_, projects live on a UiPathOrchDu drive.
+    DocumentUnderstanding,
+    /// Test Manager — /testmanager_, projects live on a UiPathOrchTm drive.
+    TestManager,
+}
+
+/// <summary>
 /// One known API endpoint: a path template plus the metadata the -Uri completer needs to
 /// decide whether to offer it and what to show in the tooltip.
 ///
@@ -38,6 +52,12 @@ internal sealed record ApiEndpoint(
 {
     internal bool HasPartitionPlaceholder =>
         Path.Contains(ApiEndpointCatalog.PartitionPlaceholder, StringComparison.Ordinal);
+
+    /// True when the path is scoped by a project id it cannot run without.
+    internal bool RequiresProject =>
+        Path.Contains(ApiEndpointCatalog.ProjectPlaceholder, StringComparison.Ordinal);
+
+    internal ApiService Service => ApiEndpointCatalog.ServiceOf(Path);
 }
 
 /// <summary>
@@ -179,16 +199,31 @@ internal static class ApiEndpointCatalog
         _ => !identity && !portal,
     };
 
+    /// The project-scoped service a path belongs to, read off its gateway prefix.
+    internal static ApiService ServiceOf(string path)
+    {
+        if (path.Contains("/testmanager_/", StringComparison.OrdinalIgnoreCase)) return ApiService.TestManager;
+        if (path.Contains("/du_/", StringComparison.OrdinalIgnoreCase)) return ApiService.DocumentUnderstanding;
+        return ApiService.None;
+    }
+
     /// <summary>
     /// Substitutes the ids the drive context knows into a path template: the partition global id,
-    /// and the DU/TM project id when the location is a project on a DU/TM drive.
+    /// and the DU/TM project id.
+    ///
+    /// The project id is only substituted into a path of the SERVICE the project belongs to. A
+    /// location on a Test Manager drive says nothing about which Document Understanding project is
+    /// meant, and pasting a TM project id into a /du_ path would silently address nothing.
     ///
     /// An id the context could not supply is left as its {placeholder}. That is deliberate: the
-    /// template is still a useful completion the user can fill in by hand, and it beats both hiding
-    /// the endpoint and blocking a &lt;Tab&gt; keypress on an API round-trip to learn the id.
+    /// endpoint stays discoverable, the tooltip says which -Path would fill it (see
+    /// ApiPathCompleter), and it beats blocking a &lt;Tab&gt; keypress on an API round-trip.
     /// </summary>
     internal static string FillPlaceholders(string path, ApiContext? context)
-        => FillPlaceholders(path, context?.PartitionGlobalId, context?.ProjectId);
+        => FillPlaceholders(
+            path,
+            context?.PartitionGlobalId,
+            context is not null && context.ProjectKind == ServiceOf(path) ? context.ProjectId : null);
 
     internal static string FillPlaceholders(string path, string? partitionGlobalId, string? projectId)
     {

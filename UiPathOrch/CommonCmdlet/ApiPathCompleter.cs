@@ -59,6 +59,12 @@ internal class ApiPathCompleter : OrchArgumentCompleter
         // `*du*`<Ctrl+Space> is the way to find one whose prefix you don't know.
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
+        // The DU / TM drives of this same tenant, named in the hint on a project-scoped endpoint
+        // whose {projectId} this context can't fill. Resolved once, and only from the mounted
+        // drives, so the hint names a drive that actually exists.
+        string? duDrive = ApiContextResolver.ShadowDriveNameFor(SessionState, context.Drive, ApiService.DocumentUnderstanding);
+        string? tmDrive = ApiContextResolver.ShadowDriveNameFor(SessionState, context.Drive, ApiService.TestManager);
+
         foreach (var endpoint in ApiEndpointCatalog.All)
         {
             if (!ApiEndpointCatalog.MatchesSwitches(endpoint, identity, portal)) continue;
@@ -72,8 +78,43 @@ internal class ApiPathCompleter : OrchArgumentCompleter
                 PathTools.EscapePSText(uri),
                 uri,
                 CompletionResultType.ParameterValue,
-                ApiEndpointCatalog.TipHelp(endpoint));
+                TipHelp(endpoint, context, duDrive, tmDrive));
         }
+    }
+
+    /// <summary>
+    /// The tooltip: the endpoint's own (methods, version range, summary), plus — when the endpoint
+    /// is project-scoped and this context could not fill its {projectId} — what to do about it.
+    ///
+    /// These endpoints are offered rather than hidden ON PURPOSE. From a UiPathOrch drive a
+    /// /testmanager_/api/v2/{projectId}/... path cannot run as completed, but dropping it from the
+    /// list hides the endpoint's very existence; naming the -Path that fills it turns a dead
+    /// completion into the instruction for getting a live one.
+    /// </summary>
+    internal static string TipHelp(ApiEndpoint endpoint, ApiContext context, string? duDrive, string? tmDrive)
+    {
+        string tip = ApiEndpointCatalog.TipHelp(endpoint);
+
+        string? hint = ProjectHint(endpoint, context, duDrive, tmDrive);
+        return hint is null ? tip : $"{tip}  <-- {hint}";
+    }
+
+    /// Null when the endpoint needs no project, or when this context already filled it.
+    internal static string? ProjectHint(ApiEndpoint endpoint, ApiContext context, string? duDrive, string? tmDrive)
+    {
+        if (!endpoint.RequiresProject) return null;
+
+        // Filled: the context's project belongs to this endpoint's service.
+        if (context.ProjectKind == endpoint.Service && !string.IsNullOrEmpty(context.ProjectId)) return null;
+
+        string label = ApiContextResolver.ServiceLabel(endpoint.Service);
+        if (label.Length == 0) return null;   // {projectId} on a service we don't map to a drive
+
+        string? driveName = endpoint.Service == ApiService.TestManager ? tmDrive : duDrive;
+
+        return driveName is null
+            ? $"{{projectId}}: needs a {label} project; this tenant has no {label} drive mounted"
+            : $"{{projectId}}: fills in from a {label} project — cd {driveName}:\\<project>, or pass -Path {driveName}:\\<project>";
     }
 
     /// <summary>

@@ -18,12 +18,15 @@ namespace UiPath.PowerShell.Core;
 /// <param name="PartitionGlobalId">Fills {partitionGlobalId}. Null when unknown.</param>
 /// <param name="ProjectId">Fills {projectId}: the DU/TM project the location points at. Null at a
 /// shadow drive's root (no single project) and on a UiPathOrch drive.</param>
+/// <param name="ProjectKind">Which service <paramref name="ProjectId"/> belongs to. A project id is
+/// only meaningful within its own service, so it is never substituted into another's path.</param>
 /// <param name="ContextPath">PSPath stamped on emitted records — where the caller actually was.</param>
 internal sealed record ApiContext(
     OrchDriveInfo Drive,
     Folder? Folder,
     string? PartitionGlobalId,
     string? ProjectId,
+    ApiService ProjectKind,
     string ContextPath);
 
 internal static class ApiContextResolver
@@ -49,9 +52,11 @@ internal static class ApiContextResolver
         {
             OrchDriveInfo orch => FromOrchDrive(sessionState, orch, path, allowFetch),
             OrchDuDriveInfo du => FromShadowDrive(sessionState, du.ParentDrive, du, du.DuProjects,
-                                                  p => p.name, p => p.id, path, allowFetch),
+                                                  p => p.name, p => p.id,
+                                                  ApiService.DocumentUnderstanding, path, allowFetch),
             OrchTmDriveInfo tm => FromShadowDrive(sessionState, tm.ParentDrive, tm, tm.TmProjects,
-                                                  p => p.projectPrefix, p => p.id, path, allowFetch),
+                                                  p => p.projectPrefix, p => p.id,
+                                                  ApiService.TestManager, path, allowFetch),
             _ => null,
         };
     }
@@ -83,6 +88,7 @@ internal static class ApiContextResolver
             folder,
             ResolvePartitionGlobalId(drive, allowFetch),
             ProjectId: null,
+            ApiService.None,
             folder.GetPSPath());
     }
 
@@ -93,6 +99,7 @@ internal static class ApiContextResolver
         ListCachePerTenant<TProject> projects,
         Func<TProject, string?> getName,
         Func<TProject, string?> getId,
+        ApiService projectKind,
         string? path,
         bool allowFetch)
         where TProject : class
@@ -119,8 +126,36 @@ internal static class ApiContextResolver
             Folder: null,
             ResolvePartitionGlobalId(parent, allowFetch),
             projectId,
+            projectKind,
             shadow.NameColonSeparator + projectName);
     }
+
+    /// <summary>
+    /// The name of <paramref name="parent"/>'s mounted DU / TM drive, or null when the tenant has
+    /// none. Used to tell the user which -Path would supply a {projectId} — naming a drive that
+    /// exists, not one we assume from the parent's name.
+    /// </summary>
+    internal static string? ShadowDriveNameFor(SessionState? sessionState, OrchDriveInfo parent, ApiService service)
+    {
+        if (sessionState is null) return null;
+
+        return service switch
+        {
+            ApiService.DocumentUnderstanding =>
+                sessionState.EnumAllDuDrives().FirstOrDefault(d => ReferenceEquals(d.ParentDrive, parent))?.Name,
+            ApiService.TestManager =>
+                sessionState.EnumAllTmDrives().FirstOrDefault(d => ReferenceEquals(d.ParentDrive, parent))?.Name,
+            _ => null,
+        };
+    }
+
+    /// A human label for the service, for the messages that name it.
+    internal static string ServiceLabel(ApiService service) => service switch
+    {
+        ApiService.DocumentUnderstanding => "Document Understanding",
+        ApiService.TestManager => "Test Manager",
+        _ => "",
+    };
 
     /// The partition global id, at the cost the caller allows. Without fetching there are two free
     /// sources: the value the drive already resolved, and the prt_id claim of the token in memory.

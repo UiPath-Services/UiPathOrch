@@ -215,6 +215,38 @@ public class ApiEndpointCatalogTests
         => Assert.Equal("/api/Group/{partitionGlobalId}",
             ApiEndpointCatalog.FillPlaceholders("/api/Group/{partitionGlobalId}", context: null));
 
+    // ----- a project id belongs to ONE service -----
+
+    [Theory]
+    [InlineData("/testmanager_/api/v2/{projectId}/testcases", nameof(ApiService.TestManager))]
+    [InlineData("/du_/api/framework/projects/{projectId}", nameof(ApiService.DocumentUnderstanding))]
+    [InlineData("/odata/Assets", nameof(ApiService.None))]
+    [InlineData("/aifabric_/ai-deployer/v2/mlskills", nameof(ApiService.None))]
+    public void Reads_the_service_off_the_gateway_prefix(string path, string expected)
+        => Assert.Equal(expected, ApiEndpointCatalog.ServiceOf(path).ToString());
+
+    [Fact]
+    public void Does_not_paste_a_TM_project_id_into_a_DU_path()
+    {
+        // A Test Manager location says nothing about which DU project is meant. Substituting its id
+        // into a /du_ path would address nothing at all — silently, with a plausible-looking URL.
+        var tmContext = TmContext("tm-proj-1");
+
+        Assert.Equal(
+            "/testmanager_/api/v2/tm-proj-1/testcases",
+            ApiEndpointCatalog.FillPlaceholders("/testmanager_/api/v2/{projectId}/testcases", tmContext));
+
+        Assert.Equal(
+            "/du_/api/framework/projects/{projectId}/document-types",
+            ApiEndpointCatalog.FillPlaceholders("/du_/api/framework/projects/{projectId}/document-types", tmContext));
+    }
+
+    // A context carrying a TM project. Drive/Folder aren't read by FillPlaceholders, so a bare
+    // record with the id and its service is enough to pin the service-matching rule.
+    private static ApiContext TmContext(string projectId)
+        => new(Drive: null!, Folder: null, PartitionGlobalId: null,
+               ProjectId: projectId, ProjectKind: ApiService.TestManager, ContextPath: @"Orch1Tm:\HEHE");
+
     // ----- word matching -----
     //
     // The completer filters with the shared CreateWPFromWordToComplete, so -Uri follows the
