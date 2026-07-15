@@ -321,10 +321,12 @@ name to the new local name with the mapping CSV: `New-OrchUserMappingCsv` alread
 enumerates the source directory users, so fill each `DestinationUserName` with the new
 local user's name and proceed as in [Case B](#case-b-username-mapping-required).
 
-> **Validate this path before a production run.** Creating a local user at a **Cloud**
-> destination goes through the invite-based identity flow, which this guide has not
-> exercised end to end for a directory→local conversion. Rehearse on a non-production
-> destination and confirm the users appear as expected.
+> **Creation is verified on Cloud; still arrange sign-in.** `New-PmUser` (the identity
+> bulk-create API) does create an **active** local user at a Cloud destination —
+> confirmed on Automation Cloud (API 20): the user comes back keyed by its email, active,
+> with `invitationAccepted` already true. What this test did **not** cover is how that
+> user then signs in (password / the organization's invite flow), so rehearse the
+> sign-in setup on a non-production destination before the full run.
 
 **Local → directory** (non-AD source → AD / Entra destination), when the migrated
 people should become directory users. The Entra users must already exist at the
