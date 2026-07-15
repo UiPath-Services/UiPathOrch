@@ -169,18 +169,17 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                 #region Add srcUsers belonging to the same srcGroups into a single payload
                 foreach (var srcUser in srcUsers)
                 {
-                    #region Skip users without an email address
-                    // Destination orgs key local users by email and reject creation
-                    // without one. On-prem MSI sources often have local users with
-                    // an alphabetic userName and an EMPTY email (observed: "" not
-                    // null). Previously these were sent through with email="" and,
-                    // because the BulkCreate response is not inspected, were silently
-                    // dropped by the server — no error, no warning, user not told.
-                    // Skip them explicitly with an actionable warning instead;
-                    // recreate via Get-PmUser -ExportCsv -> set the email -> New-PmUser.
-                    if (Core.OrchProvider.HasNoEmail(srcUser))
+                    #region Skip email-less users only where the destination requires an email
+                    // Automation Cloud keys local users by email and rejects creation
+                    // without one (users are invite-based there), so an email-less source
+                    // user cannot be created — skip it with an actionable warning. On
+                    // Automation Suite / on-premises the userName is the identifier and the
+                    // email is optional (verified on-prem 25.10.2: BulkCreate accepts a
+                    // userName with an empty email), so such users migrate username-only
+                    // instead of being silently dropped.
+                    if (Core.OrchProvider.MustSkipEmaillessUser(preserveUserName, srcUser))
                     {
-                        WriteWarning($"{dstDrive.NameColonSeparator}: Skipping user '{srcUser.userName}' because it has no email address. Local users without an email cannot be created at the destination; recreate them manually (Get-PmUser -ExportCsv -> set the email -> New-PmUser).");
+                        WriteWarning($"{dstDrive.NameColonSeparator}: Skipping user '{srcUser.userName}' because it has no email address. Automation Cloud cannot create a local user without an email — recreate it manually there, or migrate to Automation Suite / on-premises where the userName is enough.");
                         continue;
                     }
                     #endregion
@@ -192,6 +191,14 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                     // be unit-tested without a live drive.
                     string mappedUserName = Core.OrchProvider.ResolvePmUserName(
                         srcUser.userName, srcUser.email, preserveUserName, userMapping);
+
+                    // A source user with neither a userName nor an email has no identifier
+                    // to create it with.
+                    if (string.IsNullOrEmpty(mappedUserName))
+                    {
+                        WriteWarning($"{dstDrive.NameColonSeparator}: Skipping a source user that has neither a userName nor an email — nothing to create it with.");
+                        continue;
+                    }
                     #endregion
 
                     #region Skip if the user already exists at the destination

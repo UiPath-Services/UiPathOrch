@@ -218,6 +218,29 @@ public class CopyIdentityLogicTests
         Assert.Equal("alice", ResolvePmUserName("alice", "alice@x.com", false, Map(("alice@x.com", "alice"))));
     }
 
+    [Fact]
+    public void ResolvePmUserName_BothEmpty_ReturnsEmpty()
+    {
+        // The caller treats an empty result as "no identifier" and skips the user.
+        Assert.Equal("", ResolvePmUserName("", "", true, null));
+    }
+
+    // ---- MustSkipEmaillessUser ----
+    // Automation Cloud (preserveUserName == false) must skip an email-less user; AS /
+    // on-prem (preserveUserName == true) migrates it username-only instead of dropping it.
+
+    [Theory]
+    [InlineData(false, null, true)]        // Cloud + no email  -> skip
+    [InlineData(false, "", true)]          // Cloud + empty email -> skip
+    [InlineData(false, "a@x.com", false)]  // Cloud + email -> keep
+    [InlineData(true, null, false)]        // AS/on-prem + no email -> keep (the #3 fix)
+    [InlineData(true, "", false)]          // AS/on-prem + empty email -> keep
+    [InlineData(true, "a@x.com", false)]   // AS/on-prem + email -> keep
+    public void MustSkipEmaillessUser_OnlySkipsWhenDestinationRequiresEmail(bool preserveUserName, string? email, bool expected)
+    {
+        Assert.Equal(expected, MustSkipEmaillessUser(preserveUserName, User(email)));
+    }
+
     // ---- ResolveNewPmUserIdentity ----
     // Either input alone yields userName == email (backward compatible with the old
     // single -Email / -UserName-alias parameter); supplying both keeps them distinct.

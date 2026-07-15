@@ -28,13 +28,15 @@ Copy-PmUser [-Path <string>] [-LiteralPath <string>] [-Email] <string[]> [-Desti
 
 ## DESCRIPTION
 
-Copies users at the organization (platform management) level from a source organization to one or more destination organizations. The cmdlet replicates user properties including email, name, surname, displayName, bypassBasicAuthRestriction, and invitationAccepted.
+Copies users at the organization (platform management) level from a source organization to one or more destination organizations. The cmdlet replicates user properties including userName, email, name, surname, displayName, bypassBasicAuthRestriction, and invitationAccepted.
+
+By default the source userName is preserved on Automation Suite and on-premises destinations, where a local user's userName can differ from its email. On Automation Cloud, which keys local users by email, the userName is set to the email instead. A source user with no email is migrated on Automation Suite / on-premises (created with just its userName) but skipped on Automation Cloud, which requires an email.
 
 Users are grouped by their source group membership, and the corresponding groups are automatically created or matched in the destination organization. If a group with the same name already exists in the destination, it is reused. Group matching is case-insensitive.
 
-If a user with the same email already exists in the destination organization, the copy is skipped with an error. The cmdlet also prevents copying between drives that belong to the same organization (same partitionGlobalId).
+If a user with the same userName or email already exists in the destination organization, the copy is skipped with an error. The cmdlet also prevents copying between drives that belong to the same organization (same partitionGlobalId).
 
-The -UserMappingCsv parameter allows remapping usernames during the copy. When specified, source user emails are looked up in the mapping CSV and replaced with the mapped values in the destination. This is useful when migrating users between organizations with different identity providers.
+The -UserMappingCsv parameter allows remapping usernames during the copy. When specified, the destination userName is taken from the mapping CSV: a source user is looked up by its userName (the SourceUserName column) and, for backward compatibility, by its email, and the DestinationUserName replaces the userName in the destination. This is useful when migrating users between organizations with different identity providers.
 
 The -Email parameter supports wildcards and tab completion. The -Destination and -Path parameters support tab completion for available drives.
 
@@ -76,7 +78,7 @@ Copies all users whose email ends with "@gmail.com" to the Orch2 organization.
 PS Orch1:\> Copy-PmUser * -Destination Orch2: -UserMappingCsv C:\temp\mapping.csv
 ```
 
-Copies all users to the Orch2 organization, remapping usernames according to the mapping CSV file. The CSV maps source email addresses to destination usernames.
+Copies all users to the Orch2 organization, remapping usernames according to the mapping CSV file. The CSV maps source usernames (or, for backward compatibility, emails) to destination usernames.
 
 ### Example 5: Preview a cross-organization copy
 
@@ -176,7 +178,7 @@ HelpMessage: ''
 
 ### -UserMappingCsv
 
-Specifies the path to a user mapping CSV file for remapping usernames during the copy. The CSV maps source email addresses to destination usernames. This is useful when migrating between organizations with different identity providers. Only supported when a single destination drive is specified.
+Specifies the path to a user mapping CSV file for remapping usernames during the copy. The CSV maps source usernames (or, for backward compatibility, emails) to destination usernames. This is useful when migrating between organizations with different identity providers. Only supported when a single destination drive is specified.
 
 ```yaml
 Type: System.String
@@ -262,7 +264,7 @@ Returns the created PmUser objects in the destination organization, ordered by e
 
 The source and destination drives must belong to different organizations (different partitionGlobalId). If they belong to the same organization, the operation is skipped with a warning.
 
-Users that already exist in the destination organization (matched by email, case-insensitive) are skipped with an error.
+Users that already exist in the destination organization (matched by userName or email, case-insensitive) are skipped with an error.
 
 Group memberships are preserved during the copy. Groups are matched by name (case-insensitive) in the destination, and created automatically if they do not exist.
 

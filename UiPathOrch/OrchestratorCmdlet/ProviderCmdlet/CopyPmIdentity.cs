@@ -8,10 +8,20 @@ namespace UiPath.PowerShell.Core;
 // inline code; the cmdlets call these.
 public partial class OrchProvider
 {
-    // Copy-PmUser: a source local user with no email cannot be created at an
-    // identity-backed destination (Cloud / v15+ key local users by email), so it
-    // is skipped with a warning rather than sent through and silently rejected.
+    // Copy-PmUser: does the source user lack an email? Used with MustSkipEmaillessUser
+    // to decide whether an email-less user can be created at the destination — only
+    // Automation Cloud requires an email (Automation Suite / on-premises accept a
+    // userName-only local user).
     internal static bool HasNoEmail(PmUser? user) => string.IsNullOrEmpty(user?.email);
+
+    // Copy-PmUser: an email-less source user can only be created where the destination
+    // doesn't require an email. Automation Cloud (preserveUserName == false) keys local
+    // users by email and rejects creation without one (users are invite-based), so it
+    // must be skipped there. Automation Suite / on-premises use the userName as the
+    // identifier and accept an empty email (verified on-prem 25.10.2: BulkCreate creates
+    // a userName-only user), so such a user is migrated rather than dropped.
+    internal static bool MustSkipEmaillessUser(bool preserveUserName, PmUser? user) =>
+        !preserveUserName && HasNoEmail(user);
 
     // Copy-PmUser: resolve the userName to create the destination user with.
     // Default preserves the source userName so a local user keeps its identity,
