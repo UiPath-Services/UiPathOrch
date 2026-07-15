@@ -473,8 +473,9 @@ This cmdlet:
    DisplayName — directory users first, then robot accounts, each block
    sorted by name
 
-> **Note**: Local users are not mapped because they can be recreated directly
-> using `New-PmUser`.
+> **Note**: Local users are not in the mapping CSV — they are migrated separately
+> in [Step 1-2](#1-2-migrating-local-users-and-robot-accounts) (`Copy-PmUser`, or the
+> export → `New-PmUser` path).
 
 #### B-2: Review and Edit User Mapping CSV
 
