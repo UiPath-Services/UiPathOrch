@@ -38,8 +38,9 @@ This guide covers both full migrations and one-off copies. Use the questions bel
    - *Same* → [Case A](#case-a-no-username-mapping-required-simple-migration) — one command.
    - *They change* (e.g., AD `DOMAIN\jsmith` → Entra `jsmith@contoso.com`) → [Case B](#case-b-username-mapping-required) — a user mapping CSV.
 
-3. **Migrating local users across organizations?** (on-premises / Automation Suite sources usually have them; same-org migrations share them and skip this)
-   - Go to [Migrating local users](#1-2-migrating-local-users-and-robot-accounts). `Copy-PmUser` preserves the source username and can migrate email-less users, but the exact behavior depends on the **destination edition** — see the table there.
+3. **How are users identified on each side — local, or Active Directory / Entra ID?** (only for cross-org migrations; same-org shares users and skips this)
+   - Start at [Identity migration scenarios](#identity-migration-scenarios): whether each side is directory-integrated decides whether users are **copied**, **recreated**, or **mapped**.
+   - Purely local → local? Go straight to [Migrating local users](#1-2-migrating-local-users-and-robot-accounts) — `Copy-PmUser` preserves the source username and can migrate email-less users, with behavior that depends on the **destination edition**.
 
 > **Directory vs local.** Directory users (AD / Entra ID) are never created by the copy cmdlets — they must already exist in the destination through the identity provider. Only **local users** and **robot accounts** are created by `Copy-PmUser` / `Copy-PmRobotAccount`. Directory user *references* inside entities (folder assignments, per-user assets) are translated by the [Case B](#case-b-username-mapping-required) mapping CSV.
 
@@ -281,6 +282,57 @@ You mapped your scenario in [Choose your path](#choose-your-path) above; this is
 but does NOT create organization-level users. Users must exist in the
 destination organization before their folder assignments can be copied.
 
+#### Identity migration scenarios
+
+How you migrate **users** depends on whether the **source** and the **destination**
+are directory-integrated (Active Directory / Entra ID → *directory users*) or not
+(→ *local users*). Find your quadrant first — it decides whether users are
+**copied**, **recreated**, or **mapped**:
+
+| | **Destination: not AD-integrated** (local users) | **Destination: AD / Entra integrated** (directory users) |
+|---|---|---|
+| **Source: not AD-integrated** (local users) | **local → local.** `Copy-PmUser` copies them (see [1-2](#1-2-migrating-local-users-and-robot-accounts)). | **local → local, or → directory.** Either copy them as local users (`Copy-PmUser`; a Cloud destination needs emails) *or*, if those people already exist as Entra users at the destination, treat them as directory users and only map their references ([Case B](#case-b-username-mapping-required)). An intent decision — ask the user. |
+| **Source: AD / Entra integrated** (directory users) | **directory → local (recreate).** There is no destination directory to hold them, so recreate each source directory user as a **local** user at the destination, then map references. See below. | **directory → directory.** Directory users are not copied via API — ensure they exist at the destination through its identity provider, then translate references with the mapping CSV ([Case B](#case-b-username-mapping-required)). |
+
+The `local → local` and `directory → directory` diagonals are the well-trodden paths
+([1-2](#1-2-migrating-local-users-and-robot-accounts) and [Case B](#case-b-username-mapping-required)).
+The two off-diagonal cases need extra care:
+
+**Directory → local** (AD / Entra source → non-AD destination). Recreate the source's
+directory users as local users at the destination, using the email and name the
+directory already holds:
+
+```powershell
+# 1. Export the source directory users' identifying details
+Get-OrchUser -Path Source: |
+  Where-Object Type -eq 'DirectoryUser' |
+  Select-Object @{N='Email';E={$_.EmailAddress}}, @{N='UserName';E={$_.UserName}}, @{N='Name';E={$_.FullName}} |
+  Export-Csv C:\Migration\directory-as-local.csv -NoTypeInformation
+
+# 2. Review the CSV — set the Email / UserName each destination local user should have
+#    (a Cloud destination keys local users by email, so every row needs one)
+
+# 3. Create them as local users at the destination
+Import-Csv C:\Migration\directory-as-local.csv | New-PmUser -Path Destination:
+```
+
+Then translate references (folder assignments, per-user assets) from the old directory
+name to the new local name with the mapping CSV: `New-OrchUserMappingCsv` already
+enumerates the source directory users, so fill each `DestinationUserName` with the new
+local user's name and proceed as in [Case B](#case-b-username-mapping-required).
+
+> **Validate this path before a production run.** Creating a local user at a **Cloud**
+> destination goes through the invite-based identity flow, which this guide has not
+> exercised end to end for a directory→local conversion. Rehearse on a non-production
+> destination and confirm the users appear as expected.
+
+**Local → directory** (non-AD source → AD / Entra destination), when the migrated
+people should become directory users. The Entra users must already exist at the
+destination through its identity provider — you are not creating them here. Skip
+`Copy-PmUser` for them and only map their references (source local name → destination
+Entra name) with the mapping CSV ([Case B](#case-b-username-mapping-required)); use
+`Copy-PmUser` only for the users you intend to keep as **local** accounts.
+
 #### 1-1: Investigate source users
 
 First, list all users in the source tenant and classify them:
@@ -350,7 +402,9 @@ A user that already has an email keeps it in every case; only the userName and t
   Import-Csv C:\Migration\local-users.csv | New-PmUser -Path Destination:
   ```
 - Directory users (AD / Entra ID) cannot be copied via API — they must be added
-  to the destination organization through the identity provider.
+  to the destination through its identity provider, or, when the destination is
+  **not** directory-integrated, recreated as local users (see
+  [Identity migration scenarios](#identity-migration-scenarios) above).
 
 > **Selecting users by name.** `-UserName` on `Get-` / `Update-` / `Copy-PmUser`
 > matches a user by **either** its userName **or** its email, so it resolves a
