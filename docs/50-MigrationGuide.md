@@ -303,12 +303,12 @@ User types:
 | `DirectoryGroup` | AD / Entra ID group | Create in destination directory |
 | `DirectoryRobot` | Robot account | Copy with `Copy-PmRobotAccount`; map with UserMappingCsv if names differ |
 | `DirectoryExternalApplication` | External app | Recreate manually |
-| `User` | Local user (on-prem) | Copy with `Copy-PmUser` |
+| `User` | Local user (on-premises / Automation Suite) | Copy with `Copy-PmUser` |
 
 Ask the user:
 - Which directory users exist in the destination organization?
 - Do any usernames change format (e.g., `admin` → `admin@company.com`)?
-- Are there local users that need to be recreated?
+- Are there local users that need to be migrated?
 
 #### 1-2: Migrating local users and robot accounts
 
@@ -340,7 +340,9 @@ by email (users are invite-based). `Copy-PmUser` follows this automatically:
   email). Give them one either way:
   - add the email at the **source** first, then copy —
     `Update-PmUser -Path Source: -UserName <name> -NewEmail <addr>`
-    (works on Automation Suite / on-premises), or
+    (needs an Automation Suite / on-premises source on a version that supports the
+    `Pm*` cmdlets, i.e. API 15+ / 22.4+; older MSI sources cannot, so use the export
+    path below), or
   - recreate them at the **destination** with an email via the export path below.
 - **Add or change an email after migration** (Automation Suite / on-premises):
   `Update-PmUser -Path Destination: -UserName <name> -NewEmail <addr>`.
