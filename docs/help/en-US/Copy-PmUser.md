@@ -156,7 +156,7 @@ HelpMessage: ''
 
 ### -Email
 
-Specifies the email address(es) of the user(s) to copy. Supports wildcards for pattern matching. Tab completion dynamically suggests user email addresses from the source organization. This parameter has the alias "UserName".
+Specifies the email address(es) of the user(s) to copy. Supports wildcards for pattern matching. Tab completion dynamically suggests user email addresses from the source organization. This parameter has the alias "UserName", and a pattern matches a source user by either its userName or its email -- so a userName that differs from the email still selects it.
 
 ```yaml
 Type: System.String[]

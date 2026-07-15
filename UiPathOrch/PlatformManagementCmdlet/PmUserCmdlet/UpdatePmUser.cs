@@ -66,7 +66,12 @@ public class UpdatePmUserCmdlet : OrchestratorPSCmdlet
             try
             {
                 var users = drive.PmUsers.Get();
-                var targetUsers = users.SelectByWildcards(u => u?.email, wpEmail);
+                // -UserName is an alias of -Email; match a pattern against EITHER the
+                // userName or the email so a userName that differs from the email still
+                // resolves. SelectByWildcardsAny keeps the empty -> empty (no -Email given
+                // => no-op) semantics of the former SelectByWildcards, unlike the Any
+                // filter used by the read cmdlets.
+                var targetUsers = users.SelectByWildcardsAny([u => u?.userName, u => u?.email], wpEmail);
                 foreach (var user in targetUsers.OrderBy(u => u.email)
                     .WithProgressBar(this, $"Updating PmUsers in {drive.NameColonSeparator}", u => u.email)
                     .WithCancellation(cancelHandler.Token))

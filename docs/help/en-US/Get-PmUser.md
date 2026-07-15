@@ -171,7 +171,7 @@ HelpMessage: ''
 
 ### -Email
 
-Specifies the email addresses of users to retrieve. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests user email addresses from the target organizations. This parameter has the alias "UserName".
+Specifies the email addresses of users to retrieve. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests user email addresses from the target organizations. This parameter has the alias "UserName", and a pattern matches a user by either its userName or its email -- so a userName that differs from the email (or a userName-only account with no email) still resolves.
 
 ```yaml
 Type: System.String[]

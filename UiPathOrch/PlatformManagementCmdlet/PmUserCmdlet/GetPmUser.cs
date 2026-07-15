@@ -120,8 +120,12 @@ public class GetPmUserCmdlet : OrchestratorPSCmdlet
                 if (entities is null) continue;
 
                 var drive = result.Source;
+                // -UserName is an alias of -Email; match a pattern against EITHER the
+                // userName or the email so a userName that differs from the email (or a
+                // userName-only account with no email) still resolves. Mirrors how
+                // Get-OrchUser matches UserName/EmailAddress.
                 var targetUsers = entities
-                    .FilterByWildcards(u => u?.email, wpEmail)
+                    .FilterByWildcardsAny([u => u?.userName, u => u?.email], wpEmail)
                     .OrderBy(u => u.email);
 
                 if (writer is not null)

@@ -49,7 +49,10 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
             var srcAllUsers = srcDrive.PmUsers.Get();
 
             var srcUsers = srcDrive.PmUsers.Get()
-                .FilterByWildcards(u => u?.email, wpEmail)
+                // -UserName is an alias of -Email; match a pattern against EITHER the
+                // userName or the email so a userName that differs from the email still
+                // selects the source user (mirrors Get-OrchUser's UserName/EmailAddress).
+                .FilterByWildcardsAny([u => u?.userName, u => u?.email], wpEmail)
                 .OrderBy(u => u.name);
 
             foreach (var srcUser in srcUsers)

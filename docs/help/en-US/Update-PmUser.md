@@ -166,7 +166,7 @@ HelpMessage: ''
 
 ### -Email
 
-Specifies the email address(es) of the user(s) to update. Supports wildcards for batch updates. Tab completion dynamically suggests user email addresses. This parameter has the alias "UserName".
+Specifies the email address(es) of the user(s) to update. Supports wildcards for batch updates. Tab completion dynamically suggests user email addresses. This parameter has the alias "UserName", and a pattern matches a user by either its userName or its email -- so a userName that differs from the email (or a userName-only account) still resolves. As with the former behavior, no -Email/-UserName means no user is matched (a no-op), not all users.
 
 ```yaml
 Type: System.String[]
