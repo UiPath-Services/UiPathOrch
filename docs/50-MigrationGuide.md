@@ -314,6 +314,11 @@ Get-OrchUser -Path Source: |
 
 # 3. Create them as local users at the destination
 Import-Csv C:\Migration\directory-as-local.csv | New-PmUser -Path Destination:
+
+# 4. Give each new user a sign-in password (they change it on first login; a
+#    per-user temp password is safer — see the password post-processing in Case A/B)
+Import-Csv C:\Migration\directory-as-local.csv |
+  ForEach-Object { Update-PmUser -Path Destination: -UserName $_.Email -Password 'Init!Change1' }
 ```
 
 Then translate references (folder assignments, per-user assets) from the old directory
@@ -321,12 +326,12 @@ name to the new local name with the mapping CSV: `New-OrchUserMappingCsv` alread
 enumerates the source directory users, so fill each `DestinationUserName` with the new
 local user's name and proceed as in [Case B](#case-b-username-mapping-required).
 
-> **Creation is verified on Cloud; still arrange sign-in.** `New-PmUser` (the identity
-> bulk-create API) does create an **active** local user at a Cloud destination —
-> confirmed on Automation Cloud (API 20): the user comes back keyed by its email, active,
-> with `invitationAccepted` already true. What this test did **not** cover is how that
-> user then signs in (password / the organization's invite flow), so rehearse the
-> sign-in setup on a non-production destination before the full run.
+> **Verified on Cloud.** `New-PmUser` (the identity bulk-create API) creates an
+> **active**, email-keyed local user at a Cloud destination, and
+> `Update-PmUser -Path Destination: -UserName <email> -Password <pw>` then sets its
+> sign-in password — both calls confirmed to succeed on Automation Cloud (API 20). The
+> user signs in with its email and that password. (The interactive browser login itself
+> was not exercised here, but it is the standard email + password flow.)
 
 **Local → directory** (non-AD source → AD / Entra destination), when the migrated
 people should become directory users. The Entra users must already exist at the
