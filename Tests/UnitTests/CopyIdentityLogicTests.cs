@@ -147,4 +147,74 @@ public class CopyIdentityLogicTests
         var existing = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase) { "bot1", "bot2" };
         Assert.Equal(expected, RobotNameAlreadyExists(existing, name));
     }
+
+    // ---- ResolvePmUserName ----
+    // Default preserves the source userName (AS / on-prem); Automation Cloud
+    // (preserveUserName == false) keeps email-as-userName; a UserMappingCsv entry
+    // overrides either, tried by userName first then email (backward compat).
+
+    private static Dictionary<string, string> Map(params (string key, string val)[] entries) =>
+        entries.ToDictionary(e => e.key, e => e.val, System.StringComparer.OrdinalIgnoreCase);
+
+    [Fact]
+    public void ResolvePmUserName_PreserveTrue_PrefersUserName()
+    {
+        Assert.Equal("alice", ResolvePmUserName("alice", "alice@x.com", true, null));
+    }
+
+    [Fact]
+    public void ResolvePmUserName_PreserveTrue_NoUserName_FallsBackToEmail()
+    {
+        Assert.Equal("alice@x.com", ResolvePmUserName("", "alice@x.com", true, null));
+    }
+
+    [Fact]
+    public void ResolvePmUserName_Cloud_PrefersEmail()
+    {
+        Assert.Equal("alice@x.com", ResolvePmUserName("alice", "alice@x.com", false, null));
+    }
+
+    [Fact]
+    public void ResolvePmUserName_Cloud_NoEmail_FallsBackToUserName()
+    {
+        Assert.Equal("alice", ResolvePmUserName("alice", "", false, null));
+    }
+
+    [Fact]
+    public void ResolvePmUserName_Csv_KeyedByUserName_Overrides()
+    {
+        Assert.Equal("alice.smith", ResolvePmUserName("alice", "alice@x.com", true, Map(("alice", "alice.smith"))));
+    }
+
+    [Fact]
+    public void ResolvePmUserName_Csv_KeyedByEmail_Overrides_BackwardCompat()
+    {
+        Assert.Equal("alice.smith", ResolvePmUserName("alice", "alice@x.com", true, Map(("alice@x.com", "alice.smith"))));
+    }
+
+    [Fact]
+    public void ResolvePmUserName_Csv_UserNameKeyWins_OverEmailKey()
+    {
+        var map = Map(("alice", "by-name"), ("alice@x.com", "by-email"));
+        Assert.Equal("by-name", ResolvePmUserName("alice", "alice@x.com", true, map));
+    }
+
+    [Fact]
+    public void ResolvePmUserName_Csv_NoMatch_UsesDefault()
+    {
+        Assert.Equal("alice", ResolvePmUserName("alice", "alice@x.com", true, Map(("someone-else", "x"))));
+    }
+
+    [Fact]
+    public void ResolvePmUserName_Csv_EmptyMappedValue_Ignored_UsesDefault()
+    {
+        // A blank DestinationUserName cell must not blank the created userName.
+        Assert.Equal("alice", ResolvePmUserName("alice", "alice@x.com", true, Map(("alice", ""))));
+    }
+
+    [Fact]
+    public void ResolvePmUserName_Csv_OverridesEvenOnCloud()
+    {
+        Assert.Equal("alice", ResolvePmUserName("alice", "alice@x.com", false, Map(("alice@x.com", "alice"))));
+    }
 }

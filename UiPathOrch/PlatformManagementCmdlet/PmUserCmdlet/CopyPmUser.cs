@@ -99,6 +99,15 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
+            // Automation Cloud keys local users by email (users are invite-based and
+            // the identifier IS the email), so keep the historical email-as-userName
+            // there to avoid regressing Cloud migrations (confirmed: Cloud users have
+            // userName == email). Automation Suite and on-premises use an identity
+            // model where a local user's userName is separate from the email (verified
+            // on AS: a migrated user keeps a userName != email), so there we preserve
+            // the source userName. A -UserMappingCsv entry overrides either way.
+            bool preserveUserName = dstDrive._psDrive.ResolvedEdition != OrchEdition.Cloud;
+
             #region Get group list from dstDrive
             Dictionary<string, PmGroup> dstGroups;
             try
@@ -131,9 +140,10 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
 
                 #region Get user list from dstDrive
                 Dictionary<string, PmUser> dstUsers = null;
+                HashSet<string> dstUserNames = null;
                 try
                 {
-                    // Build the "already taken" lookup defensively: a plain
+                    // Build the "already taken" lookups defensively: a plain
                     // ToDictionary(u => u.email) throws "an item with the same key
                     // has already been added" when the destination has two+ users
                     // sharing a key — in practice empty-email entries (key ""),
@@ -141,8 +151,14 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                     // leaving dstUsers null and the duplicate check silently
                     // disabled. Drop empty emails (they can't be a meaningful dup
                     // target for an email-keyed create) and collapse duplicates so
-                    // the lookup is built reliably.
-                    dstUsers = Core.OrchProvider.BuildDstUserLookup(dstDrive.PmUsers.Get());
+                    // the lookup is built reliably. Also index by userName so the
+                    // duplicate guard catches a collision on the name we create with
+                    // (the destination's identifier once userName != email).
+                    var dstAllUsers = dstDrive.PmUsers.Get();
+                    dstUsers = Core.OrchProvider.BuildDstUserLookup(dstAllUsers);
+                    dstUserNames = new HashSet<string>(
+                        dstAllUsers.Where(u => !string.IsNullOrEmpty(u?.userName)).Select(u => u!.userName!),
+                        StringComparer.OrdinalIgnoreCase);
                 }
                 catch (Exception ex)
                 {
@@ -169,26 +185,29 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                     }
                     #endregion
 
-                    #region Skip if a user with the same name already exists in dstDrive
-                    if (dstUsers?.ContainsKey(srcUser.email!) ?? false)
+                    #region Resolve the userName to create with
+                    // Preserve the source userName by default; Automation Cloud keeps
+                    // email-as-userName; a -UserMappingCsv entry overrides. The full
+                    // policy (and its edge cases) lives in ResolvePmUserName so it can
+                    // be unit-tested without a live drive.
+                    string mappedUserName = Core.OrchProvider.ResolvePmUserName(
+                        srcUser.userName, srcUser.email, preserveUserName, userMapping);
+                    #endregion
+
+                    #region Skip if the user already exists at the destination
+                    // Match on the userName we would create (the destination's
+                    // identifier) or on the email (catches a user created by an earlier
+                    // email-as-userName run). Either collision means the server would
+                    // reject the create.
+                    if ((dstUserNames?.Contains(mappedUserName) ?? false) ||
+                        (dstUsers?.ContainsKey(srcUser.email!) ?? false))
                     {
-                        WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"Username '{srcUser.email}' is already taken."), "GetPmGroupError", ErrorCategory.InvalidOperation, srcDrive));
+                        WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, $"A user with the name '{mappedUserName}' or email '{srcUser.email}' already exists at the destination."), "CopyPmUserDuplicate", ErrorCategory.ResourceExists, srcDrive));
                         continue;
                     }
                     #endregion
 
                     #region Add this user to the payload
-                    // Name resolution via UserMappingCsv
-                    string mappedUserName = !string.IsNullOrEmpty(srcUser.email) ? srcUser.email : srcUser.userName;
-                    if (userMapping is not null)
-                    {
-                        string lookupKey = srcUser.email ?? srcUser.userName ?? "";
-                        if (userMapping.TryGetValue(lookupKey, out var mapped) && !string.IsNullOrEmpty(mapped))
-                        {
-                            mappedUserName = mapped;
-                        }
-                    }
-
                     var command = new CreateUserCommandBase()
                     {
                         id = Guid.NewGuid().ToString(),

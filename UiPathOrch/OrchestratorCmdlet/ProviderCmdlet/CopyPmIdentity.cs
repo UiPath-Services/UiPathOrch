@@ -13,6 +13,39 @@ public partial class OrchProvider
     // is skipped with a warning rather than sent through and silently rejected.
     internal static bool HasNoEmail(PmUser? user) => string.IsNullOrEmpty(user?.email);
 
+    // Copy-PmUser: resolve the userName to create the destination user with.
+    // Default preserves the source userName so a local user keeps its identity,
+    // falling back to the email only when there is no userName. On Automation Cloud
+    // (preserveUserName == false) the identifier is the email, so the historical
+    // email-as-userName is kept and Cloud migrations don't regress. A UserMappingCsv
+    // entry overrides either default and is tried FIRST: it may be keyed by the source
+    // userName (matching the SourceUserName column and the sibling copy cmdlets) or,
+    // for backward compatibility with earlier email-keyed sheets, by the email —
+    // userName is looked up first, then email. An empty mapped value is ignored (falls
+    // through to the default) so a blank cell never blanks the created userName.
+    internal static string ResolvePmUserName(
+        string? srcUserName, string? srcEmail, bool preserveUserName,
+        IReadOnlyDictionary<string, string>? userMapping)
+    {
+        if (userMapping is not null)
+        {
+            if (!string.IsNullOrEmpty(srcUserName) &&
+                userMapping.TryGetValue(srcUserName, out var byName) && !string.IsNullOrEmpty(byName))
+            {
+                return byName;
+            }
+            if (!string.IsNullOrEmpty(srcEmail) &&
+                userMapping.TryGetValue(srcEmail, out var byEmail) && !string.IsNullOrEmpty(byEmail))
+            {
+                return byEmail;
+            }
+        }
+
+        return preserveUserName
+            ? (!string.IsNullOrEmpty(srcUserName) ? srcUserName : (srcEmail ?? ""))
+            : (!string.IsNullOrEmpty(srcEmail) ? srcEmail : (srcUserName ?? ""));
+    }
+
     // Copy-PmUser: build the destination "already taken" lookup defensively. A
     // plain ToDictionary(u => u.email) throws "an item with the same key has
     // already been added" when the destination has 2+ users sharing a key (in
