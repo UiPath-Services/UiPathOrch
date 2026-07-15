@@ -38,7 +38,7 @@ This guide covers both full migrations and one-off copies. Use the questions bel
    - *Same* → [Case A](#case-a-no-username-mapping-required-simple-migration) — one command.
    - *They change* (e.g., AD `DOMAIN\jsmith` → Entra `jsmith@contoso.com`) → [Case B](#case-b-username-mapping-required) — a user mapping CSV.
 
-3. **Do you have local users to migrate?** (on-premises / Automation Suite sources usually do)
+3. **Migrating local users across organizations?** (on-premises / Automation Suite sources usually have them; same-org migrations share them and skip this)
    - Go to [Migrating local users](#1-2-migrating-local-users-and-robot-accounts). `Copy-PmUser` preserves the source username and can migrate email-less users, but the exact behavior depends on the **destination edition** — see the table there.
 
 > **Directory vs local.** Directory users (AD / Entra ID) are never created by the copy cmdlets — they must already exist in the destination through the identity provider. Only **local users** and **robot accounts** are created by `Copy-PmUser` / `Copy-PmRobotAccount`. Directory user *references* inside entities (folder assignments, per-user assets) are translated by the [Case B](#case-b-username-mapping-required) mapping CSV.
@@ -269,18 +269,11 @@ After editing, run `Import-OrchConfig` to reload the configuration.
 
 ### Case Determination
 
-**Source and destination belong to the same organization:**
-Organization-level entities (local users, local groups, robot accounts) are
-shared, so no copying is needed. Start from Step 2.
+You mapped your scenario in [Choose your path](#choose-your-path) above; this is where each route begins.
 
-**Source and destination belong to different organizations:**
-Start from Step 1.
-
-**Username mapping is required:**
-If the source and destination username formats differ (e.g., AD username
-`DOMAIN\jsmith` -> Entra ID email address `jsmith@contoso.com`), use the
-Case B procedure. Generate the user mapping CSV using `New-OrchUserMappingCsv`
-before starting the copy.
+- **Same organization** — org-level entities (local users, groups, robot accounts) are already shared, so there is nothing to copy at this level. Skip to [Step 2](#step-2-copy-tenant-level-and-folder-level-entities).
+- **Different organizations** — start at [Step 1](#step-1-copy-organization-level-entities-cross-organization-only) to bring users across, then [Step 2](#step-2-copy-tenant-level-and-folder-level-entities) for tenant and folder entities.
+- **Usernames change between source and destination** (e.g., AD `DOMAIN\jsmith` → Entra `jsmith@contoso.com`) — use [Case B](#case-b-username-mapping-required) within Step 2, generating the mapping CSV with `New-OrchUserMappingCsv` before copying.
 
 ### Step 1: Copy Organization-Level Entities (Cross-Organization Only)
 
@@ -332,6 +325,8 @@ by email (users are invite-based). `Copy-PmUser` follows this automatically:
 |---|---|---|
 | **Automation Suite / on-premises** | the **source userName** is preserved (it may differ from the email) | **migrated** — created with just its userName |
 | **Automation Cloud** | set to the **email** (Cloud's identifier) | **skipped** — Cloud requires an email |
+
+A user that already has an email keeps it in every case; only the userName and the handling of email-less users differ by edition.
 
 - **When to skip `Copy-PmUser` entirely:** if the destination is AD / Entra ID
   integrated (no local users needed), or the source is AD-integrated — only
