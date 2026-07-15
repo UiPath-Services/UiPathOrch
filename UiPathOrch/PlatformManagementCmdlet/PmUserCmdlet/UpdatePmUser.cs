@@ -22,9 +22,14 @@ public class UpdatePmUserCmdlet : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public string? Surname { get; set; }
 
-    // It seems that the Email of an existing user cannot be changed via the API.
-    //[Parameter(ValueFromPipelineByPropertyName = true)]
-    //public string? Email { get; set; }
+    // Sets (or clears) the user's email. -Email / -UserName above selects which user(s)
+    // to update; -NewEmail changes the selected user's email. An existing user's email
+    // IS changeable via PUT /api/User/{id} -- verified live on on-prem 21.10.4 / 22.10.1
+    // / 25.10.2, where adding an email to a userName-only account and changing an
+    // existing email both succeed. (An earlier note here wrongly assumed the email could
+    // not be changed, which is why this was left out.)
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public string? NewEmail { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public string? Password { get; set; }
@@ -71,8 +76,23 @@ public class UpdatePmUserCmdlet : OrchestratorPSCmdlet
                 // resolves. SelectByWildcardsAny keeps the empty -> empty (no -Email given
                 // => no-op) semantics of the former SelectByWildcards, unlike the Any
                 // filter used by the read cmdlets.
-                var targetUsers = users.SelectByWildcardsAny([u => u?.userName, u => u?.email], wpEmail);
-                foreach (var user in targetUsers.OrderBy(u => u.email)
+                var targetUsers = users
+                    .SelectByWildcardsAny([u => u?.userName, u => u?.email], wpEmail)
+                    .OrderBy(u => u.email)
+                    .ToList();
+
+                // -NewEmail sets one address; applying it to several users at once would
+                // collide on the destination, so require the selection to resolve to a
+                // single user.
+                if (!string.IsNullOrEmpty(NewEmail) && targetUsers.Count > 1)
+                {
+                    WriteError(new ErrorRecord(
+                        new PSArgumentException($"-NewEmail sets a single email address, but {targetUsers.Count} users matched on '{drive.NameColonSeparator}'. Narrow -Email/-UserName to one user."),
+                        "UpdatePmUserNewEmailMultiMatch", ErrorCategory.InvalidArgument, drive));
+                    continue;
+                }
+
+                foreach (var user in targetUsers
                     .WithProgressBar(this, $"Updating PmUsers in {drive.NameColonSeparator}", u => u.email)
                     .WithCancellation(cancelHandler.Token))
                 {
@@ -97,7 +117,7 @@ public class UpdatePmUserCmdlet : OrchestratorPSCmdlet
                     dst.AssignStringIfNotNull(Name, (u, v) => u.name = v);
                     dst.AssignStringIfNotNull(DisplayName, (u, v) => u.displayName = v);
                     dst.AssignStringIfNotNull(Surname, (u, v) => u.surname = v);
-                    //dst.AssignStringIfNotNull(Email, (u, v) => u.email = v);
+                    dst.AssignStringIfNotNull(NewEmail, (u, v) => u.email = v);
                     dst.AssignStringIfNotNullOrEmpty(Password, (u, v) => u.password = v); // Password cannot be retrieved via API, so leave as-is
                     dst.AssignBoolIfNotNull(BypassBasicAuthRestriction, (u, v) => u.bypassBasicAuthRestriction = v);
 
@@ -105,7 +125,7 @@ public class UpdatePmUserCmdlet : OrchestratorPSCmdlet
                     if (src.name != dst.name ||
                         src.displayName != dst.displayName ||
                         src.surname != dst.surname ||
-                        //src.email != dst.email ||
+                        src.email != dst.email ||
                         src.bypassBasicAuthRestriction != dst.bypassBasicAuthRestriction ||
                         !string.IsNullOrEmpty(Password))
                     {
