@@ -4,7 +4,7 @@ external help file: UiPathOrch.dll-Help.xml
 HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/New-PmUser.md'
 Locale: en-US
 Module Name: UiPathOrch
-ms.date: 03/06/2026
+ms.date: 07/15/2026
 PlatyPS schema version: 2024-05-01
 title: New-PmUser
 ---
@@ -13,29 +13,31 @@ title: New-PmUser
 
 ## SYNOPSIS
 
-Creates a new platform management user in a UiPath Automation Cloud organization.
+Creates a new platform management user in a UiPath organization (Automation Cloud, Automation Suite, or on-premises).
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-New-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [-Email] <string> [-BypassBasicAuthRestriction <string>]
- [-Confirm] [-DisplayName <string>] [-GroupName <string[]>] [-InvitationAccepted <string>]
- [-Name <string>] [-SurName <string>] [-Type <string>] [-WhatIf] [<CommonParameters>]
+New-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [[-Email] <string>] [-UserName <string>]
+ [-BypassBasicAuthRestriction <string>] [-Confirm] [-DisplayName <string>] [-GroupName <string[]>]
+ [-InvitationAccepted <string>] [-Name <string>] [-SurName <string>] [-Type <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
 
 ## DESCRIPTION
 
-Creates a new user at the organization (platform management) level in UiPath Automation Cloud. The user is created via the identity service bulk creation API.
+Creates a new user at the organization (platform management) level. The user is created via the identity service bulk creation API.
+
+By default the userName equals the email. On Automation Suite and on-premises a local user's userName can differ from its email -- pass -UserName to set it separately (supply at least one of -Email or -UserName). On Automation Cloud the identifier is always the email, so leave -UserName unset there.
 
 This cmdlet accepts pipeline input, allowing multiple users to be created from a CSV file or other pipeline sources. When multiple users are piped in, they are batched by target drive and group membership and created in bulk for efficiency. The bulk API call is executed during EndProcessing, so all pipeline input is collected before any API calls are made.
 
 If a -GroupName is specified and the group does not exist, the cmdlet automatically creates the group before adding the user. Wildcard patterns in -GroupName are expanded to match existing group names. When importing from a CSV exported by Get-PmUser, the GroupName column may contain comma-separated group names, which are automatically parsed.
 
-Duplicate email entries within the same batch are detected and skipped with a warning.
+Duplicate userName entries within the same batch are detected and skipped with a warning.
 
 The -Email, -Type, -BypassBasicAuthRestriction, -InvitationAccepted, -GroupName, and -Path parameters support tab completion.
 
@@ -176,19 +178,17 @@ HelpMessage: ''
 
 ### -Email
 
-Specifies the email address for the new user. This value is also used as the userName. This parameter has the aliases "UserName" and "DestinationUserName".
+Specifies the email address for the new user. When -UserName is not given this value is also used as the userName (always the case on Automation Cloud, where the identifier is the email). Optional -- supply at least one of -Email or -UserName.
 
 ```yaml
 Type: System.String
 DefaultValue: ''
 SupportsWildcards: false
-Aliases:
-- UserName
-- DestinationUserName
+Aliases: []
 ParameterSets:
 - Name: (All)
   Position: 0
-  IsRequired: true
+  IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true
   ValueFromRemainingArguments: false
@@ -290,6 +290,28 @@ Type: System.String
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -UserName
+
+Specifies the login name (identifier) for the new user. On Automation Suite and on-premises a local user's userName can differ from its email; when omitted, the userName defaults to -Email. Has the alias "DestinationUserName" so a user-mapping row's target name binds to it. On Automation Cloud the userName must equal the email, so leave this unset there.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases:
+- DestinationUserName
 ParameterSets:
 - Name: (All)
   Position: Named

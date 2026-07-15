@@ -217,4 +217,32 @@ public class CopyIdentityLogicTests
     {
         Assert.Equal("alice", ResolvePmUserName("alice", "alice@x.com", false, Map(("alice@x.com", "alice"))));
     }
+
+    // ---- ResolveNewPmUserIdentity ----
+    // Either input alone yields userName == email (backward compatible with the old
+    // single -Email / -UserName-alias parameter); supplying both keeps them distinct.
+
+    [Fact]
+    public void ResolveNewPmUserIdentity_EmailOnly_UserNameEqualsEmail()
+    {
+        Assert.Equal(("a@x.com", "a@x.com"), ResolveNewPmUserIdentity(null, "a@x.com"));
+    }
+
+    [Fact]
+    public void ResolveNewPmUserIdentity_UserNameOnly_EmailDefaultsToUserName()
+    {
+        Assert.Equal(("a@x.com", "a@x.com"), ResolveNewPmUserIdentity("a@x.com", null));
+    }
+
+    [Fact]
+    public void ResolveNewPmUserIdentity_Both_KeepsThemDistinct()
+    {
+        Assert.Equal(("alice", "alice@x.com"), ResolveNewPmUserIdentity("alice", "alice@x.com"));
+    }
+
+    [Fact]
+    public void ResolveNewPmUserIdentity_Neither_EmptyUserName_ForCallerToReject()
+    {
+        Assert.Equal(("", ""), ResolveNewPmUserIdentity(null, ""));
+    }
 }

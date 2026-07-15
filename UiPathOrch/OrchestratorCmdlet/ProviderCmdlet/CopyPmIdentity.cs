@@ -46,6 +46,21 @@ public partial class OrchProvider
             : (!string.IsNullOrEmpty(srcEmail) ? srcEmail : (srcUserName ?? ""));
     }
 
+    // New-PmUser: resolve (userName, email) from the -UserName / -Email parameters.
+    // userName is the identifier and defaults to the email (always so on Automation
+    // Cloud, and the long-standing single-parameter behaviour); email defaults to the
+    // userName when only a userName is supplied. Either input alone therefore yields
+    // userName == email (backward compatible with the old -Email/-UserName-alias
+    // parameter), while supplying BOTH lets a local user keep a userName distinct from
+    // its email on Automation Suite / on-premises. userName is empty only when both
+    // inputs are empty, which the caller rejects.
+    internal static (string userName, string email) ResolveNewPmUserIdentity(string? userName, string? email)
+    {
+        string effUserName = !string.IsNullOrEmpty(userName) ? userName : (email ?? "");
+        string effEmail = !string.IsNullOrEmpty(email) ? email : (userName ?? "");
+        return (effUserName, effEmail);
+    }
+
     // Copy-PmUser: build the destination "already taken" lookup defensively. A
     // plain ToDictionary(u => u.email) throws "an item with the same key has
     // already been added" when the destination has 2+ users sharing a key (in

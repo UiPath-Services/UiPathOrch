@@ -6,11 +6,14 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-class CsvLine(string? name, string? surname, string? displayName, string? type, string? bypassBasicAuthRestriction, string? invitationAccepted)
+class CsvLine(string? email, string? name, string? surname, string? displayName, string? type, string? bypassBasicAuthRestriction, string? invitationAccepted)
 {
-    // id is generated with new Guid() at API call time
-    // email is managed as the Dictionary key
-    // userName is set to the same value as email
+    // id is generated with new Guid() at API call time.
+    // The Dictionary key is the userName (the identifier); the email is carried here
+    // because on Automation Suite / on-premises a local user's email can differ from
+    // the userName (it equals the userName on Automation Cloud and whenever no separate
+    // -UserName was given).
+    public string? email { get; set; } = email;
     public string? name { get; set; } = name;
     public string? surname { get; set; } = surname;
     public string? displayName { get; set; } = displayName;
@@ -52,12 +55,22 @@ internal class DriveGroupIdsComparer : IEqualityComparer<(OrchDriveInfo drive, s
 [OutputType(typeof(Entities.PmUser))]
 public class NewPmUserCmdlet : OrchestratorPSCmdlet
 {
-    // Key: (drive, groupIds) Value: Dictionary<email, csvLine>
+    // Key: (drive, groupIds) Value: Dictionary<userName, csvLine>
     Dictionary<(OrchDriveInfo drive, string[] groupNames), Dictionary<string, CsvLine>> _params = new(new DriveGroupIdsComparer());
 
-    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [Alias("UserName", "DestinationUserName")]
+    // The email address. On Automation Cloud this is also the identifier (userName ==
+    // email). Optional so a userName-only call is possible; at least one of -Email /
+    // -UserName must be supplied.
+    [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     public string? Email { get; set; }
+
+    // The login name / identifier. On Automation Suite and on-premises a local user's
+    // userName can differ from the email; when omitted it defaults to the email (the
+    // long-standing behaviour, and what Automation Cloud requires). DestinationUserName
+    // is an alias so a user-mapping row's target name binds straight to it.
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Alias("DestinationUserName")]
+    public string? UserName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public string? Name { get; set; }
@@ -101,6 +114,17 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
 
         _params ??= [];
 
+        // userName is the identifier and defaults to the email; email defaults to the
+        // userName. Require at least one. See ResolveNewPmUserIdentity.
+        var (effUserName, effEmail) = Core.OrchProvider.ResolveNewPmUserIdentity(UserName, Email);
+        if (string.IsNullOrEmpty(effUserName))
+        {
+            WriteError(new ErrorRecord(
+                new PSArgumentException("Specify -UserName or -Email (at least one is required)."),
+                "NewPmUserMissingIdentity", ErrorCategory.InvalidArgument, null));
+            return;
+        }
+
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
 
         foreach (var drive in drives)
@@ -133,18 +157,18 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
 
             string[] orderedGroupNames = [.. groupNames.Order()]; // Sort so it can be used as a key
 
-            string target = System.IO.Path.Combine(drive.NameColonSeparator, Email!);
+            string target = System.IO.Path.Combine(drive.NameColonSeparator, effUserName);
             if (_params.TryGetValue((drive, orderedGroupNames)!, out var userName_line))
             {
-                if (userName_line.TryGetValue(Email!, out var line))
+                if (userName_line.TryGetValue(effUserName, out var line))
                 {
-                    WriteWarning($"{drive.NameColonSeparator}{Email}: duplicate entry found. This entry will be ignored.");
+                    WriteWarning($"{drive.NameColonSeparator}{effUserName}: duplicate entry found. This entry will be ignored.");
                     continue;
                 }
                 if (ShouldProcess(target, "New PmUser"))
                 {
-                    line = new(Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted);
-                    userName_line[Email!] = line;
+                    line = new(effEmail, Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted);
+                    userName_line[effUserName] = line;
                 }
             }
             else
@@ -152,8 +176,8 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
                 if (ShouldProcess(target, "New PmUser"))
                 {
                     userName_line = [];
-                    CsvLine line = new(Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted);
-                    userName_line[Email!] = line;
+                    CsvLine line = new(effEmail, Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted);
+                    userName_line[effUserName] = line;
                     _params[(drive, orderedGroupNames)!] = userName_line;
                 }
             }
@@ -189,7 +213,7 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
 
             foreach (var userName_line in param.Value)
             {
-                var email = userName_line.Key;
+                var userName = userName_line.Key;
                 var line = userName_line.Value;
                 var user = new CreateUserCommandBase()
                 {
@@ -199,9 +223,11 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
                     invitationAccepted = line.invitationAccepted
                 };
 
-                // Set the email value in both userName and email fields
-                user.AssignStringIfNotNullOrEmpty(email, (u, v) => u.userName = v);
-                user.AssignStringIfNotNullOrEmpty(email, (u, v) => u.email = v);
+                // userName is the dictionary key (the identifier); email is carried on
+                // the line and may differ on AS / on-prem (it equals userName on Cloud
+                // and whenever -UserName was omitted).
+                user.AssignStringIfNotNullOrEmpty(userName, (u, v) => u.userName = v);
+                user.AssignStringIfNotNullOrEmpty(line.email, (u, v) => u.email = v);
                 user.AssignStringIfNotNullOrEmpty(line.name, (u, v) => u.name = v);
                 user.AssignStringIfNotNullOrEmpty(line.surname, (u, v) => u.surname = v);
                 user.AssignStringIfNotNullOrEmpty(line.displayName, (u, v) => u.displayName = v);
