@@ -6,6 +6,7 @@ permalink: /migration/
 
 # UiPathOrch Module - Migration & Copy Guide
 
+- [Choose your path](#choose-your-path)
 - [Getting Started](#getting-started)
 - [Phase 1: Interview and Migration Planning](#phase-1-interview-and-migration-planning)
 - [Phase 2: Environment Preparation](#phase-2-environment-preparation)
@@ -15,9 +16,32 @@ permalink: /migration/
 - [Copying Individual Entities](#copying-individual-entities)
 - [Appendix](#appendix)
 
-For lift-and-shift migration, start at [Getting Started](#getting-started).
-The [Copying Individual Entities](#copying-individual-entities) section
-covers selective or partial copying scenarios.
+## Choose your path
+
+This guide covers both full migrations and one-off copies. Use the questions below to read only the sections you need.
+
+**What are you doing?**
+
+| Your situation | Go to |
+|---|---|
+| Migrating a whole tenant (lift-and-shift) | [Getting Started](#getting-started), then Phases 1–4 in order |
+| Copying just a few entities (some assets, one folder, queue items, bucket files) | [Copying Individual Entities](#copying-individual-entities) |
+| Carrying only **your own** portal settings / notification preferences | [Your Own Portal Preferences](#your-own-portal-preferences-and-notification-subscriptions) |
+
+**For a full migration, three questions decide your route:**
+
+1. **Same organization, or different?**
+   - *Same org* — org-level users, groups, and robot accounts are already shared. Skip user copy; start at [Step 2](#step-2-copy-tenant-level-and-folder-level-entities).
+   - *Different orgs* — handle users first ([Step 1](#step-1-copy-organization-level-entities-cross-organization-only)), then entities ([Step 2](#step-2-copy-tenant-level-and-folder-level-entities)).
+
+2. **Do the usernames match between source and destination?**
+   - *Same* → [Case A](#case-a-no-username-mapping-required-simple-migration) — one command.
+   - *They change* (e.g., AD `DOMAIN\jsmith` → Entra `jsmith@contoso.com`) → [Case B](#case-b-username-mapping-required) — a user mapping CSV.
+
+3. **Do you have local users to migrate?** (on-premises / Automation Suite sources usually do)
+   - Go to [Migrating local users](#1-2-migrating-local-users-and-robot-accounts). `Copy-PmUser` preserves the source username and can migrate email-less users, but the exact behavior depends on the **destination edition** — see the table there.
+
+> **Directory vs local.** Directory users (AD / Entra ID) are never created by the copy cmdlets — they must already exist in the destination through the identity provider. Only **local users** and **robot accounts** are created by `Copy-PmUser` / `Copy-PmRobotAccount`. Directory user *references* inside entities (folder assignments, per-user assets) are translated by the [Case B](#case-b-username-mapping-required) mapping CSV.
 
 ## Getting Started
 
@@ -286,33 +310,54 @@ Ask the user:
 - Do any usernames change format (e.g., `admin` → `admin@company.com`)?
 - Are there local users that need to be recreated?
 
-#### 1-2: Copy local users and robot accounts
+#### 1-2: Migrating local users and robot accounts
 
 ```powershell
-# Copy local users (skip if destination uses AD only)
+# Copy local users (creates them in the destination org, and creates their groups)
 Copy-PmUser -Path Source: * Destination:
 
 # Copy robot accounts
 Copy-PmRobotAccount -Path Source: * Destination:
 ```
 
-- `Copy-PmUser` automatically creates the groups that the copied users belong
-  to. Therefore, there is no need to explicitly copy groups.
-- **When to skip `Copy-PmUser`:** if the destination organization is
-  AD / Entra ID integrated (no local users needed), or if the source is
-  AD-integrated, local-user copy is unnecessary — only directory users need to
-  exist in the destination.
-- **Cross-edition caveat (OnPrem → Cloud):** `Copy-PmUser` between different
-  Orchestrator editions (e.g., on-prem → Cloud) is **not yet verified**. As a
-  more controllable alternative, export the source local users and recreate
-  them at the destination explicitly:
+`Copy-PmUser` creates the groups that the copied users belong to, so there is no
+need to copy groups separately.
+
+**How the destination edition changes the result.** A local user has a userName
+and (optionally) an email. Automation Suite and on-premises key local users by
+userName and allow the email to differ or be absent; Automation Cloud keys them
+by email (users are invite-based). `Copy-PmUser` follows this automatically:
+
+| Destination | userName at destination | Email-less source user |
+|---|---|---|
+| **Automation Suite / on-premises** | the **source userName** is preserved (it may differ from the email) | **migrated** — created with just its userName |
+| **Automation Cloud** | set to the **email** (Cloud's identifier) | **skipped** — Cloud requires an email |
+
+- **When to skip `Copy-PmUser` entirely:** if the destination is AD / Entra ID
+  integrated (no local users needed), or the source is AD-integrated — only
+  directory users need to exist in the destination.
+- **Email-less local users → Automation Cloud** are skipped (Cloud needs an
+  email). Give them one either way:
+  - add the email at the **source** first, then copy —
+    `Update-PmUser -Path Source: -UserName <name> -NewEmail <addr>`
+    (works on Automation Suite / on-premises), or
+  - recreate them at the **destination** with an email via the export path below.
+- **Add or change an email after migration** (Automation Suite / on-premises):
+  `Update-PmUser -Path Destination: -UserName <name> -NewEmail <addr>`.
+- **Export → recreate path** (full control, and the way to supply emails for a
+  Cloud destination). The export CSV carries a `UserName` column, so a userName
+  that differs from the email round-trips:
   ```powershell
   Get-PmUser -Path Source: -ExportCsv C:\Migration\local-users.csv
-  # Review/edit the CSV, then recreate the users at the destination
+  # Review/edit the CSV — fill in the Email column where blank; adjust UserName if needed
   Import-Csv C:\Migration\local-users.csv | New-PmUser -Path Destination:
   ```
-- Directory users (AD / Entra ID) cannot be copied via API. They must be
-  added to the destination organization through the identity provider.
+- Directory users (AD / Entra ID) cannot be copied via API — they must be added
+  to the destination organization through the identity provider.
+
+> **Selecting users by name.** `-UserName` on `Get-` / `Update-` / `Copy-PmUser`
+> matches a user by **either** its userName **or** its email, so it resolves a
+> userName that differs from the email (and userName-only accounts).
 
 #### 1-3: Copy group memberships
 
