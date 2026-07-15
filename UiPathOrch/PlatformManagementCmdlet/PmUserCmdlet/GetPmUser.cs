@@ -36,6 +36,7 @@ public class GetPmUserCmdlet : OrchestratorPSCmdlet
     private static readonly string[] CsvHeaders = [
         "Path",
         "Email",
+        "UserName",
         "Name",
         "SurName",
         "DisplayName",
@@ -68,39 +69,29 @@ public class GetPmUserCmdlet : OrchestratorPSCmdlet
             }
             #endregion
 
-            string[] line;
-            //if (string.IsNullOrEmpty(user.email) && (user.userName?.Contains('@') ?? false))
-            if (string.IsNullOrEmpty(user.email))
-            {
-                line = [
-                    EscapeCsvValue(drive.NameColonSeparator, true),
-                    "",
-                    EscapeCsvValue(user.userName),
-                    EscapeCsvValue(user.surname),
-                    EscapeCsvValue(user.name),
-                    EscapeCsvValue("user"),
-                    EscapeCsvValue(user.bypassBasicAuthRestriction),
-                    EscapeCsvValue(user.invitationAccepted),
-                    EscapeCsvValue(groupNames, true)
-                ];
-            }
-            else
-            {
-                line = [
-                    EscapeCsvValue(drive.NameColonSeparator, true),
-                    EscapeCsvValue(user.email),
-                    EscapeCsvValue(string.Compare(user.email, user.userName, StringComparison.OrdinalIgnoreCase) == 0 ? user.name : user.userName),
-                    EscapeCsvValue(user.surname),
-                    EscapeCsvValue(string.Compare(user.email, user.userName, StringComparison.OrdinalIgnoreCase) != 0 && string.IsNullOrEmpty(user.displayName) ? user.name : user.displayName),
-                    EscapeCsvValue("user"),
-                    EscapeCsvValue(user.bypassBasicAuthRestriction),
-                    EscapeCsvValue(user.invitationAccepted),
-                    EscapeCsvValue(groupNames, true)
-                ];
-            }
-            writer.WriteCsvLine(line);
+            writer.WriteCsvLine(BuildUserCsvRow(drive.NameColonSeparator, user, groupNames));
         }
     }
+
+    // -ExportCsv row: one column per CsvHeaders entry, laid out to match the New-PmUser
+    // import parameters so the export round-trips — including a userName that differs
+    // from the email on Automation Suite / on-premises (previously there was no UserName
+    // column, so a distinct userName was smuggled into the Name column and lost on
+    // re-import). Type is always "user"; groupNames are resolved by the caller. Static so
+    // the column layout is unit-testable.
+    internal static string[] BuildUserCsvRow(string path, PmUser user, IEnumerable<string> groupNames) =>
+    [
+        EscapeCsvValue(path, true),
+        EscapeCsvValue(user.email),
+        EscapeCsvValue(user.userName),
+        EscapeCsvValue(user.name),
+        EscapeCsvValue(user.surname),
+        EscapeCsvValue(user.displayName),
+        EscapeCsvValue("user"),
+        EscapeCsvValue(user.bypassBasicAuthRestriction),
+        EscapeCsvValue(user.invitationAccepted),
+        EscapeCsvValue(groupNames, true)
+    ];
 
     protected override void ProcessRecord()
     {

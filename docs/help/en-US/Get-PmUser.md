@@ -34,7 +34,7 @@ This cmdlet retrieves users from the identity service API and returns PmUser obj
 
 The -Email parameter supports wildcards and tab completion. Press [Ctrl+Space] or [Tab] to see available user email addresses. Multiple values can be specified, and wildcard patterns are supported for flexible filtering.
 
-When -ExportCsv is specified, the output is written to a CSV file instead of the pipeline. The CSV includes columns: Path, Email, Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted, GroupName. Group IDs are resolved to human-readable group names in the export.
+When -ExportCsv is specified, the output is written to a CSV file instead of the pipeline. The CSV includes columns: Path, Email, UserName, Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted, GroupName. Group IDs are resolved to human-readable group names in the export. The UserName column preserves a login name that differs from the email (as on Automation Suite / on-premises), so the file round-trips through New-PmUser.
 
 When multiple Pm: drives are connected, specifying -Path targets specific organizations. If -Path is omitted, the current drive is targeted.
 
@@ -193,7 +193,7 @@ HelpMessage: ''
 
 ### -ExportCsv
 
-Exports users to the specified CSV file path. The CSV includes Path, Email, Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted, and GroupName columns. Group IDs are resolved to human-readable group names. When this parameter is specified, no objects are written to the pipeline.
+Exports users to the specified CSV file path. The CSV includes Path, Email, UserName, Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted, and GroupName columns. Group IDs are resolved to human-readable group names. When this parameter is specified, no objects are written to the pipeline.
 
 ```yaml
 Type: System.String

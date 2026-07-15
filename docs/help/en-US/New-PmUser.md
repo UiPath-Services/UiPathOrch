@@ -71,7 +71,7 @@ Creates a new user and assigns them to the "Automation Developers" group. If the
 PS Orch1:\> Import-Csv C:\temp\users.csv | New-PmUser
 ```
 
-Imports users from a CSV file. The CSV should contain columns matching the parameter names: Email, Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted, GroupName, and Path. Users are batched by group membership and created via the bulk API.
+Imports users from a CSV file. The CSV should contain columns matching the parameter names: Email, UserName, Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted, GroupName, and Path. A UserName column (as produced by Get-PmUser -ExportCsv) is preserved as the login name, so a user whose userName differs from the email round-trips on Automation Suite / on-premises. Users are batched by group membership and created via the bulk API.
 
 ### Example 4: Create a user with group wildcard
 
