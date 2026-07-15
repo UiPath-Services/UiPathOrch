@@ -1470,7 +1470,14 @@ internal static class SessionStateExtensions
         }
         catch (Exception ex)
         {
-            throw new InvalidOperationException($"Error reading the CSV file at {physicalPath}", ex);
+            // Surface the real cause in the message itself. The inner exception —
+            // "does not contain the required columns 'SourceUserName' /
+            // 'DestinationUserName'", "The CSV file is empty.", or an IO/lock error
+            // (e.g. the file still open in Excel) — was otherwise hidden behind the
+            // generic wrapper, leaving the operator with no idea why the CSV was
+            // rejected (observed: a header named 'SourceEmail' read as the generic
+            // "Error reading the CSV file" with no hint that the column name was wrong).
+            throw new InvalidOperationException($"Error reading the CSV file at {physicalPath}: {ex.Message}", ex);
         }
 
         return userMapping;
