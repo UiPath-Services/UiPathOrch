@@ -54,7 +54,8 @@ so the "only write on a real change" guarantee is verified per field without a l
   `/{partitionGlobalId}/identity_`); older orgs also accept the host-level `/identity_`, which is
   why this went unnoticed. The config auto-generates a *host-level* `IdentityUrl` — required for
   the PKCE authorize endpoint, whose org-scoping caused the errorCode=219 regression fixed in
-  1.4.2 — and that value also clobbered the session's identity **API** base. On Cloud the API base
+  1.4.2 — and that value also clobbered the session's identity **API** base. This is a regression
+  introduced in **v0.9.16.1**. On Cloud the API base
   now stays org-scoped when the `IdentityUrl` is the auto-generated default; an explicitly pinned
   Identity Server still wins, and Automation Suite / on-premises / the authorize endpoint are
   unchanged. Verified live: an affected org went from every PM write failing to reads and

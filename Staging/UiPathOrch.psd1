@@ -515,8 +515,9 @@ Update-OrchUser * -ES_StudioNotifyServer false.
 Fixed: every partition-scoped Pm* operation failed with InvalidPartition on a newer Automation
 Cloud org (Get-PmGroup, New-PmUser, Copy-PmUser, ...). The Cloud identity API needs the org-scoped
 route, but the config's auto-generated host-level IdentityUrl (required for the PKCE authorize
-endpoint) was clobbering the identity API base. The API base now stays org-scoped on Cloud, while
-the authorize endpoint and Automation Suite / on-premises are unchanged.
+endpoint) was clobbering the identity API base -- a regression introduced in v0.9.16.1. The API
+base now stays org-scoped on Cloud, while the authorize endpoint and Automation Suite / on-premises
+are unchanged.
 
 Fixed: New-PmUser -UserName with a bare non-address name now creates a userName-only local user
 (the name was being copied into the email field, which the server rejected). Remove-PmUser
