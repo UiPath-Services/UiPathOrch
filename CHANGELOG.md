@@ -4,6 +4,75 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+#### Update cmdlets — only call the API when something actually changes
+
+The `Update-Orch*` cmdlets are meant to diff the requested change against the current value
+and skip the write when nothing differs, so a no-op request does not churn the audit log. A
+family of fields bypassed that diff: they flipped the dirty flag whenever the parameter was
+merely present, producing a full-record update (with fresh timestamps) even when the value was
+unchanged. Reported for `Update-OrchUser * -ES_StudioNotifyServer false`, which re-wrote every
+matched user whose `StudioNotifyServer` was already `false`.
+
+- **`Update-OrchUser`** now diffs the execution-settings (`-ES_*`), `-Roles`, unattended-robot
+  (`-UR_*`), and `-UpdatePolicyType`/`-UpdatePolicyVersion` blocks against the current user, and
+  only PUTs when at least one value truly changes. `-UR_Password` still always writes (the server
+  returns it masked, so it cannot be compared). The change-detection logic was extracted to a pure,
+  API-free core so it is fully unit-tested.
+- **`Update-OrchBucket`, `Update-OrchProcess`, `Update-OrchQueue`** — `-Tags` compared as an
+  unordered set instead of always writing.
+- **`Update-OrchMachine`** — `-RobotUsers`, `-UpdatePolicyType`/`-UpdatePolicyVersion`, `-Tags`, and
+  the `-Maintenance*` block now diff against the current machine (the maintenance block also no
+  longer mutates the cached machine object in place).
+- **`Update-OrchWebhook`** — `-Events` compared as an unordered set.
+- **`Update-OrchApiTrigger`, `Update-OrchTrigger`** — `-MachineRobots`, `-ExecutorRobots`, and
+  `-StopProcessDate` compared against the current trigger.
+- **`Update-OrchProcessVersion`** — the `-Id` path now skips a release already on the requested (or
+  latest) version, matching the `-Name` path.
+- **`Update-OrchBusinessRule`** — no longer writes on every invocation; `-Description`/`-Tags` are
+  diffed and a supplied `-Source` file still always writes.
+
+Cmdlets that were already correct are unchanged, as are genuinely non-diffable write-only secrets
+(`-Password`, `-AdditionalConfiguration`).
+
+Each cmdlet's change decision was extracted into a pure, API-free core (`Compute*Update` /
+`ShouldUpdateRelease*`), and every parameter that can land in the request payload now has a
+unit test asserting both directions — the current value is a no-op, a different value writes —
+so the "only write on a real change" guarantee is verified per field without a live Orchestrator.
+
+#### Platform Management
+
+- **Every partition-scoped `Pm*` operation failed with `InvalidPartition` on a newer Automation
+  Cloud org** — `Get-PmGroup`, `New-PmUser`, `Copy-PmUser`, … (`Get-PmUser` still worked, which
+  reads through the portal instead). The Cloud identity API wants the org-scoped route
+  (`https://{host}/{org}/identity_` — the Cloud admin console itself calls
+  `/{partitionGlobalId}/identity_`); older orgs also accept the host-level `/identity_`, which is
+  why this went unnoticed. The config auto-generates a *host-level* `IdentityUrl` — required for
+  the PKCE authorize endpoint, whose org-scoping caused the errorCode=219 regression fixed in
+  1.4.2 — and that value also clobbered the session's identity **API** base. On Cloud the API base
+  now stays org-scoped when the `IdentityUrl` is the auto-generated default; an explicitly pinned
+  Identity Server still wins, and Automation Suite / on-premises / the authorize endpoint are
+  unchanged. Verified live: an affected org went from every PM write failing to reads and
+  creates succeeding; an older org behaves identically before and after.
+- **`New-PmUser -UserName <name>` with a bare non-address name could not create a user.** The
+  value was copied into the email field (backward compatibility with the old single parameter,
+  whose values were addresses), and the server rejected it with `The field Email is invalid` — so
+  the userName-only local user, which is the Automation Suite / on-premises model, could not be
+  created by this cmdlet at all. A non-address `-UserName` alone now sends an **empty** email
+  (BulkCreate accepts it; verified on-prem 25.10.2 and Automation Cloud). Email-shaped values keep
+  the historical `userName == email` default, so nothing that used to work changes. On Automation
+  Cloud the same call warns that the account cannot sign in until an email is added
+  (`Update-PmUser -NewEmail`).
+- **`Remove-PmUser` silently removed nothing when the pattern only matched a userName.** It
+  filtered candidates on the email alone, so a userName that differs from the email — or a
+  userName-only account with no email at all — never matched and the cmdlet reported nothing. It
+  now matches on either the userName or the email, completing the rule `Get-PmUser` /
+  `Update-PmUser` / `Copy-PmUser` already follow, and the progress bar labels email-less users by
+  their userName.
+
 ## [1.12.0] - 2026-07-17
 
 Local users whose userName differs from — or is absent alongside — an email now migrate and
