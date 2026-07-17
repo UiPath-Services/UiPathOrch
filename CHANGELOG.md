@@ -11,11 +11,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 #### Update cmdlets — only call the API when something actually changes
 
 The `Update-Orch*` cmdlets are meant to diff the requested change against the current value
-and skip the write when nothing differs, so a no-op request does not churn the audit log. A
-family of fields bypassed that diff: they flipped the dirty flag whenever the parameter was
-merely present, producing a full-record update (with fresh timestamps) even when the value was
-unchanged. Reported for `Update-OrchUser * -ES_StudioNotifyServer false`, which re-wrote every
-matched user whose `StudioNotifyServer` was already `false`.
+and skip the write when nothing differs, so a no-op request does not churn the audit log. That
+field-level change detection was introduced in **v0.9.16.1**, but a family of fields bypassed it:
+they flipped the dirty flag whenever the parameter was merely present, producing a full-record
+update (with fresh timestamps) even when the value was unchanged. Reported for
+`Update-OrchUser * -ES_StudioNotifyServer false`, which re-wrote every matched user whose
+`StudioNotifyServer` was already `false`.
 
 - **`Update-OrchUser`** now diffs the execution-settings (`-ES_*`), `-Roles`, unattended-robot
   (`-UR_*`), and `-UpdatePolicyType`/`-UpdatePolicyVersion` blocks against the current user, and
@@ -54,8 +55,7 @@ so the "only write on a real change" guarantee is verified per field without a l
   `/{partitionGlobalId}/identity_`); older orgs also accept the host-level `/identity_`, which is
   why this went unnoticed. The config auto-generates a *host-level* `IdentityUrl` — required for
   the PKCE authorize endpoint, whose org-scoping caused the errorCode=219 regression fixed in
-  1.4.2 — and that value also clobbered the session's identity **API** base. This is a regression
-  introduced in **v0.9.16.1**. On Cloud the API base
+  1.4.2 — and that value also clobbered the session's identity **API** base. On Cloud the API base
   now stays org-scoped when the `IdentityUrl` is the auto-generated default; an explicitly pinned
   Identity Server still wins, and Automation Suite / on-premises / the authorize endpoint are
   unchanged. Verified live: an affected org went from every PM write failing to reads and

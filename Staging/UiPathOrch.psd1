@@ -505,19 +505,19 @@ PrivateData = @{
         ReleaseNotes = @'
 1.12.1
 
-Update-Orch* cmdlets now skip the API call when nothing actually changed. A family of fields
-(execution settings, roles, unattended-robot, tags, machine robots, retention, entry point, ...)
-used to flip the dirty flag whenever the parameter was merely present, re-writing the record --
-and churning the audit log -- even when the value was unchanged. Each cmdlet's change decision is
+Update-Orch* cmdlets now skip the API call when nothing actually changed. The field-level change
+detection introduced in v0.9.16.1 missed a family of fields (execution settings, roles,
+unattended-robot, tags, machine robots, retention, entry point, ...) that flipped the dirty flag
+whenever the parameter was merely present, re-writing the record -- and churning the audit log --
+even when the value was unchanged. Each cmdlet's change decision is
 now a pure, per-field unit-tested core, so a no-op request issues no PUT/PATCH. Reported for
 Update-OrchUser * -ES_StudioNotifyServer false.
 
 Fixed: every partition-scoped Pm* operation failed with InvalidPartition on a newer Automation
 Cloud org (Get-PmGroup, New-PmUser, Copy-PmUser, ...). The Cloud identity API needs the org-scoped
 route, but the config's auto-generated host-level IdentityUrl (required for the PKCE authorize
-endpoint) was clobbering the identity API base -- a regression introduced in v0.9.16.1. The API
-base now stays org-scoped on Cloud, while the authorize endpoint and Automation Suite / on-premises
-are unchanged.
+endpoint) was clobbering the identity API base. The API base now stays org-scoped on Cloud, while
+the authorize endpoint and Automation Suite / on-premises are unchanged.
 
 Fixed: New-PmUser -UserName with a bare non-address name now creates a userName-only local user
 (the name was being copied into the email field, which the server rejected). Remove-PmUser
