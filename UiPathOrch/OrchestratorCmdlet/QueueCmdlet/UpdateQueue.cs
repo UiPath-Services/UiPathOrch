@@ -216,26 +216,29 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
                     }
                 }
 
+                // The bucket name -> id resolution stays here (needs the folder's bucket list); the
+                // write/no-write decision + PUT fill-defaults are the pure, unit-tested
+                // OrchStringExtensions.ComputeRetentionUpdate (shared with Update-OrchProcess).
                 QueueRetentionSetting? retentionUpdate = null;
                 if (hasRetentionParam && currentRetention is not null)
                 {
-                    var ret = new QueueRetentionSetting { QueueDefinitionId = queue.Id!.Value };
-                    bool retDirty = false;
-                    if (RetentionAction is not null && RetentionAction != (currentRetention.Action ?? "")) { ret.Action = RetentionAction; retDirty = true; }
-                    if (RetentionPeriod is not null && RetentionPeriod != 0 && RetentionPeriod != currentRetention.Period) { ret.Period = RetentionPeriod; retDirty = true; }
-                    ret.AssignIdFromName(
-                        RetentionBucket,
-                        () => drive.Buckets.Get(folder),
-                        e => e.Name!,
-                        e => e.Id!,
-                        (s, v) => { if (currentRetention.BucketId != v) { s.BucketId = v; retDirty = true; } },
-                        this, target, "RetentionBucket");
-                    if (retDirty)
+                    long? resolvedBucketId = null;
+                    _ = new QueueRetentionSetting().AssignIdFromName(
+                        RetentionBucket, () => drive.Buckets.Get(folder), e => e.Name!, e => e.Id!,
+                        (_, v) => resolvedBucketId = v, this, target, "RetentionBucket");
+
+                    if (OrchStringExtensions.ComputeRetentionUpdate(
+                            new OrchStringExtensions.RetentionUpdateInput
+                            {
+                                Action = RetentionAction,
+                                Period = RetentionPeriod,
+                                BucketCleared = RetentionBucket == "",
+                                ResolvedBucketId = resolvedBucketId,
+                            },
+                            currentRetention.Action, currentRetention.Period, currentRetention.BucketId,
+                            out string action, out int period, out long? bucketId))
                     {
-                        ret.Action ??= currentRetention.Action ?? "Delete";
-                        ret.Period ??= currentRetention.Period ?? 30;
-                        ret.BucketId ??= currentRetention.BucketId;
-                        retentionUpdate = ret;
+                        retentionUpdate = new QueueRetentionSetting { QueueDefinitionId = queue.Id!.Value, Action = action, Period = period, BucketId = bucketId };
                     }
                 }
 
@@ -254,23 +257,23 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
 
                     if (currentStale is not null)
                     {
-                        var ret = new QueueRetentionSetting { QueueDefinitionId = queue.Id!.Value, Type = "Stale" };
-                        bool retDirty = false;
-                        if (StaleRetentionAction is not null && StaleRetentionAction != (currentStale.Action ?? "")) { ret.Action = StaleRetentionAction; retDirty = true; }
-                        if (StaleRetentionPeriod is not null && StaleRetentionPeriod != 0 && StaleRetentionPeriod != currentStale.Period) { ret.Period = StaleRetentionPeriod; retDirty = true; }
-                        ret.AssignIdFromName(
-                            StaleRetentionBucket,
-                            () => drive.Buckets.Get(folder),
-                            e => e.Name!,
-                            e => e.Id!,
-                            (s, v) => { if (currentStale.BucketId != v) { s.BucketId = v; retDirty = true; } },
-                            this, target, "StaleRetentionBucket");
-                        if (retDirty)
+                        long? resolvedBucketId = null;
+                        _ = new QueueRetentionSetting().AssignIdFromName(
+                            StaleRetentionBucket, () => drive.Buckets.Get(folder), e => e.Name!, e => e.Id!,
+                            (_, v) => resolvedBucketId = v, this, target, "StaleRetentionBucket");
+
+                        if (OrchStringExtensions.ComputeRetentionUpdate(
+                                new OrchStringExtensions.RetentionUpdateInput
+                                {
+                                    Action = StaleRetentionAction,
+                                    Period = StaleRetentionPeriod,
+                                    BucketCleared = StaleRetentionBucket == "",
+                                    ResolvedBucketId = resolvedBucketId,
+                                },
+                                currentStale.Action, currentStale.Period, currentStale.BucketId,
+                                out string action, out int period, out long? bucketId))
                         {
-                            ret.Action ??= currentStale.Action ?? "Delete";
-                            ret.Period ??= currentStale.Period ?? 30;
-                            ret.BucketId ??= currentStale.BucketId;
-                            staleRetentionUpdate = ret;
+                            staleRetentionUpdate = new QueueRetentionSetting { QueueDefinitionId = queue.Id!.Value, Type = "Stale", Action = action, Period = period, BucketId = bucketId };
                         }
                     }
                 }

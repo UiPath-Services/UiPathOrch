@@ -390,48 +390,52 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
                 });
 
                 #region Retention (uses separate PutReleaseRetention API)
+                // The bucket name -> id resolution stays here (it needs the folder's bucket list);
+                // the write/no-write decision + PUT fill-defaults are the pure, unit-tested
+                // OrchStringExtensions.ComputeRetentionUpdate. AssignIdFromName's return value is
+                // intentionally ignored (retention never aborts the record) but it still WriteErrors
+                // on a 0/multi-match bucket name exactly as before.
                 ReleaseRetentionSetting? retentionUpdate = null;
                 {
-                    var ret = new ReleaseRetentionSetting { ReleaseId = process.Id };
-                    bool retDirty = false;
-                    if (RetentionAction is not null && RetentionAction != (process.RetentionAction ?? "")) { ret.Action = RetentionAction; retDirty = true; }
-                    if (RetentionPeriod is not null && RetentionPeriod != 0 && RetentionPeriod != process.RetentionPeriod) { ret.Period = RetentionPeriod; retDirty = true; }
-                    ret.AssignIdFromName(
-                        RetentionBucket,
-                        () => drive.Buckets.Get(folder),
-                        e => e.Name!,
-                        e => e.Id!,
-                        (s, v) => { if (process.RetentionBucketId != v) { s.BucketId = v; retDirty = true; } },
-                        this, target, "RetentionBucket");
-                    if (retDirty)
+                    long? resolvedBucketId = null;
+                    _ = newRelease.AssignIdFromName(
+                        RetentionBucket, () => drive.Buckets.Get(folder), e => e.Name!, e => e.Id!,
+                        (_, v) => resolvedBucketId = v, this, target, "RetentionBucket");
+
+                    if (OrchStringExtensions.ComputeRetentionUpdate(
+                            new OrchStringExtensions.RetentionUpdateInput
+                            {
+                                Action = RetentionAction,
+                                Period = RetentionPeriod,
+                                BucketCleared = RetentionBucket == "",
+                                ResolvedBucketId = resolvedBucketId,
+                            },
+                            process.RetentionAction, process.RetentionPeriod, process.RetentionBucketId,
+                            out string action, out int period, out long? bucketId))
                     {
-                        // PUT requires all fields; fill unspecified fields from current values
-                        ret.Action ??= process.RetentionAction ?? "Delete";
-                        ret.Period ??= process.RetentionPeriod ?? 30;
-                        ret.BucketId ??= process.RetentionBucketId;
-                        retentionUpdate = ret;
+                        retentionUpdate = new ReleaseRetentionSetting { ReleaseId = process.Id, Action = action, Period = period, BucketId = bucketId };
                     }
                 }
 
                 ReleaseRetentionSetting? staleRetentionUpdate = null;
                 {
-                    var ret = new ReleaseRetentionSetting { ReleaseId = process.Id, Type = "Stale" };
-                    bool retDirty = false;
-                    if (StaleRetentionAction is not null && StaleRetentionAction != (process.StaleRetentionAction ?? "")) { ret.Action = StaleRetentionAction; retDirty = true; }
-                    if (StaleRetentionPeriod is not null && StaleRetentionPeriod != 0 && StaleRetentionPeriod != process.StaleRetentionPeriod) { ret.Period = StaleRetentionPeriod; retDirty = true; }
-                    ret.AssignIdFromName(
-                        StaleRetentionBucket,
-                        () => drive.Buckets.Get(folder),
-                        e => e.Name!,
-                        e => e.Id!,
-                        (s, v) => { if (process.StaleRetentionBucketId != v) { s.BucketId = v; retDirty = true; } },
-                        this, target, "StaleRetentionBucket");
-                    if (retDirty)
+                    long? resolvedBucketId = null;
+                    _ = newRelease.AssignIdFromName(
+                        StaleRetentionBucket, () => drive.Buckets.Get(folder), e => e.Name!, e => e.Id!,
+                        (_, v) => resolvedBucketId = v, this, target, "StaleRetentionBucket");
+
+                    if (OrchStringExtensions.ComputeRetentionUpdate(
+                            new OrchStringExtensions.RetentionUpdateInput
+                            {
+                                Action = StaleRetentionAction,
+                                Period = StaleRetentionPeriod,
+                                BucketCleared = StaleRetentionBucket == "",
+                                ResolvedBucketId = resolvedBucketId,
+                            },
+                            process.StaleRetentionAction, process.StaleRetentionPeriod, process.StaleRetentionBucketId,
+                            out string action, out int period, out long? bucketId))
                     {
-                        ret.Action ??= process.StaleRetentionAction ?? "Delete";
-                        ret.Period ??= process.StaleRetentionPeriod ?? 30;
-                        ret.BucketId ??= process.StaleRetentionBucketId;
-                        staleRetentionUpdate = ret;
+                        staleRetentionUpdate = new ReleaseRetentionSetting { ReleaseId = process.Id, Type = "Stale", Action = action, Period = period, BucketId = bucketId };
                     }
                 }
                 #endregion
@@ -455,15 +459,25 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
                                 .FirstOrDefault(e => e.Id == process.EntryPointId);
                             resolvedEntryPoint = entryPoint?.Path;
                         }
+                        long? resolvedEntryPointId = null;
+                        bool entryPointResolved = false;
                         if (!newRelease.AssignIdFromName(
                                 resolvedEntryPoint,
                                 () => drive.PackageEntryPoints.Get((feedId ?? "", process.ProcessKey ?? "", newRelease.ProcessVersion ?? process.ProcessVersion ?? "")),
                                 e => e.Path!,
                                 e => e.Id!,
-                                (s, v) => { if (process.EntryPointId != v) { s!.EntryPointId = v; releaseDirty = true; } },
+                                (_, v) => { resolvedEntryPointId = v; entryPointResolved = true; },
                                 this, target, "EntryPoint"))
                         {
                             continue;
+                        }
+                        // Reassign only when the resolved entry point differs from the current one
+                        // (ShouldReassignEntryPoint is pure and unit-tested; the resolution above
+                        // needs the package feed and stays here).
+                        if (entryPointResolved && ShouldReassignEntryPoint(process.EntryPointId, resolvedEntryPointId))
+                        {
+                            newRelease.EntryPointId = resolvedEntryPointId;
+                            releaseDirty = true;
                         }
                     }
                     catch (Exception ex)
@@ -540,6 +554,15 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
         public string? QueueItemVideoRecordingType { get; init; }
         public int? MaxDurationSeconds { get; init; }
     }
+
+    /// <summary>
+    /// Whether the release's entry point should be reassigned: only when the resolved entry-point id
+    /// differs from the current one. A null resolution (name not specified / not resolvable) that
+    /// equals the current null is a no-op; an empty-string clear ("" -> null id) writes when a point
+    /// was set. Pure — the resolution itself needs the package feed and stays in the cmdlet.
+    /// </summary>
+    internal static bool ShouldReassignEntryPoint(long? currentEntryPointId, long? resolvedEntryPointId)
+        => currentEntryPointId != resolvedEntryPointId;
 
     /// <summary>
     /// Applies the requested changes onto <paramref name="payload"/> (a fresh Release carrying only

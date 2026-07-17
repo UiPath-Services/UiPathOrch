@@ -778,6 +778,59 @@ internal static class OrchStringExtensions
         return false;
     }
 
+    // The retention diff shared by Update-OrchProcess and Update-OrchQueue. The bucket name is
+    // resolved to an id by the cmdlet (it needs the folder's bucket list), and the result is
+    // passed in here so the write/no-write decision is pure and unit-testable.
+    internal readonly struct RetentionUpdateInput
+    {
+        // -RetentionAction: null = not specified; any other value is compared against current.
+        public string? Action { get; init; }
+        // -RetentionPeriod: null or 0 = not specified (mirrors the inline "!= 0" guard).
+        public int? Period { get; init; }
+        // -RetentionBucket was "" (AssignIdFromName treats "" as a clear -> default id).
+        public bool BucketCleared { get; init; }
+        // The id a non-empty -RetentionBucket resolved to (single match); null when the bucket
+        // was not specified, cleared, or failed to resolve.
+        public long? ResolvedBucketId { get; init; }
+    }
+
+    /// <summary>
+    /// Decide whether a retention PUT is needed and, if so, produce the full payload. Mirrors the
+    /// inline logic that used to live in Update-OrchProcess / Update-OrchQueue verbatim:
+    /// Action/Period write only when specified AND different; the bucket follows AssignIdFromName +
+    /// the old setter — a resolved id writes when it differs, and an empty-string clear flips the
+    /// dirty flag when a bucket was set but the fill-default (BucketId ??= current) then restores
+    /// the current id, so the empty-string clear was effectively inert and stays that way. When it
+    /// returns true the out params are the complete PUT payload (unspecified fields filled from the
+    /// current values, matching the "PUT requires all fields" behaviour).
+    /// </summary>
+    internal static bool ComputeRetentionUpdate(
+        RetentionUpdateInput input,
+        string? currentAction, int? currentPeriod, long? currentBucketId,
+        out string action, out int period, out long? bucketId)
+    {
+        bool dirty = false;
+        string? newAction = null;
+        int? newPeriod = null;
+
+        if (input.Action is not null && input.Action != (currentAction ?? "")) { newAction = input.Action; dirty = true; }
+        if (input.Period is not null && input.Period != 0 && input.Period != currentPeriod) { newPeriod = input.Period; dirty = true; }
+
+        if (input.BucketCleared)
+        {
+            if (currentBucketId is not null) dirty = true;
+        }
+        else if (input.ResolvedBucketId is not null && input.ResolvedBucketId != currentBucketId)
+        {
+            dirty = true;
+        }
+
+        action = newAction ?? currentAction ?? "Delete";
+        period = newPeriod ?? currentPeriod ?? 30;
+        bucketId = input.ResolvedBucketId ?? currentBucketId;
+        return dirty;
+    }
+
     private static string? ReplaceLastPartWithAsterisk(string? input)
     {
         if (input is null) return null;
