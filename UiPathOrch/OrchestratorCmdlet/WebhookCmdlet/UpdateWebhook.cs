@@ -90,29 +90,19 @@ public class UpdateWebhookCmdlet : OrchestratorPSCmdlet
             {
                 // Build a PATCH payload with only the properties that need updating.
                 // Properties left null are excluded from JSON serialization (WhenWritingNull).
+                // The change-detection itself is a pure, API-free method (unit-tested per field).
                 var patch = new Webhook { Id = webhook.Id };
-                bool dirty = false;
-
-                dirty |= patch.AssignStringIfNotNull(Description, webhook, w => w.Description, (w, v) => w.Description = v);
-                dirty |= patch.AssignStringIfNotNull(Url, webhook, w => w.Url, (w, v) => w.Url = v);
-                dirty |= patch.AssignStringIfNotNull(Secret, webhook, w => w.Secret, (w, v) => w.Secret = v);
-                dirty |= patch.AssignBoolIfNotNull(Enabled, webhook, w => w.Enabled, (w, v) => w.Enabled = v);
-                dirty |= patch.AssignBoolIfNotNull(AllowInsecureSsl, webhook, w => w.AllowInsecureSsl, (w, v) => w.AllowInsecureSsl = v);
-                dirty |= patch.AssignBoolIfNotNull(SubscribeToAllEvents, webhook, w => w.SubscribeToAllEvents, (w, v) => w.SubscribeToAllEvents = v);
-
-                // Replace the event set when -Events was supplied. The server
-                // PATCH replaces Events wholesale, so we always send the
-                // resolved set; picking events implies not-subscribe-to-all
-                // unless the flag was set explicitly.
-                if (resolvedEvents is not null)
+                bool dirty = ComputeWebhookUpdate(patch, webhook, new WebhookUpdateInputs
                 {
-                    patch.Events = resolvedEvents;
-                    dirty = true;
-                    if (!subscribeAllBound)
-                    {
-                        patch.SubscribeToAllEvents = false;
-                    }
-                }
+                    Description = Description,
+                    Url = Url,
+                    Secret = Secret,
+                    Enabled = Enabled,
+                    AllowInsecureSsl = AllowInsecureSsl,
+                    SubscribeToAllEvents = SubscribeToAllEvents,
+                    ResolvedEvents = resolvedEvents,
+                    SubscribeAllBound = subscribeAllBound,
+                });
 
                 if (!dirty) continue;
 
@@ -131,5 +121,62 @@ public class UpdateWebhookCmdlet : OrchestratorPSCmdlet
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Pure inputs for <see cref="ComputeWebhookUpdate"/>. The event-type wildcard resolution
+    /// (an API round-trip) is done by the cmdlet first and passed in as <see cref="ResolvedEvents"/>,
+    /// so change detection is fully testable without a live Orchestrator.
+    /// </summary>
+    internal sealed class WebhookUpdateInputs
+    {
+        public string? Description { get; init; }
+        public string? Url { get; init; }
+        public string? Secret { get; init; }
+        public string? Enabled { get; init; }
+        public string? AllowInsecureSsl { get; init; }
+        public string? SubscribeToAllEvents { get; init; }
+        /// <summary>Resolved event set to apply, or null when -Events was not supplied.</summary>
+        public WebhookEvent[]? ResolvedEvents { get; init; }
+        /// <summary>True when -SubscribeToAllEvents was explicitly bound (suppresses the implied flip).</summary>
+        public bool SubscribeAllBound { get; init; }
+    }
+
+    /// <summary>
+    /// Applies the requested changes onto <paramref name="payload"/> and returns whether anything
+    /// actually changed versus <paramref name="source"/> (the current webhook). Only a real
+    /// difference flips the result true, so the caller can skip the PATCH when the request is a
+    /// no-op. No API access — unit-testable in isolation.
+    /// </summary>
+    internal static bool ComputeWebhookUpdate(Webhook payload, Webhook source, WebhookUpdateInputs input)
+    {
+        bool dirty = false;
+
+        dirty |= payload.AssignStringIfNotNull(input.Description, source, w => w.Description, (w, v) => w.Description = v);
+        dirty |= payload.AssignStringIfNotNull(input.Url, source, w => w.Url, (w, v) => w.Url = v);
+        dirty |= payload.AssignStringIfNotNull(input.Secret, source, w => w.Secret, (w, v) => w.Secret = v);
+        dirty |= payload.AssignBoolIfNotNull(input.Enabled, source, w => w.Enabled, (w, v) => w.Enabled = v);
+        dirty |= payload.AssignBoolIfNotNull(input.AllowInsecureSsl, source, w => w.AllowInsecureSsl, (w, v) => w.AllowInsecureSsl = v);
+        dirty |= payload.AssignBoolIfNotNull(input.SubscribeToAllEvents, source, w => w.SubscribeToAllEvents, (w, v) => w.SubscribeToAllEvents = v);
+
+        // Replace the event set when -Events was supplied, but only when it actually differs from
+        // the current one (order-insensitive), so re-sending the same set does not churn the audit
+        // log. Picking events implies not-subscribe-to-all unless the flag was set explicitly; that
+        // implied flip is diffed too, so a webhook already not subscribed-to-all with an unchanged
+        // set stays a no-op.
+        if (input.ResolvedEvents is not null)
+        {
+            if (!OrchStringExtensions.UnorderedEquals(source.Events, input.ResolvedEvents, e => e.EventType ?? ""))
+            {
+                payload.Events = input.ResolvedEvents;
+                dirty = true;
+            }
+            if (!input.SubscribeAllBound)
+            {
+                dirty |= payload.AssignBoolIfNotNull("false", source, w => w.SubscribeToAllEvents, (w, v) => w.SubscribeToAllEvents = v);
+            }
+        }
+
+        return dirty;
     }
 }
