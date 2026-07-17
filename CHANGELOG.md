@@ -27,7 +27,9 @@ matched user whose `StudioNotifyServer` was already `false`.
 - **`Update-OrchMachine`** — `-RobotUsers`, `-UpdatePolicyType`/`-UpdatePolicyVersion`, `-Tags`, and
   the `-Maintenance*` block now diff against the current machine (the maintenance block also no
   longer mutates the cached machine object in place).
-- **`Update-OrchWebhook`** — `-Events` compared as an unordered set.
+- **`Update-OrchWebhook`** — `-Events` compared as an unordered set, and an empty `-Secret` no
+  longer overwrites the stored secret with a blank value (an empty string means "leave it",
+  matching the other write-only secrets such as `-Password`).
 - **`Update-OrchApiTrigger`, `Update-OrchTrigger`** — `-MachineRobots`, `-ExecutorRobots`, and
   `-StopProcessDate` compared against the current trigger.
 - **`Update-OrchProcessVersion`** — the `-Id` path now skips a release already on the requested (or

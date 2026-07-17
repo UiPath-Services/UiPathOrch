@@ -154,7 +154,11 @@ public class UpdateWebhookCmdlet : OrchestratorPSCmdlet
 
         dirty |= payload.AssignStringIfNotNull(input.Description, source, w => w.Description, (w, v) => w.Description = v);
         dirty |= payload.AssignStringIfNotNull(input.Url, source, w => w.Url, (w, v) => w.Url = v);
-        dirty |= payload.AssignStringIfNotNull(input.Secret, source, w => w.Secret, (w, v) => w.Secret = v);
+        // Secret is a credential: an empty string means "leave it", not "clear it" -- never write a
+        // blank secret (the rule the other write-only secrets, e.g. -Password, already follow). A
+        // non-empty value is still diffed against the current one.
+        if (!string.IsNullOrEmpty(input.Secret))
+            dirty |= payload.AssignStringIfNotNull(input.Secret, source, w => w.Secret, (w, v) => w.Secret = v);
         dirty |= payload.AssignBoolIfNotNull(input.Enabled, source, w => w.Enabled, (w, v) => w.Enabled = v);
         dirty |= payload.AssignBoolIfNotNull(input.AllowInsecureSsl, source, w => w.AllowInsecureSsl, (w, v) => w.AllowInsecureSsl = v);
         dirty |= payload.AssignBoolIfNotNull(input.SubscribeToAllEvents, source, w => w.SubscribeToAllEvents, (w, v) => w.SubscribeToAllEvents = v);

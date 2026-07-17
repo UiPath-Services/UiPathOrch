@@ -39,6 +39,19 @@ public class UpdateWebhookDirtyTests
     [Fact] public void Description() => AssertField(new() { Description = "desc" }, new() { Description = "changed" });
     [Fact] public void Url() => AssertField(new() { Url = "https://example.test/hook" }, new() { Url = "https://example.test/other" });
     [Fact] public void Secret() => AssertField(new() { Secret = "sekret" }, new() { Secret = "rotated" });
+
+    [Fact]
+    public void Secret_EmptyString_IsNoOp_NeverWritesBlank()
+    {
+        // -Secret "" means "leave it", not "clear it": a blank credential must never be written.
+        var source = Baseline();          // has a secret
+        var payload = new Webhook { Id = source.Id };
+        bool dirty = UpdateWebhookCmdlet.ComputeWebhookUpdate(
+            payload, source, new UpdateWebhookCmdlet.WebhookUpdateInputs { Secret = "" });
+
+        Assert.False(dirty);
+        Assert.Null(payload.Secret);      // not set to "" on the payload
+    }
     [Fact] public void Enabled() => AssertField(new() { Enabled = "true" }, new() { Enabled = "false" });
     [Fact] public void AllowInsecureSsl() => AssertField(new() { AllowInsecureSsl = "false" }, new() { AllowInsecureSsl = "true" });
     [Fact] public void SubscribeToAllEvents() => AssertField(new() { SubscribeToAllEvents = "false" }, new() { SubscribeToAllEvents = "true" });
