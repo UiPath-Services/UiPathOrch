@@ -639,35 +639,6 @@ subfolders now group right after the workspace instead of sorting in among every
 name — for dir -Recurse and for the entity cmdlets that walk EnumFolders (Get-OrchAsset -Recurse,
 etc.), so e.g. a workspace subfolder's assets list right after the workspace's own.
 
-1.11.4
-
-Added: New-OrchUserMappingCsv now also enumerates robot accounts — robot rows resolve against the
-destination tenant user list (same-named robots auto-fill, renamed ones stay empty for manual
-mapping), carry "robot" in the SourceSource column, and the CSV lists directory users first, then
-robots. Test-OrchUserMappingCsv checks tenant-user reachability first (which validates robot rows
-correctly), reports directory-only entries once as an aggregated Pending warning instead of per-row
-noise, and shows a per-entry progress bar.
-
-Fixed: folder-assignment checks and listings now read the union of GetUsersForFolder's
-includeInherited true/false forms — in one customer Automation Cloud environment the true form
-omitted a directly-assigned robot account, so the asset copy dropped its per-user values as
-"not assigned" and skipped per-user-only assets entirely; Set-OrchAsset / Set-OrchCredentialAsset /
-Set-OrchSecretAsset -UserName, name completion, and Get-OrchFolderUser -IncludeInherited read the
-same view and are all fixed by the union. User-mapping CSV lookups are no longer case-sensitive on
-SourceUserName, and the "not assigned" drop warning's example command now uses the source user name.
-Cmdlets that need an endpoint the connected Orchestrator predates now report that instead of a bare
-Not Found, and every Orchestrator-version gate now carries live measurements (20.10.16 through
-25.10.2 plus Automation Cloud).
-
-1.11.3
-
-Added: Test-OrchUserMappingCsv now also verifies each DestinationUserName is reachable as a destination
-tenant user, not just resolvable in the destination directory — a mapping that only resolved at
-directory level validated clean and then dropped every per-user asset value at copy time; such entries
-now warn up front. Asset copies now end with a one-line drop summary listing the distinct users /
-machines that failed to resolve, even after per-value warnings hit the throttle; the "does not have
-user with Name" warning is throttled through the same budget and its users are included in the summary.
-
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
 
