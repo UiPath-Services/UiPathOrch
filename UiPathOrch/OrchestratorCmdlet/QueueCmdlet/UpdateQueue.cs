@@ -192,7 +192,6 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
                     SlaInMinutes = SlaInMinutes,
                     RiskSlaInMinutes = RiskSlaInMinutes,
                     Tags = Tags,
-                    ReleaseSpecified = !string.IsNullOrEmpty(Release),
                     ReleaseResolved = releaseResolved,
                     ResolvedReleaseId = resolvedReleaseId,
                 });
@@ -200,8 +199,8 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
                 #region Retention (uses separate PutQueueRetention API)
                 // Queue list API does not return retention fields, so fetch current values
                 // from the dedicated QueueRetention API when any retention parameter is specified.
-                bool hasRetentionParam = RetentionAction is not null || (RetentionPeriod is not null && RetentionPeriod != 0) || RetentionBucket is not null;
-                bool hasStaleRetentionParam = StaleRetentionAction is not null || (StaleRetentionPeriod is not null && StaleRetentionPeriod != 0) || StaleRetentionBucket is not null;
+                bool hasRetentionParam = OrchStringExtensions.HasRetentionParam(RetentionAction, RetentionPeriod, RetentionBucket);
+                bool hasStaleRetentionParam = OrchStringExtensions.HasRetentionParam(StaleRetentionAction, StaleRetentionPeriod, StaleRetentionBucket);
 
                 QueueRetentionSetting? currentRetention = null;
                 if (hasRetentionParam || hasStaleRetentionParam)
@@ -341,8 +340,6 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
         public int? SlaInMinutes { get; init; }
         public int? RiskSlaInMinutes { get; init; }
         public string[]? Tags { get; init; }
-        /// <summary>True when -Release was supplied (even if it did not resolve).</summary>
-        public bool ReleaseSpecified { get; init; }
         /// <summary>True when the Release name resolved (exactly one match, or an explicit empty clear).</summary>
         public bool ReleaseResolved { get; init; }
         /// <summary>The resolved release id to diff against; only consulted when <see cref="ReleaseResolved"/> is true.</summary>

@@ -831,6 +831,15 @@ internal static class OrchStringExtensions
         return dirty;
     }
 
+    /// <summary>
+    /// Whether any retention parameter is effectively specified — the gate Update-OrchQueue uses to
+    /// decide whether to fetch the current retention settings at all. Mirrors ComputeRetentionUpdate's
+    /// zero-as-unspecified rule so the fetch gate and the diff agree. The action/period/bucket trio is
+    /// passed explicitly so the regular and Stale gates stay distinct at the call site.
+    /// </summary>
+    internal static bool HasRetentionParam(string? action, int? period, string? bucket)
+        => action is not null || (period is not null && period != 0) || bucket is not null;
+
     private static string? ReplaceLastPartWithAsterisk(string? input)
     {
         if (input is null) return null;

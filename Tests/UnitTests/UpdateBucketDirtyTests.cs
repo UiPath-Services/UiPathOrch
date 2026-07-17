@@ -65,9 +65,14 @@ public class ComputeBucketUpdate_EveryFieldTests
         var s1 = Baseline();
         Assert.True(UpdateBucketCmdlet.ComputeBucketUpdate(OrchCollectionExtensions.DeepCopy(s1), s1,
             new UpdateBucketCmdlet.BucketUpdateInputs { Password = "s3cr3t" }));
+
+        // A blank password must be a no-op AND must not be written onto the payload (never write a
+        // blank credential), matching Update-OrchWebhook's -Secret rule.
         var s2 = Baseline();
-        Assert.False(UpdateBucketCmdlet.ComputeBucketUpdate(OrchCollectionExtensions.DeepCopy(s2), s2,
+        var payload = OrchCollectionExtensions.DeepCopy(s2);
+        Assert.False(UpdateBucketCmdlet.ComputeBucketUpdate(payload, s2,
             new UpdateBucketCmdlet.BucketUpdateInputs { Password = "" }));
+        Assert.Null(payload.Password);
     }
 
     [Fact]

@@ -60,15 +60,15 @@ public class ComputeQueueUpdate_EveryFieldTests
 
     [Fact]
     public void Release_SameId_IsNoOp_DifferentId_Writes() => AssertField(
-        new() { ReleaseSpecified = true, ReleaseResolved = true, ResolvedReleaseId = 100 },
-        new() { ReleaseSpecified = true, ReleaseResolved = true, ResolvedReleaseId = 200 });
+        new() { ReleaseResolved = true, ResolvedReleaseId = 100 },
+        new() { ReleaseResolved = true, ResolvedReleaseId = 200 });
 
     [Fact]
     public void Release_SpecifiedButUnresolved_IsNoOp()
     {
         var d = Baseline();
         Assert.False(UpdateQueueCmdlet.ComputeQueueUpdate(OrchCollectionExtensions.DeepCopy(d), d,
-            new UpdateQueueCmdlet.QueueUpdateInputs { ReleaseSpecified = true, ReleaseResolved = false, ResolvedReleaseId = 999 }));
+            new UpdateQueueCmdlet.QueueUpdateInputs { ReleaseResolved = false, ResolvedReleaseId = 999 }));
     }
 
     [Fact]

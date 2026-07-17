@@ -104,14 +104,30 @@ public class ComputeTriggerUpdate_EveryFieldTests
         new() { TimeZoneResolved = true, ResolvedTimeZoneId = "UTC" },
         new() { TimeZoneResolved = true, ResolvedTimeZoneId = "Tokyo Standard Time" });
 
+    // A supplied-but-unresolved name (resolved flag false) must never write, even with a different
+    // id value present. All four resolved-id fields share the `if (input.XResolved && …)` guard, so
+    // each is pinned individually — a regression that dropped the flag check on any one would slip
+    // past a Calendar-only test.
     [Fact]
-    public void ResolvedId_NotResolved_IsNoOp()
+    public void Calendar_NotResolved_IsNoOp() => AssertNotResolvedIsNoOp(
+        new UpdateTriggerCmdlet.TriggerUpdateInputs { CalendarResolved = false, ResolvedCalendarId = 99 });
+
+    [Fact]
+    public void Release_NotResolved_IsNoOp() => AssertNotResolvedIsNoOp(
+        new UpdateTriggerCmdlet.TriggerUpdateInputs { ReleaseResolved = false, ResolvedReleaseId = 99 });
+
+    [Fact]
+    public void Queue_NotResolved_IsNoOp() => AssertNotResolvedIsNoOp(
+        new UpdateTriggerCmdlet.TriggerUpdateInputs { QueueResolved = false, ResolvedQueueDefinitionId = 99 });
+
+    [Fact]
+    public void TimeZone_NotResolved_IsNoOp() => AssertNotResolvedIsNoOp(
+        new UpdateTriggerCmdlet.TriggerUpdateInputs { TimeZoneResolved = false, ResolvedTimeZoneId = "Some Other Zone" });
+
+    private static void AssertNotResolvedIsNoOp(UpdateTriggerCmdlet.TriggerUpdateInputs input)
     {
-        // A supplied-but-unresolved name (resolved flag false) must never write, even with a
-        // different id value present.
         var s = Baseline();
-        Assert.False(UpdateTriggerCmdlet.ComputeTriggerUpdate(OrchCollectionExtensions.DeepCopy(s), s,
-            new UpdateTriggerCmdlet.TriggerUpdateInputs { CalendarResolved = false, ResolvedCalendarId = 99 }));
+        Assert.False(UpdateTriggerCmdlet.ComputeTriggerUpdate(OrchCollectionExtensions.DeepCopy(s), s, input));
     }
 
     [Fact]

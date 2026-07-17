@@ -128,4 +128,19 @@ public class RetentionAndEntryPointDirtyTests
     [Fact]
     public void EntryPoint_BothNull_IsNoOp()
         => Assert.False(UpdateProcessCmdlet.ShouldReassignEntryPoint(null, null));
+
+    // ----- HasRetentionParam: the Queue fetch gate -----
+    //
+    // Update-OrchQueue only fetches current retention when a retention parameter is effectively
+    // specified. Zero period counts as unspecified (mirrors ComputeRetentionUpdate), so this gate
+    // and the diff agree. The regular and Stale trios call it with their own params.
+
+    [Theory]
+    [InlineData(null, null, null, false)]     // nothing → no fetch
+    [InlineData("Delete", null, null, true)]  // action alone
+    [InlineData(null, 30, null, true)]        // period alone
+    [InlineData(null, 0, null, false)]        // zero period = unspecified
+    [InlineData(null, null, "bucket", true)]  // bucket alone
+    public void HasRetentionParam_gates_the_fetch(string? action, int? period, string? bucket, bool expected)
+        => Assert.Equal(expected, OrchStringExtensions.HasRetentionParam(action, period, bucket));
 }
