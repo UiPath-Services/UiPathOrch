@@ -162,6 +162,25 @@ public class InvokeOrchApiCmdlet : OrchestratorPSCmdlet
             return;
         }
 
+        // Any other placeholder the context can't fill ({token}, {id}, {objectType}, ...) would go
+        // out as a literal and come back a 404. The drive only knows {partitionGlobalId} and
+        // {projectId} (handled above); everything else is a value only the caller has, so refuse
+        // with the list to fill rather than send a request that cannot succeed. This also catches a
+        // template pasted from the swagger docs whose ids were never substituted.
+        var unresolved = ApiEndpointCatalog.UnresolvedPlaceholders(apiPath);
+        if (unresolved.Count > 0)
+        {
+            string list = string.Join(", ", unresolved);
+            ThrowTerminatingError(new ErrorRecord(
+                new ArgumentException(
+                    $"'{ApiPath}' still contains {list}, which must be filled in before the request is sent. " +
+                    $"The drive fills {ApiEndpointCatalog.PartitionPlaceholder} and {ApiEndpointCatalog.ProjectPlaceholder} " +
+                    "from its context; any other placeholder is a value only you have (a connector token, a resource " +
+                    $"id, ...). Replace {list} with the actual value and run again."),
+                "InvokeOrchApiUnresolvedPlaceholder", ErrorCategory.InvalidArgument, ApiPath));
+            return;
+        }
+
         string baseUrl;
         if (Identity.IsPresent) baseUrl = drive.OrchAPISession._base_url_identity;
         else if (Portal.IsPresent) baseUrl = drive.OrchAPISession._base_url_portal;

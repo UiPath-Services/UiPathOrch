@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Text.RegularExpressions;
 
 namespace UiPath.PowerShell.Core;
 
@@ -234,6 +235,30 @@ internal static class ApiEndpointCatalog
             path = path.Replace(ProjectPlaceholder, projectId, StringComparison.Ordinal);
 
         return path;
+    }
+
+    // A path-template placeholder: "{" then one or more non-brace characters then "}". Every
+    // swagger path parameter this catalog carries is identifier-like ({projectId}, {token},
+    // {id}, {objectType}, ...), so a permissive [^{}] body matches them all without straying
+    // across segment boundaries.
+    private static readonly Regex PlaceholderPattern = new(@"\{[^{}]+\}", RegexOptions.Compiled);
+
+    /// <summary>
+    /// The {placeholder} tokens still present in a path — those neither FillPlaceholders nor the
+    /// drive context could fill. The completer flags them in the tooltip; the cmdlet refuses a
+    /// request whose URI still carries one, because a literal "{token}" / "{id}" would only come
+    /// back a 404. Distinct, in first-seen order.
+    /// </summary>
+    internal static IReadOnlyList<string> UnresolvedPlaceholders(string? path)
+    {
+        if (string.IsNullOrEmpty(path) || path.IndexOf('{') < 0) return [];
+
+        var found = new List<string>();
+        foreach (Match m in PlaceholderPattern.Matches(path))
+        {
+            if (!found.Contains(m.Value, StringComparer.Ordinal)) found.Add(m.Value);
+        }
+        return found;
     }
 
     /// The tooltip shown beside a completion: the methods, then the version range when the

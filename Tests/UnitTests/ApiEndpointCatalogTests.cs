@@ -215,6 +215,80 @@ public class ApiEndpointCatalogTests
         => Assert.Equal("/api/Group/{partitionGlobalId}",
             ApiEndpointCatalog.FillPlaceholders("/api/Group/{partitionGlobalId}", context: null));
 
+    // ----- unresolved placeholders: the send-time guard and the tooltip flag -----
+    //
+    // Anything the drive context can't fill -- {token}, {id}, {objectType}, ... -- must be caught
+    // before the request goes out, or a literal "{token}" reaches the server and comes back a 404.
+    // UnresolvedPlaceholders is the shared detector: the cmdlet refuses on a non-empty result, the
+    // completer flags it in the tooltip.
+
+    [Fact]
+    public void No_unresolved_placeholders_when_the_path_has_none()
+        => Assert.Empty(ApiEndpointCatalog.UnresolvedPlaceholders("/testmanager_/api/serverinfo"));
+
+    [Fact]
+    public void Finds_a_lone_manual_placeholder()
+        => Assert.Equal(
+            new[] { "{token}" },
+            ApiEndpointCatalog.UnresolvedPlaceholders("/testmanager_/api/webhookconnector/{token}/defects"));
+
+    [Fact]
+    public void Finds_every_distinct_placeholder_in_first_seen_order()
+        => Assert.Equal(
+            new[] { "{projectId}", "{objectType}", "{id}" },
+            ApiEndpointCatalog.UnresolvedPlaceholders(
+                "/testmanager_/api/v2/{projectId}/attachments/{objectType}/{id}"));
+
+    [Fact]
+    public void Collapses_a_repeated_placeholder_to_one_entry()
+        => Assert.Equal(
+            new[] { "{partitionGlobalId}" },
+            ApiEndpointCatalog.UnresolvedPlaceholders("/x/{partitionGlobalId}/y/{partitionGlobalId}"));
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public void No_unresolved_placeholders_in_a_null_or_empty_path(string? path)
+        => Assert.Empty(ApiEndpointCatalog.UnresolvedPlaceholders(path));
+
+    [Fact]
+    public void Only_the_manual_ids_survive_context_substitution()
+    {
+        // The exact flow the send-time guard sees: fill the context ids first, then detect what is
+        // left. {projectId} and {partitionGlobalId} go, the caller-supplied ids stay.
+        string filled = ApiEndpointCatalog.FillPlaceholders(
+            "/testmanager_/api/v2/{projectId}/attachments/{objectType}/{id}", "pid", "proj-42");
+
+        Assert.Equal(
+            new[] { "{objectType}", "{id}" },
+            ApiEndpointCatalog.UnresolvedPlaceholders(filled));
+    }
+
+    [Fact]
+    public void Manual_placeholder_hint_names_a_connector_token()
+    {
+        var e = new ApiEndpoint(ApiEndpointBase.Service,
+            "/testmanager_/api/webhookconnector/{token}/defects", "GET", 0, 0, "");
+
+        Assert.Equal("fill {token} in yourself", ApiPathCompleter.ManualPlaceholderHint(e));
+    }
+
+    [Fact]
+    public void Manual_placeholder_hint_ignores_the_context_filled_ids()
+    {
+        // {projectId} has its own ProjectHint and {partitionGlobalId} always fills, so neither is
+        // the manual-hint's business -- only a caller-supplied id would be.
+        var e = new ApiEndpoint(ApiEndpointBase.Service,
+            "/testmanager_/api/v2/{projectId}/testcases", "GET", 0, 0, "");
+
+        Assert.Null(ApiPathCompleter.ManualPlaceholderHint(e));
+    }
+
+    [Fact]
+    public void Manual_placeholder_hint_is_null_when_nothing_is_manual()
+        => Assert.Null(ApiPathCompleter.ManualPlaceholderHint(
+            new ApiEndpoint(ApiEndpointBase.Orchestrator, "/odata/Assets", "GET", 0, 0, "")));
+
     // ----- a project id belongs to ONE service -----
 
     [Theory]

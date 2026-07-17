@@ -95,8 +95,26 @@ internal class ApiPathCompleter : OrchArgumentCompleter
     {
         string tip = ApiEndpointCatalog.TipHelp(endpoint);
 
-        string? hint = ProjectHint(endpoint, context, duDrive, tmDrive);
-        return hint is null ? tip : $"{tip}  <-- {hint}";
+        var hints = new List<string>(2);
+        if (ProjectHint(endpoint, context, duDrive, tmDrive) is string ph) hints.Add(ph);
+        if (ManualPlaceholderHint(endpoint) is string mh) hints.Add(mh);
+
+        return hints.Count == 0 ? tip : $"{tip}  <-- {string.Join("; ", hints)}";
+    }
+
+    /// <summary>
+    /// The placeholders in this endpoint the drive context never fills — anything other than
+    /// {partitionGlobalId} (always filled) and {projectId} (covered by <see cref="ProjectHint"/>).
+    /// They are connector tokens / resource ids the caller must type in; naming them turns a
+    /// completion that would 404 as-is into a visible "fill this first". Null when there are none.
+    /// </summary>
+    internal static string? ManualPlaceholderHint(ApiEndpoint endpoint)
+    {
+        var manual = ApiEndpointCatalog.UnresolvedPlaceholders(endpoint.Path)
+            .Where(p => p != ApiEndpointCatalog.PartitionPlaceholder && p != ApiEndpointCatalog.ProjectPlaceholder)
+            .ToList();
+
+        return manual.Count == 0 ? null : $"fill {string.Join(", ", manual)} in yourself";
     }
 
     /// Null when the endpoint needs no project, or when this context already filled it.
