@@ -468,7 +468,9 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         return writer;
     }
 
-    protected static int? ConvertPriorityToSpecificPriorityValue(string? specificPriorityValue)
+    // protected internal so the priority-name -> value mapping is unit-testable (it runs in
+    // Update/New-OrchProcess and Update-OrchTrigger's ProcessRecord, ahead of the diff core).
+    protected internal static int? ConvertPriorityToSpecificPriorityValue(string? specificPriorityValue)
     {
         return specificPriorityValue switch
         {
