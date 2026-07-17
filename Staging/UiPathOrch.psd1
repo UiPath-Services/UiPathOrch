@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.12.0'
+ModuleVersion = '1.12.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,26 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.12.1
+
+Update-Orch* cmdlets now skip the API call when nothing actually changed. A family of fields
+(execution settings, roles, unattended-robot, tags, machine robots, retention, entry point, ...)
+used to flip the dirty flag whenever the parameter was merely present, re-writing the record --
+and churning the audit log -- even when the value was unchanged. Each cmdlet's change decision is
+now a pure, per-field unit-tested core, so a no-op request issues no PUT/PATCH. Reported for
+Update-OrchUser * -ES_StudioNotifyServer false.
+
+Fixed: every partition-scoped Pm* operation failed with InvalidPartition on a newer Automation
+Cloud org (Get-PmGroup, New-PmUser, Copy-PmUser, ...). The Cloud identity API needs the org-scoped
+route, but the config's auto-generated host-level IdentityUrl (required for the PKCE authorize
+endpoint) was clobbering the identity API base. The API base now stays org-scoped on Cloud, while
+the authorize endpoint and Automation Suite / on-premises are unchanged.
+
+Fixed: New-PmUser -UserName with a bare non-address name now creates a userName-only local user
+(the name was being copied into the email field, which the server rejected). Remove-PmUser
+-UserName now matches by userName or email, so an email-less user can be removed. Update-OrchWebhook
+no longer overwrites -Secret with a blank value when an empty string is passed.
+
 1.12.0
 
 Local users whose userName differs from -- or exists without -- an email now migrate and manage
@@ -619,25 +639,6 @@ a secret (a password, or an ExternalName that references a credential store), so
 request that supplies neither is skipped with a clear warning instead of no output at all,
 which also surfaces a mistyped or since-deleted asset name in a bulk-update CSV. Updating
 an existing credential is unchanged.
-
-1.11.5
-
-Fixed: Get-PmGroupLicense -ExpandAllocation no longer stops at 50 members. The Automation Cloud
-license allocations endpoint now caps each page at 50, and the cmdlet was treating that short page
-as the last one, so a group with more than 50 licensed members was truncated to 50 (a group with 50
-or fewer looked fine, which made it seem intermittent); it now pages through all of them. The
-Automation-Cloud-only licensing cmdlets (Get-PmGroupLicense / Get-PmUserLicense / Get-PmLicense /
-Get-PmLicenseAllocation / Get-PmLicenseContract / Get-PmLicenseInventory) also report a clear
-"available only on Automation Cloud" message when run against on-prem Orchestrator, instead of a
-cryptic "'<' is an invalid start of a value" JSON parse error. Subfolders that a solution deploy
-creates inside a personal workspace are visible again to dir / cd / Get-Item / wildcard resolution /
-Remove-Item — Orchestrator stopped returning them from /odata/Folders, so the folder catalog now
-grafts them in from /api/Folders/GetAllForCurrentUser. That navigation endpoint is paged (take is
-capped at 1000), so it is now read page by page until its Count total is reached — a tenant with
-more folders than one page no longer drops the tail. And under -Recurse a personal workspace's
-subfolders now group right after the workspace instead of sorting in among every other folder by
-name — for dir -Recurse and for the entity cmdlets that walk EnumFolders (Get-OrchAsset -Recurse,
-etc.), so e.g. a workspace subfolder's assets list right after the workspace's own.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
