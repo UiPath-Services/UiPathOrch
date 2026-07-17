@@ -52,7 +52,13 @@ public class RemovePmUserCmdlet : OrchestratorPSCmdlet
 
                 var partitionGlobalId = drive!.GetPartitionGlobalId();
 
-                var targetUsers = users.FilterByWildcards(u => u?.email, wpEmail);
+                // -UserName is an alias of -Email; match a pattern against EITHER the
+                // userName or the email — mirroring Get/Update/Copy-PmUser — so a
+                // userName that differs from the email, or a userName-only account
+                // (no email at all), can be removed. Filtering on the email alone made
+                // Remove-PmUser a silent no-op for exactly the users New-PmUser
+                // -UserName can now create.
+                var targetUsers = users.FilterByWildcardsAny([u => u?.userName, u => u?.email], wpEmail);
 
                 if (NoMatchWarning.IsPresent && !targetUsers.Any())
                 {
@@ -63,7 +69,8 @@ public class RemovePmUserCmdlet : OrchestratorPSCmdlet
                 }
 
                 foreach (var user in targetUsers.OrderBy(u => u.email)
-                    .WithProgressBar(this, $"Removing PmUsers in {drive.NameColonSeparator}", u => u.email)
+                    .WithProgressBar(this, $"Removing PmUsers in {drive.NameColonSeparator}",
+                        u => string.IsNullOrEmpty(u.email) ? u.userName : u.email)
                     .WithCancellation(cancelHandler.Token))
                 {
                     if (user.id == currentUser?.Key) continue;

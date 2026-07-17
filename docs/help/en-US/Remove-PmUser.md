@@ -133,7 +133,7 @@ HelpMessage: ''
 
 ### -Email
 
-Specifies the email address(es) of the user(s) to remove. Supports wildcards for pattern matching. Tab completion dynamically suggests user email addresses. This parameter has the alias "UserName".
+Specifies the email address(es) of the user(s) to remove. Supports wildcards for pattern matching. Tab completion dynamically suggests user email addresses. This parameter has the alias "UserName", and a pattern matches a user by either its userName or its email -- so a userName that differs from the email, or a userName-only account without an email, still resolves (mirrors Get-PmUser / Update-PmUser / Copy-PmUser).
 
 ```yaml
 Type: System.String[]
