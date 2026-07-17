@@ -1,4 +1,4 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
 using System.Management.Automation;
 using System.Text;
 using System.Text.Json;
@@ -624,6 +624,28 @@ internal static class OrchStringExtensions
         }
     }
 
+    /// <summary>
+    /// String-input diff-tracking overload mirroring the void version above: "" -> null,
+    /// numeric -> int, other non-empty -> ignored. Compares against <paramref name="source"/>,
+    /// sets on <paramref name="target"/>. For dirty-flag tracking with PUT payloads.
+    /// </summary>
+    public static bool AssignNumberIfNotNull<T>(this T target, string? value, T source, Func<T, int?> getter, Action<T, int?> setter)
+    {
+        if (value is null) return false;
+
+        int? newValue;
+        if (int.TryParse(value, out var result))
+            newValue = result;
+        else if (value == "")
+            newValue = null;
+        else
+            return false; // non-numeric, non-empty: the void overload ignores it, so do the same
+
+        if (getter(source) == newValue) return false;
+        setter(target, newValue);
+        return true;
+    }
+
     // Method for bool properties
     public static void AssignBoolIfNotNull<T>(this T target, string? value, Action<T, bool?> setter)
     {
@@ -824,6 +846,71 @@ internal static class OrchStringExtensions
             if (tags is not null) setter(target, tags);
         }
     }
+
+    /// <summary>
+    /// Diff-tracking Tags assignment. Parses <paramref name="value"/>, compares it as an
+    /// unordered (Name, Value) multiset against the current tags read from
+    /// <paramref name="source"/>, and only assigns to <paramref name="target"/> + returns
+    /// true when the set actually differs. Blank/empty input is treated as "not specified"
+    /// (matching the void overload), so it never clears existing tags. For dirty-flag
+    /// tracking with PUT/PATCH payloads.
+    /// </summary>
+    public static bool AssignTags<T>(this T target, string[]? value, T source, Func<T, Tag[]?> getter, Action<T, Tag[]?> setter)
+    {
+        if (value is null || value.Length == 0) return false;
+        Tag[] tags = value.ConvertToTags().ToArray();
+        if (TagsEqual(getter(source), tags)) return false;
+        setter(target, tags);
+        return true;
+    }
+
+    /// <summary>Unordered (Name, Value) multiset equality of two tag arrays; null and empty are equal.</summary>
+    public static bool TagsEqual(Tag[]? a, Tag[]? b) =>
+        UnorderedEquals(a, b, t => $"{t.Name}\u0001{t.Value}");
+
+    /// <summary>
+    /// Order-insensitive multiset equality of two sequences, compared by an ordinal string
+    /// key projection. A null sequence and an empty sequence are treated as equal (both
+    /// "no items"). This is the shared primitive the Update-* cmdlets use to decide whether
+    /// a collection-valued field (Tags, Events, RobotUsers, MachineRobots, ExecutorRobots,
+    /// RolesList, ...) actually changed before flipping a dirty flag and issuing a write.
+    /// </summary>
+    public static bool UnorderedEquals<T>(IEnumerable<T>? a, IEnumerable<T>? b, Func<T, string> key)
+    {
+        var counts = new Dictionary<string, int>(StringComparer.Ordinal);
+        int na = 0;
+        foreach (var item in a ?? Enumerable.Empty<T>())
+        {
+            var k = key(item);
+            counts[k] = counts.TryGetValue(k, out var n) ? n + 1 : 1;
+            na++;
+        }
+        int nb = 0;
+        foreach (var item in b ?? Enumerable.Empty<T>())
+        {
+            var k = key(item);
+            if (!counts.TryGetValue(k, out var n)) return false;
+            if (n == 1) counts.Remove(k); else counts[k] = n - 1;
+            nb++;
+        }
+        return na == nb; // every b-key was consumed from counts; equal totals => same multiset
+    }
+
+    /// <summary>Value equality of an update policy by (Type, SpecificVersion); null policies compare as empty.</summary>
+    public static bool UpdatePolicyEquals(UpdatePolicy? a, UpdatePolicy? b) =>
+        string.Equals(a?.Type, b?.Type, StringComparison.Ordinal) &&
+        string.Equals(a?.SpecificVersion, b?.SpecificVersion, StringComparison.Ordinal);
+
+    /// <summary>
+    /// Value equality of a maintenance window over the fields Update-OrchMachine can set
+    /// (Enabled, CronExpression, TimezoneId, Duration); null windows compare as empty. Server-
+    /// computed fields such as NextExecutionTime are intentionally ignored.
+    /// </summary>
+    public static bool MaintenanceWindowEquals(MaintenanceWindow? a, MaintenanceWindow? b) =>
+        a?.Enabled == b?.Enabled &&
+        string.Equals(a?.CronExpression, b?.CronExpression, StringComparison.Ordinal) &&
+        string.Equals(a?.TimezoneId, b?.TimezoneId, StringComparison.Ordinal) &&
+        Nullable.Equals(a?.Duration, b?.Duration);
 
     /// <summary>
     /// Multi-row CSV-aggregation merge for a string field. Records the "best opinion seen so far"

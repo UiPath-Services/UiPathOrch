@@ -206,130 +206,87 @@ public class UpdateUserCmdlet : OrchestratorPSCmdlet
                         detailedUser.UnattendedRobot.Password = null;
                     }
 
-                    var postingUser = OrchCollectionExtensions.DeepCopy(detailedUser);
-                    bool dirty = false;
-
-                    dirty |= postingUser.AssignStringIfNotNull(Name, detailedUser, u => u.Name, (u, v) => u.Name = v);
-                    dirty |= postingUser.AssignStringIfNotNull(Surname, detailedUser, u => u.Surname, (u, v) => u.Surname = v);
-
-                    dirty |= postingUser.AssignBoolIfNotFalse(IsExternalLicensed, detailedUser, u => u.IsExternalLicensed, (u, v) => u.IsExternalLicensed = v);
-                    dirty |= postingUser.AssignBoolIfNotFalse(MayHaveUserSession, detailedUser, u => u.MayHaveUserSession, (u, v) => u.MayHaveUserSession = v);
-                    dirty |= postingUser.AssignBoolIfNotFalse(MayHaveRobotSession, detailedUser, u => u.MayHaveRobotSession, (u, v) => u.MayHaveRobotSession = v);
-                    dirty |= postingUser.AssignBoolIfNotFalse(MayHavePersonalWorkspace, detailedUser, u => u.MayHavePersonalWorkspace, (u, v) => u.MayHavePersonalWorkspace = v);
-                    dirty |= postingUser.AssignBoolIfNotFalse(MayHaveUnattendedSession, detailedUser, u => u.MayHaveUnattendedSession, (u, v) => u.MayHaveUnattendedSession = v);
-                    dirty |= postingUser.AssignBoolIfNotFalse(RestrictToPersonalWorkspace, detailedUser, u => u.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
-
-                    #region RolesList
+                    // Resolve everything that needs an API round-trip (role names, credential-store
+                    // name -> id) up front, then hand the resolved values to the pure change-detection
+                    // step (ComputeUserUpdate). Keeping the decision API-free makes it unit-testable
+                    // and guarantees a no-op request skips the PUT (and the audit-log churn it causes).
+                    #region RolesList resolution
+                    string[]? resolvedRoleNames = null;
                     if (Roles is not null)
                     {
                         if (Roles.Any(r => !string.IsNullOrEmpty(r)))
                         {
-                            List<Entities.Role> roles = null;
                             try
                             {
-                                roles = drive.Roles.Get()
+                                resolvedRoleNames = drive.Roles.Get()
                                     .Where(r => r.Type != "Folder")
                                     .SelectByWildcards(r => r?.Name, wpRoles)
-                                    .ToList();
+                                    .Select(r => r.Name!)
+                                    .Distinct()
+                                    .Order()
+                                    .ToArray();
                             }
                             catch
                             {
                                 WriteError(new ErrorRecord(new OrchException(target, "Failed to retrieve Role. Ignored."), "GetRoleError", ErrorCategory.InvalidOperation, drive));
-                            }
-                            if (roles is not null)
-                            {
-                                postingUser.RolesList = roles.Select(r => r.Name!)
-                                    .Distinct()
-                                    .Order()
-                                    .ToArray();
-                                dirty = true;
+                                resolvedRoleNames = null; // resolution failed: leave RolesList untouched
                             }
                         }
                         else
                         {
-                            postingUser.RolesList = [];
-                            dirty = true;
+                            resolvedRoleNames = []; // -Roles '' clears every role
                         }
                     }
                     #endregion
 
-                    // Outer guard: only materialize an UnattendedRobot section in the payload
-                    // when at least one UR_* field was actually provided. Inner Assign* helpers
-                    // do per-field null/empty checks. UR_Password uses *IfNotNullOrEmpty because
-                    // Get-OrchUser exports passwords as "" — accepting "" here would erase the
-                    // stored password on every CSV roundtrip.
-                    if (!string.IsNullOrEmpty(UR_UserName) ||
-                        !string.IsNullOrEmpty(UR_CredentialStore) ||
-                        !string.IsNullOrEmpty(UR_Password) ||
-                        !string.IsNullOrEmpty(UR_CredentialExternalName) ||
-                        !string.IsNullOrEmpty(UR_CredentialType) ||
-                        !string.IsNullOrEmpty(UR_LimitConcurrentExecution))
+                    // Resolve -UR_CredentialStore (name -> id). A supplied-but-unresolved store still
+                    // materializes the UnattendedRobot section (so other UR_* fields apply) but leaves
+                    // CredentialStoreId untouched, matching the previous warn-and-ignore behavior.
+                    bool credentialStoreSpecified = !string.IsNullOrEmpty(UR_CredentialStore);
+                    long? resolvedCredentialStoreId = null;
+                    if (credentialStoreSpecified)
                     {
-                        postingUser.UnattendedRobot ??= new();
-                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_UserName, (u, v) => u.UserName = v);
-                        postingUser.UnattendedRobot.AssignStringIfNotNullOrEmpty(UR_Password, (u, v) => u.Password = v);
-                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialExternalName, (u, v) => u.CredentialExternalName = v);
-                        postingUser.UnattendedRobot.AssignStringIfNotNull(UR_CredentialType, (u, v) => u.CredentialType = v);
-                        postingUser.UnattendedRobot.AssignBoolIfNotFalse(UR_LimitConcurrentExecution, u => u.LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
-
-                        if (!string.IsNullOrEmpty(UR_CredentialStore))
-                        {
-                            var credentialStores = drive.CredentialStores.Get();
-                            var targetCredentialStore = credentialStores.FirstOrDefault(cs => string.Compare(cs.Name, UR_CredentialStore, StringComparison.OrdinalIgnoreCase) == 0);
-
-                            if (targetCredentialStore is null)
-                            {
-                                WriteWarning($"The specified credential store '{System.IO.Path.Combine(drive.NameColonSeparator, UR_CredentialStore)}' does not exist and will be ignored.");
-                            }
-                            else
-                            {
-                                postingUser.UnattendedRobot.CredentialStoreId = targetCredentialStore.Id;
-                            }
-                        }
-                        dirty = true;
+                        var targetCredentialStore = drive.CredentialStores.Get()
+                            .FirstOrDefault(cs => string.Compare(cs.Name, UR_CredentialStore, StringComparison.OrdinalIgnoreCase) == 0);
+                        if (targetCredentialStore is null)
+                            WriteWarning($"The specified credential store '{System.IO.Path.Combine(drive.NameColonSeparator, UR_CredentialStore!)}' does not exist and will be ignored.");
+                        else
+                            resolvedCredentialStoreId = targetCredentialStore.Id;
                     }
 
-                    if (!string.IsNullOrEmpty(UpdatePolicyType) || !string.IsNullOrEmpty(UpdatePolicyVersion))
+                    var postingUser = OrchCollectionExtensions.DeepCopy(detailedUser);
+                    var inputs = new UserUpdateInputs
                     {
-                        postingUser.AssignUpdatePolicy(UpdatePolicyType, UpdatePolicyVersion);
-                        dirty = true;
-                    }
+                        Name = Name,
+                        Surname = Surname,
+                        IsExternalLicensed = IsExternalLicensed,
+                        MayHaveUserSession = MayHaveUserSession,
+                        MayHaveRobotSession = MayHaveRobotSession,
+                        MayHaveUnattendedSession = MayHaveUnattendedSession,
+                        MayHavePersonalWorkspace = MayHavePersonalWorkspace,
+                        RestrictToPersonalWorkspace = RestrictToPersonalWorkspace,
+                        UR_UserName = UR_UserName,
+                        UR_Password = UR_Password,
+                        UR_CredentialExternalName = UR_CredentialExternalName,
+                        UR_CredentialType = UR_CredentialType,
+                        UR_LimitConcurrentExecution = UR_LimitConcurrentExecution,
+                        UR_CredentialStoreSpecified = credentialStoreSpecified,
+                        UR_ResolvedCredentialStoreId = resolvedCredentialStoreId,
+                        UpdatePolicyType = UpdatePolicyType,
+                        UpdatePolicyVersion = UpdatePolicyVersion,
+                        ES_TracingLevel = ES_TracingLevel,
+                        ES_StudioNotifyServer = ES_StudioNotifyServer,
+                        ES_LoginToConsole = ES_LoginToConsole,
+                        ES_ResolutionWidth = ES_ResolutionWidth,
+                        ES_ResolutionHeight = ES_ResolutionHeight,
+                        ES_ResolutionDepth = ES_ResolutionDepth,
+                        ES_FontSmoothing = ES_FontSmoothing,
+                        ES_AutoDownloadProcess = ES_AutoDownloadProcess,
+                        RolesSpecified = Roles is not null,
+                        ResolvedRoleNames = resolvedRoleNames,
+                    };
 
-                    void UpdateExecutionSettings(ExecutionSettings executionSettings)
-                    {
-                        executionSettings.AssignStringIfNotNull(ES_TracingLevel, (es, v) => es.TracingLevel = v);
-                        executionSettings.AssignBoolIfNotNull(ES_StudioNotifyServer, (es, v) => es.StudioNotifyServer = v);
-                        executionSettings.AssignBoolIfNotNull(ES_LoginToConsole, (es, v) => es.LoginToConsole = v);
-                        executionSettings.AssignNumberIfNotNull(ES_ResolutionWidth, (es, v) => es.ResolutionWidth = v);
-                        executionSettings.AssignNumberIfNotNull(ES_ResolutionHeight, (es, v) => es.ResolutionHeight = v);
-                        executionSettings.AssignNumberIfNotNull(ES_ResolutionDepth, (es, v) => es.ResolutionDepth = v);
-                        executionSettings.AssignBoolIfNotNull(ES_FontSmoothing, (es, v) => es.FontSmoothing = v);
-                        executionSettings.AssignBoolIfNotNull(ES_AutoDownloadProcess, (es, v) => es.AutoDownloadProcess = v);
-                    }
-
-                    if (detailedUser.Type != "DirectoryExternalApplication" && (
-                        ES_TracingLevel is not null ||
-                        ES_StudioNotifyServer is not null ||
-                        ES_LoginToConsole is not null ||
-                        ES_ResolutionWidth is not null ||
-                        ES_ResolutionHeight is not null ||
-                        ES_ResolutionDepth is not null ||
-                        ES_FontSmoothing is not null ||
-                        ES_AutoDownloadProcess is not null))
-                    {
-                        if (postingUser.RobotProvision is not null)
-                        {
-                            postingUser.RobotProvision.ExecutionSettings ??= new();
-                            UpdateExecutionSettings(postingUser.RobotProvision.ExecutionSettings);
-                        }
-
-                        if (postingUser.UnattendedRobot is not null)
-                        {
-                            postingUser.UnattendedRobot.ExecutionSettings ??= new();
-                            UpdateExecutionSettings(postingUser.UnattendedRobot.ExecutionSettings);
-                        }
-                        dirty = true;
-                    }
+                    bool dirty = ComputeUserUpdate(postingUser, detailedUser, inputs);
 
                     if (!dirty) continue;
 
@@ -349,5 +306,168 @@ public class UpdateUserCmdlet : OrchestratorPSCmdlet
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Pure inputs for <see cref="ComputeUserUpdate"/>. Everything that needs an API
+    /// round-trip (role wildcard resolution, credential-store name -> id) is resolved by
+    /// the cmdlet first and passed in here, so change detection is fully testable without a
+    /// live Orchestrator.
+    /// </summary>
+    internal sealed class UserUpdateInputs
+    {
+        public string? Name { get; init; }
+        public string? Surname { get; init; }
+        public string? IsExternalLicensed { get; init; }
+        public string? MayHaveUserSession { get; init; }
+        public string? MayHaveRobotSession { get; init; }
+        public string? MayHaveUnattendedSession { get; init; }
+        public string? MayHavePersonalWorkspace { get; init; }
+        public string? RestrictToPersonalWorkspace { get; init; }
+
+        public string? UR_UserName { get; init; }
+        public string? UR_Password { get; init; }
+        public string? UR_CredentialExternalName { get; init; }
+        public string? UR_CredentialType { get; init; }
+        public string? UR_LimitConcurrentExecution { get; init; }
+        /// <summary>True when -UR_CredentialStore was supplied (even if it did not resolve), so the UR block still materializes.</summary>
+        public bool UR_CredentialStoreSpecified { get; init; }
+        /// <summary>Resolved credential-store id, or null to leave CredentialStoreId untouched (unspecified or not found).</summary>
+        public long? UR_ResolvedCredentialStoreId { get; init; }
+
+        public string? UpdatePolicyType { get; init; }
+        public string? UpdatePolicyVersion { get; init; }
+
+        public string? ES_TracingLevel { get; init; }
+        public string? ES_StudioNotifyServer { get; init; }
+        public string? ES_LoginToConsole { get; init; }
+        public string? ES_ResolutionWidth { get; init; }
+        public string? ES_ResolutionHeight { get; init; }
+        public string? ES_ResolutionDepth { get; init; }
+        public string? ES_FontSmoothing { get; init; }
+        public string? ES_AutoDownloadProcess { get; init; }
+
+        /// <summary>True when -Roles was bound at all.</summary>
+        public bool RolesSpecified { get; init; }
+        /// <summary>
+        /// Role names to set (already wildcard-resolved, distinct, ordered). Null means -Roles was
+        /// not specified, or resolution failed and the roles block should be skipped. An empty array
+        /// means "clear all roles" (-Roles '').
+        /// </summary>
+        public string[]? ResolvedRoleNames { get; init; }
+    }
+
+    /// <summary>
+    /// Applies the requested changes onto <paramref name="postingUser"/> (a deep copy of
+    /// <paramref name="detailedUser"/>) and returns whether anything actually changed. Only a
+    /// real difference from the current value flips the result true, so the caller can skip the
+    /// PUT — and the full-record audit entry it produces — when the request is a no-op. No API
+    /// access, so this is unit-testable in isolation.
+    /// </summary>
+    internal static bool ComputeUserUpdate(User postingUser, User detailedUser, UserUpdateInputs input)
+    {
+        bool dirty = false;
+
+        dirty |= postingUser.AssignStringIfNotNull(input.Name, detailedUser, u => u.Name, (u, v) => u.Name = v);
+        dirty |= postingUser.AssignStringIfNotNull(input.Surname, detailedUser, u => u.Surname, (u, v) => u.Surname = v);
+
+        dirty |= postingUser.AssignBoolIfNotFalse(input.IsExternalLicensed, detailedUser, u => u.IsExternalLicensed, (u, v) => u.IsExternalLicensed = v);
+        dirty |= postingUser.AssignBoolIfNotFalse(input.MayHaveUserSession, detailedUser, u => u.MayHaveUserSession, (u, v) => u.MayHaveUserSession = v);
+        dirty |= postingUser.AssignBoolIfNotFalse(input.MayHaveRobotSession, detailedUser, u => u.MayHaveRobotSession, (u, v) => u.MayHaveRobotSession = v);
+        dirty |= postingUser.AssignBoolIfNotFalse(input.MayHavePersonalWorkspace, detailedUser, u => u.MayHavePersonalWorkspace, (u, v) => u.MayHavePersonalWorkspace = v);
+        dirty |= postingUser.AssignBoolIfNotFalse(input.MayHaveUnattendedSession, detailedUser, u => u.MayHaveUnattendedSession, (u, v) => u.MayHaveUnattendedSession = v);
+        dirty |= postingUser.AssignBoolIfNotFalse(input.RestrictToPersonalWorkspace, detailedUser, u => u.RestrictToPersonalWorkspace, (u, v) => u.RestrictToPersonalWorkspace = v);
+
+        // Roles: replace the set only when the resolved set actually differs from the current one
+        // (order-insensitive). A raw "specified => dirty" would re-PUT identical role lists.
+        if (input.RolesSpecified && input.ResolvedRoleNames is not null)
+        {
+            if (!OrchStringExtensions.UnorderedEquals(detailedUser.RolesList, input.ResolvedRoleNames, s => s ?? string.Empty))
+            {
+                postingUser.RolesList = input.ResolvedRoleNames;
+                dirty = true;
+            }
+        }
+
+        // Unattended robot: materialize the section when any UR_* field was supplied, then diff each
+        // field against the current value. UR_Password can't be diffed (the server returns it masked
+        // / nulled), so a supplied password always counts as a change.
+        bool urSpecified =
+            !string.IsNullOrEmpty(input.UR_UserName) ||
+            input.UR_CredentialStoreSpecified ||
+            !string.IsNullOrEmpty(input.UR_Password) ||
+            !string.IsNullOrEmpty(input.UR_CredentialExternalName) ||
+            !string.IsNullOrEmpty(input.UR_CredentialType) ||
+            !string.IsNullOrEmpty(input.UR_LimitConcurrentExecution);
+        if (urSpecified)
+        {
+            var urSource = detailedUser.UnattendedRobot ?? new UnattendedRobot();
+            postingUser.UnattendedRobot ??= new();
+            var ur = postingUser.UnattendedRobot;
+
+            dirty |= ur.AssignStringIfNotNull(input.UR_UserName, urSource, u => u.UserName, (u, v) => u.UserName = v);
+            if (!string.IsNullOrEmpty(input.UR_Password)) { ur.Password = input.UR_Password; dirty = true; }
+            dirty |= ur.AssignStringIfNotNull(input.UR_CredentialExternalName, urSource, u => u.CredentialExternalName, (u, v) => u.CredentialExternalName = v);
+            dirty |= ur.AssignStringIfNotNull(input.UR_CredentialType, urSource, u => u.CredentialType, (u, v) => u.CredentialType = v);
+            dirty |= ur.AssignBoolIfNotFalse(input.UR_LimitConcurrentExecution, urSource, u => u.LimitConcurrentExecution, (u, v) => u.LimitConcurrentExecution = v);
+            if (input.UR_ResolvedCredentialStoreId is not null)
+                dirty |= ur.AssignNumberIfNotNull(input.UR_ResolvedCredentialStoreId, urSource, u => u.CredentialStoreId, (u, v) => u.CredentialStoreId = v);
+        }
+
+        // Update policy: apply, then compare (Type, SpecificVersion) against the source policy.
+        if (!string.IsNullOrEmpty(input.UpdatePolicyType) || !string.IsNullOrEmpty(input.UpdatePolicyVersion))
+        {
+            postingUser.AssignUpdatePolicy(input.UpdatePolicyType, input.UpdatePolicyVersion);
+            if (!OrchStringExtensions.UpdatePolicyEquals(detailedUser.UpdatePolicy, postingUser.UpdatePolicy))
+                dirty = true;
+        }
+
+        // Execution settings (the originally-reported defect): diff each ES_* against the current
+        // value instead of flipping dirty whenever any ES_* is merely present.
+        if (detailedUser.Type != "DirectoryExternalApplication" && (
+            input.ES_TracingLevel is not null ||
+            input.ES_StudioNotifyServer is not null ||
+            input.ES_LoginToConsole is not null ||
+            input.ES_ResolutionWidth is not null ||
+            input.ES_ResolutionHeight is not null ||
+            input.ES_ResolutionDepth is not null ||
+            input.ES_FontSmoothing is not null ||
+            input.ES_AutoDownloadProcess is not null))
+        {
+            bool ApplyExecutionSettings(ExecutionSettings target, ExecutionSettings source)
+            {
+                bool changed = false;
+                changed |= target.AssignStringIfNotNull(input.ES_TracingLevel, source, es => es.TracingLevel, (es, v) => es.TracingLevel = v);
+                changed |= target.AssignBoolIfNotNull(input.ES_StudioNotifyServer, source, es => es.StudioNotifyServer, (es, v) => es.StudioNotifyServer = v);
+                changed |= target.AssignBoolIfNotNull(input.ES_LoginToConsole, source, es => es.LoginToConsole, (es, v) => es.LoginToConsole = v);
+                changed |= target.AssignNumberIfNotNull(input.ES_ResolutionWidth, source, es => es.ResolutionWidth, (es, v) => es.ResolutionWidth = v);
+                changed |= target.AssignNumberIfNotNull(input.ES_ResolutionHeight, source, es => es.ResolutionHeight, (es, v) => es.ResolutionHeight = v);
+                changed |= target.AssignNumberIfNotNull(input.ES_ResolutionDepth, source, es => es.ResolutionDepth, (es, v) => es.ResolutionDepth = v);
+                changed |= target.AssignBoolIfNotNull(input.ES_FontSmoothing, source, es => es.FontSmoothing, (es, v) => es.FontSmoothing = v);
+                changed |= target.AssignBoolIfNotNull(input.ES_AutoDownloadProcess, source, es => es.AutoDownloadProcess, (es, v) => es.AutoDownloadProcess = v);
+                return changed;
+            }
+
+            // postingUser is a DeepCopy of detailedUser, so the detailedUser section's ExecutionSettings
+            // holds the unmodified current values to diff against. A null source (section had no
+            // ExecutionSettings) compares as all-null, so a specified value is correctly a change.
+            if (postingUser.RobotProvision is not null)
+            {
+                postingUser.RobotProvision.ExecutionSettings ??= new();
+                dirty |= ApplyExecutionSettings(
+                    postingUser.RobotProvision.ExecutionSettings,
+                    detailedUser.RobotProvision?.ExecutionSettings ?? new());
+            }
+
+            if (postingUser.UnattendedRobot is not null)
+            {
+                postingUser.UnattendedRobot.ExecutionSettings ??= new();
+                dirty |= ApplyExecutionSettings(
+                    postingUser.UnattendedRobot.ExecutionSettings,
+                    detailedUser.UnattendedRobot?.ExecutionSettings ?? new());
+            }
+        }
+
+        return dirty;
     }
 }
