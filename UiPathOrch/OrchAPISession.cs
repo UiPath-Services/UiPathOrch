@@ -462,16 +462,49 @@ public partial class OrchAPISession : IDisposable
             _base_url_portal = _base_url + "/portal";
         }
 
-        if (!string.IsNullOrEmpty(drive._psDrive.IdentityUrl))
-        {
-            _base_url_identity = drive._psDrive.IdentityUrl;
-        }
+        _base_url_identity = ResolveIdentityApiBase(
+            _base_url_identity,
+            drive._psDrive.IdentityUrl,
+            drive._psDrive.ResolvedEdition == OrchEdition.Cloud);
 
         _base_url_orchestrator = drive._psDrive.ResolvedEdition == OrchEdition.AutomationSuite
             ? _base_url + "/orchestrator_"
             : _base_url;
 
         _drive = drive;
+    }
+
+    /// <summary>
+    /// The identity API base for this session. The drive's IdentityUrl normally wins — a
+    /// non-default Identity Server must stay reachable — with ONE exception: on Automation
+    /// Cloud the config auto-generates a HOST-level IdentityUrl ("https://{host}/identity_"),
+    /// because the PKCE authorize endpoint must be host-level (org-scoping it regressed
+    /// Entra-federated orgs with errorCode=219 — see UiPathOrchConfig's Cloud arm and
+    /// IdentityUrlAutoGenTests). The identity API is the OPPOSITE: a newer Cloud org rejects
+    /// partition-scoped calls on the host-level route with InvalidPartition, while the
+    /// org-scoped route ("https://{host}/{org}/identity_") works on every org — the Cloud
+    /// admin console itself calls "/{partitionGlobalId}/identity_" (verified 2026-07: a new
+    /// org 400s host-level; old and new orgs both 200 org-scoped). So when the IdentityUrl
+    /// is exactly that auto-generated host-level default, keep the org-scoped base computed
+    /// from the drive root; any other value is an explicitly pinned Identity Server and wins.
+    /// Cloud only: Automation Suite deploys identity host-level (its auto-generated value IS
+    /// the correct API base) and on-premises has no org segment.
+    /// </summary>
+    internal static string ResolveIdentityApiBase(string orgScopedDefault, string? identityUrl, bool isCloudEdition)
+    {
+        if (string.IsNullOrEmpty(identityUrl)) return orgScopedDefault;
+
+        if (isCloudEdition &&
+            Uri.TryCreate(orgScopedDefault, UriKind.Absolute, out var orgScoped) &&
+            string.Equals(
+                identityUrl.TrimEnd('/'),
+                $"{orgScoped.Scheme}://{orgScoped.Authority}/identity_",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            return orgScopedDefault;
+        }
+
+        return identityUrl;
     }
 
     private readonly object _authLock = new();
