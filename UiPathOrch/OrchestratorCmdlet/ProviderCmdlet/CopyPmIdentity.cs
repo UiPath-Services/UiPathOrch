@@ -59,16 +59,23 @@ public partial class OrchProvider
 
     // New-PmUser: resolve (userName, email) from the -UserName / -Email parameters.
     // userName is the identifier and defaults to the email (always so on Automation
-    // Cloud, and the long-standing single-parameter behaviour); email defaults to the
-    // userName when only a userName is supplied. Either input alone therefore yields
-    // userName == email (backward compatible with the old -Email/-UserName-alias
-    // parameter), while supplying BOTH lets a local user keep a userName distinct from
-    // its email on Automation Suite / on-premises. userName is empty only when both
-    // inputs are empty, which the caller rejects.
+    // Cloud, and the long-standing single-parameter behaviour). email defaults to the
+    // userName only when that value is email-SHAPED (contains '@'): the default exists
+    // for backward compatibility with the old -Email/-UserName-alias parameter, whose
+    // values were addresses. A bare NON-address -UserName (e.g. "admin") instead gets an
+    // EMPTY email, creating a userName-only local user — the Automation Suite /
+    // on-premises model (their BulkCreate accepts an empty email, verified on-prem
+    // v13-v17). Copying the name into the email field made the server reject it with
+    // "The field Email is invalid", so no call that used to work changes behaviour —
+    // this only makes the previously-impossible case work. Supplying BOTH keeps them
+    // distinct. userName is empty only when both inputs are empty, which the caller
+    // rejects.
     internal static (string userName, string email) ResolveNewPmUserIdentity(string? userName, string? email)
     {
         string effUserName = !string.IsNullOrEmpty(userName) ? userName : (email ?? "");
-        string effEmail = !string.IsNullOrEmpty(email) ? email : (userName ?? "");
+        string effEmail = !string.IsNullOrEmpty(email)
+            ? email
+            : (userName?.Contains('@') == true ? userName : "");
         return (effUserName, effEmail);
     }
 

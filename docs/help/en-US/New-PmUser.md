@@ -31,7 +31,7 @@ New-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [[-Email] <string>] [-Us
 
 Creates a new user at the organization (platform management) level. The user is created via the identity service bulk creation API.
 
-By default the userName equals the email. On Automation Suite and on-premises a local user's userName can differ from its email -- pass -UserName to set it separately (supply at least one of -Email or -UserName). On Automation Cloud the identifier is always the email, so leave -UserName unset there.
+By default the userName equals the email. On Automation Suite and on-premises a local user's userName can differ from its email -- pass -UserName to set it separately (supply at least one of -Email or -UserName). A bare non-address -UserName alone (for example "admin") creates a userName-only user with no email, which those editions support (sign-in is userName + password); an email-shaped -UserName alone keeps the historical userName == email behavior. On Automation Cloud the identifier is always the email, so leave -UserName unset there -- an email-less user can be created on Cloud but cannot sign in until an email is added (the cmdlet warns; use Update-PmUser -NewEmail).
 
 This cmdlet accepts pipeline input, allowing multiple users to be created from a CSV file or other pipeline sources. When multiple users are piped in, they are batched by target drive and group membership and created in bulk for efficiency. The bulk API call is executed during EndProcessing, so all pipeline input is collected before any API calls are made.
 
@@ -178,7 +178,7 @@ HelpMessage: ''
 
 ### -Email
 
-Specifies the email address for the new user. When -UserName is not given this value is also used as the userName (always the case on Automation Cloud, where the identifier is the email). Optional -- supply at least one of -Email or -UserName.
+Specifies the email address for the new user. When -UserName is not given this value is also used as the userName (always the case on Automation Cloud, where the identifier is the email). Optional -- supply at least one of -Email or -UserName. When only -UserName is given, the email is left empty unless that value is itself email-shaped (contains "@"), in which case it doubles as the email for backward compatibility.
 
 ```yaml
 Type: System.String
@@ -304,7 +304,7 @@ HelpMessage: ''
 
 ### -UserName
 
-Specifies the login name (identifier) for the new user. On Automation Suite and on-premises a local user's userName can differ from its email; when omitted, the userName defaults to -Email. Has the alias "DestinationUserName" so a user-mapping row's target name binds to it. On Automation Cloud the userName must equal the email, so leave this unset there.
+Specifies the login name (identifier) for the new user. On Automation Suite and on-premises a local user's userName can differ from its email; when omitted, the userName defaults to -Email. Given alone, a bare non-address value (for example "admin") creates a userName-only user with an empty email -- the Automation Suite / on-premises local-user model -- while an email-shaped value doubles as the email. Has the alias "DestinationUserName" so a user-mapping row's target name binds to it. On Automation Cloud the userName must equal the email, so leave this unset there.
 
 ```yaml
 Type: System.String

@@ -242,8 +242,13 @@ public class CopyIdentityLogicTests
     }
 
     // ---- ResolveNewPmUserIdentity ----
-    // Either input alone yields userName == email (backward compatible with the old
-    // single -Email / -UserName-alias parameter); supplying both keeps them distinct.
+    // An email-shaped input alone yields userName == email (backward compatible with the
+    // old single -Email / -UserName-alias parameter, whose values were addresses); a bare
+    // NON-address -UserName gets an EMPTY email — the userName-only local user of
+    // Automation Suite / on-premises. Copying "admin" into the email field only bought a
+    // server-side "The field Email is invalid", so the empty default enables a case that
+    // could never work rather than changing one that did. Supplying both keeps them
+    // distinct.
 
     [Fact]
     public void ResolveNewPmUserIdentity_EmailOnly_UserNameEqualsEmail()
@@ -252,9 +257,20 @@ public class CopyIdentityLogicTests
     }
 
     [Fact]
-    public void ResolveNewPmUserIdentity_UserNameOnly_EmailDefaultsToUserName()
+    public void ResolveNewPmUserIdentity_EmailShapedUserNameOnly_EmailDefaultsToUserName()
     {
         Assert.Equal(("a@x.com", "a@x.com"), ResolveNewPmUserIdentity("a@x.com", null));
+    }
+
+    [Theory]
+    [InlineData("admin")]
+    [InlineData("zzonpremprobe")]
+    public void ResolveNewPmUserIdentity_BareUserNameOnly_GetsAnEmptyEmail(string bareName)
+    {
+        // The on-prem / AS specialty: a userName-only local user. The email must go out
+        // EMPTY (BulkCreate accepts that; verified on-prem v13-v17) — not as a copy of
+        // the name, which the server rejects as an invalid email.
+        Assert.Equal((bareName, ""), ResolveNewPmUserIdentity(bareName, null));
     }
 
     [Fact]

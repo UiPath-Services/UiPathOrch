@@ -115,7 +115,9 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
         _params ??= [];
 
         // userName is the identifier and defaults to the email; email defaults to the
-        // userName. Require at least one. See ResolveNewPmUserIdentity.
+        // userName only when it is email-shaped — a bare non-address -UserName (e.g.
+        // "admin") creates a userName-only local user with an EMPTY email instead of an
+        // invalid one. Require at least one. See ResolveNewPmUserIdentity.
         var (effUserName, effEmail) = Core.OrchProvider.ResolveNewPmUserIdentity(UserName, Email);
         if (string.IsNullOrEmpty(effUserName))
         {
@@ -129,6 +131,16 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
 
         foreach (var drive in drives)
         {
+            // An email-less user is first-class on Automation Suite / on-premises (sign-in is
+            // userName + password), but Automation Cloud signs users in by email — the create
+            // succeeds there, yet the account cannot sign in. The caller asked for it
+            // explicitly, so create it anyway and say what it implies (Copy-PmUser skips the
+            // same case, because a migration must not silently produce unusable accounts).
+            if (string.IsNullOrEmpty(effEmail) && drive._psDrive.ResolvedEdition == Core.OrchEdition.Cloud)
+            {
+                WriteWarning($"{drive.NameColonSeparator}{effUserName}: creating without an email address. Automation Cloud signs users in by email, so this account will not be able to sign in until one is added (Update-PmUser -NewEmail).");
+            }
+
             var groups = drive.PmGroups.Get();
             // Case sensitivity doesn't matter for existing group names, but we need to ignore case for newly created group names.
             HashSet<string> groupNames = new(StringComparer.OrdinalIgnoreCase);
