@@ -4,6 +4,68 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.12.0] - 2026-07-17
+
+Local users whose userName differs from — or is absent alongside — an email now migrate and
+manage correctly across editions.
+
+### Added
+
+#### Users
+
+- **`Copy-PmUser` preserves a local user's source userName on Automation Suite / on-premises,
+  instead of overwriting it with the email.** These editions identify a local user by its userName
+  (which may differ from, or exist without, an email), so a cross-org copy now recreates the user
+  under its own userName. Automation Cloud keeps the historical email-as-userName because Cloud
+  signs users in by email. A `-UserMappingCsv` entry still overrides either default, and — matching
+  the sibling copy cmdlets — its lookup column is now the **source userName** (older email-keyed
+  sheets still work: userName is tried first, then email).
+- **`Copy-PmUser` migrates email-less local users to Automation Suite / on-premises instead of
+  silently skipping them.** On those editions the userName is the identifier and the email is
+  optional, so a userName-only user is recreated as-is. For an Automation Cloud destination such a
+  user is still skipped — Cloud sign-in is by email, so an account without one could not sign in —
+  now with an actionable warning naming how to give it an email.
+- **`New-PmUser` accepts a `-UserName` distinct from `-Email`.** Supplying both lets a local user
+  keep a userName that differs from its email on Automation Suite / on-premises. Either parameter
+  alone still yields `userName == email` (backward compatible with the former `-Email`/`-UserName`
+  single-parameter behaviour); on Automation Cloud the email remains the identifier.
+- **`Update-PmUser -NewEmail` changes or adds a user's email.** `-Email`/`-UserName` selects the
+  user and `-NewEmail` sets the new address — an email can be added to a userName-only account
+  (verified on Automation Suite / on-premises v13–v17). Because a single address is set, the
+  selection must resolve to exactly one user.
+- **`Get-PmUser -ExportCsv` now writes a `UserName` column** so a userName that differs from the
+  email survives an export/import round trip.
+- **`-UserName` (alias of `-Email`) now matches on either the userName or the email** across
+  `Get-PmUser`, `Update-PmUser` and `Copy-PmUser`, so a userName that differs from the email — or a
+  userName-only account — still resolves. As before, no `-Email`/`-UserName` matches no user (a
+  no-op), not all users.
+
+#### API
+
+- **`Invoke-OrchApi` refuses a `-Uri` that still carries a placeholder it cannot fill.** The drive
+  supplies `{partitionGlobalId}` and `{projectId}` from its context; any other path placeholder —
+  `{token}`, `{id}`, `{objectType}`, … — is a value only the caller has, and sent literally would
+  only come back a 404. Such a URI is now refused before the request goes out, listing the
+  placeholders to fill (generalizing the existing `{projectId}`-only guard). The `-Uri` completion
+  tooltip flags the same manual ids (`fill {token} in yourself`).
+
+### Fixed
+
+#### Users
+
+- **`Copy-PmUser -UserMappingCsv` reported a generic "Error reading the CSV file" that hid the real
+  cause.** A malformed sheet — most often the wrong header (the CSV needs a `SourceUserName`
+  column) — now surfaces the underlying reason so the fix is obvious.
+
+### Changed
+
+#### Documentation
+
+- **The migration guide (`docs/50-MigrationGuide.md`) was restructured** around a choose-your-path
+  selector and an identity-scenario matrix (source × destination directory integration), and
+  documents the local-user handling above — including the AD-integrated-source → AD-less-destination
+  (directory → local) recreation procedure.
+
 ## [1.11.7] - 2026-07-14
 
 ### Added

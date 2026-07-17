@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.11.7'
+ModuleVersion = '1.12.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,47 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.12.0
+
+Local users whose userName differs from -- or exists without -- an email now migrate and manage
+correctly across editions.
+
+Added: Copy-PmUser preserves a local user's source userName on Automation Suite / on-premises
+(which identify a user by userName) instead of overwriting it with the email, and keeps the
+historical email-as-userName on Automation Cloud, where sign-in is by email. A -UserMappingCsv
+entry overrides either default and is now keyed by the source userName like the sibling copy
+cmdlets (older email-keyed sheets still work; userName is tried first, then email). Copy-PmUser
+also migrates email-less users to Automation Suite / on-premises instead of skipping them; an
+email-less user bound for Automation Cloud is still skipped -- it could not sign in there -- now
+with a warning that says how to give it an email.
+
+Added: New-PmUser -UserName can differ from -Email, so a local user keeps a userName distinct
+from its email on Automation Suite / on-premises. Either parameter alone still yields
+userName == email, backward compatible with the former single-parameter behaviour.
+
+Added: Update-PmUser -NewEmail changes or adds a user's email; an email can be added to a
+userName-only account (verified on Automation Suite / on-premises v13-v17). The selection must
+resolve to exactly one user.
+
+Added: Get-PmUser -ExportCsv now writes a UserName column so a userName that differs from the
+email survives an export/import round trip, and -UserName (alias of -Email) matches on either
+the userName or the email across Get-PmUser, Update-PmUser and Copy-PmUser.
+
+Added: Invoke-OrchApi refuses a -Uri that still carries a placeholder it cannot fill. The drive
+supplies {partitionGlobalId} and {projectId} from its context; any other -- {token}, {id},
+{objectType}, ... -- is a value only you have, and sent literally would only come back a 404, so
+the request is refused with the list to fill. The -Uri completion tooltip flags the same manual
+ids.
+
+Fixed: Copy-PmUser -UserMappingCsv reported a generic "Error reading the CSV file" that hid the
+real cause (most often the wrong header -- the CSV needs a SourceUserName column). The underlying
+reason is now surfaced.
+
+Changed: the migration guide (docs/50-MigrationGuide.md) was restructured around a choose-your-path
+selector and an identity-scenario matrix (source x destination directory integration), and
+documents the local-user handling above, including the AD-integrated-source to AD-less-destination
+(directory to local) recreation procedure.
+
 1.11.7
 
 Added: Invoke-OrchApi -Uri now tab-completes the known API endpoints -- 873 of them, from a
