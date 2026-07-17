@@ -3,6 +3,7 @@ using System.Management.Automation;
 using System.Management.Automation.Language;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -205,13 +206,25 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
             {
                 if (Id is not null && Id.Length != 0)
                 {
+                    // Index the folder's releases by Id so we can skip a release that is already at
+                    // the requested version — matching the -Name branch, which already guards on
+                    // IsLatestVersion / CurrentVersion. Without this the -Id path re-issued the
+                    // update unconditionally, producing a no-op audit entry every time.
+                    var releasesById = drive.Releases.Get(folder)
+                        .Where(r => r.Id is not null)
+                        .GroupBy(r => r.Id!.Value)
+                        .ToDictionary(g => g.Key, g => g.First());
+
                     foreach (var id in Id
                         .WithProgressBar(this, $"Updating process versions in {folder.GetPSPath()}", id => id.ToString())
                         .WithCancellation(cancelHandler.Token))
                     {
                         string target = System.IO.Path.Combine(folder.GetPSPath(), id.ToString());
+                        releasesById.TryGetValue(id, out var release);
                         if (Version is null)
                         {
+                            // Already on the latest version: nothing to do.
+                            if (!ShouldUpdateReleaseToLatest(release)) continue;
                             if (ShouldProcess(System.IO.Path.Combine(folder.GetPSPath(), id.ToString()), "Update ProcessVersion to Latest"))
                             {
                                 try
@@ -228,6 +241,8 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                         }
                         else
                         {
+                            // Already on the requested version: nothing to do.
+                            if (!ShouldUpdateReleaseToVersion(release, Version)) continue;
                             if (ShouldProcess(target, $"Update ProcessVersion to {Version}"))
                             {
                                 try
@@ -256,7 +271,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                     {
                         if (wpVersion is null)
                         {
-                            if (release.IsLatestVersion ?? false)
+                            if (!ShouldUpdateReleaseToLatest(release))
                                 continue;
                             if (ShouldProcess(release.GetPSPath(), "Update ProcessVersion to Latest"))
                             {
@@ -279,7 +294,7 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
 
                             var toVersion = packageVersions.Where(v => wpVersion.IsMatch(v)).LastOrDefault();
                             if (toVersion is null) continue;
-                            if (release.CurrentVersion!.VersionNumber == toVersion) continue;
+                            if (!ShouldUpdateReleaseToVersion(release, toVersion)) continue;
 
                             if (ShouldProcess(release.GetPSPath(), $"Update ProcessVersion to {toVersion}"))
                             {
@@ -308,4 +323,20 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
             }
         }
     }
+
+    /// <summary>
+    /// True when the release should be updated to its latest version. Pure/testable: false only
+    /// when the release exists and is already the latest. A null release (not found in the folder)
+    /// proceeds — matching the -Id path's behavior of letting the API report an unknown release.
+    /// </summary>
+    internal static bool ShouldUpdateReleaseToLatest(Release? release) =>
+        !(release is not null && (release.IsLatestVersion ?? false));
+
+    /// <summary>
+    /// True when the release should be updated to <paramref name="targetVersion"/>. Pure/testable:
+    /// false only when the release's current version already equals the target (a null release or
+    /// null CurrentVersion proceeds).
+    /// </summary>
+    internal static bool ShouldUpdateReleaseToVersion(Release? release, string targetVersion) =>
+        release?.CurrentVersion?.VersionNumber != targetVersion;
 }
