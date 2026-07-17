@@ -95,47 +95,38 @@ public class UpdateBucketCmdlet : OrchestratorPSCmdlet
                 // write-only on the server and never returned by GET, so the deep copy
                 // has Password = null and only the user-supplied value is sent.
                 Bucket newBucket = OrchCollectionExtensions.DeepCopy(bucket);
-                bool dirty = false;
 
-                dirty |= newBucket.AssignStringIfNotNull(NewName, bucket, b => b.Name, (b, v) => b.Name = v);
-                dirty |= newBucket.AssignStringIfNotNull(Description, bucket, b => b.Description, (b, v) => b.Description = v);
-                dirty |= newBucket.AssignStringIfNotNull(StorageProvider, bucket, b => b.StorageProvider, (b, v) => b.StorageProvider = v);
-                dirty |= newBucket.AssignStringIfNotNull(StorageParameters, bucket, b => b.StorageParameters, (b, v) => b.StorageParameters = v);
-                dirty |= newBucket.AssignStringIfNotNull(StorageContainer, bucket, b => b.StorageContainer, (b, v) => b.StorageContainer = v);
-                dirty |= newBucket.AssignStringIfNotNull(ExternalName, bucket, b => b.ExternalName, (b, v) => b.ExternalName = v);
-
-                if (!string.IsNullOrEmpty(Password))
-                {
-                    newBucket.Password = Password;
-                    dirty = true;
-                }
-
-                if (Options is not null)
-                {
-                    string joined = string.Join(",", Options);
-                    if (joined != (bucket.Options ?? ""))
-                    {
-                        newBucket.Options = joined;
-                        dirty = true;
-                    }
-                }
-
+                // Resolve the credential-store name -> id up front (the only API round-trip in this
+                // block), then hand the resolved value to the pure, API-free change-detection core so
+                // the "only write when something changes" decision is unit-testable in isolation.
+                bool credentialStoreResolved = false;
+                long? resolvedCredentialStoreId = null;
                 if (!string.IsNullOrEmpty(CredentialStore))
                 {
                     var found = FindCredentialStoreId(target, drive, wpCredentialStore);
-                    if (found is not null && found.Id != bucket.CredentialStoreId)
+                    if (found is not null)
                     {
-                        newBucket.CredentialStoreId = found.Id;
-                        dirty = true;
+                        credentialStoreResolved = true;
+                        resolvedCredentialStoreId = found.Id;
                     }
                 }
 
-                var effectiveTags = Tags?.Where(t => !string.IsNullOrEmpty(t)).ToArray();
-                if (effectiveTags is not null && effectiveTags.Length != 0)
+                var inputs = new BucketUpdateInputs
                 {
-                    newBucket.AssignTags(effectiveTags, (b, v) => b.Tags = v);
-                    dirty = true;
-                }
+                    NewName = NewName,
+                    Description = Description,
+                    StorageProvider = StorageProvider,
+                    StorageParameters = StorageParameters,
+                    StorageContainer = StorageContainer,
+                    ExternalName = ExternalName,
+                    Password = Password,
+                    Options = Options,
+                    Tags = Tags,
+                    CredentialStoreResolved = credentialStoreResolved,
+                    ResolvedCredentialStoreId = resolvedCredentialStoreId,
+                };
+
+                bool dirty = ComputeBucketUpdate(newBucket, bucket, inputs);
 
                 if (!dirty) continue;
 
@@ -153,5 +144,78 @@ public class UpdateBucketCmdlet : OrchestratorPSCmdlet
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Pure inputs for <see cref="ComputeBucketUpdate"/>. The only API round-trip (credential-store
+    /// name -> id) is resolved by the cmdlet first and passed in via
+    /// <see cref="CredentialStoreResolved"/> / <see cref="ResolvedCredentialStoreId"/>, so change
+    /// detection is fully testable without a live Orchestrator.
+    /// </summary>
+    internal sealed class BucketUpdateInputs
+    {
+        public string? NewName { get; init; }
+        public string? Description { get; init; }
+        public string? StorageProvider { get; init; }
+        public string? StorageParameters { get; init; }
+        public string? StorageContainer { get; init; }
+        public string? ExternalName { get; init; }
+        public string? Password { get; init; }
+        public string[]? Options { get; init; }
+        public string[]? Tags { get; init; }
+        /// <summary>True when -CredentialStore resolved to exactly one store (mirrors the former "found is not null" guard).</summary>
+        public bool CredentialStoreResolved { get; init; }
+        /// <summary>The resolved credential-store id (may be null); only applied when <see cref="CredentialStoreResolved"/> and it differs from the current value.</summary>
+        public long? ResolvedCredentialStoreId { get; init; }
+    }
+
+    /// <summary>
+    /// Applies the requested changes onto <paramref name="payload"/> (a deep copy of
+    /// <paramref name="source"/>) and returns whether anything actually changed versus
+    /// <paramref name="source"/> (the current bucket). Only a real difference flips the result true,
+    /// so the caller can skip the PUT when the request is a no-op. Password is write-only (never
+    /// returned by GET) so a supplied one always writes. No API access — unit-testable in isolation.
+    /// </summary>
+    internal static bool ComputeBucketUpdate(Bucket payload, Bucket source, BucketUpdateInputs input)
+    {
+        bool dirty = false;
+
+        dirty |= payload.AssignStringIfNotNull(input.NewName, source, b => b.Name, (b, v) => b.Name = v);
+        dirty |= payload.AssignStringIfNotNull(input.Description, source, b => b.Description, (b, v) => b.Description = v);
+        dirty |= payload.AssignStringIfNotNull(input.StorageProvider, source, b => b.StorageProvider, (b, v) => b.StorageProvider = v);
+        dirty |= payload.AssignStringIfNotNull(input.StorageParameters, source, b => b.StorageParameters, (b, v) => b.StorageParameters = v);
+        dirty |= payload.AssignStringIfNotNull(input.StorageContainer, source, b => b.StorageContainer, (b, v) => b.StorageContainer = v);
+        dirty |= payload.AssignStringIfNotNull(input.ExternalName, source, b => b.ExternalName, (b, v) => b.ExternalName = v);
+
+        if (!string.IsNullOrEmpty(input.Password))
+        {
+            payload.Password = input.Password;
+            dirty = true;
+        }
+
+        if (input.Options is not null)
+        {
+            string joined = string.Join(",", input.Options);
+            if (joined != (source.Options ?? ""))
+            {
+                payload.Options = joined;
+                dirty = true;
+            }
+        }
+
+        if (input.CredentialStoreResolved && input.ResolvedCredentialStoreId != source.CredentialStoreId)
+        {
+            payload.CredentialStoreId = input.ResolvedCredentialStoreId;
+            dirty = true;
+        }
+
+        var effectiveTags = input.Tags?.Where(t => !string.IsNullOrEmpty(t)).ToArray();
+        if (effectiveTags is not null && effectiveTags.Length != 0)
+        {
+            // Only write when the tag set actually differs from the current one.
+            dirty |= payload.AssignTags(effectiveTags, source, b => b.Tags, (b, v) => b.Tags = v);
+        }
+
+        return dirty;
     }
 }

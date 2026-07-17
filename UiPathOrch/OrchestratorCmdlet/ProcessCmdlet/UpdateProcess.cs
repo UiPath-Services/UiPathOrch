@@ -361,18 +361,34 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
 
                 string target = process.GetPSPath();
 
-                // Build PATCH payload with only user-specified properties
+                // Build PATCH payload with only user-specified properties. The change-detection for
+                // the release PATCH lives in the pure, API-free ComputeReleaseUpdate core (unit-tested
+                // per field). EntryPoint resolution stays here (it needs the package feed) and the two
+                // Retention updates use a separate API.
                 Release newRelease = new() { Id = process.Id };
+                bool releaseDirty = ComputeReleaseUpdate(newRelease, process, new ReleaseUpdateInputs
+                {
+                    NewName = NewName,
+                    Description = Description,
+                    InputArguments = InputArguments,
+                    SpecificPriorityValue = SpecificPriorityValue,
+                    HiddenForAttendedUser = HiddenForAttendedUser,
+                    RemoteControlAccess = RemoteControlAccess,
+                    Version = Version,
+                    Tags = Tags,
+                    ErrorRecordingEnabled = ErrorRecordingEnabled,
+                    Duration = Duration,
+                    Frequency = Frequency,
+                    Quality = Quality,
+                    AutoStartProcess = AutoStartProcess,
+                    AlwaysRunning = AlwaysRunning,
+                    A4R_Enabled = A4R_Enabled,
+                    A4R_HealingEnabled = A4R_HealingEnabled,
+                    VideoRecordingType = VideoRecordingType,
+                    QueueItemVideoRecordingType = QueueItemVideoRecordingType,
+                    MaxDurationSeconds = MaxDurationSeconds,
+                });
 
-                #region Set values specified by parameters
-
-                bool releaseDirty = false;
-                releaseDirty |= newRelease.AssignStringIfNotNull(NewName, process, r => r.Name, (r, v) => r.Name = v);
-                releaseDirty |= newRelease.AssignStringIfNotNull(Description, process, r => r.Description, (r, v) => r.Description = v);
-                releaseDirty |= newRelease.AssignStringIfNotNull(InputArguments, process, r => r.InputArguments, (r, v) => r.InputArguments = v);
-                releaseDirty |= newRelease.AssignNumberIfNotNullOrZero(SpecificPriorityValue, process, r => r.SpecificPriorityValue, (r, v) => r.SpecificPriorityValue = v);
-                releaseDirty |= newRelease.AssignBoolIfNotNull(HiddenForAttendedUser, process, r => r.HiddenForAttendedUser, (r, v) => r.HiddenForAttendedUser = v);
-                releaseDirty |= newRelease.AssignStringIfNotNull(RemoteControlAccess, process, r => r.RemoteControlAccess, (r, v) => r.RemoteControlAccess = v);
                 #region Retention (uses separate PutReleaseRetention API)
                 ReleaseRetentionSetting? retentionUpdate = null;
                 {
@@ -420,53 +436,8 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
                 }
                 #endregion
 
-                var effectiveTags = Tags?.Where(t => !string.IsNullOrEmpty(t)).ToArray();
-                if (effectiveTags is not null && effectiveTags.Length != 0)
-                {
-                    newRelease.AssignTags(effectiveTags, (r, v) => r.Tags = v);
-                    releaseDirty = true;
-                }
-
-                #region ProcessSettings (only include if any sub-property is specified)
-                {
-                    var ps = new ProcessSettings();
-                    var psSource = process.ProcessSettings ?? new();
-                    bool psDirty = false;
-                    psDirty |= ps.AssignBoolIfNotNull(ErrorRecordingEnabled, psSource, r => r.ErrorRecordingEnabled, (r, v) => r.ErrorRecordingEnabled = v);
-                    psDirty |= ps.AssignNumberIfNotNullOrZero(Duration, psSource, r => r.Duration, (r, v) => r.Duration = v);
-                    psDirty |= ps.AssignNumberIfNotNullOrZero(Frequency, psSource, r => r.Frequency, (r, v) => r.Frequency = v);
-                    psDirty |= ps.AssignNumberIfNotNullOrZero(Quality, psSource, r => r.Quality, (r, v) => r.Quality = v);
-                    psDirty |= ps.AssignBoolIfNotNull(AutoStartProcess, psSource, r => r.AutoStartProcess, (r, v) => r.AutoStartProcess = v);
-                    psDirty |= ps.AssignBoolIfNotNull(AlwaysRunning, psSource, r => r.AlwaysRunning, (r, v) => r.AlwaysRunning = v);
-
-                    var a4r = new AutopilotForRobotsSettings();
-                    var a4rSource = psSource.AutopilotForRobots ?? new();
-                    bool a4rDirty = false;
-                    a4rDirty |= a4r.AssignBoolIfNotNull(A4R_Enabled, a4rSource, r => r.Enabled, (r, v) => r.Enabled = v);
-                    a4rDirty |= a4r.AssignBoolIfNotNull(A4R_HealingEnabled, a4rSource, r => r.HealingEnabled, (r, v) => r.HealingEnabled = v);
-                    if (a4rDirty) { ps.AutopilotForRobots = a4r; psDirty = true; }
-
-                    if (psDirty) { newRelease.ProcessSettings = ps; releaseDirty = true; }
-                }
-                #endregion
-
-                #region VideoRecordingSettings (only include if any sub-property is specified)
-                {
-                    var vrs = new VideoRecordingSettings();
-                    var vrsSource = process.VideoRecordingSettings ?? new();
-                    bool vrsDirty = false;
-                    vrsDirty |= vrs.AssignStringIfNotNull(VideoRecordingType, vrsSource, r => r.VideoRecordingType, (r, v) => r.VideoRecordingType = v);
-                    vrsDirty |= vrs.AssignStringIfNotNull(QueueItemVideoRecordingType, vrsSource, r => r.QueueItemVideoRecordingType, (r, v) => r.QueueItemVideoRecordingType = v);
-                    vrsDirty |= vrs.AssignNumberIfNotNullOrZero(MaxDurationSeconds, vrsSource, r => r.MaxDurationSeconds, (r, v) => r.MaxDurationSeconds = v);
-
-                    if (vrsDirty) { newRelease.VideoRecordingSettings = vrs; releaseDirty = true; }
-                }
-                #endregion
-
-                #endregion
-
-                // When ProcessVersion is changed, EntryPointId must be reassigned
-                releaseDirty |= newRelease.AssignStringIfNotNull(Version, process, r => r.ProcessVersion, (r, v) => r.ProcessVersion = v);
+                // When ProcessVersion is changed, EntryPointId must be reassigned. ComputeReleaseUpdate
+                // has already applied the new ProcessVersion onto newRelease.
                 bool bVersionChanged = newRelease.ProcessVersion is not null;
 
                 #region Convert EntryPoint to EntryPointId
@@ -536,5 +507,105 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Pure inputs for <see cref="ComputeReleaseUpdate"/> — every parameter that lands in the
+    /// release PATCH payload. The EntryPoint reassignment (which needs the package feed) and the
+    /// two Retention updates (a separate API) are handled by the cmdlet, not here.
+    /// </summary>
+    internal sealed class ReleaseUpdateInputs
+    {
+        public string? NewName { get; init; }
+        public string? Description { get; init; }
+        public string? InputArguments { get; init; }
+        public int? SpecificPriorityValue { get; init; }
+        public string? HiddenForAttendedUser { get; init; }
+        public string? RemoteControlAccess { get; init; }
+        public string? Version { get; init; }
+        public string[]? Tags { get; init; }
+
+        // ProcessSettings
+        public string? ErrorRecordingEnabled { get; init; }
+        public int? Duration { get; init; }
+        public int? Frequency { get; init; }
+        public int? Quality { get; init; }
+        public string? AutoStartProcess { get; init; }
+        public string? AlwaysRunning { get; init; }
+        public string? A4R_Enabled { get; init; }
+        public string? A4R_HealingEnabled { get; init; }
+
+        // VideoRecordingSettings
+        public string? VideoRecordingType { get; init; }
+        public string? QueueItemVideoRecordingType { get; init; }
+        public int? MaxDurationSeconds { get; init; }
+    }
+
+    /// <summary>
+    /// Applies the requested changes onto <paramref name="payload"/> (a fresh Release carrying only
+    /// the process Id) and returns whether anything differs from <paramref name="source"/> (the
+    /// current process), so the caller can skip the PATCH when the request is a no-op. Also applies
+    /// the new ProcessVersion so the caller can detect a version change for EntryPoint reassignment.
+    /// No API access — unit-testable in isolation.
+    /// </summary>
+    internal static bool ComputeReleaseUpdate(Release payload, Release source, ReleaseUpdateInputs input)
+    {
+        bool dirty = false;
+
+        dirty |= payload.AssignStringIfNotNull(input.NewName, source, r => r.Name, (r, v) => r.Name = v);
+        dirty |= payload.AssignStringIfNotNull(input.Description, source, r => r.Description, (r, v) => r.Description = v);
+        dirty |= payload.AssignStringIfNotNull(input.InputArguments, source, r => r.InputArguments, (r, v) => r.InputArguments = v);
+        dirty |= payload.AssignNumberIfNotNullOrZero(input.SpecificPriorityValue, source, r => r.SpecificPriorityValue, (r, v) => r.SpecificPriorityValue = v);
+        dirty |= payload.AssignBoolIfNotNull(input.HiddenForAttendedUser, source, r => r.HiddenForAttendedUser, (r, v) => r.HiddenForAttendedUser = v);
+        dirty |= payload.AssignStringIfNotNull(input.RemoteControlAccess, source, r => r.RemoteControlAccess, (r, v) => r.RemoteControlAccess = v);
+
+        var effectiveTags = input.Tags?.Where(t => !string.IsNullOrEmpty(t)).ToArray();
+        if (effectiveTags is not null && effectiveTags.Length != 0)
+        {
+            // Only write when the tag set actually differs from the current one.
+            dirty |= payload.AssignTags(effectiveTags, source, r => r.Tags, (r, v) => r.Tags = v);
+        }
+
+        #region ProcessSettings (only include if any sub-property is specified)
+        {
+            var ps = new ProcessSettings();
+            var psSource = source.ProcessSettings ?? new();
+            bool psDirty = false;
+            psDirty |= ps.AssignBoolIfNotNull(input.ErrorRecordingEnabled, psSource, r => r.ErrorRecordingEnabled, (r, v) => r.ErrorRecordingEnabled = v);
+            psDirty |= ps.AssignNumberIfNotNullOrZero(input.Duration, psSource, r => r.Duration, (r, v) => r.Duration = v);
+            psDirty |= ps.AssignNumberIfNotNullOrZero(input.Frequency, psSource, r => r.Frequency, (r, v) => r.Frequency = v);
+            psDirty |= ps.AssignNumberIfNotNullOrZero(input.Quality, psSource, r => r.Quality, (r, v) => r.Quality = v);
+            psDirty |= ps.AssignBoolIfNotNull(input.AutoStartProcess, psSource, r => r.AutoStartProcess, (r, v) => r.AutoStartProcess = v);
+            psDirty |= ps.AssignBoolIfNotNull(input.AlwaysRunning, psSource, r => r.AlwaysRunning, (r, v) => r.AlwaysRunning = v);
+
+            var a4r = new AutopilotForRobotsSettings();
+            var a4rSource = psSource.AutopilotForRobots ?? new();
+            bool a4rDirty = false;
+            a4rDirty |= a4r.AssignBoolIfNotNull(input.A4R_Enabled, a4rSource, r => r.Enabled, (r, v) => r.Enabled = v);
+            a4rDirty |= a4r.AssignBoolIfNotNull(input.A4R_HealingEnabled, a4rSource, r => r.HealingEnabled, (r, v) => r.HealingEnabled = v);
+            if (a4rDirty) { ps.AutopilotForRobots = a4r; psDirty = true; }
+
+            if (psDirty) { payload.ProcessSettings = ps; dirty = true; }
+        }
+        #endregion
+
+        #region VideoRecordingSettings (only include if any sub-property is specified)
+        {
+            var vrs = new VideoRecordingSettings();
+            var vrsSource = source.VideoRecordingSettings ?? new();
+            bool vrsDirty = false;
+            vrsDirty |= vrs.AssignStringIfNotNull(input.VideoRecordingType, vrsSource, r => r.VideoRecordingType, (r, v) => r.VideoRecordingType = v);
+            vrsDirty |= vrs.AssignStringIfNotNull(input.QueueItemVideoRecordingType, vrsSource, r => r.QueueItemVideoRecordingType, (r, v) => r.QueueItemVideoRecordingType = v);
+            vrsDirty |= vrs.AssignNumberIfNotNullOrZero(input.MaxDurationSeconds, vrsSource, r => r.MaxDurationSeconds, (r, v) => r.MaxDurationSeconds = v);
+
+            if (vrsDirty) { payload.VideoRecordingSettings = vrs; dirty = true; }
+        }
+        #endregion
+
+        // When ProcessVersion is changed, EntryPointId must be reassigned by the caller (it needs
+        // the package feed). Apply the version here so the caller can detect the change.
+        dirty |= payload.AssignStringIfNotNull(input.Version, source, r => r.ProcessVersion, (r, v) => r.ProcessVersion = v);
+
+        return dirty;
     }
 }

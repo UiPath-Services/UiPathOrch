@@ -162,34 +162,40 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
                 string target = queue.GetPSPath();
                 QueueDefinition newQueue = OrchCollectionExtensions.DeepCopy<QueueDefinition>(queue);
 
-                bool queueDirty = false;
-                queueDirty |= newQueue.AssignStringIfNotNull(NewName, queue, q => q.Name, (q, v) => q.Name = v);
-                queueDirty |= newQueue.AssignStringIfNotNull(Description, queue, q => q.Description, (q, v) => q.Description = v);
-                queueDirty |= newQueue.AssignBoolIfNotNull(AcceptAutomaticallyRetry, queue, q => q.AcceptAutomaticallyRetry, (q, v) => q.AcceptAutomaticallyRetry = v);
-                queueDirty |= newQueue.AssignBoolIfNotNull(RetryAbandonedItems, queue, q => q.RetryAbandonedItems, (q, v) => q.RetryAbandonedItems = v);
-                queueDirty |= newQueue.AssignNumberIfNotNullOrZero(MaxNumberOfRetries, queue, q => q.MaxNumberOfRetries, (q, v) => q.MaxNumberOfRetries = v);
-                queueDirty |= newQueue.AssignStringIfNotNull(SpecificDataJsonSchema, queue, q => q.SpecificDataJsonSchema, (q, v) => q.SpecificDataJsonSchema = v);
-                queueDirty |= newQueue.AssignStringIfNotNull(OutputDataJsonSchema, queue, q => q.OutputDataJsonSchema, (q, v) => q.OutputDataJsonSchema = v);
-                queueDirty |= newQueue.AssignStringIfNotNull(AnalyticsDataJsonSchema, queue, q => q.AnalyticsDataJsonSchema, (q, v) => q.AnalyticsDataJsonSchema = v);
-                queueDirty |= newQueue.AssignNumberIfNotNullOrZero(SlaInMinutes, queue, q => q.SlaInMinutes, (q, v) => q.SlaInMinutes = v);
-                queueDirty |= newQueue.AssignNumberIfNotNullOrZero(RiskSlaInMinutes, queue, q => q.RiskSlaInMinutes, (q, v) => q.RiskSlaInMinutes = v);
-
+                // Resolve Release name -> id up front. This is the only API round-trip in the main
+                // payload, and it also emits the not-found / multiple-match errors. A throwaway holder
+                // captures the resolved id (and whether it resolved) without mutating the payload, so
+                // the pure, API-free ComputeQueueUpdate core can diff it. AssignIdFromName's error
+                // emission is unchanged (it depends on the name, not the target).
                 #region Convert Release to ReleaseId
-                newQueue.AssignIdFromName(
+                long? resolvedReleaseId = null;
+                bool releaseResolved = false;
+                new QueueDefinition().AssignIdFromName(
                     Release,
                     () => drive.Releases.Get(folder),
                     e => e.Name!,
                     e => e.Id!,
-                    (s, v) => { if (queue.ReleaseId != v) { s.ReleaseId = v; queueDirty = true; } },
+                    (s, v) => { resolvedReleaseId = v; releaseResolved = true; },
                     this, target, "Release");
                 #endregion
 
-                var effectiveTags = Tags?.Where(t => !string.IsNullOrEmpty(t)).ToArray();
-                if (effectiveTags is not null && effectiveTags.Length != 0)
+                bool queueDirty = ComputeQueueUpdate(newQueue, queue, new QueueUpdateInputs
                 {
-                    newQueue.AssignTags(effectiveTags, (r, v) => r.Tags = v);
-                    queueDirty = true;
-                }
+                    NewName = NewName,
+                    Description = Description,
+                    AcceptAutomaticallyRetry = AcceptAutomaticallyRetry,
+                    RetryAbandonedItems = RetryAbandonedItems,
+                    MaxNumberOfRetries = MaxNumberOfRetries,
+                    SpecificDataJsonSchema = SpecificDataJsonSchema,
+                    OutputDataJsonSchema = OutputDataJsonSchema,
+                    AnalyticsDataJsonSchema = AnalyticsDataJsonSchema,
+                    SlaInMinutes = SlaInMinutes,
+                    RiskSlaInMinutes = RiskSlaInMinutes,
+                    Tags = Tags,
+                    ReleaseSpecified = !string.IsNullOrEmpty(Release),
+                    ReleaseResolved = releaseResolved,
+                    ResolvedReleaseId = resolvedReleaseId,
+                });
 
                 #region Retention (uses separate PutQueueRetention API)
                 // Queue list API does not return retention fields, so fetch current values
@@ -312,5 +318,68 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Pure inputs for <see cref="ComputeQueueUpdate"/>. The Release name -> id resolution (an API
+    /// round-trip) is done by the cmdlet first and passed in here, so change detection for the main
+    /// queue PATCH is fully testable without a live Orchestrator.
+    /// </summary>
+    internal sealed class QueueUpdateInputs
+    {
+        public string? NewName { get; init; }
+        public string? Description { get; init; }
+        public string? AcceptAutomaticallyRetry { get; init; }
+        public string? RetryAbandonedItems { get; init; }
+        public int? MaxNumberOfRetries { get; init; }
+        public string? SpecificDataJsonSchema { get; init; }
+        public string? OutputDataJsonSchema { get; init; }
+        public string? AnalyticsDataJsonSchema { get; init; }
+        public int? SlaInMinutes { get; init; }
+        public int? RiskSlaInMinutes { get; init; }
+        public string[]? Tags { get; init; }
+        /// <summary>True when -Release was supplied (even if it did not resolve).</summary>
+        public bool ReleaseSpecified { get; init; }
+        /// <summary>True when the Release name resolved (exactly one match, or an explicit empty clear).</summary>
+        public bool ReleaseResolved { get; init; }
+        /// <summary>The resolved release id to diff against; only consulted when <see cref="ReleaseResolved"/> is true.</summary>
+        public long? ResolvedReleaseId { get; init; }
+    }
+
+    /// <summary>
+    /// Applies the requested changes onto <paramref name="payload"/> (a deep copy of
+    /// <paramref name="source"/>) for the main queue PUT and returns whether anything actually
+    /// changed, so the caller can skip the PutQueueDefinition when the request is a no-op. Retention
+    /// is managed by a separate API and handled by the caller. No API access — unit-testable.
+    /// </summary>
+    internal static bool ComputeQueueUpdate(QueueDefinition payload, QueueDefinition source, QueueUpdateInputs input)
+    {
+        bool dirty = false;
+        dirty |= payload.AssignStringIfNotNull(input.NewName, source, q => q.Name, (q, v) => q.Name = v);
+        dirty |= payload.AssignStringIfNotNull(input.Description, source, q => q.Description, (q, v) => q.Description = v);
+        dirty |= payload.AssignBoolIfNotNull(input.AcceptAutomaticallyRetry, source, q => q.AcceptAutomaticallyRetry, (q, v) => q.AcceptAutomaticallyRetry = v);
+        dirty |= payload.AssignBoolIfNotNull(input.RetryAbandonedItems, source, q => q.RetryAbandonedItems, (q, v) => q.RetryAbandonedItems = v);
+        dirty |= payload.AssignNumberIfNotNullOrZero(input.MaxNumberOfRetries, source, q => q.MaxNumberOfRetries, (q, v) => q.MaxNumberOfRetries = v);
+        dirty |= payload.AssignStringIfNotNull(input.SpecificDataJsonSchema, source, q => q.SpecificDataJsonSchema, (q, v) => q.SpecificDataJsonSchema = v);
+        dirty |= payload.AssignStringIfNotNull(input.OutputDataJsonSchema, source, q => q.OutputDataJsonSchema, (q, v) => q.OutputDataJsonSchema = v);
+        dirty |= payload.AssignStringIfNotNull(input.AnalyticsDataJsonSchema, source, q => q.AnalyticsDataJsonSchema, (q, v) => q.AnalyticsDataJsonSchema = v);
+        dirty |= payload.AssignNumberIfNotNullOrZero(input.SlaInMinutes, source, q => q.SlaInMinutes, (q, v) => q.SlaInMinutes = v);
+        dirty |= payload.AssignNumberIfNotNullOrZero(input.RiskSlaInMinutes, source, q => q.RiskSlaInMinutes, (q, v) => q.RiskSlaInMinutes = v);
+
+        // Release: only write when the resolved id differs from the current one.
+        if (input.ReleaseResolved && source.ReleaseId != input.ResolvedReleaseId)
+        {
+            payload.ReleaseId = input.ResolvedReleaseId;
+            dirty = true;
+        }
+
+        var effectiveTags = input.Tags?.Where(t => !string.IsNullOrEmpty(t)).ToArray();
+        if (effectiveTags is not null && effectiveTags.Length != 0)
+        {
+            // Only write when the tag set actually differs from the current one.
+            dirty |= payload.AssignTags(effectiveTags, source, q => q.Tags, (q, v) => q.Tags = v);
+        }
+
+        return dirty;
     }
 }
