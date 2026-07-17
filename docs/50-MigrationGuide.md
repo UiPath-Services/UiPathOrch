@@ -376,14 +376,16 @@ Copy-PmRobotAccount -Path Source: * Destination:
 need to copy groups separately.
 
 **How the destination edition changes the result.** A local user has a userName
-and (optionally) an email. Automation Suite and on-premises key local users by
-userName and allow the email to differ or be absent; Automation Cloud keys them
-by email (users are invite-based). `Copy-PmUser` follows this automatically:
+and (optionally) an email. Automation Suite and on-premises identify local users by
+userName (the email may differ or be absent); Automation Cloud signs users in by
+their email. `Copy-PmUser` follows this automatically:
 
 | Destination | userName at destination | Email-less source user |
 |---|---|---|
 | **Automation Suite / on-premises** | the **source userName** is preserved (it may differ from the email) | **migrated** — created with just its userName |
-| **Automation Cloud** | set to the **email** (Cloud's identifier) | **skipped** — Cloud requires an email |
+| **Automation Cloud** | set to the **email** (Cloud signs in by email) | **skipped** — with no email it could not sign in on Cloud |
+
+(Cloud's bulk-create API *will* accept an email-less or userName≠email account, but on Cloud sign-in is by email, so such an account would be unusable — that is why `Copy-PmUser` follows the email convention there.)
 
 A user that already has an email keeps it in every case; only the userName and the handling of email-less users differ by edition.
 

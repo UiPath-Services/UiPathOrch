@@ -173,16 +173,16 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                 foreach (var srcUser in srcUsers)
                 {
                     #region Skip email-less users only where the destination requires an email
-                    // Automation Cloud keys local users by email and rejects creation
-                    // without one (users are invite-based there), so an email-less source
-                    // user cannot be created — skip it with an actionable warning. On
+                    // Automation Cloud authenticates local users by email, so an email-less
+                    // user cannot sign in there — skip it with an actionable warning (Cloud's
+                    // bulk-create API does accept the account, but it would be unusable). On
                     // Automation Suite / on-premises the userName is the identifier and the
-                    // email is optional (verified on-prem 25.10.2: BulkCreate accepts a
-                    // userName with an empty email), so such users migrate username-only
-                    // instead of being silently dropped.
+                    // email is optional (verified: BulkCreate accepts a userName with an empty
+                    // email, and sign-in is userName + password), so such users migrate
+                    // username-only instead of being silently dropped.
                     if (Core.OrchProvider.MustSkipEmaillessUser(preserveUserName, srcUser))
                     {
-                        WriteWarning($"{dstDrive.NameColonSeparator}: Skipping user '{srcUser.userName}' because it has no email address. Automation Cloud cannot create a local user without an email — recreate it manually there, or migrate to Automation Suite / on-premises where the userName is enough.");
+                        WriteWarning($"{dstDrive.NameColonSeparator}: Skipping user '{srcUser.userName}' because it has no email address. Automation Cloud signs users in by email, so a local user without one cannot sign in there — give it an email first (Update-PmUser -NewEmail at the source, or New-PmUser with an email at the destination), or migrate to Automation Suite / on-premises where the userName is enough.");
                         continue;
                     }
                     #endregion

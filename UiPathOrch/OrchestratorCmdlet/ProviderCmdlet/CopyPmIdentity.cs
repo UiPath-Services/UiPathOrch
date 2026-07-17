@@ -9,17 +9,18 @@ namespace UiPath.PowerShell.Core;
 public partial class OrchProvider
 {
     // Copy-PmUser: does the source user lack an email? Used with MustSkipEmaillessUser
-    // to decide whether an email-less user can be created at the destination — only
-    // Automation Cloud requires an email (Automation Suite / on-premises accept a
-    // userName-only local user).
+    // to decide whether an email-less user is usable at the destination — only
+    // Automation Cloud needs one, because Cloud sign-in is by email (Automation Suite /
+    // on-premises authenticate a userName-only local user by userName + password).
     internal static bool HasNoEmail(PmUser? user) => string.IsNullOrEmpty(user?.email);
 
-    // Copy-PmUser: an email-less source user can only be created where the destination
-    // doesn't require an email. Automation Cloud (preserveUserName == false) keys local
-    // users by email and rejects creation without one (users are invite-based), so it
-    // must be skipped there. Automation Suite / on-premises use the userName as the
-    // identifier and accept an empty email (verified on-prem 25.10.2: BulkCreate creates
-    // a userName-only user), so such a user is migrated rather than dropped.
+    // Copy-PmUser: an email-less source user is only usable where sign-in does not need an
+    // email. Automation Cloud (preserveUserName == false) authenticates local users by
+    // email, so one created without an email cannot sign in there — its bulk-create API
+    // actually accepts the account (verified), but the account would be unusable, so skip
+    // it. Automation Suite / on-premises authenticate by userName + password and accept an
+    // empty email (verified on-prem: BulkCreate creates a userName-only user), so such a
+    // user is migrated rather than dropped.
     internal static bool MustSkipEmaillessUser(bool preserveUserName, PmUser? user) =>
         !preserveUserName && HasNoEmail(user);
 
