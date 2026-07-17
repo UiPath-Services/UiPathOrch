@@ -89,16 +89,13 @@ public class UpdateCredentialStoreCmdlet : OrchestratorPSCmdlet
 
                 var posting = OrchCollectionExtensions.DeepCopy(detailed);
                 posting.Id = store.Id;
-                bool dirty = false;
 
-                dirty |= posting.AssignStringIfNotNull(NewName, detailed, s => s.Name, (s, v) => s.Name = v);
-                dirty |= posting.AssignStringIfNotNull(HostName, detailed, s => s.HostName, (s, v) => s.HostName = v);
-
-                if (!string.IsNullOrEmpty(AdditionalConfiguration))
+                bool dirty = ComputeCredentialStoreUpdate(posting, detailed, new CredentialStoreUpdateInputs
                 {
-                    posting.AdditionalConfiguration = AdditionalConfiguration;
-                    dirty = true;
-                }
+                    NewName = NewName,
+                    HostName = HostName,
+                    AdditionalConfiguration = AdditionalConfiguration,
+                });
 
                 if (!dirty) continue;
 
@@ -116,5 +113,34 @@ public class UpdateCredentialStoreCmdlet : OrchestratorPSCmdlet
                 }
             }
         }
+    }
+
+    internal sealed class CredentialStoreUpdateInputs
+    {
+        public string? NewName { get; init; }
+        public string? HostName { get; init; }
+        public string? AdditionalConfiguration { get; init; }
+    }
+
+    /// <summary>
+    /// Applies the requested changes onto <paramref name="payload"/> (a deep copy of the current
+    /// store whose AdditionalConfiguration has already been nulled) and returns whether anything
+    /// differs from <paramref name="source"/>, so the caller can skip the PUT on a no-op. NewName
+    /// and HostName are diffed against the current store. AdditionalConfiguration is a write-only
+    /// secret (the GET masks it), so a non-empty value always writes and an empty string means
+    /// "leave it" — a blank secret is never written. No API access — unit-testable in isolation.
+    /// </summary>
+    internal static bool ComputeCredentialStoreUpdate(CredentialStore payload, CredentialStore source, CredentialStoreUpdateInputs input)
+    {
+        bool dirty = false;
+        dirty |= payload.AssignStringIfNotNull(input.NewName, source, s => s.Name, (s, v) => s.Name = v);
+        dirty |= payload.AssignStringIfNotNull(input.HostName, source, s => s.HostName, (s, v) => s.HostName = v);
+
+        if (!string.IsNullOrEmpty(input.AdditionalConfiguration))
+        {
+            payload.AdditionalConfiguration = input.AdditionalConfiguration;
+            dirty = true;
+        }
+        return dirty;
     }
 }
