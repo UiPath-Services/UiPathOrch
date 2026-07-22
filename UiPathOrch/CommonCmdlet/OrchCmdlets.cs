@@ -33,16 +33,33 @@ public class EncodingArgumentTransformationAttribute : ArgumentTransformationAtt
     }
 }
 
-// Lets a producer's Tag[] property bind to a string[] -Tags parameter via ValueFromPipelineByPropertyName.
-// Without it PowerShell coerces each Tag through its (default) ToString() to the type name
-// "UiPath.PowerShell.Entities.Tag", which ConvertToTags then turns into a garbage tag -- so
-// `Get-Orch* | New-/Update-Orch*` silently overwrote tags. Map each Tag to the same "Name=Value" form
-// the CSV path uses (OrchStringExtensions.FormatTag); pass strings (manual or CSV input) through unchanged.
-// Tag deliberately has no ToString() override (it would make ConvertTo-Json emit this string for
-// deep-nested tags -- see OrchStringExtensions.FormatTag), so the conversion lives here at the binding edge.
-public class TagArgumentTransformationAttribute : ArgumentTransformationAttribute
+/// <summary>
+/// Shared plumbing for the entity-to-string binding attributes below.
+///
+/// Each exists to stop a producer's typed property (Tag[], WebhookEvent[], RobotUser[],
+/// RobotExecutor[]) from binding to a string[] parameter through its default ToString(), which
+/// yields the TYPE NAME -- and made `Get-Orch* | New-/Update-Orch*` silently destroy the very
+/// value it was meant to round-trip: tags overwritten, a webhook's event subscriptions dropped,
+/// a machine's robot assignment wiped. Only the projection differs between them, so only the
+/// projection is overridden; Transform is sealed so a fifth attribute cannot reintroduce those
+/// bugs by re-implementing the plumbing and dropping one of its steps.
+///
+/// Each of the four steps below is load-bearing:
+///   1. unwrap a PSObject around the INPUT itself;
+///   2. pass null through untouched (the binder relies on this);
+///   3. treat a bare string as ONE item -- it is also IEnumerable&lt;char&gt;, so without the
+///      explicit guard "env=prod" explodes into one item per character;
+///   4. unwrap a PSObject around each ELEMENT -- the shape pipeline binding actually delivers.
+///      Skip it and the `is T` test fails, the element falls back to ToString(), and the original
+///      data-destroying bug is back.
+/// See PipelineArgumentTransformTests, which pins all four plus each projection.
+/// </summary>
+public abstract class EntityToStringTransformationAttribute<T> : ArgumentTransformationAttribute
 {
-    public override object Transform(EngineIntrinsics engineIntrinsics, object inputData)
+    /// <summary>Convert one already-unwrapped <typeparamref name="T"/> to the string the parameter expects.</summary>
+    protected abstract string? Project(T entity);
+
+    public sealed override object Transform(EngineIntrinsics engineIntrinsics, object inputData)
     {
         object? data = inputData is PSObject pso ? pso.BaseObject : inputData;
         if (data is null) return null!;
@@ -52,70 +69,42 @@ public class TagArgumentTransformationAttribute : ArgumentTransformationAttribut
         return items.Select(raw =>
         {
             object? o = raw is PSObject p ? p.BaseObject : raw;
-            return o is Tag tag ? OrchStringExtensions.FormatTag(tag) : o?.ToString();
+            return o is T entity ? Project(entity) : o?.ToString();
         }).ToArray();
     }
 }
 
-// Same idea for Webhook -Events: a producer's WebhookEvent[] binds as the wire event-type name
-// instead of coercing to the type name (which the resolver matched to nothing -> the webhook lost
-// all its event subscriptions on update).
-public class WebhookEventArgumentTransformationAttribute : ArgumentTransformationAttribute
+// Lets a producer's Tag[] property bind to a string[] -Tags parameter via ValueFromPipelineByPropertyName,
+// mapping each Tag to the same "Name=Value" form the CSV path uses; strings (manual or CSV input) pass
+// through unchanged. Tag deliberately has no ToString() override (it would make ConvertTo-Json emit this
+// string for deep-nested tags -- see OrchStringExtensions.FormatTag), so the conversion lives here at the
+// binding edge.
+public class TagArgumentTransformationAttribute : EntityToStringTransformationAttribute<Tag>
 {
-    public override object Transform(EngineIntrinsics engineIntrinsics, object inputData)
-    {
-        object? data = inputData is PSObject pso ? pso.BaseObject : inputData;
-        if (data is null) return null!;
-        IEnumerable<object?> items = data is System.Collections.IEnumerable seq && data is not string
-            ? seq.Cast<object?>()
-            : [data];
-        return items.Select(raw =>
-        {
-            object? o = raw is PSObject p ? p.BaseObject : raw;
-            return o is WebhookEvent ev ? ev.EventType : o?.ToString();
-        }).ToArray();
-    }
+    protected override string? Project(Tag tag) => OrchStringExtensions.FormatTag(tag);
+}
+
+// Webhook -Events: a producer's WebhookEvent[] binds as the wire event-type name (the resolver matched
+// the coerced type name to nothing, so the webhook lost all its event subscriptions on update).
+public class WebhookEventArgumentTransformationAttribute : EntityToStringTransformationAttribute<WebhookEvent>
+{
+    protected override string? Project(WebhookEvent ev) => ev.EventType;
 }
 
 // A producer's RobotUser[] (Machine.RobotUsers) binds to the string[] -RobotUsers parameter as the
 // robot's stable Id -- always present for classic AND modern robots, unlike UserName (null for modern).
-// New-/Update-OrchMachine already fetch AllRobotsAcrossFolders and now match -RobotUsers on User.FullName
-// OR Id, so a `Get-OrchMachine | Update-OrchMachine` object-pipe re-resolves the same robots instead of
-// coercing each RobotUser to a garbage type-name string (which wiped the assignment).
-public class RobotUserArgumentTransformationAttribute : ArgumentTransformationAttribute
+// New-/Update-OrchMachine fetch AllRobotsAcrossFolders and match -RobotUsers on User.FullName OR Id, so a
+// `Get-OrchMachine | Update-OrchMachine` object-pipe re-resolves the same robots.
+public class RobotUserArgumentTransformationAttribute : EntityToStringTransformationAttribute<RobotUser>
 {
-    public override object Transform(EngineIntrinsics engineIntrinsics, object inputData)
-    {
-        object? data = inputData is PSObject pso ? pso.BaseObject : inputData;
-        if (data is null) return null!;
-        IEnumerable<object?> items = data is System.Collections.IEnumerable seq && data is not string
-            ? seq.Cast<object?>()
-            : [data];
-        return items.Select(raw =>
-        {
-            object? o = raw is PSObject p ? p.BaseObject : raw;
-            return o is RobotUser ru ? ru.RobotId?.ToString() : o?.ToString();
-        }).ToArray();
-    }
+    protected override string? Project(RobotUser ru) => ru.RobotId?.ToString();
 }
 
-// Same idea for trigger -ExecutorRobots: a producer's RobotExecutor[] binds as the robot Name (what
-// DeserializeExecutorRobots and the CSV form expect) instead of coercing to the type name.
-public class RobotExecutorArgumentTransformationAttribute : ArgumentTransformationAttribute
+// Trigger -ExecutorRobots: a producer's RobotExecutor[] binds as the robot Name, which is what
+// DeserializeExecutorRobots and the CSV form expect.
+public class RobotExecutorArgumentTransformationAttribute : EntityToStringTransformationAttribute<RobotExecutor>
 {
-    public override object Transform(EngineIntrinsics engineIntrinsics, object inputData)
-    {
-        object? data = inputData is PSObject pso ? pso.BaseObject : inputData;
-        if (data is null) return null!;
-        IEnumerable<object?> items = data is System.Collections.IEnumerable seq && data is not string
-            ? seq.Cast<object?>()
-            : [data];
-        return items.Select(raw =>
-        {
-            object? o = raw is PSObject p ? p.BaseObject : raw;
-            return o is RobotExecutor re ? re.Name : o?.ToString();
-        }).ToArray();
-    }
+    protected override string? Project(RobotExecutor re) => re.Name;
 }
 
 public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost

@@ -1,3 +1,4 @@
+using System.Management.Automation;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
 using Xunit;
@@ -94,5 +95,96 @@ public class PipelineArgumentTransformTests
         var attr = new RobotExecutorArgumentTransformationAttribute();
         var result = (string?[])attr.Transform(null!, new[] { "robotA" });
         Assert.Equal(new[] { "robotA" }, result);
+    }
+
+    // ---------------- shared unwrapping / shaping contract ----------------
+    //
+    // The cases above only exercise "typed array in, strings out" and "strings pass through".
+    // The transforms do three more things that the tests never pinned, each of which silently
+    // reintroduces the original data-destroying bug if it regresses -- and all three are shared
+    // plumbing, so a regression would hit every one of these parameters at once:
+    //
+    //   * PSObject unwrapping on the INPUT and, separately, on each ELEMENT. Pipeline binding
+    //     hands elements over wrapped; if the element is not unwrapped, `is Tag` fails and the
+    //     element falls back to ToString() -- i.e. the type name, which is exactly what these
+    //     attributes exist to prevent.
+    //   * a bare string must count as ONE item, never as its IEnumerable<char>.
+    //   * a bare (non-array) entity must still be projected.
+    //
+    // Tag stands in for all four where the behaviour is type-independent; the element-unwrap
+    // case is repeated per attribute because that is the one that destroyed real data.
+
+    [Fact]
+    public void Transform_UnwrapsAPSObjectAroundTheWholeInput()
+    {
+        var attr = new TagArgumentTransformationAttribute();
+        var tags = new[] { new Tag { Name = "env", Value = "prod", DisplayName = "env", DisplayValue = "prod" } };
+
+        var result = (string?[])attr.Transform(null!, PSObject.AsPSObject(tags));
+
+        Assert.Equal(new[] { "env=prod" }, result);
+    }
+
+    [Theory]
+    [MemberData(nameof(ElementUnwrapCases))]
+    public void Transform_UnwrapsAPSObjectAroundEachElement(
+        ArgumentTransformationAttribute attr, object entity, string expected)
+    {
+        // The shape ValueFromPipelineByPropertyName actually delivers.
+        var wrapped = new object[] { PSObject.AsPSObject(entity) };
+
+        var result = (string?[])attr.Transform(null!, wrapped);
+
+        Assert.Equal(new[] { expected }, result);
+    }
+
+    public static TheoryData<ArgumentTransformationAttribute, object, string> ElementUnwrapCases() => new()
+    {
+        { new TagArgumentTransformationAttribute(), new Tag { Name = "env", Value = "prod", DisplayName = "env", DisplayValue = "prod" }, "env=prod" },
+        { new WebhookEventArgumentTransformationAttribute(), new WebhookEvent { EventType = "task.created" }, "task.created" },
+        { new RobotUserArgumentTransformationAttribute(), new RobotUser { RobotId = 12345 }, "12345" },
+        { new RobotExecutorArgumentTransformationAttribute(), new RobotExecutor { Name = "robotA" }, "robotA" },
+    };
+
+    // A string is IEnumerable<char>. Without the explicit `is not string` guard, "env=prod"
+    // would be exploded into one item per character.
+    [Fact]
+    public void Transform_TreatsABareStringAsASingleItem()
+    {
+        var attr = new TagArgumentTransformationAttribute();
+
+        var result = (string?[])attr.Transform(null!, "env=prod");
+
+        Assert.Equal(new[] { "env=prod" }, result);
+    }
+
+    [Fact]
+    public void Transform_ProjectsABareNonArrayEntity()
+    {
+        var attr = new TagArgumentTransformationAttribute();
+
+        var result = (string?[])attr.Transform(null!, new Tag { Name = "env", Value = "prod", DisplayName = "env", DisplayValue = "prod" });
+
+        Assert.Equal(new[] { "env=prod" }, result);
+    }
+
+    [Fact]
+    public void Transform_PassesNullThroughInsteadOfThrowing()
+    {
+        var attr = new TagArgumentTransformationAttribute();
+
+        Assert.Null(attr.Transform(null!, null!));
+    }
+
+    // An element of an unrelated type has no projection, so it falls back to ToString(). Pinned
+    // so the fallback stays a deliberate branch rather than becoming an exception.
+    [Fact]
+    public void Transform_FallsBackToToStringForUnrelatedTypes()
+    {
+        var attr = new TagArgumentTransformationAttribute();
+
+        var result = (string?[])attr.Transform(null!, new object[] { 42 });
+
+        Assert.Equal(new[] { "42" }, result);
     }
 }
