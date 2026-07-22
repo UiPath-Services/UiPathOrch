@@ -44,7 +44,7 @@ namespace UiPath.OrchAPI;
 /// one open) while leaving the file free whenever the user is actually in a position to grab it.
 /// Measured cost of a reopen in the default log directory: ~11.7 ms, once per idle period.
 /// </summary>
-public sealed class LogFileWriter : IDisposable
+internal sealed class LogFileWriter : IDisposable
 {
     private readonly string _logFilePath;
     private readonly object _lock = new();
@@ -311,9 +311,11 @@ public sealed class LogFileWriter : IDisposable
 }
 
 /// <summary>
-/// Class that manages log metrics.
+/// Class that manages log metrics. Internal like <see cref="LogFileWriter"/>; only the
+/// <see cref="LogStatistics"/> snapshot it produces crosses the assembly boundary, via
+/// <c>OrchAPISession.GetLogStatistics()</c>.
 /// </summary>
-public sealed class LogMetrics
+internal sealed class LogMetrics
 {
     private long _totalEntriesWritten;
     private long _totalBytesWritten;
@@ -355,6 +357,9 @@ public sealed class LogMetrics
 /// Snapshot of a writer's counters. <c>BatchesWritten</c> now counts write operations rather
 /// than deferred batches -- with a write per entry it tracks <c>TotalEntriesWritten</c> except
 /// where a retained entry went out alongside a later one.
+///
+/// Public because <c>OrchAPISession.GetLogStatistics()</c> returns it; the writer and its metrics
+/// class are internal. Keep it that way -- nothing else about the logger is a supported surface.
 /// </summary>
 public readonly record struct LogStatistics(
     long TotalEntriesWritten,
