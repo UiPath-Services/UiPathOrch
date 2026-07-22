@@ -21,6 +21,67 @@ public class AsyncLogWriterTests : IDisposable
         catch { /* best-effort cleanup */ }
     }
 
+    // A failed flush must not destroy the buffered entries.
+    //
+    // This is the bug behind the intermittent IdleFlush_LoneEntry failures: FlushBufferAsync
+    // swallowed every exception and returned void, and the callers cleared the buffer regardless
+    // -- so one transient IOException (a scanner holding the freshly created file open is enough)
+    // discarded the entries, left the log file absent, and still reported DroppedEntries = 0. On
+    // a lone-entry writer that meant an EMPTY LOG, which is precisely the failure the idle-flush
+    // tests below exist to prevent, reached by a second independent route.
+    //
+    // Deterministic: the lock is held by this test, not by chance.
+    [Fact]
+    public async Task FailedFlush_RetainsEntriesAndWritesThemOnceTheFileIsWritableAgain()
+    {
+        var w = new AsyncLogWriter(_tempPath, batchSize: 100, flushIntervalMs: 100);
+        try
+        {
+            using (new FileStream(_tempPath, FileMode.Create, FileAccess.Write, FileShare.None))
+            {
+                await w.WriteAsync("written-while-locked\n");
+                await Task.Delay(500);  // at least one interval flush fires and fails
+            }
+
+            // Lock released: the retained entry must be persisted by a later flush.
+            await w.WriteAsync("written-after-unlock\n");
+            await Task.Delay(500);
+        }
+        finally
+        {
+            await w.DisposeAsync();
+        }
+
+        var lines = await File.ReadAllLinesAsync(_tempPath);
+        Assert.Equal(new[] { "written-while-locked", "written-after-unlock" }, lines);
+        Assert.Equal(0, w.GetStatistics().DroppedEntries);
+    }
+
+    // Nothing may leave the buffer unwritten without being counted -- the statistics used to
+    // report a clean run while entries were being discarded.
+    [Fact]
+    public async Task UnwritableTarget_CountsTheEntriesItCannotPersist()
+    {
+        // A directory can never be opened for append: a permanent failure, not a transient one.
+        var dirPath = Path.Combine(Path.GetTempPath(), $"asynclog_dir_{Guid.NewGuid():N}");
+        Directory.CreateDirectory(dirPath);
+        try
+        {
+            var w = new AsyncLogWriter(dirPath, batchSize: 100, flushIntervalMs: 100);
+            await w.WriteAsync("cannot-be-written\n");
+            await Task.Delay(400);
+            await w.DisposeAsync();
+
+            var stats = w.GetStatistics();
+            Assert.Equal(0, stats.TotalEntriesWritten);
+            Assert.Equal(1, stats.DroppedEntries);
+        }
+        finally
+        {
+            try { Directory.Delete(dirPath, recursive: true); } catch { /* best-effort */ }
+        }
+    }
+
     [Fact]
     public async Task BasicWrites_AllPersistedAfterDispose()
     {

@@ -27,11 +27,29 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
     private readonly int _batchSize;
     private readonly int _flushIntervalMs;
 
+    // Upper bound on entries held back for retry after a failed flush. Tied to maxQueueSize --
+    // the module's existing declaration of how many log entries may sit in memory -- so the two
+    // buffers shrink together when a caller tunes it down. A path that stays unwritable
+    // therefore holds at most ~2x maxQueueSize entries (channel + retry buffer) before the
+    // oldest start being dropped and counted.
+    private readonly int _maxRetainedEntries;
+
+    // What a flush attempt achieved. Retryable vs Permanent decides whether the buffer is worth
+    // holding on to: a locked or momentarily unavailable file recovers on the next interval,
+    // whereas a denied or malformed path never will and retrying it forever would spin.
+    private enum FlushOutcome
+    {
+        Persisted,
+        Retryable,
+        Permanent,
+    }
+
     public AsyncLogWriter(string logFilePath, int maxQueueSize = 10000, int batchSize = 100, int flushIntervalMs = 1000)
     {
         _logFilePath = logFilePath ?? throw new ArgumentNullException(nameof(logFilePath));
         _batchSize = batchSize;
         _flushIntervalMs = flushIntervalMs;
+        _maxRetainedEntries = maxQueueSize;
         _fileSemaphore = new SemaphoreSlim(1, 1);
         _shutdownCts = new CancellationTokenSource();
         _metrics = new LogMetrics();
@@ -148,38 +166,54 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
                     }
                 }
 
+                // Once a flush fails, stop attempting further ones until the next interval:
+                // without this the batch flush below would re-attempt on EVERY subsequent
+                // TryRead (the buffer stays at or above _batchSize when it is not cleared),
+                // hammering a filesystem that just told us it was busy.
+                bool flushBlocked = false;
+
                 // Drain everything currently available without blocking.
                 while (reader.TryRead(out var entry))
                 {
                     buffer.Add(entry);
-                    if (buffer.Count >= _batchSize)
+                    if (!flushBlocked && buffer.Count >= _batchSize)
                     {
-                        await FlushBufferAsync(buffer, cancellationToken);
-                        buffer.Clear();
+                        flushBlocked = !ApplyFlushOutcome(
+                            buffer, await FlushBufferAsync(buffer, cancellationToken));
                         lastFlushTime = DateTime.UtcNow;
                     }
                 }
 
                 // Time-based flush: persist whatever remains once the interval has
-                // elapsed, even when no new entries are arriving.
-                if (buffer.Count > 0 &&
+                // elapsed, even when no new entries are arriving. A retained buffer is
+                // retried here on the next interval, which doubles as the retry backoff.
+                if (!flushBlocked && buffer.Count > 0 &&
                     (DateTime.UtcNow - lastFlushTime).TotalMilliseconds >= _flushIntervalMs)
                 {
-                    await FlushBufferAsync(buffer, cancellationToken);
-                    buffer.Clear();
+                    ApplyFlushOutcome(buffer, await FlushBufferAsync(buffer, cancellationToken));
+                    // Advance regardless of the outcome so a failing flush waits a full interval
+                    // before the next attempt instead of retrying in a tight loop.
                     lastFlushTime = DateTime.UtcNow;
                 }
             }
 
-            // Process remaining entries during shutdown
+            // Process remaining entries during shutdown. This is the last attempt -- the loop has
+            // exited, so anything not persisted here is genuinely lost and must be counted.
             if (buffer.Count > 0)
             {
-                await FlushBufferAsync(buffer, cancellationToken);
+                if (!ApplyFlushOutcome(buffer, await FlushBufferAsync(buffer, cancellationToken)))
+                {
+                    _metrics.RecordDroppedEntries(buffer.Count);
+                    buffer.Clear();
+                }
             }
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            // Normal shutdown
+            // Normal shutdown. Whatever is still buffered missed the shutdown budget and will
+            // never be written -- count it rather than letting the statistics claim success.
+            _metrics.RecordDroppedEntries(buffer.Count);
+            buffer.Clear();
         }
         catch (Exception ex)
         {
@@ -189,12 +223,18 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
     }
 
     /// <summary>
-    /// Writes the buffer contents to a file.
+    /// Writes the buffer contents to a file and reports whether they were persisted.
+    ///
+    /// The outcome matters: this used to return void after swallowing every exception, and the
+    /// callers cleared the buffer unconditionally -- so a single transient IOException (a virus
+    /// scanner holding the new file open is enough) silently destroyed the entries, left the log
+    /// file absent, and did not even count them as dropped. The caller now decides what to do
+    /// from the outcome; NOTHING is discarded without being recorded.
     /// </summary>
-    private async Task FlushBufferAsync(List<LogEntry> buffer, CancellationToken cancellationToken)
+    private async Task<FlushOutcome> FlushBufferAsync(List<LogEntry> buffer, CancellationToken cancellationToken)
     {
         if (buffer.Count == 0)
-            return;
+            return FlushOutcome.Persisted;
 
         await _fileSemaphore.WaitAsync(cancellationToken);
         try
@@ -241,26 +281,87 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
 
             // Update metrics
             _metrics.RecordBatchWritten(buffer.Count, totalBytes);
+            return FlushOutcome.Persisted;
         }
+        // Shutdown budget exhausted mid-write. Propagate so the processing loop's own handler
+        // treats it as the normal shutdown it is; that handler accounts for what is left over.
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        // PathTooLong / DirectoryNotFound derive from IOException, so they must precede it.
+        catch (PathTooLongException ex)
+        {
+            Debug.WriteLine($"Log path too long: {ex.Message}");
+            return FlushOutcome.Permanent;
+        }
+        // Retryable: the directory is (re)created on every flush above, and a network path can
+        // come back. The retention cap stops this from retrying without bound.
         catch (DirectoryNotFoundException ex)
         {
             Debug.WriteLine($"Log directory not found: {ex.Message}");
+            return FlushOutcome.Retryable;
         }
         catch (UnauthorizedAccessException ex)
         {
             Debug.WriteLine($"Log file access denied: {ex.Message}");
+            return FlushOutcome.Permanent;
         }
+        catch (NotSupportedException ex)
+        {
+            Debug.WriteLine($"Log path is not supported: {ex.Message}");
+            return FlushOutcome.Permanent;
+        }
+        // The transient case this whole outcome mechanism exists for: the file is locked by a
+        // scanner or another handle, the volume hiccuped, the share dropped. Next interval.
         catch (IOException ex)
         {
             Debug.WriteLine($"Log file I/O error: {ex.Message}");
+            return FlushOutcome.Retryable;
         }
         catch (Exception ex)
         {
+            // Unknown failure: do not spin on it, but do not hide it either -- the caller counts
+            // the discarded entries.
             Debug.WriteLine($"Unexpected log write error: {ex}");
+            return FlushOutcome.Permanent;
         }
         finally
         {
             _fileSemaphore.Release();
+        }
+    }
+
+    /// <summary>
+    /// Apply a flush outcome to the buffer. Returns true when the entries were persisted.
+    /// Every entry that leaves the buffer unwritten is counted in <see cref="LogMetrics"/>.
+    /// </summary>
+    private bool ApplyFlushOutcome(List<LogEntry> buffer, FlushOutcome outcome)
+    {
+        switch (outcome)
+        {
+            case FlushOutcome.Persisted:
+                buffer.Clear();
+                return true;
+
+            case FlushOutcome.Permanent:
+                // The path itself is unusable; retrying would spin forever. Account for the loss
+                // rather than hiding it, which is exactly what the old code did.
+                _metrics.RecordDroppedEntries(buffer.Count);
+                buffer.Clear();
+                return false;
+
+            default: // Retryable -- keep the entries for the next interval.
+                if (buffer.Count > _maxRetainedEntries)
+                {
+                    // A path that never recovers must not grow this list until the process dies.
+                    // Evict the OLDEST so the surviving tail is the most recent context, which is
+                    // what a reader of a truncated diagnostic log actually needs.
+                    int excess = buffer.Count - _maxRetainedEntries;
+                    buffer.RemoveRange(0, excess);
+                    _metrics.RecordDroppedEntries(excess);
+                }
+                return false;
         }
     }
 
@@ -347,9 +448,18 @@ public sealed class LogMetrics
         Interlocked.Increment(ref _batchesWritten);
     }
 
-    public void RecordDroppedEntry()
+    public void RecordDroppedEntry() => RecordDroppedEntries(1);
+
+    /// <summary>
+    /// Record entries that were accepted but could not be persisted -- a flush that failed
+    /// permanently, retained entries evicted past the retry cap, or a buffer still unwritten
+    /// when the shutdown budget ran out. Without this the statistics reported everything as
+    /// written while entries were being discarded.
+    /// </summary>
+    public void RecordDroppedEntries(int count)
     {
-        Interlocked.Increment(ref _droppedEntries);
+        if (count <= 0) return;
+        Interlocked.Add(ref _droppedEntries, count);
     }
 
     public LogStatistics GetStatistics()
