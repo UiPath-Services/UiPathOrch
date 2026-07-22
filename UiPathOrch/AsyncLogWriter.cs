@@ -23,8 +23,10 @@ namespace UiPath.OrchAPI;
 ///
 /// What the pipeline cost instead: a silent-data-loss bug (a failed flush cleared the buffer
 /// and reported DroppedEntries = 0), ~430 lines of concurrency code, and load-sensitive tests.
-/// Every caller already wraps its write in `_ = Task.Run(...)`, so the "don't block the HTTP
-/// thread" benefit that normally justifies an async logger was being provided twice.
+/// It was not even buying non-blocking writes: every caller wrapped its write in
+/// `_ = Task.Run(...)` as well, so the benefit that normally justifies an async logger was
+/// being provided twice -- and the outer copy cost the log its order. Both are gone; callers
+/// now write inline through OrchAPISession.WriteLogBlock.
 ///
 /// Durability is also strictly better: an entry is on its way to the OS before WriteAsync
 /// returns, instead of sitting in a channel and an in-memory buffer for up to a flush interval.
@@ -144,8 +146,8 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
     private void StopIdlePollingLocked() => _idleTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
     /// <summary>
-    /// Appends a log entry. Completes synchronously -- the ValueTask is kept so the call sites,
-    /// which await this from inside their own Task.Run, need no change.
+    /// Appends a log entry. Completes synchronously; the ValueTask return is vestigial and kept
+    /// only so the existing tests and any external caller compile unchanged.
     /// </summary>
     public ValueTask WriteAsync(string logContent, CancellationToken cancellationToken = default)
     {

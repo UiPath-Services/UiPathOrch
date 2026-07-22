@@ -345,22 +345,38 @@ public partial class OrchAPISession : IDisposable
         return _asyncLogWriter;
     }
 
-    // Synchronous version
-    //private void WriteLogBlock(string? logBlock)
-    //{
-    //    if (string.IsNullOrEmpty(logBlock))
-    //        return;
-
-    //    // Use the async log writer (non-blocking)
-    //    GetAsyncLogWriter().Write(logBlock);
-    //}
-
-    internal async ValueTask WriteLogBlockAsync(string? logBlock, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// Append a block to the drive's log. Call this DIRECTLY from the code that produced the
+    /// block -- do not hand it to Task.Run.
+    ///
+    /// The call sites used to fire and forget (`_ = Task.Run(async () => await ...)`) because
+    /// the writer batched behind a channel and a flush interval. It no longer does: the block
+    /// is encoded and flushed through an already-open handle, measured at ~0.025 ms, i.e. under
+    /// a thousandth of the HTTP round trip that produced it. Offloading that bought nothing and
+    /// cost the log its ORDER -- each block became an independent pool work item, so two calls
+    /// made one after the other on the SAME thread could be written in either order, and the
+    /// sequence numbers in the log came out shuffled. Writing inline restores it.
+    ///
+    /// Never throws: a diagnostic logger must not be able to fail the operation it is
+    /// describing. Everything recoverable is handled inside the writer (entries are retained and
+    /// retried), and anything left is swallowed here.
+    /// </summary>
+    internal void WriteLogBlock(string? logBlock)
     {
         if (string.IsNullOrEmpty(logBlock))
             return;
 
-        await GetAsyncLogWriter().WriteAsync(logBlock, cancellationToken);
+        try
+        {
+            GetAsyncLogWriter().WriteAsync(logBlock).GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            // The writer already swallows I/O failures and accounts for them; this catches the
+            // rest (e.g. the log directory itself being unusable) so logging can never take down
+            // a cmdlet.
+            System.Diagnostics.Debug.WriteLine($"Log write failed: {ex.Message}");
+        }
     }
 
     // Get log statistics

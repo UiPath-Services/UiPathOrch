@@ -142,6 +142,25 @@ public class AsyncLogWriterTests : IDisposable
         Assert.Equal(0, w.GetStatistics().DroppedEntries);
     }
 
+    // Sequential writes from one thread must appear in the order they were made.
+    //
+    // This is what the Task.Run offload at the call sites destroyed: each block became an
+    // independent thread-pool work item, so two log blocks produced back-to-back on the SAME
+    // thread could reach the writer in either order and the sequence numbers in the log came out
+    // shuffled. Writing inline is what restores it, and this pins the property at the writer.
+    [Fact]
+    public async Task SequentialWrites_AppearInTheOrderTheyWereMade()
+    {
+        await using var w = new AsyncLogWriter(_tempPath);
+        for (int i = 0; i < 200; i++)
+            await w.WriteAsync($"#{i:D4}\n");
+
+        var lines = ReadAllLinesShared(_tempPath);
+        Assert.Equal(200, lines.Length);
+        for (int i = 0; i < 200; i++)
+            Assert.Equal($"#{i:D4}", lines[i]);
+    }
+
     [Fact]
     public async Task BasicWrites_AllPersistedAfterDispose()
     {

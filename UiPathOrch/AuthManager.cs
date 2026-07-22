@@ -1066,12 +1066,7 @@ internal class OrchestratorAuthManager
         sb.AppendLine($"  ProxyEnabled  : {psd.Proxy?.Enabled.GetValueOrDefault() ?? false}");
         sb.AppendLine();
 
-        var block = sb.ToString();
-        _ = System.Threading.Tasks.Task.Run(async () =>
-        {
-            try { await _drive.OrchAPISession.WriteLogBlockAsync(block, System.Threading.CancellationToken.None); }
-            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Auth settings log write failed: {ex.Message}"); }
-        });
+        _drive.OrchAPISession.WriteLogBlock(sb.ToString());
     }
 
     /// <summary>
@@ -1086,12 +1081,8 @@ internal class OrchestratorAuthManager
         var logging = _drive._psDrive.Logging;
         if (!(logging?.Enabled.GetValueOrDefault() ?? false)) return;
 
-        var block = $"{DateTime.Now:HH:mm:ss.fff} === Authorize URL handed to the browser ===\n{authUrl}\n\n";
-        _ = System.Threading.Tasks.Task.Run(async () =>
-        {
-            try { await _drive.OrchAPISession.WriteLogBlockAsync(block, System.Threading.CancellationToken.None); }
-            catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Authorize URL log write failed: {ex.Message}"); }
-        });
+        _drive.OrchAPISession.WriteLogBlock(
+            $"{DateTime.Now:HH:mm:ss.fff} === Authorize URL handed to the browser ===\n{authUrl}\n\n");
     }
 
     /// <summary>
@@ -1190,15 +1181,9 @@ internal class OrchestratorAuthManager
                     request.RequestUri = originalUri;
                 }
 
-                if (!string.IsNullOrEmpty(combinedLogBlock))
-                {
-                    var blockToWrite = combinedLogBlock;
-                    _ = System.Threading.Tasks.Task.Run(async () =>
-                    {
-                        try { await session.WriteLogBlockAsync(blockToWrite, System.Threading.CancellationToken.None); }
-                        catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"Async auth log write failed: {ex.Message}"); }
-                    });
-                }
+                // Inline, like the API log path -- see OrchAPISession.WriteLogBlock for why the
+                // Task.Run offload was removed.
+                session.WriteLogBlock(combinedLogBlock);
             }
         }
     }

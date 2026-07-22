@@ -302,11 +302,9 @@ public partial class OrchAPISession : IDisposable
         {
             if (logEnabled)
             {
-                // Build the log block synchronously while `ret` is still owned by us;
-                // the response body has already been buffered above via LoadIntoBufferAsync,
-                // so this does not block on additional network I/O. Only the disk write is
-                // pushed to the background, which avoids racing with the caller's `using`
-                // disposal of the HttpResponseMessage.
+                // Build the log block while `ret` is still owned by us; the response body has
+                // already been buffered above via LoadIntoBufferAsync, so this does not block on
+                // additional network I/O.
                 string? combinedLogBlock;
                 try
                 {
@@ -325,21 +323,11 @@ public partial class OrchAPISession : IDisposable
                     combinedLogBlock = null;
                 }
 
-                if (!string.IsNullOrEmpty(combinedLogBlock))
-                {
-                    var blockToWrite = combinedLogBlock;
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            await WriteLogBlockAsync(blockToWrite, CancellationToken.None);
-                        }
-                        catch (Exception ex)
-                        {
-                            System.Diagnostics.Debug.WriteLine($"Async log write failed: {ex.Message}");
-                        }
-                    });
-                }
+                // Written inline, not handed to Task.Run: the write is ~0.025 ms through the
+                // held handle, and offloading it made the log's ORDER depend on thread-pool
+                // scheduling -- two calls issued back-to-back on this very thread could land in
+                // either order. See OrchAPISession.WriteLogBlock.
+                WriteLogBlock(combinedLogBlock);
             }
         }
     }
