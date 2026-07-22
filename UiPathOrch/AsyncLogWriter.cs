@@ -19,6 +19,10 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
     private readonly LogMetrics _metrics;
     private volatile bool _disposed;
 
+    // Whether the one-time "did this writer create the log file?" question has been answered.
+    // Only ever read/written inside FlushBufferAsync's _fileSemaphore, so no interlocking.
+    private bool _permissionsSettled;
+
     // Configurable parameters
     private readonly int _batchSize;
     private readonly int _flushIntervalMs;
@@ -212,12 +216,21 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
                 totalBytes += Encoding.UTF8.GetByteCount(entry.Content);
             }
 
-            // AppendAllTextAsync creates the file on first flush with umask-derived permissions,
-            // so tighten it to owner-only right after — HTTP bodies (including credentials a
-            // cmdlet submitted) go in here. Only when WE created it: an operator who widened an
-            // existing log deliberately keeps their mode. Safe to test-then-act because the whole
-            // block runs under _fileSemaphore, and this writer owns the path.
-            bool createdByThisFlush = !File.Exists(_logFilePath);
+            // AppendAllTextAsync creates the file with umask-derived permissions, so tighten it to
+            // owner-only right after — HTTP bodies (including credentials a cmdlet submitted) go
+            // in here. Only when WE created it: an operator who widened an existing log
+            // deliberately keeps their mode.
+            //
+            // The stat can only matter on the flush that creates the file, so it is settled once
+            // and never repeated for the writer's lifetime rather than paid on every flush. Safe
+            // to test-then-act: the whole block runs under _fileSemaphore and this writer owns the
+            // path, so _permissionsSettled needs no interlocking.
+            bool createdByThisFlush = false;
+            if (!_permissionsSettled)
+            {
+                createdByThisFlush = !File.Exists(_logFilePath);
+                _permissionsSettled = true;
+            }
 
             await File.AppendAllTextAsync(_logFilePath, stringBuilder.ToString(), cancellationToken);
 
