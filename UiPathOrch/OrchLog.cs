@@ -324,25 +324,25 @@ public partial class OrchAPISession : IDisposable
     }
 
 
-    // New async log system. volatile is required for the double-checked locking below to be correct
-    // on weak memory models (e.g. ARM64): without it the lock-free reads could observe a non-null
-    // reference to a not-yet-fully-constructed AsyncLogWriter.
-    private volatile AsyncLogWriter? _asyncLogWriter;
-    private readonly object _asyncLogWriterLock = new();
+    // volatile is required for the double-checked locking below to be correct on weak memory
+    // models (e.g. ARM64): without it the lock-free reads could observe a non-null reference to a
+    // not-yet-fully-constructed LogFileWriter.
+    private volatile LogFileWriter? _logWriter;
+    private readonly object _logWriterLock = new();
 
-    private AsyncLogWriter GetAsyncLogWriter()
+    private LogFileWriter GetLogWriter()
     {
-        if (_asyncLogWriter == null)
+        if (_logWriter == null)
         {
             // Dedicated lock, not lock(this): external callers can lock the OrchLog instance, and
             // sharing that monitor risks a deadlock. The double-check keeps the already-initialized
             // path lock-free.
-            lock (_asyncLogWriterLock)
+            lock (_logWriterLock)
             {
-                _asyncLogWriter ??= new AsyncLogWriter(GetLogFilePath());
+                _logWriter ??= new LogFileWriter(GetLogFilePath());
             }
         }
-        return _asyncLogWriter;
+        return _logWriter;
     }
 
     /// <summary>
@@ -368,7 +368,7 @@ public partial class OrchAPISession : IDisposable
 
         try
         {
-            GetAsyncLogWriter().WriteAsync(logBlock).GetAwaiter().GetResult();
+            GetLogWriter().Write(logBlock);
         }
         catch (Exception ex)
         {
@@ -382,14 +382,14 @@ public partial class OrchAPISession : IDisposable
     // Get log statistics
     public LogStatistics GetLogStatistics()
     {
-        return _asyncLogWriter?.GetStatistics() ?? default;
+        return _logWriter?.GetStatistics() ?? default;
     }
 
-    partial void DisposeAsyncLogWriter()
+    partial void DisposeLogWriter()
     {
         try
         {
-            _asyncLogWriter?.Dispose();
+            _logWriter?.Dispose();
         }
         catch (Exception ex)
         {

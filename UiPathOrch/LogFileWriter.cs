@@ -44,7 +44,7 @@ namespace UiPath.OrchAPI;
 /// one open) while leaving the file free whenever the user is actually in a position to grab it.
 /// Measured cost of a reopen in the default log directory: ~11.7 ms, once per idle period.
 /// </summary>
-public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
+public sealed class LogFileWriter : IDisposable
 {
     private readonly string _logFilePath;
     private readonly object _lock = new();
@@ -90,7 +90,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
     /// Byte-size counterpart to <paramref name="maxRetainedEntries"/>. The binding limit in
     /// practice: a single Verbose entry carries a whole response body.
     /// </param>
-    public AsyncLogWriter(
+    public LogFileWriter(
         string logFilePath,
         int maxRetainedEntries = DefaultMaxRetainedEntries,
         int idleCloseMs = DefaultIdleCloseMs,
@@ -146,28 +146,23 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
     private void StopIdlePollingLocked() => _idleTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
     /// <summary>
-    /// Appends a log entry. Completes synchronously; the ValueTask return is vestigial and kept
-    /// only so the existing tests and any external caller compile unchanged.
+    /// Appends a log entry, flushed before the call returns.
     /// </summary>
-    public ValueTask WriteAsync(string logContent, CancellationToken cancellationToken = default)
+    public void Write(string logContent)
     {
         if (_disposed || string.IsNullOrEmpty(logContent))
-            return ValueTask.CompletedTask;
-
-        cancellationToken.ThrowIfCancellationRequested();
+            return;
 
         lock (_lock)
         {
             // Re-check inside the lock: Dispose may have run while we waited, and writing through
             // a StreamWriter it already disposed would throw.
-            if (_disposed) return ValueTask.CompletedTask;
+            if (_disposed) return;
 
             _pending.Add(new PendingEntry(logContent, Encoding.UTF8.GetByteCount(logContent)));
             _pendingBytes += _pending[^1].Bytes;
             DrainPendingLocked();
         }
-
-        return ValueTask.CompletedTask;
     }
 
     /// <summary>
@@ -312,16 +307,6 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
             _idleTimer.Dispose();
             _disposed = true;
         }
-    }
-
-    /// <summary>
-    /// Asynchronous shutdown. Nothing is queued in the background any more, so this is just
-    /// <see cref="Dispose"/>; the API is kept so call sites and tests need no change.
-    /// </summary>
-    public ValueTask DisposeAsync()
-    {
-        Dispose();
-        return ValueTask.CompletedTask;
     }
 }
 

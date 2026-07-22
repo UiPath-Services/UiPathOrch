@@ -82,7 +82,7 @@ public class RateLimiter : IDisposable
 public partial class OrchAPISession : IDisposable
 {
     // Partial method for async log writer disposal
-    partial void DisposeAsyncLogWriter();
+    partial void DisposeLogWriter();
 
     private readonly HttpClient _httpClient;
     private HttpClient HttpClient
@@ -718,7 +718,7 @@ public partial class OrchAPISession : IDisposable
                 limiter?.Dispose();
 
                 // Dispose the async log writer
-                DisposeAsyncLogWriter();
+                DisposeLogWriter();
             }
         }
     }
