@@ -952,6 +952,14 @@ internal class OrchestratorAuthManager
         "access_token", "refresh_token", "id_token",
         "client_secret", "code", "code_verifier", "assertion",
         "password",
+        // The on-prem user/password flow (POST /api/Account/Authenticate) returns the bearer
+        // token inside ABP's AjaxResponse envelope, where the key is `result` -- outside the
+        // OAuth2/OIDC vocabulary the rest of this set is drawn from, so it used to be logged
+        // verbatim at Trace/Verbose (the one auth flow whose token reached the log file, and
+        // a direct contradiction of OrchLog's "logs are safe to share" contract). Only the
+        // two auth endpoints' traffic reaches MaskAuthSecrets, and on Authenticate `result`
+        // is never anything but the token -- so masking it costs no diagnostic detail.
+        "result",
     };
 
     private const string _redactedValue = "***REDACTED***";
