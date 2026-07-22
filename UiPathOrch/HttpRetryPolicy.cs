@@ -52,18 +52,42 @@ internal static class HttpRetryPolicy
         || status == HttpStatusCode.ServiceUnavailable    // 503
         || status == HttpStatusCode.GatewayTimeout;       // 504
 
+    // Half-width of the jitter band applied to the exponential backoff: the computed delay is
+    // scaled by a factor drawn from [1 - JitterRatio, 1 + JitterRatio].
+    //
+    // Without jitter every caller that took the same 429 waits the identical 500ms / 1s / 2s and
+    // they all retry in lockstep -- re-creating the burst that tripped the throttle, burning the
+    // whole retry budget on synchronized collisions. That is the expected shape here rather than
+    // an edge case: cmdlets fan out over folders and drives (Parallel.ForEach in the link/move
+    // bases and the argument completers, OrchThreadPool in the Get-* paths) behind a 15 req/s
+    // limiter that refills on a one-second boundary, so concurrent requests are already clustered
+    // when they hit the limit. Spreading the retries lets them drain in sequence instead.
+    internal const double JitterRatio = 0.25;
+
     // Backoff before the next transient retry. Honors a server Retry-After when present,
-    // otherwise exponential (BaseDelay * 2^attempt). Both are clamped to [0, MaxDelay] so
-    // a hostile or huge Retry-After can't hang the cmdlet.
-    internal static TimeSpan BackoffDelay(int transientAttempt, TimeSpan? retryAfter)
+    // otherwise exponential (BaseDelay * 2^attempt * jitterFactor). Both are clamped to
+    // [0, MaxDelay] so a hostile or huge Retry-After can't hang the cmdlet.
+    //
+    // jitterFactor is passed in rather than drawn here so this stays a pure function of its
+    // arguments (like the rest of this class) and its exact-value tests keep asserting exact
+    // values; live callers pass NextJitterFactor(). It deliberately does NOT apply to a server
+    // Retry-After -- that is an instruction, not an estimate, so it is honored as sent.
+    internal static TimeSpan BackoffDelay(int transientAttempt, TimeSpan? retryAfter, double jitterFactor = 1.0)
     {
         if (retryAfter is { } ra)
         {
             return Clamp(ra, TimeSpan.Zero, MaxDelay);
         }
-        double ms = BaseDelay.TotalMilliseconds * Math.Pow(2, Math.Max(0, transientAttempt));
+        double ms = BaseDelay.TotalMilliseconds * Math.Pow(2, Math.Max(0, transientAttempt)) * jitterFactor;
         return Clamp(TimeSpan.FromMilliseconds(ms), TimeSpan.Zero, MaxDelay);
     }
+
+    // The jitter factor a live caller feeds to BackoffDelay. Random.Shared is thread-safe and
+    // lock-free on .NET 6+, and avoids the classic trap of per-thread `new Random()` instances
+    // seeded from the same clock tick -- which would hand every parallel retry the SAME factor
+    // and defeat the entire point.
+    internal static double NextJitterFactor() =>
+        1.0 + ((Random.Shared.NextDouble() * 2.0) - 1.0) * JitterRatio;
 
     // Resolve an HTTP Retry-After header (delta-seconds OR an HTTP-date) to a wait,
     // clamped to be non-negative. Returns null when the header is absent/unparseable.

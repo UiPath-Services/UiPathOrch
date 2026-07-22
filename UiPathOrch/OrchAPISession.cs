@@ -176,7 +176,10 @@ public partial class OrchAPISession : IDisposable
             if (action == HttpRetryPolicy.Action.Backoff)
             {
                 TimeSpan? retryAfter = HttpRetryPolicy.ResolveRetryAfter(response.Headers.RetryAfter, DateTimeOffset.Now);
-                TimeSpan delay = HttpRetryPolicy.BackoffDelay(transientAttempt, retryAfter);
+                // Jitter the exponential backoff so parallel callers that took the same 429 don't
+                // retry in lockstep (see HttpRetryPolicy.JitterRatio). Ignored when the server
+                // sent a Retry-After.
+                TimeSpan delay = HttpRetryPolicy.BackoffDelay(transientAttempt, retryAfter, HttpRetryPolicy.NextJitterFactor());
                 response.Dispose();
                 transientAttempt++;
                 if (delay > TimeSpan.Zero && ct.WaitHandle.WaitOne(delay))

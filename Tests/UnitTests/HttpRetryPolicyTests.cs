@@ -74,6 +74,54 @@ public class HttpRetryPolicyTests
         Assert.Equal(TimeSpan.Zero, HttpRetryPolicy.BackoffDelay(0, TimeSpan.FromSeconds(-3)));
     }
 
+    // ---------------- jitter ----------------
+    // Parallel callers that take the same 429 must not retry in lockstep. The factor is passed
+    // INTO BackoffDelay rather than drawn inside it, so the exact-value assertions above stay
+    // exact (and never flake) while the live path still spreads its retries.
+
+    [Fact]
+    public void Jitter_factor_scales_the_exponential_delay_linearly()
+    {
+        // 500 * 2^1 * 0.5
+        Assert.Equal(TimeSpan.FromMilliseconds(500), HttpRetryPolicy.BackoffDelay(1, null, 0.5));
+        // 500 * 2^0 * 1.25
+        Assert.Equal(TimeSpan.FromMilliseconds(625), HttpRetryPolicy.BackoffDelay(0, null, 1.25));
+        // The default is "no jitter", which is what keeps the exact-value tests above valid.
+        Assert.Equal(HttpRetryPolicy.BackoffDelay(2, null), HttpRetryPolicy.BackoffDelay(2, null, 1.0));
+    }
+
+    [Fact]
+    public void Jitter_cannot_push_the_delay_past_MaxDelay()
+    {
+        Assert.Equal(HttpRetryPolicy.MaxDelay, HttpRetryPolicy.BackoffDelay(20, null, 1 + HttpRetryPolicy.JitterRatio));
+    }
+
+    // A server-sent Retry-After is an instruction, not an estimate: jitter must not move it.
+    [Fact]
+    public void Jitter_does_not_disturb_a_server_RetryAfter()
+    {
+        Assert.Equal(TimeSpan.FromSeconds(7),
+            HttpRetryPolicy.BackoffDelay(0, TimeSpan.FromSeconds(7), 1 + HttpRetryPolicy.JitterRatio));
+        Assert.Equal(TimeSpan.FromSeconds(7),
+            HttpRetryPolicy.BackoffDelay(0, TimeSpan.FromSeconds(7), 1 - HttpRetryPolicy.JitterRatio));
+    }
+
+    [Fact]
+    public void NextJitterFactor_stays_inside_the_band_and_actually_varies()
+    {
+        var seen = new HashSet<double>();
+        for (int i = 0; i < 1000; i++)
+        {
+            double f = HttpRetryPolicy.NextJitterFactor();
+            Assert.InRange(f, 1 - HttpRetryPolicy.JitterRatio, 1 + HttpRetryPolicy.JitterRatio);
+            seen.Add(f);
+        }
+
+        // Guards against a regression to a constant (which would silently restore lockstep
+        // retries while every range assertion above still passed).
+        Assert.True(seen.Count > 900, $"expected widely varying factors, got {seen.Count} distinct values in 1000 draws");
+    }
+
     [Fact]
     public void ResolveRetryAfter_handles_delta_date_and_absent()
     {
