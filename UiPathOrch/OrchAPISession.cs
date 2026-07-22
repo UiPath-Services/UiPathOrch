@@ -2490,12 +2490,38 @@ public partial class OrchAPISession : IDisposable
     // Synchronous version
     public void ReadBucketItem(BlobFileAccess? access, string destinationPath, CancellationToken cancellationToken = default) => ReadBucketItemAsync(access, destinationPath, cancellationToken).GetAwaiter().GetResult();
 
+    // A bucket upload targets a pre-signed write URI whose HTTP verb is chosen by the bucket's
+    // STORAGE PROVIDER, not by us -- Azure Blob and S3 hand back a pre-signed PUT, which is what
+    // both write paths below implement. A provider that returns anything else (e.g. an S3
+    // POST-policy form upload) is out of scope for them.
+    //
+    // Shared so WriteBucketItem and WriteBucketItemFromStream report this identically, and so
+    // the message names the verb actually received: the bare NotImplementedException this
+    // replaces surfaced only "The method or operation is not implemented.", which told the user
+    // neither what was unsupported nor that it depends on their bucket's storage configuration
+    // -- and gave a bug report nothing to reproduce from. NotSupportedException rather than
+    // NotImplementedException: the operation is outside this input's supported range, not an
+    // unfinished stub.
+    //
+    // Ordinal + case-insensitive, so no culture-sensitive ToUpper (the two call sites had
+    // drifted to ToUpper / ToUpperInvariant respectively) and no intermediate string. A null
+    // Verb takes the same path as an unsupported one instead of NRE-ing on the null-forgiving
+    // dereference this replaces.
+    internal static void EnsurePutWriteUri(BlobFileAccess access)
+    {
+        if (!string.Equals(access.Verb, "PUT", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new NotSupportedException(
+                "Bucket upload requires a PUT write URI; this bucket's storage provider returned "
+                + $"'{access.Verb ?? "(none)"}'. Only pre-signed PUT uploads (Azure Blob / S3) are supported.");
+        }
+    }
+
     public void WriteBucketItem(BlobFileAccess access, string filePath, CancellationToken cancelToken)
     {
         cancelToken.ThrowIfCancellationRequested();
 
-        // For now, only PUT is supported. POST support may need to be added later if needed.
-        if (access.Verb!.ToUpper() != "PUT") throw new NotImplementedException();
+        EnsurePutWriteUri(access);
 
         if (!Uri.TryCreate(access.Uri, UriKind.Absolute, out var _))
             throw new ArgumentException($"Invalid Uri: {access.Uri}", nameof(access));
@@ -2603,8 +2629,7 @@ public partial class OrchAPISession : IDisposable
     {
         cancelToken.ThrowIfCancellationRequested();
 
-        // For now, only PUT is supported (mirrors WriteBucketItem).
-        if (access.Verb!.ToUpperInvariant() != "PUT") throw new NotImplementedException();
+        EnsurePutWriteUri(access);
 
         if (!Uri.TryCreate(access.Uri, UriKind.Absolute, out var _))
             throw new ArgumentException($"Invalid Uri: {access.Uri}", nameof(access));
