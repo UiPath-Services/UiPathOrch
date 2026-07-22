@@ -1,117 +1,284 @@
-using System.Threading.Channels;
 using System.Text;
 using System.Diagnostics;
 
 namespace UiPath.OrchAPI;
 
 /// <summary>
-/// Provides asynchronous log writing.
-/// Uses a Channel-based queuing system to eliminate blocking on log writes.
+/// Writes the drive's HTTP diagnostic log.
+///
+/// Holds the log file OPEN for the writer's lifetime and appends under a lock. That choice is
+/// the whole design, and it is worth recording why, because this class used to be a
+/// Channel + background processor + batching + shutdown-budget pipeline instead:
+///
+/// Measured on the maintainer's machine, 2 KB blocks, 1000 iterations:
+///   open + append + close (what File.AppendAllText does) .... 3.3 ms  (13.7 ms under %TEMP%)
+///   write + flush through a handle already open ............. 0.30 ms
+///
+/// The cost is the OPEN, not the write -- an on-access scanner charges per file open, which is
+/// also why %TEMP% is several times worse than a developer folder. Holding the handle removes
+/// 90-98% of the cost outright. At this module's own cap of 15 requests/second per drive that
+/// is ~4.5 ms per second of logging work, i.e. under 1% of a single HTTP round trip, so there
+/// is nothing left for a background pipeline to save: the batching it existed to provide was
+/// amortising an open/close that no longer happens.
+///
+/// What the pipeline cost instead: a silent-data-loss bug (a failed flush cleared the buffer
+/// and reported DroppedEntries = 0), ~430 lines of concurrency code, and load-sensitive tests.
+/// Every caller already wraps its write in `_ = Task.Run(...)`, so the "don't block the HTTP
+/// thread" benefit that normally justifies an async logger was being provided twice.
+///
+/// Durability is also strictly better: an entry is on its way to the OS before WriteAsync
+/// returns, instead of sitting in a channel and an in-memory buffer for up to a flush interval.
+///
+/// The file is opened with FileShare.ReadWrite so `Get-Content -Wait` can still tail it and a
+/// second PowerShell session using the same drive name can still append.
+///
+/// It is also CLOSED once writing goes idle, because holding a write handle is not free to the
+/// rest of the system even though it is free to us: Windows refuses any open that declares
+/// FileShare.Read (which denies our write access), and that is the default for File.ReadAllText,
+/// StreamReader(path), Get-FileHash, Remove-Item -- and Compress-Archive, i.e. the "zip your logs
+/// and send them" step of a support request. PowerShell's own provider shares ReadWrite, so
+/// Get-Content / Show-TextFiles / Select-String / Copy-Item are unaffected either way.
+/// Closing on idle keeps the batching benefit exactly where it matters (a burst writes through
+/// one open) while leaving the file free whenever the user is actually in a position to grab it.
+/// Measured cost of a reopen in the default log directory: ~11.7 ms, once per idle period.
 /// </summary>
 public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
 {
-    private readonly Channel<LogEntry> _logQueue;
-    private readonly ChannelWriter<LogEntry> _writer;
-    private readonly Task _processingTask;
     private readonly string _logFilePath;
-    private readonly SemaphoreSlim _fileSemaphore;
-    private readonly CancellationTokenSource _shutdownCts;
-    private readonly LogMetrics _metrics;
-    private volatile bool _disposed;
+    private readonly object _lock = new();
+    private readonly LogMetrics _metrics = new();
 
-    // Whether the one-time "did this writer create the log file?" question has been answered.
-    // Only ever read/written inside FlushBufferAsync's _fileSemaphore, so no interlocking.
+    // Opened on first write and kept open. Null when not yet opened, or dropped after a failure
+    // so the next write reopens.
+    private StreamWriter? _writer;
+    private bool _disposed;
+
+    // Whether the one-time "did this writer create the file?" question has been answered; the
+    // answer drives the owner-only permission tightening on Unix. Guarded by _lock.
     private bool _permissionsSettled;
 
-    // Configurable parameters
-    private readonly int _batchSize;
-    private readonly int _flushIntervalMs;
+    // Entries a failed write could not persist. Retried on the next write and once more on
+    // dispose -- without this a lone entry written during a transient failure would be lost
+    // exactly the way the old pipeline lost it, and closing the handle on idle would not be safe
+    // to do at all (something else can take the file exclusively while we are closed). A plain
+    // List under the same lock; no channel.
+    private readonly record struct PendingEntry(string Content, int Bytes);
+    private readonly List<PendingEntry> _pending = [];
+    private long _pendingBytes;
 
-    // Upper bound on entries held back for retry after a failed flush. Tied to maxQueueSize --
-    // the module's existing declaration of how many log entries may sit in memory -- so the two
-    // buffers shrink together when a caller tunes it down. A path that stays unwritable
-    // therefore holds at most ~2x maxQueueSize entries (channel + retry buffer) before the
-    // oldest start being dropped and counted.
-    private readonly int _maxRetainedEntries;
+    // Two independent bounds, because a log entry is a whole HTTP block: at Verbose the response
+    // body goes in uncapped, so one entry can be megabytes and a count-only limit would not
+    // actually bound anything. Past either cap the OLDEST go first -- the surviving tail is the
+    // most recent context, which is what a reader of a truncated diagnostic log needs -- and the
+    // newest entry is always retained regardless of size.
+    private readonly int _maxPending;
+    private readonly long _maxPendingBytes;
 
-    // What a flush attempt achieved. Retryable vs Permanent decides whether the buffer is worth
-    // holding on to: a locked or momentarily unavailable file recovers on the next interval,
-    // whereas a denied or malformed path never will and retrying it forever would spin.
-    private enum FlushOutcome
-    {
-        Persisted,
-        Retryable,
-        Permanent,
-    }
-
-    public AsyncLogWriter(string logFilePath, int maxQueueSize = 10000, int batchSize = 100, int flushIntervalMs = 1000)
+    /// <param name="maxRetainedEntries">
+    /// Upper bound on entries held back after a failed write. The previous <c>batchSize</c> and
+    /// <c>flushIntervalMs</c> parameters are gone: entries are written and flushed as they
+    /// arrive, so there is no batch to size and no deferred flush to schedule.
+    /// </param>
+    /// <param name="idleCloseMs">
+    /// Release the file handle after this long without a write, so the log stops blocking
+    /// FileShare.Read openers (Compress-Archive, Get-FileHash, Remove-Item). The next write
+    /// reopens it. Lower values free the file sooner at the cost of more reopens.
+    /// </param>
+    /// <param name="maxRetainedBytes">
+    /// Byte-size counterpart to <paramref name="maxRetainedEntries"/>. The binding limit in
+    /// practice: a single Verbose entry carries a whole response body.
+    /// </param>
+    public AsyncLogWriter(
+        string logFilePath,
+        int maxRetainedEntries = DefaultMaxRetainedEntries,
+        int idleCloseMs = DefaultIdleCloseMs,
+        long maxRetainedBytes = DefaultMaxRetainedBytes)
     {
         _logFilePath = logFilePath ?? throw new ArgumentNullException(nameof(logFilePath));
-        _batchSize = batchSize;
-        _flushIntervalMs = flushIntervalMs;
-        _maxRetainedEntries = maxQueueSize;
-        _fileSemaphore = new SemaphoreSlim(1, 1);
-        _shutdownCts = new CancellationTokenSource();
-        _metrics = new LogMetrics();
+        _maxPending = maxRetainedEntries > 0 ? maxRetainedEntries : DefaultMaxRetainedEntries;
+        _maxPendingBytes = maxRetainedBytes > 0 ? maxRetainedBytes : DefaultMaxRetainedBytes;
+        _idleCloseMs = idleCloseMs > 0 ? idleCloseMs : DefaultIdleCloseMs;
+        // Poll often enough that the file is released promptly after the idle window, but never
+        // more than once a second. Created disarmed: a drive that never logs pays nothing.
+        _idlePollMs = Math.Max(1, Math.Min(1000, _idleCloseMs / 2));
+        _idleTimer = new Timer(OnIdleTick, null, Timeout.Infinite, Timeout.Infinite);
+    }
 
-        // Channel configuration
-        var options = new BoundedChannelOptions(maxQueueSize)
+    private const int DefaultMaxRetainedEntries = 10000;
+
+    // 8 MB of retained log text. Generous for any realistic outage, small enough that a drive
+    // stuck against an unwritable path cannot meaningfully grow the host process.
+    private const long DefaultMaxRetainedBytes = 8L * 1024 * 1024;
+
+    // Five seconds: long enough that an interactive sequence of cmdlets keeps writing through one
+    // open, short enough that a user who stops to collect the logs is not left waiting.
+    private const int DefaultIdleCloseMs = 5000;
+
+    private readonly int _idleCloseMs;
+    private readonly int _idlePollMs;
+    private readonly Timer _idleTimer;
+    private long _lastWriteTick;   // Environment.TickCount64 of the last successful write
+
+    /// <summary>
+    /// Close the handle once writing has gone quiet. Runs on a timer thread, so it takes the same
+    /// lock every write takes -- a close can never land between a write's open and its flush.
+    /// </summary>
+    private void OnIdleTick(object? state)
+    {
+        lock (_lock)
         {
-            FullMode = BoundedChannelFullMode.Wait,
-            SingleReader = true,
-            SingleWriter = false,
-            AllowSynchronousContinuations = false
-        };
+            if (_disposed || _writer is null) return;
 
-        _logQueue = Channel.CreateBounded<LogEntry>(options);
-        _writer = _logQueue.Writer;
+            if (Environment.TickCount64 - _lastWriteTick < _idleCloseMs) return;
 
-        // Start the background processing task
-        _processingTask = ProcessLogEntriesAsync(_shutdownCts.Token);
+            // Anything a previous write could not persist gets one more attempt before the handle
+            // goes away; whatever remains stays queued for the next write, which reopens.
+            DrainPendingLocked();
+            if (_writer is not null) CloseWriterLocked();
+            StopIdlePollingLocked();
+        }
+    }
+
+    private void StartIdlePollingLocked() => _idleTimer.Change(_idlePollMs, _idlePollMs);
+
+    private void StopIdlePollingLocked() => _idleTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+    /// <summary>
+    /// Appends a log entry. Completes synchronously -- the ValueTask is kept so the call sites,
+    /// which await this from inside their own Task.Run, need no change.
+    /// </summary>
+    public ValueTask WriteAsync(string logContent, CancellationToken cancellationToken = default)
+    {
+        if (_disposed || string.IsNullOrEmpty(logContent))
+            return ValueTask.CompletedTask;
+
+        cancellationToken.ThrowIfCancellationRequested();
+
+        lock (_lock)
+        {
+            // Re-check inside the lock: Dispose may have run while we waited, and writing through
+            // a StreamWriter it already disposed would throw.
+            if (_disposed) return ValueTask.CompletedTask;
+
+            _pending.Add(new PendingEntry(logContent, Encoding.UTF8.GetByteCount(logContent)));
+            _pendingBytes += _pending[^1].Bytes;
+            DrainPendingLocked();
+        }
+
+        return ValueTask.CompletedTask;
     }
 
     /// <summary>
-    /// Asynchronously enqueues a log entry.
+    /// Attempt to persist everything in <see cref="_pending"/>. Anything still unwritten stays
+    /// queued for the next call. Must be called under <see cref="_lock"/>.
     /// </summary>
-    public async ValueTask WriteAsync(string logContent, CancellationToken cancellationToken = default)
+    private void DrainPendingLocked()
     {
-        if (_disposed || string.IsNullOrEmpty(logContent))
-            return;
-
-        var entry = new LogEntry(DateTime.UtcNow, logContent);
+        if (_pending.Count == 0) return;
 
         try
         {
-            await _writer.WriteAsync(entry, cancellationToken);
+            StreamWriter writer = _writer ??= OpenWriterLocked();
+
+            long bytes = _pendingBytes;
+            foreach (var entry in _pending)
+            {
+                writer.Write(entry.Content);
+            }
+            // Flush to the OS on every write: a diagnostic log is read after something went
+            // wrong, so buffered-but-unwritten bytes are the one outcome that defeats it. This
+            // is the 0.30 ms measured above -- the expensive part was the open, not this.
+            writer.Flush();
+
+            _metrics.RecordBatchWritten(_pending.Count, bytes);
+            _pending.Clear();
+            _pendingBytes = 0;
+
+            // Arm the idle poll now that a handle is open and has just been used.
+            _lastWriteTick = Environment.TickCount64;
+            StartIdlePollingLocked();
         }
-        catch (InvalidOperationException)
+        catch (Exception ex)
         {
-            // Channel has been closed
-            _metrics.RecordDroppedEntry();
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // Cancellation request is a normal case
+            // Drop the handle so the next attempt reopens -- the failure may be the handle
+            // itself (a share that went away, a file replaced underneath us).
+            CloseWriterLocked();
+
+            Debug.WriteLine($"Log write failed ({ex.GetType().Name}): {ex.Message}");
+
+            // Keep the entries for the next write. Anything evicted past a cap is COUNTED -- the
+            // previous implementation discarded silently and still reported a clean run.
+            TrimPendingLocked();
         }
     }
 
     /// <summary>
-    /// Synchronous version.
-    /// Attempts to enqueue in a non-blocking manner.
+    /// Enforce both retention caps by dropping the oldest entries, counting whatever goes. The
+    /// newest entry is always kept, even on its own over the byte cap: a single oversized block
+    /// is still the most useful thing to have. Under <see cref="_lock"/>.
     /// </summary>
-    //public void Write(string logContent)
-    //{
-    //    if (_disposed || string.IsNullOrEmpty(logContent))
-    //        return;
+    private void TrimPendingLocked()
+    {
+        int drop = 0;
+        long bytes = _pendingBytes;
+        while (_pending.Count - drop > 1 &&
+               (_pending.Count - drop > _maxPending || bytes > _maxPendingBytes))
+        {
+            bytes -= _pending[drop].Bytes;
+            drop++;
+        }
 
-    //    var entry = new LogEntry(DateTime.UtcNow, logContent);
+        if (drop == 0) return;
 
-    //    if (!_writer.TryWrite(entry))
-    //    {
-    //        // Queue is full or has been closed
-    //        _metrics.RecordDroppedEntry();
-    //    }
-    //}
+        // RemoveRange once rather than RemoveAt in a loop -- the latter is quadratic.
+        _pending.RemoveRange(0, drop);
+        _pendingBytes = bytes;
+        _metrics.RecordDroppedEntries(drop);
+    }
+
+    /// <summary>Open the log file for append, creating the directory if needed. Under <see cref="_lock"/>.</summary>
+    private StreamWriter OpenWriterLocked()
+    {
+        var directory = Path.GetDirectoryName(_logFilePath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            OwnerOnlyPath.CreateRestrictedDirectory(directory);
+        }
+
+        // Settle the permission question before the open creates the file.
+        bool creating = false;
+        if (!_permissionsSettled)
+        {
+            creating = !File.Exists(_logFilePath);
+            _permissionsSettled = true;
+        }
+
+        // FileShare.ReadWrite: `Get-Content -Wait` must still tail this, and a second session on
+        // the same drive name must still be able to append.
+        var stream = new FileStream(
+            _logFilePath, FileMode.Append, FileAccess.Write, FileShare.ReadWrite,
+            bufferSize: 4096, useAsync: false);
+
+        if (creating)
+        {
+            // HTTP bodies land here, including credentials a cmdlet submitted.
+            OwnerOnlyPath.RestrictFile(_logFilePath);
+        }
+
+        // UTF-8 without a BOM, matching what File.AppendAllText produced before, so an existing
+        // log keeps its encoding and mid-file BOMs never appear.
+        return new StreamWriter(stream, new UTF8Encoding(encoderShouldEmitUTF8Identifier: false))
+        {
+            AutoFlush = false,
+        };
+    }
+
+    private void CloseWriterLocked()
+    {
+        try { _writer?.Dispose(); }
+        catch (Exception ex) { Debug.WriteLine($"Log handle close failed: {ex.Message}"); }
+        _writer = null;
+    }
 
     /// <summary>
     /// Gets log statistics.
@@ -119,317 +286,42 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
     public LogStatistics GetStatistics() => _metrics.GetStatistics();
 
     /// <summary>
-    /// Processes log entries in the background.
-    /// </summary>
-    private async Task ProcessLogEntriesAsync(CancellationToken cancellationToken)
-    {
-        var buffer = new List<LogEntry>(_batchSize);
-        var lastFlushTime = DateTime.UtcNow;
-
-        try
-        {
-            var reader = _logQueue.Reader;
-            var completed = false;
-
-            while (!completed)
-            {
-                if (buffer.Count == 0)
-                {
-                    // Nothing buffered: wait indefinitely for the next entry
-                    // (no idle wake-ups when there is nothing to flush).
-                    completed = !await reader.WaitToReadAsync(cancellationToken);
-                }
-                else
-                {
-                    // Entries are buffered: never wait past the flush deadline, so a
-                    // time-based flush still fires when no further entries arrive.
-                    // Previously the interval was only re-evaluated when the *next*
-                    // entry was dequeued, so a lone buffered entry -- e.g. the pre-auth
-                    // diagnostics block written right before a hanging PKCE listener --
-                    // was never persisted (folder created, log file empty).
-                    // Cap the wait at the time remaining until the next flush is due
-                    // (not a full interval each time) so flush latency stays within
-                    // _flushIntervalMs even under sustained sub-batch traffic.
-                    var elapsedMs = (DateTime.UtcNow - lastFlushTime).TotalMilliseconds;
-                    var remainingMs = (int)Math.Clamp(_flushIntervalMs - elapsedMs, 0d, (double)_flushIntervalMs);
-                    using var waitCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
-                    waitCts.CancelAfter(remainingMs);
-                    try
-                    {
-                        completed = !await reader.WaitToReadAsync(waitCts.Token);
-                    }
-                    catch (OperationCanceledException) when (waitCts.IsCancellationRequested
-                                                            && !cancellationToken.IsCancellationRequested)
-                    {
-                        // Flush deadline reached with no new entry -- fall through
-                        // to the time-based flush below.
-                    }
-                }
-
-                // Once a flush fails, stop attempting further ones until the next interval:
-                // without this the batch flush below would re-attempt on EVERY subsequent
-                // TryRead (the buffer stays at or above _batchSize when it is not cleared),
-                // hammering a filesystem that just told us it was busy.
-                bool flushBlocked = false;
-
-                // Drain everything currently available without blocking.
-                while (reader.TryRead(out var entry))
-                {
-                    buffer.Add(entry);
-                    if (!flushBlocked && buffer.Count >= _batchSize)
-                    {
-                        flushBlocked = !ApplyFlushOutcome(
-                            buffer, await FlushBufferAsync(buffer, cancellationToken));
-                        lastFlushTime = DateTime.UtcNow;
-                    }
-                }
-
-                // Time-based flush: persist whatever remains once the interval has
-                // elapsed, even when no new entries are arriving. A retained buffer is
-                // retried here on the next interval, which doubles as the retry backoff.
-                if (!flushBlocked && buffer.Count > 0 &&
-                    (DateTime.UtcNow - lastFlushTime).TotalMilliseconds >= _flushIntervalMs)
-                {
-                    ApplyFlushOutcome(buffer, await FlushBufferAsync(buffer, cancellationToken));
-                    // Advance regardless of the outcome so a failing flush waits a full interval
-                    // before the next attempt instead of retrying in a tight loop.
-                    lastFlushTime = DateTime.UtcNow;
-                }
-            }
-
-            // Process remaining entries during shutdown. This is the last attempt -- the loop has
-            // exited, so anything not persisted here is genuinely lost and must be counted.
-            if (buffer.Count > 0)
-            {
-                if (!ApplyFlushOutcome(buffer, await FlushBufferAsync(buffer, cancellationToken)))
-                {
-                    _metrics.RecordDroppedEntries(buffer.Count);
-                    buffer.Clear();
-                }
-            }
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            // Normal shutdown. Whatever is still buffered missed the shutdown budget and will
-            // never be written -- count it rather than letting the statistics claim success.
-            _metrics.RecordDroppedEntries(buffer.Count);
-            buffer.Clear();
-        }
-        catch (Exception ex)
-        {
-            // Record error logs through an alternative means
-            Debug.WriteLine($"AsyncLogWriter processing failed: {ex}");
-        }
-    }
-
-    /// <summary>
-    /// Writes the buffer contents to a file and reports whether they were persisted.
-    ///
-    /// The outcome matters: this used to return void after swallowing every exception, and the
-    /// callers cleared the buffer unconditionally -- so a single transient IOException (a virus
-    /// scanner holding the new file open is enough) silently destroyed the entries, left the log
-    /// file absent, and did not even count them as dropped. The caller now decides what to do
-    /// from the outcome; NOTHING is discarded without being recorded.
-    /// </summary>
-    private async Task<FlushOutcome> FlushBufferAsync(List<LogEntry> buffer, CancellationToken cancellationToken)
-    {
-        if (buffer.Count == 0)
-            return FlushOutcome.Persisted;
-
-        await _fileSemaphore.WaitAsync(cancellationToken);
-        try
-        {
-            // Create the directory if it does not exist
-            var directory = Path.GetDirectoryName(_logFilePath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-            {
-                OwnerOnlyPath.CreateRestrictedDirectory(directory);
-            }
-
-            // StringBuilder for batch writing
-            var stringBuilder = new StringBuilder();
-            int totalBytes = 0;
-
-            foreach (var entry in buffer)
-            {
-                stringBuilder.Append(entry.Content);
-                totalBytes += Encoding.UTF8.GetByteCount(entry.Content);
-            }
-
-            // AppendAllTextAsync creates the file with umask-derived permissions, so tighten it to
-            // owner-only right after — HTTP bodies (including credentials a cmdlet submitted) go
-            // in here. Only when WE created it: an operator who widened an existing log
-            // deliberately keeps their mode.
-            //
-            // The stat can only matter on the flush that creates the file, so it is settled once
-            // and never repeated for the writer's lifetime rather than paid on every flush. Safe
-            // to test-then-act: the whole block runs under _fileSemaphore and this writer owns the
-            // path, so _permissionsSettled needs no interlocking.
-            bool createdByThisFlush = false;
-            if (!_permissionsSettled)
-            {
-                createdByThisFlush = !File.Exists(_logFilePath);
-                _permissionsSettled = true;
-            }
-
-            await File.AppendAllTextAsync(_logFilePath, stringBuilder.ToString(), cancellationToken);
-
-            if (createdByThisFlush)
-            {
-                OwnerOnlyPath.RestrictFile(_logFilePath);
-            }
-
-            // Update metrics
-            _metrics.RecordBatchWritten(buffer.Count, totalBytes);
-            return FlushOutcome.Persisted;
-        }
-        // Shutdown budget exhausted mid-write. Propagate so the processing loop's own handler
-        // treats it as the normal shutdown it is; that handler accounts for what is left over.
-        catch (OperationCanceledException)
-        {
-            throw;
-        }
-        // PathTooLong / DirectoryNotFound derive from IOException, so they must precede it.
-        catch (PathTooLongException ex)
-        {
-            Debug.WriteLine($"Log path too long: {ex.Message}");
-            return FlushOutcome.Permanent;
-        }
-        // Retryable: the directory is (re)created on every flush above, and a network path can
-        // come back. The retention cap stops this from retrying without bound.
-        catch (DirectoryNotFoundException ex)
-        {
-            Debug.WriteLine($"Log directory not found: {ex.Message}");
-            return FlushOutcome.Retryable;
-        }
-        catch (UnauthorizedAccessException ex)
-        {
-            Debug.WriteLine($"Log file access denied: {ex.Message}");
-            return FlushOutcome.Permanent;
-        }
-        catch (NotSupportedException ex)
-        {
-            Debug.WriteLine($"Log path is not supported: {ex.Message}");
-            return FlushOutcome.Permanent;
-        }
-        // The transient case this whole outcome mechanism exists for: the file is locked by a
-        // scanner or another handle, the volume hiccuped, the share dropped. Next interval.
-        catch (IOException ex)
-        {
-            Debug.WriteLine($"Log file I/O error: {ex.Message}");
-            return FlushOutcome.Retryable;
-        }
-        catch (Exception ex)
-        {
-            // Unknown failure: do not spin on it, but do not hide it either -- the caller counts
-            // the discarded entries.
-            Debug.WriteLine($"Unexpected log write error: {ex}");
-            return FlushOutcome.Permanent;
-        }
-        finally
-        {
-            _fileSemaphore.Release();
-        }
-    }
-
-    /// <summary>
-    /// Apply a flush outcome to the buffer. Returns true when the entries were persisted.
-    /// Every entry that leaves the buffer unwritten is counted in <see cref="LogMetrics"/>.
-    /// </summary>
-    private bool ApplyFlushOutcome(List<LogEntry> buffer, FlushOutcome outcome)
-    {
-        switch (outcome)
-        {
-            case FlushOutcome.Persisted:
-                buffer.Clear();
-                return true;
-
-            case FlushOutcome.Permanent:
-                // The path itself is unusable; retrying would spin forever. Account for the loss
-                // rather than hiding it, which is exactly what the old code did.
-                _metrics.RecordDroppedEntries(buffer.Count);
-                buffer.Clear();
-                return false;
-
-            default: // Retryable -- keep the entries for the next interval.
-                if (buffer.Count > _maxRetainedEntries)
-                {
-                    // A path that never recovers must not grow this list until the process dies.
-                    // Evict the OLDEST so the surviving tail is the most recent context, which is
-                    // what a reader of a truncated diagnostic log actually needs.
-                    int excess = buffer.Count - _maxRetainedEntries;
-                    buffer.RemoveRange(0, excess);
-                    _metrics.RecordDroppedEntries(excess);
-                }
-                return false;
-        }
-    }
-
-    // Shutdown budget. The background processor must finish flushing within this window;
-    // the synchronous wait is given a small extra buffer so that DisposeAsync's finally
-    // (which releases the semaphore and CTS) actually runs before Dispose() returns.
-    private static readonly TimeSpan ShutdownProcessingTimeout = TimeSpan.FromSeconds(10);
-    private static readonly TimeSpan SyncDisposeWait = TimeSpan.FromSeconds(12);
-
-    /// <summary>
-    /// Asynchronous shutdown.
-    /// </summary>
-    public async ValueTask DisposeAsync()
-    {
-        if (_disposed)
-            return;
-
-        _disposed = true;
-
-        try
-        {
-            // Stop accepting new entries
-            _writer.Complete();
-
-            // Wait for background processing to complete (with timeout)
-            _shutdownCts.CancelAfter(ShutdownProcessingTimeout);
-            await _processingTask;
-        }
-        catch (OperationCanceledException)
-        {
-            var stats = _metrics.GetStatistics();
-            Debug.WriteLine($"AsyncLogWriter shutdown timeout - flushed {stats.TotalEntriesWritten} entries, dropped {stats.DroppedEntries}");
-        }
-        finally
-        {
-            _fileSemaphore?.Dispose();
-            _shutdownCts?.Dispose();
-        }
-    }
-
-    /// <summary>
-    /// Synchronous Dispose (IDisposable interface).
+    /// Flush anything still queued, then release the file handle. Idempotent.
     /// </summary>
     public void Dispose()
     {
-        if (_disposed)
-            return;
+        lock (_lock)
+        {
+            if (_disposed) return;
 
-        try
-        {
-            var disposeTask = DisposeAsync();
-            if (!disposeTask.IsCompleted)
+            // Last chance for entries a previous write could not persist.
+            DrainPendingLocked();
+            if (_pending.Count > 0)
             {
-                // Wait long enough for DisposeAsync's CancelAfter window plus finally to run.
-                disposeTask.AsTask().Wait(SyncDisposeWait);
+                // No further writes will come, so these are genuinely lost -- count them rather
+                // than let the statistics claim a clean run.
+                _metrics.RecordDroppedEntries(_pending.Count);
+                _pending.Clear();
+                _pendingBytes = 0;
             }
-        }
-        catch (Exception ex)
-        {
-            Debug.WriteLine($"AsyncLogWriter dispose error: {ex}");
+
+            CloseWriterLocked();
+            StopIdlePollingLocked();
+            _idleTimer.Dispose();
+            _disposed = true;
         }
     }
-}
 
-/// <summary>
-/// Internal struct representing a log entry.
-/// </summary>
-internal readonly record struct LogEntry(DateTime Timestamp, string Content);
+    /// <summary>
+    /// Asynchronous shutdown. Nothing is queued in the background any more, so this is just
+    /// <see cref="Dispose"/>; the API is kept so call sites and tests need no change.
+    /// </summary>
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
+        return ValueTask.CompletedTask;
+    }
+}
 
 /// <summary>
 /// Class that manages log metrics.
@@ -441,7 +333,7 @@ public sealed class LogMetrics
     private long _droppedEntries;
     private long _batchesWritten;
 
-    public void RecordBatchWritten(int entryCount, int byteCount)
+    public void RecordBatchWritten(int entryCount, long byteCount)
     {
         Interlocked.Add(ref _totalEntriesWritten, entryCount);
         Interlocked.Add(ref _totalBytesWritten, byteCount);
@@ -451,10 +343,9 @@ public sealed class LogMetrics
     public void RecordDroppedEntry() => RecordDroppedEntries(1);
 
     /// <summary>
-    /// Record entries that were accepted but could not be persisted -- a flush that failed
-    /// permanently, retained entries evicted past the retry cap, or a buffer still unwritten
-    /// when the shutdown budget ran out. Without this the statistics reported everything as
-    /// written while entries were being discarded.
+    /// Record entries that were accepted but could not be persisted -- entries evicted past the
+    /// retry cap, or still queued when the writer was disposed. Without this the statistics
+    /// reported everything as written while entries were being discarded.
     /// </summary>
     public void RecordDroppedEntries(int count)
     {
@@ -474,7 +365,9 @@ public sealed class LogMetrics
 }
 
 /// <summary>
-/// Struct representing log statistics.
+/// Snapshot of a writer's counters. <c>BatchesWritten</c> now counts write operations rather
+/// than deferred batches -- with a write per entry it tracks <c>TotalEntriesWritten</c> except
+/// where a retained entry went out alongside a later one.
 /// </summary>
 public readonly record struct LogStatistics(
     long TotalEntriesWritten,
@@ -486,4 +379,3 @@ public readonly record struct LogStatistics(
     public double AverageEntriesPerBatch => BatchesWritten > 0 ? (double)TotalEntriesWritten / BatchesWritten : 0;
     public double AverageBytesPerEntry => TotalEntriesWritten > 0 ? (double)TotalBytesWritten / TotalEntriesWritten : 0;
 }
-
