@@ -61,7 +61,9 @@ public partial class OrchProvider
         if (string.IsNullOrEmpty(_logFolderPath))
         {
             _logFolderPath = System.IO.Path.Combine(GetBasePath(), "Logs");
-            Directory.CreateDirectory(_logFolderPath);
+            // Owner-only: HTTP bodies land here, and those include credentials submitted by
+            // cmdlets (the drive warns about exactly this when logging is enabled).
+            OwnerOnlyPath.CreateRestrictedDirectory(_logFolderPath);
             //string logFileName = $"{DateTime.Today:yyyy-MM-dd}.log";
             //return System.IO.Path.Combine(driveDirectory, logFileName);
         }
@@ -80,14 +82,11 @@ public partial class OrchProvider
 
             SaveResourceToFile($"UiPathOrch.Resources.{lang}.UiPathOrchConfig.json", configFilePath);
 
-            // The config file holds plaintext credentials (AppSecret / PAT / Password).
-            // On Unix, restrict it to owner read/write (0600) — the default FileMode.CreateNew
-            // would otherwise inherit the umask. On Windows the per-user profile path already
-            // carries a restrictive ACL, and File.SetUnixFileMode is unsupported there.
-            if (!OperatingSystem.IsWindows())
-            {
-                System.IO.File.SetUnixFileMode(configFilePath, UnixFileMode.UserRead | UnixFileMode.UserWrite);
-            }
+            // The config file holds plaintext credentials (AppSecret / PAT / Password), so on
+            // Unix restrict it to owner read/write — the default FileMode.CreateNew would
+            // otherwise inherit the umask. Shared with the log paths, which carry the same class
+            // of secret in their request/response bodies; see OwnerOnlyPath.
+            OwnerOnlyPath.RestrictFile(configFilePath);
         }
     }
 

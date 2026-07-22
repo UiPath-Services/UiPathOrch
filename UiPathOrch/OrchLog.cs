@@ -304,7 +304,7 @@ public partial class OrchAPISession : IDisposable
         {
             string baseLogFolderPath = UiPath.PowerShell.Core.OrchProvider.GetLogFolderBasePath();
             _logFolderPath = System.IO.Path.Combine(baseLogFolderPath, SanitizeDriveName());
-            Directory.CreateDirectory(_logFolderPath);
+            OwnerOnlyPath.CreateRestrictedDirectory(_logFolderPath);
         }
         return _logFolderPath;
     }
@@ -315,7 +315,7 @@ public partial class OrchAPISession : IDisposable
         if (_logFilePath == null)
         {
             string logFolderPath = GetLogFolderPath();
-            Directory.CreateDirectory(logFolderPath);
+            OwnerOnlyPath.CreateRestrictedDirectory(logFolderPath);
 
             string fileName = $"{DateTime.Today:yyyy-MM-dd}_{SanitizeDriveName()}.log";
             _logFilePath = System.IO.Path.Combine(logFolderPath, fileName);

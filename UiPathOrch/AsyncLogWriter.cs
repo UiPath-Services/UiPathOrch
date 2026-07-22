@@ -199,7 +199,7 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
             var directory = Path.GetDirectoryName(_logFilePath);
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             {
-                Directory.CreateDirectory(directory);
+                OwnerOnlyPath.CreateRestrictedDirectory(directory);
             }
 
             // StringBuilder for batch writing
@@ -212,7 +212,19 @@ public sealed class AsyncLogWriter : IDisposable, IAsyncDisposable
                 totalBytes += Encoding.UTF8.GetByteCount(entry.Content);
             }
 
+            // AppendAllTextAsync creates the file on first flush with umask-derived permissions,
+            // so tighten it to owner-only right after — HTTP bodies (including credentials a
+            // cmdlet submitted) go in here. Only when WE created it: an operator who widened an
+            // existing log deliberately keeps their mode. Safe to test-then-act because the whole
+            // block runs under _fileSemaphore, and this writer owns the path.
+            bool createdByThisFlush = !File.Exists(_logFilePath);
+
             await File.AppendAllTextAsync(_logFilePath, stringBuilder.ToString(), cancellationToken);
+
+            if (createdByThisFlush)
+            {
+                OwnerOnlyPath.RestrictFile(_logFilePath);
+            }
 
             // Update metrics
             _metrics.RecordBatchWritten(buffer.Count, totalBytes);
