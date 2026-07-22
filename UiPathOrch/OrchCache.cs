@@ -108,33 +108,58 @@ public class ListCachePerTenant<T> : ITenantCacheClearable
     {
         _exception.ThrowCachedExceptionIfAny();
 
-        if (_cache is null)
+        // Snapshot into a local and use ONLY the local below -- never re-read the field. Every
+        // cache class in this file follows this shape; the rationale lives here.
+        //
+        // ClearCache() nulls _cache WITHOUT holding _lock, so a clear landing between the null
+        // check and a later read would hand a null back through this non-nullable return type
+        // (and, in the lazy-init classes below, NRE on the very next dereference). That cannot
+        // happen today -- and the invariant that makes it safe is worth stating, because
+        // nothing else in the codebase records it:
+        //
+        //   every ClearCache() call is made on the pipeline thread, from a write cmdlet's
+        //   ProcessRecord or the provider, and every parallel path in this module is a
+        //   READ-ONLY prefetch that joins before returning (Parallel.ForEach in the argument
+        //   completers and the link/move bases; OrchThreadPool.RunForEach in the Get-*
+        //   fan-outs). So no worker thread is ever inside a Get() while a clear runs.
+        //
+        // Snapshotting keeps that safe even if the invariant is later broken -- a fan-out that
+        // writes and invalidates would otherwise reintroduce the race silently -- and it costs
+        // nothing: one volatile read instead of three or four, and the JIT can hold a local in
+        // a register where it is obliged to re-load a volatile field on every access. Should a
+        // clear ever race a reader, the reader completes against the pre-clear dictionary and
+        // the next Get() rebuilds; clear-vs-read ordering was never defined to begin with.
+        // FolderCache.GetOrBuild already had this shape -- the caches here now match it.
+        var snapshot = _cache;
+        if (snapshot is not null) return snapshot;
+
+        try
         {
-            try
+            lock (_lock)
             {
-                lock (_lock)
+                snapshot = _cache;
+                if (snapshot is null)
                 {
-                    if (_cache is null)
+                    var temp = getter().ToList();
+                    if (initializer is not null)
                     {
-                        var temp = getter().ToList();
-                        if (initializer is not null)
+                        foreach (var entity in temp)
                         {
-                            foreach (var entity in temp)
-                            {
-                                initializer(entity);
-                            }
+                            initializer(entity);
                         }
-                        _cache = temp;
                     }
+                    _cache = temp;
+                    snapshot = temp;
                 }
             }
-            catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
-            {
-                _exception.CacheException(ex);
-                throw;
-            }
         }
-        return _cache;
+        catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
+        {
+            _exception.CacheException(ex);
+            throw;
+        }
+
+        return snapshot;
     }
 
     public void ClearCache()
@@ -622,22 +647,25 @@ public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearabl
 
         _exceptions.ThrowCachedExceptionIfAny(index);
 
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                _cache ??= [];
+                cache = _cache ??= [];
             }
         }
 
-        if (!_cache.TryGetValue(index, out var entity))
+        if (!cache.TryGetValue(index, out var entity))
         {
             // Double-check inside the lock so concurrent first-touch on the
             // same index doesn't issue duplicate API calls — symmetric with
             // SingleCachePerTenant / ListCachePerTenant.
             lock (_lock)
             {
-                if (!_cache.TryGetValue(index, out entity))
+                if (!cache.TryGetValue(index, out entity))
                 {
                     try
                     {
@@ -650,7 +678,7 @@ public class IndexedCachePerTenant<TIndexEntity, TEntity> : ITenantCacheClearabl
                         }
                         // Publish to the cache only after initialization, so concurrent readers
                         // never observe a partially-initialized entity.
-                        _cache[index] = entity;
+                        cache[index] = entity;
                     }
                     catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
@@ -716,23 +744,26 @@ public class KeyedListCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 
         _exceptions.ThrowCachedExceptionIfAny(key);
 
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                _cache ??= _keyComparer is null
+                cache = _cache ??= _keyComparer is null
                     ? new ConcurrentDictionary<TKey, List<TEntity>>()
                     : new ConcurrentDictionary<TKey, List<TEntity>>(_keyComparer);
             }
         }
 
-        if (!_cache.TryGetValue(key, out var list))
+        if (!cache.TryGetValue(key, out var list))
         {
             // Double-check inside the lock — see IndexedCachePerTenant.Get for
             // the symmetry rationale.
             lock (_lock)
             {
-                if (!_cache.TryGetValue(key, out list))
+                if (!cache.TryGetValue(key, out list))
                 {
                     try
                     {
@@ -746,7 +777,7 @@ public class KeyedListCachePerTenant<TKey, TEntity> : ITenantCacheClearable
                         }
                         // Publish to the cache only after init, so concurrent readers never
                         // observe a partially-initialized list.
-                        _cache[key] = list;
+                        cache[key] = list;
                     }
                     catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
@@ -838,23 +869,26 @@ public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 
         _exceptions.ThrowCachedExceptionIfAny(key);
 
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                _cache ??= _keyComparer is null
+                cache = _cache ??= _keyComparer is null
                     ? new ConcurrentDictionary<TKey, TEntity?>()
                     : new ConcurrentDictionary<TKey, TEntity?>(_keyComparer);
             }
         }
 
-        if (!_cache.TryGetValue(key, out var entity))
+        if (!cache.TryGetValue(key, out var entity))
         {
             // Double-check inside the lock — see IndexedCachePerTenant.Get for
             // the symmetry rationale.
             lock (_lock)
             {
-                if (!_cache.TryGetValue(key, out entity))
+                if (!cache.TryGetValue(key, out entity))
                 {
                     try
                     {
@@ -865,7 +899,7 @@ public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
                         }
                         // Publish only after init so concurrent readers never observe
                         // a partially-initialized entity.
-                        _cache[key] = entity;
+                        cache[key] = entity;
                     }
                     catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
@@ -1187,20 +1221,23 @@ public class KeyedSingleCachePerFolder<TKey, TEntity> : IFolderCacheClearable
         Int64 folderId = folder.Id.Value;
         _exceptions.ThrowCachedExceptionIfAny((folderId, key));
 
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                _cache ??= [];
+                cache = _cache ??= [];
             }
         }
 
-        if (!_cache.TryGetValue(folderId, out var inner))
+        if (!cache.TryGetValue(folderId, out var inner))
         {
             inner = _keyComparer is null
                 ? new ConcurrentDictionary<TKey, TEntity?>()
                 : new ConcurrentDictionary<TKey, TEntity?>(_keyComparer);
-            inner = _cache.GetOrAdd(folderId, inner);
+            inner = cache.GetOrAdd(folderId, inner);
         }
 
         if (!inner.TryGetValue(key, out var entity))
@@ -1301,20 +1338,23 @@ public class KeyedListCachePerFolder<TKey, TEntity> : IFolderCacheClearable
         Int64 folderId = folder.Id.Value;
         _exceptions.ThrowCachedExceptionIfAny((folderId, key));
 
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                _cache ??= [];
+                cache = _cache ??= [];
             }
         }
 
-        if (!_cache.TryGetValue(folderId, out var inner))
+        if (!cache.TryGetValue(folderId, out var inner))
         {
             inner = _keyComparer is null
                 ? new ConcurrentDictionary<TKey, List<TEntity>>()
                 : new ConcurrentDictionary<TKey, List<TEntity>>(_keyComparer);
-            inner = _cache.GetOrAdd(folderId, inner);
+            inner = cache.GetOrAdd(folderId, inner);
         }
 
         if (!inner.TryGetValue(key, out var list))
@@ -1412,14 +1452,17 @@ public class SingleCachePerFolder<T> : IFolderCacheClearable
 
         _exceptions.ThrowCachedExceptionIfAny(folder.Id.Value);
 
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                _cache ??= [];
+                cache = _cache ??= [];
             }
         }
-        if (!_cache.TryGetValue(folder.Id!.Value, out var cachePerFolder))
+        if (!cache.TryGetValue(folder.Id!.Value, out var cachePerFolder))
         {
             try
             {
@@ -1431,7 +1474,7 @@ public class SingleCachePerFolder<T> : IFolderCacheClearable
                     _initializer(cachePerFolder, folderPath);
                 }
                 // Publish after init.
-                _cache[folder.Id.Value] = cachePerFolder;
+                cache[folder.Id.Value] = cachePerFolder;
             }
             catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
@@ -1496,15 +1539,18 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
 
         _exceptions.ThrowCachedExceptionIfAny(folderId);
 
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                _cache ??= [];
+                cache = _cache ??= [];
             }
         }
 
-        if (!_cache.TryGetValue(folderId, out var cachePerFolder))
+        if (!cache.TryGetValue(folderId, out var cachePerFolder))
         {
             try
             {
@@ -1519,7 +1565,7 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
                     }
                 }
                 // Publish after init.
-                _cache[folderId] = cachePerFolder;
+                cache[folderId] = cachePerFolder;
             }
             catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
             {
@@ -1605,14 +1651,14 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
 
         _exceptions.ThrowCachedExceptionIfAny((folder.Id!.Value, index));
 
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                if (_cache is null)
-                {
-                    _cache = [];
-                }
+                cache = _cache ??= [];
             }
         }
 
@@ -1621,7 +1667,7 @@ public class IndexedListCachePerFolder<TIndexEntity, TEntity> : IFolderCacheClea
         // GetOrAdd is atomic — replaces the "TryGetValue → new → assign" sequence
         // whose race could leak inner dicts under concurrent first-touch on the
         // same folder.
-        var cachePerFolder = _cache.GetOrAdd(folderId,
+        var cachePerFolder = cache.GetOrAdd(folderId,
             _ => new ConcurrentDictionary<Int64, List<TEntity>>());
 
         if (!cachePerFolder.TryGetValue(index, out var entities))
@@ -1737,8 +1783,13 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     /// </summary>
     public ConcurrentDictionary<TKey, TEntity>? GetCache(Folder folder)
     {
-        if (_cache is null) return null;
-        _cache.TryGetValue(folder.Id ?? 0, out var folderCache);
+        // Snapshot, like the Fetch path above -- the sibling passive readers
+        // (KeyedSingleCachePerFolder.GetCache, RobotLogsCache.GetCache) fold the null check
+        // into a single `is not null &&` expression, which reads the field once by
+        // construction; this one needs an explicit local to do the same.
+        var cache = _cache;
+        if (cache is null) return null;
+        cache.TryGetValue(folder.Id ?? 0, out var folderCache);
         return folderCache;
     }
 
@@ -1759,18 +1810,21 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
 
         _exceptions.ThrowCachedExceptionIfAny(folderId);
 
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                _cache ??= new();
+                cache = _cache ??= new();
             }
         }
 
-        if (!_cache.TryGetValue(folderId, out var folderCache))
+        if (!cache.TryGetValue(folderId, out var folderCache))
         {
             folderCache = new();
-            _cache[folderId] = folderCache;
+            cache[folderId] = folderCache;
         }
 
         List<TEntity> fetched;
@@ -1834,18 +1888,21 @@ public class IncrementalCachePerFolder<TKey, TEntity> : IFolderCacheClearable
     {
         Int64 folderId = folder.Id ?? 0;
 
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                _cache ??= new();
+                cache = _cache ??= new();
             }
         }
 
-        if (!_cache.TryGetValue(folderId, out var folderCache))
+        if (!cache.TryGetValue(folderId, out var folderCache))
         {
             folderCache = new();
-            _cache[folderId] = folderCache;
+            cache[folderId] = folderCache;
         }
 
         var key = _getKeyFunc(entity);
@@ -1929,11 +1986,14 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     {
         _exception.ThrowCachedExceptionIfAny();
 
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                _cache ??= new();
+                cache = _cache ??= new();
             }
         }
 
@@ -1959,11 +2019,11 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
             // See IncrementalCachePerFolder.Fetch for the atomicity rationale.
             if (_mergeFunc is null)
             {
-                _cache[key] = entity;
+                cache[key] = entity;
             }
             else
             {
-                _cache.AddOrUpdate(
+                cache.AddOrUpdate(
                     key,
                     addValueFactory: _ => entity,
                     updateValueFactory: (_, cached) => { _mergeFunc(entity, cached); return entity; });
@@ -1979,11 +2039,14 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
     /// </summary>
     public void AddToCache(TEntity entity)
     {
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                _cache ??= new();
+                cache = _cache ??= new();
             }
         }
 
@@ -1993,11 +2056,11 @@ public class IncrementalCachePerTenant<TKey, TEntity> : ITenantCacheClearable
         // See IncrementalCachePerFolder.Fetch for the atomicity rationale.
         if (_mergeFunc is null)
         {
-            _cache[key] = entity;
+            cache[key] = entity;
         }
         else
         {
-            _cache.AddOrUpdate(
+            cache.AddOrUpdate(
                 key,
                 addValueFactory: _ => entity,
                 updateValueFactory: (_, cached) => { _mergeFunc(entity, cached); return entity; });
@@ -2051,14 +2114,17 @@ public class RobotLogsCache : IFolderCacheClearable
     public ReadOnlyCollection<Log> Fetch(Folder folder, string? query, ulong skip, ulong first,
                                           string? orderBy = null, bool orderAscending = false)
     {
-        if (_cache is null)
+        // Snapshot before use; never re-read the field -- see ListCachePerTenant.Get for the
+        // invariant this preserves (ClearCache() nulls _cache without holding _lock).
+        var cache = _cache;
+        if (cache is null)
         {
             lock (_lock)
             {
-                _cache ??= new();
+                cache = _cache ??= new();
             }
         }
-        var folderLogs = _cache.GetOrAdd(folder.Id ?? 0, _ => new HashSet<Log>());
+        var folderLogs = cache.GetOrAdd(folder.Id ?? 0, _ => new HashSet<Log>());
 
         var logs = _drive.OrchAPISession.GetRobotLogs(folder.Id ?? 0, query, skip, first, orderBy, orderAscending).ToList();
         string folderPath = folder.GetPSPath();
