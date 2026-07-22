@@ -4,6 +4,78 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+#### Diagnostic logging
+
+Four independent defects in the drive's HTTP log, all of which cost you exactly the information
+you turned logging on to get.
+
+- **The on-premises bearer token was written to the log in plaintext.** The secret-redaction set
+  was drawn from the OAuth2 / OIDC vocabulary (`access_token`, `refresh_token`, `client_secret`,
+  `code`, `password`, …), which covers the token endpoint completely. The on-premises
+  username/password flow (`POST /api/Account/Authenticate`) is not OAuth: it returns the access
+  token inside ABP's response envelope under the key `result`, which nothing in that vocabulary
+  matched — so on a drive with `Logging.Enabled` and `LoggingLevel` `Trace` or `Verbose`, a
+  successful sign-in wrote the full bearer token to the log file verbatim. This contradicted the
+  module's own guarantee that the `Authorization` header is masked and logs are therefore safe to
+  share. Only that one auth endpoint is affected — Automation Cloud, Automation Suite, PKCE,
+  confidential-app and PAT drives never had the token in the log. **If you have shared or
+  archived logs from an on-premises username/password drive at Trace/Verbose, treat those tokens
+  as exposed.**
+- **A transient I/O error silently destroyed log entries.** The writer swallowed every exception
+  from the file write and reported success to its caller, which then discarded the buffered
+  entries regardless — so one momentary failure (a virus scanner holding the freshly created log
+  file open is enough) lost those entries permanently, left the log file absent, and still
+  reported `DroppedEntries = 0`. Because the failure was silent in Release builds, there was no
+  trace of it anywhere. A failed write is now retried on the next write, and anything genuinely
+  abandoned — an unwritable path, or a retention cap reached during a long outage — is counted in
+  the statistics. Nothing leaves the writer unrecorded.
+- **Log blocks could be written out of order.** Each block was handed to the thread pool and
+  forgotten, so two API calls made one after the other on the same thread could be logged in
+  either order and the sequence numbers (`#0001`, `#0002`, …) came out shuffled. Blocks are now
+  written inline, in the order they were produced.
+- **A log directory or file created on Linux/macOS was world-readable.** The config file has
+  always been created `0600` because it holds credentials; the log paths never got the same
+  treatment, so they inherited the process umask (commonly `0755` / `0644`). They hold the same
+  class of secret — request and response bodies are recorded at Trace/Verbose and on every error,
+  which is where a cmdlet submitting a credential lands. New log directories are now created
+  `0700` and new log files `0600`.
+
+#### Other
+
+- **`Set-OrchBucketItem` reported an unsupported storage provider as "The method or operation is
+  not implemented."** The pre-signed upload verb is chosen by the bucket's storage provider, so
+  which branch you land on is a property of your tenant, not of anything you typed. The error now
+  names the verb that was actually returned and states which uploads are supported. A provider
+  that omitted the verb entirely produced a `NullReferenceException`; that now takes the same
+  diagnosable path.
+- **Throttled requests retried in lockstep.** The backoff after a `429` / `503` / `504` was a
+  fixed 500 ms → 1 s → 2 s sequence with no random component. A `429` means several requests
+  exceeded the limit at once, so they took it together and then all retried at the same instant,
+  re-creating the burst that tripped the throttle and spending the whole retry budget on
+  synchronized collisions — the shape produced by the `-Recurse` fan-outs. The delay is now spread
+  by ±25%. A server-supplied `Retry-After` is still honoured exactly as sent.
+
+### Changed
+
+- **The log file is held open while a drive is actively logging, and released after 5 seconds
+  without a write.** Writing through an already-open handle is ~460× cheaper than reopening the
+  file for every entry (measured in the default log directory, which sits under a synced
+  `Documents` folder), and it removes an entire background pipeline. While the handle is held,
+  Windows refuses any open that declares `FileShare.Read` — which is the default for
+  `Compress-Archive`, `Get-FileHash`, `Remove-Item` and `[IO.File]::ReadAllText`. PowerShell's own
+  provider shares read/write, so `Get-Content`, `Get-Content -Wait`, `Select-String` and
+  `Copy-Item` are unaffected. If you need to zip, hash or delete an active drive's log, pause for
+  a few seconds or unmount the drive first. Writes made while something else holds the file are
+  retained and written once it is free.
+- **Log files created by earlier versions keep their existing permissions on Linux/macOS.** Only
+  newly created paths get the owner-only mode; an operator who deliberately widened a log so a
+  collection agent could read it is not overridden. Remove the old files, or `chmod` them by hand,
+  if you want the tighter mode applied retroactively.
+
 ## [1.12.1] - 2026-07-17
 
 ### Fixed
