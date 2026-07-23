@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.12.1'
+ModuleVersion = '1.12.2'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,47 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.12.2
+
+Fixed four independent defects in the drive's HTTP diagnostic log.
+
+Fixed: the on-premises username/password sign-in (POST /api/Account/Authenticate) wrote the bearer
+token to the log in plaintext at Trace/Verbose. That flow returns the token under ABP's `result`
+key, outside the OAuth2/OIDC vocabulary the redaction set was built from, so it was never masked.
+Only that one auth endpoint was affected -- Automation Cloud, Automation Suite, PKCE,
+confidential-app and PAT drives never had the token in the log. If you have shared or archived logs
+from an on-premises username/password drive at Trace/Verbose, treat those tokens as exposed.
+
+Fixed: a transient I/O error silently destroyed log entries. The writer swallowed the exception,
+reported success, and the entries were discarded -- while the statistics still reported
+DroppedEntries = 0. A failed write is now retried on the next write, and anything genuinely
+abandoned (an unwritable path, or a retention cap reached during a long outage) is counted.
+
+Fixed: log blocks could be written out of order, because each was handed to the thread pool and
+forgotten, shuffling the sequence numbers. Blocks are now written inline, in the order produced.
+
+Fixed: log directories and files created on Linux/macOS were world-readable -- they inherited the
+process umask (commonly 0755/0644) while the config file had always been 0600, though the logs
+hold the same class of secret (request and response bodies at Trace/Verbose and on every error).
+New log directories are now created 0700 and new log files 0600; paths created by earlier versions
+keep their existing permissions.
+
+Fixed: Set-OrchBucketItem reported an unsupported storage provider as "The method or operation is
+not implemented." The error now names the verb the provider actually returned and states which
+uploads are supported; a provider that omitted the verb no longer throws NullReferenceException.
+
+Fixed: throttled requests (429/503/504) retried in lockstep on a fixed 500ms/1s/2s backoff,
+re-creating the burst that tripped the throttle -- the shape produced by the -Recurse fan-outs. The
+delay is now spread by +/-25%. A server-supplied Retry-After is still honoured exactly as sent.
+
+Changed: the log file is held open while a drive is actively logging and released after 5 seconds
+without a write (writing through an open handle is far cheaper than reopening per entry). While the
+handle is held, Windows refuses any open declaring FileShare.Read -- Compress-Archive, Get-FileHash,
+Remove-Item, [IO.File]::ReadAllText. PowerShell's own provider shares read/write, so Get-Content,
+Get-Content -Wait, Select-String and Copy-Item are unaffected. To zip, hash or delete an active
+drive's log, pause a few seconds or unmount the drive first; writes made while the file is busy are
+retained and written once it is free.
+
 1.12.1
 
 Update-Orch* cmdlets now skip the API call when nothing actually changed. The field-level change
