@@ -361,6 +361,12 @@ public class LogFileWriterTests : IDisposable
     [Fact]
     public void Reader_DemandingExclusiveShare_IsRefusedWhileTheWriterHoldsIt()
     {
+        // Windows-only: FileShare is mandatory here, so an opener that denies our write share is
+        // refused while we hold the handle. On Unix .NET emulates FileShare with advisory flock,
+        // where our shared lock and the reader's are compatible and nothing is refused -- the very
+        // behaviour that made holding the handle a non-issue there. See LogFileWriter's remarks.
+        if (!OperatingSystem.IsWindows()) return;
+
         using var w = new LogFileWriter(_tempPath);
         w.Write("first\n");
 
@@ -372,6 +378,11 @@ public class LogFileWriterTests : IDisposable
     [Fact]
     public async Task IdleWriter_ReleasesTheFileAndReopensOnTheNextWrite()
     {
+        // Windows-only: the "held while active" assertion below depends on FileShare being
+        // mandatory. On Unix the shared advisory lock never refuses the reader, so there is no
+        // held-vs-released transition to observe. See LogFileWriter's remarks.
+        if (!OperatingSystem.IsWindows()) return;
+
         using var w = new LogFileWriter(_tempPath, idleCloseMs: 150);
         w.Write("before-idle\n");
         Assert.Throws<IOException>(() => File.ReadAllText(_tempPath));   // held while active
@@ -392,6 +403,13 @@ public class LogFileWriterTests : IDisposable
     [Fact]
     public async Task ExclusiveHolderDuringTheIdleWindow_DoesNotCostEntries()
     {
+        // Windows-only: the outage this models is another process taking the file with
+        // FileShare.None. On Unix that maps to an exclusive advisory flock whose interaction with
+        // our reopening write handle is not the mandatory-lock outage the test asserts. The
+        // retention path it exercises is platform-agnostic and covered by the failure-path tests
+        // above; here we pin the Windows behaviour specifically. See LogFileWriter's remarks.
+        if (!OperatingSystem.IsWindows()) return;
+
         using var w = new LogFileWriter(_tempPath, idleCloseMs: 150);
         w.Write("before-outage\n");
 
