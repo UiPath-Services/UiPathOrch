@@ -76,6 +76,7 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
     public string? MaintenanceTimeZone { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true, DontShow = true)]
+    [ArgumentCompleter(typeof(TimeZoneIdCompleter))]
     [SupportsWildcards]
     public string? MaintenanceTimeZoneId { get; set; }
 

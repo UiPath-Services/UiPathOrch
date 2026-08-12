@@ -879,7 +879,7 @@ HelpMessage: ''
 
 ### -TimeZoneId
 
-Specifies the time zone for the trigger schedule using the time zone identifier. This parameter is primarily used for CSV import scenarios.
+Specifies the time zone for the trigger schedule using the time zone identifier. This parameter is primarily used for CSV import scenarios. Tab completion suggests valid Windows time zone IDs, matching on either the ID or the display name.
 
 ```yaml
 Type: System.String

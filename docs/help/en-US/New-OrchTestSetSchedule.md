@@ -233,7 +233,7 @@ HelpMessage: ''
 
 ### -TimeZoneId
 
-IANA / Windows time zone ID used to interpret -CronExpression.
+IANA / Windows time zone ID used to interpret -CronExpression. Tab completion suggests valid Windows time zone IDs, matching on either the ID or the display name.
 
 ```yaml
 Type: System.String

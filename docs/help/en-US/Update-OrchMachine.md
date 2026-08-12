@@ -271,7 +271,7 @@ HelpMessage: ''
 
 ### -MaintenanceTimeZoneId
 
-Specifies the time zone ID for the maintenance window directly (e.g., "Eastern Standard Time"). This is an alternative to -MaintenanceTimeZone for pipeline/CSV scenarios.
+Specifies the time zone ID for the maintenance window directly (e.g., "Eastern Standard Time"). This is an alternative to -MaintenanceTimeZone for pipeline/CSV scenarios. Tab completion suggests valid Windows time zone IDs, matching on either the ID or the display name.
 
 ```yaml
 Type: System.String

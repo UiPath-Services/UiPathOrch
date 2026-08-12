@@ -4,6 +4,19 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **`-TimeZoneId` now tab-completes on the trigger and machine cmdlets.** `New-OrchTrigger`,
+  `Update-OrchTrigger` and `Update-OrchMachine` bind a Windows time-zone id (`Tokyo Standard
+  Time`); their `-TimeZone` siblings have always completed display names, but the id parameters
+  offered nothing. They now use the same completer as the test-set-schedule cmdlets, which matches
+  on either the id or the display name, and — on Linux and macOS, where the OS zone database is
+  IANA — falls back to an embedded Windows table so every suggestion is one Orchestrator will
+  accept. These parameters are `DontShow`: that hides them from parameter-name completion but not
+  from argument completion, so the suggestions appear as soon as the name is typed.
+
 ## [1.12.2] - 2026-07-23
 
 ### Fixed

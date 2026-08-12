@@ -327,7 +327,7 @@ HelpMessage: ''
 
 ### -TimeZoneId
 
-IANA / Windows time zone Id (e.g. "Tokyo Standard Time") used to interpret -CronExpression. Tab-completes to valid Ids.
+IANA / Windows time zone ID (e.g. "Tokyo Standard Time") used to interpret -CronExpression. Tab completion suggests valid Windows time zone IDs, matching on either the ID or the display name.
 
 ```yaml
 Type: System.String

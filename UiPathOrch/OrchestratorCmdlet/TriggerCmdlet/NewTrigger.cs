@@ -120,6 +120,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
     public string? TimeZone { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true, DontShow = true)]
+    [ArgumentCompleter(typeof(TimeZoneIdCompleter))]
     [SupportsWildcards]
     public string? TimeZoneId { get; set; }
 
