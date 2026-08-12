@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.12.2'
+ModuleVersion = '1.12.3'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,38 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.12.3
+
+Added: -TimeZoneId now tab-completes on New-OrchTrigger, Update-OrchTrigger and Update-OrchMachine.
+These bind a Windows time-zone id (Tokyo Standard Time); only their -TimeZone siblings had a
+completer, so the id parameters offered nothing. They now use the same completer as the
+test-set-schedule cmdlets, matching on either the id or the display name, and falling back to an
+embedded Windows table on Linux/macOS -- where the OS zone database is IANA -- so every suggestion
+is one Orchestrator will accept. The parameters are DontShow, which hides them from parameter-name
+completion but not from argument completion, so the suggestions appear once the name is typed.
+
+Fixed: Resolve-OrchAuthError sent you to the wrong place for unauthorized_client. Requesting an
+OAuth scope the external application has not been granted surfaces as unauthorized_client, not
+invalid_scope, on both Automation Cloud and on-premises 22.10. That code had no branch of its own,
+so it fell through to generic advice declaring the cause server-side and recommending the URL be
+escalated to UiPath Identity engineering. Both halves are wrong for the commonest cause: the
+problem is the drive's Scope and it is yours to fix. unauthorized_client now leads with that, and
+names the property that makes the failure so hard to place -- Identity rejects the entire
+authorization request rather than the offending scope, and never says which entry it was, so one
+stray scope blocks sign-in with no clue as to why. invalid_scope gained the same explanation, and
+the generic branch now suggests checking Scope / AppId / RedirectUrl before proposing escalation.
+
+Fixed: an OAuth error on the PKCE callback was indistinguishable from no callback at all. RFC 6749
+lets Identity answer a failed authorize request by redirecting to the redirect_uri with ?error=
+instead of ?code=. The loopback listener read only `code`, so such a callback was ignored and the
+wait ran on to the full three-minute PKCE timeout, which then reported "no browser callback
+received" -- the opposite of what happened. The error is now read off the callback and surfaced
+with its OAuth error code and the server's description, and the browser gets a page saying so
+instead of hanging. Callbacks carrying neither code nor error (favicon probes, stray requests) are
+still ignored. Note that neither Automation Cloud nor on-premises 22.10 was observed to redirect
+errors back this way -- both park the browser on an Identity error page -- so this is conformance
+for deployments that do redirect, not a cure for the timeout those two produce.
+
 1.12.2
 
 Fixed four independent defects in the drive's HTTP diagnostic log.
@@ -564,47 +596,6 @@ Fixed: New-PmUser -UserName with a bare non-address name now creates a userName-
 (the name was being copied into the email field, which the server rejected). Remove-PmUser
 -UserName now matches by userName or email, so an email-less user can be removed. Update-OrchWebhook
 no longer overwrites -Secret with a blank value when an empty string is passed.
-
-1.12.0
-
-Local users whose userName differs from -- or exists without -- an email now migrate and manage
-correctly across editions.
-
-Added: Copy-PmUser preserves a local user's source userName on Automation Suite / on-premises
-(which identify a user by userName) instead of overwriting it with the email, and keeps the
-historical email-as-userName on Automation Cloud, where sign-in is by email. A -UserMappingCsv
-entry overrides either default and is now keyed by the source userName like the sibling copy
-cmdlets (older email-keyed sheets still work; userName is tried first, then email). Copy-PmUser
-also migrates email-less users to Automation Suite / on-premises instead of skipping them; an
-email-less user bound for Automation Cloud is still skipped -- it could not sign in there -- now
-with a warning that says how to give it an email.
-
-Added: New-PmUser -UserName can differ from -Email, so a local user keeps a userName distinct
-from its email on Automation Suite / on-premises. Either parameter alone still yields
-userName == email, backward compatible with the former single-parameter behaviour.
-
-Added: Update-PmUser -NewEmail changes or adds a user's email; an email can be added to a
-userName-only account (verified on Automation Suite / on-premises v13-v17). The selection must
-resolve to exactly one user.
-
-Added: Get-PmUser -ExportCsv now writes a UserName column so a userName that differs from the
-email survives an export/import round trip, and -UserName (alias of -Email) matches on either
-the userName or the email across Get-PmUser, Update-PmUser and Copy-PmUser.
-
-Added: Invoke-OrchApi refuses a -Uri that still carries a placeholder it cannot fill. The drive
-supplies {partitionGlobalId} and {projectId} from its context; any other -- {token}, {id},
-{objectType}, ... -- is a value only you have, and sent literally would only come back a 404, so
-the request is refused with the list to fill. The -Uri completion tooltip flags the same manual
-ids.
-
-Fixed: Copy-PmUser -UserMappingCsv reported a generic "Error reading the CSV file" that hid the
-real cause (most often the wrong header -- the CSV needs a SourceUserName column). The underlying
-reason is now surfaced.
-
-Changed: the migration guide (docs/50-MigrationGuide.md) was restructured around a choose-your-path
-selector and an identity-scenario matrix (source x destination directory integration), and
-documents the local-user handling above, including the AD-integrated-source to AD-less-destination
-(directory to local) recreation procedure.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
