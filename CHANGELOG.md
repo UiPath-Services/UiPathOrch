@@ -17,6 +17,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   accept. These parameters are `DontShow`: that hides them from parameter-name completion but not
   from argument completion, so the suggestions appear as soon as the name is typed.
 
+### Fixed
+
+- **An OAuth error on the PKCE callback was indistinguishable from no callback at all.** RFC 6749
+  lets Identity answer a failed authorize request by redirecting to the client's redirect_uri with
+  `?error=…` instead of `?code=…`. The loopback listener only ever looked for `code`, so such a
+  callback was ignored and the wait simply continued: the cmdlet blocked for the full three-minute
+  PKCE timeout and then reported "no browser callback received", which is the opposite of what had
+  happened. The error is now read off the callback and surfaced with its OAuth error code and the
+  server's description — with scope-specific guidance for `invalid_scope` — and the browser gets a
+  page saying so instead of hanging on a blank response. Callbacks carrying neither `code` nor
+  `error` (favicon probes, stray requests) are still ignored, as before. Worth knowing: neither
+  Automation Cloud nor on-premises 22.10 was observed to redirect errors back this way — both park
+  the browser on an Identity error page instead — so this path is spec conformance for deployments
+  that do redirect, not a cure for the timeout those two produce.
+
 ## [1.12.2] - 2026-07-23
 
 ### Fixed

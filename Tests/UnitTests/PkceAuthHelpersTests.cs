@@ -97,4 +97,71 @@ public class PkceAuthHelpersTests
     [InlineData("Orch1:", "Du. TM.", "Orch1:, Orch1Du:, Orch1Tm:")]
     public void FormatMountedDriveList_adds_du_and_tm_shadow_drives_by_scope(string drive, string scope, string expected)
         => Assert.Equal(expected, OrchestratorAuthManager.FormatMountedDriveList(drive, scope));
+
+    // ---- BuildOAuthCallbackErrorMessage ----
+    // Identity can redirect back to the loopback listener with ?error=... instead of
+    // ?code=... The listener used to ignore those callbacks, so the caller waited out
+    // the full 3-minute PKCE timeout and the actual reason never reached the user.
+
+    [Fact]
+    public void Callback_error_names_the_oauth_error_code()
+    {
+        var msg = OrchestratorAuthManager.BuildOAuthCallbackErrorMessage("access_denied", null, null);
+
+        Assert.Contains("'access_denied'", msg);
+        Assert.Contains("instead of an authorization code", msg);
+        Assert.Contains("Import-OrchConfig", msg);
+    }
+
+    [Fact]
+    public void Invalid_scope_gets_the_scope_specific_guidance()
+    {
+        // The case this path exists for: a scope list built against one deployment
+        // moved to another whose Identity does not define one of the scopes.
+        var msg = OrchestratorAuthManager.BuildOAuthCallbackErrorMessage("invalid_scope", null, null);
+
+        Assert.Contains("not recognized by this deployment's Identity", msg);
+        Assert.Contains("Edit-OrchConfig", msg);
+        // The generic branch must not also fire.
+        Assert.DoesNotContain("redirect URI", msg);
+    }
+
+    [Fact]
+    public void Invalid_scope_matching_is_case_insensitive()
+    {
+        var msg = OrchestratorAuthManager.BuildOAuthCallbackErrorMessage("INVALID_SCOPE", null, null);
+        Assert.Contains("not recognized by this deployment's Identity", msg);
+    }
+
+    [Theory]
+    [InlineData("scope not allowed", "scope not allowed.")]   // punctuation added
+    [InlineData("scope not allowed.", "scope not allowed.")]  // already punctuated, not doubled
+    [InlineData("  padded  ", "padded.")]                     // trimmed
+    public void Server_description_is_included_verbatim(string description, string expected)
+    {
+        var msg = OrchestratorAuthManager.BuildOAuthCallbackErrorMessage("invalid_scope", description, null);
+        Assert.Contains(expected, msg);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void Blank_description_and_uri_are_omitted(string? blank)
+    {
+        var msg = OrchestratorAuthManager.BuildOAuthCallbackErrorMessage("invalid_scope", blank, blank);
+
+        Assert.DoesNotContain("More information:", msg);
+        // No dangling separator from an empty description.
+        Assert.DoesNotContain("code.  ", msg);
+    }
+
+    [Fact]
+    public void Error_uri_is_appended_when_present()
+    {
+        var msg = OrchestratorAuthManager.BuildOAuthCallbackErrorMessage(
+            "invalid_scope", null, " https://id.example/help ");
+
+        Assert.Contains("More information: https://id.example/help.", msg);
+    }
 }

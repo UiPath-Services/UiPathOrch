@@ -440,6 +440,76 @@ internal class OrchestratorAuthManager
         + "run `cd $HOME`, then "
         + "`Resolve-OrchAuthError '<url>'`.";
 
+    // Compose the error surfaced when Identity calls the loopback listener back with
+    // an OAuth error instead of an authorization code (RFC 6749 §4.1.2.1). Pure and
+    // internal so the wording is unit-testable without a live Identity server.
+    internal static string BuildOAuthCallbackErrorMessage(string error, string? description, string? errorUri)
+    {
+        var sb = new StringBuilder();
+        sb.Append("PKCE sign-in failed: Identity returned '")
+          .Append(error)
+          .Append("' instead of an authorization code.");
+
+        string? desc = description?.Trim();
+        if (!string.IsNullOrEmpty(desc))
+        {
+            sb.Append(' ').Append(desc);
+            if (!desc.EndsWith('.')) sb.Append('.');
+        }
+
+        if (string.Equals(error, "invalid_scope", StringComparison.OrdinalIgnoreCase))
+        {
+            // The case this path was added for: a scope list built against one
+            // deployment moved to another whose Identity does not define it.
+            sb.Append(" At least one requested scope is not recognized by this deployment's Identity")
+              .Append(" or is not granted to this application. Scope names and availability differ")
+              .Append(" between Orchestrator versions, so a list that works on one deployment does not")
+              .Append(" necessarily work on another. Compare the drive's Scope against the external")
+              .Append(" application's allowed scopes (Edit-OrchConfig opens the configuration file),")
+              .Append(" then run Import-OrchConfig.");
+        }
+        else
+        {
+            sb.Append(" Verify the application registration, its allowed scopes and its redirect URI,")
+              .Append(" then run Import-OrchConfig.");
+        }
+
+        string? uri = errorUri?.Trim();
+        if (!string.IsNullOrEmpty(uri))
+        {
+            sb.Append(" More information: ").Append(uri).Append('.');
+        }
+
+        return sb.ToString();
+    }
+
+    // Render a minimal failure page so the browser tab does not sit on a blank
+    // response after an error callback. Deliberately not one of the localized
+    // MountSuccessNotification resources: this path shows a server-supplied
+    // message that has to appear verbatim, so a per-language template would add
+    // seven files without changing what the user actually reads.
+    private static async Task WriteCallbackErrorPageAsync(
+        HttpListenerContext context, string message, CancellationToken ct)
+    {
+        string html =
+            "<!DOCTYPE html><html><head><meta charset=\"utf-8\">"
+            + "<title>UiPath Orchestrator sign-in failed</title></head>"
+            + "<body style=\"font-family:Segoe UI,Arial,sans-serif;margin:2rem;max-width:44rem\">"
+            + "<h2>Sign-in failed</h2><p>" + WebUtility.HtmlEncode(message) + "</p>"
+            + "<p>You can close this tab and return to PowerShell.</p></body></html>";
+
+        byte[] buffer = Encoding.UTF8.GetBytes(html);
+        context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+        context.Response.ContentLength64 = buffer.Length;
+        context.Response.ContentType = "text/html; charset=UTF-8";
+        context.Response.Headers["Connection"] = "close";
+
+        await using var output = context.Response.OutputStream;
+        await output.WriteAsync(buffer, ct);
+        await output.FlushAsync(ct);
+        context.Response.Close();
+    }
+
     // Builds the Identity authorize URL. Extracted as a pure, testable function:
     // endpoint selection (explicit IdentityUrl / Cloud common path + acr_values /
     // on-prem) and the scope URL-encoding the v1.9.2 macOS fix depends on (a raw
@@ -714,6 +784,32 @@ internal class OrchestratorAuthManager
                                 // Exit the loop
                                 break;
                             }
+
+                            // No `code` in the callback. Identity may have redirected
+                            // back with an OAuth error instead (RFC 6749 §4.1.2.1) —
+                            // invalid_scope is the one that bites when a scope list is
+                            // moved between deployments. This loop used to ignore every
+                            // callback without `code`, which made an error redirect
+                            // indistinguishable from no redirect at all: the caller sat
+                            // until the 3-minute timeout and the real reason was lost.
+                            string? oauthError = context.Request.QueryString["error"];
+                            if (string.IsNullOrEmpty(oauthError))
+                            {
+                                // Something else hit the loopback (favicon probe, stray
+                                // request). Keep waiting for the real callback.
+                                continue;
+                            }
+
+                            capturedException = new InvalidOperationException(
+                                BuildOAuthCallbackErrorMessage(
+                                    oauthError,
+                                    context.Request.QueryString["error_description"],
+                                    context.Request.QueryString["error_uri"]));
+
+                            await WriteCallbackErrorPageAsync(context, capturedException.Message, cts);
+
+                            // Exit the loop
+                            break;
                         }
                         catch (Exception ex)
                         {
