@@ -249,4 +249,71 @@ public class AuthErrorUrlParserTests
         Assert.Equal("invalid_scope",
             doc.RootElement.GetProperty("error").GetString());
     }
+
+    // ---- unauthorized_client ----
+    // The verbatim URL an on-premises 22.10 Identity left the browser on when
+    // the drive asked for PM scopes the external application had not been
+    // granted. It carries nothing but the errorCode: no errorId, no returnUrl,
+    // no traceId — so the guidance has to stand on its own.
+    private const string RealUnauthorizedClientUrl =
+        "https://orchestrator.local/identity/error?errorCode=unauthorized_client";
+
+    [Fact]
+    public void UnauthorizedClient_LeadsWithScopes_NotEscalation()
+    {
+        var d = AuthErrorUrlParser.Parse(RealUnauthorizedClientUrl);
+
+        Assert.True(d.IsAuthError);
+        Assert.Equal("unauthorized_client", d.ErrorCode);
+
+        // Points at the drive's Scope and how to fix it.
+        Assert.Contains("Scope", d.Diagnosis!);
+        Assert.Contains("Edit-OrchConfig", d.RecommendedAction!);
+        Assert.Contains("Import-OrchConfig", d.RecommendedAction!);
+
+        // Must NOT read as "nothing you can do, escalate" — that was the old
+        // generic-branch behaviour and it sent people to Identity engineering
+        // for a problem in their own configuration.
+        Assert.DoesNotContain("cannot resolve this client-side", d.Diagnosis!);
+        Assert.StartsWith("Start with the scopes.", d.RecommendedAction!);
+    }
+
+    [Fact]
+    public void UnauthorizedClient_ExplainsThatOneBadScopeFailsEverything()
+    {
+        // The property that makes this failure so hard to diagnose: the whole
+        // request dies and the offending scope is never named.
+        var d = AuthErrorUrlParser.Parse(RealUnauthorizedClientUrl);
+
+        Assert.Contains("entire authorization request", d.Diagnosis!);
+        Assert.Contains("bisect", d.RecommendedAction!);
+    }
+
+    [Fact]
+    public void InvalidScope_AlsoExplainsAllOrNothing_AndKeepsScopeList()
+    {
+        var url = "https://h/identity_/web/login?errorCode=invalid_scope"
+            + "&returnUrl=%2Fidentity_%2Fconnect%2Fauthorize%2Fcallback"
+            + "%3Fclient_id%3DAPP%26scope%3DOR.Users%2520PM.License";
+
+        var d = AuthErrorUrlParser.Parse(url);
+
+        Assert.Contains("entire authorization request", d.Diagnosis!);
+        Assert.Contains("PM.License", d.Diagnosis!);   // requested list echoed back
+        Assert.Contains("Edit-OrchConfig", d.RecommendedAction!);
+    }
+
+    [Fact]
+    public void UnknownErrorCode_ChecksConfigBeforeSuggestingEscalation()
+    {
+        var d = AuthErrorUrlParser.Parse("https://h/identity_/web/?errorCode=999");
+
+        Assert.True(d.IsAuthError);
+        // Escalation is still offered, but only after the client-side checks.
+        var configIdx = d.RecommendedAction!.IndexOf("Scope, AppId",
+            System.StringComparison.Ordinal);
+        var escalateIdx = d.RecommendedAction!.IndexOf("Identity engineering",
+            System.StringComparison.Ordinal);
+        Assert.True(configIdx >= 0 && escalateIdx > configIdx);
+    }
 }

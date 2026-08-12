@@ -32,6 +32,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the browser on an Identity error page instead — so this path is spec conformance for deployments
   that do redirect, not a cure for the timeout those two produce.
 
+- **`Resolve-OrchAuthError` sent you to the wrong place for `unauthorized_client`.** On both
+  Automation Cloud and on-premises 22.10, requesting an OAuth scope the external application has
+  not been granted surfaces as `unauthorized_client`, not `invalid_scope`. That code had no branch
+  of its own, so it fell through to the generic advice — "UiPathOrch cannot resolve this
+  client-side, it is server-side at UiPath Identity", followed by a suggestion to hand the URL to
+  Identity engineering. Both halves are wrong for the commonest cause: the problem is the drive's
+  `Scope` and it is yours to fix. `unauthorized_client` now leads with that, and names the property
+  that makes the failure so hard to place — Identity rejects the entire authorization request
+  rather than the offending scope, and never says which entry it was, so one stray scope blocks
+  sign-in with no clue as to why. `invalid_scope` gained the same explanation, and the generic
+  branch now suggests checking `Scope` / `AppId` / `RedirectUrl` before proposing escalation.
+
 ## [1.12.2] - 2026-07-23
 
 ### Fixed

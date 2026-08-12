@@ -218,18 +218,55 @@ public static class AuthErrorUrlParser
             return;
         }
 
+        // Shared by invalid_scope and unauthorized_client: both are produced by
+        // a Scope the application cannot be granted, and both fail the WHOLE
+        // authorize request without naming the offending entry.
+        var scopeNote = r.Scopes is not null
+            ? $" Scopes requested: {string.Join(" ", r.Scopes)}."
+            : string.Empty;
+        const string ScopeAllOrNothing =
+            " Identity rejects the entire authorization request, not just the "
+            + "offending scope, and does not say which one it was — so a single "
+            + "stray entry blocks sign-in completely.";
+        const string ScopeFix =
+            "Compare the drive's 'Scope' against the scopes actually granted to "
+            + "the external application (Admin -> External Applications) and "
+            + "remove any the app does not have; Edit-OrchConfig opens the "
+            + "configuration file. Scope availability differs between "
+            + "Orchestrator versions, so a list that works on one deployment can "
+            + "break on another — e.g. PM.License exists on Automation Cloud but "
+            + "not on 22.10 on-premises. Re-run Import-OrchConfig afterwards. If "
+            + "the list is long, bisect it: the error will not name the entry.";
+
         if (string.Equals(code, "invalid_scope",
                 StringComparison.OrdinalIgnoreCase))
         {
             r.Diagnosis = "One or more requested OAuth scopes are not granted "
                 + "to, or not valid for, this external application / Identity "
-                + "version" + appNote
-                + (r.Scopes is not null
-                    ? $" Scopes requested: {string.Join(" ", r.Scopes)}."
-                    : string.Empty);
-            r.RecommendedAction = "Reconcile the 'Scope' in your UiPathOrch "
-                + "config with the scopes actually granted to the external "
-                + "app; remove any the app does not have.";
+                + "version" + appNote + ScopeAllOrNothing + scopeNote;
+            r.RecommendedAction = ScopeFix;
+            return;
+        }
+
+        // Observed on both Automation Cloud and on-premises 22.10: asking for a
+        // scope the application is not granted surfaces as unauthorized_client,
+        // NOT invalid_scope. Left in the generic branch it read as "server-side,
+        // escalate to Identity", which sent people down the wrong path — the
+        // cause is client-side configuration they can fix themselves.
+        if (string.Equals(code, "unauthorized_client",
+                StringComparison.OrdinalIgnoreCase))
+        {
+            r.Diagnosis = "Identity refused the authorization request for this "
+                + "external application." + appNote
+                + " Most often the drive's Scope asks for at least one scope the "
+                + "application is not granted." + ScopeAllOrNothing
+                + " Less often the application is not enabled for the "
+                + "interactive authorization-code / PKCE flow, is registered as "
+                + "confidential but used as non-confidential, or belongs to a "
+                + "different organization than the drive's Root." + scopeNote;
+            r.RecommendedAction = "Start with the scopes. " + ScopeFix
+                + " If the scopes already match, check the application's allowed "
+                + "flow and its owning organization." + traceNote;
             return;
         }
 
@@ -237,10 +274,12 @@ public static class AuthErrorUrlParser
         {
             r.Diagnosis = $"Identity returned '{code ?? r.Error}'"
                 + (string.IsNullOrEmpty(desc) ? string.Empty : $": {desc}")
-                + ". UiPathOrch cannot resolve this client-side — it is "
-                + "server-side at UiPath Identity or the federated IdP."
+                + ". No specific client-side cause is known for this code."
                 + appNote;
-            r.RecommendedAction = "Provide the full error URL"
+            r.RecommendedAction = "Check the drive's Scope, AppId and "
+                + "RedirectUrl against the external application first — those "
+                + "account for most sign-in failures. If they are correct, "
+                + "provide the full error URL"
                 + (r.TraceId is not null
                     ? $" including traceId '{r.TraceId}'" : string.Empty)
                 + " to UiPath Identity engineering for server-side "
