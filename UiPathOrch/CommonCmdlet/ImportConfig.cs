@@ -12,6 +12,68 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsData.Import, "OrchConfig", SupportsShouldProcess = true)]
 public class ImportOrchConfigCmdlet : PSCmdlet
 {
+    /// <summary>
+    /// Configuration file to load instead of the one currently in effect. A folder is accepted
+    /// as well as a file. On success this becomes the session's configuration file by setting
+    /// UIPATHORCH_CONFIG_PATH in the CURRENT PROCESS -- nothing is written to the user's or the
+    /// machine's persistent environment. For a standing setup, set the variable in $PROFILE (or
+    /// as a user / system variable) instead, so that module autoloading picks it up before any
+    /// drive is mounted.
+    /// </summary>
+    [Parameter(Position = 0)]
+    public string? ConfigPath { get; set; }
+
+    // Resolve -ConfigPath to file-system candidates. Returns false having written the error.
+    private bool TryResolveConfigPathArgument(out Core.OrchProvider.ConfigPathResolution resolved)
+    {
+        resolved = default;
+        string expanded = System.Environment.ExpandEnvironmentVariables(ConfigPath!.Trim());
+
+        string path;
+        ProviderInfo provider;
+        try
+        {
+            path = SessionState.Path.GetUnresolvedProviderPathFromPSPath(expanded, out provider, out _);
+        }
+        catch (System.Exception ex)
+        {
+            WriteError(new ErrorRecord(ex, "ConfigPathInvalid", ErrorCategory.InvalidArgument, ConfigPath));
+            return false;
+        }
+
+        // The current location is usually an Orch drive, so a relative path would otherwise be
+        // resolved against the Orchestrator provider and yield a nonsense file path.
+        if (!provider.Name.Equals("FileSystem", System.StringComparison.OrdinalIgnoreCase))
+        {
+            WriteError(new ErrorRecord(
+                new System.ArgumentException(
+                    $"-ConfigPath resolved to the '{provider.Name}' provider. Specify a file-system path; a relative path is resolved against the current location, which is on a '{provider.Name}' drive."),
+                "ConfigPathNotFileSystem", ErrorCategory.InvalidArgument, ConfigPath));
+            return false;
+        }
+
+        // Accept a folder as well as a file, the same way the environment variable does: the
+        // file reading is tried first and the folder reading only if it is not there. Unlike the
+        // resolver this cmdlet can afford to probe, so a path that already exists as a folder
+        // skips the pointless first attempt.
+        bool isFolder = System.IO.Path.EndsInDirectorySeparator(expanded) || System.IO.Directory.Exists(path);
+
+        resolved = isFolder
+            ? new Core.OrchProvider.ConfigPathResolution
+            {
+                Path = System.IO.Path.Combine(path, Core.OrchProvider.ConfigFileName),
+                IsOverride = true,
+            }
+            : new Core.OrchProvider.ConfigPathResolution
+            {
+                Path = path,
+                FolderCandidate = System.IO.Path.Combine(path, Core.OrchProvider.ConfigFileName),
+                IsOverride = true,
+            };
+
+        return true;
+    }
+
     protected override void ProcessRecord()
     {
         // Always re-read the config and re-mount. A prior optimization skipped this
@@ -22,21 +84,37 @@ public class ImportOrchConfigCmdlet : PSCmdlet
         // which clears their cached sign-ins; the next use of each drive
         // re-authenticates. That is intentional: it is how a user picks up a fresh
         // sign-in (e.g. after signing in to the org's directory in the browser).
-        string configFilePath = Core.OrchProvider.GetConfigFilePath();
+        bool switching = !string.IsNullOrWhiteSpace(ConfigPath);
+        Core.OrchProvider.ConfigPathResolution resolution;
 
-        if (!System.IO.File.Exists(configFilePath))
+        if (switching)
         {
-            WriteWarning($"Configuration file not found: {configFilePath}");
-            WriteWarning("Run Edit-OrchConfig to create and edit the configuration file.");
+            if (!TryResolveConfigPathArgument(out resolution)) return;
+        }
+        else
+        {
+            resolution = Core.OrchProvider.ResolveConfigPath();
+            if (resolution.Warning is not null) WriteWarning(resolution.Warning);
+        }
+
+        // Everything up to ShouldProcess is pre-flight: read and parse before touching any
+        // session state, so that a bad -ConfigPath leaves the session exactly as it was --
+        // drives still mounted, environment variable untouched.
+        if (!Core.OrchProvider.TryReadConfigFile(
+                resolution, out string? json, out string configFilePath, out string? readError, bypassMemo: true))
+        {
+            WriteWarning($"\"{configFilePath}\": {readError}");
+            if (!switching)
+            {
+                WriteWarning("Run Edit-OrchConfig to create and edit the configuration file.");
+            }
             return;
         }
 
-        // Read and deserialize the configuration file
-        string json = System.IO.File.ReadAllText(configFilePath);
         UiPathOrchConfig config;
         try
         {
-            config = JsonSerializer.Deserialize<UiPathOrchConfig>(json, JsonTools.jsonAllowComments)!;
+            config = JsonSerializer.Deserialize<UiPathOrchConfig>(json!, JsonTools.jsonAllowComments)!;
             if (config is null) throw new System.Exception("Deserialization resulted in a null object.");
         }
         catch (System.Exception ex)
@@ -59,6 +137,14 @@ public class ImportOrchConfigCmdlet : PSCmdlet
         if (!ShouldProcess(configFilePath, "Import OrchConfig"))
         {
             return;
+        }
+
+        // Only now does the file become the session's configuration file. Switching is a side
+        // effect, so it must not happen under -WhatIf, nor when the file turned out unusable.
+        if (switching)
+        {
+            System.Environment.SetEnvironmentVariable(Core.OrchProvider.ConfigPathEnvVar, configFilePath);
+            WriteVerbose($"{Core.OrchProvider.ConfigPathEnvVar} set to '{configFilePath}' for this process. Child processes inherit it; nothing was written to the persistent environment.");
         }
 
         // If the current location is on an Orch drive, switch to C: since we cannot remove a drive while it is current

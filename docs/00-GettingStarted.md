@@ -245,6 +245,54 @@ that drive in `UiPathOrchConfig.json`:
 
 Then run `Import-OrchConfig` and re-check with `Get-OrchPSDrive`.
 
+### Moving the configuration file
+
+The configuration file normally lives in the per-user module folder; `Get-OrchConfigPath`
+reports where. Set the `UIPATHORCH_CONFIG_PATH` environment variable to read it from
+somewhere else — a network share, for instance, so that several machines share one set of
+drive definitions:
+
+```powershell
+# In $PROFILE, before any UiPathOrch command runs:
+$env:UIPATHORCH_CONFIG_PATH = '\\fileserver\rpa\UiPathOrchConfig.json'
+```
+
+A user or system environment variable works the same way. Use a UNC path rather than a
+mapped drive letter: a drive letter is not visible to services, scheduled tasks, or
+another logon session.
+
+The value may name either the file or the folder holding it — `\\fileserver\rpa` and
+`\\fileserver\rpa\UiPathOrchConfig.json` are equivalent, whatever the folder is called.
+The value is read as a file first; only if there is no file there is it read as a folder
+containing `UiPathOrchConfig.json`. Ending the value with a separator says "folder"
+outright and skips the first attempt. `Get-OrchConfigPath` reports whichever one
+answered.
+
+To switch files inside a running session, pass the path to `Import-OrchConfig`:
+
+```powershell
+Import-OrchConfig -ConfigPath \\fileserver\rpa\UiPathOrchConfig.json
+```
+
+That sets the same environment variable for the current process, so the rest of the
+session — and any child process — uses the file. Nothing is written to the persistent
+environment; `Remove-Item Env:UIPATHORCH_CONFIG_PATH` followed by `Import-OrchConfig`
+returns to the default. Prefer `$PROFILE` for a standing setup: the module is loaded
+automatically by the first UiPathOrch command and mounts drives at that moment, which is
+before a `-ConfigPath` on that same command line can run.
+
+The module only ever reads this file, so a read-only share is fine and several machines
+can use one file at once. Note, though, that the file stores credentials in plain text
+(`AppSecret`, `Password`, personal access tokens), protected only by the share's ACL.
+Sharing one file between **people** also means sharing those credentials, and every
+action then appears in Orchestrator's audit trail under the same identity. A file meant
+for several people should define only drives that authenticate interactively
+(non-confidential app / PKCE), so that it carries connection details and no secrets.
+
+Two behaviours differ once the location is overridden: the template is never created
+automatically at that path, and if the file cannot be read, no drives are mounted rather
+than falling back to the default file.
+
 ### Upgrading
 
 ```powershell

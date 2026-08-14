@@ -27,9 +27,11 @@ Get-OrchConfigPath [<CommonParameters>]
 
 ## DESCRIPTION
 
-Returns the file path to the UiPathOrch module configuration file. If the default configuration file does not exist, it is created automatically before the path is returned.
+Returns the file path to the UiPathOrch module configuration file that is currently in effect. If the default configuration file does not exist, it is created automatically before the path is returned.
 
 The configuration file stores drive definitions and other module settings that are loaded when the UiPathOrch module is imported.
+
+The location is the built-in per-user path unless the `UIPATHORCH_CONFIG_PATH` environment variable overrides it (see `Import-OrchConfig`). Use `-Verbose` to see which of the two the returned path came from. An overridden file is never created automatically — only the default location gets a template.
 
 Primary Endpoint: (none)
 
@@ -74,9 +76,11 @@ Returns the full file path to the UiPathOrch configuration file as a string.
 
 ## NOTES
 
-The configuration file is automatically created with default content if it does not already exist. This ensures that the module always has a valid configuration file to reference.
+The configuration file at the default location is automatically created with default content if it does not already exist. This ensures that the module always has a valid configuration file to reference. A path supplied through `UIPATHORCH_CONFIG_PATH` is returned as-is whether or not the file exists, and is never created — that location is typically shared, and creating an empty configuration there would overwrite what other machines are pointed at.
 
 ## RELATED LINKS
+
+[Import-OrchConfig](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Import-OrchConfig.md)
 
 [Get-OrchPSDrive](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchPSDrive.md)
 

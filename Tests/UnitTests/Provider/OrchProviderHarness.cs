@@ -25,6 +25,11 @@ public sealed class OrchProviderHarness : IDisposable
         // (e.g. on CI): InitializeDefaultDrives then just returns null instead of prompting.
         System.Environment.SetEnvironmentVariable("UIPATHORCH_SUPPRESS_CONFIG_CREATION", "1");
 
+        // And ignore any config-file override the developer or the build agent happens to have
+        // set: it would point provider initialization at a real, possibly shared, config and
+        // mount whatever tenants it names.
+        System.Environment.SetEnvironmentVariable("UIPATHORCH_CONFIG_PATH", null);
+
         string dll = typeof(OrchProvider).Assembly.Location;
         var iss = InitialSessionState.CreateDefault2();
         iss.ImportPSModule(new[] { dll });

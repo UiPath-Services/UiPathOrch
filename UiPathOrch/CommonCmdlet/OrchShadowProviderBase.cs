@@ -167,14 +167,16 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
 
     protected override Collection<PSDriveInfo>? InitializeDefaultDrives()
     {
-        string configFilePath = OrchProvider.GetConfigFilePath();
-        if (File.Exists(configFilePath))
+        // Bounded read shared with OrchProvider: the location can be an overridden -- and
+        // unreachable -- network share, and this runs during provider initialization where a
+        // blocking read would hang the user's first command. Missing / unreadable / invalid
+        // config cases are all OrchProvider's to report; here just mount nothing.
+        if (OrchProvider.TryReadConfigFile(OrchProvider.ResolveConfigPath(), out string? json, out _, out _))
         {
-            string json = File.ReadAllText(configFilePath);
             UiPathOrchConfig config;
             try
             {
-                config = JsonSerializer.Deserialize<UiPathOrchConfig>(json, JsonTools.jsonAllowComments);
+                config = JsonSerializer.Deserialize<UiPathOrchConfig>(json!, JsonTools.jsonAllowComments);
                 if (config is null) return null;
             }
             catch

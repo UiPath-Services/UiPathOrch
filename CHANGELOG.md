@@ -4,6 +4,48 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **The configuration file location can now be changed.** `UiPathOrchConfig.json` was fixed to the
+  per-user module folder, which made it impossible to keep one set of drive definitions on a share
+  and use it from several machines. The new `UIPATHORCH_CONFIG_PATH` environment variable relocates
+  it, and `Import-OrchConfig -ConfigPath <path>` switches files inside a running session by setting
+  that variable for the current **process** — nothing is written to the user's or the machine's
+  persistent environment. Both forms accept either the file or the folder holding it, and tell the
+  two apart by trying rather than by guessing from the spelling: the path is read as a file first,
+  and as a folder containing `UiPathOrchConfig.json` only if no file is there. Ending the value with
+  a separator says "folder" outright and skips the first attempt. The fallback runs only when the
+  first reading finds nothing — a timeout on an unreachable share, or access denied, is reported as
+  it stands rather than costing a second full timeout — and if neither reading answers, the error
+  names both paths. `Get-OrchConfigPath` reports the file in effect and, with `-Verbose`, where the
+  location came from. The module only ever reads this file, so a read-only share works and concurrent use from
+  several machines is safe.
+
+  For a standing setup, set the variable in `$PROFILE` (or as a user / system variable) rather than
+  relying on `-ConfigPath`: the module is autoloaded by the first UiPathOrch command in a session
+  and mounts drives at that moment, which is before a `-ConfigPath` on that same command line can
+  run. A UNC path is recommended — a mapped drive letter is not visible to services, scheduled
+  tasks, or another logon session.
+
+  Three behaviours deliberately differ once the location is overridden, all for the same reason —
+  that path is typically shared, so the assumptions that hold for a private per-user file no longer
+  do. The template is never created there, so an empty configuration cannot land on the share and
+  overwrite what other machines are pointed at. A parse error does not open the file in an editor,
+  which would otherwise open the shared file on every affected user's machine — and a partial read
+  while someone else is saving is enough to trigger it. And if the file cannot be read, no drives
+  are mounted rather than falling back to the default file: silently connecting a different set of
+  tenants because a share was briefly offline is worse than connecting none. Reads of an overridden
+  path also get a bounded 10-second wait, so an unreachable share reports a timeout instead of
+  hanging the user's first command for the full network timeout.
+
+  Note that the file stores credentials in plain text (`AppSecret`, `Password`, personal access
+  tokens) and a share protects it only with its own ACL. Sharing one file between *people* shares
+  those credentials, and Orchestrator's audit trail then attributes everyone's actions to the same
+  identity. A file intended for several people should define only drives that authenticate
+  interactively, so that it carries connection details and no secrets.
+
 ## [1.12.3] - 2026-08-12
 
 ### Added

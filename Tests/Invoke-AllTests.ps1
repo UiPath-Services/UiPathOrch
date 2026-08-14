@@ -64,6 +64,16 @@ Import-OrchConfig 6>$null | Out-Null
 Get-PSDrive $Tenant   -ErrorAction Stop | Out-Null
 Get-PSDrive $RefDrive -ErrorAction Stop | Out-Null
 
+# This run WIPES -Tenant, so make it visible which configuration file named it.
+# UIPATHORCH_CONFIG_PATH can point the module at a shared config whose drive names
+# collide with the local ones — same drive letter, different tenant.
+$configPath = Get-OrchConfigPath
+Write-Host "Config file : $configPath" -ForegroundColor DarkGray
+if ($env:UIPATHORCH_CONFIG_PATH) {
+    Write-Host "              (from UIPATHORCH_CONFIG_PATH)" -ForegroundColor DarkGray
+}
+Write-Host ("Wipe target : {0}: -> {1}" -f $Tenant, (Get-PSDrive $Tenant).Root) -ForegroundColor DarkGray
+
 # Children (Invoke-Pester test blocks) read these.
 $env:UIPATHORCH_TEST_DRIVE     = $Tenant
 $env:UIPATHORCH_TEST_REF_DRIVE = $RefDrive

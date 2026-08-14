@@ -64,6 +64,43 @@ GETTING STARTED
 
         Get-OrchHelp
 
+CONFIGURATION FILE LOCATION
+    Get-OrchConfigPath reports the configuration file in effect. By default
+    it lives in the per-user module folder.
+
+    Set the UIPATHORCH_CONFIG_PATH environment variable to read it from
+    somewhere else - a network share, for example, so that several machines
+    share one set of drive definitions:
+
+        $env:UIPATHORCH_CONFIG_PATH = '\\fileserver\rpa\UiPathOrchConfig.json'
+
+    Either the file or the folder holding it may be given - '\\fileserver\rpa'
+    means the same thing. The value is read as a file first, and as a folder
+    containing UiPathOrchConfig.json only if no file is there.
+
+    Set it in $PROFILE, or as a user or system environment variable, so that
+    it is in place before the module loads. Use a UNC path: a mapped drive
+    letter is not visible to services, scheduled tasks, or another logon
+    session. To switch files inside a running session:
+
+        Import-OrchConfig -ConfigPath \\fileserver\rpa\UiPathOrchConfig.json
+
+    That sets the same variable for the current process only; nothing is
+    written to the persistent environment.
+
+    The module only reads this file, so a read-only share works and several
+    machines can use one file at once. The file does hold credentials in
+    plain text, so a file shared between people should define only drives
+    that authenticate interactively.
+
+    Environment variables read by the module:
+
+        UIPATHORCH_CONFIG_PATH               Configuration file location.
+        UIPATHORCH_SUPPRESS_CONFIG_CREATION  Set to 1 to stop the module
+                                             creating and opening a default
+                                             configuration file when none
+                                             exists.
+
 AUTHENTICATION TYPES
     Non-Confidential App   Interactive login required, no app secret.
                            Recommended for interactive use.

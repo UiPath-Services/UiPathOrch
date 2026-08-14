@@ -49,10 +49,218 @@ public partial class OrchProvider
         }
     }
 
+    /// <summary>
+    /// Environment variable that relocates the configuration file. PROCESS scope only -- the
+    /// module never writes a persistent (User / Machine) variable. Set it from $PROFILE, from a
+    /// user or system variable, or for the current process via `Import-OrchConfig -ConfigPath`.
+    /// </summary>
+    internal const string ConfigPathEnvVar = "UIPATHORCH_CONFIG_PATH";
+
+    internal const string ConfigFileName = "UiPathOrchConfig.json";
+
+    /// <summary>Where the configuration file lives when nothing overrides it.</summary>
+    public static string GetDefaultConfigFilePath()
+        => System.IO.Path.Combine(GetBasePath(), ConfigFileName);
+
+    /// <summary>
+    /// Outcome of resolving the configuration file location. <see cref="IsOverride"/> is what
+    /// callers branch on: an overridden location is never auto-created from the template, never
+    /// opened in an editor, and never falls back to the DEFAULT file when it cannot be read.
+    /// <para>
+    /// The value may name either the file or the folder holding it, and the two are told apart by
+    /// trying rather than by guessing from the spelling: <see cref="Path"/> is attempted first and
+    /// <see cref="FolderCandidate"/> -- the same value with the standard file name appended -- is
+    /// attempted only if the first is NOT FOUND. Any other failure (a timeout on an unreachable
+    /// share, access denied, malformed JSON) is reported as-is, because a second read would either
+    /// cost another full timeout or answer the same question twice.
+    /// </para>
+    /// </summary>
+    internal readonly struct ConfigPathResolution
+    {
+        /// <summary>The path to try first: the value itself, read as a file.</summary>
+        internal string Path { get; init; }
+
+        /// <summary>
+        /// The path to try if <see cref="Path"/> does not exist, or null when there is nothing to
+        /// fall back to -- the default location, and a value already written as a folder.
+        /// </summary>
+        internal string? FolderCandidate { get; init; }
+
+        internal bool IsOverride { get; init; }
+        internal string? Warning { get; init; }
+    }
+
+    /// <summary>
+    /// Pure resolver for the configuration file location, split out from the environment so it
+    /// can be unit tested. Deliberately does NOT touch the file system -- it runs during provider
+    /// initialization, where a probe against an unreachable share would block with no way to
+    /// report why. It produces the candidates; the read decides between them.
+    /// </summary>
+    internal static ConfigPathResolution ResolveConfigPath(string? rawValue, string defaultPath)
+    {
+        if (string.IsNullOrWhiteSpace(rawValue))
+        {
+            return new ConfigPathResolution { Path = defaultPath, IsOverride = false };
+        }
+
+        // A value stored as REG_SZ -- which is what SetEnvironmentVariable writes -- is NOT
+        // expanded by the OS at process start, unlike a REG_EXPAND_SZ value entered through the
+        // System Properties UI. Expand here so both spellings behave identically.
+        string value = System.Environment.ExpandEnvironmentVariables(rawValue.Trim());
+
+        // No SessionState exists during provider initialization to resolve a relative path
+        // against, and "relative to what" would differ anyway: the current location is very often
+        // an Orch drive rather than a file system one. Require a rooted path.
+        if (!System.IO.Path.IsPathRooted(value))
+        {
+            return new ConfigPathResolution
+            {
+                Path = defaultPath,
+                IsOverride = false,
+                Warning = $"{ConfigPathEnvVar} is set to \"{rawValue}\", which is not a rooted path. It was ignored and \"{defaultPath}\" is used instead. Specify a full path -- a UNC path is recommended, because a mapped drive letter is not visible to services or to another logon session.",
+            };
+        }
+
+        // A trailing separator says "folder" outright, so there is nothing left to disambiguate.
+        if (System.IO.Path.EndsInDirectorySeparator(value))
+        {
+            return new ConfigPathResolution
+            {
+                Path = System.IO.Path.Combine(value, ConfigFileName),
+                IsOverride = true,
+            };
+        }
+
+        return new ConfigPathResolution
+        {
+            Path = value,
+            FolderCandidate = System.IO.Path.Combine(value, ConfigFileName),
+            IsOverride = true,
+        };
+    }
+
+    internal static ConfigPathResolution ResolveConfigPath()
+        => ResolveConfigPath(System.Environment.GetEnvironmentVariable(ConfigPathEnvVar), GetDefaultConfigFilePath());
+
+    /// <summary>
+    /// The configuration file in effect. When the location could name either a file or a folder
+    /// this reads to find out, so it can block for as long as <see cref="TryReadConfigFile"/>
+    /// does; the read is memoized, so the read that usually follows is free.
+    /// </summary>
     public static string GetConfigFilePath()
     {
-        string configFileName = "UiPathOrchConfig.json";
-        return System.IO.Path.Combine(GetBasePath(), configFileName);
+        var resolution = ResolveConfigPath();
+        if (resolution.FolderCandidate is null) return resolution.Path;
+
+        TryReadConfigFile(resolution, out _, out string effectivePath, out _);
+        return effectivePath;
+    }
+
+    // An offline share blocks File.Exists / ReadAllText until the SMB (or DFS) client gives up,
+    // which can take a minute or more. Module autoloading means that hang lands on the user's
+    // first UiPathOrch command with no visible cause, so reads go through a bounded wait.
+    private const int ConfigReadTimeoutMs = 10_000;
+
+    // OrchProvider, OrchDuProvider and OrchTmProvider each initialize their default drives during
+    // module load and each needs the same file. Memoize briefly so one load costs one read (and,
+    // on a dead share, one timeout instead of three). The window is far shorter than any
+    // edit-then-reload cycle, and Import-OrchConfig bypasses it outright.
+    private const int ConfigReadMemoMs = 5_000;
+    private static readonly object _configReadLock = new();
+    private static string? _configReadKey;
+    private static string? _configReadJson;
+    private static string _configReadEffectivePath = "";
+    private static string? _configReadError;
+    private static long _configReadAt;
+
+    /// <summary>
+    /// Read the configuration file, resolving the file-or-folder question by trying rather than
+    /// guessing. <paramref name="effectivePath"/> is the path that actually answered -- or the
+    /// primary candidate when nothing did, so callers always have something to name.
+    /// Returns false with a human-readable <paramref name="error"/> when the file is missing,
+    /// unreadable, or the read timed out.
+    /// </summary>
+    internal static bool TryReadConfigFile(
+        ConfigPathResolution resolution,
+        out string? json,
+        out string effectivePath,
+        out string? error,
+        bool bypassMemo = false)
+    {
+        string key = resolution.Path + " " + (resolution.FolderCandidate ?? "");
+
+        lock (_configReadLock)
+        {
+            if (!bypassMemo &&
+                string.Equals(_configReadKey, key, StringComparison.OrdinalIgnoreCase) &&
+                System.Environment.TickCount64 - _configReadAt < ConfigReadMemoMs)
+            {
+                json = _configReadJson;
+                effectivePath = _configReadEffectivePath;
+                error = _configReadError;
+                return error is null;
+            }
+
+            effectivePath = resolution.Path;
+            bool ok = TryReadOne(resolution.Path, out json, out error, out bool notFound);
+
+            // Fall back to the folder reading ONLY on not-found. A timeout means the share is
+            // unreachable, so a second attempt buys nothing and costs another full timeout;
+            // access-denied and malformed JSON are answers, not reasons to look elsewhere.
+            if (!ok && notFound && resolution.FolderCandidate is not null)
+            {
+                if (TryReadOne(resolution.FolderCandidate, out json, out string? folderError, out _))
+                {
+                    effectivePath = resolution.FolderCandidate;
+                    error = null;
+                    ok = true;
+                }
+                else
+                {
+                    error = $"No configuration file at \"{resolution.Path}\" (read as a file) or \"{resolution.FolderCandidate}\" (read as a folder). {folderError}";
+                }
+            }
+
+            _configReadKey = key;
+            _configReadJson = json;
+            _configReadEffectivePath = effectivePath;
+            _configReadError = error;
+            _configReadAt = System.Environment.TickCount64;
+
+            return ok;
+        }
+    }
+
+    private static bool TryReadOne(string path, out string? json, out string? error, out bool notFound)
+    {
+        json = null;
+        error = null;
+        notFound = false;
+        try
+        {
+            // On timeout the worker thread stays blocked until the OS gives up. That is
+            // acceptable for a one-shot at module load, and is why the wait exists at all.
+            var task = Task.Run(() => File.Exists(path) ? File.ReadAllText(path) : (string?)null);
+            if (!task.Wait(ConfigReadTimeoutMs))
+            {
+                error = $"Timed out after {ConfigReadTimeoutMs / 1000} seconds while reading the configuration file. The path may be on a network share that is currently unreachable.";
+            }
+            else if (task.Result is null)
+            {
+                notFound = true;
+                error = "The configuration file was not found.";
+            }
+            else
+            {
+                json = task.Result;
+            }
+        }
+        catch (Exception ex)
+        {
+            error = (ex is AggregateException agg ? agg.GetBaseException() : ex).Message;
+        }
+
+        return error is null;
     }
 
     private static string? _logFolderPath = null;
@@ -74,7 +282,15 @@ public partial class OrchProvider
 
     public static void EnsureDefaultConfigFileExists()
     {
-        string configFilePath = GetConfigFilePath();
+        var resolution = ResolveConfigPath();
+
+        // Never materialize a template at an overridden location. That location is typically a
+        // share several people point at, and dropping a fresh empty config onto it -- because one
+        // machine happened to reach it a moment before it came online, say -- is destructive in a
+        // way the default per-user path never is. An overridden file is the user's to create.
+        if (resolution.IsOverride) return;
+
+        string configFilePath = resolution.Path;
         if (!System.IO.File.Exists(configFilePath))
         {
             string lang = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
@@ -169,10 +385,35 @@ public partial class OrchProvider
 
     protected override Collection<PSDriveInfo>? InitializeDefaultDrives()
     {
-        string configFilePath = GetConfigFilePath();
-        if (File.Exists(configFilePath))
+        var resolution = ResolveConfigPath();
+        if (resolution.Warning is not null) WriteWarning(resolution.Warning);
+
+        string configFilePath = resolution.Path;
+        string? json;
+
+        if (resolution.IsOverride)
         {
-            string json = File.ReadAllText(configFilePath);
+            // Bounded read, and no fallback to the default file: mounting a different set of
+            // tenants than the one that was asked for -- silently, because a share happened to be
+            // offline -- is worse than mounting none.
+            if (!TryReadConfigFile(resolution, out json, out configFilePath, out string? readError))
+            {
+                WriteWarning($"\"{configFilePath}\": {readError}");
+                WriteWarning($"The configuration file location comes from the {ConfigPathEnvVar} environment variable. No drives were mounted; the default configuration file was deliberately not used as a fallback.");
+                return null;
+            }
+        }
+        else if (File.Exists(configFilePath))
+        {
+            json = File.ReadAllText(configFilePath);
+        }
+        else
+        {
+            json = null;
+        }
+
+        if (json is not null)
+        {
             try
             {
                 _config = JsonSerializer.Deserialize<UiPathOrchConfig>(json, JsonTools.jsonAllowComments) ?? throw new Exception("Deserialization resulted in a null object.");
@@ -181,7 +422,11 @@ public partial class OrchProvider
             {
                 WriteWarning($"\"{configFilePath}\": {ex.Message}");
 
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                // Never open an overridden config in an editor. It is typically shared, so every
+                // user hitting the same parse error would get it opened on their machine -- and a
+                // partial read while someone else is saving is enough to trigger that, turning one
+                // person's edit into a room full of concurrent editors racing to overwrite it.
+                if (!resolution.IsOverride && RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 {
                     var startInfo = new ProcessStartInfo("notepad.exe")
                     {

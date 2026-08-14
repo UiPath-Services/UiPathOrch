@@ -31,6 +31,32 @@ contexts) and for accuracy (folder context, OData headers, and
 ApiVersion are applied identically to cmdlet calls, so the comparison
 isolates only the response-processing layer).
 
+## No Drives, or the Wrong Drives
+
+Before investigating a drive, confirm which configuration file produced it:
+
+```powershell
+Get-OrchConfigPath
+$env:UIPATHORCH_CONFIG_PATH
+```
+
+`UIPATHORCH_CONFIG_PATH` (process scope) relocates the configuration file; when it is
+empty, the built-in per-user location is used. A drive name says nothing about which
+tenant it points at, so a shared configuration file can supply an `Orch1:` that is not
+the `Orch1:` from the local file.
+
+| Symptom | Cause |
+|---|---|
+| No drives at all, with a warning naming the configuration file | The file could not be read. When the location is overridden, the default file is **not** used as a fallback — an offline share must not silently connect a different set of tenants |
+| The first command in a session pauses for ~10 seconds, then no drives | The overridden location is unreachable. Reads of an overridden path are bounded at 10 seconds instead of blocking for the full network timeout |
+| A warning that the variable "is not a rooted path" | The value is relative and was ignored. Use a full path — a UNC path rather than a mapped drive letter, which is not visible to services, scheduled tasks, or another logon session |
+| Notepad opens by itself on the first command | The default configuration file is missing, so the template was created and opened. This never happens for an overridden location. Set `UIPATHORCH_CONFIG_PATH` in `$PROFILE`, or set `UIPATHORCH_SUPPRESS_CONFIG_CREATION=1`, to stop it |
+| The variable is set but the drives came from the old file | The module mounts drives when it is first loaded, which is on the first UiPathOrch command in the session. Setting the variable after that point requires `Import-OrchConfig` to take effect |
+
+A configuration file holds credentials in plain text (`AppSecret`, `Password`, personal
+access tokens), and a share protects it only with its own ACL. A file shared by several
+people should contain only drives that authenticate interactively.
+
 ## Connection Issues
 
 When a drive fails to connect, verify the configuration values:

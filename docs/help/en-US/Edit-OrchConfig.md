@@ -35,6 +35,8 @@ On Linux and macOS, the cmdlet does not launch an editor. It changes the current
 
 If the configuration file does not exist, the cmdlet creates a default configuration file before opening it.
 
+The file opened is the one currently in effect — the built-in per-user location, or the file named by the `UIPATHORCH_CONFIG_PATH` environment variable (see `Import-OrchConfig`). An overridden location is never created from the template: if the file is missing or unreachable, the cmdlet reports an error instead of opening an editor, because that path is typically a share and creating a configuration file there would overwrite what other machines are pointed at. Bear in mind that a shared file may be open on someone else's machine at the same time; the last save wins.
+
 After saving changes to the configuration file, run `Import-OrchConfig` to reload the configuration and mount the configured Orchestrator tenants as PSDrives.
 
 ## EXAMPLES

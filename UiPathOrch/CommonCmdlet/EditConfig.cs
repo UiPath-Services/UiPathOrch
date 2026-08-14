@@ -71,8 +71,26 @@ public class EditConfigCmdlet : PSCmdlet
 
     protected override void ProcessRecord()
     {
+        var resolution = Core.OrchProvider.ResolveConfigPath();
+        if (resolution.Warning is not null) WriteWarning(resolution.Warning);
+
+        // No-op when the location is overridden: a template is only ever right for the default,
+        // per-user location.
         Core.OrchProvider.EnsureDefaultConfigFileExists();
-        string configFilePath = Core.OrchProvider.GetConfigFilePath();
+
+        string configFilePath = resolution.Path;
+
+        // With no template to fall back on, an overridden location that cannot be read has
+        // nothing to open -- say so instead of handing the editor a path that does not exist.
+        // The same read settles whether the location named the file or the folder holding it.
+        if (resolution.IsOverride &&
+            !Core.OrchProvider.TryReadConfigFile(resolution, out _, out configFilePath, out string? probeError))
+        {
+            WriteError(new ErrorRecord(
+                new IOException($"{probeError} The location comes from the {Core.OrchProvider.ConfigPathEnvVar} environment variable."),
+                "ConfigFileNotAvailable", ErrorCategory.OpenError, configFilePath));
+            return;
+        }
 
         string?[] candidates;
 
