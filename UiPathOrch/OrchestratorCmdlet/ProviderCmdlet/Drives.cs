@@ -168,9 +168,9 @@ public partial class OrchProvider
     private const int ConfigReadMemoMs = 5_000;
     private static readonly object _configReadLock = new();
     private static string? _configReadKey;
-    private static string? _configReadJson;
     private static string _configReadEffectivePath = "";
     private static string? _configReadError;
+    private static bool _configReadNotFound;
     private static long _configReadAt;
 
     /// <summary>
@@ -178,7 +178,9 @@ public partial class OrchProvider
     /// guessing. <paramref name="effectivePath"/> is the path that actually answered -- or the
     /// primary candidate when nothing did, so callers always have something to name.
     /// Returns false with a human-readable <paramref name="error"/> when the file is missing,
-    /// unreadable, or the read timed out.
+    /// unreadable, or the read timed out; <paramref name="notFound"/> separates "nothing is
+    /// there" from "something went wrong reading it", which is the difference between offering
+    /// to create a template and refusing to touch the path.
     /// </summary>
     internal static bool TryReadConfigFile(
         ConfigPathResolution resolution,
@@ -186,30 +188,56 @@ public partial class OrchProvider
         out string effectivePath,
         out string? error,
         bool bypassMemo = false)
+        => TryReadConfigFile(resolution, out json, out effectivePath, out error, out _, bypassMemo);
+
+    /// <inheritdoc cref="TryReadConfigFile(ConfigPathResolution, out string?, out string, out string?, bool)"/>
+    internal static bool TryReadConfigFile(
+        ConfigPathResolution resolution,
+        out string? json,
+        out string effectivePath,
+        out string? error,
+        out bool notFound,
+        bool bypassMemo = false)
     {
         string key = resolution.Path + " " + (resolution.FolderCandidate ?? "");
 
         lock (_configReadLock)
         {
-            if (!bypassMemo &&
-                string.Equals(_configReadKey, key, StringComparison.OrdinalIgnoreCase) &&
-                System.Environment.TickCount64 - _configReadAt < ConfigReadMemoMs)
+            // The memo remembers only WHICH path answered and how it failed -- never the file's
+            // content. That content carries plaintext AppSecret / Password / PAT values, and a
+            // static would keep a copy of them reachable for the rest of the process. Re-reading
+            // a file that just answered costs microseconds; what the memo is actually worth is
+            // the dead-share case, where the three providers would otherwise each pay the full
+            // timeout during one module load -- and there is no content to cache there anyway.
+            bool memoHit = !bypassMemo
+                && string.Equals(_configReadKey, key, StringComparison.OrdinalIgnoreCase)
+                && System.Environment.TickCount64 - _configReadAt < ConfigReadMemoMs;
+
+            if (memoHit && _configReadError is not null)
             {
-                json = _configReadJson;
+                json = null;
                 effectivePath = _configReadEffectivePath;
                 error = _configReadError;
-                return error is null;
+                notFound = _configReadNotFound;
+                return false;
             }
 
+            if (memoHit && TryReadOne(_configReadEffectivePath, out json, out error, out notFound))
+            {
+                effectivePath = _configReadEffectivePath;
+                return true;
+            }
+
+            // No memo, or the remembered path stopped answering -- resolve from scratch.
             effectivePath = resolution.Path;
-            bool ok = TryReadOne(resolution.Path, out json, out error, out bool notFound);
+            bool ok = TryReadOne(resolution.Path, out json, out error, out notFound);
 
             // Fall back to the folder reading ONLY on not-found. A timeout means the share is
             // unreachable, so a second attempt buys nothing and costs another full timeout;
             // access-denied and malformed JSON are answers, not reasons to look elsewhere.
             if (!ok && notFound && resolution.FolderCandidate is not null)
             {
-                if (TryReadOne(resolution.FolderCandidate, out json, out string? folderError, out _))
+                if (TryReadOne(resolution.FolderCandidate, out json, out string? folderError, out bool folderNotFound))
                 {
                     effectivePath = resolution.FolderCandidate;
                     error = null;
@@ -217,14 +245,15 @@ public partial class OrchProvider
                 }
                 else
                 {
+                    notFound = folderNotFound;
                     error = $"No configuration file at \"{resolution.Path}\" (read as a file) or \"{resolution.FolderCandidate}\" (read as a folder). {folderError}";
                 }
             }
 
             _configReadKey = key;
-            _configReadJson = json;
             _configReadEffectivePath = effectivePath;
             _configReadError = error;
+            _configReadNotFound = notFound;
             _configReadAt = System.Environment.TickCount64;
 
             return ok;
@@ -238,9 +267,15 @@ public partial class OrchProvider
         notFound = false;
         try
         {
-            // On timeout the worker thread stays blocked until the OS gives up. That is
-            // acceptable for a one-shot at module load, and is why the wait exists at all.
-            var task = Task.Run(() => File.Exists(path) ? File.ReadAllText(path) : (string?)null);
+            // On timeout the worker stays blocked until the OS gives up, so it must NOT be a
+            // thread-pool thread: GetConfigFilePath is reachable from Get-OrchConfigPath, and a
+            // loop run against a dead share would otherwise park one pool thread per call and
+            // starve unrelated async work. LongRunning gives it a dedicated thread instead.
+            var task = Task.Factory.StartNew(
+                () => File.Exists(path) ? File.ReadAllText(path) : (string?)null,
+                CancellationToken.None,
+                TaskCreationOptions.LongRunning,
+                TaskScheduler.Default);
             if (!task.Wait(ConfigReadTimeoutMs))
             {
                 error = $"Timed out after {ConfigReadTimeoutMs / 1000} seconds while reading the configuration file. The path may be on a network share that is currently unreachable.";
@@ -388,28 +423,30 @@ public partial class OrchProvider
         var resolution = ResolveConfigPath();
         if (resolution.Warning is not null) WriteWarning(resolution.Warning);
 
-        string configFilePath = resolution.Path;
-        string? json;
+        // Both locations go through the same bounded, guarded read. The default one is not
+        // reliably local either: GetBasePath builds on the Documents folder, which under
+        // enterprise Folder Redirection is routinely a UNC path -- and the shadow providers
+        // already read it this way, so anything else here would mount the Orch drives while
+        // their Du/Tm companions silently gave up.
+        bool read = TryReadConfigFile(
+            resolution, out string? json, out string configFilePath, out string? readError, out bool notFound);
 
-        if (resolution.IsOverride)
+        if (!read && resolution.IsOverride)
         {
-            // Bounded read, and no fallback to the default file: mounting a different set of
-            // tenants than the one that was asked for -- silently, because a share happened to be
-            // offline -- is worse than mounting none.
-            if (!TryReadConfigFile(resolution, out json, out configFilePath, out string? readError))
-            {
-                WriteWarning($"\"{configFilePath}\": {readError}");
-                WriteWarning($"The configuration file location comes from the {ConfigPathEnvVar} environment variable. No drives were mounted; the default configuration file was deliberately not used as a fallback.");
-                return null;
-            }
+            // No fallback to the default file: mounting a different set of tenants than the one
+            // that was asked for -- silently, because a share happened to be offline -- is worse
+            // than mounting none.
+            WriteWarning($"\"{configFilePath}\": {readError}");
+            WriteWarning($"The configuration file location comes from the {ConfigPathEnvVar} environment variable. No drives were mounted; the default configuration file was deliberately not used as a fallback.");
+            return null;
         }
-        else if (File.Exists(configFilePath))
+
+        if (!read && !notFound)
         {
-            json = File.ReadAllText(configFilePath);
-        }
-        else
-        {
-            json = null;
+            // The default file exists but could not be read -- locked by an editor, or denied.
+            // Creating a template over it would destroy the drive definitions it still holds.
+            WriteWarning($"\"{configFilePath}\": {readError}");
+            return null;
         }
 
         if (json is not null)
@@ -449,7 +486,12 @@ public partial class OrchProvider
             }
             _config!.Enabled ??= true;
 
-            foreach (var drive in _config!.PSDrives!)
+            // A config with no "PSDrives" array deserializes fine and has nothing to mount.
+            // Import-OrchConfig reports that case; here just mount nothing rather than throwing a
+            // raw NullReferenceException out of provider initialization. Reachable now that
+            // UIPATHORCH_CONFIG_PATH can point this at an arbitrary hand-written file -- the
+            // shadow providers guard the same loop for the same reason.
+            foreach (var drive in _config!.PSDrives ?? [])
             {
                 drive.CascadePSDriveFromGlobalSettings(_config);
                 if (!drive.Enabled.GetValueOrDefault()) continue;

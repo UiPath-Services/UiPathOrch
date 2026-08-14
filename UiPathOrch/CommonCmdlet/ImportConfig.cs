@@ -20,7 +20,11 @@ public class ImportOrchConfigCmdlet : PSCmdlet
     /// as a user / system variable) instead, so that module autoloading picks it up before any
     /// drive is mounted.
     /// </summary>
+    // Without this, an empty argument -- an unset variable, a blank cell in a CSV -- would fall
+    // through to "no switch" and quietly re-import the config already in effect, reporting
+    // success while the caller believes it switched.
     [Parameter(Position = 0)]
+    [ValidateNotNullOrEmpty]
     public string? ConfigPath { get; set; }
 
     // Resolve -ConfigPath to file-system candidates. Returns false having written the error.
@@ -52,13 +56,12 @@ public class ImportOrchConfigCmdlet : PSCmdlet
             return false;
         }
 
-        // Accept a folder as well as a file, the same way the environment variable does: the
-        // file reading is tried first and the folder reading only if it is not there. Unlike the
-        // resolver this cmdlet can afford to probe, so a path that already exists as a folder
-        // skips the pointless first attempt.
-        bool isFolder = System.IO.Path.EndsInDirectorySeparator(expanded) || System.IO.Directory.Exists(path);
-
-        resolved = isFolder
+        // Accept a folder as well as a file, exactly the way the environment variable does: the
+        // file reading is tried first and the folder reading only if nothing is there. No
+        // Directory.Exists probe to shortcut it -- that call blocks for the full SMB/DFS connect
+        // timeout against an unreachable share, which is precisely the hang the bounded read
+        // downstream exists to prevent, and it would run before that bound applied.
+        resolved = System.IO.Path.EndsInDirectorySeparator(expanded)
             ? new Core.OrchProvider.ConfigPathResolution
             {
                 Path = System.IO.Path.Combine(path, Core.OrchProvider.ConfigFileName),
@@ -103,11 +106,21 @@ public class ImportOrchConfigCmdlet : PSCmdlet
         if (!Core.OrchProvider.TryReadConfigFile(
                 resolution, out string? json, out string configFilePath, out string? readError, bypassMemo: true))
         {
-            WriteWarning($"\"{configFilePath}\": {readError}");
-            if (!switching)
+            // An explicitly named file that cannot be read is an ERROR, not a warning. A warning
+            // leaves $? true, does not stop under -ErrorAction Stop, and is not catchable -- so a
+            // startup script that switches to a shared config would sail past an offline share
+            // and keep running against the drives from the PREVIOUS config, silently targeting
+            // the wrong tenant. That is the same failure the no-fallback rule exists to prevent.
+            if (switching)
             {
-                WriteWarning("Run Edit-OrchConfig to create and edit the configuration file.");
+                WriteError(new ErrorRecord(
+                    new System.IO.IOException($"{readError} (-ConfigPath: {configFilePath})"),
+                    "ConfigFileNotAvailable", ErrorCategory.OpenError, ConfigPath));
+                return;
             }
+
+            WriteWarning($"\"{configFilePath}\": {readError}");
+            WriteWarning("Run Edit-OrchConfig to create and edit the configuration file.");
             return;
         }
 

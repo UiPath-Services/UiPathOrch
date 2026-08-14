@@ -120,7 +120,7 @@ Configuration file to load instead of the one currently in effect. A folder is a
 
 The path must resolve to a file-system path. A relative path is resolved against the current location, so specify a full path when the current location is on an Orchestrator drive. A UNC path is recommended for a shared file.
 
-On success the resolved full path is stored in the `UIPATHORCH_CONFIG_PATH` environment variable of the current process, which makes it the configuration file for the rest of the session and for any child process started from it. Nothing is written to the persistent environment. If the file cannot be read or does not parse, the session is left unchanged.
+On success the resolved full path is stored in the `UIPATHORCH_CONFIG_PATH` environment variable of the current process, which makes it the configuration file for the rest of the session and for any child process started from it. Nothing is written to the persistent environment. If the file cannot be read or does not parse, the cmdlet writes a terminating-capable error and the session is left unchanged — the previously mounted drives stay as they were, so a script using `-ErrorAction Stop` or `try`/`catch` will not run on against the wrong configuration.
 
 Note that the file holds credentials in plain text (`AppSecret`, `Password`, personal access tokens). A file shared by several people should contain only drives that authenticate interactively, so that no secret is shared along with it.
 

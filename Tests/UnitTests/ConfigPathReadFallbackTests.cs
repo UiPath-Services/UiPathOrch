@@ -139,23 +139,37 @@ public sealed class ConfigPathReadFallbackTests : IClassFixture<ConfigPathTempTr
         Assert.DoesNotContain("read as a file", error);
     }
 
-    // Malformed content is an answer, not a reason to look elsewhere: the file reading
-    // succeeded, so the folder reading must not run and shadow it.
+    // Content is not the read's business: malformed JSON comes back verbatim for the caller's
+    // deserializer to reject. Only a missing file triggers the folder reading, so this must not
+    // be turned into a not-found and sent looking elsewhere.
+    //
+    // (A file that exists AND has a same-named folder beside it cannot be constructed — one name,
+    // one entry — so "the folder reading must not shadow a readable file" is unreachable as a
+    // fixture. NeitherReadingAnswers_TheErrorNamesBothPaths pins the gate from the other side.)
     [Fact]
-    public void AFileThatExists_IsReturnedEvenWhenItsContentIsNotJson()
+    public void AFileThatExists_IsReturnedVerbatimEvenWhenItsContentIsNotJson()
     {
-        string folder = Path.Combine(_root, "both");
-        Directory.CreateDirectory(folder);
-        File.WriteAllText(Path.Combine(folder, "UiPathOrchConfig.json"), "{ \"marker\": \"inside\" }");
-
-        string file = Path.Combine(_root, "both.json");
+        string file = Path.Combine(_root, "malformed.json");
         File.WriteAllText(file, "not json at all");
 
         bool ok = OrchProvider.TryReadConfigFile(
-            Resolve(file), out string? json, out string effective, out string? error, bypassMemo: true);
+            Resolve(file), out string? json, out string effective, out string? error, out bool notFound, bypassMemo: true);
 
         Assert.True(ok, error ?? "");
+        Assert.False(notFound);
         Assert.Equal(file, effective);
         Assert.Equal("not json at all", json);
+    }
+
+    // notFound is what tells InitializeDefaultDrives whether it may create a template at the
+    // default location, so "absent" and "present but unreadable" must not collapse together.
+    [Fact]
+    public void NothingThere_ReportsNotFound()
+    {
+        bool ok = OrchProvider.TryReadConfigFile(
+            Resolve(Path.Combine(_root, "absent")), out _, out _, out _, out bool notFound, bypassMemo: true);
+
+        Assert.False(ok);
+        Assert.True(notFound);
     }
 }
