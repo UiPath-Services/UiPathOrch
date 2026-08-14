@@ -523,9 +523,14 @@ both paths.
 
 Three behaviours differ once the location is overridden, because that path is typically shared: no
 template is created there, a parse error does not open the file in an editor, and a file that
-cannot be read mounts no drives rather than silently falling back to the default file. Reads of an
-overridden path get a bounded 10-second wait, so an unreachable share reports a timeout instead of
-hanging the first command of the session.
+cannot be read mounts no drives rather than silently falling back to the default file. In the same
+spirit, an unreadable -ConfigPath is reported as an error rather than a warning, so a script using
+-ErrorAction Stop stops instead of carrying on against the drives left from the previous config.
+
+Reads of the configuration file, at either location, get a bounded 10-second wait, so an
+unreachable path reports a timeout instead of hanging the first command of the session. This covers
+the default location too: it is built on the Documents folder, which under enterprise Folder
+Redirection is routinely a UNC path.
 
 Note that the file stores credentials in plain text (AppSecret, Password, personal access tokens)
 and a share protects it only with its own ACL. Sharing one file between people shares those
