@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.12.3'
+ModuleVersion = '1.13.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,36 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.13.0
+
+Added: the configuration file location can now be changed. UiPathOrchConfig.json was fixed to the
+per-user module folder, so one set of drive definitions could not be kept on a share and used from
+several machines. The new UIPATHORCH_CONFIG_PATH environment variable relocates it, and
+Import-OrchConfig -ConfigPath <path> switches files inside a running session by setting that
+variable for the current process -- nothing is written to the persistent environment. For a
+standing setup, set the variable in $PROFILE or as a user or system variable, so that it is in
+place before the module autoloads and mounts its drives. A UNC path is recommended: a mapped drive
+letter is not visible to services, scheduled tasks, or another logon session. Get-OrchConfigPath
+reports the file in effect and, with -Verbose, where the location came from.
+
+Either the file or the folder holding it may be named. The two are told apart by trying rather than
+by guessing from the spelling: the path is read as a file first, and as a folder containing
+UiPathOrchConfig.json only if no file is there. The fallback runs only on not-found, so an
+unreachable share does not cost a second timeout, and when neither reading answers, the error names
+both paths.
+
+Three behaviours differ once the location is overridden, because that path is typically shared: no
+template is created there, a parse error does not open the file in an editor, and a file that
+cannot be read mounts no drives rather than silently falling back to the default file. Reads of an
+overridden path get a bounded 10-second wait, so an unreachable share reports a timeout instead of
+hanging the first command of the session.
+
+Note that the file stores credentials in plain text (AppSecret, Password, personal access tokens)
+and a share protects it only with its own ACL. Sharing one file between people shares those
+credentials, and Orchestrator's audit trail then attributes everyone's actions to the same
+identity. A file intended for several people should define only drives that authenticate
+interactively, so that it carries connection details and no secrets.
+
 1.12.3
 
 Added: -TimeZoneId now tab-completes on New-OrchTrigger, Update-OrchTrigger and Update-OrchMachine.
@@ -575,27 +605,6 @@ Remove-Item, [IO.File]::ReadAllText. PowerShell's own provider shares read/write
 Get-Content -Wait, Select-String and Copy-Item are unaffected. To zip, hash or delete an active
 drive's log, pause a few seconds or unmount the drive first; writes made while the file is busy are
 retained and written once it is free.
-
-1.12.1
-
-Update-Orch* cmdlets now skip the API call when nothing actually changed. The field-level change
-detection introduced in v0.9.16.1 missed a family of fields (execution settings, roles,
-unattended-robot, tags, machine robots, retention, entry point, ...) that flipped the dirty flag
-whenever the parameter was merely present, re-writing the record -- and churning the audit log --
-even when the value was unchanged. Each cmdlet's change decision is
-now a pure, per-field unit-tested core, so a no-op request issues no PUT/PATCH. Reported for
-Update-OrchUser * -ES_StudioNotifyServer false.
-
-Fixed: every partition-scoped Pm* operation failed with InvalidPartition on a newer Automation
-Cloud org (Get-PmGroup, New-PmUser, Copy-PmUser, ...). The Cloud identity API needs the org-scoped
-route, but the config's auto-generated host-level IdentityUrl (required for the PKCE authorize
-endpoint) was clobbering the identity API base. The API base now stays org-scoped on Cloud, while
-the authorize endpoint and Automation Suite / on-premises are unchanged.
-
-Fixed: New-PmUser -UserName with a bare non-address name now creates a userName-only local user
-(the name was being copied into the email field, which the server rejected). Remove-PmUser
--UserName now matches by userName or email, so an email-less user can be removed. Update-OrchWebhook
-no longer overwrites -Secret with a blank value when an empty string is passed.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
