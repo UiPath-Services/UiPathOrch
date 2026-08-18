@@ -284,9 +284,9 @@ You can pipe a destination folder path to this cmdlet via the Destination proper
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Bucket
+### None
 
-Returns the newly created Bucket object in the destination folder. When the source and destination are the same folder, the operation is silently skipped and no output is returned.
+This cmdlet produces no pipeline output. Progress is reported through Write-Progress, and per-bucket problems through warnings and non-terminating errors. Verify the result with `Get-OrchBucket` on the destination, or compare both sides with `Compare-OrchBucket`.
 
 ## NOTES
 

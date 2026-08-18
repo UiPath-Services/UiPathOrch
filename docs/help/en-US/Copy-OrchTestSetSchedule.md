@@ -269,9 +269,9 @@ You can pipe the Destination path to this cmdlet.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.TestSetSchedule
+### None
 
-Returns TestSetSchedule objects representing the copied test set schedules.
+This cmdlet produces no pipeline output. Progress is reported through Write-Progress, and per-schedule problems through warnings and non-terminating errors. Verify the result with `Get-OrchTestSetSchedule` on the destination, or compare both sides with `Compare-OrchTestSetSchedule`.
 
 ## NOTES
 

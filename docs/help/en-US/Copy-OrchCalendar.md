@@ -232,9 +232,9 @@ You can pipe a source drive path to this cmdlet via the Path property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ExtendedCalendar
+### None
 
-Returns the calendar objects that were copied. If a calendar with the same name already exists on the destination drive, an error is returned for that calendar.
+This cmdlet produces no pipeline output. Progress is reported through Write-Progress, and per-calendar problems through warnings and non-terminating errors — including the error returned when a calendar with the same name already exists on the destination drive. Verify the result with `Get-OrchCalendar` on the destination, or compare both sides with `Compare-OrchCalendar`.
 
 ## NOTES
 

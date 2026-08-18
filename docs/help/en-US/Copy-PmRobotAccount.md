@@ -222,9 +222,9 @@ You can pipe robot account names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### None
+### UiPath.PowerShell.Entities.PmRobotAccount
 
-This cmdlet does not produce pipeline output. The copy operation is performed as a side effect.
+Returns the robot accounts created in the destination organization, with Path set to the destination drive. Accounts that already exist there, or that the server rejects, are not returned — each is reported as a warning or a non-terminating error.
 
 ## NOTES
 

@@ -256,9 +256,9 @@ You can pipe email addresses to this cmdlet via the Email property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.PmUser
+### None
 
-Returns the created PmUser objects in the destination organization, ordered by email.
+This cmdlet produces no pipeline output. Skipped and rejected users are reported through warnings and non-terminating errors (an email-less user on a Cloud destination, a name or email that already exists there, a bulk-create the server did not fully accept). Verify the result with `Get-PmUser` on the destination organization.
 
 ## NOTES
 

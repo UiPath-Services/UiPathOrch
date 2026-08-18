@@ -31,7 +31,7 @@ Copy-OrchAsset [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint
 
 Copies assets from a source folder to a destination folder in UiPath Orchestrator. The destination can be a different folder on the same Orchestrator instance or a folder on a different Orchestrator instance (cross-drive copy). All asset types are supported: Text, Bool, Integer, and Credential.
 
-If the source and destination resolve to the same folder, the operation is silently skipped. If an asset with the same name already exists in the destination, it is updated with the source asset's values.
+If the source and destination resolve to the same folder, the operation is silently skipped. If an asset with the same name already exists in the destination folder, an error is returned for that asset and the existing asset is left unchanged — the copy creates assets, it never overwrites one that is already there. Use `Set-OrchAsset` to update an existing asset's value.
 
 For per-robot assets, user assignments are copied based on matching usernames between source and destination. When copying across different Orchestrator instances, use -UserMappingCsv to specify how source usernames map to destination usernames. The user mapping CSV can be generated using New-OrchUserMappingCsv.
 
@@ -314,15 +314,17 @@ You can pipe source path and destination via the Path and Destination properties
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Asset
+### None
 
-Returns Asset objects for newly created assets at the destination. When an existing asset is updated, no output is produced.
+This cmdlet produces no pipeline output. Progress is reported through Write-Progress, and per-asset problems through warnings and non-terminating errors. Verify the result with `Get-OrchAsset` on the destination, or compare both sides with `Compare-OrchAsset`.
 
 ## NOTES
 
 The -Path parameter is a single string, not a string array. This differs from most other cmdlets in the module that accept string arrays for -Path.
 
 When the source and destination resolve to the same folder, the operation is silently skipped without error.
+
+An asset that already exists at the destination is never overwritten: the cmdlet posts a create, the destination rejects the duplicate name ("The name <asset> is already used."), and that surfaces as a non-terminating error for that asset while the remaining assets continue to copy. Re-running a copy is therefore safe, but it is not a silent skip — expect one error per already-copied asset. To push changed values to an existing destination asset, use `Set-OrchAsset`.
 
 For cross-instance migration of per-robot assets, a user mapping CSV is required because user IDs differ between instances. Without -UserMappingCsv, per-robot values may not be copied correctly if usernames do not match.
 

@@ -302,9 +302,9 @@ You can pipe a source path to this cmdlet via the Path property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.BulkItemDtoOfString
+### None
 
-Returns the upload result for each successfully copied package at the destination.
+This cmdlet produces no pipeline output. Progress is reported through Write-Progress, and per-package problems through warnings and non-terminating errors — including the error written when the same Id and version already exists at the destination. Verify the result with `Get-OrchPackage` on the destination.
 
 ## NOTES
 

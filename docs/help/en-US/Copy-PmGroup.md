@@ -225,9 +225,9 @@ You can pipe group names to this cmdlet via the GroupName property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.PmGroup
+### None
 
-Returns the created or updated PmGroup objects in the destination organization.
+This cmdlet produces no pipeline output. Per-group problems are reported through warnings and non-terminating errors. Verify the result with `Get-PmGroup` on the destination organization.
 
 ## NOTES
 

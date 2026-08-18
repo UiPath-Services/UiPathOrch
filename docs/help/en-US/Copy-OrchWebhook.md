@@ -226,9 +226,9 @@ You can pipe a destination drive path to this cmdlet via the Destination propert
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Webhook
+### None
 
-Returns the newly created Webhook object in the destination drive.
+This cmdlet produces no pipeline output. Progress is reported through Write-Progress, and per-webhook problems through warnings and non-terminating errors. Verify the result with `Get-OrchWebhook` on the destination, or compare both sides with `Compare-OrchWebhook`.
 
 ## NOTES
 

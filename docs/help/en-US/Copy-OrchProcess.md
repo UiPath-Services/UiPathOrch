@@ -282,9 +282,9 @@ You can pipe a destination folder path to this cmdlet via the Destination proper
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.Release
+### None
 
-Returns the newly created Release object in the destination folder. When the source and destination are the same folder, the process is silently skipped and no output is returned.
+This cmdlet produces no pipeline output. Progress is reported through Write-Progress, and per-process problems through warnings and non-terminating errors. Verify the result with `Get-OrchProcess` on the destination, or compare both sides with `Compare-OrchProcess`.
 
 ## NOTES
 

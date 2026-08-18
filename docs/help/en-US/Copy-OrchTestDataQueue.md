@@ -269,9 +269,9 @@ You can pipe the Destination path to this cmdlet.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.TestDataQueue
+### None
 
-Returns TestDataQueue objects representing the copied test data queues.
+This cmdlet produces no pipeline output. Progress is reported through Write-Progress, and per-queue problems through warnings and non-terminating errors. Verify the result with `Get-OrchTestDataQueue` on the destination, or compare both sides with `Compare-OrchTestDataQueue`.
 
 ## NOTES
 

@@ -276,9 +276,9 @@ You can pipe a destination folder path to this cmdlet via the Destination proper
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ProcessSchedule
+### None
 
-Returns the newly created ProcessSchedule object in the destination folder.
+This cmdlet produces no pipeline output. Progress is reported through Write-Progress, and per-trigger problems through warnings and non-terminating errors — including the warning that each copied trigger is created disabled. Verify the result with `Get-OrchTrigger` on the destination, or compare both sides with `Compare-OrchTrigger`.
 
 ## NOTES
 

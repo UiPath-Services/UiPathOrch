@@ -246,9 +246,9 @@ You can pipe a source drive path to this cmdlet via the Path property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.BulkItemDtoOfString
+### None
 
-Returns upload result objects for each successfully copied library package.
+This cmdlet produces no pipeline output. Progress is reported through Write-Progress, and per-library problems through warnings and non-terminating errors — including the error written when the same Id and version already exists at the destination. Verify the result with `Get-OrchLibrary` on the destination.
 
 ## NOTES
 

@@ -233,9 +233,9 @@ You can pipe the source path via the Path property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.CreatedMachine
+### None
 
-Returns CreatedMachine objects for newly created machines at the destination.
+This cmdlet produces no pipeline output. Progress is reported through Write-Progress, and per-machine problems through warnings and non-terminating errors. Verify the result with `Get-OrchMachine` on the destination, or compare both sides with `Compare-OrchMachine`.
 
 ## NOTES
 

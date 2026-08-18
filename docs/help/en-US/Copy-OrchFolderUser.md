@@ -325,9 +325,9 @@ You can pipe source path and destination via the Path and Destination properties
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.UserRoles
+### None
 
-Returns UserRoles objects for newly created folder user assignments at the destination.
+This cmdlet produces no pipeline output. Progress is reported through Write-Progress, and per-assignment problems through warnings and non-terminating errors. Verify the result with `Get-OrchFolderUser` on the destination, or compare both sides with `Compare-OrchFolderUser`.
 
 ## NOTES
 
