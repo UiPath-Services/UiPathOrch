@@ -59,6 +59,18 @@ jobs:
         # Fails if a cmdlet was added/removed without updating the manifest.
         run: ./Tests/Get-CmdletInventory.ps1 -DllPath ./UiPathOrch/bin/Release/net8.0/UiPathOrch.dll -FailOnDrift
 
+      - name: Verify help markdown syntax order (drift)
+        shell: pwsh
+        # docs/help/en-US/*.md is what Get-Help -Online serves, so its SYNTAX
+        # blocks have to carry the same canonical parameter order that
+        # Reorder-SyntaxParameters.ps1 gives the built MAML. Applying it to the
+        # markdown is a manual step that nothing else enforces; this gate is what
+        # makes forgetting it visible. Run the reorder and fail if it changed
+        # anything, the same shape as the dotnet format gate above.
+        run: |
+          ./PlatyPS/Reorder-MdSyntaxParameters.ps1 ./docs/help/en-US
+          git diff --exit-code -- docs/help/en-US
+
   # Build + unit-test on Linux and macOS so the "Windows | Linux | macOS" claim is
   # exercised by CI and cross-platform regressions (path handling, browser launch,
   # CSV encoding) are caught. Formatting is verified by the Windows job only.
