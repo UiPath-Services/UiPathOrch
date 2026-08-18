@@ -6,6 +6,7 @@ permalink: /migration/
 
 # UiPathOrch Module - Migration & Copy Guide
 
+- [The migration at a glance](#the-migration-at-a-glance)
 - [Choose your path](#choose-your-path)
 - [Getting Started](#getting-started)
 - [Phase 1: Interview and Migration Planning](#phase-1-interview-and-migration-planning)
@@ -15,6 +16,59 @@ permalink: /migration/
 - [Phase 5: Feedback](#phase-5-feedback)
 - [Copying Individual Entities](#copying-individual-entities)
 - [Appendix](#appendix)
+- [Case Study: Two-Phase Migration](#case-study-two-phase-migration)
+
+## The migration at a glance
+
+A whole tenant migration is the steps below, in this order. None of them is safe to run
+blind — each row links to the section that states its preconditions.
+
+| # | Step | Command | Details |
+|---|---|---|---|
+| 0 | Cross-organization only: bring the users across first | `Copy-PmUser -Path OldOrch: * NewOrch: -WhatIf`<br>`Copy-PmRobotAccount -Path OldOrch: * NewOrch: -WhatIf` | [Step 1](#step-1-copy-organization-level-entities-cross-organization-only) |
+| 1 | Everything except live data — tenant entities, folders, folder entities | `copy -Recurse OldOrch:\ NewOrch:\ -WhatIf` | [Step 2](#step-2-copy-tenant-level-and-folder-level-entities) |
+| 2 | Re-enter the secrets the API cannot read — export, fill in the values, import back. The same export → edit → import shape applies to `Set-OrchSecretAsset`, `Update-OrchBucket` and `Update-OrchUser` | `Get-OrchCredentialAsset -Path NewOrch: -Recurse -ExportCsv c:\cred-assets.csv`<br>`Import-Csv c:\cred-assets.csv \| Set-OrchCredentialAsset -WhatIf` | [Passwords / Secrets](#entities-containing-passwordssecrets) |
+| 3 | Queue items with Status `New` | `Copy-OrchQueueItem -Path OldOrch:\ -Recurse * -Destination NewOrch:\ -WhatIf` | [Copying Queue Items](#copying-queue-items) |
+| 4 | Storage bucket files | `Copy-OrchBucketItem -Path OldOrch:\ -Recurse * * -Destination NewOrch:\ -WhatIf` | [Copying Bucket Files](#copying-bucket-files) |
+| 5 | Start the destination | `Enable-OrchTrigger -Path NewOrch:\ -Recurse * -WhatIf` | [Step 3](#step-3-enable-the-copied-triggers) |
+| 6 | Verify against the destination — one `Compare-Orch*` per entity type | `Compare-OrchAsset * NewOrch:\ -Path OldOrch:\ -Recurse` | [Phase 4](#phase-4-post-migration-verification) |
+
+The commands are shown with `-WhatIf`, which reports what would happen and changes nothing —
+run each one that way first, then drop `-WhatIf` to perform it. (Step 6 is read-only and has no
+`-WhatIf`.)
+
+Before running any of it: make the source drive's scopes read-only
+([Step 0](#step-0-safety-check--verify-source-drive-scopes)), decide whether you need a
+username mapping CSV ([Choose your path](#choose-your-path)), and check the destination's
+library feed setting ([Phase 2](#phase-2-environment-preparation)).
+
+### What `copy` covers
+
+`copy` (`Copy-Item`) scopes itself by the paths you give it and whether you pass
+`-Recurse`, so the same command covers a whole tenant or just the folder tree:
+
+```powershell
+# Everything: the tenant entities, plus every folder and its folder entities
+copy -Recurse OldOrch:\ NewOrch:\ -WhatIf
+
+# Copy the tenant entities only — libraries, tenant-feed packages, credential stores,
+# roles, users, machines, calendars, webhooks (copied in that order)
+copy OldOrch:\ NewOrch:\ -WhatIf
+
+# Copy every folder and its folder entities (no tenant entities)
+copy -Recurse OldOrch:\* NewOrch:\ -WhatIf
+
+# Copy the folder hierarchy only (no tenant entities, no folder entities)
+copy -Recurse OldOrch:\ NewOrch:\ -ExcludeEntities -WhatIf
+```
+
+Every example above carries `-WhatIf`, so it reports what it would copy and changes
+nothing. Drop `-WhatIf` to perform the copy.
+
+The tenant entities are copied by the **root-to-root** form, which is why
+`OldOrch:\*` — a wildcard over the top-level folders, not the root itself — leaves them
+behind. Queue items, storage bucket files and event triggers are never carried by any of
+these; see [Important Notes](#important-notes).
 
 ## Choose your path
 
@@ -114,10 +168,10 @@ Connect to the source tenant and investigate the entities to be migrated. Use
 to expand nested properties.
 
 ```powershell
-Get-OrchUser -Path Source: | ConvertTo-Json
-Get-OrchCredentialStore -Path Source:
-Get-OrchFolderUser -Path Source:\ -Recurse | ConvertTo-Json
-Get-OrchAsset -Path Source:\ -Recurse | where ValueType -eq Credential | ConvertTo-Json
+Get-OrchUser -Path OldOrch: | ConvertTo-Json
+Get-OrchCredentialStore -Path OldOrch:
+Get-OrchFolderUser -Path OldOrch:\ -Recurse | ConvertTo-Json
+Get-OrchAsset -Path OldOrch:\ -Recurse | where ValueType -eq Credential | ConvertTo-Json
 ```
 
 It is especially important to identify in advance which entities contain
@@ -128,7 +182,7 @@ drives — UiPathOrch builds different URL patterns for Cloud, Automation
 Suite, and on-premises:
 
 ```powershell
-Get-OrchPSDrive Source:, Destination: | Select-Object Name, Root, Edition
+Get-OrchPSDrive OldOrch:, NewOrch: | Select-Object Name, Root, Edition
 ```
 
 If the `Edition` column shows the wrong value for either drive (rare —
@@ -163,7 +217,7 @@ Based on the interview results, create a migration plan that includes:
 - UiPathOrch module is imported
 - Source and destination drives are connected
 - **It is strongly recommended to use descriptive drive names to prevent
-  operational mistakes** (e.g., `Source:` and `Destination:`). Numbered names
+  operational mistakes** (e.g., `OldOrch:` and `NewOrch:`). Numbered names
   like `Orch1:` and `Orch2:` risk confusing the source and destination. Drive
   names can be changed in the configuration file (`Edit-OrchConfig -UseDefaultEditor`).
 
@@ -174,7 +228,7 @@ library copying will fail. Check the current setting and ask the user
 which option to use:
 
 ```powershell
-Get-OrchSetting -Path Destination: 'Deployment.Libraries.FeedScope'
+Get-OrchSetting -Path NewOrch: 'Deployment.Libraries.FeedScope'
 ```
 
 | Value | Description |
@@ -186,7 +240,7 @@ Get-OrchSetting -Path Destination: 'Deployment.Libraries.FeedScope'
 After confirming with the user:
 
 ```powershell
-Set-OrchSetting -Path Destination: -Name 'Deployment.Libraries.FeedScope' -Value 'Tenant'
+Set-OrchSetting -Path NewOrch: -Name 'Deployment.Libraries.FeedScope' -Value 'Tenant'
 ```
 
 ### Active Directory Integration Prerequisites
@@ -238,7 +292,7 @@ are read-only**. This prevents accidental modification or deletion of entities
 in the source tenant.
 
 ```powershell
-Get-OrchPSDrive Source: | Select-Object -ExpandProperty Scope
+Get-OrchPSDrive OldOrch: | Select-Object -ExpandProperty Scope
 ```
 
 Example of read-only scopes:
@@ -278,7 +332,7 @@ You mapped your scenario in [Choose your path](#choose-your-path) above; this is
 
 ### Step 1: Copy Organization-Level Entities (Cross-Organization Only)
 
-`copy -Recurse Source:\ Destination:\` copies tenant and folder entities
+`copy -Recurse OldOrch:\ NewOrch:\` copies tenant and folder entities
 but does NOT create organization-level users. Users must exist in the
 destination organization before their folder assignments can be copied.
 
@@ -289,10 +343,10 @@ are directory-integrated (Active Directory / Entra ID → *directory users*) or 
 (→ *local users*). Find your quadrant first — it decides whether users are
 **copied**, **recreated**, or **mapped**:
 
-| | **Destination: not AD-integrated** (local users) | **Destination: AD / Entra integrated** (directory users) |
+| | **NewOrch: not AD-integrated** (local users) | **NewOrch: AD / Entra integrated** (directory users) |
 |---|---|---|
-| **Source: not AD-integrated** (local users) | **local → local.** `Copy-PmUser` copies them (see [1-2](#1-2-migrating-local-users-and-robot-accounts)). | **local → local, or → directory.** Either copy them as local users (`Copy-PmUser`; a Cloud destination needs emails) *or*, if those people already exist as Entra users at the destination, treat them as directory users and only map their references ([Case B](#case-b-username-mapping-required)). An intent decision — ask the user. |
-| **Source: AD / Entra integrated** (directory users) | **directory → local (recreate).** There is no destination directory to hold them, so recreate each source directory user as a **local** user at the destination, then map references. See below. | **directory → directory.** Directory users are not copied via API — ensure they exist at the destination through its identity provider, then translate references with the mapping CSV ([Case B](#case-b-username-mapping-required)). |
+| **OldOrch: not AD-integrated** (local users) | **local → local.** `Copy-PmUser` copies them (see [1-2](#1-2-migrating-local-users-and-robot-accounts)). | **local → local, or → directory.** Either copy them as local users (`Copy-PmUser`; a Cloud destination needs emails) *or*, if those people already exist as Entra users at the destination, treat them as directory users and only map their references ([Case B](#case-b-username-mapping-required)). An intent decision — ask the user. |
+| **OldOrch: AD / Entra integrated** (directory users) | **directory → local (recreate).** There is no destination directory to hold them, so recreate each source directory user as a **local** user at the destination, then map references. See below. | **directory → directory.** Directory users are not copied via API — ensure they exist at the destination through its identity provider, then translate references with the mapping CSV ([Case B](#case-b-username-mapping-required)). |
 
 The `local → local` and `directory → directory` diagonals are the well-trodden paths
 ([1-2](#1-2-migrating-local-users-and-robot-accounts) and [Case B](#case-b-username-mapping-required)).
@@ -304,7 +358,7 @@ directory already holds:
 
 ```powershell
 # 1. Export the source directory users' identifying details
-Get-OrchUser -Path Source: |
+Get-OrchUser -Path OldOrch: |
   Where-Object Type -eq 'DirectoryUser' |
   Select-Object @{N='Email';E={$_.EmailAddress}}, @{N='UserName';E={$_.UserName}}, @{N='Name';E={$_.FullName}} |
   Export-Csv C:\Migration\directory-as-local.csv -NoTypeInformation
@@ -313,12 +367,12 @@ Get-OrchUser -Path Source: |
 #    (a Cloud destination keys local users by email, so every row needs one)
 
 # 3. Create them as local users at the destination
-Import-Csv C:\Migration\directory-as-local.csv | New-PmUser -Path Destination:
+Import-Csv C:\Migration\directory-as-local.csv | New-PmUser -Path NewOrch:
 
 # 4. Give each new user a sign-in password (they change it on first login; a
 #    per-user temp password is safer — see the password post-processing in Case A/B)
 Import-Csv C:\Migration\directory-as-local.csv |
-  ForEach-Object { Update-PmUser -Path Destination: -UserName $_.Email -Password 'Init!Change1' }
+  ForEach-Object { Update-PmUser -Path NewOrch: -UserName $_.Email -Password 'Init!Change1' }
 ```
 
 Then translate references (folder assignments, per-user assets) from the old directory
@@ -328,7 +382,7 @@ local user's name and proceed as in [Case B](#case-b-username-mapping-required).
 
 > **Verified on Cloud.** `New-PmUser` (the identity bulk-create API) creates an
 > **active**, email-keyed local user at a Cloud destination, and
-> `Update-PmUser -Path Destination: -UserName <email> -Password <pw>` then sets its
+> `Update-PmUser -Path NewOrch: -UserName <email> -Password <pw>` then sets its
 > sign-in password — both calls confirmed to succeed on Automation Cloud (API 20). The
 > user signs in with its email and that password. (The interactive browser login itself
 > was not exercised here, but it is the standard email + password flow.)
@@ -345,7 +399,7 @@ Entra name) with the mapping CSV ([Case B](#case-b-username-mapping-required)); 
 First, list all users in the source tenant and classify them:
 
 ```powershell
-Get-OrchUser -Path Source: | Select-Object UserName, Type | Format-Table
+Get-OrchUser -Path OldOrch: | Select-Object UserName, Type | Format-Table
 ```
 
 User types:
@@ -366,10 +420,10 @@ Ask the user:
 
 ```powershell
 # Copy local users (creates them in the destination org, and creates their groups)
-Copy-PmUser -Path Source: * Destination:
+Copy-PmUser -Path OldOrch: * NewOrch:
 
 # Copy robot accounts
-Copy-PmRobotAccount -Path Source: * Destination:
+Copy-PmRobotAccount -Path OldOrch: * NewOrch:
 ```
 
 `Copy-PmUser` creates the groups that the copied users belong to, so there is no
@@ -395,20 +449,20 @@ A user that already has an email keeps it in every case; only the userName and t
 - **Email-less local users → Automation Cloud** are skipped (Cloud needs an
   email). Give them one either way:
   - add the email at the **source** first, then copy —
-    `Update-PmUser -Path Source: -UserName <name> -NewEmail <addr>`
+    `Update-PmUser -Path OldOrch: -UserName <name> -NewEmail <addr>`
     (needs an Automation Suite / on-premises source on a version that supports the
     `Pm*` cmdlets, i.e. API 15+ / 22.4+; older MSI sources cannot, so use the export
     path below), or
   - recreate them at the **destination** with an email via the export path below.
 - **Add or change an email after migration** (Automation Suite / on-premises):
-  `Update-PmUser -Path Destination: -UserName <name> -NewEmail <addr>`.
+  `Update-PmUser -Path NewOrch: -UserName <name> -NewEmail <addr>`.
 - **Export → recreate path** (full control, and the way to supply emails for a
   Cloud destination). The export CSV carries a `UserName` column, so a userName
   that differs from the email round-trips:
   ```powershell
-  Get-PmUser -Path Source: -ExportCsv C:\Migration\local-users.csv
+  Get-PmUser -Path OldOrch: -ExportCsv C:\Migration\local-users.csv
   # Review/edit the CSV — fill in the Email column where blank; adjust UserName if needed
-  Import-Csv C:\Migration\local-users.csv | New-PmUser -Path Destination:
+  Import-Csv C:\Migration\local-users.csv | New-PmUser -Path NewOrch:
   ```
 - Directory users (AD / Entra ID) cannot be copied via API — they must be added
   to the destination through its identity provider, or, when the destination is
@@ -425,13 +479,13 @@ If directory users are added to local groups, those groups need to be
 migrated:
 
 ```powershell
-Get-PmGroupMember -Path Source: -ExportCsv c:\groups.csv
+Get-PmGroupMember -Path OldOrch: -ExportCsv c:\groups.csv
 ```
 
 Have the user review the exported CSV contents, then import after confirming:
 
 ```powershell
-Import-Csv c:\groups.csv | Add-PmGroupMember -Path Destination:
+Import-Csv c:\groups.csv | Add-PmGroupMember -Path NewOrch:
 ```
 
 ### Step 2: Copy Tenant-Level and Folder-Level Entities
@@ -443,13 +497,13 @@ The following single command automatically copies tenant-level entities
 webhooks) and folder-level entities in the correct order.
 
 ```powershell
-copy -Recurse Source:\ Destination:\
+copy -Recurse OldOrch:\ NewOrch:\
 ```
 
 This alone completes most of the migration work.
 
 > **`-Recurse` is what pulls in the folders.** On a root-to-root copy,
-> `copy Source:\ Destination:\` **without** `-Recurse` copies only the tenant-level
+> `copy OldOrch:\ NewOrch:\` **without** `-Recurse` copies only the tenant-level
 > entities listed above (libraries, packages, credential stores, roles, users, machines,
 > calendars, webhooks). The folders themselves and their folder-level entities (assets,
 > queues, processes, triggers, buckets, test sets, test data queues, action catalogs,
@@ -469,7 +523,7 @@ passwords migrated during copy. Address this with the following steps:
 Example (credential assets):
 
 ```powershell
-Get-OrchCredentialAsset -Path Destination: -Recurse -ExportCsv c:\cred-assets.csv
+Get-OrchCredentialAsset -Path NewOrch: -Recurse -ExportCsv c:\cred-assets.csv
 # User edits the CredentialPassword column in the CSV
 Import-Csv c:\cred-assets.csv | Set-OrchCredentialAsset
 ```
@@ -520,7 +574,7 @@ Generate a user mapping CSV that maps source directory users to destination
 directory users:
 
 ```powershell
-New-OrchUserMappingCsv Source: Destination: C:\Migration\UserMapping.csv
+New-OrchUserMappingCsv OldOrch: NewOrch: C:\Migration\UserMapping.csv
 ```
 
 This cmdlet:
@@ -556,7 +610,7 @@ Have the user review and confirm the mapping before proceeding.
 Validate the completed CSV to ensure all mappings are correct:
 
 ```powershell
-Test-OrchUserMappingCsv C:\Migration\UserMapping.csv Source: Destination:
+Test-OrchUserMappingCsv C:\Migration\UserMapping.csv OldOrch: NewOrch:
 ```
 
 This cmdlet checks, for each row:
@@ -592,7 +646,7 @@ Use the `-UserMappingCsv` parameter with copy cmdlets to automatically
 translate user references:
 
 ```powershell
-copy -Recurse Source:\ Destination:\ -UserMappingCsv C:\Migration\UserMapping.csv
+copy -Recurse OldOrch:\ NewOrch:\ -UserMappingCsv C:\Migration\UserMapping.csv
 ```
 
 This single command copies all tenant-level and folder-level entities,
@@ -602,9 +656,9 @@ references (users, folder users, assets, etc.).
 Alternatively, copy individual entity types with user mapping:
 
 ```powershell
-Copy-OrchUser -Path Source: * Destination: -UserMappingCsv C:\Migration\UserMapping.csv
-Copy-OrchFolderUser -Recurse -Path Source:\ * -Destination Destination:\ -UserMappingCsv C:\Migration\UserMapping.csv
-Copy-OrchAsset -Recurse -Path Source:\ * -Destination Destination:\ -UserMappingCsv C:\Migration\UserMapping.csv
+Copy-OrchUser -Path OldOrch: * NewOrch: -UserMappingCsv C:\Migration\UserMapping.csv
+Copy-OrchFolderUser -Recurse -Path OldOrch:\ * -Destination NewOrch:\ -UserMappingCsv C:\Migration\UserMapping.csv
+Copy-OrchAsset -Recurse -Path OldOrch:\ * -Destination NewOrch:\ -UserMappingCsv C:\Migration\UserMapping.csv
 ```
 
 > **Order matters** when copying entity types individually: folder users must be
@@ -619,7 +673,7 @@ Same as Case A -- since the Web API cannot retrieve passwords, entities
 containing passwords require post-processing via CSV:
 
 ```powershell
-Get-OrchCredentialAsset -Path Destination: -Recurse -ExportCsv c:\cred-assets.csv
+Get-OrchCredentialAsset -Path NewOrch: -Recurse -ExportCsv c:\cred-assets.csv
 # User sets the CredentialPassword column in the CSV
 Import-Csv c:\cred-assets.csv | Set-OrchCredentialAsset
 ```
@@ -629,13 +683,113 @@ maintained in a CSV, importing it with `Set-OrchCredentialAsset` creates the
 missing assets and per-user values directly — no copy / placeholder round-trip
 for those assets.
 
+### Step 3: Enable the Copied Triggers
+
+**Time triggers and queue triggers are copied disabled.** `Copy-Item` and
+`Copy-OrchTrigger` force `Enabled = false` on the destination trigger, and warn
+once for each trigger that was enabled at the source:
+
+```
+WARNING: 'NewOrch:\Finance\Nightly': This trigger will be disabled. Please enable it if necessary.
+```
+
+That is deliberate. It lets a destination tenant be prepared days ahead without
+anything starting there, and it stops the same schedule firing in two tenants
+while both still exist. It also means **nothing runs in the destination until
+you turn the triggers on** — the last step of the cutover, not of the copy.
+
+```powershell
+# Enable every trigger in the destination tree
+Enable-OrchTrigger -Path NewOrch:\ -Recurse *
+```
+
+To reproduce the source's enabled/disabled state instead of enabling
+everything, export the source triggers and enable only those that were enabled
+there:
+
+```powershell
+Get-OrchTrigger -Path OldOrch:\ -Recurse -ExportCsv C:\Migration\triggers.csv
+Import-Csv C:\Migration\triggers.csv |
+    Where-Object Enabled -eq 'True' |
+    ForEach-Object { $_.Path = $_.Path -replace '^OldOrch:', 'NewOrch:'; $_ } |
+    Enable-OrchTrigger
+```
+
+> **API triggers are different — they keep the source's state.** `Copy-OrchApiTrigger`
+> and the folder copy do *not* reset `Enabled` on an API trigger, so one that is
+> enabled at the source arrives enabled and can be invoked over HTTP as soon as it
+> exists. If you are copying ahead of the cutover, disable them at the destination
+> until you are ready: `Disable-OrchApiTrigger -Path NewOrch:\ -Recurse *`.
+
+Event triggers are not copied at all (see [Important Notes](#important-notes)) —
+recreate them in the destination web UI, against a destination Integration
+Service connection, and enable them there.
+
 ---
 
 ## Phase 4: Post-Migration Verification
 
-After migration is complete, compare and verify entities between the source
-and destination. Use `Get-Orch*` cmdlets to inspect entity properties. Use
-`ConvertTo-Json` to expand nested properties.
+Verify by **measuring the destination**, not by reading the copy's console
+output. A run log records what the tool believed it did; a comparison records
+what is actually there. The `Compare-Orch*` family exists for this: each cmdlet
+diffs a reference location (`-Path`) against a difference location, matching
+entities **by name** (ids are tenant-local) and ignoring volatile fields (Id,
+Key, timestamps, creator / modifier).
+
+```powershell
+Compare-OrchAsset * NewOrch:\ -Path OldOrch:\ -Recurse
+```
+
+Each row carries a SideIndicator:
+
+| Indicator | Meaning | What it usually means after a migration |
+|---|---|---|
+| `<=` | only in the source | not copied — this is the row to act on |
+| `=>` | only in the destination | pre-existing there, or renamed |
+| `<>` | on both sides, a compared property differs | the source changed after the copy, or part of the entity was rejected |
+| `==` | identical (only shown with `-IncludeEqual`) | nothing to do |
+
+A full sweep, exported as migration evidence:
+
+```powershell
+$folderTypes = 'Asset','Queue','Process','Trigger','ApiTrigger','Bucket',
+               'FolderUser','FolderMachine','ActionCatalog'
+foreach ($t in $folderTypes) {
+    & "Compare-Orch$t" * NewOrch:\ -Path OldOrch:\ -Recurse -IncludeEqual |
+        Export-Csv "C:\Migration\verify-$t.csv" -NoTypeInformation
+}
+```
+
+Tenant-level entities take the same shape without `-Recurse`:
+
+```powershell
+foreach ($t in 'Role','User','Machine','Calendar','Webhook','CredentialStore') {
+    & "Compare-Orch$t" * NewOrch: -Path OldOrch: |
+        Export-Csv "C:\Migration\verify-$t.csv" -NoTypeInformation
+}
+```
+
+Notes:
+
+- **Cross-tenant per-user values**: pass `-UserMappingCsv` (the same CSV the copy
+  consumed) to `Compare-OrchAsset`, so remapped owners do not show up as
+  spurious `UserValues` differences.
+- **Secrets are invisible to the comparison.** Credential and Secret *values*
+  cannot be read back through the API, so password drift is never reported (the
+  credential username is compared). Verify those by running a job that uses them.
+- **No `Compare-*` for packages, libraries, queue items or bucket files.** Diff
+  those with `Get-OrchPackage` / `Get-OrchLibrary` / `Get-OrchQueueItem` /
+  `Get-OrchBucketItem` on both sides.
+- Anything reported as `<=` is missing at the destination. Fix the cause and
+  re-run that entity type's copy — re-copying is safe, since entities already at
+  the destination are not overwritten (they come back as duplicate-name errors).
+
+For a property-level look at a single entity, `Get-Orch*` with `ConvertTo-Json`
+still has its place:
+
+```powershell
+Get-OrchAsset -Path NewOrch:\Finance MyAsset | ConvertTo-Json
+```
 
 ---
 
@@ -893,7 +1047,7 @@ separately with `Copy-OrchBucketItem`.
 
 The procedure, end to end:
 
-1. **Copy the folders and bucket definitions first.** `copy Source:\ Destination:\ -Recurse`
+1. **Copy the folders and bucket definitions first.** `copy OldOrch:\ NewOrch:\ -Recurse`
    brings the folder tree and the bucket *definitions* across (or copy them selectively
    with `Copy-OrchBucket -Recurse`). The destination buckets must exist before files are
    added.
@@ -903,10 +1057,10 @@ The procedure, end to end:
 
 ```powershell
 # 1. Copy folder tree + bucket definitions (also done by the master copy -Recurse)
-Copy-OrchBucket     -Path Source:\ -Destination Destination:\ -Recurse
+Copy-OrchBucket     -Path OldOrch:\ -Destination NewOrch:\ -Recurse
 
 # 2. Copy the files into them, drive-to-drive (* * = all buckets, all files)
-Copy-OrchBucketItem -Path Source:\ * * -Destination Destination:\ -Recurse
+Copy-OrchBucketItem -Path OldOrch:\ * * -Destination NewOrch:\ -Recurse
 ```
 
 Preview first with `-WhatIf`; it lists each file that would be copied without
@@ -921,7 +1075,7 @@ Notes:
   destination bucket (it cannot be combined with `-Recurse`).
 - **`Copy-OrchBucketItem` emits the source files it copied**, so you can pipe into
   `Remove-OrchBucketItem` for a copy-then-delete move:
-  `Copy-OrchBucketItem MyBucket * Destination:\Shared | Remove-OrchBucketItem`.
+  `Copy-OrchBucketItem MyBucket * NewOrch:\Shared | Remove-OrchBucketItem`.
 - **External storage providers** (Amazon S3, Azure Blob, MinIO, etc.): the files live in
   the customer's own storage, not in Orchestrator, so the copy recreates only the bucket
   *configuration*. After copying, reset the bucket's credential with `Update-OrchBucket` —
@@ -985,10 +1139,10 @@ preferences.
 
 ```powershell
 # Portal preferences (theme, language, ...)
-Copy-PmUserPreference -Path Source: -Destination Destination:
+Copy-PmUserPreference -Path OldOrch: -Destination NewOrch:
 
 # Notification subscriptions (which events notify you, by InApp / Email)
-Copy-PmNotificationSubscription -Path Source: -Destination Destination:
+Copy-PmNotificationSubscription -Path OldOrch: -Destination NewOrch:
 ```
 
 Both resolve "you" per organization from each drive's token and take effect on
@@ -1013,8 +1167,11 @@ webhooks
 
 **Folder-Level Entities:**
 Folders, folder users, folder machines, storage buckets, packages in folder
-feeds, processes, assets, queues, queue items, triggers, API triggers, test
-sets, test schedules, test data queues, action catalogs
+feeds, processes, assets, queues, queue items, triggers, API triggers, event
+triggers, test sets, test schedules, test data queues, action catalogs
+
+Of these, **queue items**, **storage bucket files** and **event triggers** are not
+carried by a folder copy — see [Important Notes](#important-notes).
 
 ### Entities Containing Usernames
 
@@ -1037,6 +1194,7 @@ Entities requiring post-processing because secrets are never returned by the API
 | Machine — Confidential (OrchMachine) | ClientSecret |
 | Credential Store (OrchCredentialStore) | Secrets in AdditionalConfiguration |
 | Credential Asset (OrchAsset, Credential type) | CredentialPassword |
+| Secret Asset (OrchAsset, Secret type) | SecretValue — re-set with `Set-OrchSecretAsset` |
 | Storage Bucket (OrchBucket) | Password |
 | Webhook (OrchWebhook) | Secret |
 
@@ -1050,10 +1208,10 @@ re-set cmdlet for each entity, plus details on credential assets.
 
   ```powershell
   # Check current setting
-  Get-OrchSetting -Path Destination: 'Deployment.Libraries.FeedScope'
+  Get-OrchSetting -Path NewOrch: 'Deployment.Libraries.FeedScope'
 
   # Set to allow tenant feed (required for library copy)
-  Set-OrchSetting -Path Destination: -Name 'Deployment.Libraries.FeedScope' -Value 'Tenant'
+  Set-OrchSetting -Path NewOrch: -Name 'Deployment.Libraries.FeedScope' -Value 'Tenant'
   ```
 
   Valid values for `Deployment.Libraries.FeedScope`:
@@ -1070,8 +1228,24 @@ re-set cmdlet for each entity, plus details on credential assets.
   migrations (e.g., Automation Cloud to on-premises) will produce errors for
   entities that are incompatible with the destination. These errors are
   expected and can be reviewed after the migration completes. Fix the
-  underlying issues and re-run the migration — already-copied entities are
-  skipped automatically.
+  underlying issues and re-run the migration. An entity already at the
+  destination is never overwritten, but it is not *silently* skipped either:
+  the copy posts the create, the destination rejects the duplicate name, and
+  that surfaces as a non-terminating error for that entity while the run
+  continues. So a re-run is safe, and produces one error per entity that was
+  already copied. Folders and folder-user assignments are the exception —
+  existing ones are reused (roles are merged) — as are queue items and bucket
+  files, which are genuinely idempotent and simply resume.
+- **Triggers are copied disabled**: every copied time trigger and queue trigger
+  arrives with `Enabled = false`, with a warning per trigger. Nothing starts
+  running in the destination tenant until you enable them — see
+  [Enabling the Copied Triggers](#step-3-enable-the-copied-triggers).
+- **Event triggers**: there is no `Copy-OrchEventTrigger`, and event triggers are
+  not included in a folder copy. They reference an Integration Service
+  connection, which cannot be created through an API (authorising a connection
+  is interactive), so they must be recreated at the destination. Time triggers
+  and API triggers *are* copied. List what you have before migrating:
+  `Get-OrchEventTrigger -Path OldOrch:\ -Recurse`.
 - **Personal workspaces**: To migrate personal workspaces, exploration must be
   started in the Orchestrator Web UI on both sides, followed by running
   `Clear-OrchCache`. Personal workspaces can only be automatically copied when
@@ -1079,9 +1253,9 @@ re-set cmdlet for each entity, plus details on credential assets.
   usernames differ, copy folder entities individually:
 
 ```powershell
-Copy-OrchPackage -Path "Source:\user1's workspace" * * -Destination "Destination:\newname's workspace"
-Copy-OrchProcess -Path "Source:\user1's workspace" * -Destination "Destination:\newname's workspace"
-Copy-OrchAsset -Path "Source:\user1's workspace" * -Destination "Destination:\newname's workspace"
+Copy-OrchPackage -Path "OldOrch:\user1's workspace" * * -Destination "NewOrch:\newname's workspace"
+Copy-OrchProcess -Path "OldOrch:\user1's workspace" * -Destination "NewOrch:\newname's workspace"
+Copy-OrchAsset -Path "OldOrch:\user1's workspace" * -Destination "NewOrch:\newname's workspace"
 # ... and other folder entities similarly
 ```
 
@@ -1102,3 +1276,62 @@ Copy-OrchAsset -Path "Source:\user1's workspace" * -Destination "Destination:\ne
   and destination, use Case A. If usernames differ, always use Case B with
   `-UserMappingCsv`. Without the mapping, copy cmdlets will fail to find users
   and user information is lost from copied entities.
+
+---
+
+## Case Study: Two-Phase Migration
+
+*When the migration does not fit in one maintenance window.*
+
+**The situation.** A large customer moving from an on-premises MSI Orchestrator to
+Automation Suite, with a few hundred unattended robots. Production cannot stop during
+the working week, and keeping two Orchestrators alive side by side for a gradual
+migration is not acceptable either — so the switch has to happen over a single weekend.
+There is far more to move than that window allows if it is all done at once.
+
+**The split.** Migrate configuration during the week before; migrate only live data in
+the window. This is not a special mode — it is how the copy already behaves, so it needs
+no extra options. In this example the two tenants are mounted as `Msi:` (the source) and
+`Suite:` (the destination):
+
+| When | What moves | Command |
+|---|---|---|
+| Week before (production still running) | tenant entities, folders, and every folder entity — processes, assets, queues, bucket definitions, triggers, ... | `copy -Recurse Msi:\ Suite:\` |
+| Week before | re-enter every secret (see [Entities Containing Passwords/Secrets](#entities-containing-passwordssecrets)) | `Import-Csv c:\cred-assets.csv \| Set-OrchCredentialAsset` |
+| Cutover weekend | queue items with Status `New` | `Copy-OrchQueueItem -Path Msi:\ -Recurse * -Destination Suite:\` |
+| Cutover weekend | storage bucket files | `Copy-OrchBucketItem -Path Msi:\ -Recurse * * -Destination Suite:\` |
+| Cutover weekend | package versions published since the pre-copy | `Copy-OrchPackage -Path Msi:\ -Recurse * * -Destination Suite:\` |
+| Cutover weekend | enable the destination triggers | `Enable-OrchTrigger -Path Suite:\ -Recurse *` |
+
+Run each of them with `-WhatIf` first.
+
+**Why the pre-copy is safe**
+
+- A folder copy carries queue *definitions* and bucket *definitions*, never their
+  contents, so the live data genuinely stays behind until the weekend.
+- Time and queue triggers arrive disabled, so the prepared tenant does not start doing
+  work of its own. Disable the copied API triggers yourself — they keep the source's
+  state (see [Step 3](#step-3-enable-the-copied-triggers)).
+- Re-entering secrets is the most manual step of any migration. Moving it into the quiet
+  week is the single biggest reason to split the migration at all.
+
+**What the plan must account for**
+
+- **The freeze is mandatory, not a convenience.** The copy does not re-synchronise: an
+  entity already at the destination is not updated to match a changed source (see
+  [Important Notes](#important-notes)). Anything edited after the pre-copy has to be
+  re-applied by hand.
+- **Verify that the freeze held.** At the end of the week, run the
+  [Phase 4](#phase-4-post-migration-verification) comparison. Rows reported as `<>` are
+  exactly the entities that changed despite the freeze; fix those few with `Set-Orch*` /
+  `Update-Orch*`.
+- **The catch-up copy is cheap.** `Copy-OrchPackage` checks the destination first and
+  skips a version that is already there without downloading it, so re-running it with a
+  wildcard transfers only what is new.
+- **Stop the source before moving queue items.** Each item is a transaction: stop the
+  consuming jobs and `Disable-OrchTrigger` on the source first, then
+  `Copy-OrchQueueItem | Remove-OrchQueueItem` for a transaction-safe move.
+- **Event triggers do not migrate.** Inventory them before the weekend
+  (`Get-OrchEventTrigger -Path Msi:\ -Recurse`) and plan to recreate them by hand.
+- **Rehearse the whole sequence** end to end against a non-production destination first.
+  The individual steps are well-trodden; this particular ordering of them is newer.
