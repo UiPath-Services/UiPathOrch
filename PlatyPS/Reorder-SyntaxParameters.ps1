@@ -1,8 +1,9 @@
 <#
 .SYNOPSIS
     Reorders parameters in MAML XML <command:syntaxItem> so that
-    Path, LiteralPath, Recurse, Depth appear first, followed by the remaining
-    parameters in their original order.
+    Path, LiteralPath, Recurse, Depth appear first, the remaining positional
+    parameters follow in position order, and the named parameters come last
+    in alphabetical order.
 
 .DESCRIPTION
     PlatyPS exports parameters in alphabetical order within <command:syntaxItem>.
@@ -57,8 +58,12 @@ foreach ($path in $XmlPath) {
             if ($found) { $priorityParams.Add($found) }
         }
 
-        # Skip if no priority parameters found
-        if ($priorityParams.Count -eq 0) { continue }
+        # A syntax item with none of the priority parameters is still reordered:
+        # the positional-then-named rule applies to every cmdlet, and skipping
+        # here left ~11 cmdlets (Import-OrchConfig, New-OrchUserMappingCsv,
+        # Test-OrchUserMappingCsv, ...) in PlatyPS's alphabetical order, which
+        # disagreed with the same cmdlet's markdown. The loop below is a no-op
+        # when there is nothing to move, and the idempotence check skips the write.
 
         # Partition non-priority parameters into positional vs named.
         # MAML stores per-set position in the 'position' attribute
@@ -103,7 +108,11 @@ foreach ($path in $XmlPath) {
         }
         if ($alreadyOrdered) { continue }
 
-        $nameList = ($priorityParams | ForEach-Object { $_.SelectSingleNode('maml:name', $ns).'#text' }) -join ', '
+        $nameList = if ($priorityParams.Count -gt 0) {
+            ($priorityParams | ForEach-Object { $_.SelectSingleNode('maml:name', $ns).'#text' }) -join ', '
+        } else {
+            'none'
+        }
 
         if ($PSCmdlet.ShouldProcess($cmdName, "Reorder syntax (priority [$nameList] + positional + named)")) {
             # Remove all parameter nodes
