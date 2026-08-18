@@ -386,7 +386,12 @@ NuGet.Config
 *.csBK
 
 # Generated help XML (built from PlatyPS markdown)
+# The markdown under docs/help/en-US IS tracked -- Get-Help -Online resolves each
+# cmdlet's HelpUri to its .md in this repo, so the markdown has to be pushed. The
+# MAML is a build output: release.yml regenerates it into Staging/en-US on every
+# release, and PlatyPS/v1-US is an intermediate export directory.
 Staging/en-US/*-Help.xml
+PlatyPS/v1-US/
 
 # Scratch/working files
 scratch/
