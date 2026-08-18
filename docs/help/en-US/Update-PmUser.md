@@ -20,9 +20,10 @@ Updates properties of a platform management user in a UiPath Automation Cloud or
 ### __AllParameterSets
 
 ```
-Update-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [[-Email] <string[]>] [-NewEmail <string>]
+Update-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [[-Email] <string[]>]
  [-BypassBasicAuthRestriction <string>] [-Confirm] [-DisplayName <string>]
- [-Name <string>] [-Password <string>] [-Surname <string>] [-WhatIf] [<CommonParameters>]
+ [-Name <string>] [-NewEmail <string>] [-Password <string>] [-Surname <string>] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

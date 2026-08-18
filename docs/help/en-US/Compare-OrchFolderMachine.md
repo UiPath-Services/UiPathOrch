@@ -20,9 +20,9 @@ Compares folder machine assignments between two folders or Orchestrator instance
 ### __AllParameterSets
 
 ```
-Compare-OrchFolderMachine [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
- [-IncludeEqual] [<CommonParameters>]
+Compare-OrchFolderMachine [-Path <string>] [-LiteralPath <string>] [-Recurse]
+ [-Depth <uint>] [-Name] <string[]> [-DifferencePath] <string>
+ [[-DifferenceName] <string>] [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

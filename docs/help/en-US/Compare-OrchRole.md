@@ -20,9 +20,9 @@ Compares roles between two Orchestrator instances and reports the differences, i
 ### __AllParameterSets
 
 ```
-Compare-OrchRole [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-IncludeEqual]
- [<CommonParameters>]
+Compare-OrchRole [-Path <string>] [-LiteralPath <string>] [-Name] <string[]>
+ [-DifferencePath] <string> [[-DifferenceName] <string>] [-IncludeEqual]
+ [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

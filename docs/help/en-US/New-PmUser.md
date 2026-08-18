@@ -20,9 +20,10 @@ Creates a new platform management user in a UiPath organization (Automation Clou
 ### __AllParameterSets
 
 ```
-New-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [[-Email] <string>] [-UserName <string>]
- [-BypassBasicAuthRestriction <string>] [-Confirm] [-DisplayName <string>] [-GroupName <string[]>]
- [-InvitationAccepted <string>] [-Name <string>] [-SurName <string>] [-Type <string>] [-WhatIf] [<CommonParameters>]
+New-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [[-Email] <string>]
+ [-BypassBasicAuthRestriction <string>] [-Confirm] [-DisplayName <string>]
+ [-GroupName <string[]>] [-InvitationAccepted <string>] [-Name <string>]
+ [-SurName <string>] [-Type <string>] [-UserName <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,9 +20,9 @@ Compares test data queues between two folders or Orchestrator instances and repo
 ### __AllParameterSets
 
 ```
-Compare-OrchTestDataQueue [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
- [-IncludeEqual] [<CommonParameters>]
+Compare-OrchTestDataQueue [-Path <string>] [-LiteralPath <string>] [-Recurse]
+ [-Depth <uint>] [-Name] <string[]> [-DifferencePath] <string>
+ [[-DifferenceName] <string>] [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

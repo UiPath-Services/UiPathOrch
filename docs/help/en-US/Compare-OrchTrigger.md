@@ -20,9 +20,9 @@ Compares time/queue triggers (process schedules) between two folders or Orchestr
 ### __AllParameterSets
 
 ```
-Compare-OrchTrigger [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
- [-IncludeEqual] [<CommonParameters>]
+Compare-OrchTrigger [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
+ [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
+ [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

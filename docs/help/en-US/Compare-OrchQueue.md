@@ -20,9 +20,9 @@ Compares queue definitions between two folders or Orchestrator instances and rep
 ### __AllParameterSets
 
 ```
-Compare-OrchQueue [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
- [-IncludeEqual] [<CommonParameters>]
+Compare-OrchQueue [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
+ [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
+ [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

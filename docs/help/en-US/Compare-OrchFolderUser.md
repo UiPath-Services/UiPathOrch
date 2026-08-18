@@ -20,9 +20,9 @@ Compares folder user assignments between two folders or Orchestrator instances a
 ### __AllParameterSets
 
 ```
-Compare-OrchFolderUser [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
- [-IncludeEqual] [<CommonParameters>]
+Compare-OrchFolderUser [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
+ [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
+ [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

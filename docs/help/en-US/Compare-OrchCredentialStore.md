@@ -20,9 +20,9 @@ Compares credential stores between two Orchestrator instances and reports the di
 ### __AllParameterSets
 
 ```
-Compare-OrchCredentialStore [-Name] <string[]> [-DifferencePath] <string>
- [[-DifferenceName] <string>] [-Path <string>] [-LiteralPath <string>] [-Property <string[]>]
- [-IncludeEqual] [<CommonParameters>]
+Compare-OrchCredentialStore [-Path <string>] [-LiteralPath <string>] [-Name] <string[]>
+ [-DifferencePath] <string> [[-DifferenceName] <string>] [-IncludeEqual]
+ [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

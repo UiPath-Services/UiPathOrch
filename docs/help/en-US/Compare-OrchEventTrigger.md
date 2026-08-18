@@ -20,9 +20,9 @@ Compares event (connector) triggers between two folders or Orchestrator instance
 ### __AllParameterSets
 
 ```
-Compare-OrchEventTrigger [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
- [-IncludeEqual] [<CommonParameters>]
+Compare-OrchEventTrigger [-Path <string>] [-LiteralPath <string>] [-Recurse]
+ [-Depth <uint>] [-Name] <string[]> [-DifferencePath] <string>
+ [[-DifferenceName] <string>] [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

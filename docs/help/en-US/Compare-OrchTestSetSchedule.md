@@ -20,9 +20,9 @@ Compares test set schedules between two folders or Orchestrator instances and re
 ### __AllParameterSets
 
 ```
-Compare-OrchTestSetSchedule [-Name] <string[]> [-DifferencePath] <string>
- [[-DifferenceName] <string>] [-Path <string>] [-LiteralPath <string>] [-Property <string[]>]
- [-Recurse] [-Depth <uint>] [-IncludeEqual] [<CommonParameters>]
+Compare-OrchTestSetSchedule [-Path <string>] [-LiteralPath <string>] [-Recurse]
+ [-Depth <uint>] [-Name] <string[]> [-DifferencePath] <string>
+ [[-DifferenceName] <string>] [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

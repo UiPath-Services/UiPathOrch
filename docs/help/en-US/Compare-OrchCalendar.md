@@ -20,9 +20,9 @@ Compares calendars between two Orchestrator instances and reports the difference
 ### __AllParameterSets
 
 ```
-Compare-OrchCalendar [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-IncludeEqual]
- [<CommonParameters>]
+Compare-OrchCalendar [-Path <string>] [-LiteralPath <string>] [-Name] <string[]>
+ [-DifferencePath] <string> [[-DifferenceName] <string>] [-IncludeEqual]
+ [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,9 +20,9 @@ Compares webhooks between two Orchestrator instances and reports the differences
 ### __AllParameterSets
 
 ```
-Compare-OrchWebhook [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-IncludeEqual]
- [<CommonParameters>]
+Compare-OrchWebhook [-Path <string>] [-LiteralPath <string>] [-Name] <string[]>
+ [-DifferencePath] <string> [[-DifferenceName] <string>] [-IncludeEqual]
+ [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

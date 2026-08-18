@@ -20,9 +20,9 @@ Invokes an arbitrary Orchestrator, Identity Server, Portal, Test Manager, or Doc
 ### __AllParameterSets
 
 ```
-Invoke-OrchApi [-ApiPath] <string> [-Body <Object>] [-Confirm] [-ContentType <string>]
- [-Headers <IDictionary>] [-Identity] [-InFile <string>] [-LiteralPath <string>]
- [-Method <string>] [-OutFile <string>] [-Path <string>] [-Portal] [-Raw]
+Invoke-OrchApi [-Path <string>] [-LiteralPath <string>] [-ApiPath] <string>
+ [-Body <Object>] [-Confirm] [-ContentType <string>] [-Headers <IDictionary>] [-Identity]
+ [-InFile <string>] [-Method <string>] [-OutFile <string>] [-Portal] [-Raw]
  [-ResponseHeadersVariable <string>] [-SkipFolderContext] [-SkipHttpErrorCheck]
  [-StatusCodeVariable <string>] [-WhatIf] [<CommonParameters>]
 ```

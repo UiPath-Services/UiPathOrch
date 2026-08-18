@@ -20,9 +20,9 @@ Compares test sets between two folders or Orchestrator instances and reports the
 ### __AllParameterSets
 
 ```
-Compare-OrchTestSet [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
- [-IncludeEqual] [<CommonParameters>]
+Compare-OrchTestSet [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
+ [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
+ [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

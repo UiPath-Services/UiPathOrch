@@ -20,9 +20,9 @@ Compares API (HTTP) triggers between two folders or Orchestrator instances and r
 ### __AllParameterSets
 
 ```
-Compare-OrchApiTrigger [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
- [-IncludeEqual] [<CommonParameters>]
+Compare-OrchApiTrigger [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
+ [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
+ [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

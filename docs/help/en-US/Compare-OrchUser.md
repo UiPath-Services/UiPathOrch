@@ -20,9 +20,9 @@ Compares users between two Orchestrator instances and reports the differences.
 ### __AllParameterSets
 
 ```
-Compare-OrchUser [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-UserMappingCsv <string>]
- [-IncludeEqual] [<CommonParameters>]
+Compare-OrchUser [-Path <string>] [-LiteralPath <string>] [-Name] <string[]>
+ [-DifferencePath] <string> [[-DifferenceName] <string>] [-IncludeEqual]
+ [-Property <string[]>] [-UserMappingCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,9 +20,9 @@ Copies the files inside storage buckets directly from one folder, drive, or tena
 ### __AllParameterSets
 
 ```
-Copy-OrchBucketItem [-Name] <string[]> [-FullPath] <string[]> [-Destination] <string>
- [[-DestinationBucket] <string>] [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
- [-Confirm] [-WhatIf] [<CommonParameters>]
+Copy-OrchBucketItem [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
+ [-Name] <string[]> [-FullPath] <string[]> [-Destination] <string>
+ [[-DestinationBucket] <string>] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

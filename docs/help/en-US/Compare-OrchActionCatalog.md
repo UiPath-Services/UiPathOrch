@@ -20,9 +20,9 @@ Compares action catalogs between two folders or Orchestrator instances and repor
 ### __AllParameterSets
 
 ```
-Compare-OrchActionCatalog [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-Recurse] [-Depth <uint>]
- [-IncludeEqual] [<CommonParameters>]
+Compare-OrchActionCatalog [-Path <string>] [-LiteralPath <string>] [-Recurse]
+ [-Depth <uint>] [-Name] <string[]> [-DifferencePath] <string>
+ [[-DifferenceName] <string>] [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

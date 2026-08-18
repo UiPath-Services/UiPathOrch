@@ -20,9 +20,9 @@ Compares machines between two Orchestrator instances and reports the differences
 ### __AllParameterSets
 
 ```
-Compare-OrchMachine [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-Property <string[]>] [-IncludeEqual]
- [<CommonParameters>]
+Compare-OrchMachine [-Path <string>] [-LiteralPath <string>] [-Name] <string[]>
+ [-DifferencePath] <string> [[-DifferenceName] <string>] [-IncludeEqual]
+ [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,9 +20,10 @@ Compares assets between two folders or Orchestrator instances and reports the di
 ### __AllParameterSets
 
 ```
-Compare-OrchAsset [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-Path <string>] [-LiteralPath <string>] [-ValueType <string[]>] [-Property <string[]>]
- [-UserMappingCsv <string>] [-Recurse] [-Depth <uint>] [-IncludeEqual] [<CommonParameters>]
+Compare-OrchAsset [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
+ [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
+ [-IncludeEqual] [-Property <string[]>] [-UserMappingCsv <string>] [-ValueType <string[]>]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
