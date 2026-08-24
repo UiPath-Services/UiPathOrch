@@ -942,11 +942,19 @@ public partial class OrchProvider
             if (char.ToLowerInvariant(srcAnchorFqn[i]) != char.ToLowerInvariant(srcLinkFqn[i])) break;
             if (srcAnchorFqn[i] == '/') lastBoundary = i;
         }
-        if (lastBoundary < 0) return null; // no shared ancestor
 
-        string srcCommon = srcAnchorFqn.Substring(0, lastBoundary);
-        string srcSuffixToLink = srcLinkFqn.Substring(lastBoundary + 1);
-        int upStepsFromAnchor = srcAnchorFqn.Substring(srcCommon.Length).Count(c => c == '/');
+        // lastBoundary < 0 is NOT "no shared ancestor": every folder shares the TENANT
+        // ROOT, whose FQN is "" and therefore carries no "/" to be found as a boundary.
+        // Two top-level folders (Shared / Finance) hit this, which is the most common
+        // Orchestrator layout — reading it as "unrelated" silently dropped every link
+        // between root-level folders and copied the entity twice instead. Treat the
+        // root as the common ancestor: srcCommon = "", and the anchor's distance to it
+        // is its full segment count (no leading "/" to count).
+        string srcCommon = lastBoundary < 0 ? "" : srcAnchorFqn.Substring(0, lastBoundary);
+        string srcSuffixToLink = lastBoundary < 0 ? srcLinkFqn : srcLinkFqn.Substring(lastBoundary + 1);
+        int upStepsFromAnchor = lastBoundary < 0
+            ? (srcAnchorFqn.Length == 0 ? 0 : srcAnchorFqn.Count(c => c == '/') + 1)
+            : srcAnchorFqn.Substring(srcCommon.Length).Count(c => c == '/');
 
         string? dstCommon = WalkUp(dstAnchorFqn, upStepsFromAnchor);
         if (dstCommon is null) return null;
@@ -955,14 +963,18 @@ public partial class OrchProvider
     }
 
     /// <summary>Strips <paramref name="upSteps"/> trailing "/segment" pieces from
-    /// <paramref name="fqn"/>. Returns null if the path can't go that high.</summary>
+    /// <paramref name="fqn"/>. The tenant root is "", so stripping the last segment of a
+    /// top-level folder yields "" instead of failing — that is what lets ComputeDstFqn
+    /// express a rebase whose common ancestor is the root. Returns null only when asked
+    /// to walk ABOVE the root. A returned "" is the tenant root, which holds no entities,
+    /// so FindDstFolders simply matches no folder for it (no folder has an empty FQN).</summary>
     internal static string? WalkUp(string fqn, int upSteps)
     {
         for (int i = 0; i < upSteps; i++)
         {
+            if (fqn.Length == 0) return null; // already at the tenant root
             int lastSlash = fqn.LastIndexOf('/');
-            if (lastSlash < 0) return null;
-            fqn = fqn.Substring(0, lastSlash);
+            fqn = lastSlash < 0 ? "" : fqn.Substring(0, lastSlash);
         }
         return fqn;
     }

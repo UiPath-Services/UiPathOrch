@@ -736,7 +736,8 @@ public partial class OrchProvider
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken,
-        Dictionary<string, string>? userMapping = null)
+        Dictionary<string, string>? userMapping = null,
+        LinkCopyReport? linkReport = null)
     {
         dstDrive.FolderMachinesAssigned.ClearCache(newFolder);
 
@@ -776,12 +777,13 @@ public partial class OrchProvider
                 if (spReason == ShouldProcessReason.WhatIf)
                 {
                     PreviewDroppedUserValues(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, userMapping, dropBudget);
+                    PreviewAssetLinkLoss(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, linkReport);
                 }
                 continue;
             }
 
             reporter.WriteProgress(++index, asset.Name);
-            CopyOneAsset(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, userMapping, dropBudget);
+            CopyOneAsset(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, userMapping, dropBudget, linkReport);
         }
 
         dropBudget.WriteSummary();
@@ -861,13 +863,14 @@ public partial class OrchProvider
     // per-user values are re-homed to the destination's users / machines or dropped with a warning.
     private static void CopyOneAsset(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, OrchDriveInfo dstDrive, Folder newFolder,
-        Asset asset, Dictionary<string, string>? userMapping, DropWarningBudget? budget)
+        Asset asset, Dictionary<string, string>? userMapping, DropWarningBudget? budget,
+        LinkCopyReport? linkReport = null)
     {
         string msg = $"Copying asset {asset.GetPSPath()}";
 
         // Get links, and if an entity with the same name exists in the linked folder of the target drive,
-        // just create a link to it instead
-        if (LinkAsset(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, msg))
+        // just create a link to it instead (cross-tenant only — see LinkSharedEntity)
+        if (LinkAsset(_this, srcDrive, srcFolder, dstDrive, newFolder, asset, msg, linkReport))
         {
             return;
         }
@@ -1033,7 +1036,8 @@ public partial class OrchProvider
     internal static void CopyQueues(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-        bool shouldProcess, CancellationToken cancelToken)
+        bool shouldProcess, CancellationToken cancelToken,
+        LinkCopyReport? linkReport = null)
     {
         // Considering that cmdlets may be executed consecutively in a script,
         // we shouldn't have been clearing the cache each time..
@@ -1067,7 +1071,18 @@ public partial class OrchProvider
         {
             cancelToken.ThrowIfCancellationRequested();
 
-            if (shouldProcess || _this.ShouldProcess($"Item: '{queue.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Queue"))
+            // Reason-returning overload so that -WhatIf can still preview the folder-link
+            // decision (read-only) while a declined -Confirm just skips, mirroring CopyAssets.
+            ShouldProcessReason spReason = ShouldProcessReason.None;
+            if (!shouldProcess &&
+                !_this.ShouldProcess($"Item: '{queue.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Queue", out spReason))
+            {
+                if (spReason == ShouldProcessReason.WhatIf)
+                {
+                    PreviewQueueLinkLoss(_this, srcDrive, srcFolder, dstDrive, newFolder, queue, linkReport);
+                }
+                continue;
+            }
             {
                 target = srcFolder.GetPSPath();
                 msg = $"Copying queue {queue.GetPSPath()}";
@@ -1077,7 +1092,7 @@ public partial class OrchProvider
 
                 // Get links, and if an entity with the same name exists in the linked folder of the target drive,
                 // just create a link to it instead
-                if (LinkQueue(_this, srcDrive, srcFolder, dstDrive, newFolder, queue))
+                if (LinkQueue(_this, srcDrive, srcFolder, dstDrive, newFolder, queue, linkReport))
                 {
                     continue;
                 }
@@ -1483,7 +1498,8 @@ public partial class OrchProvider
     internal static void CopyBuckets(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
-        bool shouldProcess, CancellationToken cancelToken)
+        bool shouldProcess, CancellationToken cancelToken,
+        LinkCopyReport? linkReport = null)
     {
         // Considering that cmdlets may be executed consecutively in a script,
         // we shouldn't have been clearing the cache each time..
@@ -1515,14 +1531,25 @@ public partial class OrchProvider
         {
             cancelToken.ThrowIfCancellationRequested();
 
-            if (shouldProcess || _this.ShouldProcess($"Item: '{bucket.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Bucket"))
+            // Reason-returning overload so that -WhatIf can still preview the folder-link
+            // decision (read-only) while a declined -Confirm just skips, mirroring CopyAssets.
+            ShouldProcessReason spReason = ShouldProcessReason.None;
+            if (!shouldProcess &&
+                !_this.ShouldProcess($"Item: '{bucket.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Bucket", out spReason))
+            {
+                if (spReason == ShouldProcessReason.WhatIf)
+                {
+                    PreviewBucketLinkLoss(_this, srcDrive, srcFolder, dstDrive, newFolder, bucket, linkReport);
+                }
+                continue;
+            }
             {
                 msg = $"Copying bucket {System.IO.Path.Combine(bucket.GetPSPath())}";
                 reporter.WriteProgress(++index, bucket.Name);
 
                 // Get links, and if an entity with the same name exists in the linked folder of the target drive,
-                // just create a link to it instead
-                if (LinkBucket(_this, srcDrive, srcFolder, dstDrive, newFolder, bucket))
+                // just create a link to it instead (cross-tenant only — see LinkSharedEntity)
+                if (LinkBucket(_this, srcDrive, srcFolder, dstDrive, newFolder, bucket, linkReport))
                 {
                     continue;
                 }

@@ -296,6 +296,8 @@ When performing cross-drive copy (e.g., Orch1: to Orch2:), the cmdlet recreates 
 
 If a bucket with the same name already exists in the destination folder, an error is returned for that bucket. The bucket cache and bucket link cache in the destination are cleared after each successful copy.
 
+A shared (linked) bucket is handled differently depending on where it is going. Within one tenant the copy always creates an independent bucket — to share the existing one with another folder instead, use `Add-OrchBucketLink`. The cmdlet warns when it copies a linked bucket this way, including under -WhatIf. Across tenants the sharing is reproduced when the destination has a counterpart folder already holding a bucket of the same name, so copying both folders of a shared bucket yields one linked bucket rather than two; when no counterpart is found the bucket is copied independently and a warning is emitted at the end of the run.
+
 ## RELATED LINKS
 
 [Get-OrchBucket](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchBucket.md)

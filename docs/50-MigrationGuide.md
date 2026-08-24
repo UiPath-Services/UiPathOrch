@@ -899,6 +899,51 @@ Copy-OrchAsset -Path Orch1:\ -Recurse * Orch2:\
 Copy-OrchAsset -Path Orch1:\FolderA * \FolderB
 ```
 
+#### Shared (linked) assets, queues, and buckets
+
+An asset, queue, or bucket can be **linked** into several folders: one entity, visible
+from all of them, with a single value that changes everywhere at once. A copy handles
+that in one of two ways, depending on where it is going.
+
+**Within one tenant, a copy is always an independent entity.** `Copy-OrchAsset -Path
+Orch1:\FolderA * \FolderB` gives `FolderB` its *own* asset that then drifts from the
+original. To share the existing one instead — the usual intent — link it rather than copy
+it:
+
+```powershell
+Add-OrchAssetLink -Path Orch1:\FolderA MyAsset -Link Orch1:\FolderB -WhatIf
+```
+
+The copy warns when it does this, so a link that was meant to be preserved doesn't turn
+into two diverging entities unnoticed.
+
+**Across tenants, links are reproduced where the destination allows it.** When the source
+entity is shared with another folder, the copy looks for that folder's counterpart on the
+destination and links to the entity already there instead of creating a second one — so
+copying both folders of a shared asset yields one linked asset, not two. This needs the
+counterpart folder to exist on the destination with a matching path, and the entity to
+have been copied into it (either folder may go first; the second one establishes the
+link). When that isn't the case the entity is copied independently and the copy says so
+at the end of the run.
+
+To reapply a sharing layout explicitly — after copying folders under new names, or to
+repair a migration done with an older version — snapshot it and import it back:
+
+```powershell
+Get-OrchAssetLink  -Path OldOrch:\ -Recurse -ExportCsv C:\temp\asset-links.csv
+Get-OrchQueueLink  -Path OldOrch:\ -Recurse -ExportCsv C:\temp\queue-links.csv
+Get-OrchBucketLink -Path OldOrch:\ -Recurse -ExportCsv C:\temp\bucket-links.csv
+# Edit the Path and Link columns in each CSV (e.g. OldOrch:\Shared → NewOrch:\Shared)
+Import-Csv C:\temp\asset-links.csv | Add-OrchAssetLink -WhatIf
+```
+
+`Add-Orch*Link` shares an entity that already exists — it does not merge duplicates. If a
+copy already created a separate entity in the link folder, delete that one first
+(`Remove-OrchAsset` / `Remove-OrchQueue` / `Remove-OrchBucket`), keep one, then link.
+Linking works for global-scope assets only; per-robot assets cannot be shared across
+folders at all. Re-importing an unchanged CSV is a no-op, so the import is safe to repeat,
+and `Get-Orch*Link` on the destination verifies the result.
+
 ### Copying Folders
 
 The `copy` command (`Copy-Item`) copies folders along with all their

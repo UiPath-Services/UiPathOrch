@@ -164,16 +164,16 @@ public partial class OrchProvider
                                 () => srcDrive.FolderMachinesAssigned.ClearCache(srcFolder),
                                 r => CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
                             ("Copying buckets...           ", 300, null,
-                                r => CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                                r => CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, _linkReport)),
                             ("Copying packages...          ", 400, null,
                                 r => CopyPackages(this, srcDrive, srcFolder, dstDrive, newFolder, r, cancelToken)),
                             ("Copying processes...         ", 500, null,
                                 r => CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
                             ("Copying assets...            ", 600,
                                 () => srcDrive.Assets.ClearCache(srcFolder),
-                                r => CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, userMapping)),
+                                r => CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, userMapping, _linkReport)),
                             ("Copying queues...            ", 700, null,
-                                r => CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                                r => CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, _linkReport)),
                             ("Copying triggers...          ", 800,
                                 () => srcDrive.Triggers.ClearCache(srcFolder),
                                 r => CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
@@ -297,6 +297,7 @@ public partial class OrchProvider
         // on a fresh provider instance per Copy-Item to clear it would silently leak the
         // flag into a later un-flagged copy if instances were ever pooled/reused.
         ExcludeEntities = dynamicParameters?.ExcludeEntities.IsPresent ?? false;
+        var linkReport = _linkReport = new LinkCopyReport();
 
         OrchDriveInfo srcDrive = ExtractOrchDriveInfo(path);
         OrchDriveInfo dstDrive = ExtractOrchDriveInfo(copyPath);
@@ -418,6 +419,7 @@ public partial class OrchProvider
             {
                 dstDrive.ClearFolders();
             }
+            linkReport.Flush(this);
             return;
         }
 
@@ -439,6 +441,7 @@ public partial class OrchProvider
             {
                 dstDrive.ClearFolders();
             }
+            linkReport.Flush(this);
         }
     }
 }

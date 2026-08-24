@@ -48,6 +48,10 @@ public class CopyBucketCmdlet : OrchestratorPSCmdlet
         using var reporterBuckets = new ProgressReporter(this, 1000, Int32.MaxValue, "Copying buckets...");
         using var cancelHandler = new ConsoleCancelHandler();
 
+        // One report for the whole run: a shared bucket that isn't linked in one folder's pass
+        // may still be linked by a later folder's pass, so the verdict is only final at Flush.
+        var linkReport = new Core.OrchProvider.LinkCopyReport();
+
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
             try
@@ -71,7 +75,7 @@ public class CopyBucketCmdlet : OrchestratorPSCmdlet
                 Core.OrchProvider.CopyBuckets(this,
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterBuckets,
-                    false, cancelHandler.Token);
+                    false, cancelHandler.Token, linkReport);
                 dstDrive.Buckets.ClearCache(dstFolder);
                 dstDrive.BucketLinks.ClearCache();
             }
@@ -85,5 +89,7 @@ public class CopyBucketCmdlet : OrchestratorPSCmdlet
                 WriteError(new ErrorRecord(new OrchException(target, ex), "CopyBucketError", ErrorCategory.InvalidOperation, dstFolder));
             }
         }
+
+        linkReport.Flush(this);
     }
 }

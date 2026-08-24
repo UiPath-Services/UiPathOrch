@@ -19,9 +19,11 @@ public class ComputeDstFqnTests
     [InlineData("A/B/C", 0, "A/B/C")]
     [InlineData("A/B/C", 1, "A/B")]
     [InlineData("A/B/C", 2, "A")]
-    [InlineData("A/B/C", 3, null)]   // can't go above the top segment
+    [InlineData("A/B/C", 3, "")]     // the tenant root, whose FQN is ""
+    [InlineData("A/B/C", 4, null)]   // can't go above the root
     [InlineData("A", 0, "A")]
-    [InlineData("A", 1, null)]
+    [InlineData("A", 1, "")]         // a top-level folder's parent IS the root
+    [InlineData("", 1, null)]
     public void WalkUp_StripsTrailingSegments(string fqn, int upSteps, string? expected)
         => Assert.Equal(expected, WalkUp(fqn, upSteps));
 
@@ -51,9 +53,46 @@ public class ComputeDstFqnTests
     public void Cousin_RebasesUnderCommonPrefix()
         => Assert.Equal("Marketing/East/Q2", ComputeDstFqn("Sales/East/Q2", "Sales/West/Q1", "Marketing/HQ/Team"));
 
+    // The tenant root is a common ancestor like any other, so two subtrees that meet only
+    // at the root rebase to the same absolute path on the destination. (Before the top-level
+    // fix this returned null; a same-drive copy that resolves back to the source's own link
+    // folder is still refused, by FindDstFolders' alias guard — see the test below.)
     [Fact]
-    public void DisjointTopLevel_ReturnsNull()
-        => Assert.Null(ComputeDstFqn("Other/X", "Sales/Q1", "Marketing/West"));
+    public void DisjointTopLevel_RebasesUnderTheTenantRoot()
+        => Assert.Equal("Other/X", ComputeDstFqn("Other/X", "Sales/Q1", "Marketing/West"));
+
+    // ---- top-level (root-level) folders: the shape that silently lost every link ----
+    // Their FQNs carry no "/", so the only boundary between them is the tenant root. The
+    // scan for a "/" boundary found none and the whole rebase was abandoned, so an entity
+    // shared between two root-level folders — the most common Orchestrator layout — was
+    // copied twice instead of linked, in either direction and with no error or warning.
+    // Reproduced live cloud-to-cloud (Shared <-> Development) before the fix.
+
+    [Fact]
+    public void TopLevelSiblings_SameNamesOnBothSides()
+        => Assert.Equal("Development", ComputeDstFqn("Development", "Shared", "Shared"));
+
+    [Fact]
+    public void TopLevelSiblings_ReverseDirection()
+        => Assert.Equal("Shared", ComputeDstFqn("Shared", "Development", "Development"));
+
+    [Fact]
+    public void TopLevelSibling_ReparentedDestination()
+        => Assert.Equal("Migration/Finance", ComputeDstFqn("Finance", "Shared", "Migration/Shared"));
+
+    [Fact]
+    public void TopLevelSibling_LinkIsASubfolderOfAnotherTopLevelFolder()
+        => Assert.Equal("Dept#2/fuga", ComputeDstFqn("Dept#2/fuga", "Shared", "Shared"));
+
+    // The rebase lands on the tenant root itself: no folder has an empty FQN, so
+    // FindDstFolders matches nothing and the entity is copied rather than linked.
+    [Fact]
+    public void AncestorAboveATopLevelDstAnchor_ResolvesToTheRoot()
+        => Assert.Equal("", ComputeDstFqn("Sales", "Sales/Q1", "Marketing"));
+
+    [Fact]
+    public void DstAnchorIsTheRoot_HasNoExpressibleCounterpart()
+        => Assert.Null(ComputeDstFqn("Finance", "Shared", ""));
 
     [Fact]
     public void CaseInsensitive_AnchorMatch_PreservesLinkTailCase()
@@ -87,6 +126,35 @@ public class ComputeDstFqnTests
             F(2, "Marketing/West"))!.ToList();
         Assert.Single(got);
         Assert.Equal(20, got[0].Id);
+    }
+
+    // End-to-end shape of the live repro: TestAsset2024 lives in Shared and is shared with
+    // Development (both top-level); copying Shared -> Shared must resolve Development on the
+    // destination so the second folder's copy links instead of creating a second asset.
+    [Fact]
+    public void FindDstFolders_RebasesTopLevelSiblingLink()
+    {
+        var got = FindDstFolders(
+            [10],
+            [F(10, "Development"), F(1, "Shared")],
+            [F(20, "Development"), F(2, "Shared")],
+            F(1, "Shared"),
+            F(2, "Shared"))!.ToList();
+        Assert.Single(got);
+        Assert.Equal(20, got[0].Id);
+    }
+
+    // A rebase that lands on the tenant root matches no folder (none has an empty FQN).
+    [Fact]
+    public void FindDstFolders_RootResult_MatchesNothing()
+    {
+        var got = FindDstFolders(
+            [10],
+            [F(10, "Sales"), F(1, "Sales/Q1")],
+            [F(20, "Marketing/West"), F(2, "Marketing")],
+            F(1, "Sales/Q1"),
+            F(2, "Marketing"))!.ToList();
+        Assert.Empty(got);
     }
 
     [Fact]

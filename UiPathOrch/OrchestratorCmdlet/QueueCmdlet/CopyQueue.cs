@@ -51,6 +51,10 @@ public class CopyQueueCmdlet : OrchestratorPSCmdlet
         using var reporterQueues = new ProgressReporter(this, 700, Int32.MaxValue, "Copying queues...");
         using var cancelHandler = new ConsoleCancelHandler();
 
+        // One report for the whole run: a shared queue that isn't linked in one folder's pass
+        // may still be linked by a later folder's pass, so the verdict is only final at Flush.
+        var linkReport = new Core.OrchProvider.LinkCopyReport();
+
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
             try
@@ -74,7 +78,7 @@ public class CopyQueueCmdlet : OrchestratorPSCmdlet
                 Core.OrchProvider.CopyQueues(this,
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterQueues,
-                    false, cancelHandler.Token);
+                    false, cancelHandler.Token, linkReport);
                 dstDrive.Queues.ClearCache(dstFolder);
             }
             catch (OperationCanceledException)
@@ -87,5 +91,7 @@ public class CopyQueueCmdlet : OrchestratorPSCmdlet
                 WriteError(new ErrorRecord(new OrchException(target, ex), "CopyQueueError", ErrorCategory.InvalidOperation, target));
             }
         }
+
+        linkReport.Flush(this);
     }
 }

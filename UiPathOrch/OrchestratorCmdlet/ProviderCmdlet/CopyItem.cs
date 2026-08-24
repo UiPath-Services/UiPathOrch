@@ -363,6 +363,12 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 {
     private bool ExcludeEntities = false;
 
+    // Folder-link outcomes for the CURRENT Copy-Item call. Like ExcludeEntities it is assigned
+    // unconditionally at the top of CopyItem so it can never leak into a later call, and it lives
+    // on the provider rather than being threaded through CopyItemRecurse because the verdict for
+    // one entity depends on folders copied later in the same recursion. Flushed by CopyItem.
+    private LinkCopyReport? _linkReport;
+
     // IWritableHost: report whether this host renders wide Write-Progress text correctly
     // (PowerShell #21293 / PR #26185), based on the live host version. See ProgressRendering.
     public bool RendersWideProgress

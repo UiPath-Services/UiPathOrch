@@ -296,6 +296,8 @@ When performing cross-drive copy (e.g., Orch1: to Orch2:), the cmdlet recreates 
 
 If a queue with the same name already exists in the destination folder, an error is returned for that queue.
 
+A shared (linked) queue is handled differently depending on where it is going. Within one tenant the copy always creates an independent queue — to share the existing one with another folder instead, use `Add-OrchQueueLink`. The cmdlet warns when it copies a linked queue this way, including under -WhatIf. Across tenants the sharing is reproduced when the destination has a counterpart folder already holding a queue of the same name, so copying both folders of a shared queue yields one linked queue rather than two; when no counterpart is found the queue is copied independently and a warning is emitted at the end of the run.
+
 ## RELATED LINKS
 
 [Get-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchQueue.md)

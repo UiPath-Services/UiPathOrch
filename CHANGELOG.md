@@ -4,6 +4,44 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- **Copying an entity shared between two top-level folders to another tenant lost the link and
+  created two independent entities.** `Copy-Item` and `Copy-Orch{Asset,Queue,Bucket}` find the
+  destination counterpart of a linked folder by rebasing its fully-qualified name around the folder
+  being copied. The rebase looked for the deepest `/` boundary shared by the two names and treated
+  "no boundary found" as "unrelated folders" — but two *top-level* folders share only the tenant
+  root, whose fully-qualified name is `""` and therefore carries no `/`. Every link between
+  root-level folders (the most common Orchestrator layout) was silently abandoned in both
+  directions, and the entity was copied into each folder instead of being linked once. The tenant
+  root is now treated as the common ancestor it is: `WalkUp` can reach it (returning `""`) and the
+  rebase mirrors the source's absolute path onto the destination. Reproduced cloud-to-cloud before
+  the fix — `Shared` / `Development` produced two assets with different ids, while `Dept#2` /
+  `Dept#2\fuga` (parent and child, which took a different branch) linked correctly.
+
+  Two subtree folders that meet only at the root now also rebase to the same absolute path instead
+  of resolving to nothing; a same-drive copy that would resolve back to the source's own link folder
+  is still refused by `FindDstFolders`' alias guard.
+
+### Changed
+
+- **Copying a linked entity within one tenant now always creates an independent entity, and says
+  so.** Reproducing a link is `Add-Orch{Asset,Queue,Bucket}Link`'s job: linking an existing entity
+  into another folder is one call, whereas a copy that silently linked instead of copying gave no
+  way to ask for a plain copy. `Copy-Item` / `Copy-Orch{Asset,Queue,Bucket}` therefore no longer
+  link within a tenant (two drives mounted on the same tenant count as one), and warn that the copy
+  is independent and which cmdlet shares the existing entity instead. The warning also appears
+  under `-WhatIf`, where the verdict is already final.
+
+- **A cross-tenant copy that could not reproduce a link now reports it.** Previously the copy fell
+  back to creating an independent entity without a word, which is how the top-level bug above went
+  unnoticed. The warning is deferred to the end of the run rather than raised at the miss: in a
+  folder-tree copy the counterpart is often only filled by a *later* folder's pass, which then links
+  the entity, so warning at the miss would cry wolf on a normal migration. Both warning kinds are
+  throttled after five, like the per-user value drops.
+
 ## [1.13.0] - 2026-08-14
 
 ### Added

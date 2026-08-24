@@ -330,6 +330,8 @@ For cross-instance migration of per-robot assets, a user mapping CSV is required
 
 Credential asset passwords cannot be read from the source; only the credential username and structure are copied. Passwords must be re-entered at the destination.
 
+A shared (linked) asset is handled differently depending on where it is going. Within one tenant the copy always creates an independent asset — to share the existing one with another folder instead, use `Add-OrchAssetLink`. The cmdlet warns when it copies a linked asset this way, including under -WhatIf. Across tenants the sharing is reproduced when the destination has a counterpart folder already holding an asset of the same name, so copying both folders of a shared asset yields one linked asset rather than two; when no counterpart is found the asset is copied independently and a warning is emitted at the end of the run.
+
 ## RELATED LINKS
 
 [Get-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAsset.md)

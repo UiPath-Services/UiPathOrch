@@ -64,6 +64,10 @@ public class CopyAssetCmdlet : OrchestratorPSCmdlet
 
         using var reporterAssets = new ProgressReporter(this, 600, Int32.MaxValue, "Copying assets...");
         using var cancelHandler = new ConsoleCancelHandler();
+
+        // One report for the whole run: a shared asset that isn't linked in one folder's pass
+        // may still be linked by a later folder's pass, so the verdict is only final at Flush.
+        var linkReport = new Core.OrchProvider.LinkCopyReport();
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
             try
@@ -87,7 +91,7 @@ public class CopyAssetCmdlet : OrchestratorPSCmdlet
                 Core.OrchProvider.CopyAssets(this,
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterAssets,
-                    false, cancelHandler.Token, userMapping);
+                    false, cancelHandler.Token, userMapping, linkReport);
                 dstDrive.Assets.ClearCache(dstFolder);
             }
             catch (OperationCanceledException)
@@ -100,5 +104,7 @@ public class CopyAssetCmdlet : OrchestratorPSCmdlet
                 WriteError(new ErrorRecord(new OrchException(target, ex), "CopyAssetError", ErrorCategory.InvalidOperation, dstFolder));
             }
         }
+
+        linkReport.Flush(this);
     }
 }
