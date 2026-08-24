@@ -52,6 +52,23 @@ BeforeAll {
     $script:TargetDrive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     $script:Folder      = "${script:TargetDrive}:\TestFixture_Base\Development"
 
+    # Orchestrator's Test Automation module can be discontinued for an account, in which
+    # case every test-set / test-schedule endpoint answers with an error instead of data.
+    # The test-schedule tests below then have nothing to assert about — skip them with a
+    # reason rather than reporting an environment state as a product failure.
+    function script:Get-TestAutomationSkipReason {
+        try {
+            Get-OrchTestSetSchedule -Path $script:Folder -ErrorAction Stop | Out-Null
+            return $null
+        }
+        catch {
+            if ($_.Exception.Message -match 'discontinued') {
+                return 'Test Automation has been discontinued in Orchestrator for this account'
+            }
+            return $null   # any other failure is a real one — let the test report it
+        }
+    }
+
     Get-PSDrive $script:TargetDrive -ErrorAction Stop | Out-Null
     if (-not (Test-Path $script:Folder)) {
         throw "Fixture folder '$script:Folder' missing — run Import-Fixture.ps1 first."
@@ -452,6 +469,14 @@ Describe 'v1.5.3: Get-OrchTestSetSchedule -ExportCsv header columns' {
     # has it off), so we cannot create rows to round-trip. The CSV
     # *header* — which determines whether Import-Csv | New-/Update- will
     # bind correctly — can be verified against an empty result.
+    #
+    # A tenant whose Test Automation module has been DISCONTINUED outright is a
+    # different matter: the endpoint no longer answers at all, so there is no
+    # empty result to read a header from. That is an environment state, not a
+    # regression, so skip rather than fail.
+    BeforeAll { $script:TaSkip = script:Get-TestAutomationSkipReason }
+    BeforeEach { if ($script:TaSkip) { Set-ItResult -Skipped -Because $script:TaSkip } }
+
     It 'emits exactly the New-/Update- parameter names as columns' {
         $csv = Join-Path $env:TEMP "${script:Prefix}schedules.csv"
         try {
@@ -562,6 +587,13 @@ Describe 'v1.5.3: Update-OrchTestSetSchedule against tenant feature flag' {
     # cmdlet doesn't silently swallow a "not found" or PUT with stale
     # state — by exercising it against an entity name that doesn't exist
     # in the target folder. Cmdlet must not throw; it must WriteError.
+    #
+    # Skipped when the account's Test Automation module has been discontinued:
+    # the cmdlet then cannot even enumerate, so "no match => no error" is not
+    # the behaviour under test. Environment state, not a regression.
+    BeforeAll { $script:TaSkip = script:Get-TestAutomationSkipReason }
+    BeforeEach { if ($script:TaSkip) { Set-ItResult -Skipped -Because $script:TaSkip } }
+
     It 'returns cleanly when no schedule matches the supplied -Name' {
         $err = $null
         # Wildcard guaranteed not to match anything.

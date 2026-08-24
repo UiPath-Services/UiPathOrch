@@ -108,6 +108,8 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         if (_orchAPISession is not null)
         {
             _orchAPISession.PmApiDeprecated = true;
+            // Re-probe whether the account still lacks Test Automation (see the property's comment).
+            _orchAPISession.TestAutomationDiscontinued = false;
         }
 
         #region Orchestrator API cache

@@ -456,13 +456,20 @@ Describe 'CSV round-trip' {
     }
 }
 
-# Verifies that Copy-Item reproduces the source link graph in dst — for every
-# folder that was linked to a multi-link entity in src, the corresponding dst
-# folder must end up linked to the dst's copy of that entity. The fixture
-# defines asset-shared3 / queue-shared3 / bucket-shared3 as Production-owned
-# entities each linked to three other folders (Development, QA, SubA), so each
-# entity's reproduced link set in dst must cover all three folder names.
-Describe 'Copy-Item link reproduction' {
+# Within ONE tenant, Copy-Item deliberately does NOT reproduce the source link
+# graph: every destination folder gets its own independent entity. Sharing an
+# existing entity with more folders is Add-Orch{Asset,Queue,Bucket}Link's job —
+# one call — whereas a copy that linked instead of copying left no way to ask
+# for a plain copy. The copy says what it did instead of doing it silently.
+#
+# The fixture defines asset-shared3 / queue-shared3 / bucket-shared3 as
+# Production-owned entities each linked into three other folders (Development,
+# QA, SubA), and asset-host / queue-emails / bucket-files as two-link entities.
+# Copying Production first and the link folders after is the ordering that used
+# to produce links inside one tenant, so it is the ordering that pins the change.
+#
+# Cross-TENANT copies do reproduce links — see the cross-drive Describe below.
+Describe 'Copy-Item within one tenant copies linked entities independently' {
     BeforeAll {
         $script:CopyDest = "${script:Drive}:\TestFixture_CopyDest"
 
@@ -472,15 +479,16 @@ Describe 'Copy-Item link reproduction' {
 
         New-Item -Path $script:CopyDest -ItemType Directory | Out-Null
 
-        # Copy Production first because it owns the multi-link entities. After
-        # Production is in dst, copying Development / QA causes LinkAsset /
-        # LinkQueue / LinkBucket to find each owned entity in dst's Production
-        # and link the new folder to it instead of duplicating. Production's
-        # -Recurse pulls in SubA / SubB and establishes the SubA links during
-        # that recursion (because Production has been copied moments before).
-        Copy-Item -Path "${script:Drive}:\TestFixture_Base\Production"  -Destination $script:CopyDest -Recurse -Confirm:$false
-        Copy-Item -Path "${script:Drive}:\TestFixture_Base\Development" -Destination $script:CopyDest -Recurse -Confirm:$false
-        Copy-Item -Path "${script:Drive}:\TestFixture_Base\QA"          -Destination $script:CopyDest -Recurse -Confirm:$false
+        # -ErrorAction Continue on purpose: Copy-Item reports a per-stage failure as a
+        # non-terminating error and carries on with the remaining stages, but the runner
+        # sets $ErrorActionPreference = 'Stop', which would turn the first one into a
+        # terminating error and fail every test in this block for a reason that has
+        # nothing to do with links. A tenant whose Test Automation module has been
+        # discontinued does exactly that on the test-set / test-schedule stages.
+        Copy-Item -Path "${script:Drive}:\TestFixture_Base\Production"  -Destination $script:CopyDest -Recurse -Confirm:$false -ErrorAction Continue -WarningVariable prodWarn
+        Copy-Item -Path "${script:Drive}:\TestFixture_Base\Development" -Destination $script:CopyDest -Recurse -Confirm:$false -ErrorAction Continue
+        Copy-Item -Path "${script:Drive}:\TestFixture_Base\QA"          -Destination $script:CopyDest -Recurse -Confirm:$false -ErrorAction Continue
+        $script:ProdWarnings = @($prodWarn | ForEach-Object { $_.ToString() })
         Clear-OrchCache -Path $script:CopyDest
     }
 
@@ -488,59 +496,58 @@ Describe 'Copy-Item link reproduction' {
         Remove-Item -Path $script:CopyDest -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
     }
 
-    # Helper: project links to the leaf folder name of the Link column, sorted
-    function script:Get-LinkLeaves($links) {
-        $links.Link | ForEach-Object { ($_ -split '\\')[-1] } | Sort-Object
+    # Helper: the folders the destination entity is shared with. Returns the paths rather
+    # than a count so a failure names the unexpected link instead of just "expected 0, got 1".
+    function script:Get-LinkTargets($links) {
+        , @(@($links) | ForEach-Object { $_.Link })
     }
 
     # 2-link case (asset-host: Production → Dev, QA)
-    It 'reproduces asset-host links (Development, QA)' {
-        $links = Get-OrchAssetLink -Path "${script:CopyDest}\Production" -Name 'asset-host'
-        Get-LinkLeaves $links | Should -Be @('Development', 'QA')
+    It 'does not link asset-host at the destination' {
+        Get-LinkTargets (Get-OrchAssetLink -Path "${script:CopyDest}\Production" -Name 'asset-host') | Should -BeNullOrEmpty
     }
 
     # 3-link case (asset-shared3: Production → Dev, QA, SubA)
-    It 'reproduces asset-shared3 links to ALL three folders (Development, QA, SubA)' {
-        $links = Get-OrchAssetLink -Path "${script:CopyDest}\Production" -Name 'asset-shared3'
-        Get-LinkLeaves $links | Should -Be @('Development', 'QA', 'SubA')
+    It 'does not link asset-shared3 at the destination' {
+        Get-LinkTargets (Get-OrchAssetLink -Path "${script:CopyDest}\Production" -Name 'asset-shared3') | Should -BeNullOrEmpty
     }
 
     # 2-link case (queue-emails: Production → Dev, QA)
-    It 'reproduces queue-emails links (Development, QA)' {
-        $links = Get-OrchQueueLink -Path "${script:CopyDest}\Production" -Name 'queue-emails'
-        Get-LinkLeaves $links | Should -Be @('Development', 'QA')
+    It 'does not link queue-emails at the destination' {
+        Get-LinkTargets (Get-OrchQueueLink -Path "${script:CopyDest}\Production" -Name 'queue-emails') | Should -BeNullOrEmpty
     }
 
     # 3-link case (queue-shared3: Production → Dev, QA, SubA)
-    It 'reproduces queue-shared3 links to ALL three folders (Development, QA, SubA)' {
-        $links = Get-OrchQueueLink -Path "${script:CopyDest}\Production" -Name 'queue-shared3'
-        Get-LinkLeaves $links | Should -Be @('Development', 'QA', 'SubA')
+    It 'does not link queue-shared3 at the destination' {
+        Get-LinkTargets (Get-OrchQueueLink -Path "${script:CopyDest}\Production" -Name 'queue-shared3') | Should -BeNullOrEmpty
     }
 
     # 2-link case (bucket-files: Production → Dev, SubA)
-    It 'reproduces bucket-files links (Development, SubA)' {
-        $links = Get-OrchBucketLink -Path "${script:CopyDest}\Production" -Name 'bucket-files'
-        Get-LinkLeaves $links | Should -Be @('Development', 'SubA')
+    It 'does not link bucket-files at the destination' {
+        Get-LinkTargets (Get-OrchBucketLink -Path "${script:CopyDest}\Production" -Name 'bucket-files') | Should -BeNullOrEmpty
     }
 
     # 3-link case (bucket-shared3: Production → Dev, QA, SubA)
-    It 'reproduces bucket-shared3 links to ALL three folders (Development, QA, SubA)' {
-        $links = Get-OrchBucketLink -Path "${script:CopyDest}\Production" -Name 'bucket-shared3'
-        Get-LinkLeaves $links | Should -Be @('Development', 'QA', 'SubA')
+    It 'does not link bucket-shared3 at the destination' {
+        Get-LinkTargets (Get-OrchBucketLink -Path "${script:CopyDest}\Production" -Name 'bucket-shared3') | Should -BeNullOrEmpty
     }
 
-    # Subsequent-folder skip: when Development is copied (after Production),
-    # asset-host / queue-emails / etc. should be linked to dst Production's
-    # copy rather than duplicated in dst Development. So dst Development
-    # contains no NEW asset-host of its own — it sees Production's via link.
-    It 'subsequent-folder copy did not duplicate the linked entities into Development' {
-        # In src, Development owns 3 assets (asset-env, asset-port, asset-trace) +
-        # sees asset-host and asset-shared3 via link (5 total enumerable). The
-        # dst Development must show the same 5, with asset-host / asset-shared3
-        # being the same Id as in dst Production (i.e., linked, not duplicated).
-        $devProd = Get-OrchAsset -Path "${script:CopyDest}\Production"  -Name 'asset-host'
-        $devDev  = Get-OrchAsset -Path "${script:CopyDest}\Development" -Name 'asset-host'
-        $devProd.Id | Should -Be $devDev.Id
+    # The flip side of "no links": each folder that could see the source entity
+    # ends up owning a separate destination entity, with its own Id.
+    It 'gives each destination folder its own copy of the shared entity' {
+        $prod = Get-OrchAsset -Path "${script:CopyDest}\Production"  -Name 'asset-host'
+        $dev  = Get-OrchAsset -Path "${script:CopyDest}\Development" -Name 'asset-host'
+        $prod | Should -Not -BeNullOrEmpty
+        $dev  | Should -Not -BeNullOrEmpty
+        $dev.Id | Should -Not -Be $prod.Id `
+            -Because 'a same-tenant copy creates an independent entity, it does not link the existing one'
+    }
+
+    # Silence is what made this dangerous before: the entity quietly stopped
+    # being shared. The copy must name the cmdlet that does share it.
+    It 'warns that the copy did not reproduce the links' {
+        $hit = $script:ProdWarnings | Where-Object { $_ -match 'does not reproduce those links' -and $_ -match 'Add-OrchAssetLink' }
+        $hit | Should -Not -BeNullOrEmpty
     }
 }
 

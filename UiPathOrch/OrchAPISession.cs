@@ -3475,6 +3475,15 @@ public partial class OrchAPISession : IDisposable
 
     public DirectoryScope[]? GetPmDirectoryScope(string partitionGlobalId) => HttpRequestIdentity<DirectoryScope[]>(HttpMethod.Get, $"/api/Directory/Scopes/{partitionGlobalId}");
 
+    // Orchestrator's Test Automation module can be discontinued for an account ("TestAutomation
+    // functionality has been discontinued in Orchestrator for your account. Please use Test Manager
+    // service."). Every test-set and test-schedule read then fails, so a -Recurse copy would report
+    // one error per folder for a feature the tenant no longer has -- noise that also aborts the
+    // caller under $ErrorActionPreference = 'Stop'. The copy sets this on the first such response,
+    // warns once, and skips those stages afterwards. Reset by Clear-OrchCache (ClearTenantCache),
+    // so a tenant that regains the module is picked up without starting a new session.
+    public bool TestAutomationDiscontinued { get; set; }
+
     private bool _pmApiDeprecated = true;
     public bool PmApiDeprecated
     {

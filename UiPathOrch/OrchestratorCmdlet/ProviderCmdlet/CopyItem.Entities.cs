@@ -1595,12 +1595,49 @@ public partial class OrchProvider
     // There is no need to copy TestCases.
     // TestCases are created by copying the test process package.
 
+    // True when the failure is Orchestrator reporting that the account no longer has the Test
+    // Automation module. Matched on the message because the response carries errorCode 0 and no
+    // other machine-readable marker; a miss simply leaves the previous behaviour (a per-folder
+    // error), so the narrow match costs nothing when it does not fire.
+    private static bool IsTestAutomationDiscontinued(Exception? ex)
+    {
+        for (var e = ex; e is not null; e = e.InnerException)
+        {
+            if (e.Message is not null &&
+                e.Message.Contains("TestAutomation functionality has been discontinued", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    // Recognise that failure once per drive: warn a single time and let the caller skip the stage,
+    // instead of reporting the same discontinuation for every folder of a -Recurse copy. Returns
+    // true when the exception was this and has been handled. See OrchAPISession.
+    private static bool HandleTestAutomationDiscontinued(IWritableHost _this, OrchDriveInfo drive, Exception ex)
+    {
+        if (!IsTestAutomationDiscontinued(ex)) return false;
+
+        if (!drive.OrchAPISession.TestAutomationDiscontinued)
+        {
+            drive.OrchAPISession.TestAutomationDiscontinued = true;
+            _this.WriteWarning($"{drive.NameColon} reports that Orchestrator's Test Automation module has been discontinued for this account, so test sets and test schedules are skipped for this drive; everything else is copied as usual. Test cases now live in the Test Manager service. Run Clear-OrchCache to re-check.");
+        }
+        return true;
+    }
+
     internal static void CopyTestSets(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
         if (newFolder.FolderType == "Personal") return;
+
+        // Already established that this account has no Test Automation module — nothing to copy,
+        // and nothing to say a second time.
+        if (srcDrive.OrchAPISession.TestAutomationDiscontinued ||
+            dstDrive.OrchAPISession.TestAutomationDiscontinued) return;
 
         // Test entities do not exist in v16 and earlier; v15 (e.g. Orch 22.10)
         // returns HTTP 500 from /odata/TestSets rather than 404, so without the
@@ -1671,6 +1708,7 @@ public partial class OrchProvider
                     }
                     catch (Exception ex)
                     {
+                        if (HandleTestAutomationDiscontinued(_this, dstDrive, ex)) return;
                         _this.WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), msg, ex), "CreateTestSetError", ErrorCategory.InvalidOperation, srcFolder));
                         return;
                     }
@@ -1679,6 +1717,7 @@ public partial class OrchProvider
         }
         catch (Exception ex)
         {
+            if (HandleTestAutomationDiscontinued(_this, srcDrive, ex)) return;
             _this.WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), msg, ex), "GetTestSetError", ErrorCategory.InvalidOperation, srcFolder));
             return;
         }
@@ -1784,6 +1823,11 @@ public partial class OrchProvider
         if (srcDrive.OrchAPISession.ApiVersion < 18) return;
         if (dstDrive.OrchAPISession.ApiVersion < 18) return;
 
+        // Already established that this account has no Test Automation module — nothing to copy,
+        // and nothing to say a second time.
+        if (srcDrive.OrchAPISession.TestAutomationDiscontinued ||
+            dstDrive.OrchAPISession.TestAutomationDiscontinued) return;
+
         string msg = $"Copying test schedules";
 
         List<TestSetSchedule> srcTestSetSchedules;
@@ -1793,6 +1837,7 @@ public partial class OrchProvider
         }
         catch (Exception ex)
         {
+            if (HandleTestAutomationDiscontinued(_this, srcDrive, ex)) return;
             _this.WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), msg, ex), "GetTestSetScheduleError", ErrorCategory.InvalidOperation, srcFolder));
             return;
         }
@@ -1827,6 +1872,7 @@ public partial class OrchProvider
                 }
                 catch (Exception ex)
                 {
+                    if (HandleTestAutomationDiscontinued(_this, dstDrive, ex)) return;
                     _this.WriteError(new ErrorRecord(new OrchException(newFolder.GetPSPath(), msg, ex), "CopyApiTriggerError", ErrorCategory.InvalidOperation, target));
                 }
             }
