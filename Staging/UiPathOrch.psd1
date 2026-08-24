@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.13.0'
+ModuleVersion = '1.14.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,39 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.14.0
+
+Fixed: copying an entity shared between two top-level folders to another tenant lost the link and
+created two independent entities. The copy finds the destination counterpart of a linked folder by
+rebasing its fully-qualified name around the folder being copied, and it looked for the deepest "/"
+boundary the two names share -- but two top-level folders share only the tenant root, whose
+fully-qualified name is empty and therefore carries no "/". Every link between root-level folders,
+the most common Orchestrator layout, was silently abandoned in both directions and the entity was
+copied into each folder instead of being linked once. The tenant root is now treated as the common
+ancestor it is, so the source's own folder tree is mirrored onto the destination.
+
+Changed: copying a linked entity within one tenant now always creates an independent entity, and
+says so. Sharing an existing entity with another folder is the job of Add-OrchAssetLink and its
+queue and bucket siblings -- one call -- whereas a copy that linked instead of copying left no way
+to ask for a plain copy. Two drives mounted on the same tenant count as one. The warning appears
+under -WhatIf too. A cross-tenant copy that could not reproduce a link now reports that as well, at
+the end of the run rather than at the moment of the miss: in a folder-tree copy the counterpart
+folder is often only filled by a later folder's pass, which then links the entity.
+
+Changed: a tenant whose Test Automation module has been discontinued no longer produces one error
+per folder during Copy-Item -Recurse. The copy now says so once per drive, skips test sets and test
+schedules, and copies everything else as usual; Clear-OrchCache re-probes.
+
+Changed: removing an asset, queue or bucket that is linked into other folders now says that it was
+only unlinked. A delete addressed to a folder removes that folder's share of the entity; the entity
+-- with its value, items or files -- survives in the remaining folders under the same id, and dies
+only with the last folder that holds it. That is Orchestrator's own behaviour, the web UI offering
+"remove from folder" separately from "delete", but the cmdlets reported nothing and the folder you
+were looking at is empty afterwards, so the removal read as a delete while the entity was still live
+elsewhere. Remove-OrchAsset, Remove-OrchQueue and Remove-OrchBucket now name the folders that still
+hold it, under -WhatIf as well, and the folder-deletion prompt no longer claims to remove all of a
+folder's contents.
+
 1.13.0
 
 Added: the configuration file location can now be changed. UiPathOrchConfig.json was fixed to the
@@ -569,47 +602,6 @@ instead of hanging. Callbacks carrying neither code nor error (favicon probes, s
 still ignored. Note that neither Automation Cloud nor on-premises 22.10 was observed to redirect
 errors back this way -- both park the browser on an Identity error page -- so this is conformance
 for deployments that do redirect, not a cure for the timeout those two produce.
-
-1.12.2
-
-Fixed four independent defects in the drive's HTTP diagnostic log.
-
-Fixed: the on-premises username/password sign-in (POST /api/Account/Authenticate) wrote the bearer
-token to the log in plaintext at Trace/Verbose. That flow returns the token under ABP's `result`
-key, outside the OAuth2/OIDC vocabulary the redaction set was built from, so it was never masked.
-Only that one auth endpoint was affected -- Automation Cloud, Automation Suite, PKCE,
-confidential-app and PAT drives never had the token in the log. If you have shared or archived logs
-from an on-premises username/password drive at Trace/Verbose, treat those tokens as exposed.
-
-Fixed: a transient I/O error silently destroyed log entries. The writer swallowed the exception,
-reported success, and the entries were discarded -- while the statistics still reported
-DroppedEntries = 0. A failed write is now retried on the next write, and anything genuinely
-abandoned (an unwritable path, or a retention cap reached during a long outage) is counted.
-
-Fixed: log blocks could be written out of order, because each was handed to the thread pool and
-forgotten, shuffling the sequence numbers. Blocks are now written inline, in the order produced.
-
-Fixed: log directories and files created on Linux/macOS were world-readable -- they inherited the
-process umask (commonly 0755/0644) while the config file had always been 0600, though the logs
-hold the same class of secret (request and response bodies at Trace/Verbose and on every error).
-New log directories are now created 0700 and new log files 0600; paths created by earlier versions
-keep their existing permissions.
-
-Fixed: Set-OrchBucketItem reported an unsupported storage provider as "The method or operation is
-not implemented." The error now names the verb the provider actually returned and states which
-uploads are supported; a provider that omitted the verb no longer throws NullReferenceException.
-
-Fixed: throttled requests (429/503/504) retried in lockstep on a fixed 500ms/1s/2s backoff,
-re-creating the burst that tripped the throttle -- the shape produced by the -Recurse fan-outs. The
-delay is now spread by +/-25%. A server-supplied Retry-After is still honoured exactly as sent.
-
-Changed: the log file is held open while a drive is actively logging and released after 5 seconds
-without a write (writing through an open handle is far cheaper than reopening per entry). While the
-handle is held, Windows refuses any open declaring FileShare.Read -- Compress-Archive, Get-FileHash,
-Remove-Item, [IO.File]::ReadAllText. PowerShell's own provider shares read/write, so Get-Content,
-Get-Content -Wait, Select-String and Copy-Item are unaffected. To zip, hash or delete an active
-drive's log, pause a few seconds or unmount the drive first; writes made while the file is busy are
-retained and written once it is free.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

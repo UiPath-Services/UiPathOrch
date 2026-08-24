@@ -4,7 +4,7 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.14.0] - 2026-08-24
 
 ### Fixed
 
@@ -26,6 +26,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   is still refused by `FindDstFolders`' alias guard.
 
 ### Changed
+
+- **A tenant whose Test Automation module has been discontinued no longer produces one error per
+  folder during a copy.** Orchestrator can retire the module per account ("TestAutomation
+  functionality has been discontinued in Orchestrator for your account. Please use Test Manager
+  service."), after which every test-set and test-schedule read fails. `Copy-Item -Recurse` reported
+  that once per folder — noise proportional to the tree, and enough to abort the caller under
+  `$ErrorActionPreference = 'Stop'` even though the copy itself carries on. The first such response
+  is now recognised: the copy warns once per drive, then skips the test-set and test-schedule stages
+  for the rest of the session, and copies everything else as usual. `Clear-OrchCache` re-probes, so
+  a tenant that regains the module does not need a new session. Detection matches the server's
+  message because the response carries no machine-readable marker (its `errorCode` is 0); when it
+  does not match, the previous per-folder error is what you get.
 
 - **Removing an asset, queue, or bucket that is linked into other folders now says that it was
   only unlinked.** Measured on Cloud, for all three entity types and in both directions (removing
