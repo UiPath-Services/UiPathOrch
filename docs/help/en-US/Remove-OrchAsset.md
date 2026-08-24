@@ -323,6 +323,8 @@ By default, this cmdlet does not prompt for confirmation; deletion proceeds imme
 
 The cmdlet processes each matching asset individually, so if one removal fails (e.g., due to permissions), remaining assets continue to be processed.
 
+An asset that is linked into several folders is only removed from the folder you target: the asset, and its value, remain in the other folders under the same id. The cmdlet warns when this happens — including under -WhatIf — and names the folders that still hold it. To delete the asset itself, remove it from those folders as well; `Get-OrchAssetLink` shows where it is linked.
+
 ## RELATED LINKS
 
 [Get-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAsset.md)

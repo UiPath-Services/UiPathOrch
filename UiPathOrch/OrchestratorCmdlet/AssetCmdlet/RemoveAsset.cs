@@ -65,6 +65,10 @@ public class RemoveAssetCmdlet : RemoveFolderEntityCmdletBase<Asset>
     protected override IEnumerable<Asset> GetEntities(OrchDriveInfo drive, Folder folder)
         => drive.Assets.Get(folder);
 
+    // A linked asset is only unshared from this folder by the delete — see the base class.
+    protected override List<SimpleFolder>? GetOtherLinkFolders(OrchDriveInfo drive, Folder folder, Asset asset)
+        => OtherFolders(drive.GetFoldersForAsset(folder, asset), folder);
+
     protected override void Remove(OrchDriveInfo drive, Folder folder, Asset asset)
     {
         drive.OrchAPISession.RemoveAsset(folder.Id ?? 0, asset.Id ?? 0);

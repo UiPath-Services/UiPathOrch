@@ -27,7 +27,8 @@ public abstract class RemoveEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
         IReadOnlyList<WildcardPattern>? wpName,
         string scopeLabel,
         Action<TEntity> remove,
-        CancellationToken token)
+        CancellationToken token,
+        Action<TEntity>? previewWhatIf = null)
     {
         var getName = GetName;
         var getPSPath = GetPSPath;
@@ -40,7 +41,18 @@ public abstract class RemoveEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
             .WithProgressBar(this, $"Removing {entityNoun} in {scopeLabel}", getName)
             .WithCancellation(token))
         {
-            if (ShouldProcess(getPSPath(entity), $"Remove {entityNoun}"))
+            // The four-argument overload is used only so that -WhatIf can be told apart from a
+            // declined -Confirm (previewWhatIf reports read-only facts about what the removal
+            // WOULD do). The three strings reproduce what ShouldProcess(target, action) builds
+            // itself — including the default "Confirm" caption — so both the "What if:" line and
+            // the confirmation prompt are unchanged.
+            string target = getPSPath(entity);
+            string action = $"Remove {entityNoun}";
+            if (ShouldProcess(
+                    $"Performing the operation \"{action}\" on target \"{target}\".",
+                    $"Are you sure you want to perform this action?\nPerforming the operation \"{action}\" on target \"{target}\".",
+                    "Confirm",
+                    out ShouldProcessReason reason))
             {
                 try
                 {
@@ -50,6 +62,10 @@ public abstract class RemoveEntityCmdletBase<TEntity> : OrchestratorPSCmdlet
                 {
                     WriteError(new ErrorRecord(new OrchException(getPSPath(entity), ex), $"Remove{entityNoun}Error", errorCategory, entity));
                 }
+            }
+            else if (reason == ShouldProcessReason.WhatIf)
+            {
+                previewWhatIf?.Invoke(entity);
             }
         }
     }

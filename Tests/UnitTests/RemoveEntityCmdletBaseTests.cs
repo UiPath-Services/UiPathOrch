@@ -31,8 +31,9 @@ public class RemoveEntityCmdletBaseTests
         protected override Func<Widget?, string?> GetName => w => w?.WidgetName;
         protected override Func<Widget, string> GetPSPath => w => $"Test:\\{w.WidgetName}";
 
-        public void Run(IEnumerable<Widget> entities, IReadOnlyList<WildcardPattern>? wpName, Action<Widget> remove)
-            => RemoveMatching(entities, wpName, "Test:", remove, CancellationToken.None);
+        public void Run(IEnumerable<Widget> entities, IReadOnlyList<WildcardPattern>? wpName, Action<Widget> remove,
+            Action<Widget>? previewWhatIf = null)
+            => RemoveMatching(entities, wpName, "Test:", remove, CancellationToken.None, previewWhatIf);
     }
 
     private static (TestRemoveCmdlet cmdlet, RecordingCommandRuntime runtime) NewCmdlet()
@@ -90,6 +91,57 @@ public class RemoveEntityCmdletBaseTests
         Assert.Equal(new[] { "Test:\\a", "Test:\\b" }, runtime.ShouldProcessTargets); // each consulted, in order
     }
 
+    // The loop asks through the out-reason overload (so -WhatIf can be told apart from a declined
+    // -Confirm), but it must build exactly the strings ShouldProcess(target, action) builds itself:
+    // same "What if:" line, same confirmation prompt, same default "Confirm" caption. Pinned here
+    // because the reason-returning overload takes the wording out of the engine's hands.
+    [Fact]
+    public void Prompt_wording_matches_the_target_action_overload()
+    {
+        var (cmdlet, runtime) = NewCmdlet();
+        runtime.ShouldProcessResult = false;
+
+        cmdlet.Run(Widgets("a"), null, _ => { });
+
+        Assert.Equal(new[] { "Performing the operation \"Remove Widget\" on target \"Test:\\a\"." },
+            runtime.ShouldProcessDescriptions);
+        Assert.Equal(new[] { "Are you sure you want to perform this action?\nPerforming the operation \"Remove Widget\" on target \"Test:\\a\"." },
+            runtime.ShouldProcessWarnings);
+        Assert.Equal(new[] { "Confirm" }, runtime.ShouldProcessCaptions);
+    }
+
+    [Fact]
+    public void WhatIf_runs_the_preview_hook_instead_of_the_delete()
+    {
+        var (cmdlet, runtime) = NewCmdlet();
+        runtime.ShouldProcessResult = false;
+        runtime.Reason = ShouldProcessReason.WhatIf;
+        var removed = new List<string>();
+        var previewed = new List<string>();
+
+        cmdlet.Run(Widgets("b", "a"), null, w => removed.Add(w.WidgetName), w => previewed.Add(w.WidgetName));
+
+        Assert.Empty(removed);
+        Assert.Equal(new[] { "a", "b" }, previewed);
+    }
+
+    // A declined -Confirm is not a preview: the user said no, so nothing is reported about what the
+    // removal would have done.
+    [Fact]
+    public void Declined_confirm_runs_neither_the_delete_nor_the_preview()
+    {
+        var (cmdlet, runtime) = NewCmdlet();
+        runtime.ShouldProcessResult = false;
+        runtime.Reason = ShouldProcessReason.None;
+        var removed = new List<string>();
+        var previewed = new List<string>();
+
+        cmdlet.Run(Widgets("a"), null, w => removed.Add(w.WidgetName), w => previewed.Add(w.WidgetName));
+
+        Assert.Empty(removed);
+        Assert.Empty(previewed);
+    }
+
     [Fact]
     public void Failing_delete_is_nonterminating_and_processing_continues()
     {
@@ -121,8 +173,12 @@ public class RemoveEntityCmdletBaseTests
 internal sealed class RecordingCommandRuntime : ICommandRuntime
 {
     public bool ShouldProcessResult { get; set; } = true;
+    public ShouldProcessReason Reason { get; set; } = ShouldProcessReason.None;
     public List<ErrorRecord> Errors { get; } = new();
     public List<string> ShouldProcessTargets { get; } = new();
+    public List<string> ShouldProcessDescriptions { get; } = new();
+    public List<string> ShouldProcessWarnings { get; } = new();
+    public List<string> ShouldProcessCaptions { get; } = new();
 
     public PSHost Host => null!;
     public PSTransactionContext CurrentPSTransaction => null!;
@@ -132,8 +188,25 @@ internal sealed class RecordingCommandRuntime : ICommandRuntime
     public bool ShouldProcess(string? verboseDescription, string? verboseWarning, string? caption) => ShouldProcessResult;
     public bool ShouldProcess(string? verboseDescription, string? verboseWarning, string? caption, out ShouldProcessReason shouldProcessReason)
     {
-        shouldProcessReason = ShouldProcessReason.None;
+        ShouldProcessDescriptions.Add(verboseDescription ?? "");
+        ShouldProcessWarnings.Add(verboseWarning ?? "");
+        ShouldProcessCaptions.Add(caption ?? "");
+        // The engine's own ShouldProcess(target, action) routes here after composing the strings,
+        // so record the target it names too — that is what the callers of this fake assert on.
+        ShouldProcessTargets.Add(TargetOf(verboseDescription));
+        shouldProcessReason = Reason;
         return ShouldProcessResult;
+    }
+
+    // Pulls X back out of `Performing the operation "..." on target "X".`
+    private static string TargetOf(string? verboseDescription)
+    {
+        const string marker = "on target \"";
+        int start = verboseDescription?.LastIndexOf(marker, StringComparison.Ordinal) ?? -1;
+        if (start < 0) return verboseDescription ?? "";
+        start += marker.Length;
+        int end = verboseDescription!.LastIndexOf('"');
+        return end > start ? verboseDescription[start..end] : verboseDescription;
     }
 
     public bool ShouldContinue(string? query, string? caption) => true;

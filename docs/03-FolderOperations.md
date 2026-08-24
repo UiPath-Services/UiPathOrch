@@ -154,8 +154,10 @@ Copy-Item Orch1:\ Orch2:\ -Recurse                 # whole tenant: tenant-level 
 
 ## Deleting (`Remove-Item`)
 
-`Remove-Item` deletes a folder **and everything it contains** on the server. The confirmation
-mirrors the Orchestrator web delete dialog:
+`Remove-Item` deletes a folder **and everything it contains** on the server — except entities
+that are *shared* with other folders: an asset, queue, or bucket that is also linked into
+another folder is only unlinked from this one and stays alive there, with its value. The
+confirmation mirrors the Orchestrator web delete dialog:
 
 | The folder… | What happens |
 |---|---|
@@ -167,8 +169,9 @@ mirrors the Orchestrator web delete dialog:
 PS Orch1:\> Remove-Item .\Finance
 Confirm folder deletion
 The folder 'Orch1:\Finance' is not empty (Processes: 2, Triggers: 0, Assets: 5, Buckets: 0,
-Queues: 1, Action Catalogs: 0). Deleting it permanently removes the folder and all of its
-contents. Are you sure you want to continue?
+Queues: 1, Action Catalogs: 0). Deleting it removes the folder and its contents; assets,
+queues and buckets that are also linked into other folders are only unlinked from here and
+remain in those folders. Are you sure you want to continue?
 ```
 
 `-Recurse` or `-Force` deletes without the prompt:

@@ -121,7 +121,12 @@ public partial class OrchProvider
         string counts =
             $"Processes: {processes}, Triggers: {triggers}, Assets: {assets}, " +
             $"Buckets: {buckets}, Queues: {queues}, Action Catalogs: {actionCatalogs}";
+        // Deliberately not "removes ... all of its contents": measured on Cloud, an asset, queue or
+        // bucket that is also linked into another folder survives there — deleting the folder only
+        // drops this folder's share of it. Saying so costs nothing; counting how many are shared
+        // would cost one GetFoldersFor* call per entity, which this interactive-only path avoids.
         return $"The folder '{folder.GetPSPath()}' is not empty ({counts}). " +
-               "Deleting it permanently removes the folder and all of its contents.";
+               "Deleting it removes the folder and its contents; assets, queues and buckets that are " +
+               "also linked into other folders are only unlinked from here and remain in those folders.";
     }
 }

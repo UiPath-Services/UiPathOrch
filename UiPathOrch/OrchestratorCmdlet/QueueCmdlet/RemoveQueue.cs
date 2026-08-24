@@ -20,6 +20,10 @@ public class RemoveQueueCmdlet : RemoveFolderEntityCmdletBase<QueueDefinition>
     protected override IEnumerable<QueueDefinition> GetEntities(OrchDriveInfo drive, Folder folder)
         => drive.Queues.Get(folder);
 
+    // A linked queue is only unshared from this folder by the delete — see the base class.
+    protected override List<SimpleFolder>? GetOtherLinkFolders(OrchDriveInfo drive, Folder folder, QueueDefinition queue)
+        => OtherFolders(drive.GetFoldersForQueue(folder, queue), folder);
+
     protected override void Remove(OrchDriveInfo drive, Folder folder, QueueDefinition queue)
     {
         drive.OrchAPISession.RemoveQueue(folder.Id ?? 0, queue.Id ?? 0);

@@ -27,6 +27,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **Removing an asset, queue, or bucket that is linked into other folders now says that it was
+  only unlinked.** Measured on Cloud, for all three entity types and in both directions (removing
+  from the folder the entity was created in, and from a folder it was linked into): a delete
+  addressed to a folder removes that folder's share of the entity, and the entity — with its value,
+  items, or files — survives in the remaining folders under the same id. It dies only with the last
+  folder that holds it. That is Orchestrator's own semantics (the web UI offers "remove from folder"
+  separately from "delete"), but `Remove-Orch{Asset,Queue,Bucket}` reported nothing, and the local
+  view is empty afterwards, so the removal read as a delete while the entity was still live
+  elsewhere — a credential asset, for instance. The cmdlets now warn, naming the folders that still
+  hold it, under `-WhatIf` as well; the check costs one (cached) `GetFoldersFor*` call per removed
+  entity, and the warnings throttle after five.
+
+  The folder-deletion prompt said "permanently removes the folder and all of its contents", which is
+  wrong for the same reason, and now states that shared entities remain in their other folders.
+  Counting how many would survive is deliberately not done — that would cost one call per entity on
+  a path that exists to avoid extra calls.
+
 - **Copying a linked entity within one tenant now always creates an independent entity, and says
   so.** Reproducing a link is `Add-Orch{Asset,Queue,Bucket}Link`'s job: linking an existing entity
   into another folder is one call, whereas a copy that silently linked instead of copying gave no

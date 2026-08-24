@@ -251,6 +251,8 @@ Queues are folder-scoped entities. You must navigate to a folder on the Orch: dr
 
 This cmdlet removes the queue definition, not the queue items. Errors during removal are handled per-queue, allowing the cmdlet to continue processing remaining queues even if one fails.
 
+A queue that is linked into several folders is only removed from the folder you target: the queue, and its items, remain in the other folders under the same id. The cmdlet warns when this happens — including under -WhatIf — and names the folders that still hold it. To delete the queue itself, remove it from those folders as well; `Get-OrchQueueLink` shows where it is linked.
+
 ## RELATED LINKS
 
 [Get-OrchQueue](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchQueue.md)

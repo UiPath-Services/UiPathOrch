@@ -21,6 +21,10 @@ public class RemoveBucketCmdlet : RemoveFolderEntityCmdletBase<Bucket>
     protected override IEnumerable<Bucket> GetEntities(OrchDriveInfo drive, Folder folder)
         => drive.Buckets.Get(folder);
 
+    // A linked bucket is only unshared from this folder by the delete — see the base class.
+    protected override List<SimpleFolder>? GetOtherLinkFolders(OrchDriveInfo drive, Folder folder, Bucket bucket)
+        => OtherFolders(drive.GetFoldersForBucket(folder, bucket), folder);
+
     protected override void Remove(OrchDriveInfo drive, Folder folder, Bucket bucket)
     {
         drive.OrchAPISession.DeleteBucket(folder.Id ?? 0, bucket.Id ?? 0);

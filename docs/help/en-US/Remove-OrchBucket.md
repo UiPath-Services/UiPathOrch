@@ -263,7 +263,9 @@ This cmdlet does not produce output. The bucket is deleted from the Orchestrator
 
 Buckets are folder-scoped entities. You must navigate to a folder on the Orch: drive or use -Path to specify target folders.
 
-Removing a bucket permanently deletes the bucket and all files stored within it. This operation cannot be undone. The bucket cache and bucket link cache are cleared after each successful deletion.
+Removing a bucket that lives in a single folder permanently deletes the bucket and all files stored within it. This operation cannot be undone. The bucket cache and bucket link cache are cleared after each successful deletion.
+
+A bucket that is linked into several folders is only removed from the folder you target: the bucket, and its files, remain in the other folders under the same id. The cmdlet warns when this happens — including under -WhatIf — and names the folders that still hold it. To delete the bucket itself, remove it from those folders as well; `Get-OrchBucketLink` shows where it is linked.
 
 ## RELATED LINKS
 
