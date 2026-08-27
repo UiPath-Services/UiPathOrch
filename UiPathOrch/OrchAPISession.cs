@@ -74,7 +74,23 @@ public class RateLimiter : IDisposable
 
     public void Dispose()
     {
-        refillTimer.Dispose();
+        // Timer.Dispose() returns immediately, so a RefillRateLimitTokens callback can still be
+        // running -- and it touches rateLimitSemaphore. Disposing the semaphore out from under it
+        // surfaces as an ObjectDisposedException on a thread-pool thread that nobody observes (and
+        // disposing a SemaphoreSlim while a thread sits in Wait() is undefined besides). The
+        // WaitHandle overload signals only once every callback has finished, so by the time the
+        // semaphore goes there is nothing left that can reach it. Teardown therefore blocks for at
+        // most one callback -- a lock plus a Release, sub-millisecond -- and only at session
+        // teardown (Remove-PSDrive, Import-OrchConfig re-mount, process exit).
+        using (var refillsDone = new ManualResetEvent(false))
+        {
+            // false = already disposed, in which case nothing will ever signal the handle.
+            if (refillTimer.Dispose(refillsDone))
+            {
+                refillsDone.WaitOne();
+            }
+        }
+
         rateLimitSemaphore.Dispose();
     }
 }

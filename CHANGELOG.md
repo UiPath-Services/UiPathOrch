@@ -26,7 +26,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Deployment Settings may be invalid.", errorCode 1005), with or without an explicit feed id, so
   removing what you copied in needs host administration.
 
+- **`Copy-Item -Recurse` now says when a folder's event triggers are being left behind.** Event
+  triggers are carried by none of the copy stages and there is no `Copy-OrchEventTrigger`: an
+  `ApiTrigger` points at an Integration Service connection whose id differs at the destination, and
+  a connection cannot be created through an API at all — authorising one is interactive. The
+  omission was silent, so a migration lost them with no error, no warning and no line in `-WhatIf`;
+  the operator's first signal was a process that never started in the new tenant. A copy now warns
+  once per folder with the count, and `-WhatIf` reports it too. Nothing about what is copied has
+  changed. An Orchestrator that predates event triggers stays quiet.
+
 ### Fixed
+
+- **`RateLimiter.Dispose` could leave an in-flight timer callback holding a disposed semaphore.**
+  `Timer.Dispose()` returns immediately, so a `RefillRateLimitTokens` callback already running
+  could reach `rateLimitSemaphore` after it had been disposed — an `ObjectDisposedException` on a
+  thread-pool thread that nobody observes. Teardown now waits for the callback via
+  `Timer.Dispose(WaitHandle)` before disposing the semaphore. Reached only at session teardown
+  (`Remove-PSDrive`, `Import-OrchConfig` re-mount, process exit), and the wait is one callback long
+  — a lock plus a `Release`.
 
 - **`Get-OrchLibrary -HostFeed` / `Get-OrchLibraryVersion -HostFeed` went stale after a feed-scope
   change, and on one tenant configuration could have answered with the tenant feed.** The host

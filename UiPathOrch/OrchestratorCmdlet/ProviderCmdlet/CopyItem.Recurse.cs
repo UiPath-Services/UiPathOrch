@@ -101,6 +101,19 @@ public partial class OrchProvider
             "Confirm",
             out ShouldProcessReason shouldProcessReason);
 
+        // Event triggers are carried by none of the copy stages below, and there is no
+        // Copy-OrchEventTrigger: an ApiTrigger points at an Integration Service connection whose
+        // id differs at the destination, and a connection cannot be created through an API at all
+        // (authorising one is interactive). Whatever we decide about copying them, losing them
+        // *silently* is the defect -- the operator's first signal is a process that never starts
+        // in the new tenant. Warn wherever a copy would otherwise have carried this folder's
+        // contents, including under -WhatIf (which descends without copying), but not when a
+        // -Confirm prompt was declined.
+        if (!ExcludeEntities && (proceed || shouldProcessReason == ShouldProcessReason.WhatIf))
+        {
+            WarnAboutUncopiedEventTriggers(srcDrive, srcFolder);
+        }
+
         if (proceed)
         {
             // totalNum: folder itself, users, machines, packages, processes, assets, 
@@ -269,6 +282,28 @@ public partial class OrchProvider
             }
         }
         return false;
+    }
+
+    /// <summary>
+    /// Advisory only -- it must never disturb the copy it annotates, so every failure is
+    /// swallowed. ListCachePerFolder.Get returns an empty list below the entity's API-version
+    /// floor instead of throwing, so an Orchestrator that predates event triggers stays quiet
+    /// on its own.
+    /// </summary>
+    private void WarnAboutUncopiedEventTriggers(OrchDriveInfo srcDrive, Folder srcFolder)
+    {
+        try
+        {
+            int count = srcDrive.EventTriggers.Get(srcFolder).Count;
+            if (count > 0)
+            {
+                WriteWarning(
+                    $"\"{srcFolder.GetPSPath()}\": {count} event trigger(s) are not copied. They reference an " +
+                    "Integration Service connection, which cannot be created through an API, so they must be " +
+                    "recreated at the destination. List them with `Get-OrchEventTrigger`.");
+            }
+        }
+        catch { } // An advisory is never worth failing a copy over.
     }
 
     protected override object CopyItemDynamicParameters(string path, string destination, bool recurse)

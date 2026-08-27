@@ -1311,7 +1311,10 @@ re-set cmdlet for each entity, plus details on credential assets.
   not included in a folder copy. They reference an Integration Service
   connection, which cannot be created through an API (authorising a connection
   is interactive), so they must be recreated at the destination. Time triggers
-  and API triggers *are* copied. List what you have before migrating:
+  and API triggers *are* copied. A copy warns once per folder that holds event
+  triggers, with the count, and `-WhatIf` reports it too — so the omission shows
+  up in the run rather than as a process that never starts in the new tenant.
+  List what you have before migrating:
   `Get-OrchEventTrigger -Path OldOrch:\ -Recurse`.
 - **Personal workspaces**: To migrate personal workspaces, exploration must be
   started in the Orchestrator Web UI on both sides, followed by running
