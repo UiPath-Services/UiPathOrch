@@ -269,19 +269,24 @@ or Entra ID, additional setup is required to enable directory user operations:
    required to enable the PKCE-based authentication flow.
 2. **Verify Entra ID login status**: For AD-integrated organizations,
    UiPathOrch automatically directs the user to the Entra ID login page
-   during PKCE authentication. After connecting, UiPathOrch checks whether
-   you are signed in via Entra ID. If not, a warning is displayed:
+   during PKCE authentication. UiPathOrch checks whether you signed in via
+   Entra ID, and if not, says so **on the sign-in page in your browser** —
+   the page you land on when the sign-in completes:
    ```
-   WARNING: [Orch1:] You are signed in with a local user account. This
-   organization supports Entra ID directory integration and single sign on.
-   ... please sign out and sign in through the organization-specific URL:
+   [Orch1:] You are signed in with a local user account. This organization
+   supports Entra ID directory integration and single sign on. ... please
+   sign out and sign in through the organization-specific URL:
    https://cloud.uipath.com/<org> in your browser — then run
-   'Import-OrchConfig' here to sign in again with that account.
+   'Import-OrchConfig' here to sign in again with that account. Learn more
    ```
-   This warning typically appears when the user signs in with a local account
-   instead of Entra ID.
-3. **Sign in with the directory account**: If the warning appears and you need
-   organization-level access, follow the warning's own instructions — in your
+   It typically appears when the user signs in with a local account instead
+   of Entra ID. Read it before closing the tab: it is not repeated on the
+   console. (A drive that never opens a browser — personal access token,
+   confidential application — has no page to show it on and gets a
+   PowerShell `WARNING:` instead.) See
+   [Entra ID Warning](02-Essentials.md#entra-id-warning) for the details.
+3. **Sign in with the directory account**: If the notice appears and you need
+   organization-level access, follow its own instructions — in your
    browser, sign out and sign in again through the organization-specific URL,
    then re-trigger the PowerShell sign-in:
    ```powershell

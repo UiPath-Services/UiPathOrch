@@ -250,24 +250,34 @@ dir -Recurse | Select-Object FullName, FolderType
 For AD-integrated organizations, UiPathOrch automatically directs the user to
 the Entra ID login page during PKCE authentication.
 
-If the user signs in with a local account instead of Entra ID, a warning is
-displayed:
+If the user signs in with a local account instead of Entra ID, a notice is
+shown:
 
 ```
-WARNING: [Orch1:] You are signed in with a local user account. This
-organization supports Entra ID directory integration and single sign on. To
-take advantage of all directory capabilities, like directory search and
-directory groups please sign out and sign in through the organization-specific
-URL: https://cloud.uipath.com/<org> in your browser — then run
-'Import-OrchConfig' here to sign in again with that account.
+[Orch1:] You are signed in with a local user account. This organization
+supports Entra ID directory integration and single sign on. To take advantage
+of all directory capabilities, like directory search and directory groups
+please sign out and sign in through the organization-specific URL:
+https://cloud.uipath.com/<org> in your browser — then run 'Import-OrchConfig'
+here to sign in again with that account. Learn more: https://docs.uipath.com/
+automation-cloud/automation-cloud/latest/admin-guide/about-accounts
 ```
 
-This warning appears when the JWT token indicates GlobalIdp authentication
-instead of Entra ID (aad). Organization-level operations (Platform Management
-cmdlets, Active Directory user search) may fail without Entra ID login.
+**Where it appears.** A non-confidential (PKCE) sign-in opens a browser, and
+the page it lands on is where this notice is shown — with the organization URL
+as a link you can click, and "Learn more" as a link to the account
+documentation. It is not repeated on the console afterwards. On a drive that
+never opens a browser (personal access token, confidential application) there
+is no page to show it on, so it arrives as a PowerShell `WARNING:` instead, on
+the next cmdlet that touches the drive.
+
+The notice appears when the JWT token indicates GlobalIdp authentication
+instead of Entra ID (aad), and the organization's authentication setting is
+`aad`. Organization-level operations (Platform Management cmdlets, Active
+Directory user search) may fail without Entra ID login.
 
 To switch: sign out in your browser, sign in at the organization-specific URL
-shown in the warning, then run `Import-OrchConfig`. Re-importing clears the
+shown in the notice, then run `Import-OrchConfig`. Re-importing clears the
 cached sign-in and re-runs the browser PKCE flow, which now picks up the
 directory account. (`Switch-OrchCurrentUser` does not help here — its private
 browser session can't inherit the directory sign-in you just made.)
