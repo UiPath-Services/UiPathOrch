@@ -14,6 +14,13 @@
          and drive the real engine globber). Test-only; the shipping module never references this.
          Pinned to the same SMA version UiPathOrch builds against (7.4.2). -->
     <PackageReference Include="Microsoft.PowerShell.SDK" Version="7.4.2" />
+    <!-- Enables the "XPlat Code Coverage" data collector that CI asks dotnet test for. CI
+         collects and uploads the report; there is deliberately no threshold gate until the
+         number is established. -->
+    <PackageReference Include="coverlet.collector" Version="6.0.4">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
     <PackageReference Include="xunit" Version="2.9.3" />
     <PackageReference Include="xunit.runner.visualstudio" Version="4.0.0">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

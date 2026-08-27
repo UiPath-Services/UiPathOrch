@@ -44,6 +44,18 @@ public class PartitionGlobalIdPassivenessTests
             "GetPartitionGlobalId must remain an abstract method on the base.");
     }
 
+    // Coverage instrumentation rewrites every method to record hits, so an instrumented build's
+    // IL is not the IL that ships -- the getter gains exactly the `call` this test forbids. The
+    // shape assertions below are therefore about the shipped assembly only; the "does not invoke
+    // GetPartitionGlobalId" assertion, which is the actual regression, holds either way.
+    private static bool IsInstrumentedForCoverage =>
+        typeof(OrchDriveInfo).Assembly.GetTypes()
+            .Any(t => t.Namespace?.StartsWith("Coverlet.Core.Instrumentation", StringComparison.Ordinal) == true);
+
+    private static bool ContainsSequence(byte[] haystack, byte[] needle) =>
+        Enumerable.Range(0, haystack.Length - needle.Length + 1)
+            .Any(i => haystack.Skip(i).Take(needle.Length).SequenceEqual(needle));
+
     [Fact]
     public void OrchDriveInfo_PartitionGlobalIdGetter_IsPassiveFieldLoad()
     {
@@ -56,16 +68,27 @@ public class PartitionGlobalIdPassivenessTests
         Assert.NotNull(body);
         var il = body!.GetILAsByteArray()!;
 
-        // Expected IL for `=> _partitionGlobalId`:
+        // The regression shape is the getter invoking GetPartitionGlobalId(), whose fallback
+        // path issues an authenticated API call. Look for that method's metadata token rather
+        // than for call opcodes: a raw byte scan cannot tell an opcode from an operand byte
+        // (a field token containing 0x28 would read as a `call`), and coverage instrumentation
+        // legitimately injects calls of its own.
+        var active = typeof(OrchDriveInfo).GetMethod(
+            "GetPartitionGlobalId",
+            BindingFlags.NonPublic | BindingFlags.Instance)!;
+        Assert.False(
+            ContainsSequence(il, BitConverter.GetBytes(active.MetadataToken)),
+            "PartitionGlobalId's getter must not invoke GetPartitionGlobalId().");
+
+        if (IsInstrumentedForCoverage) return;
+
+        // Expected IL for `=> _partitionGlobalId`, in the shipped assembly:
         //   ldarg.0 (0x02)
         //   ldfld   (0x7B) + 4-byte field token
         //   ret     (0x2A)
-        // A call/callvirt would mean the getter is invoking
-        // GetPartitionGlobalId() (or another method) -- the regression shape.
         Assert.Equal(0x02, il[0]);                       // ldarg.0
         Assert.Equal(0x7B, il[1]);                       // ldfld
         Assert.Equal(0x2A, il[il.Length - 1]);           // ret
-        Assert.DoesNotContain((byte)0x28, il);           // call
-        Assert.DoesNotContain((byte)0x6F, il);           // callvirt
+        Assert.Equal(7, il.Length);                      // 1 + 1 + 4 + 1: nothing else fits
     }
 }

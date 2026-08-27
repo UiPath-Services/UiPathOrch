@@ -49,8 +49,55 @@ jobs:
           Write-Host "::error::dotnet format failed after $max attempts."
           exit 1
 
+      - name: Lint (PSScriptAnalyzer)
+        shell: pwsh
+        # RELEASE.md lists this as a manual pre-tag gate, which meant it only ever ran at the
+        # point it was least useful -- right before shipping, by hand. Same command and same
+        # pass criterion as that checklist, so the two cannot drift apart.
+        #
+        # Errors fail the build; warnings are reported and do not. The release procedure asks
+        # for warnings to be "reviewed and justified", not driven to zero, and the ones present
+        # when this gate was added (Write-Host in the example scripts, unused parameters in the
+        # .psm1) all predate it. Annotating them keeps them visible without blocking anything.
+        run: |
+          if (-not (Get-Module -ListAvailable PSScriptAnalyzer)) {
+            Install-Module PSScriptAnalyzer -Force -Scope CurrentUser -SkipPublisherCheck
+          }
+          Import-Module PSScriptAnalyzer
+
+          $warnings = @(Invoke-ScriptAnalyzer -Path Staging -Recurse -Severity Warning)
+          foreach ($w in $warnings) {
+            Write-Host "::warning file=$($w.ScriptPath),line=$($w.Line)::$($w.RuleName): $($w.Message)"
+          }
+          Write-Host "PSScriptAnalyzer warnings: $($warnings.Count)"
+
+          $errors = @(Invoke-ScriptAnalyzer -Path Staging -Recurse -Severity Error)
+          foreach ($e in $errors) {
+            Write-Host "::error file=$($e.ScriptPath),line=$($e.Line)::$($e.RuleName): $($e.Message)"
+          }
+          Write-Host "PSScriptAnalyzer errors: $($errors.Count)"
+          if ($errors.Count -gt 0) { exit 1 }
+
       - name: Test
         run: dotnet test --no-build --configuration Release --verbosity normal
+
+      # Deliberately a SECOND run rather than a flag on the one above. Coverage instrumentation
+      # rewrites the assembly, so PartitionGlobalIdPassivenessTests' IL-shape assertions -- which
+      # exist to catch a specific PKCE regression -- do not apply to an instrumented build and
+      # step aside there. Collecting on the main run would mean they never execute in CI at all.
+      # The extra run costs a few seconds.
+      - name: Collect coverage
+        run: dotnet test --no-build --configuration Release --verbosity quiet --collect:"XPlat Code Coverage" --results-directory ./TestResults
+
+      # No threshold gate: the point of collecting is to establish the number first. Upload
+      # only -- a coverage figure nobody can see is not a measurement.
+      - name: Upload coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: TestResults/**/coverage.cobertura.xml
+          if-no-files-found: warn
 
       - name: Verify cmdlet inventory (manifest drift)
         shell: pwsh
