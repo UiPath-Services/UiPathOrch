@@ -28,7 +28,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 20px;
+            padding: 20px 6vw;
             -webkit-font-smoothing: antialiased;
         }}
 
@@ -42,8 +42,8 @@
             grid-template-columns: auto 1fr;
             column-gap: 18px;
             padding: 18px 22px 14px 22px;
-            min-width: 440px;
-            max-width: 95vw;
+            min-width: min(440px, 100%);
+            max-width: 60vw;
             overflow: hidden;
         }}
 
@@ -89,6 +89,37 @@
             font-weight: 600;
         }}
 
+        .notice {{
+            grid-column: 1 / -1;
+            margin-top: 14px;
+            padding: 10px 12px;
+            background: var(--chip);
+            border-left: 3px solid var(--accent);
+            border-radius: 4px;
+            font-size: 13px;
+            color: var(--muted);
+        }}
+
+        .notice-title {{
+            margin: 0;
+            font-weight: 600;
+            color: var(--ink);
+        }}
+
+        .notice ul {{
+            margin: 5px 0 0 0;
+            padding-left: 18px;
+        }}
+
+        .notice li {{
+            margin: 3px 0 0 0;
+            overflow-wrap: anywhere;
+        }}
+
+        .notice a {{
+            color: var(--accent);
+        }}
+
         .footer {{
             grid-column: 1 / -1;
             display: flex;
@@ -120,6 +151,10 @@
             <a class="tenant" href="{0}" target="_blank" rel="noopener noreferrer">{0}</a>
             <p class="row">Monté en tant que <strong>{1}</strong></p>
             <p class="row" style="{4}">Connecté en tant que <strong>{5}</strong></p>
+        </div>
+        <div class="notice" style="{6}">
+            <p class="notice-title">Remarque</p>
+            <!--WARNINGS-->
         </div>
         <div class="footer">
             <span>

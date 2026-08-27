@@ -483,6 +483,149 @@ internal class OrchestratorAuthManager
         return sb.ToString();
     }
 
+    // Target of the web banner's "Learn more" link.
+    internal const string EntraLearnMoreUrl =
+        "https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/about-accounts";
+
+    /// <summary>
+    /// The Entra-ID local-user advisory, worded to match the banner Orchestrator's web UI shows
+    /// for the same condition.
+    /// </summary>
+    /// <remarks>
+    /// Everything up to the organization URL is the web banner's wording verbatim. What follows
+    /// is ours: the web banner is displayed in the browser the reader is already looking at,
+    /// whereas this one may have to say where to go and how to come back. The "[drive:]" prefix
+    /// disambiguates which drive the notice is about when several are mounted.
+    /// </remarks>
+    internal static string BuildEntraIdSignInWarning(string driveNameColon, string orgUrl) =>
+        $"[{driveNameColon}] You are signed in with a local user account. "
+        + "This organization supports Entra ID directory integration and single sign on. "
+        + "To take advantage of all directory capabilities, like directory search and directory groups "
+        + $"please sign out and sign in through the organization-specific URL: {orgUrl} in your browser "
+        + "— then run 'Import-OrchConfig' here to sign in again with that account. "
+        + $"Learn more: {EntraLearnMoreUrl}";
+
+    // URLs in a notice become links: the Entra advisory's whole point is to send the reader
+    // somewhere, and the page is the one surface where that can be a click instead of a
+    // copy-paste. Two shapes, matched in one pass so neither can re-process the other's output:
+    //
+    //   "<label>: <url>" at the very END  -> a link LABELLED <label>, with the URL not shown.
+    //       This is the web banner's trailing "Learn more" link. It has to carry its URL as
+    //       text on the console, where there is nothing to click; on the page that URL is
+    //       noise the reader was never meant to read.
+    //   any other URL                     -> a link showing the URL, as the web banner does
+    //       for the organization URL mid-sentence.
+    //
+    // Applied AFTER encoding, so the pattern only ever sees text that is already safe to emit,
+    // and trailing sentence punctuation is kept outside the anchor -- a period swallowed into
+    // the href 404s on click.
+    // The label excludes '.' (and cannot start with whitespace), which is what keeps it to the
+    // trailing phrase: without that bound it is greedy back to the start of the notice, and the
+    // whole message -- not "Learn more" -- becomes the link text.
+    private static readonly System.Text.RegularExpressions.Regex NoticeUrlPattern =
+        new(@"(?<label>[^:<>\s.][^:<>.]{0,40}): (?<labelled>https?://[^\s<]+)$|(?<bare>https?://[^\s<]+)",
+            System.Text.RegularExpressions.RegexOptions.Compiled);
+
+    private static string LinkifyEncoded(string encoded) =>
+        NoticeUrlPattern.Replace(encoded, m =>
+        {
+            if (m.Groups["labelled"].Success)
+            {
+                string labelledUrl = m.Groups["labelled"].Value.TrimEnd('.', ',', ';', ':');
+                return Anchor(labelledUrl, m.Groups["label"].Value) + m.Groups["labelled"].Value[labelledUrl.Length..];
+            }
+
+            string url = m.Groups["bare"].Value.TrimEnd('.', ',', ';', ':');
+            return Anchor(url, url) + m.Groups["bare"].Value[url.Length..];
+        });
+
+    private static string Anchor(string href, string text) =>
+        $"<a href=\"{href}\" target=\"_blank\" rel=\"noopener noreferrer\">{text}</a>";
+
+    /// <summary>
+    /// Renders the queued advisories for the sign-in page as a list, one item per notice.
+    /// </summary>
+    /// <remarks>
+    /// When a browser is part of the flow it is where the user is already looking, and it
+    /// is where these notices are actionable — so the page is a real consumer of
+    /// PendingWarning: it clears the buffer once the response is safely written, and what
+    /// it showed is not repeated on the console. The console drain in
+    /// OrchestratorPSCmdlet.BeginProcessing remains the channel for everything the page
+    /// cannot carry: drives that never open a browser (PAT, confidential app), advisories
+    /// queued after the page was written, and a page that failed to render.
+    /// </remarks>
+    internal static string BuildNoticeHtml(string? pendingWarning)
+    {
+        if (string.IsNullOrWhiteSpace(pendingWarning)) return "";
+
+        // Producers concatenate with "\n\n"; mirror the console drain's split so the two
+        // surfaces agree on where one notice ends and the next begins.
+        var sb = new StringBuilder();
+        foreach (var segment in pendingWarning.Split(["\n\n"], StringSplitOptions.RemoveEmptyEntries))
+        {
+            string text = segment.Trim();
+            if (text.Length == 0) continue;
+            sb.Append("<li>").Append(LinkifyEncoded(WebUtility.HtmlEncode(text))).Append("</li>");
+        }
+
+        // All segments blank: return empty so the caller hides the block rather than
+        // rendering an empty list, and leaves the buffer for the console.
+        return sb.Length == 0 ? "" : "<ul>" + sb.ToString() + "</ul>";
+    }
+
+    /// <summary>
+    /// Decides and queues the Entra-ID local-user advisory while the browser is still open, so it
+    /// reaches the sign-in page instead of a console line the reader meets much later.
+    /// </summary>
+    /// <remarks>
+    /// The same decision is otherwise taken during folder enumeration, which puts it two hops
+    /// after sign-in: the probe runs only there, and the queue is drained only by the NEXT
+    /// cmdlet — so a session that signs in and runs `Get-Orch*` never sees it at all. Everything
+    /// the decision needs except the organization's auth setting is already in the JWT the
+    /// exchange just produced.
+    ///
+    /// Best-effort by construction. On any failure or timeout the gate is left un-latched, which
+    /// DecideEntraAdvisory already models as "inconclusive — retry", so the enumeration path
+    /// picks it up exactly as it does today. An advisory is never worth a hung browser tab.
+    /// </remarks>
+    private async Task TryQueueEntraAdvisoryAsync(CancellationToken ct)
+    {
+        try
+        {
+            if (_drive.OrchAPISession.EntraIdWarningChecked) return;
+
+            var kind = ClassifyEntraUserKind(_access_token);
+
+            // Resolve only what the decision needs: the partition id and the org auth setting
+            // matter for a local user and nobody else, and the setting costs a round trip.
+            string? partitionGlobalId = null;
+            string? authenticationSettingType = null;
+            if (kind == EntraUserKind.LocalUser)
+            {
+                partitionGlobalId = GetPartitionGlobalIdFromJwt();
+                if (!string.IsNullOrEmpty(partitionGlobalId))
+                {
+                    authenticationSettingType = await _drive.OrchAPISession.ProbeAuthenticationSettingTypeAsync(
+                        partitionGlobalId!, _access_token!, TimeSpan.FromSeconds(3), ct);
+                }
+            }
+
+            var decision = DecideEntraAdvisory(
+                kind,
+                partitionKnown: !string.IsNullOrEmpty(partitionGlobalId),
+                authSettingFetched: authenticationSettingType is not null,
+                authenticationSettingType);
+
+            if (decision.Latch) _drive.OrchAPISession.EntraIdWarningChecked = true;
+            if (decision.QueueWarning)
+            {
+                _drive.OrchAPISession.AppendPendingWarning(
+                    BuildEntraIdSignInWarning(_drive.NameColon, BaseUrl));
+            }
+        }
+        catch { } // Advisory only — never let it disturb the sign-in it annotates.
+    }
+
     // Render a minimal failure page so the browser tab does not sit on a blank
     // response after an error callback. Deliberately not one of the localized
     // MountSuccessNotification resources: this path shows a server-supplied
@@ -764,7 +907,20 @@ internal class OrchestratorAuthManager
 
                                 string mountedDrivesStr = FormatMountedDriveList(_drive.NameColon, _drive._psDrive.Scope ?? "");
 
-                                string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, mountedDrivesStr, versionStr, LoadBotImageRandomly(), userStyle, userEncoded);
+                                // The queued advisories go here rather than to the console -- see
+                                // BuildNoticeHtml. Decide the Entra advisory first (it is the one the
+                                // reader can act on right here), then EnsureConfigWarningsEmitted, so the
+                                // notices that depend only on drive configuration are present regardless
+                                // of whether an HTTP call has already triggered them.
+                                await TryQueueEntraAdvisoryAsync(cts);
+                                _drive.OrchAPISession.EnsureConfigWarningsEmitted();
+                                string noticeHtml = BuildNoticeHtml(_drive.OrchAPISession.PendingWarning);
+                                string noticeStyle = noticeHtml.Length == 0 ? "display:none" : "";
+
+                                // {6} shows or hides the block; the body is substituted afterwards so the
+                                // notice markup needs no brace escaping of its own.
+                                string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, mountedDrivesStr, versionStr, LoadBotImageRandomly(), userStyle, userEncoded, noticeStyle)
+                                    .Replace("<!--WARNINGS-->", noticeHtml);
 
                                 byte[] buffer = Encoding.UTF8.GetBytes(responseString);
                                 context.Response.ContentLength64 = buffer.Length;
@@ -780,6 +936,12 @@ internal class OrchestratorAuthManager
 
                                 // Explicitly close the response
                                 context.Response.Close();
+
+                                // Only now, with the page safely on the wire, does the buffer get
+                                // consumed. If anything above threw, the advisories are still queued and
+                                // the console drain picks them up -- a notice must never be lost to a page
+                                // that did not render.
+                                if (noticeHtml.Length > 0) _drive.OrchAPISession.ClearPendingWarning();
 
                                 // Exit the loop
                                 break;

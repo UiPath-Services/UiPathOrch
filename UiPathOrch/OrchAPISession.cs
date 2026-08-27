@@ -409,6 +409,17 @@ public partial class OrchAPISession : IDisposable
     // Whether the Entra ID warning check has been performed
     internal bool EntraIdWarningChecked { get; set; }
 
+    // Materialize the configuration-derived advisories without waiting for an HTTP call
+    // to trigger them. Both depend only on drive configuration -- no network, no session
+    // state -- so whether the browser gets to show them should not hinge on whether the
+    // token exchange happened to pass through HttpRequest's one-shot trigger below.
+    // Idempotent: the per-notice flags still guarantee once per session.
+    internal void EnsureConfigWarningsEmitted()
+    {
+        if (_drive._psDrive.Logging?.Enabled.GetValueOrDefault() ?? false) EnsureLoggingWarningEmitted();
+        if (_drive._psDrive.IgnoreSslErrors.GetValueOrDefault()) EnsureSslWarningEmitted();
+    }
+
     // Emitted once per session via PendingWarning when IgnoreSslErrors is set, so users
     // are reminded that MITM attacks would go undetected on this drive's connections.
     private bool _sslWarningEmitted;
@@ -3918,6 +3929,38 @@ public partial class OrchAPISession : IDisposable
     }
 
     public AccessAllowedMember[] GetPmPartitionAccessPolicy(string partitionGlobalId) => HttpRequestPortal<AccessAllowedMember[]>(HttpMethod.Get, $"/api/identity/PartitionAccessPolicy/{partitionGlobalId}") ?? [];
+
+    /// <summary>
+    /// Reads the organization's authenticationSettingType for the Entra advisory, from inside
+    /// the PKCE callback. Returns null if it cannot be determined in time.
+    /// </summary>
+    /// <remarks>
+    /// This deliberately does NOT go through the normal request path. At the point it runs the
+    /// token exchange has just produced an access token, but the session is not yet marked
+    /// authenticated and the PKCE lock is still held by the thread waiting on this callback --
+    /// and the HttpClient property getter calls EnsureAuthenticated, which would try to
+    /// authenticate a session that is mid-authentication and then block on that lock forever.
+    /// So the single GET is sent against the field, carrying the token the exchange just
+    /// produced. It also gives up on a short timeout: the browser tab is waiting on this
+    /// response, and an advisory is never worth making someone watch a blank page.
+    /// </remarks>
+    internal async Task<string?> ProbeAuthenticationSettingTypeAsync(
+        string partitionGlobalId, string accessToken, TimeSpan timeout, CancellationToken ct)
+    {
+        using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+        timeoutCts.CancelAfter(timeout);
+
+        using var request = new HttpRequestMessage(
+            HttpMethod.Get, _base_url_identity + $"/api/AuthenticationSetting/getAll/{partitionGlobalId}");
+        request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await _httpClient.SendAsync(request, timeoutCts.Token);
+        if (!response.IsSuccessStatusCode) return null;
+
+        string body = await response.Content.ReadAsStringAsync(timeoutCts.Token);
+        var parsed = JsonSerializer.Deserialize<Dictionary<string, PmAuthenticationRoot>>(body);
+        return parsed?.FirstOrDefault().Value?.authenticationSettingType;
+    }
 
     #endregion
 

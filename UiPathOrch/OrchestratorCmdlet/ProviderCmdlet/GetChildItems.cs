@@ -68,20 +68,6 @@ public partial class OrchProvider
         return providerCsvPath;
     }
 
-    // The Entra-ID local-user advisory, worded to match the banner the Orchestrator
-    // web UI shows for the same condition. AuthManager.BaseUrl is the org-scoped
-    // sign-in URL (cloud: "https://cloud.uipath.com/{org}"); the "[drive:]" prefix
-    // disambiguates which drive the notice is about when several are mounted.
-    private static string BuildEntraIdSignInWarning(OrchDriveInfo drive)
-    {
-        string orgUrl = drive.OrchAPISession.AuthManager.BaseUrl;
-        return $"[{drive.NameColon}] You are signed in with a local user account. "
-            + "This organization supports Entra ID directory integration and single sign on. "
-            + "To take advantage of all directory capabilities, like directory search and directory groups "
-            + $"please sign out and sign in through the organization-specific URL: {orgUrl} in your browser "
-            + "— then run 'Import-OrchConfig' here to sign in again with that account.";
-    }
-
     protected override void GetChildItems(string path, bool recurse, uint depth)
     {
         var drive = GetOrchDriveInfo(path);
@@ -127,7 +113,17 @@ public partial class OrchProvider
                 var decision = OrchestratorAuthManager.DecideEntraAdvisory(
                     kind, partitionKnown, authSettingFetched, authenticationSettingType);
                 if (decision.Latch) drive.OrchAPISession.EntraIdWarningChecked = true;
-                if (decision.QueueWarning) drive.OrchAPISession.AppendPendingWarning(BuildEntraIdSignInWarning(drive));
+                if (decision.QueueWarning)
+                {
+                    // AuthManager.BaseUrl is the org-scoped sign-in URL (cloud:
+                    // "https://cloud.uipath.com/{org}"). The wording is shared with the PKCE
+                    // sign-in page, which normally gets there first and latches the gate --
+                    // this path remains for drives that never open a browser, and for a probe
+                    // that was inconclusive while the browser was still up.
+                    drive.OrchAPISession.AppendPendingWarning(
+                        OrchestratorAuthManager.BuildEntraIdSignInWarning(
+                            drive.NameColon, drive.OrchAPISession.AuthManager.BaseUrl));
+                }
             }
             catch { } // Swallow - don't block navigation for a warning
         }

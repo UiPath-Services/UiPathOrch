@@ -4,6 +4,50 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+- **Sign-in advisories now appear on the browser page when the sign-in opened a browser, and are
+  no longer repeated on the console.** The console has only ever been the fallback channel — the
+  place a warning lands when there is nowhere better. A non-confidential (PKCE) sign-in puts a
+  browser page in front of the user at exactly the moment these notices apply, so that page now
+  renders them, in the language it is already localized into. It is a real consumer of the queue:
+  it clears it once the response is safely written, so what it showed is not said twice. Everything
+  it cannot carry still goes to the console unchanged — drives that never open a browser (personal
+  access token, confidential application), advisories queued after the page was written, and a page
+  that failed to render. The two configuration notices (`IgnoreSslErrors`, logging enabled) are now
+  also materialized before the page is built rather than by the first HTTP call, so whether the
+  browser gets to show them no longer depends on call ordering.
+
+  URLs inside a notice are rendered as links on the page — the Entra advisory exists to send you
+  somewhere, and the browser is the one surface where that can be a click. A notice ending in
+  `<label>: <url>` becomes a link labelled `<label>` with the URL not shown, which is how the web
+  banner's closing "Learn more" is meant to read; the console keeps the bare URL, having nothing
+  to click. A URL in the middle of a sentence still shows itself, as the web banner does for the
+  organization URL.
+
+- **The sign-in page keeps its card to a readable width.** It grew to fill the window, which the
+  added notice made obvious: the card is now capped as a fraction of the viewport, with margins
+  that scale with it, so a long advisory wraps into readable lines instead of one very long one.
+
+- **The Entra ID local-user advisory is decided at sign-in, not two hops later.** The probe ran
+  only inside folder enumeration, and its result was only drained by the *next* cmdlet — so it
+  appeared after `Get-ChildItem` plus one more command, and a session that signed in and ran only
+  `Get-Orch*` cmdlets never saw it at all. It is now decided in the sign-in callback, where the
+  JWT already supplies everything except the organization's auth setting, and shown on the page
+  the reader is looking at, with the organization URL as a link. The one extra request this costs
+  is made only for a local user — the population the notice is for — and it is sent directly with
+  the token the exchange just produced: the normal request path would call `EnsureAuthenticated`
+  on a session that is mid-authentication and deadlock against the sign-in still in progress. It
+  gives up after three seconds rather than hold the browser on an unanswered tab, and a failed or
+  inconclusive probe leaves the gate open so the enumeration path still reports it exactly as
+  before.
+
+- **The Entra ID local-user advisory now carries the "Learn more" link the web banner ends with.**
+  The notice is worded to match Orchestrator's own banner, verbatim through the organization URL,
+  but it had been dropping the banner's closing link to the account documentation.
+
 ## [1.14.1] - 2026-08-27
 
 ### Changed
