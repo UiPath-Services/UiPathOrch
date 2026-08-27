@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.14.0'
+ModuleVersion = '1.14.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,43 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.14.1
+
+Changed: a destination tenant set to "Only host feed" no longer blocks a library copy. Copy-Item and
+Copy-OrchLibrary read the destination's library feed scope before copying and, when it was Host,
+aborted the whole run. Measured on standalone 24.10.0, that refused a copy the server accepts: with
+the destination on "Only host feed" the upload succeeds and the package lands in the host feed. The
+copy is now attempted and the server's answer stands, with the feed setting appended to the error
+only when an upload actually failed. The old guard also returned out of the whole run on the first
+Host-scoped destination, losing the destinations that would have worked. Two caveats are documented
+rather than pre-empted: Automation Suite was not measured, so confirm where the first library lands
+before running a full set; and the write is one-way, because the same server refuses a
+tenant-context delete of a host-feed package, so removing what you copied in needs host
+administration.
+
+Changed: Copy-Item -Recurse now says when a folder's event triggers are being left behind. They are
+carried by none of the copy stages and there is no Copy-OrchEventTrigger, because an event trigger
+points at an Integration Service connection whose id differs at the destination and a connection
+cannot be created through an API at all. The omission was silent, so a migration lost them with no
+error, no warning and no line in -WhatIf, and the first signal was a process that never started in
+the new tenant. A copy now warns once per folder with the count, and -WhatIf reports it too. Nothing
+about what is copied has changed.
+
+Fixed: Get-OrchLibrary -HostFeed and Get-OrchLibraryVersion -HostFeed went stale after a feed-scope
+change, and on one tenant configuration could have answered with the tenant feed. The host feed id
+was memoized in a private field with no reset path, so Clear-OrchCache did not flush it and -HostFeed
+kept using the previous id, failing with "PackageFeed does not exist." It now reads through the
+per-tenant feed cache, which Clear-OrchCache does flush. Separately, a tenant scoped to "Only tenant
+feed" reports a single non-shared feed, leaving the host feed id null -- and null means "no feed id"
+to the underlying query, that is, the tenant's own feed. That path now reports that the tenant has no
+host feed, and which setting controls it.
+
+Fixed: RateLimiter.Dispose could leave an in-flight timer callback holding a disposed semaphore.
+Timer.Dispose() returns immediately, so a refill callback already running could reach the semaphore
+after it had been disposed, raising an unobserved exception on a thread-pool thread. Teardown now
+waits for the callback before disposing the semaphore. This is reached only at session teardown, and
+the wait is one callback long.
+
 1.14.0
 
 Fixed: copying an entity shared between two top-level folders to another tenant lost the link and
@@ -570,38 +607,6 @@ and a share protects it only with its own ACL. Sharing one file between people s
 credentials, and Orchestrator's audit trail then attributes everyone's actions to the same
 identity. A file intended for several people should define only drives that authenticate
 interactively, so that it carries connection details and no secrets.
-
-1.12.3
-
-Added: -TimeZoneId now tab-completes on New-OrchTrigger, Update-OrchTrigger and Update-OrchMachine.
-These bind a Windows time-zone id (Tokyo Standard Time); only their -TimeZone siblings had a
-completer, so the id parameters offered nothing. They now use the same completer as the
-test-set-schedule cmdlets, matching on either the id or the display name, and falling back to an
-embedded Windows table on Linux/macOS -- where the OS zone database is IANA -- so every suggestion
-is one Orchestrator will accept. The parameters are DontShow, which hides them from parameter-name
-completion but not from argument completion, so the suggestions appear once the name is typed.
-
-Fixed: Resolve-OrchAuthError sent you to the wrong place for unauthorized_client. Requesting an
-OAuth scope the external application has not been granted surfaces as unauthorized_client, not
-invalid_scope, on both Automation Cloud and on-premises 22.10. That code had no branch of its own,
-so it fell through to generic advice declaring the cause server-side and recommending the URL be
-escalated to UiPath Identity engineering. Both halves are wrong for the commonest cause: the
-problem is the drive's Scope and it is yours to fix. unauthorized_client now leads with that, and
-names the property that makes the failure so hard to place -- Identity rejects the entire
-authorization request rather than the offending scope, and never says which entry it was, so one
-stray scope blocks sign-in with no clue as to why. invalid_scope gained the same explanation, and
-the generic branch now suggests checking Scope / AppId / RedirectUrl before proposing escalation.
-
-Fixed: an OAuth error on the PKCE callback was indistinguishable from no callback at all. RFC 6749
-lets Identity answer a failed authorize request by redirecting to the redirect_uri with ?error=
-instead of ?code=. The loopback listener read only `code`, so such a callback was ignored and the
-wait ran on to the full three-minute PKCE timeout, which then reported "no browser callback
-received" -- the opposite of what happened. The error is now read off the callback and surfaced
-with its OAuth error code and the server's description, and the browser gets a page saying so
-instead of hanging. Callbacks carrying neither code nor error (favicon probes, stray requests) are
-still ignored. Note that neither Automation Cloud nor on-premises 22.10 was observed to redirect
-errors back this way -- both park the browser on an Identity error page -- so this is conformance
-for deployments that do redirect, not a cure for the timeout those two produce.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
