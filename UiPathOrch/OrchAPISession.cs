@@ -1567,7 +1567,10 @@ public partial class OrchAPISession : IDisposable
     // The gate turns the bare 404 into a self-explaining version error with the same
     // permanent-cache semantics (DeterministicApiException). It must stay an error, not an
     // empty result: a null LibraryHostFeedId would silently reroute the host-feed queries
-    // (LibrariesInHost / LibraryVersionsInHostFeed) to the tenant feed.
+    // (LibrariesInHost / LibraryVersionsInHostFeed) to the tenant feed. The other way to
+    // reach that null -- this endpoint answering with no shared feed at all, which is what
+    // a tenant scoped to 'Only tenant feed' returns -- is guarded by
+    // OrchDriveInfo.RequireLibraryHostFeedId() for the same reason.
     public LibraryFeed[]? GetLibraryFeeds()
     {
         EnsureVersionSupport(17);

@@ -70,6 +70,33 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
         return false;
     }
 
+    // "Only host feed" on the destination is NOT a reason to refuse the copy up front.
+    // Measured on standalone 24.10.0 (API 17): with the destination tenant set to
+    // 'Host', a tenant-context upload succeeds and the package lands in the host feed
+    // (verified by flipping the tenant to 'Tenant' afterwards and finding its own feed
+    // still empty). An earlier version of this cmdlet pre-checked the setting and
+    // aborted, which refused a copy the server actually accepts. So we attempt the
+    // upload and let the server's answer stand -- and only when it fails do we append
+    // the setting as a likely cause. Note the operation is one-way: the same server
+    // refuses a tenant-context DELETE of a host-feed package (errorCode 1005), so
+    // removing what you copied in needs host administration.
+    private static string HostFeedHint(OrchDriveInfo dstDrive)
+    {
+        try
+        {
+            var feedScope = dstDrive.Settings.Get()?.FirstOrDefault(s => s.Id == "Deployment.Libraries.FeedScope");
+            if (feedScope is not null && feedScope.Value == "Host")
+            {
+                return $" The library feed of {dstDrive.NameColonSeparator} is set to 'Only host feed'; " +
+                       "if this destination does not accept uploads into the host feed, change the Library feeds " +
+                       "tenant setting to 'Only tenant feed' or 'Both host and tenant feeds' and retry.";
+            }
+        }
+        catch { } // A hint is best-effort -- it must never mask or replace the real error.
+
+        return "";
+    }
+
     private static bool UploadLibrary(IWritableHost _this, LibraryVersion version, string? fileName, byte[]? fileContent, OrchDriveInfo dstDrive)
     {
         if (string.IsNullOrEmpty(fileName) || fileContent is null) return false;
@@ -86,7 +113,8 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
         }
         catch (Exception ex)
         {
-            _this.WriteError(new ErrorRecord(new OrchException($"{version.Id}:{version.Version}", ex), "CopyLibraryError", ErrorCategory.InvalidOperation, version));
+            string message = new OrchException($"{version.Id}:{version.Version}", ex).Message + HostFeedHint(dstDrive);
+            _this.WriteError(new ErrorRecord(new InvalidOperationException(message, ex), "CopyLibraryError", ErrorCategory.InvalidOperation, version));
         }
         return false;
     }
@@ -128,21 +156,6 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
                         foreach (var dstDrive in dstDrives)
                         {
                             cancelToken.ThrowIfCancellationRequested();
-
-                            var dstSettings = dstDrive.Settings.Get();
-                            if (dstSettings is not null)
-                            {
-                                var feedScope = dstSettings.FirstOrDefault(s => s.Id == "Deployment.Libraries.FeedScope");
-                                if (feedScope is not null && feedScope.Value == "Host")
-                                {
-                                    string errmsg = $"\"{dstDrive.NameColonSeparator}\": Library copying is disabled because the library feed is set to 'Only host feed'. " +
-                                                    $"To enable copying, please go to the tenant settings page and change the Library feeds setting to 'Only tenant feed' " +
-                                                    $"or 'Both host and tenant feeds'.";
-                                    // We can skip all remaining processing.
-                                    _this.WriteError(new ErrorRecord(new InvalidOperationException(errmsg), "CopyLibraryError", ErrorCategory.WriteError, dstDrive));
-                                    return;
-                                }
-                            }
 
                             string key = $"{version.GetPSPath()}:{version.Version}";
                             string target = $"Item: {key} Destination: {dstDrive.NameColonSeparator}";

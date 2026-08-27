@@ -30,7 +30,7 @@ Copy-OrchLibrary [-Path <string>] [-LiteralPath <string>] [-Id] <string[]> [[-Ve
 
 Copies library packages (NuGet packages containing reusable workflows) from one UiPath Orchestrator tenant feed to another. The cmdlet downloads matching library versions from the source tenant and uploads them to the destination tenant(s). If a library with the same Id and version already exists in the destination, the copy is skipped and an error is written.
 
-The destination tenant must have its library feed configured as "Only tenant feed" or "Both host and tenant feeds". If the destination tenant is set to "Only host feed", the copy operation fails with a descriptive error message.
+Libraries are uploaded to whichever feed the destination tenant treats as its default, which is decided by that tenant's `Deployment.Libraries.FeedScope` setting: with "Only tenant feed" or "Both host and tenant feeds" they land in the tenant feed, and with "Only host feed" they land in the host feed. The setting is not checked before the copy — if a destination rejects the upload, the server's own error is reported, with the feed setting appended as a likely cause.
 
 Both -Id and -Version parameters support wildcards, allowing bulk copy of multiple libraries in a single operation. The -Id and -Version parameters support tab completion. Press [Ctrl+Space] or [Tab] to see available values dynamically populated from the source tenant.
 
@@ -254,7 +254,7 @@ This cmdlet produces no pipeline output. Progress is reported through Write-Prog
 
 If a library with the same Id and version already exists in the destination tenant, the copy is skipped and an error is written. The source and destination cannot be the same drive.
 
-The destination tenant must have its library feed setting configured to accept tenant-level uploads. If the feed is set to "Only host feed", the copy operation fails with a message instructing you to change the tenant settings to "Only tenant feed" or "Both host and tenant feeds".
+A destination tenant set to "Only host feed" receives the libraries into its host feed. That was measured on standalone 24.10.0 (API 17); Automation Suite has not been verified, so copy one library and confirm where it landed before running a full set. The write is also one-way — the tenant API refuses to delete a host-feed package again ("Package cannot be deleted. Deployment Settings may be invalid.", errorCode 1005), so removing what you copied in needs host administration. To land the libraries in the destination's own tenant feed instead, set `Deployment.Libraries.FeedScope` to "Only tenant feed" or "Both host and tenant feeds" before copying.
 
 ## RELATED LINKS
 

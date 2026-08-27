@@ -4,6 +4,42 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Changed
+
+- **A destination tenant set to "Only host feed" no longer blocks a library copy up front.**
+  `Copy-Item` and `Copy-OrchLibrary` read the destination's `Deployment.Libraries.FeedScope`
+  before copying and, when it was `Host`, aborted with "Library copying is disabled because the
+  library feed is set to 'Only host feed'". Measured on standalone 24.10.0 (API 17), that refused
+  a copy the server accepts: with the destination tenant on "Only host feed" the upload succeeds
+  and the package lands in the *host* feed — confirmed by switching that tenant to "Only tenant
+  feed" afterwards and finding its own feed still empty. The copy is now attempted and the
+  server's answer stands; only when an upload actually fails and the destination is `Host`-scoped
+  is the feed setting appended to the error as a likely cause. The old guard also returned out of
+  the whole run on the first `Host`-scoped destination, so a copy to several destinations lost the
+  ones that would have worked.
+
+  Two caveats now documented rather than pre-empted: Automation Suite was not measured, so confirm
+  where the first library lands before running a full set; and the write is one-way — the same
+  server refuses a tenant-context delete of a host-feed package ("Package cannot be deleted.
+  Deployment Settings may be invalid.", errorCode 1005), with or without an explicit feed id, so
+  removing what you copied in needs host administration.
+
+### Fixed
+
+- **`Get-OrchLibrary -HostFeed` / `Get-OrchLibraryVersion -HostFeed` went stale after a feed-scope
+  change, and on one tenant configuration could have answered with the tenant feed.** The host
+  feed id was memoized in a private field with no reset path, so `Clear-OrchCache` did not flush
+  it: after changing a tenant's `Deployment.Libraries.FeedScope` within a single session,
+  `-HostFeed` kept using the previous id and failed with "PackageFeed does not exist." (observed on
+  24.10.0 switching a tenant from `Host` to `Tenant`). The id now reads through the `LibraryFeeds`
+  per-tenant cache, which `Clear-OrchCache` does flush. Separately, a tenant scoped to "Only tenant
+  feed" reports a single non-shared feed, which leaves the host feed id null — and null means "no
+  feedId" to the underlying query, i.e. the tenant's own feed. That path now reports that the
+  tenant has no host feed, and which setting controls it, instead of returning tenant-feed contents
+  under the host-feed switch.
+
 ## [1.14.0] - 2026-08-24
 
 ### Fixed

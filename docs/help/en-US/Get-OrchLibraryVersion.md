@@ -123,6 +123,8 @@ HelpMessage: ''
 
 Retrieves library versions from the host-level feed instead of the tenant feed. When the Orchestrator is configured with a host feed, this switch allows access to library versions shared across all tenants.
 
+Requires Orchestrator API v17 or later (24.10.0 reports v17); earlier versions report that the operation is unsupported. A tenant whose `Deployment.Libraries.FeedScope` is "Only tenant feed" cannot see a host feed at all, and the switch reports that rather than silently returning tenant-feed versions. On a tenant scoped to "Only host feed" the switch is unnecessary — the host feed is that tenant's default feed.
+
 ```yaml
 Type: System.Management.Automation.SwitchParameter
 DefaultValue: ''

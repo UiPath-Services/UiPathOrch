@@ -223,9 +223,8 @@ Based on the interview results, create a migration plan that includes:
 
 ### Library Feed Setting
 
-If the destination tenant's library feed is set to "Only host feed",
-library copying will fail. Check the current setting and ask the user
-which option to use:
+The destination tenant's library feed setting decides *which feed* copied libraries
+land in. Check the current setting and ask the user which option to use:
 
 ```powershell
 Get-OrchSetting -Path NewOrch: 'Deployment.Libraries.FeedScope'
@@ -233,15 +232,33 @@ Get-OrchSetting -Path NewOrch: 'Deployment.Libraries.FeedScope'
 
 | Value | Description |
 |---|---|
-| `Host` | Only host feed (libraries cannot be copied) |
+| `Host` | Only host feed — copied libraries land in the **host** feed |
 | `Tenant` | Only tenant feed |
-| `All` | Both host and tenant feeds |
+| `All` | Both host and tenant feeds — copied libraries land in the **tenant** feed |
 
-After confirming with the user:
+A copy always writes to whichever feed the destination tenant treats as its default,
+because that is the only feed the tenant-level upload endpoint addresses. Two
+consequences are worth planning around when the destination is set to `Host`:
+
+- **Verify the destination first.** The host-feed write was measured on standalone
+  24.10.0 (API 17). Automation Suite has not been verified — copy one library, confirm
+  where it landed, and only then run the whole set.
+- **It is one-way.** The tenant API refuses to delete a host-feed package again
+  ("Package cannot be deleted. Deployment Settings may be invalid.", errorCode 1005),
+  with or without an explicit feed id. Removing what you copied in needs host
+  administration.
+
+To keep libraries tenant-scoped at the destination instead, set it before copying:
 
 ```powershell
 Set-OrchSetting -Path NewOrch: -Name 'Deployment.Libraries.FeedScope' -Value 'Tenant'
 ```
+
+Reading the source side: on a tenant scoped to `Host`, a plain `Get-OrchLibrary`
+already returns the host feed, since that is the tenant's default feed.
+`Get-OrchLibrary -HostFeed` addresses the host feed explicitly; it needs Orchestrator
+API v17 or later (24.10.0 reports v17), and it reports an error on a tenant scoped to
+`Tenant`, which cannot see a host feed at all.
 
 ### Active Directory Integration Prerequisites
 
@@ -1248,23 +1265,28 @@ re-set cmdlet for each entity, plus details on credential assets.
 
 ### Important Notes
 
-- **Destination tenant library feed settings**: To copy libraries, the
-  destination tenant's library feed must be enabled. Check and set it with:
+- **Destination tenant library feed settings**: this decides which feed copied
+  libraries land in — a copy always writes to the destination tenant's default feed.
+  Check and set it with:
 
   ```powershell
   # Check current setting
   Get-OrchSetting -Path NewOrch: 'Deployment.Libraries.FeedScope'
 
-  # Set to allow tenant feed (required for library copy)
+  # Land copied libraries in the tenant feed
   Set-OrchSetting -Path NewOrch: -Name 'Deployment.Libraries.FeedScope' -Value 'Tenant'
   ```
 
   Valid values for `Deployment.Libraries.FeedScope`:
   | Value | Description |
   |---|---|
-  | `Host` | Only host feed (libraries cannot be copied) |
+  | `Host` | Only host feed — copied libraries land in the host feed |
   | `Tenant` | Only tenant feed |
-  | `All` | Both host and tenant feeds |
+  | `All` | Both host and tenant feeds — copied libraries land in the tenant feed |
+
+  See [Library Feed Setting](#library-feed-setting) for the two caveats that apply
+  when the destination is set to `Host` (Automation Suite unverified; host-feed
+  imports cannot be deleted back out through the tenant API).
 - **Entity dependencies**: Some entities reference other entities, so copy
   order matters. For example, processes depend on packages, so packages must
   be copied first.

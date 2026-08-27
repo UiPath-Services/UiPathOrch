@@ -782,18 +782,37 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     #endregion
 
 
-    private string? _libraryHostFeedId;
-    internal string? LibraryHostFeedId
-    {
-        get
-        {
-            if (string.IsNullOrEmpty(_libraryHostFeedId))
-            {
-                _libraryHostFeedId = LibraryFeeds.Get()?.FirstOrDefault(lf => lf.isShared)?.id;
-            }
-            return _libraryHostFeedId;
-        }
-    }
+    // Deliberately NOT memoized in a private field: LibraryFeeds is already a
+    // SingleCachePerTenant, so it is the layer that caches -- and, unlike a hand-rolled
+    // field, it is flushed by ClearTenantCache / Clear-OrchCache. A separate memo went
+    // stale whenever the tenant's Deployment.Libraries.FeedScope changed within one
+    // session: the old shared-feed id survived the clear and every subsequent -HostFeed
+    // query failed with "PackageFeed does not exist." (observed on 24.10.0 after
+    // switching a tenant from 'Host' to 'Tenant'). Reading through the cache each time
+    // costs nothing and cannot drift from the setting.
+    internal string? LibraryHostFeedId =>
+        LibraryFeeds.Get()?.FirstOrDefault(lf => lf.isShared)?.id;
+
+    /// <summary>
+    /// The host (shared) library feed id for the -HostFeed queries, or a self-explaining
+    /// error when this tenant has none. A null id must never be passed through to
+    /// GetLibraries / GetLibraryVersions: those treat null as "no feedId", which is the
+    /// tenant's own default feed -- so -HostFeed would silently answer with tenant-feed
+    /// contents instead of saying it cannot see a host feed. A tenant whose
+    /// Deployment.Libraries.FeedScope is 'Tenant' reports exactly one, non-shared feed
+    /// (measured on 24.10.0), which is how this case arises.
+    /// </summary>
+    /// <remarks>
+    /// The message carries no drive prefix: every caller surfaces this through
+    /// OrchException(target, ex), which prepends the path itself.
+    /// </remarks>
+    internal string RequireLibraryHostFeedId() =>
+        LibraryHostFeedId
+        ?? throw new DeterministicApiException(
+            "This tenant has no host library feed. The 'Library feeds' tenant setting " +
+            "(Deployment.Libraries.FeedScope) is set to 'Only tenant feed', so the host feed is not " +
+            "visible from this tenant. Change it to 'Only host feed' or 'Both host and tenant feeds' " +
+            "(then run Clear-OrchCache) to query the host feed.");
 
     // Organization list entities
     public readonly ListCachePerOrganization<PmUser> PmUsers;
@@ -1105,7 +1124,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         Domains = new(this, OrchAPISession.GetDomains);
 
         LibrariesInTenant = new(this, () => OrchAPISession.GetLibraries(null), e => e.Path = NameColonSeparator);
-        LibrariesInHost = new(this, () => OrchAPISession.GetLibraries(LibraryHostFeedId), e => e.Path = NameColonSeparator);
+        LibrariesInHost = new(this, () => OrchAPISession.GetLibraries(RequireLibraryHostFeedId()), e => e.Path = NameColonSeparator);
 
         Settings = new(this, OrchAPISession.GetSettings, e => e.Path = NameColonSeparator);
         UpdateSettings = new(this, OrchAPISession.GetUpdateSettings, e => e.Path = NameColonSeparator);
@@ -1239,7 +1258,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             (library, _) => library.Path = NameColonSeparator);
 
         LibraryVersionsInHostFeed = new(this,
-            libraryId => OrchAPISession.GetLibraryVersions(libraryId, LibraryHostFeedId)
+            libraryId => OrchAPISession.GetLibraryVersions(libraryId, RequireLibraryHostFeedId())
                 .OrderBy(v => v.Version!, VersionComparer.Instance),
             (library, _) => library.Path = NameColonSeparator);
 
