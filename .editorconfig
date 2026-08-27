@@ -1,4 +1,23 @@
 ﻿[*.cs]
 
 # CS8600: Null リテラルまたは Null の可能性がある値を Null 非許容型に変換しています。
+#
+# Load-bearing, not leftover: measured 2026-08-27, removing this line surfaces 446 occurrences
+# and nothing else. They are one shape throughout -- a local declared non-nullable and assigned a
+# value that may be null, then checked afterwards:
+#
+#     Exception ret = null;
+#     string folder = Path.GetDirectoryName(configFilePath);
+#     object values = fakeBoundParameters[parameterName];
+#
+# Clearing them means writing `?` on 446 local declarations. Mechanical, but its own change and
+# its own review, not a tidy-up to fold into something else. Recorded here so the next reader
+# does not re-run the experiment.
+#
+# This line alone is NOT enough. <WarningsAsErrors>nullable</WarningsAsErrors> in
+# UiPathOrch.csproj overrides an editorconfig severity of none and promotes CS8600 anyway
+# (measured: 223 errors on a clean build), so the csproj also carries
+# <WarningsNotAsErrors>CS8600</WarningsNotAsErrors>. Both are needed; changing one without the
+# other breaks the build. The rest of the nullable family (CS8602 dereference, CS8603 return,
+# CS8604 argument, CS8618 uninitialized, ...) is enforced as errors.
 dotnet_diagnostic.CS8600.severity = none
