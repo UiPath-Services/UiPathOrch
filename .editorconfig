@@ -2,17 +2,23 @@
 
 # CS8600: Null リテラルまたは Null の可能性がある値を Null 非許容型に変換しています。
 #
-# Load-bearing, not leftover: measured 2026-08-27, removing this line surfaces 446 occurrences
-# and nothing else. They are one shape throughout -- a local declared non-nullable and assigned a
-# value that may be null, then checked afterwards:
+# Keep it. Measured 2026-08-27: removing this line surfaces 446 occurrences and nothing else,
+# all one shape -- a local declared non-nullable and assigned a value that may be null, then
+# checked afterwards:
 #
 #     Exception ret = null;
 #     string folder = Path.GetDirectoryName(configFilePath);
 #     object values = fakeBoundParameters[parameterName];
 #
-# Clearing them means writing `?` on 446 local declarations. Mechanical, but its own change and
-# its own review, not a tidy-up to fold into something else. Recorded here so the next reader
-# does not re-run the experiment.
+# The obvious worry is that suppressing CS8600 also blinds the compiler downstream -- that the
+# local is thereafter believed non-null and a later dereference goes unchecked. It does not.
+# Measured with a probe: `string s = Maybe(); return s.Length;` reports CS8602 exactly as
+# `string? s = Maybe();` does. The flow state follows the value, not the declaration.
+#
+# So writing `?` on 446 declarations would buy nothing but self-documentation, while the
+# diagnostics that catch real faults -- CS8602 dereference, CS8603 return, CS8604 argument --
+# are unaffected and are build errors (see UiPathOrch.csproj). Recorded here so the next reader
+# does not re-run either experiment.
 #
 # This line alone is NOT enough. <WarningsAsErrors>nullable</WarningsAsErrors> in
 # UiPathOrch.csproj overrides an editorconfig severity of none and promotes CS8600 anyway
