@@ -1319,7 +1319,10 @@ re-set cmdlet for each entity, plus details on credential assets.
   and API triggers *are* copied. A copy warns once per folder that holds event
   triggers, with the count, and `-WhatIf` reports it too — so the omission shows
   up in the run rather than as a process that never starts in the new tenant.
-  List what you have before migrating:
+  A source that has no Integration Service has no event triggers to begin with —
+  standalone (MSI) Orchestrator being the common case — and the entity only
+  exists from Orchestrator API v18, so nothing is warned about there. List what
+  you have before migrating:
   `Get-OrchEventTrigger -Path OldOrch:\ -Recurse`.
 - **Personal workspaces**: To migrate personal workspaces, exploration must be
   started in the Orchestrator Web UI on both sides, followed by running
