@@ -26,6 +26,56 @@ public class PkceAuthHelpersTests
         Assert.Contains("&code_challenge_method=S256", url);
     }
 
+    // ---- state (RFC 8252 §8.9) ----
+
+    [Fact]
+    public void Authorize_url_carries_the_state()
+    {
+        var url = OrchestratorAuthManager.BuildAuthorizeUrl(
+            null, false, "https://orch.local", "OR.Default", "A", "http://127.0.0.1:1/", false, "v",
+            state: "st ate/+value");
+
+        Assert.Contains("&state=" + WebUtility.UrlEncode("st ate/+value"), url);
+    }
+
+    [Fact]
+    public void Authorize_url_omits_state_when_none_is_supplied()
+    {
+        // The parameter is optional so the pure function stays usable without one; the sign-in
+        // path always passes one.
+        var url = OrchestratorAuthManager.BuildAuthorizeUrl(
+            null, false, "https://orch.local", "OR.Default", "A", "http://127.0.0.1:1/", false, "v");
+
+        Assert.DoesNotContain("state=", url);
+    }
+
+    [Fact]
+    public void Matching_state_is_accepted()
+    {
+        Assert.True(OrchestratorAuthManager.IsExpectedState("abc123", "abc123"));
+    }
+
+    [Theory]
+    [InlineData("abc123", "different")]
+    [InlineData("abc123", "ABC123")]  // ordinal: case is part of the value
+    [InlineData("abc123", null)]      // an injected callback that simply omits it
+    [InlineData("abc123", "")]
+    [InlineData(null, "abc123")]
+    [InlineData("", "")]              // "no state" must never be the value that passes
+    public void Non_matching_state_is_rejected(string? expected, string? received)
+    {
+        Assert.False(OrchestratorAuthManager.IsExpectedState(expected, received));
+    }
+
+    [Fact]
+    public void State_mismatch_message_names_the_likely_cause_and_the_way_out()
+    {
+        var msg = OrchestratorAuthManager.BuildStateMismatchMessage();
+
+        Assert.Contains("Import-OrchConfig", msg);
+        Assert.Contains("RedirectUrl", msg);
+    }
+
     [Fact]
     public void Authorize_url_never_contains_a_raw_space()
     {
@@ -270,13 +320,86 @@ public class PkceAuthHelpersTests
 
     // ---- BuildEntraIdSignInWarning ----
 
+    // The advisory follows CurrentUICulture, so these pin the culture rather than inheriting the
+    // build agent's or developer's — otherwise the English assertions below fail on a Japanese
+    // Windows for the right reason and the wrong one is reported.
+    private static string AdvisoryIn(string culture, string drive, string orgUrl)
+    {
+        var original = System.Globalization.CultureInfo.CurrentUICulture;
+        try
+        {
+            System.Globalization.CultureInfo.CurrentUICulture = new System.Globalization.CultureInfo(culture);
+            return OrchestratorAuthManager.BuildEntraIdSignInWarning(drive, orgUrl);
+        }
+        finally
+        {
+            System.Globalization.CultureInfo.CurrentUICulture = original;
+        }
+    }
+
     [Fact]
     public void Entra_advisory_names_the_drive_org_url_and_learn_more_link()
     {
-        var msg = OrchestratorAuthManager.BuildEntraIdSignInWarning("Orch1:", "https://cloud.uipath.com/acme");
+        var msg = AdvisoryIn("en-US", "Orch1:", "https://cloud.uipath.com/acme");
 
         Assert.StartsWith("[Orch1:] You are signed in with a local user account.", msg);
         Assert.Contains("organization-specific URL: https://cloud.uipath.com/acme in your browser", msg);
         Assert.EndsWith("Learn more: " + OrchestratorAuthManager.EntraLearnMoreUrl, msg);
+    }
+
+    [Fact]
+    public void Entra_advisory_follows_the_ui_culture()
+    {
+        var msg = AdvisoryIn("ja-JP", "Orch1:", "https://cloud.uipath.com/acme");
+
+        Assert.StartsWith("[Orch1:] ローカル ユーザー アカウントでサインインしています。", msg);
+        Assert.Contains("https://cloud.uipath.com/acme", msg);
+        Assert.EndsWith("詳細: " + OrchestratorAuthManager.EntraLearnMoreUrl, msg);
+    }
+
+    [Fact]
+    public void An_unshipped_culture_falls_back_to_english()
+    {
+        var msg = AdvisoryIn("sv-SE", "Orch1:", "https://cloud.uipath.com/acme");
+
+        Assert.StartsWith("[Orch1:] You are signed in with a local user account.", msg);
+    }
+
+    [Theory]
+    [InlineData("de")]
+    [InlineData("en")]
+    [InlineData("fr")]
+    [InlineData("ja")]
+    [InlineData("ko")]
+    [InlineData("ro")]
+    [InlineData("tr")]
+    public void Every_shipped_language_has_an_advisory_resource(string lang)
+    {
+        // ResolveNotificationLang promises these seven; a missing .txt would silently fall back
+        // to English for that language instead of failing anywhere visible.
+        var names = typeof(OrchestratorAuthManager).Assembly.GetManifestResourceNames();
+
+        Assert.Contains($"UiPathOrch.Resources.{lang}.EntraAdvisory.txt", names);
+    }
+
+    [Theory]
+    [InlineData("de-DE")]
+    [InlineData("en-US")]
+    [InlineData("fr-FR")]
+    [InlineData("ja-JP")]
+    [InlineData("ko-KR")]
+    [InlineData("ro-RO")]
+    [InlineData("tr-TR")]
+    public void Every_language_ends_in_a_labelled_learn_more_link(string culture)
+    {
+        // The page collapses a trailing "<label>: <url>" into a link labelled <label>. Each
+        // translation has to keep that shape or its "Learn more" renders as a bare URL.
+        var html = OrchestratorAuthManager.BuildNoticeHtml(
+            AdvisoryIn(culture, "Orch1:", "https://cloud.uipath.com/acme"));
+
+        Assert.DoesNotContain($">{OrchestratorAuthManager.EntraLearnMoreUrl}</a>", html);
+        Assert.Contains($"<a href=\"{OrchestratorAuthManager.EntraLearnMoreUrl}\"", html);
+        // The organization URL is meant to stay visible, exactly as the web banner shows it.
+        Assert.Contains(">https://cloud.uipath.com/acme</a>", html);
     }
 }

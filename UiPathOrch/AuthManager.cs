@@ -489,21 +489,45 @@ internal class OrchestratorAuthManager
 
     /// <summary>
     /// The Entra-ID local-user advisory, worded to match the banner Orchestrator's web UI shows
-    /// for the same condition.
+    /// for the same condition, in the same language.
     /// </summary>
     /// <remarks>
-    /// Everything up to the organization URL is the web banner's wording verbatim. What follows
-    /// is ours: the web banner is displayed in the browser the reader is already looking at,
-    /// whereas this one may have to say where to go and how to come back. The "[drive:]" prefix
-    /// disambiguates which drive the notice is about when several are mounted.
+    /// The wording through the organization URL is taken from Orchestrator's own banner in each
+    /// language, so a reader who has seen it in the web UI recognizes it here. What follows is
+    /// ours: the banner is displayed in the browser the reader is already looking at, whereas
+    /// this one has to say how to come back to PowerShell. The "[drive:]" prefix disambiguates
+    /// which drive the notice is about when several are mounted.
+    ///
+    /// The trailing "&lt;label&gt;: {2}" shape is deliberate — BuildNoticeHtml collapses it into a
+    /// link labelled with that language's "Learn more", the way the banner ends, while the
+    /// console keeps the URL as text because there is nothing to click there.
     /// </remarks>
-    internal static string BuildEntraIdSignInWarning(string driveNameColon, string orgUrl) =>
-        $"[{driveNameColon}] You are signed in with a local user account. "
-        + "This organization supports Entra ID directory integration and single sign on. "
-        + "To take advantage of all directory capabilities, like directory search and directory groups "
-        + $"please sign out and sign in through the organization-specific URL: {orgUrl} in your browser "
-        + "— then run 'Import-OrchConfig' here to sign in again with that account. "
-        + $"Learn more: {EntraLearnMoreUrl}";
+    internal static string BuildEntraIdSignInWarning(string driveNameColon, string orgUrl)
+    {
+        string lang = ResolveNotificationLang(System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
+        string template = ReadTextResource($"UiPathOrch.Resources.{lang}.EntraAdvisory.txt")
+            ?? ReadTextResource("UiPathOrch.Resources.en.EntraAdvisory.txt")
+            ?? "[{0}] You are signed in with a local user account. Sign in through {1} instead. Learn more: {2}";
+
+        return string.Format(template, driveNameColon, orgUrl, EntraLearnMoreUrl);
+    }
+
+    // Embedded UTF-8 text resource, or null when absent. Null rather than throwing: a missing
+    // resource must degrade the advisory, never break the sign-in that carries it.
+    private static string? ReadTextResource(string resourceName)
+    {
+        try
+        {
+            using Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
+            if (stream is null) return null;
+            using StreamReader reader = new(stream);
+            return reader.ReadToEnd().TrimEnd('\r', '\n');
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
     // URLs in a notice become links: the Entra advisory's whole point is to send the reader
     // somewhere, and the page is the one surface where that can be a click instead of a
@@ -519,11 +543,12 @@ internal class OrchestratorAuthManager
     // Applied AFTER encoding, so the pattern only ever sees text that is already safe to emit,
     // and trailing sentence punctuation is kept outside the anchor -- a period swallowed into
     // the href 404s on click.
-    // The label excludes '.' (and cannot start with whitespace), which is what keeps it to the
-    // trailing phrase: without that bound it is greedy back to the start of the notice, and the
-    // whole message -- not "Learn more" -- becomes the link text.
+    // The label excludes sentence terminators (and cannot start with whitespace), which is what
+    // keeps it to the trailing phrase: without that bound it is greedy back to the start of the
+    // notice, and the whole message -- not "Learn more" -- becomes the link text. The set spans
+    // the shipped languages, so Japanese '。' bounds the label exactly as '.' does elsewhere.
     private static readonly System.Text.RegularExpressions.Regex NoticeUrlPattern =
-        new(@"(?<label>[^:<>\s.][^:<>.]{0,40}): (?<labelled>https?://[^\s<]+)$|(?<bare>https?://[^\s<]+)",
+        new(@"(?<label>[^:<>\s.。！？!?][^:<>.。！？!?]{0,40}): (?<labelled>https?://[^\s<]+)$|(?<bare>https?://[^\s<]+)",
             System.Text.RegularExpressions.RegexOptions.Compiled);
 
     private static string LinkifyEncoded(string encoded) =>
@@ -532,7 +557,10 @@ internal class OrchestratorAuthManager
             if (m.Groups["labelled"].Success)
             {
                 string labelledUrl = m.Groups["labelled"].Value.TrimEnd('.', ',', ';', ':');
-                return Anchor(labelledUrl, m.Groups["label"].Value) + m.Groups["labelled"].Value[labelledUrl.Length..];
+                // Trimmed because French writes "En savoir plus : <url>" -- the space before the
+                // colon belongs to the typography, not to the link text.
+                return Anchor(labelledUrl, m.Groups["label"].Value.Trim())
+                    + m.Groups["labelled"].Value[labelledUrl.Length..];
             }
 
             string url = m.Groups["bare"].Value.TrimEnd('.', ',', ';', ':');
@@ -660,7 +688,7 @@ internal class OrchestratorAuthManager
     internal static string BuildAuthorizeUrl(
         string? identityUrl, bool isCloud, string baseUrl,
         string? scope, string? appId, string? redirectUrl,
-        bool useInPrivate, string? codeVerifier)
+        bool useInPrivate, string? codeVerifier, string? state = null)
     {
         string endPoint;
         string acrValues = "";
@@ -691,10 +719,44 @@ internal class OrchestratorAuthManager
         // everything after the scope value (including redirect_uri) was lost
         // and Identity rejected the request with "Invalid redirect_uri".
         string encodedScope = WebUtility.UrlEncode($"{scope} offline_access");
+
+        // RFC 8252 §8.9: the loopback redirect has to carry `state`, because PKCE alone does not
+        // close the injection direction. PKCE stops an attacker from USING a code stolen from us;
+        // it does nothing about an attacker's code being delivered INTO our listener, which ends
+        // with the drive authenticated as them. `state` is what ties the callback back to the
+        // request we made. Identity echoes it verbatim and ignores it otherwise, so this is
+        // additive on every edition.
+        string stateParam = string.IsNullOrEmpty(state) ? "" : $"&state={WebUtility.UrlEncode(state)}";
+
         return !string.IsNullOrEmpty(codeVerifier)
-            ? $"{endPoint}?response_type=code&client_id={appId}&scope={encodedScope}&redirect_uri={WebUtility.UrlEncode(redirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256{acrValues}"
-            : $"{endPoint}?response_type=code&client_id={appId}&scope={encodedScope}&redirect_uri={WebUtility.UrlEncode(redirectUrl)}{acrValues}";
+            ? $"{endPoint}?response_type=code&client_id={appId}&scope={encodedScope}&redirect_uri={WebUtility.UrlEncode(redirectUrl)}&code_challenge={GetHash(codeVerifier)}&code_challenge_method=S256{stateParam}{acrValues}"
+            : $"{endPoint}?response_type=code&client_id={appId}&scope={encodedScope}&redirect_uri={WebUtility.UrlEncode(redirectUrl)}{stateParam}{acrValues}";
     }
+
+    /// <summary>
+    /// Whether a PKCE callback's `state` is the one this sign-in asked for.
+    /// </summary>
+    /// <remarks>
+    /// Absent or empty on either side is a mismatch, deliberately: "no state" must never be the
+    /// value that passes, or an injected callback that simply omits the parameter would sail
+    /// through the check that exists to stop it. Pure and static so every branch is testable
+    /// without a live endpoint.
+    /// </remarks>
+    internal static bool IsExpectedState(string? expected, string? received) =>
+        !string.IsNullOrEmpty(expected)
+        && !string.IsNullOrEmpty(received)
+        && string.Equals(expected, received, StringComparison.Ordinal);
+
+    // What the reader is told when a callback carries the wrong state. Names the realistic cause
+    // rather than the alarming one: a second sign-in sharing the redirect port is far more likely
+    // than an attack, and the fix differs.
+    internal static string BuildStateMismatchMessage() =>
+        "PKCE sign-in was refused: the browser callback did not carry the state value this "
+        + "sign-in sent, so it was discarded instead of being exchanged for a token. That check is "
+        + "what stops a sign-in response meant for somewhere else from connecting this drive as "
+        + "someone else. Run Import-OrchConfig to try again. If it repeats, check that no other "
+        + "sign-in is using the same redirect port (RedirectUrl in the configuration file, which "
+        + "Edit-OrchConfig opens).";
 
     // The success-page language: the embedded notification HTML exists only for
     // these locales, so anything else falls back to English.
@@ -811,10 +873,14 @@ internal class OrchestratorAuthManager
         {
             LogAuthSettings();
 
+            // Fresh per attempt: a state reused across sign-ins would still accept a callback
+            // captured from an earlier one.
+            string expectedState = RandomString(32);
+
             string authUrl = BuildAuthorizeUrl(
                 _drive._psDrive.IdentityUrl, _drive._psDrive.IsCloud, BaseUrl,
                 _drive._psDrive.Scope, _drive._psDrive.AppId, _drive._psDrive.RedirectUrl,
-                UseInPrivate, codeVerifier);
+                UseInPrivate, codeVerifier, expectedState);
 
             // Log the exact URL handed to the browser (when the drive's Logging is
             // enabled). This is the authorize request as Identity receives it, so a
@@ -846,6 +912,17 @@ internal class OrchestratorAuthManager
                             authorizationCode = context.Request.QueryString["code"];
                             if (!string.IsNullOrEmpty(authorizationCode))
                             {
+                                // Before the exchange, never after: exchanging first would already
+                                // have spent the code and put a token for the wrong principal in
+                                // this session, which is the outcome the check exists to prevent.
+                                if (!IsExpectedState(expectedState, context.Request.QueryString["state"]))
+                                {
+                                    authorizationCode = null;
+                                    capturedException = new InvalidOperationException(BuildStateMismatchMessage());
+                                    await WriteCallbackErrorPageAsync(context, capturedException.Message, cts);
+                                    break;
+                                }
+
                                 // Exchange the auth code for tokens inline so we can display
                                 // the authenticated user's name on the success page. The
                                 // caller (RequestToken) will skip its own exchange when

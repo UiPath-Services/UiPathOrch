@@ -263,6 +263,10 @@ here to sign in again with that account. Learn more: https://docs.uipath.com/
 automation-cloud/automation-cloud/latest/admin-guide/about-accounts
 ```
 
+The example above is English; the notice follows your UI language, matching
+Orchestrator's own banner wording, and falls back to English outside the seven
+languages the module ships.
+
 **Where it appears.** A non-confidential (PKCE) sign-in opens a browser, and
 the page it lands on is where this notice is shown — with the organization URL
 as a link you can click, and "Learn more" as a link to the account

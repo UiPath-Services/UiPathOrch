@@ -29,6 +29,13 @@
     <EmbeddedResource Include="Resources\ko\MountSuccessNotification.html" />
     <EmbeddedResource Include="Resources\ro\MountSuccessNotification.html" />
     <EmbeddedResource Include="Resources\tr\MountSuccessNotification.html" />
+    <EmbeddedResource Include="Resources\de\EntraAdvisory.txt" />
+    <EmbeddedResource Include="Resources\en\EntraAdvisory.txt" />
+    <EmbeddedResource Include="Resources\fr\EntraAdvisory.txt" />
+    <EmbeddedResource Include="Resources\ja\EntraAdvisory.txt" />
+    <EmbeddedResource Include="Resources\ko\EntraAdvisory.txt" />
+    <EmbeddedResource Include="Resources\ro\EntraAdvisory.txt" />
+    <EmbeddedResource Include="Resources\tr\EntraAdvisory.txt" />
     <EmbeddedResource Include="Resources\de\UiPathOrchConfig.json" />
     <EmbeddedResource Include="Resources\en\UiPathOrchConfig.json" />
     <EmbeddedResource Include="Resources\fr\UiPathOrchConfig.json" />

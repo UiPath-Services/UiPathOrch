@@ -280,8 +280,8 @@ or Entra ID, additional setup is required to enable directory user operations:
    'Import-OrchConfig' here to sign in again with that account. Learn more
    ```
    It typically appears when the user signs in with a local account instead
-   of Entra ID. Read it before closing the tab: it is not repeated on the
-   console. (A drive that never opens a browser — personal access token,
+   of Entra ID, in your UI language (the quote above is English). Read it
+   before closing the tab: it is not repeated on the console. (A drive that never opens a browser — personal access token,
    confidential application — has no page to show it on and gets a
    PowerShell `WARNING:` instead.) See
    [Entra ID Warning](02-Essentials.md#entra-id-warning) for the details.

@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Security
+
+- **The PKCE sign-in now sends and verifies `state`.** The loopback listener accepted any callback
+  that carried a `code` and exchanged it. PKCE protects a code stolen *from* us from being used by
+  someone else; it does nothing about someone else's code being delivered *into* our listener,
+  which ends with the drive authenticated as them — the direction RFC 8252 §8.9 requires `state`
+  for. The authorize request now carries a per-attempt random `state`, and a callback whose `state`
+  is missing or different is refused *before* the token exchange, since exchanging first would
+  already have put a token for the wrong principal in the session. The refusal explains the
+  likeliest cause — another sign-in sharing the redirect port — rather than leading with an attack.
+  Identity echoes `state` back and ignores it otherwise, so this is additive on every edition.
+
 ### Changed
 
 - **Sign-in advisories now appear on the browser page when the sign-in opened a browser, and are
@@ -26,6 +38,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   banner's closing "Learn more" is meant to read; the console keeps the bare URL, having nothing
   to click. A URL in the middle of a sentence still shows itself, as the web banner does for the
   organization URL.
+
+- **The Entra ID local-user advisory is now shown in the reader's language.** Its wording through
+  the organization URL is taken from Orchestrator's own banner in each of the module's seven
+  languages, so someone who has met it in the web UI recognizes it here; the sentence that follows
+  — where to come back to and what to run — is ours. Romanian has no banner to copy, Orchestrator's
+  web UI not offering that language, so its text is a translation of the same content. The closing
+  "Learn more" is that language's own label. Languages outside the seven fall back to English, as
+  the sign-in page already does.
 
 - **The sign-in page keeps its card to a readable width.** It grew to fill the window, which the
   added notice made obvious: the card is now capped as a fraction of the viewport, with margins
