@@ -16,7 +16,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   is missing or different is refused *before* the token exchange, since exchanging first would
   already have put a token for the wrong principal in the session. The refusal explains the
   likeliest cause — another sign-in sharing the redirect port — rather than leading with an attack.
-  Identity echoes `state` back and ignores it otherwise, so this is additive on every edition.
+  Identity echoes `state` back and ignores it otherwise, so this is additive: the round trip is
+  verified on standalone 24.10.0, Automation Cloud, and Automation Suite 24.10.11.
+
+### Fixed
+
+- **The sign-in page no longer says you are connected when the token exchange failed.** The
+  browser callback exchanges the sign-in for a token; when that exchange fails the error is
+  deliberately left for the caller to raise, but the page went on rendering the success card —
+  announcing a connection that does not exist, with only a missing user-name row as a hint that
+  anything was wrong. That page is the one signal an operator has at that moment and it pointed
+  the wrong way: a customer reported "the browser says it connected" while PowerShell showed a
+  connection error. The page now says the sign-in worked but the connection did not, and shows
+  the underlying error — which, for the case this came from, names the proxy that could not be
+  reached. Nothing about the error handling changes: PowerShell still raises it.
 
 ### Changed
 
@@ -31,6 +44,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   it, because a proxy that cannot be reached usually fails during token acquisition, before any
   Orchestrator call — while the browser, using its own proxy handling, has already shown a
   completed sign-in.
+
+  When the proxy was inherited rather than configured, the message also says how to refuse it —
+  `"UseProxy": false` in the drive's `Proxy` block, and that `Edit-OrchConfig` opens the file —
+  since the reader is standing in front of the message either way. A proxy the drive asked for
+  gets no such suggestion: one that is meant to be used should be repaired, not bypassed.
+
+  The sign-in page goes one step further and shows the `Proxy` block itself, which a console
+  warning cannot carry. Naming the key is not enough for the reader who most needs it: a
+  configuration written before `UseProxy` existed already *has* a `Proxy` block, so "set it in
+  that block" leaves them hunting for a key that is not there.
 
 ### Added
 
@@ -105,20 +128,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **A destination tenant set to "Only host feed" no longer blocks a library copy up front.**
   `Copy-Item` and `Copy-OrchLibrary` read the destination's `Deployment.Libraries.FeedScope`
   before copying and, when it was `Host`, aborted with "Library copying is disabled because the
-  library feed is set to 'Only host feed'". Measured on standalone 24.10.0 (API 17), that refused
-  a copy the server accepts: with the destination tenant on "Only host feed" the upload succeeds
-  and the package lands in the *host* feed — confirmed by switching that tenant to "Only tenant
-  feed" afterwards and finding its own feed still empty. The copy is now attempted and the
-  server's answer stands; only when an upload actually fails and the destination is `Host`-scoped
-  is the feed setting appended to the error as a likely cause. The old guard also returned out of
-  the whole run on the first `Host`-scoped destination, so a copy to several destinations lost the
-  ones that would have worked.
+  library feed is set to 'Only host feed'". It refused a copy the server accepts: with the
+  destination tenant on "Only host feed" the upload succeeds and the package lands in the *host*
+  feed — confirmed by switching that tenant to "Only tenant feed" afterwards and finding its own
+  feed still empty. Measured on standalone 24.10.0 (API 17) and again on Automation Suite 24.10.11
+  (API 18), which behaves identically. The copy is now attempted and the server's answer stands;
+  only when an upload actually fails and the destination is `Host`-scoped is the feed setting
+  appended to the error as a likely cause. The old guard also returned out of the whole run on the
+  first `Host`-scoped destination, so a copy to several destinations lost the ones that would have
+  worked.
 
-  Two caveats now documented rather than pre-empted: Automation Suite was not measured, so confirm
-  where the first library lands before running a full set; and the write is one-way — the same
-  server refuses a tenant-context delete of a host-feed package ("Package cannot be deleted.
-  Deployment Settings may be invalid.", errorCode 1005), with or without an explicit feed id, so
-  removing what you copied in needs host administration.
+  One caveat is documented rather than pre-empted: the write is one-way. Both editions refuse a
+  tenant-context delete of a host-feed package ("Package cannot be deleted. Deployment Settings may
+  be invalid.", errorCode 1005), with or without an explicit feed id, so removing what you copied
+  in needs host administration.
 
 - **`Copy-Item -Recurse` now says when a folder's event triggers are being left behind.** Event
   triggers are carried by none of the copy stages and there is no `Copy-OrchEventTrigger`: an

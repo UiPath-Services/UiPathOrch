@@ -49,6 +49,21 @@ public class ProxyDescriptionTests
         Assert.Contains("inherited from this machine", note);
         // The point the field report got wrong: an absent Proxy block is not the same as no proxy.
         Assert.Contains("does not by itself stop a proxy being used", note);
+        // And the way out, since the reader is standing in front of the message either way.
+        Assert.Contains("\"UseProxy\": false", note);
+        Assert.Contains("Edit-OrchConfig", note);
+    }
+
+    [Fact]
+    public void A_configured_proxy_is_not_told_to_turn_itself_off()
+    {
+        // A proxy the drive asked for is presumably meant to be used: the fix there is to repair
+        // it, not to bypass it, so the direct-connection suggestion must not appear.
+        var configured = new ProxySettings { Enabled = true, Url = "http://proxy.example:8080" };
+
+        var note = OrchHttp.DescribeEffectiveProxy(Destination, configured, systemProxy: new FakeProxy(null));
+
+        Assert.DoesNotContain("UseProxy", note);
     }
 
     [Fact]

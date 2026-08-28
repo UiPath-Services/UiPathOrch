@@ -215,6 +215,32 @@ public class PkceAuthHelpersTests
         Assert.Contains("More information: https://id.example/help.", msg);
     }
 
+    // ---- BuildTokenExchangeFailedMessage ----
+
+    [Fact]
+    public void Token_exchange_failure_separates_the_sign_in_from_the_connection()
+    {
+        // The page used to show the success card here, announcing a connection that does not
+        // exist. The reader has just watched the sign-in succeed, so the message has to say
+        // plainly which half failed.
+        var msg = OrchestratorAuthManager.BuildTokenExchangeFailedMessage(
+            new InvalidOperationException("Could not connect to 127.0.0.1:10000."));
+
+        Assert.Contains("signed in successfully", msg);
+        Assert.Contains("not connected", msg);
+        Assert.Contains("from PowerShell", msg);
+    }
+
+    [Fact]
+    public void Token_exchange_failure_carries_the_underlying_error()
+    {
+        // Which is where the proxy annotation lives, and the reader is standing in front of it.
+        var msg = OrchestratorAuthManager.BuildTokenExchangeFailedMessage(
+            new InvalidOperationException("went through the proxy http://127.0.0.1:10000/"));
+
+        Assert.EndsWith("went through the proxy http://127.0.0.1:10000/", msg);
+    }
+
     // ---- BuildNoticeHtml ----
     //
     // The sign-in page consumes PendingWarning instead of the console, so an empty

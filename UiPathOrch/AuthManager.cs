@@ -680,14 +680,32 @@ internal class OrchestratorAuthManager
     // MountSuccessNotification resources: this path shows a server-supplied
     // message that has to appear verbatim, so a per-language template would add
     // seven files without changing what the user actually reads.
+    /// <summary>
+    /// What the browser is told when the sign-in itself worked but the token exchange did not.
+    /// </summary>
+    /// <remarks>
+    /// The distinction matters and the page used to hide it: a failed exchange left the success
+    /// card on screen, announcing a connection that does not exist, with only the absent user-name
+    /// row as a hint. That page is the one signal an operator has at that moment, and it was
+    /// pointing the wrong way -- a customer reported "the browser says it connected" while
+    /// PowerShell showed a connection error. The underlying message is included because it is the
+    /// specific one (it carries the proxy annotation, for instance), and the reader is standing in
+    /// front of it.
+    /// </remarks>
+    internal static string BuildTokenExchangeFailedMessage(Exception failure) =>
+        "You signed in successfully, but UiPathOrch could not exchange that sign-in for a token, "
+        + "so the drive is not connected. The sign-in was fine; this step runs from PowerShell, "
+        + "not from the browser, so it is that side of the connection that failed: "
+        + failure.Message;
+
     private static async Task WriteCallbackErrorPageAsync(
-        HttpListenerContext context, string message, CancellationToken ct)
+        HttpListenerContext context, string message, CancellationToken ct, string heading = "Sign-in failed")
     {
         string html =
             "<!DOCTYPE html><html><head><meta charset=\"utf-8\">"
             + "<title>UiPath Orchestrator sign-in failed</title></head>"
             + "<body style=\"font-family:Segoe UI,Arial,sans-serif;margin:2rem;max-width:44rem\">"
-            + "<h2>Sign-in failed</h2><p>" + WebUtility.HtmlEncode(message) + "</p>"
+            + "<h2>" + WebUtility.HtmlEncode(heading) + "</h2><p>" + WebUtility.HtmlEncode(message) + "</p>"
             + "<p>You can close this tab and return to PowerShell.</p></body></html>";
 
         byte[] buffer = Encoding.UTF8.GetBytes(html);
@@ -951,6 +969,7 @@ internal class OrchestratorAuthManager
                                 // continue to render the page without a username and let the
                                 // caller's retry surface the error through the normal path.
                                 string userName = "";
+                                Exception? exchangeFailure = null;
                                 if (!string.IsNullOrEmpty(codeVerifier))
                                 {
                                     try
@@ -978,12 +997,28 @@ internal class OrchestratorAuthManager
                                             System.Diagnostics.Debug.WriteLine($"JWT parse failed: {ex.GetType().Name}: {ex.Message}");
                                         }
                                     }
-                                    catch
+                                    catch (Exception ex)
                                     {
                                         // Reset so caller's retry path runs the exchange and surfaces the real error.
                                         _access_token = null;
                                         _refresh_token = null;
+                                        exchangeFailure = ex;
                                     }
+                                }
+
+                                // The sign-in worked, the exchange did not, so there is no connection to
+                                // announce. Rendering the success card here told the reader the opposite
+                                // of what happened -- see BuildTokenExchangeFailedMessage. The caller's
+                                // retry still runs and still raises the real error in PowerShell; this
+                                // only stops the browser from contradicting it.
+                                if (exchangeFailure is not null)
+                                {
+                                    await WriteCallbackErrorPageAsync(
+                                        context,
+                                        BuildTokenExchangeFailedMessage(exchangeFailure),
+                                        cts,
+                                        heading: "Signed in, but not connected");
+                                    break;
                                 }
 
                                 // Send a response back to the browser

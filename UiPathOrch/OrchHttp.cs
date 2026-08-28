@@ -117,10 +117,16 @@ internal static class OrchHttp
             // destination itself for the same. Treat both as none.
             if (via is null || via == requestUri) return "";
 
+            // The remedy belongs with the diagnosis, and belongs on both surfaces -- the console
+            // reader needs it as much as the one looking at the sign-in page. Kept to one clause,
+            // and phrased as the direct-connection option rather than as the answer: a proxy that
+            // is meant to be used should be repaired, not bypassed, and only the reader knows which
+            // case they are in.
             return $" The request went through the proxy {via}, which UiPathOrch inherited from this"
                 + " machine rather than from the drive's configuration (HTTPS_PROXY / HTTP_PROXY, or"
                 + " Windows Internet Options). The drive's Proxy block being absent or disabled does"
-                + " not by itself stop a proxy being used.";
+                + " not by itself stop a proxy being used: to connect directly instead, set"
+                + " \"UseProxy\": false in that block (Edit-OrchConfig opens the configuration file).";
         }
         catch
         {
