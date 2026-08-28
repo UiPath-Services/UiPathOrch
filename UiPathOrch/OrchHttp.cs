@@ -98,6 +98,9 @@ internal static class OrchHttp
     {
         try
         {
+            // Turned off explicitly: there is no proxy to name, whatever the machine says.
+            if (configured?.UseProxy == false) return "";
+
             if (configured is not null && configured.Enabled == true)
             {
                 string where = configured.UseDefaultWebProxy.GetValueOrDefault()
@@ -125,8 +128,20 @@ internal static class OrchHttp
         }
     }
 
+    // Returns whether a proxy is in play -- which is what the caller needs in order to decide
+    // whether to take over dialing, not whether this method touched the handler.
     private static bool ConfigureProxy(SocketsHttpHandler handler, ProxySettings? proxy)
     {
+        // "Use no proxy" is the more specific instruction, so it wins over Enabled, and it has to
+        // be answered before the Enabled gate: the entire point is that leaving the block
+        // disabled does NOT stop .NET falling back to the machine's proxy. Returning false is
+        // correct -- the connection is direct, so the direct-connection dialer applies.
+        if (proxy?.UseProxy == false)
+        {
+            handler.UseProxy = false;
+            return false;
+        }
+
         if (proxy is null || proxy.Enabled != true) return false;
 
         try

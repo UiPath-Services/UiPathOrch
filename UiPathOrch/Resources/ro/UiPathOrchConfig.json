@@ -60,6 +60,13 @@
   "IgnoreSslErrors": false,
 
   "Proxy": {
+    // Setați la "false" pentru a vă conecta direct, ignorând orice proxy
+    // configurat pe acest computer. "Enabled": false NU face acest lucru: fără
+    // setări proxy proprii, UiPathOrch le urmează pe cele ale computerului
+    // (HTTPS_PROXY sau Opțiuni Internet). "UseProxy": false are prioritate față
+    // de "Enabled".
+    "UseProxy": true,
+
     // Setarea acestei valori la "true" activează setările proxy pentru
     // toate PSDrive-urile.
     "Enabled": false,

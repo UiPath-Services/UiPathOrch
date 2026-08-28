@@ -15,6 +15,19 @@ public class Credentials
 
 public class ProxySettings
 {
+    /// <summary>
+    /// Whether connections may use a proxy at all. Named for the handler property it sets
+    /// (<c>SocketsHttpHandler.UseProxy</c>), and null behaves as .NET's own default of true.
+    /// </summary>
+    /// <remarks>
+    /// This exists because <see cref="Enabled"/> could not express it: Enabled=false means "do
+    /// not use the settings in this block", which leaves .NET free to fall back to the machine's
+    /// proxy. There was no way to say "no proxy", and the shipped config template contains
+    /// Enabled=false, so nearly every user was inheriting a proxy their configuration never
+    /// mentioned.
+    /// </remarks>
+    public bool? UseProxy { get; set; }
+
     public bool? UseDefaultWebProxy { get; set; }
     public string? Url { get; set; }
     public bool? BypassProxyOnLocal { get; set; }

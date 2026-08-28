@@ -32,10 +32,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   Orchestrator call — while the browser, using its own proxy handling, has already shown a
   completed sign-in.
 
-  Note that a `Proxy` block that is absent or set to `"Enabled": false` does *not* stop a proxy
-  being used; there is currently no setting that does. Until there is, the way to force a direct
-  connection for a session is to set .NET's default proxy to an empty one before the first
-  request: `[System.Net.Http.HttpClient]::DefaultProxy = [System.Net.WebProxy]::new()`.
+### Added
+
+- **`"UseProxy": false` in a drive's `Proxy` block connects directly, ignoring whatever proxy the
+  machine is configured with.** There was no way to say that before: `"Enabled": false` means "do
+  not use the settings in this block", which leaves .NET free to fall back to the machine's proxy
+  — and `"Enabled": false` is what the shipped configuration template contains, so nearly every
+  user was inheriting a proxy their configuration never mentioned. Named for the handler property
+  it sets, like the block's other keys; absent behaves as .NET's own default of `true`, so no
+  existing configuration changes behaviour. `"UseProxy": false` takes precedence over `"Enabled"`,
+  the more specific instruction winning.
 
 - **Sign-in advisories now appear on the browser page when the sign-in opened a browser, and are
   no longer repeated on the console.** The console has only ever been the fallback channel — the

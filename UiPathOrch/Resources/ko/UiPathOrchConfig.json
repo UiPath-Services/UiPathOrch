@@ -52,6 +52,12 @@
   "IgnoreSslErrors": false,
 
   "Proxy": {
+    // 이 값을 false로 설정하면 이 컴퓨터에 구성된 프록시를 무시하고 직접 연결합니다.
+    // "Enabled"를 false로 두어도 그렇게 되지 않습니다. UiPathOrch는 자체 프록시 설정이
+    // 없으면 컴퓨터의 설정(HTTPS_PROXY 또는 인터넷 옵션)을 따릅니다.
+    // "UseProxy": false는 "Enabled"보다 우선합니다.
+    "UseProxy": true,
+
     // 이 값을 true로 설정하면 모든 PSDrive에서 프록시 설정이 활성화됩니다.
     "Enabled": false,
 

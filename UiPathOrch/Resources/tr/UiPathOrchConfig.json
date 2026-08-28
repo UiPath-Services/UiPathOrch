@@ -55,6 +55,12 @@
   "IgnoreSslErrors": false,
 
   "Proxy": {
+    // Bu makinede yapılandırılmış proxy'yi yoksayarak doğrudan bağlanmak için
+    // false olarak ayarlayın. "Enabled": false bunu YAPMAZ: kendi proxy ayarı
+    // olmadığında UiPathOrch makinenin ayarlarını izler (HTTPS_PROXY veya
+    // Internet Seçenekleri). "UseProxy": false, "Enabled" ayarına göre önceliklidir.
+    "UseProxy": true,
+
     // Bunu true olarak ayarlamak, tüm PSDrive'lar için proxy ayarlarını
     // etkinleştirir.
     "Enabled": false,

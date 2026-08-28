@@ -61,6 +61,13 @@
   "IgnoreSslErrors": false,
 
   "Proxy": {
+    // Auf "false" setzen, um direkt zu verbinden und jeden auf diesem Computer
+    // konfigurierten Proxy zu ignorieren. "Enabled": false bewirkt das NICHT:
+    // ohne eigene Proxy-Einstellungen folgt UiPathOrch denen des Computers
+    // (HTTPS_PROXY oder Internetoptionen). "UseProxy": false hat Vorrang vor
+    // "Enabled".
+    "UseProxy": true,
+
     // Aktiviert die Proxy-Einstellungen für alle PSDrives,
     // wenn auf "true" gesetzt.
     "Enabled": false,

@@ -49,6 +49,12 @@
   "IgnoreSslErrors": false,
 
   "Proxy": {
+    // これを false にすると、この端末に設定されているプロキシを無視して直接接続します。
+    // "Enabled" を false にしても、こうはなりません。UiPathOrch は自前のプロキシ設定が
+    // 無い場合、端末の設定 (HTTPS_PROXY やインターネット オプション) に従います。
+    // "UseProxy": false は "Enabled" より優先されます。
+    "UseProxy": true,
+
     // これを true にすると、すべての PSDrive でプロキシ設定が有効になります。
     "Enabled": false,
 

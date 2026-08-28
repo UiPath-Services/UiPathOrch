@@ -76,6 +76,50 @@ public class ProxyDescriptionTests
         Assert.DoesNotContain("inherited", note);
     }
 
+    // ---- UseProxy ----
+
+    [Fact]
+    public void UseProxy_false_turns_the_handler_off()
+    {
+        using var handler = OrchHttp.CreateHandler(new ProxySettings { UseProxy = false }, ignoreSslErrors: false);
+
+        Assert.False(handler.UseProxy);
+    }
+
+    [Fact]
+    public void UseProxy_false_beats_an_enabled_block()
+    {
+        // "Use no proxy" is the more specific instruction, so it wins.
+        var configured = new ProxySettings { UseProxy = false, Enabled = true, Url = "http://proxy.example:8080" };
+
+        using var handler = OrchHttp.CreateHandler(configured, ignoreSslErrors: false);
+
+        Assert.False(handler.UseProxy);
+        Assert.Null(handler.Proxy);
+    }
+
+    [Fact]
+    public void UseProxy_absent_leaves_the_handler_at_the_dotnet_default()
+    {
+        // Which is to use the machine's proxy -- the behaviour every existing config has.
+        using var handler = OrchHttp.CreateHandler(new ProxySettings { Enabled = false }, ignoreSslErrors: false);
+
+        Assert.True(handler.UseProxy);
+    }
+
+    [Fact]
+    public void UseProxy_false_reports_no_proxy_in_the_error()
+    {
+        // Otherwise the annotation would name the machine's proxy on a connection that
+        // deliberately did not use it.
+        var configured = new ProxySettings { UseProxy = false };
+
+        var note = OrchHttp.DescribeEffectiveProxy(
+            Destination, configured, systemProxy: new FakeProxy(new Uri("http://127.0.0.1:10000")));
+
+        Assert.Equal("", note);
+    }
+
     // ---- AnnotateProxyFailure ----
 
     [Fact]
