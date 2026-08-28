@@ -112,6 +112,7 @@ public partial class OrchProvider
 
                 var decision = OrchestratorAuthManager.DecideEntraAdvisory(
                     kind, partitionKnown, authSettingFetched, authenticationSettingType);
+
                 if (decision.Latch) drive.OrchAPISession.EntraIdWarningChecked = true;
                 if (decision.QueueWarning)
                 {
@@ -120,9 +121,10 @@ public partial class OrchProvider
                     // sign-in page, which normally gets there first and latches the gate --
                     // this path remains for drives that never open a browser, and for a probe
                     // that was inconclusive while the browser was still up.
-                    drive.OrchAPISession.AppendPendingWarning(
-                        OrchestratorAuthManager.BuildEntraIdSignInWarning(
-                            drive.NameColon, drive.OrchAPISession.AuthManager.BaseUrl));
+                    // Console-bound: no page will carry this, so the full text needs the prefix.
+                    var (full, summary) = OrchestratorAuthManager.BuildEntraIdSignInNotice(
+                        drive.NameColon, drive.OrchAPISession.AuthManager.BaseUrl, prefixFullText: true);
+                    drive.OrchAPISession.AppendPendingWarning(full, summary);
                 }
             }
             catch { } // Swallow - don't block navigation for a warning

@@ -55,6 +55,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   also materialized before the page is built rather than by the first HTTP call, so whether the
   browser gets to show them no longer depends on call ordering.
 
+  A notice with something to act on now leaves a one-line trace on the console after the page has
+  carried the full text — it says what happened, what to do, and that the detail was on the page.
+  The page is better for a person, but it is invisible to everything else: a scheduled run, a
+  transcript, a session driven through an MCP server by an agent. Purely advisory notices (TLS,
+  logging) are still said once, on the page alone. The Entra advisory's page form also drops the
+  "[drive:]" opening, which the page has no use for — it is about one drive and already names it.
+
   URLs inside a notice are rendered as links on the page — the Entra advisory exists to send you
   somewhere, and the browser is the one surface where that can be a click. A notice ending in
   `<label>: <url>` becomes a link labelled `<label>` with the URL not shown, which is how the web

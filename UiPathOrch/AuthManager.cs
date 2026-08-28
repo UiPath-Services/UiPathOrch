@@ -502,14 +502,34 @@ internal class OrchestratorAuthManager
     /// link labelled with that language's "Learn more", the way the banner ends, while the
     /// console keeps the URL as text because there is nothing to click there.
     /// </remarks>
-    internal static string BuildEntraIdSignInWarning(string driveNameColon, string orgUrl)
+    // Separates the two forms inside one resource file: the notice above, the console summary
+    // below. One file per language rather than two, and a file that loses the marker degrades to
+    // "no summary", which the caller reads as "print the full text".
+    private const string ConsoleFormMarker = "%%CONSOLE%%";
+
+    /// <param name="prefixFullText">
+    /// Whether the full notice opens with "[drive:]". The sign-in page is about one drive and
+    /// already names it, so the prefix there is redundant and an odd way to begin a sentence;
+    /// the console, where several drives' notices interleave, needs it. The summary always
+    /// carries it — that form exists to be read out of context, in a transcript or by an agent.
+    /// </param>
+    internal static (string Full, string ConsoleSummary) BuildEntraIdSignInNotice(
+        string driveNameColon, string orgUrl, bool prefixFullText)
     {
         string lang = ResolveNotificationLang(System.Globalization.CultureInfo.CurrentUICulture.TwoLetterISOLanguageName);
         string template = ReadTextResource($"UiPathOrch.Resources.{lang}.EntraAdvisory.txt")
             ?? ReadTextResource("UiPathOrch.Resources.en.EntraAdvisory.txt")
-            ?? "[{0}] You are signed in with a local user account. Sign in through {1} instead. Learn more: {2}";
+            ?? "You are signed in with a local user account. Sign in through {0} instead. Learn more: {1}";
 
-        return string.Format(template, driveNameColon, orgUrl, EntraLearnMoreUrl);
+        string[] parts = template.Split(ConsoleFormMarker, 2, StringSplitOptions.None);
+        string prefix = $"[{driveNameColon}] ";
+
+        string full = (prefixFullText ? prefix : "") + string.Format(parts[0].Trim(), orgUrl, EntraLearnMoreUrl);
+        string summary = parts.Length > 1 && parts[1].Trim().Length > 0
+            ? prefix + string.Format(parts[1].Trim(), orgUrl, EntraLearnMoreUrl)
+            : prefix + string.Format(parts[0].Trim(), orgUrl, EntraLearnMoreUrl);
+
+        return (full, summary);
     }
 
     // Embedded UTF-8 text resource, or null when absent. Null rather than throwing: a missing
@@ -647,8 +667,9 @@ internal class OrchestratorAuthManager
             if (decision.Latch) _drive.OrchAPISession.EntraIdWarningChecked = true;
             if (decision.QueueWarning)
             {
-                _drive.OrchAPISession.AppendPendingWarning(
-                    BuildEntraIdSignInWarning(_drive.NameColon, BaseUrl));
+                // Bound for the sign-in page, which is about this one drive and already names it.
+                var (full, summary) = BuildEntraIdSignInNotice(_drive.NameColon, BaseUrl, prefixFullText: false);
+                _drive.OrchAPISession.AppendPendingWarning(full, summary);
             }
         }
         catch { } // Advisory only — never let it disturb the sign-in it annotates.
@@ -1014,11 +1035,13 @@ internal class OrchestratorAuthManager
                                 // Explicitly close the response
                                 context.Response.Close();
 
-                                // Only now, with the page safely on the wire, does the buffer get
-                                // consumed. If anything above threw, the advisories are still queued and
-                                // the console drain picks them up -- a notice must never be lost to a page
-                                // that did not render.
-                                if (noticeHtml.Length > 0) _drive.OrchAPISession.ClearPendingWarning();
+                                // Only now, with the page safely on the wire, is the buffer consumed. If
+                                // anything above threw, the advisories are still queued and the console
+                                // drain picks them up -- a notice must never be lost to a page that did
+                                // not render. Downgrade rather than clear: what the page showed is not
+                                // repeated in full, but a notice carrying real content leaves its one-line
+                                // form behind, because the page is invisible to a transcript or an agent.
+                                if (noticeHtml.Length > 0) _drive.OrchAPISession.DowngradePendingWarningAfterDisplay();
 
                                 // Exit the loop
                                 break;

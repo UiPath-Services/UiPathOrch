@@ -292,9 +292,7 @@ public partial class OrchAPISession : IDisposable
             "HTTP bodies are recorded at Trace/Verbose levels and on errors; " +
             "cmdlets that submit credentials write them to the log file.";
 
-        PendingWarning = string.IsNullOrEmpty(PendingWarning)
-            ? warning
-            : PendingWarning + "\n\n" + warning;
+        AppendPendingWarning(warning);
     }
 
     private string? _logFolderPath = null;

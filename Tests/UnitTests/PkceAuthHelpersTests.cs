@@ -323,18 +323,62 @@ public class PkceAuthHelpersTests
     // The advisory follows CurrentUICulture, so these pin the culture rather than inheriting the
     // build agent's or developer's — otherwise the English assertions below fail on a Japanese
     // Windows for the right reason and the wrong one is reported.
-    private static string AdvisoryIn(string culture, string drive, string orgUrl)
+    private static (string Full, string ConsoleSummary) NoticeIn(string culture, string drive, string orgUrl, bool prefixFullText = true)
     {
         var original = System.Globalization.CultureInfo.CurrentUICulture;
         try
         {
             System.Globalization.CultureInfo.CurrentUICulture = new System.Globalization.CultureInfo(culture);
-            return OrchestratorAuthManager.BuildEntraIdSignInWarning(drive, orgUrl);
+            return OrchestratorAuthManager.BuildEntraIdSignInNotice(drive, orgUrl, prefixFullText);
         }
         finally
         {
             System.Globalization.CultureInfo.CurrentUICulture = original;
         }
+    }
+
+    private static string AdvisoryIn(string culture, string drive, string orgUrl)
+        => NoticeIn(culture, drive, orgUrl).Full;
+
+    [Fact]
+    public void The_page_form_carries_no_drive_prefix()
+    {
+        // The page is about one drive and names it already; "[Orch1:]" there is redundant and an
+        // odd way to open a sentence.
+        var (full, _) = NoticeIn("en-US", "Orch1:", "https://cloud.uipath.com/acme", prefixFullText: false);
+
+        Assert.StartsWith("You are signed in", full);
+    }
+
+    [Fact]
+    public void The_console_summary_always_names_its_drive_and_stays_short()
+    {
+        // It exists to be read out of context -- in a transcript, or by an agent that cannot see
+        // the browser -- so it names the drive and still says what to do.
+        var (full, summary) = NoticeIn("en-US", "Orch1:", "https://cloud.uipath.com/acme", prefixFullText: false);
+
+        Assert.StartsWith("[Orch1:] ", summary);
+        Assert.Contains("https://cloud.uipath.com/acme", summary);
+        Assert.Contains("Import-OrchConfig", summary);
+        Assert.True(summary.Length < full.Length, "the summary must be shorter than what it summarises");
+    }
+
+    [Theory]
+    [InlineData("de-DE")]
+    [InlineData("en-US")]
+    [InlineData("fr-FR")]
+    [InlineData("ja-JP")]
+    [InlineData("ko-KR")]
+    [InlineData("ro-RO")]
+    [InlineData("tr-TR")]
+    public void Every_language_supplies_a_distinct_console_summary(string culture)
+    {
+        // A file that lost its %%CONSOLE%% marker falls back to the full text, which would go
+        // unnoticed -- the console would simply be verbose again.
+        var (full, summary) = NoticeIn(culture, "Orch1:", "https://cloud.uipath.com/acme", prefixFullText: true);
+
+        Assert.NotEqual(full, summary);
+        Assert.True(summary.Length < full.Length);
     }
 
     [Fact]

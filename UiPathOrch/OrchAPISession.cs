@@ -403,19 +403,19 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    // Deferred warning message to be displayed when a cmdlet runs (not during tab completion)
-    internal string? PendingWarning { get; set; }
-    internal void ClearPendingWarning() => PendingWarning = null;
+    private readonly PendingNoticeQueue _pendingNotices = new();
 
-    // Append a paragraph to the deferred warning. Producers concatenate with
-    // "\n\n"; the BeginProcessing drain splits on that and emits each paragraph
-    // as its own WriteWarning. Appending (not overwriting) lets independent
-    // advisories — e.g. the IgnoreSslErrors notice and the Entra-ID local-user
-    // notice — coexist on the same drive instead of clobbering each other.
-    internal void AppendPendingWarning(string warning)
-        => PendingWarning = string.IsNullOrEmpty(PendingWarning)
-            ? warning
-            : PendingWarning + "\n\n" + warning;
+    // Deferred warning message to be displayed when a cmdlet runs (not during tab completion).
+    // Producers concatenate with "\n\n"; the BeginProcessing drain splits on that and emits each
+    // paragraph as its own WriteWarning.
+    internal string? PendingWarning => _pendingNotices.Text;
+
+    internal void ClearPendingWarning() => _pendingNotices.Clear();
+
+    internal void AppendPendingWarning(string warning, string? consoleSummary = null)
+        => _pendingNotices.Append(warning, consoleSummary);
+
+    internal void DowngradePendingWarningAfterDisplay() => _pendingNotices.DowngradeAfterDisplay();
 
     // Whether the Entra ID warning check has been performed
     internal bool EntraIdWarningChecked { get; set; }
