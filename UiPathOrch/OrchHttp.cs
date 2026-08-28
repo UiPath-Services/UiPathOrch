@@ -94,6 +94,32 @@ internal static class OrchHttp
         return annotated;
     }
 
+    /// <summary>
+    /// A configuration snippet that would make this connection direct, or null when it would not
+    /// help (no proxy, or one the drive asked for).
+    /// </summary>
+    /// <remarks>
+    /// For a surface that can show a code block -- the sign-in page, not a console warning. Naming
+    /// the key is not enough for the reader who most needs it: a configuration written before
+    /// UseProxy existed already HAS a Proxy block, so "set it in that block" leaves them looking
+    /// for a key that is not there. The snippet shows the block as they will find it, with the new
+    /// key in place and the rest of it elided so it is clear nothing else has to change.
+    /// </remarks>
+    internal static string? BuildDirectConnectionConfigSnippet(Uri requestUri, ProxySettings? configured, IWebProxy? systemProxy = null)
+    {
+        if (DescribeEffectiveProxy(requestUri, configured, systemProxy).Length == 0) return null;
+        if (configured is not null && configured.Enabled == true) return null;
+
+        return """
+              "Proxy": {
+                "UseProxy": false,
+
+                "Enabled": false,
+                ...
+              },
+            """;
+    }
+
     internal static string DescribeEffectiveProxy(Uri requestUri, ProxySettings? configured, IWebProxy? systemProxy = null)
     {
         try

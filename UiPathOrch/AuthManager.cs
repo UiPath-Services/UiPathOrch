@@ -699,13 +699,24 @@ internal class OrchestratorAuthManager
         + failure.Message;
 
     private static async Task WriteCallbackErrorPageAsync(
-        HttpListenerContext context, string message, CancellationToken ct, string heading = "Sign-in failed")
+        HttpListenerContext context, string message, CancellationToken ct,
+        string heading = "Sign-in failed", string? configSnippet = null)
     {
+        // A code block is the part of the remedy the console cannot carry, which is why it is
+        // built here rather than folded into the message both surfaces share.
+        string snippetHtml = string.IsNullOrEmpty(configSnippet)
+            ? ""
+            : "<p>Add <code>\"UseProxy\": false</code> to the <code>\"Proxy\"</code> block in your "
+              + "configuration file (<code>Edit-OrchConfig</code> opens it). Leave the rest as it is:</p>"
+              + "<pre style=\"background:#f5f6f8;border:1px solid #e1e4e8;border-radius:4px;"
+              + "padding:10px 12px;overflow-x:auto\">" + WebUtility.HtmlEncode(configSnippet) + "</pre>";
+
         string html =
             "<!DOCTYPE html><html><head><meta charset=\"utf-8\">"
             + "<title>UiPath Orchestrator sign-in failed</title></head>"
             + "<body style=\"font-family:Segoe UI,Arial,sans-serif;margin:2rem;max-width:44rem\">"
             + "<h2>" + WebUtility.HtmlEncode(heading) + "</h2><p>" + WebUtility.HtmlEncode(message) + "</p>"
+            + snippetHtml
             + "<p>You can close this tab and return to PowerShell.</p></body></html>";
 
         byte[] buffer = Encoding.UTF8.GetBytes(html);
@@ -1013,11 +1024,20 @@ internal class OrchestratorAuthManager
                                 // only stops the browser from contradicting it.
                                 if (exchangeFailure is not null)
                                 {
+                                    string? snippet = null;
+                                    try
+                                    {
+                                        snippet = UiPath.OrchAPI.OrchHttp.BuildDirectConnectionConfigSnippet(
+                                            new Uri(_drive._psDrive.Root!), _drive._psDrive.Proxy);
+                                    }
+                                    catch { } // The page must render with or without the suggestion.
+
                                     await WriteCallbackErrorPageAsync(
                                         context,
                                         BuildTokenExchangeFailedMessage(exchangeFailure),
                                         cts,
-                                        heading: "Signed in, but not connected");
+                                        heading: "Signed in, but not connected",
+                                        configSnippet: snippet);
                                     break;
                                 }
 

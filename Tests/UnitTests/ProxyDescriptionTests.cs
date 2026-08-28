@@ -91,6 +91,42 @@ public class ProxyDescriptionTests
         Assert.DoesNotContain("inherited", note);
     }
 
+    // ---- BuildDirectConnectionConfigSnippet ----
+
+    [Fact]
+    public void An_inherited_proxy_gets_a_config_snippet_showing_the_Proxy_block()
+    {
+        // Naming the key is not enough for the reader who most needs it: a configuration written
+        // before UseProxy existed already has a Proxy block, so "set it in that block" leaves them
+        // hunting for a key that is not there. Show the block with the key in place.
+        var snippet = OrchHttp.BuildDirectConnectionConfigSnippet(
+            Destination, configured: null, systemProxy: new FakeProxy(new Uri("http://127.0.0.1:10000")));
+
+        Assert.NotNull(snippet);
+        Assert.Contains("\"Proxy\": {", snippet);
+        Assert.Contains("\"UseProxy\": false", snippet);
+        // The rest of their block stays; the snippet must not read as a replacement.
+        Assert.Contains("...", snippet);
+        Assert.DoesNotContain("Logging", snippet);
+    }
+
+    [Fact]
+    public void No_proxy_gets_no_snippet()
+    {
+        Assert.Null(OrchHttp.BuildDirectConnectionConfigSnippet(
+            Destination, configured: null, systemProxy: new FakeProxy(null)));
+    }
+
+    [Fact]
+    public void A_configured_proxy_gets_no_snippet()
+    {
+        // Same reasoning as the message: a proxy the drive asked for should be repaired.
+        var configured = new ProxySettings { Enabled = true, Url = "http://proxy.example:8080" };
+
+        Assert.Null(OrchHttp.BuildDirectConnectionConfigSnippet(
+            Destination, configured, systemProxy: new FakeProxy(new Uri("http://127.0.0.1:10000"))));
+    }
+
     // ---- UseProxy ----
 
     [Fact]
