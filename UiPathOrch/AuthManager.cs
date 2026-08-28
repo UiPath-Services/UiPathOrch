@@ -1462,10 +1462,21 @@ internal class OrchestratorAuthManager
 
             return ret;
         }
-        catch
+        catch (Exception ex)
         {
             resTime = DateTime.Now;
             hasException = true;
+
+            // Same annotation as the API chokepoint, and needed here too: the token exchange is
+            // often the FIRST request a session makes, so a proxy that cannot be reached fails
+            // here rather than on any Orchestrator call -- while the browser, using its own proxy
+            // handling, has already shown a completed sign-in.
+            if (ex is HttpRequestException hre
+                && OrchHttp.AnnotateProxyFailure(hre, request.RequestUri, _drive._psDrive.Proxy) is Exception annotated)
+            {
+                throw annotated;
+            }
+
             throw;
         }
         finally

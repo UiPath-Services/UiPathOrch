@@ -308,10 +308,21 @@ public partial class OrchAPISession : IDisposable
 
             return ret;
         }
-        catch (Exception)
+        catch (Exception ex)
         {
             resTime = DateTime.Now;
             hasException = true;
+
+            // Name the proxy, if one was in play -- see OrchHttp.DescribeEffectiveProxy for why
+            // the bare connection error is unreadable without it. Only HttpRequestException is
+            // touched, and only when there is something to add that has not been added already
+            // (the auth send below this frame may have said it); everything else propagates as-is.
+            if (ex is HttpRequestException hre
+                && OrchHttp.AnnotateProxyFailure(hre, message.RequestUri, _drive._psDrive.Proxy) is Exception annotated)
+            {
+                throw annotated;
+            }
+
             throw; // Re-throw the exception
         }
         finally

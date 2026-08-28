@@ -20,6 +20,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **A connection failure now names the proxy it went through, and where that proxy came from.**
+  UiPathOrch only overrides proxy settings when a drive enables them; otherwise .NET's default
+  applies, which is the machine's own proxy (`HTTPS_PROXY` / `HTTP_PROXY`, or Windows Internet
+  Options). So every request can go through a proxy that the drive's configuration never mentions
+  — and when it fails, the error named only an address it could not reach. Reported from the
+  field as `Could not connect to 127.0.0.1:10000`, read — reasonably — as a port UiPathOrch wanted
+  to listen on, when in fact it was a local proxy agent. The error now says which proxy was used
+  and whether it came from the drive's `Proxy` block or from the machine. Both send paths carry
+  it, because a proxy that cannot be reached usually fails during token acquisition, before any
+  Orchestrator call — while the browser, using its own proxy handling, has already shown a
+  completed sign-in.
+
+  Note that a `Proxy` block that is absent or set to `"Enabled": false` does *not* stop a proxy
+  being used; there is currently no setting that does. Until there is, the way to force a direct
+  connection for a session is to set .NET's default proxy to an empty one before the first
+  request: `[System.Net.Http.HttpClient]::DefaultProxy = [System.Net.WebProxy]::new()`.
+
 - **Sign-in advisories now appear on the browser page when the sign-in opened a browser, and are
   no longer repeated on the console.** The console has only ever been the fallback channel — the
   place a warning lands when there is nowhere better. A non-confidential (PKCE) sign-in puts a

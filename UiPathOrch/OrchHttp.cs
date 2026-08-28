@@ -57,6 +57,74 @@ internal static class OrchHttp
 
     private static bool AcceptAnyCertificate(object sender, X509Certificate? cert, X509Chain? chain, SslPolicyErrors errors) => true;
 
+    /// <summary>
+    /// A sentence naming the proxy a failed request went through, or "" when none was in play.
+    /// </summary>
+    /// <remarks>
+    /// A connection failure names only the address it could not reach. When that address is a
+    /// proxy the reader is left with no way to tell a proxy is involved at all -- and least of
+    /// all when it was never configured here: ConfigureProxy leaves the handler alone unless the
+    /// drive enables one, and .NET's default is then to use the machine's proxy. So the drive's
+    /// configuration says nothing about a proxy while every request goes through one. Reported
+    /// from the field as "Could not connect to 127.0.0.1:10000", read -- reasonably -- as a port
+    /// this module wanted to listen on.
+    ///
+    /// Best-effort: any failure to work out the answer yields "", because an explanation must
+    /// never replace the error it explains.
+    /// </remarks>
+    // Marks an exception this class has already explained, so it is explained once. The two send
+    // sites nest: SendOnce reads the HttpClient property inside its own try, and that getter runs
+    // EnsureAuthenticated -> the auth send -- so a proxy failure during token acquisition is
+    // caught, annotated, and then caught again one frame out.
+    private const string ProxyNotedKey = "UiPathOrch.ProxyNoted";
+
+    /// <summary>
+    /// The same exception carrying an explanation of the proxy it went through, or null when
+    /// there is nothing to add (no proxy, no request URI, or it has been said already).
+    /// </summary>
+    internal static Exception? AnnotateProxyFailure(HttpRequestException ex, Uri? requestUri, ProxySettings? configured)
+    {
+        if (requestUri is null || ex.Data.Contains(ProxyNotedKey)) return null;
+
+        string note = DescribeEffectiveProxy(requestUri, configured);
+        if (note.Length == 0) return null;
+
+        var annotated = new HttpRequestException(ex.Message + note, ex);
+        annotated.Data[ProxyNotedKey] = true;
+        return annotated;
+    }
+
+    internal static string DescribeEffectiveProxy(Uri requestUri, ProxySettings? configured, IWebProxy? systemProxy = null)
+    {
+        try
+        {
+            if (configured is not null && configured.Enabled == true)
+            {
+                string where = configured.UseDefaultWebProxy.GetValueOrDefault()
+                    ? "the machine's Internet Options, selected by this drive's Proxy block (UseDefaultWebProxy)"
+                    : $"this drive's Proxy block ({configured.Url})";
+                return $" The request went through a proxy, configured by {where}.";
+            }
+
+            // No proxy of ours, which is not the same as no proxy: null Proxy + UseProxy left at
+            // its default means .NET resolves one from the environment.
+            Uri? via = (systemProxy ?? HttpClient.DefaultProxy)?.GetProxy(requestUri);
+
+            // Null means "no proxy for this destination"; a hand-built WebProxy answers with the
+            // destination itself for the same. Treat both as none.
+            if (via is null || via == requestUri) return "";
+
+            return $" The request went through the proxy {via}, which UiPathOrch inherited from this"
+                + " machine rather than from the drive's configuration (HTTPS_PROXY / HTTP_PROXY, or"
+                + " Windows Internet Options). The drive's Proxy block being absent or disabled does"
+                + " not by itself stop a proxy being used.";
+        }
+        catch
+        {
+            return "";
+        }
+    }
+
     private static bool ConfigureProxy(SocketsHttpHandler handler, ProxySettings? proxy)
     {
         if (proxy is null || proxy.Enabled != true) return false;
