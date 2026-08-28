@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.14.1'
+ModuleVersion = '1.15.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,49 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.15.0
+
+Added: "UseProxy": false in a drive's Proxy block now connects directly, ignoring whatever proxy the
+machine is configured with. There was no way to say that before. "Enabled": false means "do not use
+the settings in this block", which leaves .NET free to fall back to the machine's proxy -- and
+"Enabled": false is what the shipped configuration template contains, so nearly every user has been
+inheriting a proxy their configuration never mentioned. Absent behaves as .NET's own default of
+true, so no existing configuration changes behaviour, and "UseProxy": false takes precedence over
+"Enabled".
+
+Security: the PKCE sign-in now sends and verifies a state value. The loopback listener accepted any
+callback carrying a code and exchanged it. PKCE protects a code stolen from us from being used by
+someone else; it does nothing about someone else's code being delivered into our listener, which
+ends with the drive authenticated as them -- the direction RFC 8252 requires state for. A callback
+whose state is missing or different is now refused before the token exchange, since exchanging
+first would already have put a token for the wrong principal in the session. The refusal explains
+the likeliest cause, another sign-in sharing the redirect port, rather than leading with an attack.
+Verified on standalone 24.10.0, Automation Cloud, and Automation Suite 24.10.11.
+
+Fixed: the sign-in page no longer says you are connected when the token exchange failed. The
+browser callback exchanges the sign-in for a token; when that exchange fails the error is left for
+the caller to raise, but the page went on rendering the success card, announcing a connection that
+does not exist, with only a missing user-name row as a hint. That page is the one signal an
+operator has at that moment and it pointed the wrong way. It now says the sign-in worked but the
+connection did not, and shows the underlying error.
+
+Changed: a connection failure now names the proxy it went through and where that proxy came from.
+UiPathOrch only overrides proxy settings when a drive enables them; otherwise the machine's own
+proxy applies, so a request can go through a proxy the drive's configuration never mentions -- and
+when it failed, the error named only an address it could not reach. Reported from the field as
+"Could not connect to 127.0.0.1:10000", read reasonably as a port UiPathOrch wanted to listen on,
+when in fact it was a local proxy agent. When the proxy was inherited rather than configured, the
+message also says how to refuse it, and the sign-in page additionally shows the Proxy block itself.
+
+Changed: sign-in advisories now appear on the browser page when the sign-in opened a browser, and
+are not repeated on the console. The console has only ever been the fallback channel. A notice with
+something to act on still leaves a one-line trace there, because the page is invisible to a
+scheduled run, a transcript, or a session driven by an agent.
+
+Changed: the Entra ID local-user advisory is decided at sign-in rather than two hops later, is
+shown in the reader's language, matching Orchestrator's own banner wording in each of the seven
+languages the module ships, and carries the "Learn more" link the web banner ends with.
+
 1.14.1
 
 Changed: a destination tenant set to "Only host feed" no longer blocks a library copy. Copy-Item and
@@ -572,41 +615,6 @@ were looking at is empty afterwards, so the removal read as a delete while the e
 elsewhere. Remove-OrchAsset, Remove-OrchQueue and Remove-OrchBucket now name the folders that still
 hold it, under -WhatIf as well, and the folder-deletion prompt no longer claims to remove all of a
 folder's contents.
-
-1.13.0
-
-Added: the configuration file location can now be changed. UiPathOrchConfig.json was fixed to the
-per-user module folder, so one set of drive definitions could not be kept on a share and used from
-several machines. The new UIPATHORCH_CONFIG_PATH environment variable relocates it, and
-Import-OrchConfig -ConfigPath <path> switches files inside a running session by setting that
-variable for the current process -- nothing is written to the persistent environment. For a
-standing setup, set the variable in $PROFILE or as a user or system variable, so that it is in
-place before the module autoloads and mounts its drives. A UNC path is recommended: a mapped drive
-letter is not visible to services, scheduled tasks, or another logon session. Get-OrchConfigPath
-reports the file in effect and, with -Verbose, where the location came from.
-
-Either the file or the folder holding it may be named. The two are told apart by trying rather than
-by guessing from the spelling: the path is read as a file first, and as a folder containing
-UiPathOrchConfig.json only if no file is there. The fallback runs only on not-found, so an
-unreachable share does not cost a second timeout, and when neither reading answers, the error names
-both paths.
-
-Three behaviours differ once the location is overridden, because that path is typically shared: no
-template is created there, a parse error does not open the file in an editor, and a file that
-cannot be read mounts no drives rather than silently falling back to the default file. In the same
-spirit, an unreadable -ConfigPath is reported as an error rather than a warning, so a script using
--ErrorAction Stop stops instead of carrying on against the drives left from the previous config.
-
-Reads of the configuration file, at either location, get a bounded 10-second wait, so an
-unreachable path reports a timeout instead of hanging the first command of the session. This covers
-the default location too: it is built on the Documents folder, which under enterprise Folder
-Redirection is routinely a UNC path.
-
-Note that the file stores credentials in plain text (AppSecret, Password, personal access tokens)
-and a share protects it only with its own ACL. Sharing one file between people shares those
-credentials, and Orchestrator's audit trail then attributes everyone's actions to the same
-identity. A file intended for several people should define only drives that authenticate
-interactively, so that it carries connection details and no secrets.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@

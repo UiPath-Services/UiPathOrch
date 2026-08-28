@@ -4,7 +4,18 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.15.0] - 2026-08-28
+
+### Added
+
+- **`"UseProxy": false` in a drive's `Proxy` block connects directly, ignoring whatever proxy the
+  machine is configured with.** There was no way to say that before: `"Enabled": false` means "do
+  not use the settings in this block", which leaves .NET free to fall back to the machine's proxy
+  — and `"Enabled": false` is what the shipped configuration template contains, so nearly every
+  user was inheriting a proxy their configuration never mentioned. Named for the handler property
+  it sets, like the block's other keys; absent behaves as .NET's own default of `true`, so no
+  existing configuration changes behaviour. `"UseProxy": false` takes precedence over `"Enabled"`,
+  the more specific instruction winning.
 
 ### Security
 
@@ -54,17 +65,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   warning cannot carry. Naming the key is not enough for the reader who most needs it: a
   configuration written before `UseProxy` existed already *has* a `Proxy` block, so "set it in
   that block" leaves them hunting for a key that is not there.
-
-### Added
-
-- **`"UseProxy": false` in a drive's `Proxy` block connects directly, ignoring whatever proxy the
-  machine is configured with.** There was no way to say that before: `"Enabled": false` means "do
-  not use the settings in this block", which leaves .NET free to fall back to the machine's proxy
-  — and `"Enabled": false` is what the shipped configuration template contains, so nearly every
-  user was inheriting a proxy their configuration never mentioned. Named for the handler property
-  it sets, like the block's other keys; absent behaves as .NET's own default of `true`, so no
-  existing configuration changes behaviour. `"UseProxy": false` takes precedence over `"Enabled"`,
-  the more specific instruction winning.
 
 - **Sign-in advisories now appear on the browser page when the sign-in opened a browser, and are
   no longer repeated on the console.** The console has only ever been the fallback channel — the

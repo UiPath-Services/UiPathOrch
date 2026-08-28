@@ -18,7 +18,7 @@
     <WarningsNotAsErrors>CS8600</WarningsNotAsErrors>
     <BaseOutputPath></BaseOutputPath>
     <AssemblyName>UiPathOrch</AssemblyName>
-    <Version>1.14.1</Version>
+    <Version>1.15.0</Version>
     <GenerateDocumentationFile>False</GenerateDocumentationFile>
   </PropertyGroup>
 
