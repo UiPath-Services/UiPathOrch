@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.15.0'
+ModuleVersion = '1.15.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,29 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.15.1
+
+Fixed: a queue shared between folders could stay invisible in the destination for the rest of a
+Copy-Item session, taking its queue trigger with it. Copying a folder tree, the first folder's
+pass looks for its shared queue's counterpart in every destination folder the queue is linked
+to, and caches what it finds there -- usually nothing, since those folders have not been copied
+yet. Nothing invalidated that empty list afterwards, neither creating the queues on that
+folder's own pass nor sharing the queue into it, so the folder stayed empty in the module's view
+until the next Clear-OrchCache. Get-OrchQueue under-reported it, and the trigger stage of the
+same run decided the queue did not exist and skipped the trigger with a warning rather than an
+error, so the run looked successful while the migration was incomplete. Both paths now
+invalidate the destination folder's entity list and the entity's link set. Assets and buckets
+had the same defect and are fixed with it.
+
+Fixed: a copied trigger no longer comes out running once when the source said "Execute the
+process X times". Copy-Item and Copy-OrchTrigger overwrote StartStrategy with 1 for every
+destination folder that is not classic. It is the job count the modern folder's web UI labels
+"Execute the process X times": measured on Automation Suite 24.10.11, a trigger set to 3 reads
+back 3, and writing 5 with Update-OrchTrigger makes the UI say "5 times". The source value is
+now preserved; the reset survives only for a classic source folder, where the same field selects
+the execution target rather than a count. New-OrchTrigger and Update-OrchTrigger now document
+what the parameter actually sets.
+
 1.15.0
 
 Added: "UseProxy": false in a drive's Proxy block now connects directly, ignoring whatever proxy the
@@ -582,39 +605,6 @@ Timer.Dispose() returns immediately, so a refill callback already running could 
 after it had been disposed, raising an unobserved exception on a thread-pool thread. Teardown now
 waits for the callback before disposing the semaphore. This is reached only at session teardown, and
 the wait is one callback long.
-
-1.14.0
-
-Fixed: copying an entity shared between two top-level folders to another tenant lost the link and
-created two independent entities. The copy finds the destination counterpart of a linked folder by
-rebasing its fully-qualified name around the folder being copied, and it looked for the deepest "/"
-boundary the two names share -- but two top-level folders share only the tenant root, whose
-fully-qualified name is empty and therefore carries no "/". Every link between root-level folders,
-the most common Orchestrator layout, was silently abandoned in both directions and the entity was
-copied into each folder instead of being linked once. The tenant root is now treated as the common
-ancestor it is, so the source's own folder tree is mirrored onto the destination.
-
-Changed: copying a linked entity within one tenant now always creates an independent entity, and
-says so. Sharing an existing entity with another folder is the job of Add-OrchAssetLink and its
-queue and bucket siblings -- one call -- whereas a copy that linked instead of copying left no way
-to ask for a plain copy. Two drives mounted on the same tenant count as one. The warning appears
-under -WhatIf too. A cross-tenant copy that could not reproduce a link now reports that as well, at
-the end of the run rather than at the moment of the miss: in a folder-tree copy the counterpart
-folder is often only filled by a later folder's pass, which then links the entity.
-
-Changed: a tenant whose Test Automation module has been discontinued no longer produces one error
-per folder during Copy-Item -Recurse. The copy now says so once per drive, skips test sets and test
-schedules, and copies everything else as usual; Clear-OrchCache re-probes.
-
-Changed: removing an asset, queue or bucket that is linked into other folders now says that it was
-only unlinked. A delete addressed to a folder removes that folder's share of the entity; the entity
--- with its value, items or files -- survives in the remaining folders under the same id, and dies
-only with the last folder that holds it. That is Orchestrator's own behaviour, the web UI offering
-"remove from folder" separately from "delete", but the cmdlets reported nothing and the folder you
-were looking at is empty afterwards, so the removal read as a delete while the entity was still live
-elsewhere. Remove-OrchAsset, Remove-OrchQueue and Remove-OrchBucket now name the folders that still
-hold it, under -WhatIf as well, and the folder-deletion prompt no longer claims to remove all of a
-folder's contents.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
