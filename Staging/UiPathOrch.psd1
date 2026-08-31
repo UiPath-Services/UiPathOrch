@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.15.1'
+ModuleVersion = '1.15.2'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,21 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.15.2
+
+Fixed: a trigger copied out of a CLASSIC folder keeps its "Execute the process X times" count
+too. 1.15.1 stopped the count being reset for modern-to-modern copies but kept resetting it
+whenever the source folder was classic, on the untested assumption that a classic folder used
+StartStrategy for something else. Measured on standalone 21.10.4, it does not: the Execution
+Target radio writes the same field, Dynamic Allocation with X=1 reading back 1 and X=3 reading 3,
+exactly as a modern folder does. The only classic-only value is -1, written by the "All Robots"
+option, which modern folders have no equivalent for. So the assumption had been dropping the
+count on precisely the classic-to-modern migrations it was meant to serve -- an MSI source is
+where classic folders still live. The rule is now the measured one and no longer asks what kind
+of folder the trigger came from: a positive count is carried across unchanged, and only a value
+below 1 falls back to a single run, with a warning naming the trigger. The -StartStrategy help on
+New-OrchTrigger and Update-OrchTrigger, which repeated the wrong claim, is corrected with it.
+
 1.15.1
 
 Fixed: a queue shared between folders could stay invisible in the destination for the rest of a
@@ -568,43 +583,6 @@ scheduled run, a transcript, or a session driven by an agent.
 Changed: the Entra ID local-user advisory is decided at sign-in rather than two hops later, is
 shown in the reader's language, matching Orchestrator's own banner wording in each of the seven
 languages the module ships, and carries the "Learn more" link the web banner ends with.
-
-1.14.1
-
-Changed: a destination tenant set to "Only host feed" no longer blocks a library copy. Copy-Item and
-Copy-OrchLibrary read the destination's library feed scope before copying and, when it was Host,
-aborted the whole run. Measured on standalone 24.10.0, that refused a copy the server accepts: with
-the destination on "Only host feed" the upload succeeds and the package lands in the host feed. The
-copy is now attempted and the server's answer stands, with the feed setting appended to the error
-only when an upload actually failed. The old guard also returned out of the whole run on the first
-Host-scoped destination, losing the destinations that would have worked. Two caveats are documented
-rather than pre-empted: Automation Suite was not measured, so confirm where the first library lands
-before running a full set; and the write is one-way, because the same server refuses a
-tenant-context delete of a host-feed package, so removing what you copied in needs host
-administration.
-
-Changed: Copy-Item -Recurse now says when a folder's event triggers are being left behind. They are
-carried by none of the copy stages and there is no Copy-OrchEventTrigger, because an event trigger
-points at an Integration Service connection whose id differs at the destination and a connection
-cannot be created through an API at all. The omission was silent, so a migration lost them with no
-error, no warning and no line in -WhatIf, and the first signal was a process that never started in
-the new tenant. A copy now warns once per folder with the count, and -WhatIf reports it too. Nothing
-about what is copied has changed.
-
-Fixed: Get-OrchLibrary -HostFeed and Get-OrchLibraryVersion -HostFeed went stale after a feed-scope
-change, and on one tenant configuration could have answered with the tenant feed. The host feed id
-was memoized in a private field with no reset path, so Clear-OrchCache did not flush it and -HostFeed
-kept using the previous id, failing with "PackageFeed does not exist." It now reads through the
-per-tenant feed cache, which Clear-OrchCache does flush. Separately, a tenant scoped to "Only tenant
-feed" reports a single non-shared feed, leaving the host feed id null -- and null means "no feed id"
-to the underlying query, that is, the tenant's own feed. That path now reports that the tenant has no
-host feed, and which setting controls it.
-
-Fixed: RateLimiter.Dispose could leave an in-flight timer callback holding a disposed semaphore.
-Timer.Dispose() returns immediately, so a refill callback already running could reach the semaphore
-after it had been disposed, raising an unobserved exception on a thread-pool thread. Teardown now
-waits for the callback before disposing the semaphore. This is reached only at session teardown, and
-the wait is one callback long.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
