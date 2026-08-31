@@ -2363,9 +2363,22 @@ public class OrchComparison
     public string? DifferenceName { get; set; }
     public string? Path { get; set; }
     public string? DifferencePath { get; set; }
-    public List<PropertyDifference>? Differences { get; set; }
+    public PropertyDifferenceList? Differences { get; set; }
     public object? ReferenceObject { get; set; }
     public object? DifferenceObject { get; set; }
+}
+
+// The Differences column's own string form. Export-Csv converts each property with ToString(),
+// and a bare List<T> answers with its type name — so `Compare-Orch* | Export-Csv` wrote
+// "System.Collections.Generic.List`1[UiPath.PowerShell.Entities.PropertyDifference]" and the
+// exported file carried none of the diff the console had just shown (reported from an MSI-to-
+// Automation-Suite migration, 2026-08-31). Nothing else changes: the console view comes from
+// UiPathOrch.Format.ps1xml, which renders this column with its own ScriptBlock (one diff per
+// line), and ConvertTo-Json still emits the structured array — only serialization BEYOND -Depth
+// degrades to these strings, the same trade Tag makes by keeping FormatTag off Tag.ToString().
+public class PropertyDifferenceList : List<PropertyDifference>
+{
+    public override string ToString() => string.Join("; ", this);
 }
 
 // One differing property within an "<>" OrchComparison row. ToString() renders the

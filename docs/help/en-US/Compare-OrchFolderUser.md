@@ -22,7 +22,8 @@ Compares folder user assignments between two folders or Orchestrator instances a
 ```
 Compare-OrchFolderUser [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
  [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
+ [-IncludeEqual] [-Property <string[]>] [-ExportCsv <string>] [-CsvEncoding <Encoding>]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -60,7 +61,35 @@ PS C:\> Compare-OrchFolderUser -Path Orch1:\Shared -DifferencePath Orch2:\Shared
 
 Walks Shared and all subfolders, lists only the users whose role set differs, and expands the per-property differences.
 
+### Example 3: Keep the comparison as a migration report
+
+```powershell
+PS C:\> Compare-OrchFolderUser * Orch2:\Shared -Path Orch1:\Shared -Recurse -IncludeEqual -ExportCsv report.csv
+```
+
+Writes every row -- differing and equal alike -- to report.csv instead of the pipeline, with the per-property differences in the Differences column.
 ## PARAMETERS
+
+### -CsvEncoding
+
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
 ### -Depth
 
@@ -117,6 +146,27 @@ ParameterSets:
 - Name: (All)
   Position: 1
   IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ExportCsv
+
+Writes the comparison to the specified CSV file path instead of to the pipeline. The columns are SideIndicator, Name, DifferenceName, Path, DifferencePath, and Differences — the same six the console shows, with Differences carrying the per-property "Prop: 'ref' => 'diff'" text. ReferenceObject and DifferenceObject are not exported: they are whole entities kept for downstream piping, and a CSV can hold nothing of them but their type name. A directory path writes ComparedFolderUsers.csv inside it. Requires a filesystem path (not an Orch: drive path).
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false

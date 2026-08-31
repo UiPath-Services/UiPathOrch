@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 // EnvironmentId) are ignored — EnvironmentName is compared instead so it survives a tenant move.
 [Cmdlet(VerbsData.Compare, "OrchProcess")]
 [OutputType(typeof(OrchComparison))]
-public class CompareProcessCmdlet : OrchestratorPSCmdlet
+public class CompareProcessCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -49,7 +49,7 @@ public class CompareProcessCmdlet : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter IncludeEqual { get; set; }
 
-    private static readonly (string Name, Func<Release, object?> Get)[] Comparators =
+    internal static readonly (string Name, Func<Release, object?> Get)[] Comparators =
     [
         ("ProcessKey", r => r.ProcessKey),
         ("ProcessVersion", r => r.ProcessVersion),
@@ -58,7 +58,9 @@ public class CompareProcessCmdlet : OrchestratorPSCmdlet
         ("InputArguments", r => r.InputArguments),
         ("EnvironmentName", r => r.EnvironmentName),
         ("ProcessType", r => r.ProcessType),
-        ("JobPriority", r => r.JobPriority),
+        // Same derived-name fallback as Compare-OrchTrigger: a copied process reads JobPriority
+        // back as null whenever SpecificPriorityValue is set. See EntityComparison.EffectiveJobPriority.
+        ("JobPriority", r => EntityComparison.EffectiveJobPriority(r.JobPriority, r.SpecificPriorityValue)),
         ("SpecificPriorityValue", r => r.SpecificPriorityValue),
         ("TargetFramework", r => r.TargetFramework),
         ("IsAttended", r => r.IsAttended),
@@ -81,6 +83,8 @@ public class CompareProcessCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
+    protected override string DefaultCsvName => "ComparedProcesses.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -98,7 +102,7 @@ public class CompareProcessCmdlet : OrchestratorPSCmdlet
             r => r!.GetPSPath(),
             Comparators,
             "GetProcessError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 }

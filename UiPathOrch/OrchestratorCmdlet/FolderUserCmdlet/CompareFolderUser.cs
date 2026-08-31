@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // inherited) assignments are compared. See Compare-OrchAsset for the shared model.
 [Cmdlet(VerbsData.Compare, "OrchFolderUser")]
 [OutputType(typeof(OrchComparison))]
-public class CompareFolderUserCmdlet : OrchestratorPSCmdlet
+public class CompareFolderUserCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -65,6 +65,8 @@ public class CompareFolderUserCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
+    protected override string DefaultCsvName => "ComparedFolderUsers.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -82,7 +84,7 @@ public class CompareFolderUserCmdlet : OrchestratorPSCmdlet
             u => u!.GetPSPath(),
             Comparators,
             "GetFolderUserError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 

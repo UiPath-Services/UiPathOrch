@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // are not compared. See Compare-OrchAsset for the shared model.
 [Cmdlet(VerbsData.Compare, "OrchBucket")]
 [OutputType(typeof(OrchComparison))]
-public class CompareBucketCmdlet : OrchestratorPSCmdlet
+public class CompareBucketCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -77,6 +77,8 @@ public class CompareBucketCmdlet : OrchestratorPSCmdlet
         CompareParameterHelper.WarnSecretNotCompared(this, "the bucket's storage credential (access key)");
     }
 
+    protected override string DefaultCsvName => "ComparedBuckets.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -94,7 +96,7 @@ public class CompareBucketCmdlet : OrchestratorPSCmdlet
             b => b!.GetPSPath(),
             Comparators,
             "GetBucketError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 }

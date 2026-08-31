@@ -777,8 +777,8 @@ A full sweep, exported as migration evidence:
 $folderTypes = 'Asset','Queue','Process','Trigger','ApiTrigger','Bucket',
                'FolderUser','FolderMachine','ActionCatalog'
 foreach ($t in $folderTypes) {
-    & "Compare-Orch$t" * NewOrch:\ -Path OldOrch:\ -Recurse -IncludeEqual |
-        Export-Csv "C:\Migration\verify-$t.csv" -NoTypeInformation
+    & "Compare-Orch$t" * NewOrch:\ -Path OldOrch:\ -Recurse -IncludeEqual `
+        -ExportCsv "C:\Migration\verify-$t.csv"
 }
 ```
 
@@ -786,10 +786,15 @@ Tenant-level entities take the same shape without `-Recurse`:
 
 ```powershell
 foreach ($t in 'Role','User','Machine','Calendar','Webhook','CredentialStore') {
-    & "Compare-Orch$t" * NewOrch: -Path OldOrch: |
-        Export-Csv "C:\Migration\verify-$t.csv" -NoTypeInformation
+    & "Compare-Orch$t" * NewOrch: -Path OldOrch: `
+        -ExportCsv "C:\Migration\verify-$t.csv"
 }
 ```
+
+Use `-ExportCsv` rather than piping to `Export-Csv`: the six report columns
+(`SideIndicator`, `Name`, `DifferenceName`, `Path`, `DifferencePath`,
+`Differences`) are written, and the two entity columns a CSV can only render as
+a type name (`ReferenceObject`, `DifferenceObject`) are left out.
 
 Notes:
 

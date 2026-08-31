@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 // the shared model.
 [Cmdlet(VerbsData.Compare, "OrchActionCatalog")]
 [OutputType(typeof(OrchComparison))]
-public class CompareActionCatalogCmdlet : OrchestratorPSCmdlet
+public class CompareActionCatalogCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -69,6 +69,8 @@ public class CompareActionCatalogCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
+    protected override string DefaultCsvName => "ComparedActionCatalogs.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -86,7 +88,7 @@ public class CompareActionCatalogCmdlet : OrchestratorPSCmdlet
             c => c!.GetPSPath(),
             Comparators,
             "GetActionCatalogError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 }

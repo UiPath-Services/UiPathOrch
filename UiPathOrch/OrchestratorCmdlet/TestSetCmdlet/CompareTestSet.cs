@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 // name-match vs broadcast, the reference/difference convention).
 [Cmdlet(VerbsData.Compare, "OrchTestSet")]
 [OutputType(typeof(OrchComparison))]
-public class CompareTestSetCmdlet : OrchestratorPSCmdlet
+public class CompareTestSetCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -68,6 +68,8 @@ public class CompareTestSetCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
+    protected override string DefaultCsvName => "ComparedTestSets.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -85,7 +87,7 @@ public class CompareTestSetCmdlet : OrchestratorPSCmdlet
             t => t!.GetPSPath(),
             Comparators,
             "GetTestSetError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 }

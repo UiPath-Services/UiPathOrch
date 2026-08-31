@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // machines must exist on the target with matching capacity for jobs to run after a migration.
 [Cmdlet(VerbsData.Compare, "OrchMachine")]
 [OutputType(typeof(OrchComparison))]
-public class CompareMachineCmdlet : OrchestratorPSCmdlet
+public class CompareMachineCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -76,6 +76,8 @@ public class CompareMachineCmdlet : OrchestratorPSCmdlet
         CompareParameterHelper.WarnSecretNotCompared(this, "a confidential machine's client secret (ClientSecret)");
     }
 
+    protected override string DefaultCsvName => "ComparedMachines.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -92,7 +94,7 @@ public class CompareMachineCmdlet : OrchestratorPSCmdlet
             m => m?.Name,
             Comparators,
             "GetMachineError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 }

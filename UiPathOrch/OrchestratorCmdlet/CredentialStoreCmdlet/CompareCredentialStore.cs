@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // are not stored here and are never compared.
 [Cmdlet(VerbsData.Compare, "OrchCredentialStore")]
 [OutputType(typeof(OrchComparison))]
-public class CompareCredentialStoreCmdlet : OrchestratorPSCmdlet
+public class CompareCredentialStoreCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -68,6 +68,8 @@ public class CompareCredentialStoreCmdlet : OrchestratorPSCmdlet
         CompareParameterHelper.WarnSecretNotCompared(this, "credential-store secrets (AdditionalConfiguration)");
     }
 
+    protected override string DefaultCsvName => "ComparedCredentialStores.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -84,7 +86,7 @@ public class CompareCredentialStoreCmdlet : OrchestratorPSCmdlet
             c => c?.Name,
             Comparators,
             "GetCredentialStoreError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 }

@@ -4,6 +4,63 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.16.0] - 2026-09-01
+
+### Added
+
+- **The whole `Compare-Orch*` family takes `-ExportCsv` (and `-CsvEncoding`), like the
+  `Get-Orch*` family already did.** A comparison is the evidence a migration produced, and the
+  documented way to keep it was to pipe the family's output into `Export-Csv` — which is exactly
+  the pipeline that lost the `Differences` column (below) and added two columns holding nothing
+  but a type name. Unlike a `Get-Orch*` export, whose columns are chosen to bind back into the
+  `New-`/`Update-` partner, a comparison has no import partner: the six columns are the ones the
+  console shows (`SideIndicator`, `Name`, `DifferenceName`, `Path`, `DifferencePath`,
+  `Differences`), in the order the piped export already produced them, and values are written as
+  they read rather than wildcard-escaped for re-binding. `ReferenceObject` / `DifferenceObject`
+  are left out. Naming `-ExportCsv` a directory writes `Compared<Nouns>.csv` in it. The
+  migration guide's verification sweep now uses the parameter instead of the pipe.
+
+### Fixed
+
+- **`Compare-Orch* | Export-Csv` wrote the type of the differences instead of the differences.**
+  The `Differences` column arrived as
+  ``System.Collections.Generic.List`1[UiPath.PowerShell.Entities.PropertyDifference]``, so the
+  exported file recorded *which* entities differed and nothing about *how* — the one thing the
+  console had just shown on screen, and most of the reason a verification pass gets exported at
+  all. `Export-Csv` converts each property with `ToString()`, and a bare `List<T>` answers with
+  its type name; the column now carries the same `Prop: 'ref' => 'diff'` text the console does,
+  joined with `; `. Nothing else moves: the console view is rendered by its own format
+  ScriptBlock, and `ConvertTo-Json` still emits the structured array. `ReferenceObject` /
+  `DifferenceObject` are whole entities kept for downstream piping and still export as their type
+  name — add `Select-Object -ExcludeProperty ReferenceObject, DifferenceObject` before the export
+  if those two columns are in the way. Reported from an MSI-to-Automation-Suite migration.
+
+- **`Compare-OrchTrigger` no longer reports a queue trigger's cron as a difference.** A queue
+  trigger fires on queue items, and the web UI offers it no cron at all; `ProcessScheduleDto`
+  carries `StartProcessCron` for it anyway, holding whatever the last writer happened to leave —
+  this module defaults it to `0 0/1 * 1/1 * ? *` when one is missing, the web UI's builder writes
+  its own form. It is not a setting either side's user chose, so a difference in it is one nobody
+  can act on. Reported from the same migration, where a correctly copied queue trigger compared
+  `0 0/30 * 1/1 * ? *` at the source against `33 20/30 * * * ? *` at the destination. The field is
+  now read as absent on both sides for a queue trigger, leaving `QueueDefinitionName` to carry the
+  real difference when only one side is one.
+
+- **`Compare-OrchTrigger` and `Compare-OrchProcess` no longer report a correctly copied priority
+  as lost.** A destination trigger the web UI correctly showed as Low came back as
+  `JobPriority: 'Low' => (null)`, on every trigger and process that had a specific priority.
+  `JobPriority` (Low/Normal/High) and `SpecificPriorityValue` (1-100) are two views of one setting
+  and the server will not take both — measured on Automation Suite 24.10, posting the name alone
+  reads back the name *and* a filled-in value, posting the value alone reads back a null name (it
+  is not derived), and posting both is refused with
+  `400 [1009] Cannot set a specific priority value when a standard job priority setting is selected.`
+  So a copy has to drop one of the pair, and it drops the name, keeping the value, which is the
+  higher-resolution field: 47 has no name to be expressed as. The destination's null is therefore
+  correct, and `JobPriority` is now compared as the name its value resolves to (`>= 61` High,
+  `<= 30` Low, else Normal — the cut points Orchestrator itself uses when it has to express a
+  specific value as one of the three buckets). `SpecificPriorityValue` is carried across unchanged
+  and stays compared on its own, so a genuine priority change is still reported. Reported from the
+  same migration.
+
 ## [1.15.2] - 2026-08-31
 
 ### Fixed

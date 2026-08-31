@@ -242,13 +242,13 @@ public static class EntityComparison
     // Returns the comparators whose extracted values differ between reference and difference.
     // When "only" is non-empty, restricts the comparison to those property names (the
     // -Property parameter, mirroring Compare-Object -Property), case-insensitively.
-    public static List<PropertyDifference> DiffProperties<T>(
+    public static PropertyDifferenceList DiffProperties<T>(
         T reference,
         T difference,
         IReadOnlyList<(string Name, Func<T, object?> Get)> comparators,
         IReadOnlyCollection<string>? only)
     {
-        var diffs = new List<PropertyDifference>();
+        var diffs = new PropertyDifferenceList();
         foreach (var (name, get) in comparators)
         {
             if (only is { Count: > 0 } && !only.Contains(name, StringComparer.OrdinalIgnoreCase))
@@ -275,6 +275,43 @@ public static class EntityComparison
         => tags is null || tags.Length == 0
             ? null
             : string.Join(";", tags.Select(t => $"{t.Name}={t.Value}").OrderBy(s => s, StringComparer.Ordinal));
+
+    // The JobPriority a trigger/process effectively runs at, for comparison only.
+    //
+    // JobPriority (Low/Normal/High) and SpecificPriorityValue (1-100) are two views of one
+    // setting, and the server will not take both. Measured on Automation Suite 24.10, POSTing a
+    // ProcessSchedule with:
+    //
+    //   JobPriority "Low" alone         -> reads back JobPriority "Low", SpecificPriorityValue 25
+    //                                      (the server fills the value in)
+    //   SpecificPriorityValue 25 alone  -> reads back JobPriority null (the name is NOT derived)
+    //   both                            -> 400 [1009] "Cannot set a specific priority value when
+    //                                      a standard job priority setting is selected."
+    //
+    // So a copy has to drop one of the pair, and it drops the name, keeping the value -- the value
+    // is the higher-resolution field, and 47 has no name to be expressed as. The destination
+    // therefore holds a legitimate null while running at exactly the source's priority, and the
+    // web UI shows it correctly. Comparing the raw field read that as loss on every copied trigger
+    // and process that had a specific priority: "JobPriority: 'Low' => (null)" against a
+    // destination the UI showed as Low (reported from an MSI-to-Automation-Suite migration,
+    // 2026-08-31). SpecificPriorityValue is carried across unchanged and stays compared on its
+    // own, so the real drift is still caught; only the derived name falls back.
+    //
+    // The 61/30 cut points are the ones Orchestrator itself uses when it has to express a
+    // specific value as one of the three buckets (see the pre-v14 Release downgrade in
+    // OrchAPISession.PostRelease), and they agree with the named scale in
+    // ConvertPriorityToSpecificPriorityValue, where Low is 25 and High is 65.
+    public static string? EffectiveJobPriority(string? jobPriority, int? specificPriorityValue)
+    {
+        if (!string.IsNullOrEmpty(jobPriority)) return jobPriority;
+        return specificPriorityValue switch
+        {
+            null => null,
+            >= 61 => "High",
+            <= 30 => "Low",
+            _ => "Normal",
+        };
+    }
 
     // Equality used for a single compared property. null and "" are treated as equal for
     // string-valued extractors (an absent Description vs an empty one is not a real drift);

@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // (SideIndicator, name-match vs broadcast, the reference/difference path convention).
 [Cmdlet(VerbsData.Compare, "OrchQueue")]
 [OutputType(typeof(OrchComparison))]
-public class CompareQueueCmdlet : OrchestratorPSCmdlet
+public class CompareQueueCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -79,6 +79,8 @@ public class CompareQueueCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
+    protected override string DefaultCsvName => "ComparedQueues.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -96,7 +98,7 @@ public class CompareQueueCmdlet : OrchestratorPSCmdlet
             q => q!.GetPSPath(),
             Comparators,
             "GetQueueError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 }

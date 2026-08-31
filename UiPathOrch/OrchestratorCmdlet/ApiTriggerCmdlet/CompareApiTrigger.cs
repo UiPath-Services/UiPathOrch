@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 // auto-generated Slug are not compared. See Compare-OrchAsset for the shared model.
 [Cmdlet(VerbsData.Compare, "OrchApiTrigger")]
 [OutputType(typeof(OrchComparison))]
-public class CompareApiTriggerCmdlet : OrchestratorPSCmdlet
+public class CompareApiTriggerCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -76,6 +76,8 @@ public class CompareApiTriggerCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
+    protected override string DefaultCsvName => "ComparedApiTriggers.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -93,7 +95,7 @@ public class CompareApiTriggerCmdlet : OrchestratorPSCmdlet
             t => t!.GetPSPath(),
             Comparators,
             "GetApiTriggerError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 }

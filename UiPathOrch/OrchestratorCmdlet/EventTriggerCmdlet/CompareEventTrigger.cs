@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // See Compare-OrchAsset for the shared model.
 [Cmdlet(VerbsData.Compare, "OrchEventTrigger")]
 [OutputType(typeof(OrchComparison))]
-public class CompareEventTriggerCmdlet : OrchestratorPSCmdlet
+public class CompareEventTriggerCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -75,6 +75,8 @@ public class CompareEventTriggerCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
+    protected override string DefaultCsvName => "ComparedEventTriggers.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -92,7 +94,7 @@ public class CompareEventTriggerCmdlet : OrchestratorPSCmdlet
             t => t!.GetPSPath(),
             Comparators,
             "GetEventTriggerError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 }

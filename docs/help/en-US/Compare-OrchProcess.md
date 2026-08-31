@@ -22,7 +22,8 @@ Compares deployed processes (releases) between two folders or Orchestrator insta
 ```
 Compare-OrchProcess [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
  [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
+ [-IncludeEqual] [-Property <string[]>] [-ExportCsv <string>] [-CsvEncoding <Encoding>]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -32,6 +33,8 @@ Compare-OrchProcess [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth 
 Compares deployed processes (releases) between a reference location (-Path, or the current folder) and a difference location (-DifferencePath), in the spirit of Compare-Object but resolved over Orchestrator drives and folders. The primary use is migration verification: after copying processes between tenants or folders, confirm they were deployed with the same package version and settings.
 
 Processes are matched by Name (not Id, which is tenant-local) and only migration-relevant settings are compared: ProcessKey, ProcessVersion, Description, EntryPointPath, InputArguments, EnvironmentName, ProcessType, JobPriority, SpecificPriorityValue, TargetFramework, IsAttended, RequiresUserInteraction, RemoteControlAccess, RetentionAction, RetentionPeriod, and Tags. Volatile fields such as Id, Key, the numeric EnvironmentId, and timestamps are ignored; EnvironmentName is compared instead so it survives a tenant move.
+
+JobPriority is compared as the name its value resolves to rather than as the raw field. The server accepts only one of JobPriority and SpecificPriorityValue, so a copy keeps the value and drops the derived name; comparing the raw field made every copied process with a specific priority read as one that had lost it. SpecificPriorityValue is compared on its own, so a real priority change is still reported.
 
 Each result is an OrchComparison record with a SideIndicator: "<=" reference only, "=>" difference only, "<>" present on both sides but differing (with a per-property Differences breakdown), and "==" equal (only with -IncludeEqual). Without -DifferenceName each reference process is compared to the same-named process in the corresponding difference folder (mirrored relative path with -Recurse). With -DifferenceName, every reference process is compared to that single named process in -DifferencePath.
 
@@ -68,7 +71,35 @@ PS C:\> Compare-OrchProcess * Orch2:\Finance -Path Orch1:\Finance -IncludeEqual
 
 Adds "==" rows for processes that match on every compared property.
 
+### Example 4: Keep the comparison as a migration report
+
+```powershell
+PS C:\> Compare-OrchProcess * Orch2:\Shared -Path Orch1:\Shared -Recurse -IncludeEqual -ExportCsv report.csv
+```
+
+Writes every row -- differing and equal alike -- to report.csv instead of the pipeline, with the per-property differences in the Differences column.
 ## PARAMETERS
+
+### -CsvEncoding
+
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
 ### -Depth
 
@@ -125,6 +156,27 @@ ParameterSets:
 - Name: (All)
   Position: 1
   IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ExportCsv
+
+Writes the comparison to the specified CSV file path instead of to the pipeline. The columns are SideIndicator, Name, DifferenceName, Path, DifferencePath, and Differences — the same six the console shows, with Differences carrying the per-property "Prop: 'ref' => 'diff'" text. ReferenceObject and DifferenceObject are not exported: they are whole entities kept for downstream piping, and a CSV can hold nothing of them but their type name. A directory path writes ComparedProcesses.csv inside it. Requires a filesystem path (not an Orch: drive path).
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false

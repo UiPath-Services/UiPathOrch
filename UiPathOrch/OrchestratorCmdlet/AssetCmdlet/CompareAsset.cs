@@ -39,7 +39,7 @@ namespace UiPath.PowerShell.Commands;
 //     sides are the same tenant/org.
 [Cmdlet(VerbsData.Compare, "OrchAsset")]
 [OutputType(typeof(OrchComparison))]
-public class CompareAssetCmdlet : OrchestratorPSCmdlet
+public class CompareAssetCmdlet : CompareOrchCmdlet
 {
     // Reference side. Positional 0 (so `Compare-OrchAsset <ref> <diff>` reads ref-then-diff
     // like Compare-Object), pipeline-bindable, defaults to the current location when omitted.
@@ -126,7 +126,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
     // Pure diff surface (no WriteObject) so the comparator set, bool/tag/user-value
     // normalization, the reference-side user mapping, and -Property scoping are unit-testable
     // without a live drive. Returns every differing property; empty means "equal".
-    internal static List<PropertyDifference> ComputeAssetDifferences(
+    internal static PropertyDifferenceList ComputeAssetDifferences(
         Asset reference, Asset difference,
         IReadOnlyCollection<string>? only, bool compareUserValues,
         Dictionary<string, string>? userMapping)
@@ -174,6 +174,13 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
         }
     }
 
+    protected override string DefaultCsvName => "ComparedAssets.csv";
+
+    // This cmdlet emits its rows itself rather than through FolderCompare, so it holds the
+    // pipeline-or-CSV sink instead of passing it to the shared engine.
+    private Action<object>? _sink;
+    private Action<object> Emit => _sink ??= CsvOrPipeline();
+
     protected override void ProcessRecord()
     {
         var effPath = EffectivePath(Path, LiteralPath);
@@ -204,6 +211,11 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
         var userMapping = SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv);
 
         using var cancelHandler = new ConsoleCancelHandler();
+
+        // Open the sink here, not on the first row, so -ExportCsv still writes a header-only file
+        // when nothing differs -- the same "compared, found nothing" evidence the rest of the
+        // family leaves behind.
+        _ = Emit;
 
         if (!string.IsNullOrEmpty(DifferenceName))
         {
@@ -355,7 +367,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
         {
             if (IncludeEqual.IsPresent)
             {
-                WriteObject(new OrchComparison
+                Emit(new OrchComparison
                 {
                     SideIndicator = EntityComparison.Equal,
                     Name = reference.Name,
@@ -369,7 +381,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        WriteObject(new OrchComparison
+        Emit(new OrchComparison
         {
             SideIndicator = EntityComparison.Different,
             Name = reference.Name,
@@ -386,7 +398,7 @@ public class CompareAssetCmdlet : OrchestratorPSCmdlet
     {
         bool isReference = side == EntityComparison.ReferenceOnly;
         WarnIfSecretAsset(asset);
-        WriteObject(new OrchComparison
+        Emit(new OrchComparison
         {
             SideIndicator = side,
             Name = asset.Name,

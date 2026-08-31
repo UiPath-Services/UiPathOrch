@@ -22,7 +22,8 @@ Compares time/queue triggers (process schedules) between two folders or Orchestr
 ```
 Compare-OrchTrigger [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
  [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
+ [-IncludeEqual] [-Property <string[]>] [-ExportCsv <string>] [-CsvEncoding <Encoding>]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -32,6 +33,8 @@ Compare-OrchTrigger [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth 
 Compares triggers between a reference location (-Path, or the current folder) and a difference location (-DifferencePath), resolved over Orchestrator drives and folders. The primary use is migration verification: confirm schedules survived a copy between folders or tenants.
 
 Triggers are matched by Name (not the tenant-local Id) and only migration-relevant settings are compared: Enabled, ReleaseName, EntryPointPath, JobPriority, SpecificPriorityValue, RuntimeType, StartProcessCron, StartStrategy, StopStrategy, TimeZoneId, UseCalendar, CalendarName, InputArguments, QueueDefinitionName, ActivateOnJobComplete, Description, and Tags. The target process and calendar are compared by name (ReleaseName / CalendarName), not by their tenant-local ids.
+
+Two of those settings are not compared as the raw field, because a correct copy would otherwise be reported as drift. StartProcessCron is skipped for a queue trigger: such a trigger fires on queue items and the web UI offers it no cron at all, so the value the DTO carries is left over from whoever wrote the trigger last rather than anything a user chose. JobPriority is compared as the name its value resolves to, because the server accepts only one of JobPriority and SpecificPriorityValue and a copy therefore keeps the value and drops the derived name; a trigger that lost only the name still matches its source, while SpecificPriorityValue is compared on its own so a real priority change is still reported.
 
 Each result is an OrchComparison record with a SideIndicator: "<=" reference only, "=>" difference only, "<>" present on both sides but differing (with a per-property Differences breakdown), and "==" equal (only with -IncludeEqual). Without -DifferenceName each reference trigger is compared to the same-named trigger in the corresponding difference folder (mirrored relative path with -Recurse). With -DifferenceName, every reference trigger is compared to that single named trigger.
 
@@ -60,7 +63,35 @@ PS C:\> Compare-OrchTrigger -Path Orch1:\Shared -DifferencePath Orch2:\Shared -R
 
 Walks Shared and all subfolders and lists only the triggers whose settings (for example StartProcessCron) differ.
 
+### Example 3: Keep the comparison as a migration report
+
+```powershell
+PS C:\> Compare-OrchTrigger * Orch2:\Shared -Path Orch1:\Shared -Recurse -IncludeEqual -ExportCsv report.csv
+```
+
+Writes every row -- differing and equal alike -- to report.csv instead of the pipeline, with the per-property differences in the Differences column.
 ## PARAMETERS
+
+### -CsvEncoding
+
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
 ### -Depth
 
@@ -117,6 +148,27 @@ ParameterSets:
 - Name: (All)
   Position: 1
   IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ExportCsv
+
+Writes the comparison to the specified CSV file path instead of to the pipeline. The columns are SideIndicator, Name, DifferenceName, Path, DifferencePath, and Differences — the same six the console shows, with Differences carrying the per-property "Prop: 'ref' => 'diff'" text. ReferenceObject and DifferenceObject are not exported: they are whole entities kept for downstream piping, and a CSV can hold nothing of them but their type name. A directory path writes ComparedTriggers.csv inside it. Requires a filesystem path (not an Orch: drive path).
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: false
   ValueFromRemainingArguments: false

@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 // Compare-OrchAsset for the shared model.
 [Cmdlet(VerbsData.Compare, "OrchTestSetSchedule")]
 [OutputType(typeof(OrchComparison))]
-public class CompareTestSetScheduleCmdlet : OrchestratorPSCmdlet
+public class CompareTestSetScheduleCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -68,6 +68,8 @@ public class CompareTestSetScheduleCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
+    protected override string DefaultCsvName => "ComparedTestSetSchedules.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -85,7 +87,7 @@ public class CompareTestSetScheduleCmdlet : OrchestratorPSCmdlet
             s => s!.GetPSPath(),
             Comparators,
             "GetTestSetScheduleError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 }

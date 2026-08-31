@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // and compares the time zone and the set of excluded dates (order-independent).
 [Cmdlet(VerbsData.Compare, "OrchCalendar")]
 [OutputType(typeof(OrchComparison))]
-public class CompareCalendarCmdlet : OrchestratorPSCmdlet
+public class CompareCalendarCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -60,6 +60,8 @@ public class CompareCalendarCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
+    protected override string DefaultCsvName => "ComparedCalendars.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -82,7 +84,7 @@ public class CompareCalendarCmdlet : OrchestratorPSCmdlet
             c => c?.Name,
             Comparators,
             "GetCalendarError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 

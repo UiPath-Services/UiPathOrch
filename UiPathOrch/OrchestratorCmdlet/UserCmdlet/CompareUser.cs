@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 // reference user names to their difference-side equivalents before matching.
 [Cmdlet(VerbsData.Compare, "OrchUser")]
 [OutputType(typeof(OrchComparison))]
-public class CompareUserCmdlet : OrchestratorPSCmdlet
+public class CompareUserCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -77,6 +77,8 @@ public class CompareUserCmdlet : OrchestratorPSCmdlet
         CompareParameterHelper.WarnSecretNotCompared(this, "the Unattended-Robot password (UR_Password)");
     }
 
+    protected override string DefaultCsvName => "ComparedUsers.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -106,7 +108,7 @@ public class CompareUserCmdlet : OrchestratorPSCmdlet
             u => u?.UserName,
             Comparators,
             "GetUserError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError,
             nameMap);
     }

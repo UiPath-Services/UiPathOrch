@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 // See Compare-OrchAsset for the shared model (SideIndicator, name-match vs broadcast).
 [Cmdlet(VerbsData.Compare, "OrchFolderMachine")]
 [OutputType(typeof(OrchComparison))]
-public class CompareFolderMachineCmdlet : OrchestratorPSCmdlet
+public class CompareFolderMachineCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -71,6 +71,8 @@ public class CompareFolderMachineCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
+    protected override string DefaultCsvName => "ComparedFolderMachines.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -88,7 +90,7 @@ public class CompareFolderMachineCmdlet : OrchestratorPSCmdlet
             m => m!.GetPSPath(),
             Comparators,
             "GetFolderMachineError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 }

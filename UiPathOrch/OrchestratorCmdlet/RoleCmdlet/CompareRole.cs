@@ -13,7 +13,7 @@ namespace UiPath.PowerShell.Commands;
 // name-match vs broadcast).
 [Cmdlet(VerbsData.Compare, "OrchRole")]
 [OutputType(typeof(OrchComparison))]
-public class CompareRoleCmdlet : OrchestratorPSCmdlet
+public class CompareRoleCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -66,6 +66,8 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
+    protected override string DefaultCsvName => "ComparedRoles.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -82,7 +84,7 @@ public class CompareRoleCmdlet : OrchestratorPSCmdlet
             r => r?.Name,
             Comparators,
             "GetRoleError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 

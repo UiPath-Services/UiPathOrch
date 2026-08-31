@@ -11,7 +11,7 @@ namespace UiPath.PowerShell.Commands;
 // signing Secret is sensitive and is not compared.
 [Cmdlet(VerbsData.Compare, "OrchWebhook")]
 [OutputType(typeof(OrchComparison))]
-public class CompareWebhookCmdlet : OrchestratorPSCmdlet
+public class CompareWebhookCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -70,6 +70,8 @@ public class CompareWebhookCmdlet : OrchestratorPSCmdlet
         CompareParameterHelper.WarnSecretNotCompared(this, "the webhook secret");
     }
 
+    protected override string DefaultCsvName => "ComparedWebhooks.csv";
+
     protected override void ProcessRecord()
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
@@ -86,7 +88,7 @@ public class CompareWebhookCmdlet : OrchestratorPSCmdlet
             w => w?.Name,
             Comparators,
             "GetWebhookError",
-            WriteObject,
+            CsvOrPipeline(),
             WriteError);
     }
 

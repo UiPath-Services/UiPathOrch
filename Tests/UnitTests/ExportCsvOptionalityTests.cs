@@ -29,6 +29,56 @@ public class ExportCsvOptionalityTests
         // [OutputType] attributes, which would make the single-attribute
         // OutputTypeUnchanged check below throw AmbiguousMatchException.)
         yield return new object[] { typeof(GetPmUserLicenseCmdlet) };
+        // The whole Compare-Orch* family gained -ExportCsv in 1.16.0, inherited
+        // from CompareOrchCmdlet. Same guarantee: the object-output path stays
+        // the default, and -Name / -DifferencePath / -DifferenceName keep their
+        // positions.
+        foreach (var t in CompareCmdletTypes()) yield return new object[] { t };
+    }
+
+    // Every Compare-Orch* cmdlet, found through the shared base rather than listed
+    // by hand, so a new noun added to the family is covered the day it appears.
+    private static System.Collections.Generic.IEnumerable<System.Type> CompareCmdletTypes()
+        => typeof(CompareOrchCmdlet).Assembly.GetTypes()
+            .Where(t => !t.IsAbstract && typeof(CompareOrchCmdlet).IsAssignableFrom(t))
+            .OrderBy(t => t.Name, System.StringComparer.Ordinal);
+
+    [Fact]
+    public void EveryCompareCmdlet_InheritsTheCsvBase()
+    {
+        // The family is discovered by base type above; if a cmdlet were added with
+        // OrchestratorPSCmdlet as its base it would silently escape every guard here.
+        var strays = typeof(CompareOrchCmdlet).Assembly.GetTypes()
+            .Where(t => !t.IsAbstract && t.Name.StartsWith("Compare", System.StringComparison.Ordinal))
+            .Where(t => typeof(OrchestratorPSCmdlet).IsAssignableFrom(t))
+            .Where(t => !typeof(CompareOrchCmdlet).IsAssignableFrom(t))
+            .Select(t => t.Name)
+            .ToList();
+
+        Assert.True(strays.Count == 0,
+            "These Compare-Orch* cmdlets do not derive from CompareOrchCmdlet, so they have no " +
+            "-ExportCsv and are not covered by the guards in this file:\n  " + string.Join("\n  ", strays));
+    }
+
+    [Fact]
+    public void EveryCompareCmdlet_HasADistinctDefaultCsvName()
+    {
+        // The default file name is what -ExportCsv <directory> lands on; two nouns sharing one
+        // would have the second silently overwrite the first in a scripted verification pass.
+        var names = CompareCmdletTypes()
+            .Select(t => (Type: t, Name: (string)t.GetProperty("DefaultCsvName",
+                BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public)!
+                .GetValue(System.Activator.CreateInstance(t))!))
+            .ToList();
+
+        Assert.All(names, n => Assert.EndsWith(".csv", n.Name, System.StringComparison.Ordinal));
+
+        var duplicates = names.GroupBy(n => n.Name, System.StringComparer.OrdinalIgnoreCase)
+            .Where(g => g.Count() > 1)
+            .Select(g => $"{g.Key}: {string.Join(", ", g.Select(x => x.Type.Name))}")
+            .ToList();
+        Assert.True(duplicates.Count == 0,
+            "Compare-Orch* cmdlets sharing a default CSV file name:\n  " + string.Join("\n  ", duplicates));
     }
 
     [Theory]
