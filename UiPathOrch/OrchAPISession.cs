@@ -3525,6 +3525,51 @@ public partial class OrchAPISession : IDisposable
     // so a tenant that regains the module is picked up without starting a new session.
     public bool TestAutomationDiscontinued { get; set; }
 
+    // True once this Orchestrator has answered that it does not serve /odata/HttpTriggers, i.e.
+    // the tenant has no API triggers at all. Measured on Automation Suite 24.10.11: the route
+    // answers 404 {"message":"Invalid request!","errorCode":1000} in every folder, while its
+    // OData neighbours (ProcessSchedules, ApiTriggers = event triggers) answer 200 on the same
+    // token and folder, and the web UI offers only Time and Queue triggers where Automation Cloud
+    // offers Time, Queue, Event and API. Same shape as TestAutomationDiscontinued: without the
+    // latch a -Recurse copy reports one error per folder for a feature the tenant does not have,
+    // which also aborts the caller under $ErrorActionPreference = 'Stop'. Reset by Clear-OrchCache
+    // (ClearTenantCache).
+    //
+    // Deliberately discovered rather than predicted from ApiVersion. That instance reports
+    // api-supported-versions 18.0 -- exactly the ApiTriggers cache floor, which it clears by one --
+    // so the floor's premise ("18 has API triggers", taken from the v17 web UI lacking them) is
+    // false. Raising the floor would only move the guess: 22.4.4 (404) and 22.10.0 (400) already
+    // both reported 15, the standing proof in CopyApiTriggers that the version number is not a
+    // schema key.
+    public bool ApiTriggersUnavailable { get; set; }
+
+    // True when the failure is the server saying the route is not there. Used only where an
+    // absent route means an absent feature (API triggers), so the plain 404 is specific enough
+    // and no message matching is needed -- unlike IsTestAutomationDiscontinued, whose response
+    // carries no machine-readable marker at all.
+    internal static bool IsEndpointNotFound(Exception? ex)
+    {
+        for (var e = ex; e is not null; e = e.InnerException)
+        {
+            if (e is HttpResponseException http && http.StatusCode == HttpStatusCode.NotFound) return true;
+        }
+        return false;
+    }
+
+    // Latch on the first such answer. Returns true exactly once per drive, for the caller to warn.
+    internal bool NoteApiTriggersUnavailable()
+    {
+        if (ApiTriggersUnavailable) return false;
+        ApiTriggersUnavailable = true;
+        return true;
+    }
+
+    // The one-time notice, shared by the copy and the read paths so they say the same thing.
+    internal static string ApiTriggersUnavailableWarning(string driveNameColon)
+        => $"{driveNameColon} does not offer API triggers: /odata/HttpTriggers answers 404, so they are skipped for this drive. " +
+           "Automation Suite exposes only Time and Queue triggers, where Automation Cloud also has Event and API triggers. " +
+           "Everything else is unaffected. Run Clear-OrchCache to re-check.";
+
     private bool _pmApiDeprecated = true;
     public bool PmApiDeprecated
     {

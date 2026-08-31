@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using UiPath.OrchAPI;
 using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
@@ -1454,6 +1455,11 @@ public partial class OrchProvider
         // 18, so this early-out is behavior-neutral; it is aligned with that floor.
         if (srcDrive.OrchAPISession.ApiVersion < 18) return;
 
+        // Already established that this Orchestrator has no API triggers -- nothing to copy, and
+        // nothing to say a second time.
+        if (srcDrive.OrchAPISession.ApiTriggersUnavailable ||
+            dstDrive.OrchAPISession.ApiTriggersUnavailable) return;
+
         string target = srcFolder.GetPSPath();
         string msg = $"Copying API triggers";
 
@@ -1464,6 +1470,14 @@ public partial class OrchProvider
         }
         catch (Exception ex)
         {
+            // The version floor above is not a reliable guard: Automation Suite 24.10.11 clears it
+            // and still has no such route. Take the server's 404 as the answer, once per drive.
+            if (OrchAPISession.IsEndpointNotFound(ex))
+            {
+                if (srcDrive.OrchAPISession.NoteApiTriggersUnavailable())
+                    _this.WriteWarning(OrchAPISession.ApiTriggersUnavailableWarning(srcDrive.NameColon));
+                return;
+            }
             _this.WriteError(new ErrorRecord(new OrchException(target, msg, ex), "GetApiTriggerError", ErrorCategory.InvalidOperation, target));
             return;
         }

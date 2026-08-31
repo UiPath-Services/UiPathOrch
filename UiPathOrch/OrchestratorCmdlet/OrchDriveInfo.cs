@@ -110,6 +110,8 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             _orchAPISession.PmApiDeprecated = true;
             // Re-probe whether the account still lacks Test Automation (see the property's comment).
             _orchAPISession.TestAutomationDiscontinued = false;
+            // Same for API triggers, which an upgraded Orchestrator can gain.
+            _orchAPISession.ApiTriggersUnavailable = false;
         }
 
         #region Orchestrator API cache
@@ -1544,7 +1546,22 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         ActionCatalogs = new(this, OrchAPISession.GetTaskCatalogs, (e, folderPath) => e.Path = folderPath, 16); // Confirmed no error is returned in v16
         _folderCache = new FolderCache(this, BuildFolderCache);
 
-        ApiTriggers = new(this, OrchAPISession.GetHttpTriggers, (e, folderPath) => e.Path = folderPath, 18); // Confirmed not present in the v17 web interface (executing in v17 does not return an error, though)
+        // 18 is NOT "the version that has API triggers" -- Automation Suite 24.10.11 reports
+        // exactly 18.0 (ApiVersion is the max of api-supported-versions) and has none: the route
+        // answers 404 and its web UI offers only Time and Queue triggers. What the floor does is
+        // keep OLDER servers away from that 404, because below it the endpoint fails in a shape
+        // the "no API triggers" latch cannot read: measured, 22.4.4 answers 404 but 22.10.0
+        // answers 400 "Invalid OData query options" -- and both report 15. A 400 is not "the
+        // feature is absent", so it must stay a per-folder error rather than latch the feature
+        // off for the drive.
+        //
+        // Raising the floor to 20 would fit every tenant measured here (all with API triggers
+        // report 20.0; the only 18.0s are Automation Suite without them), but it would trade the
+        // one thing that made this diagnosable for one saved request per drive: below the floor
+        // this cache returns [] SILENTLY, so the Automation Suite case would go back to producing
+        // nothing and explaining nothing. Asking the server costs one request and is true on
+        // versions no one has measured yet. See OrchAPISession.ApiTriggersUnavailable.
+        ApiTriggers = new(this, OrchAPISession.GetHttpTriggers, (e, folderPath) => e.Path = folderPath, 18);
         BusinessRules = new(this, OrchAPISession.GetBusinessRules, (e, folderPath) => e.Path = folderPath);
         Connections = new(this, OrchAPISession.GetConnections, (e, folderPath) => e.Path = folderPath, 20); // Connection Service v1 (Integration Service); gated at API v20
         EventTriggers = new(this, OrchAPISession.GetEventTriggers, (e, folderPath) => e.Path = folderPath, 18);

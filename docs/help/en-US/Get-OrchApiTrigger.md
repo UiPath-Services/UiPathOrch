@@ -265,6 +265,8 @@ Required Scope: OR.Execution or OR.Execution.Read
 
 Required permissions: HttpTriggers.View
 
+Not every Orchestrator has API triggers. Automation Suite 24.10.11, for example, answers 404 on the endpoint and its web UI offers only Time and Queue triggers, where Automation Cloud also has Event and API triggers. Against such a tenant this cmdlet returns no rows and warns once per drive rather than reporting the server's "Invalid request!" for every folder of a -Recurse read; `Copy-Item` skips the API-trigger stage on the same signal. `Clear-OrchCache` re-checks, so an upgraded Orchestrator is picked up without starting a new session.
+
 ## RELATED LINKS
 
 [Remove-OrchApiTrigger](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchApiTrigger.md)

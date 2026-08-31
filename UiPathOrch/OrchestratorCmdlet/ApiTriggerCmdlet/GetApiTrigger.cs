@@ -1,5 +1,6 @@
 using System.Management.Automation;
 using System.Text;
+using UiPath.OrchAPI;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -178,6 +179,17 @@ public class GetApiTriggerCmdlet : OrchestratorPSCmdlet
             }
             catch (OrchException ex)
             {
+                // An Orchestrator that has no API triggers at all answers 404 on the route -- see
+                // OrchAPISession.ApiTriggersUnavailable. Saying that once beats repeating the
+                // server's bare "Invalid request!" for every folder of a -Recurse read, and it
+                // matches what the below-floor path already does: no rows.
+                var drive = result.Source.drive;
+                if (OrchAPISession.IsEndpointNotFound(ex))
+                {
+                    if (drive.OrchAPISession.NoteApiTriggersUnavailable())
+                        WriteWarning(OrchAPISession.ApiTriggersUnavailableWarning(drive.NameColon));
+                    continue;
+                }
                 WriteError(new ErrorRecord(ex, "GetApiTriggerError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }

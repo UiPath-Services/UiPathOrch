@@ -35,6 +35,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   name — add `Select-Object -ExcludeProperty ReferenceObject, DifferenceObject` before the export
   if those two columns are in the way. Reported from an MSI-to-Automation-Suite migration.
 
+- **An Orchestrator without API triggers no longer fails `Copy-Item` and `Get-OrchApiTrigger` with
+  "Invalid request!".** On Automation Suite 24.10.11 the route answers
+  `404 {"message":"Invalid request!","errorCode":1000}` in every folder, while its OData
+  neighbours — `ProcessSchedules`, and `ApiTriggers` (event triggers) — answer 200 on the same
+  token and folder; the web UI there offers only Time and Queue triggers, where Automation Cloud
+  also has Event and API. So the tenant simply has no API triggers, and a `-Recurse` run was
+  reporting one error per folder for a feature that does not exist, which under
+  `$ErrorActionPreference = 'Stop'` aborts the caller — during a migration it reads as a failed
+  copy. Both cmdlets now take that 404 as the answer, say so once per drive, and skip, the same
+  shape 1.14.0 gave the discontinued Test Automation module; `Clear-OrchCache` re-checks. The
+  version floor is left where it is and is now documented as unreliable rather than trusted: that
+  instance reports `api-supported-versions` 18.0, which is exactly the floor it clears by one, so
+  "18 has API triggers" is false — the same way 22.4.4 and 22.10.0 both report 15 and behave
+  differently. A tenant that does have API triggers is untouched.
+
 - **`Compare-OrchTrigger` no longer reports a queue trigger's cron as a difference.** A queue
   trigger fires on queue items, and the web UI offers it no cron at all; `ProcessScheduleDto`
   carries `StartProcessCron` for it anyway, holding whatever the last writer happened to leave —
