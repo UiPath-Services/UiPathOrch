@@ -299,10 +299,14 @@ Describe 'Copy-Item -Recurse round-trip preserves per-folder entities' {
     }
 
     It 'triggers round-trip' {
+        # StartStrategy is the modern folder's "Execute the process X times" count, and the
+        # copy used to overwrite it with 1 for every non-classic destination -- so the fixture
+        # deliberately seeds trig-daily with 3 (trig-hourly stays 1, covering both). Checking
+        # only ReleaseName here let that pass unnoticed.
         Export-AndDiff `
             -Getter { param($path, $csv) Get-OrchTrigger -Path $path -Recurse -ExportCsv $csv | Out-Null } `
             -Name 'triggers' `
-            -ColumnsToCheck @('ReleaseName')
+            -ColumnsToCheck @('ReleaseName', 'StartStrategy')
     }
 
     It 'folder machine assignments round-trip' {

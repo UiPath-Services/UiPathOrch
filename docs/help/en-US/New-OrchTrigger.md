@@ -693,7 +693,7 @@ HelpMessage: ''
 
 ### -StartStrategy
 
-Specifies the start strategy for the trigger. Default is 1. The start strategy defines how jobs are created when the trigger fires (e.g., how many jobs to create per trigger activation).
+Specifies how many jobs the trigger starts each time it fires. Default is 1. In a modern folder this is the web UI's "Execute the process X times" — `-StartStrategy 3` makes the UI read "3 times" (measured on Automation Suite 24.10.11). In a classic folder the same field selects the execution target instead of a count.
 
 ```yaml
 Type: System.Nullable`1[System.Int32]

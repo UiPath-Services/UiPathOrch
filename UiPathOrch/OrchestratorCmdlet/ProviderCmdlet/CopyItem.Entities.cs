@@ -1377,7 +1377,19 @@ public partial class OrchProvider
                 if (newFolder.ProvisionType != "Manual")
                 {
                     postingTrigger.EnvironmentId = null;
-                    postingTrigger.StartStrategy = 1;// What is StartStrategy exactly..
+
+                    // StartStrategy is the modern folder's "Execute the process X times"
+                    // count -- measured on Automation Suite 24.10.11: a trigger set to 1 in
+                    // the web UI reads back StartStrategy 1, set to 3 reads 3, and writing 5
+                    // through Update-OrchTrigger makes the UI say 5. The field carries no
+                    // count in a CLASSIC folder, where it selects the execution target
+                    // instead, so only a classic SOURCE is reset -- resetting every copy
+                    // into a modern folder, as this did, silently rewrote every "X times"
+                    // trigger to run once.
+                    if (srcFolder.ProvisionType == "Manual")
+                    {
+                        postingTrigger.StartStrategy = 1;
+                    }
                 }
 
                 if (postingTrigger.StopProcessDate < DateTime.Now)

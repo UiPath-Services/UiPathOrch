@@ -26,6 +26,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   verification run in the same session was affected too, since a destination entity hidden this way
   reads as reference-only (`<=`) in `Compare-Orch*`.
 
+- **A copied trigger no longer comes out running once when the source said "Execute the process X
+  times".** `Copy-Item` and `Copy-OrchTrigger` overwrote `StartStrategy` with 1 for every
+  destination folder that is not classic, under the comment "What is StartStrategy exactly..". It
+  is the job count the modern folder's web UI labels "Execute the process X times": measured on
+  Automation Suite 24.10.11, a trigger set to 1 in the UI reads back `StartStrategy` 1 and one set
+  to 3 reads 3, and writing 5 with `Update-OrchTrigger -StartStrategy 5` makes the UI say "5
+  times". So the count was read from the source, carried all the way to the POST, and thrown away
+  one line before it — every migrated trigger silently ran once. Reported from an MSI-to-
+  Automation-Suite migration. The source value is now preserved; the reset survives only for a
+  *classic* source folder, where the same field selects the execution target rather than a count
+  and would otherwise arrive as a meaningless number. `New-OrchTrigger` / `Update-OrchTrigger`
+  now document what the parameter actually sets.
+
 ## [1.15.0] - 2026-08-28
 
 ### Added
