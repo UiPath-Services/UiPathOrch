@@ -774,7 +774,7 @@ HelpMessage: ''
 
 ### -StartStrategy
 
-Specifies how many jobs the trigger starts each time it fires. In a modern folder this is the web UI's "Execute the process X times" — `-StartStrategy 3` makes the UI read "3 times" (measured on Automation Suite 24.10.11). In a classic folder the same field selects the execution target instead of a count.
+Specifies how many jobs the trigger starts each time it fires — the web UI's "Execute the process X times". `-StartStrategy 3` makes the UI read "3 times". The value is the count itself in both folder kinds (measured on Automation Suite 24.10.11 and on standalone 21.10.4); a classic folder additionally writes -1 for its "All Robots" execution target, which modern folders have no equivalent for.
 
 ```yaml
 Type: System.Nullable`1[System.Int32]

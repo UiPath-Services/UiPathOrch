@@ -4,6 +4,24 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- **A trigger copied out of a *classic* folder keeps its "Execute the process X times" count
+  too.** 1.15.1 stopped the count being reset for modern-to-modern copies but kept resetting it
+  whenever the source folder was classic, on the untested assumption that a classic folder used
+  `StartStrategy` for something else. Measured on standalone 21.10.4, it does not: the Execution
+  Target radio writes the same field, Dynamic Allocation with X=1 reading back 1 and X=3 reading
+  3, exactly as a modern folder does. The only classic-only value is `-1`, written by the "All
+  Robots" option, which modern folders have no equivalent for. So the assumption had been dropping
+  the count on precisely the classic-to-modern migrations it was meant to serve — an MSI source
+  is where classic folders still live. The rule is now the measured one and no longer asks what
+  kind of folder the trigger came from: a positive count is carried across unchanged, and only a
+  value below 1 falls back to a single run, with a warning naming the trigger, since "All Robots"
+  cannot be expressed at a modern destination. The `-StartStrategy` help on `New-OrchTrigger` /
+  `Update-OrchTrigger`, which repeated the wrong claim, is corrected with it.
+
 ## [1.15.1] - 2026-08-31
 
 ### Fixed

@@ -1275,6 +1275,33 @@ public partial class OrchProvider
         return null;
     }
 
+    /// <summary>
+    /// True when a trigger's <c>StartStrategy</c> cannot be carried into a MODERN destination
+    /// folder as-is and has to fall back to a single run.
+    ///
+    /// StartStrategy is the "Execute the process X times" count, in BOTH folder kinds — it is a
+    /// bare Edm.Int32 in ProcessScheduleDto, unlike the neighbouring StopStrategy / JobPriority /
+    /// RuntimeType, which are typed enums. Measured:
+    ///
+    ///   * modern, Automation Suite 24.10.11 — 1 in the web UI reads back 1, 3 reads 3, and
+    ///     writing 5 through Update-OrchTrigger makes the UI say "5 times".
+    ///   * classic, standalone 21.10.4 — the Execution Target radio writes the same field:
+    ///     Dynamic Allocation X=1 → 1, X=3 → 3, and "All Robots" → -1.
+    ///
+    /// So a POSITIVE value means the same thing on both sides and is carried across unchanged.
+    /// Values below 1 are classic-only sentinels — -1 is "All Robots", which a modern folder has
+    /// no equivalent for — and would arrive as a nonsense count, so those normalize to 1. ("Specific
+    /// Robots" was not measured: the 21.10.4 instance had no robot to select. Its robots migrate
+    /// through MigrateExecutorRobots / MigrateMachineRobots either way, and whatever it writes is
+    /// covered by one of the two branches here.)
+    ///
+    /// The predicate deliberately does NOT look at the source folder's kind. An earlier version
+    /// reset the field for every classic source, on the untested assumption that classic used it
+    /// for something else; the 21.10.4 measurement above disproved that, and the assumption had
+    /// been dropping the count on exactly the classic-to-modern migrations it was meant to serve.
+    /// </summary>
+    internal static bool StartStrategyNeedsReset(int? startStrategy) => startStrategy is null or < 1;
+
     internal static void CopyTriggers(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
@@ -1378,16 +1405,12 @@ public partial class OrchProvider
                 {
                     postingTrigger.EnvironmentId = null;
 
-                    // StartStrategy is the modern folder's "Execute the process X times"
-                    // count -- measured on Automation Suite 24.10.11: a trigger set to 1 in
-                    // the web UI reads back StartStrategy 1, set to 3 reads 3, and writing 5
-                    // through Update-OrchTrigger makes the UI say 5. The field carries no
-                    // count in a CLASSIC folder, where it selects the execution target
-                    // instead, so only a classic SOURCE is reset -- resetting every copy
-                    // into a modern folder, as this did, silently rewrote every "X times"
-                    // trigger to run once.
-                    if (srcFolder.ProvisionType == "Manual")
+                    if (StartStrategyNeedsReset(postingTrigger.StartStrategy))
                     {
+                        if (postingTrigger.StartStrategy is not null)
+                        {
+                            _this.WriteWarning($"'{newFolder.GetPSPath()}\\{srcTrigger.Name}': the source trigger carries no per-run count (a classic folder writes -1 for All Robots), and a modern folder has no equivalent. The copy runs the process once; set the count on the destination if it should run more.");
+                        }
                         postingTrigger.StartStrategy = 1;
                     }
                 }
