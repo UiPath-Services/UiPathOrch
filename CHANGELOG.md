@@ -4,6 +4,28 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- **A queue shared between folders could stay invisible in the destination for the rest of a
+  `Copy-Item` session — taking its queue trigger with it.** Copying a folder tree, the first
+  folder's pass looks for its shared queue's counterpart in every destination folder the queue is
+  linked to, and caches what it finds there — usually nothing, since those folders have not been
+  copied yet. Nothing invalidated that empty list afterwards: neither creating the queues on that
+  folder's own pass (`Copy-Item`'s folder loop was the one create path that never cleared the
+  destination list, unlike `Copy-OrchQueue` / `-OrchAsset` / `-OrchBucket`, which always have) nor
+  sharing the queue into it. The folder then stayed empty in the module's view until the next
+  `Clear-OrchCache`, with two consequences: `Get-OrchQueue` under-reported it — a migration test
+  showed `\Shared` with none of its three queues while the web UI showed all three — and, worse,
+  the trigger stage of that same run resolved its queue by name against that empty list, decided
+  the queue did not exist, and skipped the trigger with a warning rather than an error, so the run
+  looked successful while the migration was incomplete. Both paths now invalidate the destination
+  folder's entity list (and the entity's link set) at the point of the change, as every other write
+  path in the module already did. Assets and buckets had the same defect and are fixed with it; a
+  verification run in the same session was affected too, since a destination entity hidden this way
+  reads as reference-only (`<=`) in `Compare-Orch*`.
+
 ## [1.15.0] - 2026-08-28
 
 ### Added

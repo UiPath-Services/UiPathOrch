@@ -39,7 +39,8 @@ public partial class OrchProvider
         Func<Folder, IEnumerable<T>> getDstEntities,
         Func<T, string?> nameOf,
         Func<T, Int64> idOf,
-        Action<Int64, Int64, Int64> share)
+        Action<Int64, Int64, Int64> share,
+        Action<Folder, Int64> invalidateDst)
         where T : class
     {
         // Measured: GetFoldersForAsset(id=) is 404 on 11.1 (20.10.16), so linked-entity copying
@@ -95,6 +96,17 @@ public partial class OrchProvider
                 if (!seenIds.Add(dstEntityId)) continue;
 
                 share(dstLinkFolder.Id ?? 0, dstEntityId, newFolder.Id ?? 0);
+                // The share just made the entity visible in newFolder and changed its link
+                // set, so both destination caches are now stale. Neither the Copy-Orch*
+                // cmdlets nor Copy-Item's folder loop cover this: they clear the folder they
+                // copied INTO, never the folder an entity was shared into. It matters because
+                // newFolder's entity list is routinely cached BEFORE the entity lands in it —
+                // an earlier folder's pass reads it right here, via getDstEntities, looking
+                // for its own counterpart. Left stale, the folder stayed short one entity for
+                // the rest of the session, and FindDstQueue — which resolves a queue trigger's
+                // queue by name later in the same run — reported the queue as missing and
+                // silently skipped the trigger.
+                invalidateDst(newFolder, dstEntityId);
                 linked = true;
             }
             catch (Exception ex)
@@ -235,7 +247,8 @@ public partial class OrchProvider
             a => a.Name,
             a => a.Id ?? 0,
             (linkFolderId, entityId, newFolderId) => dstDrive.OrchAPISession.ShareAssetsToFolders(
-                linkFolderId, new List<Int64> { entityId }, new List<Int64> { newFolderId }, new List<Int64>()));
+                linkFolderId, new List<Int64> { entityId }, new List<Int64> { newFolderId }, new List<Int64>()),
+            (folder, entityId) => { dstDrive.Assets.ClearCache(folder); dstDrive.ClearAssetLinkCache(entityId); });
     }
 
     internal static bool LinkQueue(IWritableHost _this,
@@ -253,7 +266,8 @@ public partial class OrchProvider
             q => q.Name,
             q => q.Id ?? 0,
             (linkFolderId, entityId, newFolderId) => dstDrive.OrchAPISession.ShareQueuesToFolders(
-                linkFolderId, new List<Int64> { entityId }, new List<Int64> { newFolderId }, new List<Int64>()));
+                linkFolderId, new List<Int64> { entityId }, new List<Int64> { newFolderId }, new List<Int64>()),
+            (folder, entityId) => { dstDrive.Queues.ClearCache(folder); dstDrive.ClearQueueLinkCache(entityId); });
     }
 
     internal static bool LinkBucket(IWritableHost _this,
@@ -271,7 +285,8 @@ public partial class OrchProvider
             b => b.Name,
             b => b.Id ?? 0,
             (linkFolderId, entityId, newFolderId) => dstDrive.OrchAPISession.ShareBucketsToFolders(
-                linkFolderId, new List<Int64> { entityId }, new List<Int64> { newFolderId }, new List<Int64>()));
+                linkFolderId, new List<Int64> { entityId }, new List<Int64> { newFolderId }, new List<Int64>()),
+            (folder, entityId) => { dstDrive.Buckets.ClearCache(folder); dstDrive.ClearBucketLinkCache(entityId); });
     }
 
     // Tracks what happened to shared entities' folder links across ONE copy run (one

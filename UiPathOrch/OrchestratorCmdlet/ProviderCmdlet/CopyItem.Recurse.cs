@@ -168,6 +168,17 @@ public partial class OrchProvider
                         // dependency order. Base numbers (100..1300) match the original
                         // per-stage reporter offsets. (Test cases are intentionally absent:
                         // they are created automatically when packages/processes copy.)
+                        //
+                        // Buckets / assets / queues also clear newFolder's dst-side list
+                        // AFTER copying, exactly as the standalone Copy-OrchBucket / -OrchAsset
+                        // / -OrchQueue cmdlets do (this loop was the one create path that
+                        // didn't). These three are the only entities read back on the
+                        // destination side during a copy — FindDstBucket from the process and
+                        // queue stages, FindDstQueue from the trigger stage — and a list
+                        // cached for newFolder before those creates (an earlier folder's link
+                        // lookup does exactly that) otherwise leaves the entity invisible for
+                        // the rest of the session, so the queue trigger that needs it is
+                        // silently skipped.
                         var stages = new (string Label, int Base, Action? PreStep, Action<ProgressReporter> Run)[]
                         {
                             ("Copying folder users...      ", 100,
@@ -177,16 +188,16 @@ public partial class OrchProvider
                                 () => srcDrive.FolderMachinesAssigned.ClearCache(srcFolder),
                                 r => CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
                             ("Copying buckets...           ", 300, null,
-                                r => CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, _linkReport)),
+                                r => { CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, _linkReport); dstDrive.Buckets.ClearCache(newFolder); }),
                             ("Copying packages...          ", 400, null,
                                 r => CopyPackages(this, srcDrive, srcFolder, dstDrive, newFolder, r, cancelToken)),
                             ("Copying processes...         ", 500, null,
                                 r => CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
                             ("Copying assets...            ", 600,
                                 () => srcDrive.Assets.ClearCache(srcFolder),
-                                r => CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, userMapping, _linkReport)),
+                                r => { CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, userMapping, _linkReport); dstDrive.Assets.ClearCache(newFolder); }),
                             ("Copying queues...            ", 700, null,
-                                r => CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, _linkReport)),
+                                r => { CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, _linkReport); dstDrive.Queues.ClearCache(newFolder); }),
                             ("Copying triggers...          ", 800,
                                 () => srcDrive.Triggers.ClearCache(srcFolder),
                                 r => CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),

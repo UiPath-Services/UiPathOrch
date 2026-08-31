@@ -310,3 +310,104 @@ Describe 'Copy-Item -Recurse cross-tenant preserves per-folder entities' {
         }
     }
 }
+
+# ============================================================================
+# Regression: a shared queue used to disappear from the destination for the
+# rest of the session, because Copy-Item never invalidated the destination
+# folder's cached queue list -- neither when it CREATED queues there (the
+# folder loop was the one create path without the clear that Copy-OrchQueue
+# always had) nor when it SHARED one in.
+#
+# The trigger is a destination folder that ALREADY EXISTS when the copy starts:
+# the first folder's pass looks for its shared queue's counterpart there, finds
+# nothing, and caches that emptiness. In the field this is the normal case --
+# \Shared always exists, and every re-run finds the whole tree already there --
+# so the pre-created dst folders below are the point of the setup, not scaffolding.
+#
+# Deliberately NO Clear-OrchCache between the copy and the assertion: the
+# cleared cache is exactly what used to hide the bug. Both folders are checked
+# so the test does not depend on which one the folder walk reaches first (the
+# poisoned side flips with the order; before the fix one of the two was empty).
+# ============================================================================
+
+Describe 'Copy-Item -Recurse cross-tenant leaves no stale destination queue cache' {
+
+    BeforeAll {
+        $script:StaleSkip = $script:SkipReason
+        if (-not $script:StaleSkip) {
+            $stamp = $PID
+            $script:StaleSrcRoot = "$($script:SrcDrive):\_xt_stale_src_$stamp"
+            $script:StaleDstRoot = "$($script:DstDrive):\_xt_stale_dst_$stamp"
+            $script:StaleSrcA    = "$($script:StaleSrcRoot)\aOwner"
+            $script:StaleSrcB    = "$($script:StaleSrcRoot)\bBorrower"
+            $dstCopyRoot         = "$($script:StaleDstRoot)\_xt_stale_src_$stamp"
+            $script:StaleDstA    = "$dstCopyRoot\aOwner"
+            $script:StaleDstB    = "$dstCopyRoot\bBorrower"
+
+            Write-Host "Seeding shared-queue source '$($script:StaleSrcRoot)' ..." -ForegroundColor Cyan
+            New-Item -ItemType Directory -Path $script:StaleSrcRoot -Force -ErrorAction Stop | Out-Null
+            New-Item -ItemType Directory -Path $script:StaleSrcA    -Force -ErrorAction Stop | Out-Null
+            New-Item -ItemType Directory -Path $script:StaleSrcB    -Force -ErrorAction Stop | Out-Null
+            New-OrchQueue -Path $script:StaleSrcA -Name xtSharedQueue -Description 'xt shared queue' -ErrorAction Stop | Out-Null
+            Add-OrchQueueLink -Path $script:StaleSrcA -Name xtSharedQueue -Link $script:StaleSrcB -ErrorAction Stop | Out-Null
+
+            # Pre-create the destination tree so both folders exist before the copy.
+            New-Item -ItemType Directory -Path $script:StaleDstRoot -Force -ErrorAction Stop | Out-Null
+            New-Item -ItemType Directory -Path $dstCopyRoot         -Force -ErrorAction Stop | Out-Null
+            New-Item -ItemType Directory -Path $script:StaleDstA    -Force -ErrorAction Stop | Out-Null
+            New-Item -ItemType Directory -Path $script:StaleDstB    -Force -ErrorAction Stop | Out-Null
+
+            Clear-OrchCache
+            Write-Host "Copy-Item -Recurse (shared queue, pre-existing dst folders) ..." -ForegroundColor Cyan
+            Copy-Item -Path $script:StaleSrcRoot -Destination $script:StaleDstRoot -Recurse -ErrorAction Stop
+        }
+    }
+
+    AfterAll {
+        foreach ($root in @($script:StaleDstRoot, $script:StaleSrcRoot)) {
+            if ($root -and (Test-Path $root)) {
+                Remove-Item $root -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
+            }
+        }
+    }
+
+    It 'both destination folders list the shared queue without Clear-OrchCache' {
+        if ($script:StaleSkip) { Set-ItResult -Skipped -Because $script:StaleSkip; return }
+        foreach ($dstFolder in @($script:StaleDstA, $script:StaleDstB)) {
+            $names = @(Get-OrchQueue -Path $dstFolder * | Select-Object -ExpandProperty Name)
+            $names | Should -Contain 'xtSharedQueue' `
+                -Because "'$dstFolder' holds the queue on the server, so the copy must not leave a stale cached list hiding it"
+        }
+    }
+
+    It 'the server agrees after Clear-OrchCache (the cached view was the only thing at issue)' {
+        if ($script:StaleSkip) { Set-ItResult -Skipped -Because $script:StaleSkip; return }
+        # Scoped to the destination drive on purpose: a bare Clear-OrchCache walks every
+        # mounted drive, and under the Invoke-AllTests runner ($ErrorActionPreference='Stop')
+        # one unreachable drive in the user's config would end the test on an unrelated error.
+        Clear-OrchCache -Path "$($script:DstDrive):\"
+        foreach ($dstFolder in @($script:StaleDstA, $script:StaleDstB)) {
+            $names = @(Get-OrchQueue -Path $dstFolder * | Select-Object -ExpandProperty Name)
+            $names | Should -Contain 'xtSharedQueue' `
+                -Because "the copy itself should have put the queue in '$dstFolder'"
+        }
+    }
+
+    # Positive control for the two tests above: they are only meaningful if the
+    # copy actually took the SHARE path (LinkQueue -> ShareQueuesToFolders). One
+    # queue id in both destination folders proves it did; two ids would mean the
+    # queue was copied twice as independent queues, the link path never ran, and
+    # the assertions above passed for the wrong reason.
+    It 'the destination holds ONE shared queue, not two independent copies' {
+        if ($script:StaleSkip) { Set-ItResult -Skipped -Because $script:StaleSkip; return }
+        # Clears its own cache rather than inheriting the previous test's: this asks about
+        # server state, so it must not report a stale-cache miss as "the ids differ".
+        Clear-OrchCache -Path "$($script:DstDrive):\"
+        $ids = foreach ($dstFolder in @($script:StaleDstA, $script:StaleDstB)) {
+            (Get-OrchQueue -Path $dstFolder xtSharedQueue).Id
+        }
+        @($ids).Count | Should -Be 2 -Because 'both destination folders should report the queue'
+        $ids[0] | Should -Be $ids[1] `
+            -Because 'the cross-tenant copy reproduces the folder link, so both folders see the same queue'
+    }
+}
