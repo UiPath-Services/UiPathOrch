@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.15.2'
+ModuleVersion = '1.16.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,74 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.16.0
+
+Added: the whole Compare-Orch* family takes -ExportCsv (and -CsvEncoding), like the Get-Orch*
+family already did. A comparison is the evidence a migration produced, and the documented way to
+keep it was to pipe the output into Export-Csv -- exactly the pipeline that lost the Differences
+column (below). The six columns are the ones the console shows (SideIndicator, Name,
+DifferenceName, Path, DifferencePath, Differences), in the order the piped export already
+produced them; ReferenceObject and DifferenceObject are left out. Naming a directory writes
+Compared<Nouns>.csv in it.
+
+Fixed: Compare-Orch* piped to Export-Csv wrote the type of the differences instead of the
+differences. The Differences column arrived as the List type name, so the exported file recorded
+which entities differed and nothing about how -- the one thing the console had just shown.
+Export-Csv converts each property with ToString(), and a bare list answers with its type name;
+the column now carries the same "Prop: 'ref' => 'diff'" text the console does. The console view
+and ConvertTo-Json are unchanged. ReferenceObject and DifferenceObject are whole entities kept
+for downstream piping and still export as their type name; add
+Select-Object -ExcludeProperty ReferenceObject, DifferenceObject before the export to drop them.
+
+Fixed: Remove-OrchAssetUserValue -WhatIf showed only the first matching asset and stopped. The
+confirmation loop ran per user value and answered a declined one with `return`, from inside the
+folder and asset loops, so it left the whole cmdlet -- and ShouldProcess is false for every call
+under -WhatIf. Under -Confirm, declining one value abandoned every asset still to come. The prompt
+is now per asset and continues to the next one, which is also the granularity the operation has:
+the removal is a single PutAsset rewriting that asset's whole UserValues list, so declining one
+value removed it anyway along with the rest. The target lists every value being removed, and no
+longer prints a bare separator for a value with no machine ("[me@example.com\]" is now
+"[me@example.com]").
+
+Fixed: an Orchestrator without API triggers no longer fails Copy-Item and Get-OrchApiTrigger with
+"Invalid request!". On Automation Suite 24.10.11 /odata/HttpTriggers answers 404 in every folder
+while its OData neighbours answer 200, and the web UI there offers only Time and Queue triggers
+where Automation Cloud also has Event and API. The tenant simply has no API triggers, and a
+-Recurse run was reporting one error per folder for a feature that does not exist, which under
+$ErrorActionPreference = 'Stop' aborts the caller. Both cmdlets now take that 404 as the answer,
+say so once per drive and skip, the same shape 1.14.0 gave the discontinued Test Automation
+module; Clear-OrchCache re-checks. A tenant that does have API triggers is untouched.
+
+Fixed: Compare-OrchTrigger no longer reports a queue trigger's cron as a difference. A queue
+trigger fires on queue items and the web UI offers it no cron at all; ProcessScheduleDto carries
+StartProcessCron for it anyway, and the value belongs to the server. Measured on Automation Cloud
+26.3, a queue trigger created with "13 7/29 * 1/1 * ? *" reads back "39 3/30 * * * ? *" and the
+next one "40 3/30 * * * ? *"; posting the DTO directly is rewritten the same way, so it is not the
+cmdlet. A time trigger's cron survives untouched. It is version-dependent: the same raw POST
+against Automation Suite 24.10.11 kept the posted value. So the two sides of a migration can hold
+values neither user chose and neither can control -- the reported case, "0 0/30 * 1/1 * ? *" at an
+MSI source against "33 20/30 * * * ? *" at an Automation Suite destination. Copy-Item cannot fix
+it: it already sends the cron and the destination overrides it. The field is now read as absent on both sides for
+a queue trigger, leaving QueueDefinitionName to carry the real difference when only one side is
+one. A TIME trigger's cron is compared exactly as before. Skipping it silently would be its own
+bug -- an "==" row would assert an equality nothing checked -- so when the two crons actually
+differ the cmdlet says so: one notice per run, naming up to five triggers BY PATH and counting the
+rest, because with -Recurse a migration repeats one trigger name in every mirrored folder. When
+they agree nothing is withheld and nothing is said, unlike the secret-value notice in
+Compare-OrchAsset, which must fire on presence alone because a secret's drift is unknowable.
+
+Fixed: Compare-OrchTrigger and Compare-OrchProcess no longer report a correctly copied priority
+as lost. A destination trigger the web UI correctly showed as Low came back as
+"JobPriority: 'Low' => (null)". JobPriority and SpecificPriorityValue are two views of one setting
+and the server will not take both -- measured on Automation Suite 24.10, posting the name alone
+reads back the name and a filled-in value, posting the value alone reads back a null name, and
+posting both is refused with 400 [1009] "Cannot set a specific priority value when a standard job
+priority setting is selected". So a copy has to drop one of the pair, and it drops the name,
+keeping the higher-resolution value. The destination's null is therefore correct, and JobPriority
+is now compared as the name its value resolves to (61 and above High, 30 and below Low, else
+Normal -- the cut points Orchestrator itself uses). SpecificPriorityValue is carried across
+unchanged and stays compared on its own, so a genuine priority change is still reported.
+
 1.15.2
 
 Fixed: a trigger copied out of a CLASSIC folder keeps its "Execute the process X times" count
@@ -540,49 +608,6 @@ back 3, and writing 5 with Update-OrchTrigger makes the UI say "5 times". The so
 now preserved; the reset survives only for a classic source folder, where the same field selects
 the execution target rather than a count. New-OrchTrigger and Update-OrchTrigger now document
 what the parameter actually sets.
-
-1.15.0
-
-Added: "UseProxy": false in a drive's Proxy block now connects directly, ignoring whatever proxy the
-machine is configured with. There was no way to say that before. "Enabled": false means "do not use
-the settings in this block", which leaves .NET free to fall back to the machine's proxy -- and
-"Enabled": false is what the shipped configuration template contains, so nearly every user has been
-inheriting a proxy their configuration never mentioned. Absent behaves as .NET's own default of
-true, so no existing configuration changes behaviour, and "UseProxy": false takes precedence over
-"Enabled".
-
-Security: the PKCE sign-in now sends and verifies a state value. The loopback listener accepted any
-callback carrying a code and exchanged it. PKCE protects a code stolen from us from being used by
-someone else; it does nothing about someone else's code being delivered into our listener, which
-ends with the drive authenticated as them -- the direction RFC 8252 requires state for. A callback
-whose state is missing or different is now refused before the token exchange, since exchanging
-first would already have put a token for the wrong principal in the session. The refusal explains
-the likeliest cause, another sign-in sharing the redirect port, rather than leading with an attack.
-Verified on standalone 24.10.0, Automation Cloud, and Automation Suite 24.10.11.
-
-Fixed: the sign-in page no longer says you are connected when the token exchange failed. The
-browser callback exchanges the sign-in for a token; when that exchange fails the error is left for
-the caller to raise, but the page went on rendering the success card, announcing a connection that
-does not exist, with only a missing user-name row as a hint. That page is the one signal an
-operator has at that moment and it pointed the wrong way. It now says the sign-in worked but the
-connection did not, and shows the underlying error.
-
-Changed: a connection failure now names the proxy it went through and where that proxy came from.
-UiPathOrch only overrides proxy settings when a drive enables them; otherwise the machine's own
-proxy applies, so a request can go through a proxy the drive's configuration never mentions -- and
-when it failed, the error named only an address it could not reach. Reported from the field as
-"Could not connect to 127.0.0.1:10000", read reasonably as a port UiPathOrch wanted to listen on,
-when in fact it was a local proxy agent. When the proxy was inherited rather than configured, the
-message also says how to refuse it, and the sign-in page additionally shows the Proxy block itself.
-
-Changed: sign-in advisories now appear on the browser page when the sign-in opened a browser, and
-are not repeated on the console. The console has only ever been the fallback channel. A notice with
-something to act on still leaves a one-line trace there, because the page is invisible to a
-scheduled run, a transcript, or a session driven by an agent.
-
-Changed: the Entra ID local-user advisory is decided at sign-in rather than two hops later, is
-shown in the reader's language, matching Orchestrator's own banner wording in each of the seven
-languages the module ships, and carries the "Learn more" link the web banner ends with.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
