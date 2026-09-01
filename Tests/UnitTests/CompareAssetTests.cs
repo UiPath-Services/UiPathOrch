@@ -34,6 +34,28 @@ public class EntityComparisonValueEqualsTests
         Assert.True(EntityComparison.ValueEquals(1, 1));
         Assert.False(EntityComparison.ValueEquals(1, 2));
     }
+
+    // An Orchestrator too old to have a flag returns null for it; a newer one returns the flag's
+    // default. For a bool both mean "not enabled", so migrating between them must not report a
+    // difference nobody can act on. null against TRUE stays a difference: that is the feature
+    // switched on at one end.
+    [Theory]
+    [InlineData(null, false, true)]
+    [InlineData(false, null, true)]
+    [InlineData(null, true, false)]
+    [InlineData(true, null, false)]
+    public void ValueEquals_NullBool_IsFalseNotUnknown(bool? a, bool? b, bool expected)
+        => Assert.Equal(expected, EntityComparison.ValueEquals(a, b));
+
+    // Bool only, on purpose: a null number against 0 might mean "absent", but against a non-zero
+    // default it does not, and telling those apart needs each field's default rather than one rule.
+    [Fact]
+    public void ValueEquals_NullNumber_IsStillADifference()
+    {
+        Assert.False(EntityComparison.ValueEquals(null, 0));
+        Assert.False(EntityComparison.ValueEquals(0, null));
+        Assert.False(EntityComparison.ValueEquals(null, 30));
+    }
 }
 
 public class EntityComparisonDiffPropertiesTests

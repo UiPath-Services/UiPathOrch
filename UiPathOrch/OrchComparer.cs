@@ -314,13 +314,27 @@ public static class EntityComparison
     }
 
     // Equality used for a single compared property. null and "" are treated as equal for
-    // string-valued extractors (an absent Description vs an empty one is not a real drift);
-    // non-string values fall back to object Equals (so bool? false vs null IS a difference).
+    // string-valued extractors (an absent Description vs an empty one is not a real drift), and a
+    // null bool is treated as false (see below); everything else falls back to object Equals.
+    //
+    // The null bool: an Orchestrator too old to have a flag returns null for it, while a newer one
+    // returns the flag's default. Migrating between them made every such field a difference nobody
+    // could act on -- reported as `RetryAbandonedItems: (null) => 'False'` on a queue copied from
+    // an MSI source to Automation Suite (2026-08-31), where the field postdates the source. For a
+    // bool the two mean the same thing: not enabled. null against TRUE is left a difference,
+    // because that is the destination having the feature switched on.
+    //
+    // Deliberately bool only. The same argument does not carry to a number: a null Int32 against 0
+    // may mean "absent" but against 30 (a RetentionPeriod default) it certainly does not, and
+    // deciding that needs each field's default rather than one rule. -Property remains the way to
+    // narrow a comparison that is noisy for some other reason.
     public static bool ValueEquals(object? a, object? b)
     {
         if (a is null && b is null) return true;
         if ((a is null || a is string) && (b is null || b is string))
             return string.Equals((string?)a ?? "", (string?)b ?? "", StringComparison.Ordinal);
+        if (a is null && b is bool bFlag) return !bFlag;
+        if (b is null && a is bool aFlag) return !aFlag;
         if (a is null || b is null) return false;
         return a.Equals(b);
     }

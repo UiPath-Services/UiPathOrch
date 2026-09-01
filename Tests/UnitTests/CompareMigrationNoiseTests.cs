@@ -41,6 +41,35 @@ public class PropertyDifferenceListTests
     [Fact]
     public void ToString_EmptyIsEmpty() => Assert.Equal("", List().ToString());
 
+    // The reported shape, through the comparator set rather than through ValueEquals directly:
+    // a queue copied from an MSI source, whose Orchestrator predates RetryAbandonedItems, to
+    // Automation Suite, which returns the field's default. Reported as
+    // "RetryAbandonedItems: (null) => 'False'" on a queue that had been copied correctly.
+    [Fact]
+    public void QueueFieldTheSourceNeverHad_IsNotADifference()
+    {
+        var diffs = EntityComparison.DiffProperties(
+            new QueueDefinition { Name = "Q", RetryAbandonedItems = null },
+            new QueueDefinition { Name = "Q", RetryAbandonedItems = false },
+            [("RetryAbandonedItems", q => q.RetryAbandonedItems)],
+            null);
+
+        Assert.Empty(diffs);
+    }
+
+    // ...but the destination having actually switched it on is still drift.
+    [Fact]
+    public void QueueFieldEnabledAtTheDestination_IsStillADifference()
+    {
+        var diffs = EntityComparison.DiffProperties(
+            new QueueDefinition { Name = "Q", RetryAbandonedItems = null },
+            new QueueDefinition { Name = "Q", RetryAbandonedItems = true },
+            [("RetryAbandonedItems", q => q.RetryAbandonedItems)],
+            null);
+
+        Assert.Equal("RetryAbandonedItems: (null) => 'True'", diffs.ToString());
+    }
+
     // The diff engine has to hand back the type that renders, or nothing above changes.
     [Fact]
     public void DiffProperties_ReturnsTheRenderingList()

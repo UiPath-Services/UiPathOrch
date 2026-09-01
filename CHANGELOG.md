@@ -4,6 +4,24 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.16.1] - 2026-09-01
+
+### Fixed
+
+- **A flag the source Orchestrator is too old to have is no longer a difference.** An Orchestrator
+  that predates a boolean field returns `null` for it; a newer one returns the field's default. A
+  comparison across the two then reported every such field, as
+  `RetryAbandonedItems: (null) => 'False'` on a queue that had in fact copied perfectly — reported
+  from the same MSI-to-Automation-Suite migration as 1.16.0, where `RetryAbandonedItems` postdates
+  the source. For a bool the two values mean the same thing, *not enabled*, so `null` is now
+  compared as `false` across the whole `Compare-Orch*` family. `null` against **true** stays a
+  difference: that is the feature switched on at one end and not the other.
+
+  Bool only, deliberately. The same argument does not carry to a number — a null `Int32` against
+  `0` may well mean "absent", but against `30`, a `RetentionPeriod` default, it does not, and
+  telling those apart needs each field's own default rather than one rule. `-Property` remains the
+  way to narrow a comparison that is noisy for some other reason.
+
 ## [1.16.0] - 2026-09-01
 
 ### Added
