@@ -35,6 +35,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   name — add `Select-Object -ExcludeProperty ReferenceObject, DifferenceObject` before the export
   if those two columns are in the way. Reported from an MSI-to-Automation-Suite migration.
 
+- **`Remove-OrchAssetUserValue -WhatIf` showed only the first matching asset and stopped.** The
+  confirmation loop ran per user value and answered a declined one with `return` — from inside the
+  folder and asset loops, so it left the whole cmdlet. `ShouldProcess` is false for *every* call
+  under `-WhatIf`, which made the preview end after the first asset: the one mode whose entire job
+  is to show what a real run would do was showing a fraction of it, with nothing to say it had
+  stopped. Under `-Confirm`, declining one value abandoned every asset still to come instead of
+  skipping that value. The prompt is now per asset and continues to the next one, which is also
+  the granularity the operation actually has: the removal is a single `PutAsset` rewriting that
+  asset's whole `UserValues` list, so a per-value prompt was offering a choice it could not honour
+  — declining one value removed it anyway along with the rest. The target lists every value being
+  removed, so nothing the per-value lines showed is lost. It also no longer prints a bare
+  separator for a value with no machine: `[me@example.com\]` is now `[me@example.com]`, with
+  `user\machine` kept for the machine-scoped case.
+
 - **An Orchestrator without API triggers no longer fails `Copy-Item` and `Get-OrchApiTrigger` with
   "Invalid request!".** On Automation Suite 24.10.11 the route answers
   `404 {"message":"Invalid request!","errorCode":1000}` in every folder, while its OData

@@ -14,6 +14,14 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Remove, "OrchAssetUserValue", SupportsShouldProcess = true)]
 public class RemoveAssetUserValueCmdlet : OrchestratorPSCmdlet
 {
+    // How one user value is named in the -WhatIf / -Confirm target: "user\machine", or a bare
+    // "user" when the value is not machine-scoped. Most are not, and the separator with nothing
+    // after it read as an escaping artifact rather than a separator -- "[me@example.com\]".
+    internal static string FormatUserValueTarget(AssetUserValue uv)
+        => string.IsNullOrEmpty(uv.MachineName)
+            ? uv.UserName ?? ""
+            : $"{uv.UserName}\\{uv.MachineName}";
+
     [Parameter(Mandatory = true, Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(AssetNameCompleter))]
     [SupportsWildcards]
@@ -180,11 +188,19 @@ public class RemoveAssetUserValueCmdlet : OrchestratorPSCmdlet
 
                 if (removed.Count == 0) continue;
 
-                foreach (var uv in removed)
-                {
-                    string target = $"{copy.GetPSPath()} [{uv.UserName}\\{uv.MachineName}]";
-                    if (!ShouldProcess(target, "Remove UserValue")) return;
-                }
+                // One prompt per ASSET, not one per user value. The removal is a single PutAsset
+                // that rewrites the asset's whole UserValues list, so a per-value prompt offered a
+                // granularity the operation never had: declining one value still removed it along
+                // with the rest. The target names every value going away, so the reader sees what
+                // the per-value lines used to show.
+                //
+                // And `continue`, not `return`: this sits inside the folder and asset loops, so a
+                // declined asset abandoned the entire cmdlet. ShouldProcess is false for EVERY
+                // call under -WhatIf, which meant -WhatIf printed the first matching asset and
+                // silently stopped -- in the one mode whose whole job is to show what a real run
+                // would do.
+                string target = $"{copy.GetPSPath()} [{string.Join(", ", removed.Select(FormatUserValueTarget))}]";
+                if (!ShouldProcess(target, "Remove UserValue")) continue;
 
                 if (keep.Count > 0)
                 {

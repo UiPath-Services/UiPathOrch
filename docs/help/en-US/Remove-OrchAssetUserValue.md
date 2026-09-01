@@ -329,6 +329,8 @@ To delete the entire asset, use Remove-OrchAsset — Remove-OrchAssetUserValue o
 
 The admin API accepts UserValue operations for any tenant user regardless of folder assignment. Assigning the user to the folder (Add-OrchFolderUser) is only required for the robot runtime to actually read the value — not for admin CRUD.
 
+-WhatIf and -Confirm work per ASSET, not per user value: removing values rewrites the asset's whole UserValues list in one call, so declining a single value is not something the operation can honour. Each prompt names every value it would remove, as `[user\machine]`, or `[user]` for a value that is not machine-scoped. Declining one asset moves on to the next.
+
 ## RELATED LINKS
 
 [Set-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchAsset.md)

@@ -1257,6 +1257,49 @@ Describe 'Remove-OrchAssetUserValue' {
         ($a.UserValues | Where-Object UserId -eq $script:TestUserAId) | Should -Not -BeNullOrEmpty
     }
 
+    # T8.6 above uses ONE asset, where `return` and `continue` are indistinguishable. The bug this
+    # covers: ShouldProcess is false for every call under -WhatIf, and the loop used to `return` on
+    # the first false -- from inside the folder and asset loops, i.e. out of the whole cmdlet. So
+    # -WhatIf previewed the first matching asset and silently stopped, in the one mode whose job is
+    # to show what a real run would do. Two matching assets are the smallest case that shows it.
+    #
+    # -WhatIf text goes straight to the host: no redirection captures it (6>&1 / 4>&1 / *>&1 all
+    # come back empty), so the transcript is the only way to read it back.
+    It 'T8.6b -WhatIf previews EVERY matching asset, not just the first' {
+        $a1 = "${script:RuvName}_WiAll1"
+        $a2 = "${script:RuvName}_WiAll2"
+        foreach ($nm in @($a1, $a2)) {
+            Set-OrchSecretAsset -Name $nm -SecretValue 'g'
+            Set-OrchSecretAsset -Name $nm -UserName $script:TestUserA -SecretValue 'uv'
+        }
+        Clear-OrchCache
+
+        $tr = Join-Path ([IO.Path]::GetTempPath()) "ruv_whatif_$PID.txt"
+        try {
+            Start-Transcript -Path $tr | Out-Null
+            Remove-OrchAssetUserValue -Name "${script:RuvName}_WiAll*" -UserName $script:TestUserA -WhatIf
+            Stop-Transcript | Out-Null
+
+            $whatIf = @(Get-Content $tr | Where-Object { $_ -like '*What if:*' -and $_ -like '*Remove UserValue*' })
+            $whatIf.Count | Should -Be 2 -Because 'both matching assets must be previewed, not just the first'
+            ($whatIf -join "`n") | Should -Match ([regex]::Escape($a1))
+            ($whatIf -join "`n") | Should -Match ([regex]::Escape($a2))
+
+            # The target names the value; a value with no machine must not carry a bare separator.
+            ($whatIf -join "`n") | Should -Not -Match '\\\]' -Because 'a user-only value has no machine to print after the separator'
+        }
+        finally {
+            Remove-Item $tr -ErrorAction SilentlyContinue
+        }
+
+        # ...and nothing was actually removed.
+        Clear-OrchCache
+        foreach ($nm in @($a1, $a2)) {
+            ((Get-OrchAsset -Name $nm).UserValues | Where-Object UserId -eq $script:TestUserAId) |
+                Should -Not -BeNullOrEmpty -Because "-WhatIf must not change '$nm'"
+        }
+    }
+
     It 'T8.8 Non-existent user name is a no-op' {
         $nm = "${script:RuvName}_NoMatch"
         Set-OrchSecretAsset -Name $nm -SecretValue 'g'
