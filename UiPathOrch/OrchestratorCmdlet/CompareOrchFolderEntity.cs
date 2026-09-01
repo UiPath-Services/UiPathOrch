@@ -79,7 +79,13 @@ internal static class FolderCompare
         IReadOnlyList<(string Name, Func<T, object?> Get)> comparators,
         string errorId,
         Action<object> writeObject,
-        Action<ErrorRecord> writeError) where T : class
+        Action<ErrorRecord> writeError,
+        // Optional: called with each pair the engine matched, before the row is emitted. For a
+        // cmdlet that suppresses a property whose raw values it still wants to look at --
+        // Compare-OrchTrigger notices when a queue trigger's cron differs, so it can say the
+        // difference is there and deliberately not reported, instead of leaving "==" to be read as
+        // "the cron matched". The comparators cannot do this: each sees one side at a time.
+        Action<T, T>? onMatchedPair = null) where T : class
     {
         var (srcDrive, srcRootFolder) = sessionState.ResolveToSingleFolder(referencePath);
         var srcDrivesFolders = sessionState.EnumFolders(referencePath, recurse, depth);
@@ -124,6 +130,7 @@ internal static class FolderCompare
                 foreach (var r in refs)
                 {
                     if (r is null) continue;
+                    onMatchedPair?.Invoke(r, target);
                     EmitComparison(r, target, only, includeEqual, getName, getPSPath, comparators, writeObject);
                 }
             }
@@ -157,6 +164,7 @@ internal static class FolderCompare
                 if (getName(r) is { } name && diffByName.TryGetValue(name, out var d))
                 {
                     matched.Add(name);
+                    onMatchedPair?.Invoke(r, d);
                     EmitComparison(r, d, only, includeEqual, getName, getPSPath, comparators, writeObject);
                 }
                 else

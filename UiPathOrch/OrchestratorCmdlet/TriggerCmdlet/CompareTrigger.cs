@@ -48,19 +48,31 @@ public class CompareTriggerCmdlet : CompareOrchCmdlet
     public SwitchParameter IncludeEqual { get; set; }
 
     // A queue trigger fires on queue items, not on a clock, and the web UI offers it no cron at
-    // all. ProcessScheduleDto carries StartProcessCron for it anyway, and whatever sits in that
-    // field is left over from whoever wrote the trigger last -- this module defaults it to
-    // "0 0/1 * 1/1 * ? *" when one is missing, and the web UI's builder writes its own form. It is
-    // not a setting either side's user chose, so a difference in it is one nobody can act on.
+    // all. ProcessScheduleDto carries StartProcessCron for it anyway, and the value there is the
+    // SERVER's, not the caller's. Measured on Automation Cloud 26.3: creating a queue trigger with
+    // "13 7/29 * 1/1 * ? *" reads back "39 3/30 * * * ? *", and a second one created straight
+    // after reads back "40 3/30 * * * ? *" -- the server assigns its own, and consecutive triggers
+    // get consecutive values. Posting the DTO directly, bypassing New-OrchTrigger, is rewritten
+    // the same way, so it is the server and not this module. A TIME trigger's cron survives
+    // untouched on the same server, which is why only the queue case is suppressed.
     //
-    // Reported from an MSI-to-Automation-Suite migration (2026-08-31): a correctly copied queue
-    // trigger compared "0 0/30 * 1/1 * ? *" at the source against "33 20/30 * * * ? *" at the
-    // destination. The destination server is NOT what changed it -- measured on Automation Suite
-    // 24.10, POSTing a queue trigger stores the cron verbatim, even when StartProcessCronDetails
-    // describes a different schedule. Where that particular expression came from is unresolved;
-    // its format is the web UI builder's, not this module's. The field is skipped on its own
-    // merits rather than on a theory of who wrote it.
+    // It is server-VERSION dependent: the same raw POST against Automation Suite 24.10.11 stored
+    // the posted cron verbatim. So the two sides of a migration can hold values neither user chose
+    // and neither side can control -- which is the reported case, "0 0/30 * 1/1 * ? *" at an MSI
+    // source against "33 20/30 * * * ? *" at an Automation Suite destination (2026-08-31).
+    //
+    // This also settles what Copy-Item can do about it: nothing. CopyTriggers already sends the
+    // source cron -- StartProcessCron is not among the fields it nulls -- and the destination
+    // server overrides it anyway.
     internal static bool IsQueueTrigger(ProcessSchedule t) => t.QueueDefinitionId.GetValueOrDefault() != 0;
+
+    // True when suppressing StartProcessCron is hiding a real difference, i.e. when the "==" row
+    // would otherwise be read as "the cron matched". Pure so the decision is unit-testable: the
+    // equal case cannot be built live, because two queue triggers created separately are given
+    // different crons by the server.
+    internal static bool HidesACronDifference(ProcessSchedule reference, ProcessSchedule difference)
+        => (IsQueueTrigger(reference) || IsQueueTrigger(difference))
+           && !EntityComparison.ValueEquals(reference.StartProcessCron, difference.StartProcessCron);
 
     internal static readonly (string Name, Func<ProcessSchedule, object?> Get)[] Comparators =
     [
@@ -87,6 +99,59 @@ public class CompareTriggerCmdlet : CompareOrchCmdlet
 
     internal static readonly HashSet<string> ValidPropertyNames =
         new(Comparators.Select(c => c.Name), StringComparer.OrdinalIgnoreCase);
+
+    // Queue triggers whose StartProcessCron actually differs, reported once at the end.
+    //
+    // The notice exists so an "==" row is not read as "the cron matched" -- but that misreading
+    // only has consequences when the value really does differ. When the two crons are identical
+    // the row is equal in every sense and nothing is being withheld, so saying anything is noise,
+    // and a migration pass over hundreds of matching triggers would train the reader to skip the
+    // warnings that do carry something.
+    //
+    // This is where the comparison parts company with WarnSecretNotCompared, which fires on
+    // presence alone: a secret's value is never returned, so the module cannot know whether it
+    // drifted. Here both values are in hand.
+    private readonly List<string> _queueTriggerCronDiffs = [];
+
+    private void NoteQueueTriggerCron(ProcessSchedule reference, ProcessSchedule difference)
+        => AddCronDiff(_queueTriggerCronDiffs, reference, difference);
+
+    // Pure, so "one notice per run" and "counted by path" are pinned by unit tests. They cannot be
+    // pinned live: a queue trigger's cron is assigned by the server and cannot be set at create or
+    // update (measured on Automation Cloud 26.3 -- Update-OrchTrigger -StartProcessCron leaves it
+    // as it was), so whether two of them differ is a matter of when each happened to be created.
+    internal static void AddCronDiff(List<string> accumulated, ProcessSchedule reference, ProcessSchedule difference)
+    {
+        if (!HidesACronDifference(reference, difference)) return;
+
+        // Keyed on the reference's PATH, not its name. With -Recurse the same trigger name recurs
+        // in every mirrored folder -- the shape a migration produces -- so deduplicating by name
+        // would report "1 queue trigger" when several differ and name only the first folder's.
+        // A key is still needed: ProcessRecord runs once per piped item, so the same pair can
+        // arrive more than once and must count once.
+        var key = reference.GetPSPath();
+        if (!string.IsNullOrEmpty(key) && !accumulated.Contains(key, StringComparer.OrdinalIgnoreCase))
+            accumulated.Add(key);
+    }
+
+    // One notice for the whole run, naming enough of the triggers to be checked without turning
+    // into the wall of text a per-trigger warning would have been.
+    internal static string ComposeCronNotice(IReadOnlyList<string> paths)
+    {
+        const int show = 5;
+        var named = string.Join(", ", paths.Take(show));
+        if (paths.Count > show) named += $", and {paths.Count - show} more";
+
+        return $"StartProcessCron differs on {paths.Count} queue trigger(s) and was deliberately NOT reported: " +
+               $"{named}. A queue trigger fires on queue items and the web UI offers it no cron, so that value is " +
+               "assigned by the server rather than chosen by either side. Nothing else about these triggers was skipped.";
+    }
+
+    protected override void EndProcessing()
+    {
+        if (_queueTriggerCronDiffs.Count > 0) WriteWarning(ComposeCronNotice(_queueTriggerCronDiffs));
+        base.EndProcessing();
+    }
 
     protected override IEnumerable<string> GetTargetDriveNames()
     {
@@ -117,6 +182,7 @@ public class CompareTriggerCmdlet : CompareOrchCmdlet
             Comparators,
             "GetTriggerError",
             CsvOrPipeline(),
-            WriteError);
+            WriteError,
+            NoteQueueTriggerCron);
     }
 }

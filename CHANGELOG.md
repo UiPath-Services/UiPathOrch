@@ -65,14 +65,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   differently. A tenant that does have API triggers is untouched.
 
 - **`Compare-OrchTrigger` no longer reports a queue trigger's cron as a difference.** A queue
-  trigger fires on queue items, and the web UI offers it no cron at all; `ProcessScheduleDto`
-  carries `StartProcessCron` for it anyway, holding whatever the last writer happened to leave —
-  this module defaults it to `0 0/1 * 1/1 * ? *` when one is missing, the web UI's builder writes
-  its own form. It is not a setting either side's user chose, so a difference in it is one nobody
-  can act on. Reported from the same migration, where a correctly copied queue trigger compared
-  `0 0/30 * 1/1 * ? *` at the source against `33 20/30 * * * ? *` at the destination. The field is
-  now read as absent on both sides for a queue trigger, leaving `QueueDefinitionName` to carry the
-  real difference when only one side is one.
+  trigger fires on queue items and the web UI offers it no cron at all; `ProcessScheduleDto`
+  carries `StartProcessCron` for it anyway, and the value there belongs to the *server*, not the
+  caller. Measured on Automation Cloud 26.3: a queue trigger created with `13 7/29 * 1/1 * ? *`
+  reads back `39 3/30 * * * ? *`, the next one `40 3/30 * * * ? *` — posting the DTO directly,
+  bypassing `New-OrchTrigger`, is rewritten identically, so it is the server. A *time* trigger's
+  cron survives untouched on that same server. It is version-dependent too: the same raw POST
+  against Automation Suite 24.10.11 stored the posted value verbatim. So the two sides of a
+  migration can hold values neither user chose and neither side can control — the reported case,
+  `0 0/30 * 1/1 * ? *` at an MSI source against `33 20/30 * * * ? *` at an Automation Suite
+  destination. (This is also why `Copy-Item` cannot fix it at the source: it already sends the
+  cron — `StartProcessCron` is not among the fields it clears — and the destination overrides it.)
+  The field is now read as absent on both sides for a queue trigger, leaving `QueueDefinitionName`
+  to carry the real difference when only one side is one. A **time** trigger's cron is a setting
+  someone chose and is compared exactly as before.
+
+  Skipping it *silently* would be its own bug — an `==` row would assert an equality nothing
+  checked, and `-Property StartProcessCron` over queue triggers would compare nothing and call it
+  equal, which is precisely what the `-Property` filter already warns about for a mistyped name.
+  So when the two crons actually differ the cmdlet says so: **one notice per run**, naming up to
+  five triggers by path and counting the rest. By path, because with `-Recurse` a migration
+  repeats one trigger name in every mirrored folder and counting by name would report one where
+  several differ. When the two crons agree nothing is being withheld and nothing is said — unlike
+  the secret-value notice in `Compare-OrchAsset`, which has to fire on presence alone because a
+  secret is never returned and its drift is unknowable. Here both values are in hand.
 
 - **`Compare-OrchTrigger` and `Compare-OrchProcess` no longer report a correctly copied priority
   as lost.** A destination trigger the web UI correctly showed as Low came back as

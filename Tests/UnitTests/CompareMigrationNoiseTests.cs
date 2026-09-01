@@ -194,6 +194,99 @@ public class CompareTriggerComparatorTests
         Assert.NotNull(Diff("StartProcessCron", src, dst));
     }
 
+    // When is suppressing the cron hiding something? Only when the two values actually differ --
+    // an equal pair's "==" withholds nothing, and warning there would be noise on a verification
+    // pass over triggers that all match. This is unit-tested rather than live because the equal
+    // case cannot be built against a server: Automation Cloud assigns a queue trigger's cron
+    // itself, so two created separately never carry the same one.
+    [Fact]
+    public void QueueTrigger_SameCron_HidesNothing()
+        => Assert.False(CompareTriggerCmdlet.HidesACronDifference(
+            new ProcessSchedule { QueueDefinitionId = 33, StartProcessCron = "0 0/30 * 1/1 * ? *" },
+            new ProcessSchedule { QueueDefinitionId = 71, StartProcessCron = "0 0/30 * 1/1 * ? *" }));
+
+    [Fact]
+    public void QueueTrigger_DifferentCron_HidesADifference()
+        => Assert.True(CompareTriggerCmdlet.HidesACronDifference(
+            new ProcessSchedule { QueueDefinitionId = 33, StartProcessCron = "0 0/30 * 1/1 * ? *" },
+            new ProcessSchedule { QueueDefinitionId = 71, StartProcessCron = "33 20/30 * * * ? *" }));
+
+    // A time trigger's cron is compared for real, so nothing is hidden and nothing is announced.
+    [Fact]
+    public void TimeTrigger_DifferentCron_HidesNothing()
+        => Assert.False(CompareTriggerCmdlet.HidesACronDifference(
+            new ProcessSchedule { StartProcessCron = "0 0/30 * 1/1 * ? *" },
+            new ProcessSchedule { StartProcessCron = "0 0/45 * 1/1 * ? *" }));
+
+    // One side a queue trigger and the other not: the cron is suppressed on the queue side only,
+    // so the pair is still worth naming.
+    [Fact]
+    public void OneSidedQueueTrigger_HidesADifference()
+        => Assert.True(CompareTriggerCmdlet.HidesACronDifference(
+            new ProcessSchedule { QueueDefinitionId = 33, StartProcessCron = "a" },
+            new ProcessSchedule { StartProcessCron = "b" }));
+
+    // How many notices, and how they are counted. None of this can be pinned live: a queue
+    // trigger's cron is assigned by the server and cannot be set at create or update, so whether
+    // two of them differ depends on when each was created.
+    private static ProcessSchedule Qt(string path, string name, string cron)
+        => new() { Path = path, Name = name, QueueDefinitionId = 7, StartProcessCron = cron };
+
+    [Fact]
+    public void SameNameInMirroredFolders_CountsAsTwo()
+    {
+        // The migration shape: one trigger name repeated in every folder. Keyed on the name this
+        // reported "1 queue trigger" and pointed at one folder (measured against that build).
+        var acc = new List<string>();
+        CompareTriggerCmdlet.AddCronDiff(acc, Qt(@"Src:\A", "T", "a"), Qt(@"Dst:\A", "T", "b"));
+        CompareTriggerCmdlet.AddCronDiff(acc, Qt(@"Src:\A\Sub", "T", "a"), Qt(@"Dst:\A\Sub", "T", "b"));
+
+        Assert.Equal(2, acc.Count);
+        Assert.Equal([@"Src:\A\T", @"Src:\A\Sub\T"], acc);
+    }
+
+    // ProcessRecord runs once per piped item, so the same pair can arrive twice.
+    [Fact]
+    public void TheSameTriggerTwice_CountsOnce()
+    {
+        var acc = new List<string>();
+        CompareTriggerCmdlet.AddCronDiff(acc, Qt(@"Src:\A", "T", "a"), Qt(@"Dst:\A", "T", "b"));
+        CompareTriggerCmdlet.AddCronDiff(acc, Qt(@"Src:\A", "T", "a"), Qt(@"Dst:\A", "T", "b"));
+
+        Assert.Single(acc);
+    }
+
+    [Fact]
+    public void EqualCrons_AreNotAccumulated()
+    {
+        var acc = new List<string>();
+        CompareTriggerCmdlet.AddCronDiff(acc, Qt(@"Src:\A", "T", "same"), Qt(@"Dst:\A", "T", "same"));
+        Assert.Empty(acc);
+    }
+
+    [Fact]
+    public void Notice_NamesEveryTriggerUpToFive()
+    {
+        var five = Enumerable.Range(1, 5).Select(i => $@"Src:\F{i}\T").ToList();
+        var s = CompareTriggerCmdlet.ComposeCronNotice(five);
+
+        Assert.Contains("differs on 5 queue trigger(s)", s, StringComparison.Ordinal);
+        Assert.All(five, p => Assert.Contains(p, s, StringComparison.Ordinal));
+        Assert.DoesNotContain("more", s, StringComparison.Ordinal);
+    }
+
+    // Beyond five it stays one line: the count carries the scale, the names carry a starting point.
+    [Fact]
+    public void Notice_CountsTheRestInsteadOfListingThem()
+    {
+        var eight = Enumerable.Range(1, 8).Select(i => $@"Src:\F{i}\T").ToList();
+        var s = CompareTriggerCmdlet.ComposeCronNotice(eight);
+
+        Assert.Contains("differs on 8 queue trigger(s)", s, StringComparison.Ordinal);
+        Assert.Contains("and 3 more", s, StringComparison.Ordinal);
+        Assert.DoesNotContain(@"Src:\F6\T", s, StringComparison.Ordinal);
+    }
+
     // Zero is the "no queue" value the copy path itself tests for; it must not read as a queue trigger.
     [Fact]
     public void IsQueueTrigger_TreatsNullAndZeroAsTimeTrigger()
