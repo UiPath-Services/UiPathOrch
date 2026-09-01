@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.16.0'
+ModuleVersion = '1.16.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -503,6 +503,17 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.16.1
+
+Fixed: a flag the source Orchestrator is too old to have is no longer a difference. An Orchestrator
+that predates a boolean field returns null for it; a newer one returns the field's default, so a
+comparison across the two reported every such field -- "RetryAbandonedItems: (null) => 'False'" on
+a queue that had copied perfectly, from the same MSI-to-Automation-Suite migration as 1.16.0. For a
+bool both values mean "not enabled", so null is now compared as false across the whole
+Compare-Orch* family. null against TRUE stays a difference: that is the feature switched on at one
+end. Bool only -- a null number against 0 may mean "absent" but against a non-zero default it does
+not, and telling those apart needs each field's own default rather than one rule.
+
 1.16.0
 
 Added: the whole Compare-Orch* family takes -ExportCsv (and -CsvEncoding), like the Get-Orch*
@@ -585,29 +596,6 @@ where classic folders still live. The rule is now the measured one and no longer
 of folder the trigger came from: a positive count is carried across unchanged, and only a value
 below 1 falls back to a single run, with a warning naming the trigger. The -StartStrategy help on
 New-OrchTrigger and Update-OrchTrigger, which repeated the wrong claim, is corrected with it.
-
-1.15.1
-
-Fixed: a queue shared between folders could stay invisible in the destination for the rest of a
-Copy-Item session, taking its queue trigger with it. Copying a folder tree, the first folder's
-pass looks for its shared queue's counterpart in every destination folder the queue is linked
-to, and caches what it finds there -- usually nothing, since those folders have not been copied
-yet. Nothing invalidated that empty list afterwards, neither creating the queues on that
-folder's own pass nor sharing the queue into it, so the folder stayed empty in the module's view
-until the next Clear-OrchCache. Get-OrchQueue under-reported it, and the trigger stage of the
-same run decided the queue did not exist and skipped the trigger with a warning rather than an
-error, so the run looked successful while the migration was incomplete. Both paths now
-invalidate the destination folder's entity list and the entity's link set. Assets and buckets
-had the same defect and are fixed with it.
-
-Fixed: a copied trigger no longer comes out running once when the source said "Execute the
-process X times". Copy-Item and Copy-OrchTrigger overwrote StartStrategy with 1 for every
-destination folder that is not classic. It is the job count the modern folder's web UI labels
-"Execute the process X times": measured on Automation Suite 24.10.11, a trigger set to 3 reads
-back 3, and writing 5 with Update-OrchTrigger makes the UI say "5 times". The source value is
-now preserved; the reset survives only for a classic source folder, where the same field selects
-the execution target rather than a count. New-OrchTrigger and Update-OrchTrigger now document
-what the parameter actually sets.
 
 Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
