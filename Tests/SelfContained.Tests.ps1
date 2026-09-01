@@ -2553,8 +2553,13 @@ Describe 'IdentityUrl Derivation' {
     # Cloud orgs with errorCode=219 "user has not accepted the invitation";
     # customer bisection pinned it v0.9.15.4 OK -> v0.9.15.5 NG. This
     # mirrors the xUnit guard in Tests/UnitTests/IdentityUrlAutoGenTests.cs.
+    # These split on Edition, not on the host name. They used to select cloud as
+    # "Root matches uipath.com" and on-prem as everything else, which put an Automation
+    # Suite drive on a private host (autosuite.uipath.devtest) into the on-prem branch
+    # and failed it for deriving /identity_. The product was right and the split was
+    # wrong -- see the Automation Suite test below.
     It 'Cloud drive IdentityUrl is host-level {authority}/identity_' {
-        $cloudDrives = $script:allDrives | Where-Object { $_.Root -match 'uipath\.com' }
+        $cloudDrives = $script:allDrives | Where-Object { $_.Edition -eq 'Cloud' }
         $cloudDrives | Should -Not -BeNullOrEmpty -Because 'at least one cloud drive should be connected'
 
         foreach ($d in $cloudDrives) {
@@ -2564,8 +2569,24 @@ Describe 'IdentityUrl Derivation' {
         }
     }
 
+    # Automation Suite is the containerized platform, not a classic on-premises
+    # Orchestrator, and its Identity is host-level and served at /identity_ exactly like
+    # Cloud. Measured on autosuite.uipath.devtest (2026-09-01): /identity_ returns the
+    # OIDC discovery document, with issuer https://autosuite.uipath.devtest/identity_,
+    # while /identity answers 200 with the SPA's HTML and no discovery document at all.
+    It 'Automation Suite drive IdentityUrl is host-level {authority}/identity_' {
+        $suiteDrives = $script:allDrives | Where-Object { $_.Edition -eq 'AutomationSuite' }
+        if (-not $suiteDrives) { Set-ItResult -Skipped -Because 'no Automation Suite drives connected'; return }
+
+        foreach ($d in $suiteDrives) {
+            $uri = [Uri]$d.Root.TrimEnd('/')
+            $expected = "$($uri.Scheme)://$($uri.Authority)/identity_"
+            $d.IdentityUrl | Should -Be $expected -Because "drive '$($d.Name)' Root=$($d.Root)"
+        }
+    }
+
     It 'On-prem drive IdentityUrl is {authority}/identity' {
-        $onpremDrives = $script:allDrives | Where-Object { $_.Root -notmatch 'uipath\.com' }
+        $onpremDrives = $script:allDrives | Where-Object { $_.Edition -eq 'OnPremises' }
         if (-not $onpremDrives) { Set-ItResult -Skipped -Because 'no on-prem drives connected'; return }
 
         foreach ($d in $onpremDrives) {
@@ -2573,6 +2594,17 @@ Describe 'IdentityUrl Derivation' {
             $expected = "$($uri.Scheme)://$($uri.Authority)/identity"
             $d.IdentityUrl | Should -Be $expected -Because "drive '$($d.Name)' Root=$($d.Root)"
         }
+    }
+
+    # Selecting by Edition is not exhaustive by construction the way the old
+    # match/notmatch pair was, so a new edition would silently be asserted by nothing.
+    # This is the check that would have caught the mis-split above on its own terms.
+    It 'every connected drive falls into one of the asserted editions' {
+        $known = @('Cloud', 'AutomationSuite', 'OnPremises')
+        $unasserted = @($script:allDrives | Where-Object { $_.Edition -notin $known } |
+            ForEach-Object { "$($_.Name) (Edition=$($_.Edition), Root=$($_.Root))" })
+        $unasserted | Should -BeNullOrEmpty `
+            -Because 'a drive whose edition no test selects would have its IdentityUrl checked by nothing'
     }
 
     It 'IdentityUrl is not null or empty for any drive' {
