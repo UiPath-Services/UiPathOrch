@@ -22,7 +22,7 @@ Compares API (HTTP) triggers between two folders or Orchestrator instances and r
 ```
 Compare-OrchApiTrigger [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
  [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-IncludeEqual] [-Property <string[]>] [-ExportCsv <string>] [-CsvEncoding <Encoding>]
+ [-CsvEncoding <Encoding>] [-ExportCsv <string>] [-IncludeEqual] [-Property <string[]>]
  [<CommonParameters>]
 ```
 
@@ -67,6 +67,7 @@ PS C:\> Compare-OrchApiTrigger * Orch2:\Shared -Path Orch1:\Shared -Recurse -Inc
 ```
 
 Writes every row -- differing and equal alike -- to report.csv instead of the pipeline, with the per-property differences in the Differences column.
+
 ## PARAMETERS
 
 ### -CsvEncoding

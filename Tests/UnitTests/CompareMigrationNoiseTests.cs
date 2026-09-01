@@ -241,8 +241,11 @@ public class CompareTriggerComparatorTests
         CompareTriggerCmdlet.AddCronDiff(acc, Qt(@"Src:\A", "T", "a"), Qt(@"Dst:\A", "T", "b"));
         CompareTriggerCmdlet.AddCronDiff(acc, Qt(@"Src:\A\Sub", "T", "a"), Qt(@"Dst:\A\Sub", "T", "b"));
 
-        Assert.Equal(2, acc.Count);
-        Assert.Equal([@"Src:\A\T", @"Src:\A\Sub\T"], acc);
+        // Composed with Path.Combine, not spelled out: the key comes from GetPSPath, whose
+        // separator follows the host, so hard-coding "\" fails the Linux and macOS legs of CI.
+        Assert.Equal(
+            [System.IO.Path.Combine(@"Src:\A", "T"), System.IO.Path.Combine(@"Src:\A\Sub", "T")],
+            acc);
     }
 
     // ProcessRecord runs once per piped item, so the same pair can arrive twice.

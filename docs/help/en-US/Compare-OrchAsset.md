@@ -22,9 +22,8 @@ Compares assets between two folders or Orchestrator instances and reports the di
 ```
 Compare-OrchAsset [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint>]
  [-Name] <string[]> [-DifferencePath] <string> [[-DifferenceName] <string>]
- [-IncludeEqual] [-Property <string[]>] [-UserMappingCsv <string>] [-ValueType <string[]>]
- [-ExportCsv <string>] [-CsvEncoding <Encoding>]
- [<CommonParameters>]
+ [-CsvEncoding <Encoding>] [-ExportCsv <string>] [-IncludeEqual] [-Property <string[]>]
+ [-UserMappingCsv <string>] [-ValueType <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -118,6 +117,7 @@ PS C:\> Compare-OrchAsset * Orch2:\Shared -Path Orch1:\Shared -Recurse -IncludeE
 ```
 
 Writes every row -- differing and equal alike -- to report.csv instead of the pipeline, with the per-property differences in the Differences column.
+
 ## PARAMETERS
 
 ### -CsvEncoding

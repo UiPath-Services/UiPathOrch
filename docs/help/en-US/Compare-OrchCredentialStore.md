@@ -21,9 +21,8 @@ Compares credential stores between two Orchestrator instances and reports the di
 
 ```
 Compare-OrchCredentialStore [-Path <string>] [-LiteralPath <string>] [-Name] <string[]>
- [-DifferencePath] <string> [[-DifferenceName] <string>] [-IncludeEqual]
- [-Property <string[]>] [-ExportCsv <string>] [-CsvEncoding <Encoding>]
- [<CommonParameters>]
+ [-DifferencePath] <string> [[-DifferenceName] <string>] [-CsvEncoding <Encoding>]
+ [-ExportCsv <string>] [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -67,6 +66,7 @@ PS C:\> Compare-OrchCredentialStore * Orch2: -Path Orch1: -IncludeEqual -ExportC
 ```
 
 Writes every row -- differing and equal alike -- to report.csv instead of the pipeline, with the per-property differences in the Differences column.
+
 ## PARAMETERS
 
 ### -CsvEncoding

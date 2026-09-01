@@ -22,8 +22,8 @@ Compares event (connector) triggers between two folders or Orchestrator instance
 ```
 Compare-OrchEventTrigger [-Path <string>] [-LiteralPath <string>] [-Recurse]
  [-Depth <uint>] [-Name] <string[]> [-DifferencePath] <string>
- [[-DifferenceName] <string>] [-IncludeEqual] [-Property <string[]>] [-ExportCsv <string>] [-CsvEncoding <Encoding>]
- [<CommonParameters>]
+ [[-DifferenceName] <string>] [-CsvEncoding <Encoding>] [-ExportCsv <string>]
+ [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -67,6 +67,7 @@ PS C:\> Compare-OrchEventTrigger * Orch2:\Shared -Path Orch1:\Shared -Recurse -I
 ```
 
 Writes every row -- differing and equal alike -- to report.csv instead of the pipeline, with the per-property differences in the Differences column.
+
 ## PARAMETERS
 
 ### -CsvEncoding

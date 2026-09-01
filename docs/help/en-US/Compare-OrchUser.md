@@ -21,8 +21,8 @@ Compares users between two Orchestrator instances and reports the differences.
 
 ```
 Compare-OrchUser [-Path <string>] [-LiteralPath <string>] [-Name] <string[]>
- [-DifferencePath] <string> [[-DifferenceName] <string>] [-IncludeEqual]
- [-Property <string[]>] [-UserMappingCsv <string>] [-ExportCsv <string>] [-CsvEncoding <Encoding>]
+ [-DifferencePath] <string> [[-DifferenceName] <string>] [-CsvEncoding <Encoding>]
+ [-ExportCsv <string>] [-IncludeEqual] [-Property <string[]>] [-UserMappingCsv <string>]
  [<CommonParameters>]
 ```
 
@@ -69,6 +69,7 @@ PS C:\> Compare-OrchUser * Orch2: -Path Orch1: -IncludeEqual -ExportCsv report.c
 ```
 
 Writes every row -- differing and equal alike -- to report.csv instead of the pipeline, with the per-property differences in the Differences column.
+
 ## PARAMETERS
 
 ### -CsvEncoding
