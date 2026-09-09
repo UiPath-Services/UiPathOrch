@@ -224,6 +224,7 @@ Describe 'StaticTextsCompleter has the expected candidates' {
         $names | Should -Contain 'Text'
         $names | Should -Contain 'Bool'
         $names | Should -Contain 'Integer'
+        $names | Should -Contain 'Json'
     }
 
     It 'SoftStop_Kill: New-OrchTrigger -StopStrategy' {

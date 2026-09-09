@@ -375,7 +375,7 @@ HelpMessage: ''
 
 ### -ValueType
 
-Filters the assets to compare by value type (Text, Bool, Integer, Credential, Secret); supports wildcards.
+Filters the assets to compare by value type (Text, Bool, Integer, Json, Credential, Secret); supports wildcards.
 
 ```yaml
 Type: System.String[]

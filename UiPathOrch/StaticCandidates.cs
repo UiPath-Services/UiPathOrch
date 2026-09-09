@@ -72,7 +72,9 @@ internal class DirectoryTypes : IStaticCandidates
 
 internal class AssetTypeItems : IStaticCandidates
 {
-    public static string[] Items { get; } = ["Text", "Integer", "Bool"];
+    // Json: AssetValueType gained it in the v20 OpenAPI document (Cloud, 2026-09); Set-OrchAsset
+    // refuses it on a drive below v20 rather than let the server's generic 400 explain.
+    public static string[] Items { get; } = ["Text", "Integer", "Bool", "Json"];
 }
 
 internal class AuditLogComponentItems : IStaticCandidates

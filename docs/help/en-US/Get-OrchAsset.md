@@ -31,7 +31,7 @@ Get-OrchAsset [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <u
 
 Gets asset information from UiPath Orchestrator folders. Assets are data stores used by robots to store configuration settings, credentials, and other automation data.
 
-Assets have four value types: Text, Bool, Integer, and Credential. Each asset has a ValueScope of either Global (same value for all users) or PerRobot (different values per user/machine combination). Credential assets reference a CredentialStore that determines where the credentials are stored.
+Assets have these value types: Text, Bool, Integer, Json (Orchestrator Web API v20 and newer), Credential, and Secret. Each asset has a ValueScope of either Global (same value for all users) or PerRobot (different values per user/machine combination). Credential assets reference a CredentialStore that determines where the credentials are stored.
 
 This cmdlet supports filtering by asset name and value type, expanding user-specific values for per-robot assets, and exporting results to CSV files. When -ExpandUserValues is specified, per-robot assets output AssetUserValue objects instead of Asset objects, showing each user/machine assignment as a separate row.
 
@@ -71,7 +71,7 @@ Gets assets containing "Config" in their name from all folders.
 PS Orch1:\> Get-OrchAsset -Recurse -ValueType Credential
 ```
 
-Gets only credential-type assets from all folders. Valid values for -ValueType are Text, Bool, Integer, and Credential.
+Gets only credential-type assets from all folders. Valid values for -ValueType are Text, Bool, Integer, Json, Credential, and Secret.
 
 ### Example 4: Get an asset from a specific folder
 
@@ -301,7 +301,7 @@ HelpMessage: ''
 
 ### -ValueType
 
-Filters assets by value type. Valid values are Text, Bool, Integer, and Credential. Tab completion dynamically suggests only the value types that exist in the target folders.
+Filters assets by value type. Valid values are Text, Bool, Integer, Json, Credential, and Secret. Tab completion dynamically suggests only the value types that exist in the target folders.
 
 ```yaml
 Type: System.String[]

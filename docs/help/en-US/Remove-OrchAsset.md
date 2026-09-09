@@ -28,7 +28,7 @@ Remove-OrchAsset [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth
 
 ## DESCRIPTION
 
-Removes assets from UiPath Orchestrator folders. This cmdlet removes entire assets including all their per-robot values. It handles all asset types (Text, Bool, Integer, Credential, and Secret).
+Removes assets from UiPath Orchestrator folders. This cmdlet removes entire assets including all their per-robot values. It handles all asset types (Text, Bool, Integer, Json, Credential, and Secret).
 
 The -Name parameter supports wildcards to remove multiple assets at once. The -ValueType parameter can filter which asset types to remove, allowing targeted removal such as removing only credential assets.
 
@@ -73,7 +73,7 @@ Shows which assets would be removed without executing the command. Wildcard patt
 PS Orch1:\Shared> Remove-OrchAsset * -ValueType Credential -WhatIf
 ```
 
-Previews removal of all credential-type assets in the current folder while leaving Text, Bool, Integer, and Secret assets intact; the -ValueType parameter filters by asset type. Because this would delete every credential asset at once, confirm the listed targets first, then re-run the same command without -WhatIf to delete them.
+Previews removal of all credential-type assets in the current folder while leaving Text, Bool, Integer, Json, and Secret assets intact; the -ValueType parameter filters by asset type. Because this would delete every credential asset at once, confirm the listed targets first, then re-run the same command without -WhatIf to delete them.
 
 ### Example 4: Remove assets from a specific folder
 

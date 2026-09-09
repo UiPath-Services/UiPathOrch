@@ -242,6 +242,7 @@ public class GetAssetCmdlet : OrchestratorPSCmdlet
                                 StringValue = asset.StringValue,
                                 BoolValue = asset.BoolValue,
                                 IntValue = asset.IntValue,
+                                JsonValue = asset.JsonValue,
                                 Value = asset.Value,
                                 CredentialUsername = asset.CredentialUsername,
                                 CredentialPassword = asset.CredentialPassword,

@@ -29,7 +29,7 @@ Set-OrchAsset [-Path <string[]>] [-LiteralPath <string[]>] [[-ValueType] <string
 
 ## DESCRIPTION
 
-Creates, updates, and removes non-credential assets in UiPath Orchestrator folders. This cmdlet handles Text, Bool, and Integer asset types. For credential assets, use Set-OrchCredentialAsset instead. If -ValueType is set to Credential, the command is silently ignored.
+Creates, updates, and removes non-credential assets in UiPath Orchestrator folders. This cmdlet handles Text, Bool, Integer, and Json asset types. Json assets need Orchestrator Web API v20 or newer (Automation Cloud); on an older drive the type is refused with a message naming the drive and its version. For credential assets, use Set-OrchCredentialAsset instead. If -ValueType is set to Credential, the command is silently ignored.
 
 The cmdlet determines the operation automatically based on the asset's existence and the -Value parameter:
 
@@ -88,6 +88,14 @@ PS Orch1:\Shared> Set-OrchAsset Bool MaintenanceMode False
 ```
 
 Creates a boolean asset using positional parameters. Parameter positions are: 0=ValueType, 1=Name, 2=Value. For Bool assets, -Value must be "True" or "False" (case-insensitive).
+
+### Example 4a: Create a Json asset
+
+```powershell
+PS Orch1:\Shared> Set-OrchAsset Json ApiSettings '{"baseUrl":"https://api.example.com","retries":3}'
+```
+
+Creates a Json asset. -Value is the JSON text; it is checked for well-formedness before the asset is sent, and comes back in both the Value and JsonValue properties of Get-OrchAsset. Requires Orchestrator Web API v20 or newer.
 
 ### Example 5: Update multiple assets with wildcards
 
@@ -298,7 +306,7 @@ HelpMessage: ''
 
 ### -Value
 
-Specifies the value to assign to the asset. The value is always specified as a string regardless of the asset's ValueType. For Bool assets, use "True" or "False" (case-insensitive). For Integer assets, provide a numeric string. An empty string (`''`) removes the asset or the per-robot value. When -Value is not specified at all (null), only the -Description update is applied and the value is not changed. Tab completion suggests the current value of the asset specified by -Name.
+Specifies the value to assign to the asset. The value is always specified as a string regardless of the asset's ValueType. For Bool assets, use "True" or "False" (case-insensitive). For Integer assets, provide a numeric string. For Json assets, provide the JSON text; malformed JSON is refused before anything is sent. An empty string (`''`) removes the asset or the per-robot value. When -Value is not specified at all (null), only the -Description update is applied and the value is not changed. Tab completion suggests the current value of the asset specified by -Name.
 
 ```yaml
 Type: System.String
@@ -319,7 +327,7 @@ HelpMessage: ''
 
 ### -ValueType
 
-Specifies the type of asset to create. Valid values are Text, Integer, and Bool. Credential is not accepted; use Set-OrchCredentialAsset for credential assets. When creating a new asset without specifying -ValueType, it defaults to Text. When updating an existing asset, the existing ValueType is preserved. Tab completion suggests the three valid value types.
+Specifies the type of asset to create. Valid values are Text, Integer, Bool, and Json. Json requires Orchestrator Web API v20 or newer. Credential is not accepted; use Set-OrchCredentialAsset for credential assets. When creating a new asset without specifying -ValueType, it defaults to Text. When updating an existing asset, the existing ValueType is preserved. Tab completion suggests the four valid value types.
 
 ```yaml
 Type: System.String
@@ -385,7 +393,7 @@ Returns an Asset object only when creating a new asset. Update and remove operat
 
 ## NOTES
 
-This cmdlet handles Text, Bool, and Integer assets only. The -ValueType parameter does not accept Credential; if specified, the command is silently ignored. Use Set-OrchCredentialAsset for credential asset management.
+This cmdlet handles Text, Bool, Integer, and Json assets only. The -ValueType parameter does not accept Credential; if specified, the command is silently ignored. Use Set-OrchCredentialAsset for credential asset management. Json assets exist from Orchestrator Web API v20 (Automation Cloud); the cmdlet refuses the type on an older drive.
 
 The behavior of -Value differs depending on whether it is omitted or set to an empty string: omitting -Value preserves the current value (useful for description-only updates), while setting -Value to `''` triggers asset removal.
 

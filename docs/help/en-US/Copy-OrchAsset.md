@@ -29,7 +29,7 @@ Copy-OrchAsset [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth <uint
 
 ## DESCRIPTION
 
-Copies assets from a source folder to a destination folder in UiPath Orchestrator. The destination can be a different folder on the same Orchestrator instance or a folder on a different Orchestrator instance (cross-drive copy). All asset types are supported: Text, Bool, Integer, and Credential.
+Copies assets from a source folder to a destination folder in UiPath Orchestrator. The destination can be a different folder on the same Orchestrator instance or a folder on a different Orchestrator instance (cross-drive copy). All asset types are supported: Text, Bool, Integer, Json, Credential, and Secret. A Json asset can only land on a destination with Orchestrator Web API v20 or newer; an older destination rejects it.
 
 If the source and destination resolve to the same folder, the operation is silently skipped. If an asset with the same name already exists in the destination folder, an error is returned for that asset and the existing asset is left unchanged — the copy creates assets, it never overwrites one that is already there. Use `Set-OrchAsset` to update an existing asset's value.
 

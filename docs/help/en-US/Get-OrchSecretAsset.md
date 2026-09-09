@@ -28,7 +28,7 @@ Get-OrchSecretAsset [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-De
 
 ## DESCRIPTION
 
-Gets Secret-type assets only. Text, Bool, Integer, and Credential assets are filtered out. Use Get-OrchAsset for all asset types or Get-OrchCredentialAsset for Credential assets.
+Gets Secret-type assets only. Text, Bool, Integer, Json, and Credential assets are filtered out. Use Get-OrchAsset for all asset types or Get-OrchCredentialAsset for Credential assets.
 
 Secret assets are a v20+ feature that stores opaque secret values (as opposed to Credential's username+password pair). The server never returns the secret value itself (always masked), so the SecretValue and Value fields are always empty. Use HasDefaultValue to detect whether a Global value is configured.
 

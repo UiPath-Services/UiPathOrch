@@ -2,6 +2,7 @@ using System.Collections;
 using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using System.Text.Json;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -327,14 +328,15 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
     }
 
     /// <summary>
-    /// Assign a typed value to StringValue/BoolValue/IntValue properties.
+    /// Assign a typed value to StringValue/BoolValue/IntValue/JsonValue properties.
     /// Returns true if the value was changed.
     /// </summary>
     private static bool AssignTypedValue(
         string? valueType, string? textValue, bool boolValue, int intValue,
         Func<string?> getStr, Action<string?> setStr,
         Func<bool?> getBool, Action<bool?> setBool,
-        Func<int?> getInt, Action<int?> setInt)
+        Func<int?> getInt, Action<int?> setInt,
+        Func<string?> getJson, Action<string?> setJson)
     {
         switch (valueType)
         {
@@ -346,6 +348,11 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                 break;
             case "Integer":
                 if (getInt() != intValue) { setInt(intValue); return true; }
+                break;
+            case "Json":
+                // The JSON text travels in JsonValue (v20 OpenAPI); the server echoes it in Value.
+                // Compared as text: a reformatted but equal document is still a change the user asked for.
+                if (getJson() != textValue) { setJson(textValue); return true; }
                 break;
         }
         return false;
@@ -436,6 +443,21 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                     return null;
                 }
             }
+            else if (asset.ValueType == "Json")
+            {
+                // Refuse malformed JSON here, where the message can name the asset, instead of
+                // letting the server answer with its generic 400.
+                try
+                {
+                    using var _ = JsonDocument.Parse(param.Value!);
+                }
+                catch (JsonException ex)
+                {
+                    var errorRecord = new ErrorRecord(new OrchException(target, $"Value cannot be parsed as JSON: {ex.Message}"), "SetAssetError", ErrorCategory.InvalidOperation, target);
+                    WriteError(errorRecord);
+                    return null;
+                }
+            }
         }
 
         if (specifiedUsers is null)
@@ -463,6 +485,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
             asset.StringValue = null;
             asset.BoolValue = null;
             asset.IntValue = null;
+            asset.JsonValue = null;
             return true;
         }
 
@@ -477,7 +500,8 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
             if (AssignTypedValue(asset.ValueType, param.Value, boolValue, intValue,
                 () => asset.StringValue, v => asset.StringValue = v,
                 () => asset.BoolValue, v => asset.BoolValue = v,
-                () => asset.IntValue, v => asset.IntValue = v))
+                () => asset.IntValue, v => asset.IntValue = v,
+                () => asset.JsonValue, v => asset.JsonValue = v))
             {
                 asset.HasDefaultValue = true;
                 return true;
@@ -542,7 +566,8 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
                 if (AssignTypedValue(asset.ValueType, param.Value, boolValue, intValue,
                     () => userValue!.StringValue, v => userValue!.StringValue = v,
                     () => userValue!.BoolValue, v => userValue!.BoolValue = v,
-                    () => userValue!.IntValue, v => userValue!.IntValue = v))
+                    () => userValue!.IntValue, v => userValue!.IntValue = v,
+                    () => userValue!.JsonValue, v => userValue!.JsonValue = v))
                 {
                     isDirty = true;
                     asset.ValueScope = "PerRobot";
@@ -604,6 +629,17 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
             foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
             {
                 string targetFolder = $"{folder.GetPSPath()}";
+
+                // The Json asset type exists from the v20 OpenAPI document (Cloud, 2026-09). An older
+                // server would answer a bare 400 to it; say why here instead. An unknown version is
+                // not treated as too old, matching the module-wide `ApiVersion < N` convention.
+                if (param.ValueType == "Json" && drive.OrchAPISession.ApiVersion < 20)
+                {
+                    Exception e = new($"ValueType 'Json' needs Orchestrator Web API v20 or newer; '{drive.NameColon}' reports v{drive.OrchAPISession.ApiVersion:F1}.");
+                    var errorRecord = new ErrorRecord(new OrchException(targetFolder, e), "SetAssetError", ErrorCategory.InvalidOperation, targetFolder);
+                    WriteError(errorRecord);
+                    continue;
+                }
 
                 IEnumerable<User> specifiedUsers = null;
                 IEnumerable<ExtendedMachine?> specifiedMachines = null;

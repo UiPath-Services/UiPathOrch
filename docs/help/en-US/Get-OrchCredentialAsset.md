@@ -28,7 +28,7 @@ Get-OrchCredentialAsset [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] 
 
 ## DESCRIPTION
 
-Gets credential-type assets only. Text, Bool, Integer, and Secret assets are filtered out. Use Get-OrchAsset for all asset types or Get-OrchSecretAsset for Secret assets.
+Gets credential-type assets only. Text, Bool, Integer, Json, and Secret assets are filtered out. Use Get-OrchAsset for all asset types or Get-OrchSecretAsset for Secret assets.
 
 The cmdlet returns Asset objects. The CredentialUsername field is populated from the server, but CredentialPassword is always masked (empty). When a credential is backed by an external credential store, the ExternalName field contains the vault reference.
 
