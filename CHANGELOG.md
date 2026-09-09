@@ -4,6 +4,70 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+With the August 3, 2026 Automation Cloud release, UiPath made OpenAPI 3.0 the Orchestrator API
+description: `/orchestrator_/openapi/public.json` is now the default, and the Swagger 2.0 document
+(`/swagger/v20.0/swagger.json`) is deprecated from that release and removed in September 2026
+(Automation Suite: deprecated and removed in 2.2610). The OpenAPI document still describes Web
+API 20.0, yet it differs from the October 2025 snapshot of the v20 swagger: a Json asset type, new
+fields, four `GetByKey` lookups, the classic-robot endpoints gone, and the Test Automation API
+marked deprecated. The module follows that document where the change is visible to it. Every change below leaves a drive
+on Web API 11-19 doing exactly what it did before: the new fields are stripped before a write to
+such a server, the new parameters are refused there with a message naming the version, and the
+notices stay silent.
+
+### Added
+
+- **Json assets.** `Set-OrchAsset -ValueType Json` creates and updates the Json asset type the v20
+  OpenAPI document introduced. `-Value` is the JSON text, checked for well-formedness before
+  anything is sent, and travels in the new `JsonValue` property; the server echoes it in `Value`,
+  so `Get-OrchAsset`, its CSV export and the CSV round-trip through `Set-OrchAsset` need nothing
+  new. Per-user values take Json as well. On a drive below Web API v20 the type is refused with a
+  message naming the drive and its version instead of the server's bare 400. `Copy-OrchAsset` and
+  `Copy-Item` carry Json assets like any other; copying one to an older Orchestrator fails on the
+  server side, as it must.
+- **`Stop-OrchJob -BatchExecutionKey`** stops every job of one `Start-OrchJob` batch in a single
+  request (`StopJobsRequest.batchExecutionKey`, v20). `-Force` kills instead of stopping, as with
+  `-Id`. A drive below v20 refuses it.
+- **`Get-OrchTaskAcrossFolder -JobKey`** narrows the cross-folder task list to the tasks one job
+  raised (the endpoint's `jobId` query, v20). The value is the job's Key, the GUID a task records
+  as `CreatorJobKey` / `WaitJobKey` and the one `Get-OrchLog -JobKey` already takes, so it is
+  named and tab-completed like that parameter (the completer is now shared) rather than like the
+  numeric `-JobId` of `Get-OrchJob`. A non-GUID is refused before the request; a drive below v20
+  refuses the parameter.
+- The entities gained the fields the v20 document added: `Machine.FunctionSlots` and
+  `MachineSettings` (closing the long-standing TODO), `Release.RuntimeProfile` (Standard / Lite),
+  `Job.FolderKey` / `TargetRuntime` / `CreatorUser`, the trigger's `BindingKey`,
+  `Asset.ValueJsonSchema`, `AuditLog.UserIsActive`, `MachineRuntime.IsAutomationEdge`, the task's
+  `ClaimedByUserId` / `TaskSchemaKey` / `FpsContext`, `UserEntity.Key` / `IsActive` and the bulk
+  queue-item failure's `ErrorDetails`. A write to a server below v20 strips the writable ones, so
+  a `DeepCopy`'d Cloud entity does not trip strict deserialization there.
+
+### Changed
+
+- **`Invoke-OrchApi -Uri` completion follows the OpenAPI document.**
+  `Tools\Update-ApiEndpointCatalog.ps1` reads `OpenAPI 3.0\public.json` as the newest snapshot of
+  the version it describes, in place of the swagger document of that version, and the embedded
+  catalog was regenerated from it. The 14 endpoints the document adds (`GetByKey(identifier=)` on
+  Jobs, Releases, Buckets and Users, `GetProcessVersion`, `/api/Assets/name/{name}/value`, the
+  VideoRecording API, ...) are offered on v20 tenants; the 13 it dropped (the classic-robot
+  `/odata/Robots({key})` family, `ToggleEnabledStatus`, `ConvertToFloating`, `DeleteBulk`,
+  `GetUsernames`, `/odata/OrganizationUnits`, `GetRobotAsset(robotId=,assetName=)`) are no longer
+  offered there and stay offered on v11-v19 drives, where they still exist.
+- **User and test-set reads no longer `$expand` classic-folder navigations on v20.**
+  `UserDto.OrganizationUnits` and `TestSetDto.Environment` are gone from the v20 document, the way
+  `ReleaseDto.Environment` went before them (a 26.3 server already answers that `$expand` with
+  400 "Could not find a property named 'Environment'"). Cloud still accepted both expands when
+  this was written; the module stops asking ahead of the refusal. v20 has no classic folders, so
+  nothing is lost; below v20 the requests are byte-for-byte what they were.
+- **The Test* cmdlets say once per drive that Orchestrator has deprecated its Test Automation
+  API.** The v20 document marks `/odata/TestSets`, `TestSetSchedules`, `TestSetExecutions`,
+  `TestCaseExecutions` and `/api/TestAutomation/*` as deprecated in favour of Test Manager. The
+  cmdlets and the test-set stages of `Copy-Item` keep working; the first Test* call on a v20+
+  drive in a session warns with the FAQ link, and drives below v20 stay silent. `Clear-OrchCache`
+  resets the notice.
+
 ## [1.16.1] - 2026-09-01
 
 ### Fixed
