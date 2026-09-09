@@ -226,6 +226,7 @@ public class GetTestSetExecutionCmdlet : OrchestratorPSCmdlet
         ulong first = First ?? ulong.MaxValue;
 
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        WarnTestingModuleDeprecated(drivesFolders.Select(df => df.drive));
         var wpName = Name.ConvertToWildcardPatternList();
 
         // If no filter parameters are specified, return the cache contents

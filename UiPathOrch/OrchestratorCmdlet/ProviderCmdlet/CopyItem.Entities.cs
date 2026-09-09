@@ -1676,6 +1676,19 @@ public partial class OrchProvider
         return true;
     }
 
+    // The copy-stage twin of OrchestratorPSCmdlet.WarnTestingModuleDeprecated: say once per drive
+    // that the Test Automation API is deprecated (v20+ only), then carry on copying.
+    private static void WarnTestingModuleDeprecated(IWritableHost _this, params OrchDriveInfo[] drives)
+    {
+        foreach (var drive in drives.Distinct())
+        {
+            if (drive.OrchAPISession.NoteTestingModuleDeprecated())
+            {
+                _this.WriteWarning(UiPath.OrchAPI.OrchAPISession.TestingModuleDeprecatedWarning(drive.NameColon));
+            }
+        }
+    }
+
     internal static void CopyTestSets(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
@@ -1694,6 +1707,8 @@ public partial class OrchProvider
         // request!" noise in every Copy-Item recursion. v17+ has stable APIs.
         if (srcDrive.OrchAPISession.ApiVersion < 17) return;
         if (dstDrive.OrchAPISession.ApiVersion < 17) return;
+
+        WarnTestingModuleDeprecated(_this, srcDrive, dstDrive);
 
         string msg = $"Copying test sets";
 
@@ -1876,6 +1891,8 @@ public partial class OrchProvider
         // and nothing to say a second time.
         if (srcDrive.OrchAPISession.TestAutomationDiscontinued ||
             dstDrive.OrchAPISession.TestAutomationDiscontinued) return;
+
+        WarnTestingModuleDeprecated(_this, srcDrive, dstDrive);
 
         string msg = $"Copying test schedules";
 

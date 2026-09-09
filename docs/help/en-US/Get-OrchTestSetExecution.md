@@ -390,6 +390,8 @@ Returns TestSetExecution objects with properties including Name, Id, Status, Sta
 
 Test set executions are folder-scoped entities. You must navigate to a folder on the Orch: drive or use -Path to specify target folders.
 
+Orchestrator marks its Test Automation API (test sets, test set schedules, test executions) as deprecated from Web API v20 in favour of the Test Manager service. The cmdlet keeps working; the first Test* cmdlet run against such a drive in a session emits one warning with the FAQ link, and `Clear-OrchCache` resets it. Drives below v20 stay silent.
+
 When no filter parameters are specified, the cmdlet outputs cached results instead of querying the Orchestrator. A warning message is displayed to inform you. To force a query, specify at least one filter parameter such as `-Last Day`.
 
 ## RELATED LINKS

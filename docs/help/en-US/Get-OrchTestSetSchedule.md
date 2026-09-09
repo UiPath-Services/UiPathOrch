@@ -250,6 +250,8 @@ Returns TestSetSchedule objects representing test set schedules with properties 
 
 The cmdlet uses multi-threaded folder processing for improved performance when querying across multiple folders. Personal folders are excluded from processing.
 
+Orchestrator marks its Test Automation API (test sets, test set schedules, test executions) as deprecated from Web API v20 in favour of the Test Manager service. The cmdlet keeps working; the first Test* cmdlet run against such a drive in a session emits one warning with the FAQ link, and `Clear-OrchCache` resets it. Drives below v20 stay silent.
+
 ## RELATED LINKS
 
 [Remove-OrchTestSetSchedule](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchTestSetSchedule.md)

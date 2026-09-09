@@ -19,7 +19,10 @@ public class RemoveTestSetScheduleCmdlet : RemoveFolderEntityCmdletBase<TestSetS
     protected override bool ExcludePersonalWorkspace => true;
 
     protected override IEnumerable<TestSetSchedule> GetEntities(OrchDriveInfo drive, Folder folder)
-        => drive.TestSetSchedules.Get(folder);
+    {
+        WarnTestingModuleDeprecated(drive); // pipeline thread: the base enumerates folders serially
+        return drive.TestSetSchedules.Get(folder);
+    }
 
     protected override void Remove(OrchDriveInfo drive, Folder folder, TestSetSchedule schedule)
     {

@@ -148,6 +148,24 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
     internal static string? EffectivePath(string? path, string? literalPath)
         => literalPath is null ? path : WildcardPattern.Escape(literalPath);
 
+    // One-time notice that a drive's Orchestrator has deprecated its Test Automation API (see
+    // OrchAPISession.NoteTestingModuleDeprecated). The Test* cmdlets call this with the drives
+    // they are about to read or write, on the pipeline thread; a drive that has already said it
+    // stays quiet, and so does one below v20.
+    protected void WarnTestingModuleDeprecated(IEnumerable<OrchDriveInfo?> drives)
+    {
+        foreach (var drive in drives.Where(d => d is not null).Distinct())
+        {
+            if (drive!.OrchAPISession.NoteTestingModuleDeprecated())
+            {
+                WriteWarning(UiPath.OrchAPI.OrchAPISession.TestingModuleDeprecatedWarning(drive.NameColon));
+            }
+        }
+    }
+
+    protected void WarnTestingModuleDeprecated(params OrchDriveInfo?[] drives)
+        => WarnTestingModuleDeprecated((IEnumerable<OrchDriveInfo?>)drives);
+
     // Drives this cmdlet is about to operate on -- only their PendingWarning
     // gets flushed in BeginProcessing. The legacy code walked every registered
     // drive, which surfaced unrelated drives' pending warnings during the next

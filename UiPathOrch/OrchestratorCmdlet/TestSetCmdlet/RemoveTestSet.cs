@@ -19,7 +19,10 @@ public class RemoveTestSetCmdlet : RemoveFolderEntityCmdletBase<TestSet>
     protected override bool ExcludePersonalWorkspace => true;
 
     protected override IEnumerable<TestSet> GetEntities(OrchDriveInfo drive, Folder folder)
-        => drive.TestSets.Get(folder);
+    {
+        WarnTestingModuleDeprecated(drive); // pipeline thread: the base enumerates folders serially
+        return drive.TestSets.Get(folder);
+    }
 
     protected override void Remove(OrchDriveInfo drive, Folder folder, TestSet testSet)
     {

@@ -38,6 +38,7 @@ public class CopyTestSetScheduleCmdlet : OrchestratorPSCmdlet
 
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
         var dstFolderCache = new Dictionary<string, Folder?>();
+        WarnTestingModuleDeprecated(srcDrive, dstDrive);
 
         // If source and destination are the same, do nothing
         if (srcRootFolder == dstRootFolder) return;

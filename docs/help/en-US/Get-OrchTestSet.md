@@ -205,6 +205,8 @@ Returns TestSet objects with properties including Name, Description, Id, and Pac
 
 Test sets are folder-scoped entities. You must navigate to a folder on the Orch: drive or use -Path to specify target folders.
 
+Orchestrator marks its Test Automation API (test sets, test set schedules, test executions) as deprecated from Web API v20 in favour of the Test Manager service. The cmdlet keeps working; the first Test* cmdlet run against such a drive in a session emits one warning with the FAQ link, and `Clear-OrchCache` resets it. Drives below v20 stay silent.
+
 ## RELATED LINKS
 
 [Remove-OrchTestSet](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchTestSet.md)

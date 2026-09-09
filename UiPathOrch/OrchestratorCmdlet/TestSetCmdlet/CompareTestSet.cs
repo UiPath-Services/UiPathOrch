@@ -74,6 +74,21 @@ public class CompareTestSetCmdlet : CompareOrchCmdlet
     {
         var only = CompareParameterHelper.ResolvePropertyFilter(this, Property, ValidPropertyNames);
 
+        // Both sides read /odata/TestSets. Resolved here, on the pipeline thread, because the getter
+        // below runs inside FolderCompare; a notice must never be the reason a comparison fails.
+        try
+        {
+            string? refPath = EffectivePath(Path, LiteralPath);
+            IEnumerable<string?>? refPaths = refPath is null ? null : new[] { refPath };
+            WarnTestingModuleDeprecated(
+                SessionState.EnumOrchDrives(refPaths)
+                    .Concat(SessionState.EnumOrchDrives(new[] { DifferencePath })));
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"testing-module notice skipped: {ex.Message}");
+        }
+
         FolderCompare.Run<TestSet>(
             SessionState,
             EffectivePath(Path, LiteralPath),

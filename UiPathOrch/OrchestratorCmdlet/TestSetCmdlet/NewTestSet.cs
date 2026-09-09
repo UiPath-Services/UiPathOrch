@@ -57,6 +57,7 @@ public class NewTestSetCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath));
+        WarnTestingModuleDeprecated(drivesFolders.Select(df => df.drive));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)

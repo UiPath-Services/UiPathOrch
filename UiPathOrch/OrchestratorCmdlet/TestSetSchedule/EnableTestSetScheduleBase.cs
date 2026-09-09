@@ -69,6 +69,7 @@ public class EnableTestSetScheduleCmdletBase<Enable> : OrchestratorPSCmdlet wher
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFoldersWithoutPersonalWorkspace(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+        WarnTestingModuleDeprecated(drivesFolders.Select(df => df.drive));
         var wpName = Name.ConvertToWildcardPatternList();
 
         string action = $"{(Enable.Value ? "Enable" : "Disable")} TestSetSchedule";

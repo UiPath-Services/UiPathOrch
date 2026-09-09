@@ -110,6 +110,8 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             _orchAPISession.PmApiDeprecated = true;
             // Re-probe whether the account still lacks Test Automation (see the property's comment).
             _orchAPISession.TestAutomationDiscontinued = false;
+            // And say the testing-module deprecation notice again on the next Test* cmdlet.
+            _orchAPISession.ResetTestingModuleDeprecationNotice();
             // Same for API triggers, which an upgraded Orchestrator can gain.
             _orchAPISession.ApiTriggersUnavailable = false;
         }
