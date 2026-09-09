@@ -17,7 +17,7 @@
     <!-- Enables the "XPlat Code Coverage" data collector that CI asks dotnet test for. CI
          collects and uploads the report; there is deliberately no threshold gate until the
          number is established. -->
-    <PackageReference Include="coverlet.collector" Version="6.0.4">
+    <PackageReference Include="coverlet.collector" Version="10.0.1">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
