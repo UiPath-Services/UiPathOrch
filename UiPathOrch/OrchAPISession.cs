@@ -1806,6 +1806,15 @@ public partial class OrchAPISession : IDisposable
 
     public void StopJobs(Int64 folderId, IEnumerable<Int64> jobIds, bool force = false) => HttpRequest(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs", folderId, new { strategy = force ? "2" : "1", jobIds });
 
+    // StopJobsRequest.batchExecutionKey: v20 OpenAPI document (Cloud, 2026-09), where jobIds also
+    // stopped being required. Stops every job of one Start-OrchJob batch (Job.BatchExecutionKey)
+    // in a single call instead of listing the ids.
+    public void StopJobsByBatch(Int64 folderId, string batchExecutionKey, bool force = false)
+    {
+        EnsureVersionSupport(20);
+        HttpRequest(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs", folderId, new { strategy = force ? "2" : "1", batchExecutionKey });
+    }
+
     public Job? RestartJob(Int64 folderId, Int64 jobId) => HttpRequest<Job>(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.RestartJob", folderId, new { jobId });
 
     public Job? ResumeJob(Int64 folderId, string jobKey) => HttpRequest<Job>(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.ResumeJob", folderId, new { jobKey });
@@ -1828,8 +1837,17 @@ public partial class OrchAPISession : IDisposable
     public CreatedMachine? AddMachine(ExtendedMachine machine) //, IEnumerable<RobotUser> robotUsers)
     {
         // Strip properties not supported by older API versions.
+        // FunctionSlots, MachineSettings: v20 OpenAPI document (Cloud, 2026-09) only, absent from
+        // every swagger snapshot through the 2025-10 v20 one. AgentSlots is deliberately NOT
+        // stripped here: it has been sent to older servers unchanged since it was modelled, and
+        // silently zeroing it on a server that does know it would be the worse surprise.
         // AutomationCloudTestAutomationSlots: added in v16.0
         // AutomationCloudSlots, AutomationType, TargetFramework: added in v15.0
+        if (ApiVersion < 20)
+        {
+            machine.FunctionSlots = null;
+            machine.MachineSettings = null;
+        }
         if (ApiVersion < 16)
         {
             machine.AutomationCloudTestAutomationSlots = null;
@@ -2146,6 +2164,15 @@ public partial class OrchAPISession : IDisposable
     // ReleaseDto already has RobotSize that the v15.0 swagger snapshot lacks).
     internal static void StripReleaseFieldsForApiVersion(Release release, double? apiVersion)
     {
+        // RuntimeProfile (Standard / Lite) appears in the v20 OpenAPI document (Cloud, 2026-09) and
+        // is absent from every swagger snapshot through the 2025-10 v20 one. The server always
+        // returns it, so a DeepCopy'd Cloud release would carry "Standard" into the POST/PUT, and a
+        // strict older server rejects the unknown field (HTTP 400). Both snapshots report
+        // ApiVersion 20, so 20 is the lowest cut the version header allows.
+        if (OrchApiFloor.Below(apiVersion, 20))
+        {
+            release.RuntimeProfile = null;
+        }
         // Fields added in v19.0
         if (OrchApiFloor.Below(apiVersion, OrchApiFloor.ReleaseV19Fields))
         {
@@ -2301,6 +2328,12 @@ public partial class OrchAPISession : IDisposable
     // "model must not be null" (HTTP 400) when the body has unrecognised fields.
     private void StripProcessScheduleFieldsForApiVersion(ProcessSchedule schedule)
     {
+        // BindingKey (solution package binding) appears in the v20 OpenAPI document (Cloud,
+        // 2026-09) only; see StripReleaseFieldsForApiVersion for why 20 is the cut.
+        if (ApiVersion < 20)
+        {
+            schedule.BindingKey = null;
+        }
         // Fields added in v19.0
         if (ApiVersion < 19)
         {
@@ -2870,9 +2903,18 @@ public partial class OrchAPISession : IDisposable
 
     #region User
 
-    public IEnumerable<User> GetUsers() => GetEnumerable<User>("/odata/Users", null, "&$expand=OrganizationUnits,UserRoles");//return GetEnumerable<User>("/odata/Users", null, "&$expand=OrganizationUnits,UserRoles,UnattendedRobot"); // This causes an error
+    // OrganizationUnits is the classic-folder membership navigation on UserDto: deprecated since
+    // v19 and gone from the v20 OpenAPI document (Cloud, 2026-09), the way ReleaseDto.Environment
+    // went (see GetReleases). Once a server stops declaring the navigation, "$expand=OrganizationUnits"
+    // answers 400 "Could not find a property named 'OrganizationUnits'". v20 has no classic folders,
+    // so not expanding it there loses nothing; below v20 the request is exactly what it always was
+    // (an unknown version keeps it, staying safe). Live-checked 2026-09-09: Cloud v20 still accepted
+    // the expand, so this runs ahead of the removal rather than reacting to it.
+    private string UserExpand => ApiVersion >= 20 ? "&$expand=UserRoles" : "&$expand=OrganizationUnits,UserRoles";
 
-    public User? GetUser(Int64 userId) => HttpRequest<User>(HttpMethod.Get, $"/odata/Users({userId})?$expand=OrganizationUnits,UserRoles");
+    public IEnumerable<User> GetUsers() => GetEnumerable<User>("/odata/Users", null, UserExpand);//return GetEnumerable<User>("/odata/Users", null, "&$expand=OrganizationUnits,UserRoles,UnattendedRobot"); // This causes an error
+
+    public User? GetUser(Int64 userId) => HttpRequest<User>(HttpMethod.Get, $"/odata/Users({userId})?{UserExpand.TrimStart('&')}");
 
     public UserPrivilege? GetUserPrivilege(Int64 userId) => HttpRequest<UserPrivilege>(HttpMethod.Get, $"/api/Users/GetPrivileges?userId={userId}");
 
@@ -3054,11 +3096,22 @@ public partial class OrchAPISession : IDisposable
         // current Cloud schema (ApiVersion 20) but is absent from older OC builds.
         // Sending either to a pre-v20 server triggers strict body deserialization
         // ("assetDto must not be null", HTTP 400). This breaks Cloud → on-prem Copy-Item
-        // because DeepCopy carries the source value through.
+        // because DeepCopy carries the source value through. JsonValue / ValueJsonSchema
+        // (the Json asset type) arrived with the v20 OpenAPI document (Cloud, 2026-09) and
+        // get the same treatment; a Json asset itself cannot be created below v20.
         if (ApiVersion < 20)
         {
             asset.AllowDirectApiAccess = null;
             asset.SecretValue = null;
+            asset.JsonValue = null;
+            asset.ValueJsonSchema = null;
+            if (asset.UserValues is not null)
+            {
+                foreach (var userValue in asset.UserValues)
+                {
+                    userValue.JsonValue = null;
+                }
+            }
         }
         return HttpRequest<Asset>(HttpMethod.Post, $"/odata/Assets", folderId, asset);
     }
@@ -3140,7 +3193,21 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<OrchTask> GetTasks(Int64 folderId) => GetEnumerable<OrchTask>("/odata/Tasks", folderId);
 
-    public IEnumerable<OrchTask> GetTasksAcrossFolders() => GetEnumerable<OrchTask>("/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders");
+    // jobKey: the job's Key (GUID) for the endpoint's `jobId` query -- v20 OpenAPI document (Cloud,
+    // 2026-09), declared a plain string. Tasks reference their job by Key only (TaskDto.CreatorJobKey /
+    // WaitJobKey; there is no numeric job id on a task), so the Key is what the filter can match.
+    // Live-checked 2026-09-09 on Cloud v20: any string answers 200 (a GUID, an integer and "abc"
+    // all returned an empty list), so the caller validates the GUID. An older server would not know
+    // the parameter; refuse rather than silently ignore it.
+    public IEnumerable<OrchTask> GetTasksAcrossFolders(string? jobKey = null)
+    {
+        if (string.IsNullOrEmpty(jobKey))
+        {
+            return GetEnumerable<OrchTask>("/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders");
+        }
+        EnsureVersionSupport(20);
+        return GetEnumerable<OrchTask>("/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders", null, $"&jobId={Uri.EscapeDataString(jobKey)}");
+    }
 
     public OrchTask? GetTask(Int64 folderId, Int64 taskId) => HttpRequest<OrchTask>(HttpMethod.Get, $"/odata/Tasks({taskId})", folderId);
 
@@ -3158,7 +3225,14 @@ public partial class OrchAPISession : IDisposable
     public void DeleteInactiveSessions(IEnumerable<Int64> sessionIds)
         => HttpRequest(HttpMethod.Post, "/odata/Sessions/UiPath.Server.Configuration.OData.DeleteInactiveUnattendedSessions", null, new { sessionIds });
 
-    // Enable/disable classic folder robots
+    // Enable/disable classic folder robots.
+    //
+    // POST /odata/Robots/.../ToggleEnabledStatus was removed from the v20 OpenAPI document (Cloud,
+    // 2026-09) together with the rest of the classic-robot surface (/odata/Robots({key}) PUT/PATCH/
+    // DELETE, ConvertToFloating, DeleteBulk, GetUsernames, GetRobotsForProcess) and the
+    // /odata/OrganizationUnits endpoints. Kept: every swagger snapshot through the 2025-10 v20 one
+    // documents it, and the classic servers this module still drives (v11-v19) serve it. No cmdlet
+    // calls it today; a caller on a v20+ Cloud tenant should expect 404.
     public void ToggleEnabledStatus(Int64 folderId, Int64 robotId, bool enabled)
     {
         RobotsToggleEnabledStatusRequest payload = new()
@@ -3231,7 +3305,15 @@ public partial class OrchAPISession : IDisposable
     public void RemoveTestCases(Int64 folderId, IEnumerable<Int64> testCaseIds)
         => HttpRequest(HttpMethod.Post, "/odata/TestCaseDefinitions/UiPath.Server.Configuration.OData.BulkDelete", folderId, new { testCaseDefinitionIds = testCaseIds.ToList() });
 
-    public IEnumerable<TestSet> GetTestSets(Int64 folderId) => GetEnumerable<TestSet>("/odata/TestSets", folderId, "&$filter=(SourceType eq 'User')&$expand=Environment");
+    // Environment is the classic-folder navigation on TestSetDto, dropped from the v20 OpenAPI
+    // document (Cloud, 2026-09) like ReleaseDto.Environment (see GetReleases). Stop expanding it at
+    // v20+ before the server starts refusing the $expand; below v20 the request is unchanged.
+    // Live-checked 2026-09-09: Cloud v20 still accepted the expand.
+    public IEnumerable<TestSet> GetTestSets(Int64 folderId)
+    {
+        string expand = ApiVersion >= 20 ? "" : "&$expand=Environment";
+        return GetEnumerable<TestSet>("/odata/TestSets", folderId, $"&$filter=(SourceType eq 'User'){expand}");
+    }
 
     public TestSet? GetTestSetForEdit(Int64 folderId, Int64 testSetId) => HttpRequest<TestSet>(HttpMethod.Get, $"/odata/TestSets({testSetId})/UiPath.Server.Configuration.OData.GetForEdit()", folderId);
 
@@ -3524,6 +3606,34 @@ public partial class OrchAPISession : IDisposable
     // warns once, and skips those stages afterwards. Reset by Clear-OrchCache (ClearTenantCache),
     // so a tenant that regains the module is picked up without starting a new session.
     public bool TestAutomationDiscontinued { get; set; }
+
+    // The v20 OpenAPI document (Cloud, 2026-09) marks every Test Automation endpoint this module
+    // uses -- /odata/TestSets, TestSetSchedules, TestSetExecutions, TestCaseExecutions,
+    // TestCaseDefinitions and /api/TestAutomation/* -- as deprecated, pointing at the FAQ on
+    // deprecating the testing module. The endpoints still answer, so the Test* cmdlets keep
+    // working; this latch lets them say so once per drive and session instead of on every call.
+    // Only a server reporting v20 or newer carries the deprecation: the on-prem snapshots (v11-v19)
+    // do not, so nothing is said there. Reset by Clear-OrchCache (ClearTenantCache), like
+    // TestAutomationDiscontinued.
+    private bool _testingModuleDeprecationNoted;
+
+    // True exactly once per drive, and only on a v20+ server, for the caller to warn. An account
+    // already known to have no Test Automation module (TestAutomationDiscontinued) is past the
+    // deprecation, so nothing is said there either.
+    internal bool NoteTestingModuleDeprecated()
+    {
+        if (_testingModuleDeprecationNoted || TestAutomationDiscontinued || !(ApiVersion >= 20)) return false;
+        _testingModuleDeprecationNoted = true;
+        return true;
+    }
+
+    internal void ResetTestingModuleDeprecationNotice() => _testingModuleDeprecationNoted = false;
+
+    // The one-time notice, shared by the cmdlets and the copy stages so they say the same thing.
+    internal static string TestingModuleDeprecatedWarning(string driveNameColon)
+        => $"{driveNameColon} Orchestrator marks its Test Automation API (test sets, test set schedules, test executions) as deprecated: " +
+           "it is to be removed from Orchestrator in favour of the Test Manager service. The Test* cmdlets still work against this drive for now. " +
+           "See https://docs.uipath.com/orchestrator/referenceguide/faq---deprecating-the-testing-module";
 
     // True once this Orchestrator has answered that it does not serve /odata/HttpTriggers, i.e.
     // the tenant has no API triggers at all. Measured on Automation Suite 24.10.11: the route

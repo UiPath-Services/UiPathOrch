@@ -116,9 +116,28 @@ public class QueueReleaseStripTests
         RemoteControlAccess = "Allow",
         AutomationHubIdeaUrl = "url",
         RobotSize = "Small",
+        RuntimeProfile = "Standard",
         VideoRecordingSettings = new VideoRecordingSettings { VideoRecordingType = "All" },
         ProcessSettings = new ProcessSettings { AutopilotForRobots = new AutopilotForRobotsSettings() },
     };
+
+    [Fact]
+    public void StripRelease_RuntimeProfile_is_v20_only()
+    {
+        // RuntimeProfile is in the v20 OpenAPI document (Cloud, 2026-09) but in no swagger snapshot,
+        // and the server always returns it; a DeepCopy'd Cloud release must not carry it below v20.
+        var r = FullRelease();
+        OrchAPISession.StripReleaseFieldsForApiVersion(r, 19.0);
+        Assert.Null(r.RuntimeProfile);
+
+        r = FullRelease();
+        OrchAPISession.StripReleaseFieldsForApiVersion(r, 20.0);
+        Assert.Equal("Standard", r.RuntimeProfile);
+
+        r = FullRelease();
+        OrchAPISession.StripReleaseFieldsForApiVersion(r, null); // unknown version strips nothing
+        Assert.Equal("Standard", r.RuntimeProfile);
+    }
 
     [Fact]
     public void StripRelease_v15_nulls_v16_v17_v19_fields()

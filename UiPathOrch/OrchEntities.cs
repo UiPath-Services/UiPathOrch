@@ -462,6 +462,7 @@ public class OrchTask
     public string? Status { get; set; }          // Unassigned / Pending / Completed
     public string? Action { get; set; }
     public Int64? AssignedToUserId { get; set; }
+    public Int64? ClaimedByUserId { get; set; } // v20 OpenAPI document (Cloud, 2026-09)
     public string? TaskAssigneeName { get; set; }
     public string? TaskCatalogName { get; set; }
     public string? TaskAssignmentCriteria { get; set; }
@@ -469,6 +470,8 @@ public class OrchTask
     public string? ExternalTag { get; set; }
     public string? CreatorJobKey { get; set; }
     public string? WaitJobKey { get; set; }
+    public string? TaskSchemaKey { get; set; } // Guid // v20 OpenAPI document (Cloud, 2026-09)
+    public string? FpsContext { get; set; } // v20 OpenAPI document (Cloud, 2026-09)
     public string? ParentOperationId { get; set; }
     public bool? IsCompleted { get; set; }
     public bool? IsDeleted { get; set; }
@@ -891,7 +894,7 @@ public class User
     public string[]? RolesList { get; set; }
     // TODO: ExternalRoles is missing.
     public string[]? LoginProviders { get; set; }
-    public List<OrganizationUnit>? OrganizationUnits { get; set; } // deprecated in V19.0
+    public List<OrganizationUnit>? OrganizationUnits { get; set; } // deprecated in V19.0; gone from the v20 OpenAPI document (Cloud, 2026-09) -- GetUsers stops $expand'ing it at v20
     public int? TenantId { get; set; }
     public string? TenancyName { get; set; }
     public string? TenantDisplayName { get; set; }
@@ -1099,6 +1102,8 @@ public class UserEntity
     public bool? MayHaveUnattended { get; set; }
     public string? Type { get; set; }
     public Int64? Id { get; set; }
+    public string? Key { get; set; } // Guid // v20 OpenAPI document (Cloud, 2026-09)
+    public bool? IsActive { get; set; } // v20 OpenAPI document (Cloud, 2026-09)
 }
 
 public class MachinesRobotVersion
@@ -1350,6 +1355,7 @@ public class MachineRuntime
     public int? Total { get; set; }
     public int? Connected { get; set; }
     public int? Available { get; set; }
+    public bool? IsAutomationEdge { get; set; } // v20 OpenAPI document (Cloud, 2026-09)
 }
 
 // AutopilotForRobotsSettingsDto
@@ -1380,7 +1386,8 @@ public class Machine
     public int? HostingSlots { get; set; } // added in V19.0
     public int? AppTestSlots { get; set; } // added in V19.0
     public int? PerformanceTestSlots { get; set; } // added in V20.0
-    public int? AgentSlots { get; set; } // returned by live API (not in v20.0 swagger yet)
+    public int? AgentSlots { get; set; } // v20 OpenAPI document (Cloud, 2026-09); returned by the live API before that
+    public int? FunctionSlots { get; set; } // v20 OpenAPI document (Cloud, 2026-09)
     public int? AutomationCloudSlots { get; set; } // integer with format int32
     public int? AutomationCloudTestAutomationSlots { get; set; } // integer with format int32
 
@@ -1408,10 +1415,10 @@ public class Machine
     public MaintenanceWindow? MaintenanceWindow { get; set; } // Reference to MaintenanceWindowDto
     public MachineVpnSettings? VpnSettings { get; set; } // Reference to MachineVpnSettingsDto
 
-    // TODO: MachineSettings — the live /odata/Machines API returns this field, but it is absent from
-    // the v20.0 swagger, null on every accessible machine, and declared without a $Type in OData
-    // $metadata (so its shape is unverified). Add a typed property once a non-null sample or a
-    // swagger definition reveals the actual structure.
+    // MachineSettings: the v20 OpenAPI document (Cloud, 2026-09) declares it as a nullable string
+    // (the 2025-10 v20 swagger lacked it, and OData $metadata gave it no $Type). Null on every
+    // machine sampled so far; carried as the string the server hands out, not parsed.
+    public string? MachineSettings { get; set; }
 }
 
 // SimpleReleaseDto
@@ -1544,6 +1551,9 @@ public class Job
     public Int64? MaxExpectedRunningTimeSeconds { get; set; }
     public string? ServerlessJobType { get; set; }
     public string? ParentJobKey { get; set; } // Guid // added in V19.0
+    public string? FolderKey { get; set; } // Guid // v20 OpenAPI document (Cloud, 2026-09)
+    public string? TargetRuntime { get; set; } // v20 OpenAPI document (Cloud, 2026-09)
+    public SimpleUser? CreatorUser { get; set; } // v20 OpenAPI document (Cloud, 2026-09); navigation, null unless $expand'ed
     [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? ResumeTime { get; set; }
     [JsonConverter(typeof(LocalDateTimeConverter))]
@@ -1658,6 +1668,7 @@ public class AuditLog
     public string? ExternalClientId { get; set; }
     public Int64? UserId { get; set; }
     public bool? UserIsDeleted { get; set; }
+    public bool? UserIsActive { get; set; } // v20 OpenAPI document (Cloud, 2026-09)
 }
 
 // EnvironmentDto
@@ -2007,7 +2018,8 @@ public class Session
     public string? EndpointDetection { get; set; }
 }
 
-// RobotsToggleEnabledStatusRequest
+// RobotsToggleEnabledStatusRequest -- classic robots; the endpoint and this DTO are gone from the
+// v20 OpenAPI document (Cloud, 2026-09). Kept for v11-v19 servers; see OrchAPISession.ToggleEnabledStatus.
 public class RobotsToggleEnabledStatusRequest
 {
     public Int64[]? robotIds { get; set; }
@@ -2194,6 +2206,7 @@ public class Release
     public string? RobotSize { get; set; }
     public Tag[]? Tags { get; set; }
     public string? RemoteControlAccess { get; set; }
+    public string? RuntimeProfile { get; set; } // Standard / Lite. v20 OpenAPI document (Cloud, 2026-09); stripped below v20 on write
     [JsonConverter(typeof(LocalDateTimeConverter))]
     public DateTime? LastModificationTime { get; set; }
     public Int64? LastModifierUserId { get; set; }
@@ -2288,6 +2301,7 @@ public class AssetRobotValue
     public string? StringValue { get; set; }
     public bool? BoolValue { get; set; }
     public int? IntValue { get; set; }
+    public string? JsonValue { get; set; } // v20 OpenAPI document (Cloud, 2026-09) — when ValueType == "Json"
     public string? Value { get; set; }
     public string? CredentialUsername { get; set; }
     public string? CredentialPassword { get; set; }
@@ -2315,6 +2329,7 @@ public class AssetUserValue
     public string? StringValue { get; set; }
     public bool? BoolValue { get; set; }
     public int? IntValue { get; set; }
+    public string? JsonValue { get; set; } // v20 OpenAPI document (Cloud, 2026-09) — when ValueType == "Json"
     public string? Value { get; set; }
     public string? CredentialUsername { get; set; }
     public string? CredentialPassword { get; set; }
@@ -2409,6 +2424,8 @@ public class Asset
     public string? StringValue { get; set; }
     public bool? BoolValue { get; set; }
     public int? IntValue { get; set; }
+    public string? JsonValue { get; set; } // v20 OpenAPI document (Cloud, 2026-09) — the JSON text when ValueType == "Json"; Value echoes it
+    public string? ValueJsonSchema { get; set; } // v20 OpenAPI document (Cloud, 2026-09) — optional JSON Schema a Json asset validates against
     public string? CredentialUsername { get; set; }
     public string? CredentialPassword { get; set; }
     public string? SecretValue { get; set; } // v20+ — populated only when ValueType == "Secret"
@@ -2740,6 +2757,7 @@ public class FailedQueueItem
     public int? Ordinal { get; set; }
     public string? ErrorCode { get; set; }
     public string? ErrorMessage { get; set; }
+    public string? ErrorDetails { get; set; } // v20 OpenAPI document (Cloud, 2026-09)
 }
 
 // BulkOperationResponseDtoOfFailedQueueItemDto
@@ -2874,9 +2892,10 @@ public class ProcessSchedule
     public string? ReleaseKey { get; set; }
     public string? ReleaseName { get; set; }
     public string? EntryPointPath { get; set; } // added in V19.0
+    public string? BindingKey { get; set; } // Guid-like package binding ResourceKey. v20 OpenAPI document (Cloud, 2026-09); stripped below v20 on write
     public string? PackageName { get; set; }
-    public string? EnvironmentName { get; set; }
-    public string? EnvironmentId { get; set; }
+    public string? EnvironmentName { get; set; } // classic folders; gone from the v20 OpenAPI document (Cloud, 2026-09)
+    public string? EnvironmentId { get; set; } // classic folders; gone from the v20 OpenAPI document (Cloud, 2026-09)
     public string? JobPriority { get; set; }
     public int? SpecificPriorityValue { get; set; }
     public string? RuntimeType { get; set; }
@@ -3170,8 +3189,8 @@ public class TestSet
     public string? Description { get; set; }
     public string? SourceType { get; set; }
     public Int64? OrganizationUnitId { get; set; }
-    public Int64? EnvironmentId { get; set; }
-    public TestEnvironment? Environment { get; set; }
+    public Int64? EnvironmentId { get; set; } // classic folders; gone from the v20 OpenAPI document (Cloud, 2026-09)
+    public TestEnvironment? Environment { get; set; } // classic folders; GetTestSets stops $expand'ing it at v20
     public int? TestCaseCount { get; set; }
     public Int64? RobotId { get; set; }
     public bool? EnableCoverage { get; set; }
