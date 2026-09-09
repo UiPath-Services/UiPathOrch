@@ -277,7 +277,8 @@ or Entra ID, additional setup is required to enable directory user operations:
    supports Entra ID directory integration and single sign on. ... please
    sign out and sign in through the organization-specific URL:
    https://cloud.uipath.com/<org> in your browser — then run
-   'Import-OrchConfig' here to sign in again with that account. Learn more
+   'Import-OrchConfig' in your PowerShell session to sign in again with that
+   account. Learn more
    ```
    It typically appears when the user signs in with a local account instead
    of Entra ID, in your UI language (the quote above is English). Read it

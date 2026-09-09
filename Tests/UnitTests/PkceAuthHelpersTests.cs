@@ -377,6 +377,18 @@ public class PkceAuthHelpersTests
     }
 
     [Fact]
+    public void The_page_form_says_where_to_run_import_orchconfig()
+    {
+        // The full notice is read on the sign-in page in the browser, where "run 'Import-OrchConfig'
+        // here" pointed at the wrong window. It names the PowerShell session instead, which also
+        // reads right on the console, where the drives without a browser get the full text.
+        var (full, _) = NoticeIn("en-US", "Orch1:", "https://cloud.uipath.com/acme", prefixFullText: false);
+
+        Assert.Contains("run 'Import-OrchConfig' in your PowerShell session", full);
+        Assert.DoesNotContain("'Import-OrchConfig' here", full);
+    }
+
+    [Fact]
     public void The_console_summary_always_names_its_drive_and_stays_short()
     {
         // It exists to be read out of context -- in a transcript, or by an agent that cannot see

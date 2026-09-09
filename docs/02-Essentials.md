@@ -259,8 +259,8 @@ supports Entra ID directory integration and single sign on. To take advantage
 of all directory capabilities, like directory search and directory groups
 please sign out and sign in through the organization-specific URL:
 https://cloud.uipath.com/<org> in your browser — then run 'Import-OrchConfig'
-here to sign in again with that account. Learn more: https://docs.uipath.com/
-automation-cloud/automation-cloud/latest/admin-guide/about-accounts
+in your PowerShell session to sign in again with that account. Learn more:
+https://docs.uipath.com/automation-cloud/automation-cloud/latest/admin-guide/about-accounts
 ```
 
 The example above is English; the notice follows your UI language, matching
