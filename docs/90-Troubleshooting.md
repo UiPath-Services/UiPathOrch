@@ -312,15 +312,19 @@ $body = Invoke-OrchApi -Path Orch2: -Uri '/odata/Folders(99999)' `
 ## API Reference
 
 To look up available endpoints, parameters, and response schemas,
-fetch the Swagger JSON via `Invoke-OrchApi` (no token plumbing
+fetch the API description via `Invoke-OrchApi` (no token plumbing
 required).
 
-Orchestrator API (used by `Orch` cmdlets):
+Orchestrator API (used by `Orch` cmdlets). Since the August 3, 2026
+Automation Cloud release the description is an OpenAPI 3.0 document at
+`/openapi/public.json`; the Swagger 2.0 one at `/swagger/v20.0/swagger.json`
+is deprecated there and removed in September 2026 (Automation Suite: 2.2610),
+so an older Orchestrator is the only place the old path still answers:
 
 ```powershell
-$swagger = Invoke-OrchApi -Path Orch2: -Uri '/swagger/v20.0/swagger.json' -Raw | ConvertFrom-Json
-$swagger.paths.PSObject.Properties.Name | Where-Object { $_ -like '*Asset*' }
-$swagger.paths.'/odata/Assets'.get
+$api = Invoke-OrchApi -Path Orch2: -Uri '/openapi/public.json' -Raw | ConvertFrom-Json
+$api.paths.PSObject.Properties.Name | Where-Object { $_ -like '*Asset*' }
+$api.paths.'/odata/Assets'.get
 ```
 
 Identity Server API (used by `Pm` cmdlets):

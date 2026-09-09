@@ -29,6 +29,13 @@
     ApiVersion (the api-supported-versions header) and never offer an endpoint the
     target tenant does not have.
 
+    UiPath now publishes the Orchestrator document as OpenAPI 3.0 (OpenAPI 3.0\public.json)
+    rather than swagger 2.0; its info.version is still the Web API version (20.0 in 2026-09).
+    That document is the NEWER snapshot of its version, so it REPLACES the vNN.0\swagger.json
+    of the same version: an endpoint the newer snapshot no longer lists is tagged as ending at
+    the previous version and hidden on tenants at that version, and endpoints it adds are
+    tagged "vNN+".
+
     Portal has no swagger document, so its endpoints are harvested from the
     HttpRequestPortal / GetEnumerablePortal call sites in OrchAPISession.cs.
 
@@ -70,6 +77,14 @@ $ServiceSources = [ordered]@{
     'OpenAPI definition v0\ai-trainer_v3.json'      = '/aifabric_/ai-trainer'
     'OpenAPI definition v0\ai-pkgmanager_v3.json'   = '/aifabric_/ai-pkgmanager'
 }
+
+# Orchestrator OpenAPI 3.0 documents. Each describes one Web API version (info.version) and
+# is a newer snapshot of it than the vNN.0\swagger.json one, so it takes that version's place
+# in the union (see the DESCRIPTION). Import-SwaggerDoc reads paths / verbs / summary the same
+# way for both formats.
+$OrchOpenApiSources = @(
+    'OpenAPI 3.0\public.json'
+)
 
 # Identity: every doc we have. The union is intentional -- Identity exposes no
 # version header we could filter on, so an endpoint present in ANY doc is offered.
@@ -149,13 +164,29 @@ function Import-SwaggerDoc($doc, [string] $base, [string] $prefix, [Nullable[int
     }
 }
 
-# ---- Orchestrator: union of every vNN doc, newest first so summaries come from the newest ----
+# ---- Orchestrator: the OpenAPI documents first (the newest snapshots, so summaries come from
+# them), then the union of every vNN swagger doc, newest first, minus the versions the OpenAPI
+# documents already cover ----
+$openApiVersions = [System.Collections.Generic.HashSet[int]]::new()
+foreach ($rel in $OrchOpenApiSources) {
+    $doc = Read-Swagger $rel
+    if ($null -eq $doc) { continue }
+    $ver = [int][double]$doc.info.version
+    [void]$openApiVersions.Add($ver)
+    Import-SwaggerDoc -doc $doc -base 'O' -prefix '' -version $ver
+    Write-Verbose "Orchestrator OpenAPI v$ver ($rel): $(@($doc.paths.PSObject.Properties).Count) paths"
+}
+
 $orchDocs = Get-ChildItem -LiteralPath $SwaggerDir -Directory |
     Where-Object { $_.Name -match '^v(\d+)\.0$' } |
     Sort-Object { [int]($_.Name -replace '^v(\d+)\.0$', '$1') } -Descending
 
 foreach ($d in $orchDocs) {
     $ver = [int]($d.Name -replace '^v(\d+)\.0$', '$1')
+    if ($openApiVersions.Contains($ver)) {
+        Write-Verbose "Orchestrator v$ver swagger skipped: the OpenAPI document covers this version"
+        continue
+    }
     $doc = Read-Swagger (Join-Path $d.Name 'swagger.json')
     Import-SwaggerDoc -doc $doc -base 'O' -prefix '' -version $ver
     Write-Verbose "Orchestrator v$ver : $(@($doc.paths.PSObject.Properties).Count) paths"
@@ -204,7 +235,7 @@ Write-Verbose "Portal call sites harvested: $portalCount"
 # ---- Emit ----
 $sb = [System.Text.StringBuilder]::new()
 [void]$sb.AppendLine('# UiPathOrch known-API-endpoint catalog. GENERATED -- DO NOT EDIT BY HAND.')
-[void]$sb.AppendLine('# Regenerate: Tools\Update-ApiEndpointCatalog.ps1 -SwaggerDir <swagger corpus>')
+[void]$sb.AppendLine('# Regenerate: Tools\Update-ApiEndpointCatalog.ps1 -SwaggerDir <swagger / OpenAPI corpus>')
 [void]$sb.AppendLine('# base<TAB>path<TAB>methods<TAB>versions<TAB>summary')
 [void]$sb.AppendLine('#   base: O=Orchestrator  I=Identity(-Identity)  P=Portal(-Portal)  S=service(tenant-root relative)')
 [void]$sb.AppendLine('#   versions: Orchestrator Web API version range the path appears in (empty = not version-tagged)')

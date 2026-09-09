@@ -65,9 +65,10 @@ internal sealed record ApiEndpoint(
 /// The known-endpoint catalog behind Invoke-OrchApi's -Uri tab completion.
 ///
 /// The data lives in the embedded Resources\ApiEndpoints.txt, generated from UiPath's
-/// swagger corpus by Tools\Update-ApiEndpointCatalog.ps1 (Orchestrator v11..v20 unioned
-/// and version-tagged, Identity, Test Manager, Document Understanding, AI Center; Portal
-/// is harvested from OrchAPISession.cs, which has no swagger document). Parsing is lazy —
+/// swagger / OpenAPI corpus by Tools\Update-ApiEndpointCatalog.ps1 (Orchestrator v11..v20
+/// unioned and version-tagged, the newest version taken from the OpenAPI 3.0 document, Identity,
+/// Test Manager, Document Understanding, AI Center; Portal is harvested from OrchAPISession.cs,
+/// which has no swagger document). Parsing is lazy —
 /// the file is only read on the first &lt;Tab&gt;, never at module load.
 ///
 /// Everything here is pure and side-effect free (no session, no I/O beyond the one-time

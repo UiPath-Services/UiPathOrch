@@ -413,4 +413,23 @@ public class ApiEndpointCatalogTests
                 e.Path.StartsWith("/testmanager_/") || e.Path.StartsWith("/du_/") || e.Path.StartsWith("/aifabric_/"),
                 $"service endpoint without a known gateway prefix: {e.Path}"));
     }
+
+    [Fact]
+    public void Embedded_catalog_follows_the_openapi_snapshot_of_the_newest_version()
+    {
+        // The OpenAPI 3.0 document (2026-09) replaced the v20 swagger snapshot (2025-10) as the
+        // source for v20. An endpoint it dropped ends at v19 and is hidden on a v20 tenant while
+        // staying offered on v19; one it added starts at v20 and is offered there only.
+        var removed = Assert.Single(ApiEndpointCatalog.All,
+            e => e.Path == "/odata/Robots/UiPath.Server.Configuration.OData.ToggleEnabledStatus");
+        Assert.Equal(19, removed.MaxVersion);
+        Assert.True(ApiEndpointCatalog.MatchesVersion(removed, 19.0));
+        Assert.False(ApiEndpointCatalog.MatchesVersion(removed, 20.0));
+
+        var added = Assert.Single(ApiEndpointCatalog.All,
+            e => e.Path == "/odata/Jobs/UiPath.Server.Configuration.OData.GetByKey(identifier={identifier})");
+        Assert.Equal(20, added.MinVersion);
+        Assert.False(ApiEndpointCatalog.MatchesVersion(added, 19.0));
+        Assert.True(ApiEndpointCatalog.MatchesVersion(added, 20.0));
+    }
 }

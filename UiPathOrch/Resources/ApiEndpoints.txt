@@ -1,5 +1,5 @@
 # UiPathOrch known-API-endpoint catalog. GENERATED -- DO NOT EDIT BY HAND.
-# Regenerate: Tools\Update-ApiEndpointCatalog.ps1 -SwaggerDir <swagger corpus>
+# Regenerate: Tools\Update-ApiEndpointCatalog.ps1 -SwaggerDir <swagger / OpenAPI corpus>
 # base<TAB>path<TAB>methods<TAB>versions<TAB>summary
 #   base: O=Orchestrator  I=Identity(-Identity)  P=Portal(-Portal)  S=service(tenant-root relative)
 #   versions: Orchestrator Web API version range the path appears in (empty = not version-tagged)
@@ -178,6 +178,10 @@ I	/api/UserPartition	DELETE,POST		Add user to the target partition
 I	/api/UserPartition/partitions/{userId}	GET		Get a list of partitions that the target user is member of
 I	/api/UserPartition/users/{partitionGlobalId}	GET		Get a list of users that the target partition has
 O	/api/Account/Authenticate	POST	11-17	Authenticates the user based on user name and password
+O	/api/Assets/name/{name}/value	GET	20	Returns the named asset without requiring a robot key. Intended for first-party service-t…
+O	/api/Assets/schemas/id/{id}	GET	20	Returns the JSON validation schema of a specific asset as a .json file, looked up by id.
+O	/api/Assets/schemas/key/{key}	GET	20	Returns the JSON validation schema of a specific asset as a .json file, looked up by key.
+O	/api/Assets/schemas/name/{name}	GET	20	Returns the JSON validation schema of a specific asset as a .json file, looked up by name…
 O	/api/auth/oauth/token	GET,POST	11	Gets access token
 O	/api/Buckets/{id}/ListFiles	GET	20	Gets all files in a directory and subdirectories, with continuation token support.
 O	/api/DirectoryService/GetDirectoryPermissions	GET	11-20	Gets directory permissions
@@ -193,6 +197,7 @@ O	/api/FoldersNavigation/GetFolderNavigationContextForCurrentUser	GET	11-20	Retu
 O	/api/FoldersNavigation/GetFoldersForCurrentUser	GET	11-20	Returns a filtered subset (paginated) of the folders the current user has access to.
 O	/api/JobTriggers/DeliverPayload/{inboxId}	POST	18-20	Deliver payload for trigger inboxId.
 O	/api/JobTriggers/GetPayload/{inboxId}	GET	18-20	Get payload for trigger inboxId.
+O	/api/JobTriggers/SaveExternalTrigger	POST	20	JobTriggers_SaveExternalTrigger
 O	/api/Licensing/Acquire	POST	11-20	Acquire license units
 O	/api/Licensing/Release	PUT	11-20	Release acquired license units
 O	/api/Logs	POST	11-20	Inserts a log entry with a specified message in JSON format.
@@ -241,6 +246,10 @@ O	/api/TestDataQueueActions/GetNextItem	POST	11-20	Get the next unconsumed test 
 O	/api/TestDataQueueActions/SetAllItemsConsumed	POST	11-20	Set the IsConsumed flag for all items from a test data queue
 O	/api/TestDataQueueActions/SetItemsConsumed	POST	11-20	Set the IsConsumed flag for specific test data queue items
 O	/api/Translations/GetTranslations	GET	11-20	Returns a json with translation resources
+O	/api/VideoRecording/jobs/{jobKey}	DELETE	20	Deletes all the files within a collection associated with a Job.
+O	/api/VideoRecording/jobs/{jobKey}/read	GET	20	Gets a direct download URL for the file within a collection associated with a job.
+O	/api/VideoRecording/QueueItems/{queueItemId}	DELETE	20	Deletes all the video files associated with a queue item.
+O	/api/VideoRecording/QueueItems/{queueItemId}/Read	GET	20	Gets a direct download URL for the file within a collection associated with a queue item.
 O	/forms/TaskForms/BulkCompleteTasks	POST	15-20	Bulk Complete the task by merging form data and action taken
 O	/forms/TaskForms/BulkUpdateTasks	PUT	15-20	Bulk Update Task data by merging data.
 O	/forms/TaskForms/CompleteTask	POST	11-20	Complete the task by saving form data and action taken
@@ -258,7 +267,7 @@ O	/odata/Assets({key})	DELETE,GET,PUT	11-20	Gets a single asset based on its id
 O	/odata/Assets/UiPath.Server.Configuration.OData.GetAssetsAcrossFolders	GET	15-20	Get the assets from all the folders in which the current user has the Assets.View permiss…
 O	/odata/Assets/UiPath.Server.Configuration.OData.GetFiltered	GET	15-20	Get Filtered Assets
 O	/odata/Assets/UiPath.Server.Configuration.OData.GetFoldersForAsset(id={id})	GET	15-20	Get all accesible folders where the asset is shared, and the total count of folders where…
-O	/odata/Assets/UiPath.Server.Configuration.OData.GetRobotAsset(robotId='{robotId}',assetName='{assetName}')	GET	11-20	Returns the named asset associated to the given robot key.
+O	/odata/Assets/UiPath.Server.Configuration.OData.GetRobotAsset(robotId='{robotId}',assetName='{assetName}')	GET	11-19	Returns the named asset associated to the given robot key.
 O	/odata/Assets/UiPath.Server.Configuration.OData.GetRobotAssetByNameForRobotKey	POST	11-20	Returns the named asset associated to the given robot key.
 O	/odata/Assets/UiPath.Server.Configuration.OData.GetRobotAssetByRobotId(robotId={robotId},assetName='{assetName}')	GET	11-20	Returns the named asset associated to the given robot Id.
 O	/odata/Assets/UiPath.Server.Configuration.OData.SetRobotAssetByRobotKey	POST	15-20	Set the asset value associated to the given robot key.
@@ -278,6 +287,7 @@ O	/odata/Buckets({key})/UiPath.Server.Configuration.OData.GetFiles	GET	11-20	Get
 O	/odata/Buckets({key})/UiPath.Server.Configuration.OData.GetReadUri	GET	11-20	Gets a direct download URL for BlobFile.
 O	/odata/Buckets({key})/UiPath.Server.Configuration.OData.GetWriteUri	GET	11-20	Gets a direct upload URL for BlobFile.
 O	/odata/Buckets/UiPath.Server.Configuration.OData.GetBucketsAcrossFolders	GET	15-20	Get the buckets from all the folders in which the current user has the Buckets.View permi…
+O	/odata/Buckets/UiPath.Server.Configuration.OData.GetByKey(identifier={identifier})	GET	20	Gets a single Bucket by its GUID key.
 O	/odata/Buckets/UiPath.Server.Configuration.OData.GetFoldersForBucket(id={id})	GET	15-20	Get all accessible folders where the bucket is shared, and the total count of folders whe…
 O	/odata/Buckets/UiPath.Server.Configuration.OData.ShareToFolders	POST	15-20	Adds the buckets to the folders specified in 'ToAddFolderIds'. Removes the buckets from t…
 O	/odata/BusinessRules	GET,POST	18-20	Get Filtered Business Rules
@@ -346,6 +356,7 @@ O	/odata/Jobs({key})	GET	11-20	Gets a single job.
 O	/odata/Jobs({key})/UiPath.Server.Configuration.OData.StopJob	POST	11-20	Cancels or terminates the specified job.
 O	/odata/Jobs({key})/UiPath.Server.Configuration.OData.ValidateExistingJob	POST	15-20	Validates an existing job.
 O	/odata/Jobs/UiPath.Server.Configuration.OData.Export	POST	16-20	Requests a CSV export of filtered items.
+O	/odata/Jobs/UiPath.Server.Configuration.OData.GetByKey(identifier={identifier})	GET	20	Gets a job by its unique key (GUID based).
 O	/odata/Jobs/UiPath.Server.Configuration.OData.RestartJob	POST	15-20	Restarts the specified job.
 O	/odata/Jobs/UiPath.Server.Configuration.OData.ResumeJob	POST	11-20	Resumes the specified job.
 O	/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs	POST	11-20	Adds a new job and sets it in Pending state for each robot based on the input parameters …
@@ -369,11 +380,11 @@ O	/odata/Machines/UiPath.Server.Configuration.OData.GetAssignedMachines(folderId
 O	/odata/Machines/UiPath.Server.Configuration.OData.GetRuntimesForFolder(folderId={folderId})	GET	11-20	Gets runtimes for the specified folder
 O	/odata/MessageTemplates	GET	11-16	Gets the message templates.
 O	/odata/MessageTemplates('{key}')	PUT	11-16	Edits a message template.
-O	/odata/OrganizationUnits	GET,POST	11-20	Gets the organization units.
-O	/odata/OrganizationUnits({key})	DELETE,GET,PUT	11-20	Gets an organization unit.
-O	/odata/OrganizationUnits({key})/UiPath.Server.Configuration.OData.SetUsers	POST	11-20	Associates a group of users with and dissociates another group of users from the given un…
-O	/odata/OrganizationUnits/UiPath.Server.Configuration.OData.GetUserIdsForUnit(key={key})	GET	11-20	Returns a collection of all the ids of the users associated to an unit based on unit Id.
-O	/odata/OrganizationUnits/UiPath.Server.Configuration.OData.GetUsersForUnit(key={key})	GET	11-20	Returns a collection of all non robot users and, if no other sorting is provided, will pl…
+O	/odata/OrganizationUnits	GET,POST	11-19	Gets the organization units.
+O	/odata/OrganizationUnits({key})	DELETE,GET,PUT	11-19	Gets an organization unit.
+O	/odata/OrganizationUnits({key})/UiPath.Server.Configuration.OData.SetUsers	POST	11-19	Associates a group of users with and dissociates another group of users from the given un…
+O	/odata/OrganizationUnits/UiPath.Server.Configuration.OData.GetUserIdsForUnit(key={key})	GET	11-19	Returns a collection of all the ids of the users associated to an unit based on unit Id.
+O	/odata/OrganizationUnits/UiPath.Server.Configuration.OData.GetUsersForUnit(key={key})	GET	11-19	Returns a collection of all non robot users and, if no other sorting is provided, will pl…
 O	/odata/Permissions	GET	11-20	Gets permissions.
 O	/odata/PersonalWorkspaces	GET	16-20	Gets Personal Workspaces.
 O	/odata/PersonalWorkspaces({key})/UiPath.Server.Configuration.OData.ConvertToFolder	POST	16-20	Converts a Personal Workspace to a standard Folder.
@@ -384,6 +395,7 @@ O	/odata/Processes	GET	11-20	Gets the processes.
 O	/odata/Processes('{key}')	DELETE	11-20	Deletes a package.
 O	/odata/Processes/UiPath.Server.Configuration.OData.DownloadPackage(key='{key}')	GET	11-20	Downloads the .nupkg file of a Package.
 O	/odata/Processes/UiPath.Server.Configuration.OData.GetArguments(key='{key}')	GET	11-20	Get process parameters
+O	/odata/Processes/UiPath.Server.Configuration.OData.GetProcessVersion(key='{key}')	GET	20	Returns a specific process by its ID and version.
 O	/odata/Processes/UiPath.Server.Configuration.OData.GetProcessVersions(processId='{processId}')	GET	11-20	Returns a collection of all available versions of a given process. Allows odata query opt…
 O	/odata/Processes/UiPath.Server.Configuration.OData.SetArguments	POST	11-18	Saves process arguments
 O	/odata/Processes/UiPath.Server.Configuration.OData.UploadPackage	POST	11-20	Uploads a new package or a new version of an existing package. The content of the package…
@@ -415,7 +427,7 @@ O	/odata/QueueItems({key})/UiPathODataSvc.GetItemProcessingHistory	GET	11-20	Ret
 O	/odata/QueueItems({key})/UiPathODataSvc.SetTransactionProgress	POST	11-20	Updates the progress field of a queue item with the status 'In Progress'.
 O	/odata/QueueItems/UiPath.Server.Configuration.OData.GetReviewers	GET	11-20	Returns a collection of users having the permission for Queue Items review. Allows odata …
 O	/odata/QueueItems/UiPathODataSvc.DeleteBulk	POST	11-20	Sets the given queue items' status to Deleted.
-O	/odata/QueueItems/UiPathODataSvc.GetItemLastRetryByKey(key={key})	GET	18-20	Returns the last retry of a queue item by uniqueKey.
+O	/odata/QueueItems/UiPathODataSvc.GetItemLastRetryByKey(key={key})	GET	18-20	Returns the last retry of a queue item by the unique identifier (GUID).
 O	/odata/QueueItems/UiPathODataSvc.SetItemReviewer	POST	11-20	Sets the reviewer for multiple queue items
 O	/odata/QueueItems/UiPathODataSvc.SetItemReviewStatus	POST	11-20	Updates the review status of the specified queue items to an indicated state.
 O	/odata/QueueItems/UiPathODataSvc.UnsetItemReviewer	POST	11-20	Unsets the reviewer for multiple queue items
@@ -434,6 +446,7 @@ O	/odata/Releases({key})	DELETE,GET,PATCH,PUT	11-20	Gets a release by id.
 O	/odata/Releases({key})/UiPath.Server.Configuration.OData.RollbackToPreviousReleaseVersion	POST	11-20	Reverts the package versions for the given release to the last version it had before the …
 O	/odata/Releases({key})/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersion	POST	11-20	Updates the package version for the given release to the latest available.
 O	/odata/Releases({key})/UiPath.Server.Configuration.OData.UpdateToSpecificPackageVersion	POST	11-20	Updates the package version for the given release.
+O	/odata/Releases/UiPath.Server.Configuration.OData.GetByKey(identifier={identifier})	GET	20	Gets a release by its GUID key.
 O	/odata/Releases/UiPath.Server.Configuration.OData.RollbackToPreviousReleaseVersionByKey(identifier={identifier})	POST	20	Reverts the package versions for the given release to the last version it had before the …
 O	/odata/Releases/UiPath.Server.Configuration.OData.UpdateByKey	POST	17-20	Updates the package entry point for the given release.
 O	/odata/Releases/UiPath.Server.Configuration.OData.UpdateToLatestPackageVersionBulk	POST	11-20	Updates the package versions for the given releases to the latest available.
@@ -445,17 +458,17 @@ O	/odata/RobotLogs/UiPath.Server.Configuration.OData.Export	POST	16-20	Requests 
 O	/odata/RobotLogs/UiPath.Server.Configuration.OData.GetTotalCount	GET	11-20	Gets the total count of robot logs. This might be different than the size of the count re…
 O	/odata/RobotLogs/UiPath.Server.Configuration.OData.Reports	GET	11-16	Reports.
 O	/odata/Robots	GET,POST	11-20	Gets robots.
-O	/odata/Robots({key})	DELETE,GET,PATCH,PUT	11-20	Gets a single robot based on its key.
-O	/odata/Robots/UiPath.Server.Configuration.OData.ConvertToFloating	POST	11-20	Convert a Standard Attended Robot to a Floating Robot.
-O	/odata/Robots/UiPath.Server.Configuration.OData.DeleteBulk	POST	11-20	Deletes multiple robots based on their keys.
+O	/odata/Robots({key})	DELETE,GET,PATCH,PUT	11-19	Gets a single robot based on its key.
+O	/odata/Robots/UiPath.Server.Configuration.OData.ConvertToFloating	POST	11-19	Convert a Standard Attended Robot to a Floating Robot.
+O	/odata/Robots/UiPath.Server.Configuration.OData.DeleteBulk	POST	11-19	Deletes multiple robots based on their keys.
 O	/odata/Robots/UiPath.Server.Configuration.OData.FindAllAcrossFolders	GET	15-20	Get robots across all accessible folders.
 O	/odata/Robots/UiPath.Server.Configuration.OData.GetConfiguredRobots	GET	15-20	Gets robots autoprovisioned from users
 O	/odata/Robots/UiPath.Server.Configuration.OData.GetFolderRobots(folderId={folderId},machineId={machineId})	GET	15-20	Get folder robots
-O	/odata/Robots/UiPath.Server.Configuration.OData.GetMachineNameToLicenseKeyMappings	GET	11-20	Gets machine name to license key mapping.
-O	/odata/Robots/UiPath.Server.Configuration.OData.GetRobotsForProcess(processId='{processId}')	GET	11-20	Returns a collection of all robots that can execute the process with the provided Id.
+O	/odata/Robots/UiPath.Server.Configuration.OData.GetMachineNameToLicenseKeyMappings	GET	11-19	Gets machine name to license key mapping.
+O	/odata/Robots/UiPath.Server.Configuration.OData.GetRobotsForProcess(processId='{processId}')	GET	11-19	Returns a collection of all robots that can execute the process with the provided Id.
 O	/odata/Robots/UiPath.Server.Configuration.OData.GetRobotsFromFolder(folderId={folderId})	GET	15-20	Gets all robots from a folder
-O	/odata/Robots/UiPath.Server.Configuration.OData.GetUsernames	GET	11-20	Gets usernames.
-O	/odata/Robots/UiPath.Server.Configuration.OData.ToggleEnabledStatus	POST	11-20	Toggles the status of the robots (enabled/disabled)
+O	/odata/Robots/UiPath.Server.Configuration.OData.GetUsernames	GET	11-19	Gets usernames.
+O	/odata/Robots/UiPath.Server.Configuration.OData.ToggleEnabledStatus	POST	11-19	Toggles the status of the robots (enabled/disabled)
 O	/odata/Roles	GET,POST	11-20	Gets roles.
 O	/odata/Roles({key})	DELETE,GET,PUT	11-20	Gets role based on its id.
 O	/odata/Roles({key})/UiPath.Server.Configuration.OData.SetUsers	POST	11-20	Associates a group of users with and dissociates another group of users from the given ro…
@@ -554,6 +567,7 @@ O	/odata/Users({key})/UiPath.Server.Configuration.OData.SetActive	POST	11-19	Act
 O	/odata/Users({key})/UiPath.Server.Configuration.OData.ToggleOrganizationUnit	POST	11-18	Associates/dissociates the given user with/from an organization unit based on toggle para…
 O	/odata/Users({key})/UiPath.Server.Configuration.OData.ToggleRole	POST	11-20	Associates/dissociates the given user with/from a role based on toggle parameter.
 O	/odata/Users/UiPath.Server.Configuration.OData.ChangeCulture	POST	11-20	Changes the culture for the current user
+O	/odata/Users/UiPath.Server.Configuration.OData.GetByKey(identifier={identifier})	GET	20	Gets a user based on its id.
 O	/odata/Users/UiPath.Server.Configuration.OData.GetCurrentPermissions	GET	11-20	Returns a user permission collection containing data about the current user and all the p…
 O	/odata/Users/UiPath.Server.Configuration.OData.GetCurrentUser	GET	11-20	Returns details about the user currently logged into Orchestrator.
 O	/odata/Users/UiPath.Server.Configuration.OData.ImportUsers	POST	11	Imports from AD all users from the given group and associates them with given roles.
