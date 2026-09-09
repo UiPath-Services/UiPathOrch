@@ -24,6 +24,13 @@ Stop-OrchJob [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <ui
  [-Force] [-Job <Job>] [-WhatIf] [<CommonParameters>]
 ```
 
+### ByBatch
+
+```
+Stop-OrchJob [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <uint>] -BatchExecutionKey <string[]>
+ [-Confirm] [-Force] [-WhatIf] [<CommonParameters>]
+```
+
 ## ALIASES
 
 ## DESCRIPTION
@@ -33,6 +40,8 @@ The `Stop-OrchJob` cmdlet stops one or more running jobs in UiPath Orchestrator.
 Jobs that are already in a terminal state (Terminating, Faulted, Successful, or Stopped) are automatically skipped.
 
 The cmdlet groups jobs by folder before sending the stop request and batches the operations during end processing.
+
+`-BatchExecutionKey` stops every job of one `Start-OrchJob` batch in a single request instead of listing the ids: the jobs a single start created share the `BatchExecutionKey` property that `Get-OrchJob` shows. This form needs Orchestrator Web API v20 or newer (Automation Cloud); an older drive refuses it.
 
 The cmdlet accepts job objects from the pipeline, allowing you to pipe output from `Get-OrchJob` directly to `Stop-OrchJob`.
 
@@ -78,7 +87,36 @@ PS Orch1:\Shared> Stop-OrchJob -Id 12345, 12346 -WhatIf
 
 Shows what would happen if the specified jobs were stopped, without actually stopping them.
 
+### Example 5: Stop a whole batch
+
+```powershell
+PS Orch1:\Shared> Get-OrchJob -State Running | Select-Object -First 1 -ExpandProperty BatchExecutionKey | ForEach-Object { Stop-OrchJob -BatchExecutionKey $_ }
+```
+
+Stops every job that the same `Start-OrchJob` call created, in one request. Requires Orchestrator Web API v20 or newer.
+
 ## PARAMETERS
+
+### -BatchExecutionKey
+
+Specifies one or more batch keys; every job of each batch in the target folder is stopped (or killed with -Force) in a single request per batch. The value is the `BatchExecutionKey` property of the jobs `Get-OrchJob` returns. Requires Orchestrator Web API v20 or newer; an older drive reports that its version does not support the operation.
+
+```yaml
+Type: System.String[]
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: ByBatch
+  Position: Named
+  IsRequired: true
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
 ### -Path
 
@@ -219,7 +257,7 @@ DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
-- Name: (All)
+- Name: FromCommandLine
   Position: 0
   IsRequired: true
   ValueFromPipeline: false
@@ -240,7 +278,7 @@ DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
-- Name: (All)
+- Name: FromCommandLine
   Position: Named
   IsRequired: false
   ValueFromPipeline: true

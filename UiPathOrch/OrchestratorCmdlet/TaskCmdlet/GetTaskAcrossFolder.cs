@@ -25,6 +25,16 @@ public class GetTaskAcrossFolderCmdlet : OrchestratorPSCmdlet
     [ValidateSet("Low", "Medium", "High", "Critical")]
     public string[]? Priority { get; set; }
 
+    // The endpoint's jobId query (v20 OpenAPI document, Cloud 2026-09): only the tasks raised by
+    // one job. A task references its job by Key alone (CreatorJobKey / WaitJobKey -- TaskDto has no
+    // numeric job id), so the parameter is the job's Key, named and completed like Get-OrchLog
+    // -JobKey rather than the numeric -JobId of Get-OrchJob. Validated as a GUID here: the server
+    // takes any string and answers an empty list for one it cannot match. Refused below v20 (see
+    // OrchAPISession.GetTasksAcrossFolders).
+    [Parameter]
+    [ArgumentCompleter(typeof(JobKeyCompleter))]
+    public string? JobKey { get; set; }
+
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
     public string[]? Path { get; set; }
@@ -36,6 +46,19 @@ public class GetTaskAcrossFolderCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumOrchDrives(EffectivePath(Path, LiteralPath));
+
+        string? jobKey = null;
+        if (!string.IsNullOrEmpty(JobKey))
+        {
+            if (!Guid.TryParse(JobKey, out var jobKeyGuid))
+            {
+                ThrowTerminatingError(new ErrorRecord(
+                    new ArgumentException($"-JobKey must be a GUID; got '{JobKey}'."),
+                    "GetOrchTaskAcrossFolderInvalidJobKey", ErrorCategory.InvalidArgument, JobKey));
+            }
+            jobKey = jobKeyGuid.ToString();
+        }
+
         var wpTitle = Title.ConvertToWildcardPatternList();
         var wpStatus = Status.ConvertToWildcardPatternList();
         var wpPriority = Priority.ConvertToWildcardPatternList();
@@ -45,7 +68,7 @@ public class GetTaskAcrossFolderCmdlet : OrchestratorPSCmdlet
             drive => drive,
             drive =>
             {
-                var tasks = drive.OrchAPISession.GetTasksAcrossFolders().ToList();
+                var tasks = drive.OrchAPISession.GetTasksAcrossFolders(jobKey).ToList();
 
                 // Resolve each task's actual folder path so Path reflects where the task lives,
                 // not the aggregation drive root. Falls back to drive root for orphans.

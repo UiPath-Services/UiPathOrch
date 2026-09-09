@@ -176,40 +176,8 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
         }
     }
 
-    private class JobKeyCompleter : OrchArgumentCompleter
-    {
-        public override IEnumerable<CompletionResult> CompleteArgumentCore(
-            string commandName,
-            string parameterName,
-            string wordToComplete,
-            CommandAst commandAst,
-            IDictionary fakeBoundParameters)
-        {
-            var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
-
-            // Exclude JobKeys already selected by the parameter from the candidates
-            var wpJobKey = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
-
-            var wp = CreateWPFromWordToComplete(wordToComplete);
-
-            // No API call is needed, so there is no need to spawn threads
-
-            foreach (var (drive, folder) in drivesFolders)
-            {
-                var jobs = drive.Jobs.GetCache(folder);
-                if (jobs is not null)
-                {
-                    foreach (var job in jobs.Values
-                        .Where(l => wp.IsMatch(l.Key))
-                        .OrderBy(l => l.Key))
-                    {
-                        string tiphelp = System.IO.Path.Combine(folder.GetPSPath(), job.Id?.ToString() ?? "") + $" ({job.ReleaseName} {job.CreationTime})";
-                        yield return new CompletionResult(PathTools.EscapePSText(job.Key), job.Key, CompletionResultType.ParameterValue, tiphelp);
-                    }
-                }
-            }
-        }
-    }
+    // -JobKey completes through the shared Completer.JobKeyCompleter (OrchCompleter.cs), which
+    // Get-OrchTaskAcrossFolder -JobKey uses as well.
 
     private string? MakeFilter(OrchDriveInfo drive, Folder folder)
     {

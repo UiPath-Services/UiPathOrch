@@ -20,8 +20,8 @@ Gets action-center tasks tenant-wide via the dedicated cross-folder endpoint.
 ### __AllParameterSets
 
 ```
-Get-OrchTaskAcrossFolder [-Path <string[]>] [-LiteralPath <string[]>] [[-Title] <string[]>] [-Priority <string[]>]
- [-Status <string[]>] [<CommonParameters>]
+Get-OrchTaskAcrossFolder [-Path <string[]>] [-LiteralPath <string[]>] [[-Title] <string[]>] [-JobKey <string>]
+ [-Priority <string[]>] [-Status <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -64,7 +64,36 @@ PS Orch1:\> Get-OrchTaskAcrossFolder | Group-Object Status | Format-Table Count,
 
 Counts Unassigned vs. Pending vs. Completed tenant-wide.
 
+### Example 4: The tasks one job raised
+
+```powershell
+PS Orch1:\Shared> Get-OrchTaskAcrossFolder -JobKey 3f9c1c2e-7d4a-4b7e-9a1e-0c2b7d4f1a55
+```
+
+Narrows the list to the tasks created by that job (the job's Key, as `Get-OrchJob` shows it and as a task's `CreatorJobKey` records it), through the endpoint's `jobId` query. Tab completion offers the keys of the jobs in the current folder. Requires Orchestrator Web API v20 or newer.
+
 ## PARAMETERS
+
+### -JobKey
+
+Filters to the tasks raised by one job. The value is the job's Key (a GUID) -- the same value `Get-OrchLog -JobKey` takes and a task's `CreatorJobKey` / `WaitJobKey` carries; a non-GUID is refused before the request. Tab completion lists the keys of the jobs in the folders `-Path` resolves to. Requires Orchestrator Web API v20 or newer; an older drive reports that its version does not support the operation.
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
 
 ### -Title
 

@@ -22,14 +22,23 @@ public class StopJobCmdlet : OrchestratorPSCmdlet
 {
     private List<StopJobCommandParameter> parameters = new();
 
+    // -BatchExecutionKey requests, kept apart from the per-id ones: one API call per (folder, key).
+    private readonly List<(OrchDriveInfo drive, Folder folder, string key)> batchParameters = [];
+
     private static readonly string[] alreadyStoppedStates = ["Terminating", "Faulted", "Successful", "Stopped"];
 
-    [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
+    [Parameter(ParameterSetName = "FromCommandLine", Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(IdCompleter))]
     public Int64[]? Id { get; set; }
 
-    [Parameter(DontShow = true, ValueFromPipeline = true)]
+    [Parameter(ParameterSetName = "FromCommandLine", DontShow = true, ValueFromPipeline = true)]
     public Job? Job { get; set; }
+
+    // StopJobsRequest.batchExecutionKey (v20 OpenAPI document, Cloud 2026-09): every job one
+    // Start-OrchJob call created shares Job.BatchExecutionKey, so a single request stops the whole
+    // batch without listing the ids. Refused by OrchAPISession below v20.
+    [Parameter(ParameterSetName = "ByBatch", Mandatory = true)]
+    public string[]? BatchExecutionKey { get; set; }
 
     [Parameter]
     public SwitchParameter Force { get; set; }
@@ -91,6 +100,19 @@ public class StopJobCmdlet : OrchestratorPSCmdlet
 
     protected override void ProcessRecord()
     {
+        if (BatchExecutionKey is not null)
+        {
+            var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
+            foreach (var (drive, folder) in drivesFolders)
+            {
+                foreach (var key in BatchExecutionKey.Where(k => !string.IsNullOrEmpty(k)))
+                {
+                    batchParameters.Add((drive, folder, key));
+                }
+            }
+            return;
+        }
+
         if (Job is not null)
         {
             // Pipe input from Get-OrchJob
@@ -181,6 +203,34 @@ public class StopJobCmdlet : OrchestratorPSCmdlet
                 catch (Exception ex)
                 {
                     var errorRecord = new ErrorRecord(new OrchException(targetFolder, ex), "StopJobError", ErrorCategory.InvalidOperation, group.Key);
+                    WriteError(errorRecord);
+                }
+            }
+        }
+
+        foreach (var group in batchParameters.GroupBy(p => p.folder).WithCancellation(cancelHandler.Token))
+        {
+            OrchDriveInfo drive = group.First().drive;
+            Folder folder = group.Key;
+            string targetFolder = folder.GetPSPath();
+
+            foreach (var key in group.Select(p => p.key).Distinct())
+            {
+                if (!ShouldProcess(targetFolder, $"{action}batch {key}")) continue;
+
+                try
+                {
+                    drive.OrchAPISession.StopJobsByBatch(folder.Id ?? 0, key, Force);
+                    drive.Jobs.ClearCache(folder);
+                    drive.ClearJobCompleterCaches(folder);
+                }
+                catch (OperationCanceledException)
+                {
+                    throw;
+                }
+                catch (Exception ex)
+                {
+                    var errorRecord = new ErrorRecord(new OrchException(targetFolder, ex), "StopJobError", ErrorCategory.InvalidOperation, folder);
                     WriteError(errorRecord);
                 }
             }

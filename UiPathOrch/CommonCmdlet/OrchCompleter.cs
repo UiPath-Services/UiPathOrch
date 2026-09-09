@@ -1547,6 +1547,39 @@ internal class JobIdCompleter : OrchArgumentCompleter
     }
 }
 
+// Job Key (GUID) completer, the twin of JobIdCompleter for the parameters that address a job by its
+// Key rather than its Id: Get-OrchLog -JobKey (the log's JobKey field) and
+// Get-OrchTaskAcrossFolder -JobKey (tasks reference their job by CreatorJobKey / WaitJobKey).
+// Reads the Jobs cache of the resolved folders; no API call, so no threads.
+internal class JobKeyCompleter : OrchArgumentCompleter
+{
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
+        string commandName,
+        string parameterName,
+        string wordToComplete,
+        CommandAst commandAst,
+        IDictionary fakeBoundParameters)
+    {
+        var drivesFolders = ResolvePath(commandAst, fakeBoundParameters);
+
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        foreach (var (drive, folder) in drivesFolders)
+        {
+            var jobs = drive.Jobs.GetCache(folder);
+            if (jobs is null) continue;
+
+            foreach (var job in jobs.Values
+                .Where(j => wp.IsMatch(j.Key))
+                .OrderBy(j => j.Key))
+            {
+                string tiphelp = System.IO.Path.Combine(folder.GetPSPath(), job.Id?.ToString() ?? "") + $" ({job.ReleaseName} {job.CreationTime})";
+                yield return new CompletionResult(PathTools.EscapePSText(job.Key), job.Key, CompletionResultType.ParameterValue, tiphelp);
+            }
+        }
+    }
+}
+
 internal class ListReleasesCompleter : FolderScopedCompleter<Release>
 {
     protected override IEnumerable<Release> GetEntities(OrchDriveInfo drive, Folder folder)
