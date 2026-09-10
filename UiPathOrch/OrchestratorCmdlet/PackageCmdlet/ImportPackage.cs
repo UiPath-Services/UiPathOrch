@@ -64,12 +64,18 @@ public class ImportPackageCmdlet : OrchestratorPSCmdlet
         using var reporter = new ProgressReporter(this, 1, totalNum, "Importing Packages");
 
         int index = 0;
+        // Warn once per (destination drive, source directory) instead of once per .nupkg: a
+        // migrated folder holds dozens of packages, and the folder-level problems below are
+        // properties of the folder, not of each file. Keyed by drive as well as directory
+        // because the same local directory can be fine on one destination drive and not on
+        // another -- keying by directory alone would suppress the warning for the second drive
+        // and, worse, skip an import that should have gone through.
+        HashSet<(string drive, string dir)> ignoredFolders = new();
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var task in tasks.WithCancellation(cancelHandler.Token))
         {
             var (drive, folder, fullPath, relativePath) = task;
 
-            HashSet<string> ignoredFolders = new();
             Entities.Folder targetFolder = null;
             if (relativePath == "." || string.IsNullOrEmpty(relativePath))
             {
@@ -77,7 +83,8 @@ public class ImportPackageCmdlet : OrchestratorPSCmdlet
             }
             else
             {
-                if (ignoredFolders.Contains(System.IO.Path.GetDirectoryName(fullPath)!))
+                var ignoreKey = (drive!.NameColonSeparator, System.IO.Path.GetDirectoryName(fullPath)!);
+                if (ignoredFolders.Contains(ignoreKey))
                 {
                     continue;
                 }
@@ -86,13 +93,23 @@ public class ImportPackageCmdlet : OrchestratorPSCmdlet
                 if (targetFolder is null)
                 {
                     WriteWarning($"Folder {relativePath} does not exist on {drive.NameColonSeparator}. Ignored.");
-                    ignoredFolders.Add(System.IO.Path.GetDirectoryName(fullPath)!);
+                    ignoredFolders.Add(ignoreKey);
                     continue;
                 }
+                // -Recurse replays a tree produced by Export-OrchPackage -Recurse, whose
+                // subdirectories are the source tenant's feed-owning folders. A destination
+                // folder without its own feed cannot receive that directory: its packages would
+                // land in the tenant feed, silently merging what was a separate feed on the
+                // source. That is usually a folder created without a package feed by mistake,
+                // so say so and skip rather than quietly changing the destination's topology.
                 if (targetFolder.FeedType != "FolderHierarchy")
                 {
-                    WriteWarning($"Folder {drive.NameColonSeparator}{relativePath} exists, but its FeedType is {targetFolder.FeedType}. Ignored.");
-                    ignoredFolders.Add(System.IO.Path.GetDirectoryName(fullPath)!);
+                    WriteWarning(
+                        $"Folder {drive.NameColonSeparator}{relativePath} exists but has no package feed of its own " +
+                        $"(FeedType: {targetFolder.FeedType}), so its packages would be merged into the tenant feed. Skipped. " +
+                        $"Re-create it as a folder with its own package feed, or import this directory with " +
+                        $"-Path {drive.NameColonSeparator} if merging into the tenant feed is intended.");
+                    ignoredFolders.Add(ignoreKey);
                     continue;
                 }
             }

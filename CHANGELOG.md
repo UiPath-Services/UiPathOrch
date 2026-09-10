@@ -8,6 +8,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`Import-OrchPackage -Recurse` says once per folder what it was saying once per package.**
+  `-Recurse` replays a tree that `Export-OrchPackage -Recurse` produced, so a directory in it is
+  one of the source tenant's feed-owning folders and holds however many packages that folder had.
+  When the matching folder on the destination is missing, or exists without a package feed of its
+  own, the import skips the directory — and repeated the same warning for every `.nupkg` inside
+  it, because the set that remembers an already-reported folder was being created fresh on each
+  iteration and so was always empty. A folder with fifty packages produced fifty identical lines,
+  burying the one fact worth reading. The set now lives across the loop, keyed by destination
+  drive as well as source directory: the same local directory can be fine on one destination and
+  not on another, and keying by directory alone would have silenced the second warning and
+  skipped an import that should have gone through.
+
+  The feed warning also now names the consequence and the way out, rather than only the
+  FeedType it found. A destination folder without its own feed is usually one created without a
+  package feed by mistake; importing into it anyway would put the directory's packages in the
+  tenant feed and silently merge what was a separate feed on the source. The warning says that,
+  and offers the two ways forward — re-create the folder with its own feed, or, if merging into
+  the tenant feed is what you want, import that one directory with `-Path <drive>:\`.
+
 - **`Update-OrchProcessVersion -Id` now honours a wildcard `-Version`.** `-Version` is declared
   `[SupportsWildcards]` and the help documents `-Id 573412 -Version 2.0.*` as "update to the latest
   version matching the pattern", but only the `-Name` parameter set ever resolved the pattern. The
