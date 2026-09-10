@@ -162,7 +162,10 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
 
                 // Retrieve packages from the feed corresponding to the target releases
                 return ParallelResults.GroupBy(releases, release => drive.GetPackageVersions(folder, release.Name!)
-                    .Where(version => version.Version != release.CurrentVersion!.VersionNumber)
+                    // Same number-not-text rule as ShouldUpdateReleaseToVersion: the deployed
+                    // version must drop out of the candidates even when the feed spells it
+                    // differently from the release.
+                    .Where(version => !VersionComparer.Instance.AreSameVersion(version.Version, release.CurrentVersion!.VersionNumber))
                 );
             });
 
@@ -221,11 +224,14 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                     {
                         string target = System.IO.Path.Combine(folder.GetPSPath(), id.ToString());
                         releasesById.TryGetValue(id, out var release);
-                        if (Version is null)
+                        // Branch on wpVersion, not Version, so an empty -Version behaves like the
+                        // -Name path (treat as "latest") instead of falling into the resolve branch
+                        // with no pattern to resolve against.
+                        if (wpVersion is null)
                         {
                             // Already on the latest version: nothing to do.
                             if (!ShouldUpdateReleaseToLatest(release)) continue;
-                            if (ShouldProcess(System.IO.Path.Combine(folder.GetPSPath(), id.ToString()), "Update ProcessVersion to Latest"))
+                            if (ShouldProcess(target, "Update ProcessVersion to Latest"))
                             {
                                 try
                                 {
@@ -241,13 +247,32 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                         }
                         else
                         {
+                            // Resolve -Version against the feed exactly as the -Name branch does.
+                            // Without this the pattern was handed to the API verbatim, so
+                            // '-Id 573412 -Version 2.0.*' asked Orchestrator for a package literally
+                            // named "2.0.*" -- even though -Version is [SupportsWildcards] and the
+                            // help documents the wildcard. A release we could not look up in the
+                            // folder keeps the old pass-through, so the API still reports it.
+                            string toVersion = Version!;
+                            if (release?.Name is not null)
+                            {
+                                var resolved = ResolveTargetVersion(
+                                    drive.GetPackageVersions(folder, release.Name).Select(p => p.Version!), wpVersion);
+                                if (resolved is null)
+                                {
+                                    WriteVerbose($"{target}: no package version matched '{Version}'.");
+                                    continue;
+                                }
+                                toVersion = resolved;
+                            }
+
                             // Already on the requested version: nothing to do.
-                            if (!ShouldUpdateReleaseToVersion(release, Version)) continue;
-                            if (ShouldProcess(target, $"Update ProcessVersion to {Version}"))
+                            if (!ShouldUpdateReleaseToVersion(release, toVersion)) continue;
+                            if (ShouldProcess(target, $"Update ProcessVersion to {toVersion}"))
                             {
                                 try
                                 {
-                                    drive.OrchAPISession.UpdateReleaseToSpecificVersion(folder.Id ?? 0, id, Version);
+                                    drive.OrchAPISession.UpdateReleaseToSpecificVersion(folder.Id ?? 0, id, toVersion);
                                     drive.Releases.ClearCache(folder);
                                     drive.ReleasesDetailed.ClearCache(folder);
                                 }
@@ -292,8 +317,12 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
                             // Retrieve packages from the feed corresponding to the target release
                             var packageVersions = drive.GetPackageVersions(folder, release.Name!).Select(p => p.Version!);
 
-                            var toVersion = packageVersions.Where(v => wpVersion.IsMatch(v)).LastOrDefault();
-                            if (toVersion is null) continue;
+                            var toVersion = ResolveTargetVersion(packageVersions, wpVersion);
+                            if (toVersion is null)
+                            {
+                                WriteVerbose($"{release.GetPSPath()}: no package version matched '{Version}'.");
+                                continue;
+                            }
                             if (!ShouldUpdateReleaseToVersion(release, toVersion)) continue;
 
                             if (ShouldProcess(release.GetPSPath(), $"Update ProcessVersion to {toVersion}"))
@@ -336,7 +365,29 @@ public class UpdateProcessVersionCmdlet : OrchestratorPSCmdlet
     /// True when the release should be updated to <paramref name="targetVersion"/>. Pure/testable:
     /// false only when the release's current version already equals the target (a null release or
     /// null CurrentVersion proceeds).
+    /// <para>
+    /// The wildcard in -Version is resolved as text, but this last check is about version
+    /// *numbers*, so it goes through <c>VersionComparer</c> instead of comparing the strings. The
+    /// deployed version comes from the Releases endpoint and the resolved one from the package
+    /// feed; when those normalize a version differently -- `1.0.0` against `1.0.0.0`, `1.0.7`
+    /// against `1.0.07` -- a string comparison calls a release that is already in place stale and
+    /// re-issues the update, which is exactly the no-op audit entry this guard exists to avoid.
+    /// </para>
     /// </summary>
     internal static bool ShouldUpdateReleaseToVersion(Release? release, string targetVersion) =>
-        release?.CurrentVersion?.VersionNumber != targetVersion;
+        !VersionComparer.Instance.AreSameVersion(release?.CurrentVersion?.VersionNumber, targetVersion);
+
+    /// <summary>
+    /// Picks the version to update to out of <paramref name="orderedVersions"/>, or null when the
+    /// pattern matches nothing. Pure/testable.
+    /// <para>
+    /// The caller passes the feed's versions as returned by
+    /// <c>OrchDriveInfo.GetPackageVersions</c>, which the PackageVersions cache initializer sorts
+    /// ASCENDING with <c>VersionComparer</c>. Taking the last match is therefore "the newest
+    /// version matching the pattern" -- the ordering this depends on lives in the cache, not here,
+    /// so do not reorder the sequence before handing it over.
+    /// </para>
+    /// </summary>
+    internal static string? ResolveTargetVersion(IEnumerable<string> orderedVersions, WildcardPattern pattern) =>
+        orderedVersions.Where(pattern.IsMatch).LastOrDefault();
 }

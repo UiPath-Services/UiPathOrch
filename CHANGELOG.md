@@ -4,6 +4,42 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Fixed
+
+- **`Update-OrchProcessVersion -Id` now honours a wildcard `-Version`.** `-Version` is declared
+  `[SupportsWildcards]` and the help documents `-Id 573412 -Version 2.0.*` as "update to the latest
+  version matching the pattern", but only the `-Name` parameter set ever resolved the pattern. The
+  `-Id` path handed the string to the API verbatim, so Orchestrator was asked for a package version
+  literally named `2.0.*`; the guard in front of it likewise compared the deployed version against
+  that pattern as plain text and so never recognised a release that was already where it should be.
+  Both parameter sets now resolve `-Version` the same way, through one helper, and pick the
+  **newest** matching version — `2.0.*` moves the process to the highest 2.0.x even when a 2.1 or
+  3.0 exists in the feed.
+
+  That "newest" comes from the PackageVersions cache, which sorts a feed's versions ascending with
+  `VersionComparer`; the resolver takes the last match. The dependency was implicit and easy to
+  break by reordering at a call site, so it is now stated where the resolving happens.
+
+  Two smaller things fell out of sharing the path. A version pattern that matches nothing is a
+  skip in both parameter sets rather than a skip in one and an API error in the other, and it now
+  says so under `-Verbose` instead of vanishing. And an empty `-Version` is treated as "latest",
+  as the `-Name` path always did, rather than being resolved against a pattern that is not there.
+
+- **"Is this process already on that version?" is now a comparison of version numbers, not of
+  their spelling.** The wildcard in `-Version` is matched against the version text, as it must be,
+  but the check that follows it — has this release already got what we are about to deploy — was
+  comparing two strings that arrive from different endpoints. The deployed version comes from the
+  Releases entity and the resolved one from the package feed, and the two do not always normalize
+  a version the same way: `1.0.0` against `1.0.0.0`, or `1.0.7` against `1.0.07`, is one release
+  written twice. A release already in place was therefore called stale and updated again, which is
+  the no-op audit entry the guard exists to prevent. Both now go through `VersionComparer`, which
+  compares the parsed fields; text the version grammar does not recognise still falls back to a
+  string comparison, so two different unrecognised versions do not both collapse onto `0.0.0` and
+  read as equal. `Update-OrchProcessVersion` and `Update-OrchProcess` apply the same rule when
+  they drop the deployed version out of their `-Version` tab completion.
+
 ## [1.17.0] - 2026-09-09
 
 With the August 3, 2026 Automation Cloud release, UiPath made OpenAPI 3.0 the Orchestrator API

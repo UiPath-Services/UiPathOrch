@@ -326,7 +326,9 @@ Processes are folder-scoped entities. You must navigate to a folder on the Orch:
 
 This cmdlet updates the package version only. To modify other process settings (such as description, priority, or entry point), use Update-OrchProcess instead.
 
-When -Version is not specified and the process is already at the latest version, the process is silently skipped with no error. When -Version is specified, the cmdlet performs a wildcard match against available versions and updates to the matching version.
+When -Version is not specified and the process is already at the latest version, the process is silently skipped with no error. When -Version is specified, the cmdlet matches it against the versions available in the feed and updates to the **newest** matching version -- so `-Version 2.0.*` moves the process to the highest 2.0.x, even when a newer 2.1 or 3.0 exists. This applies to both the -Name and -Id parameter sets.
+
+If no available version matches, the process is skipped without an error; run with -Verbose to see which processes were skipped and why.
 
 An error is raised if neither -Name nor -Id is specified.
 

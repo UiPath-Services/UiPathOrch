@@ -167,6 +167,25 @@ public partial class VersionComparer : IComparer<string>
         return 0;
     }
 
+    /// <summary>
+    /// True when two version strings denote the same version. Compares the parsed numeric fields
+    /// rather than the text, because the two strings reaching a comparison often come from
+    /// different endpoints: a release's CurrentVersion and the package feed's version list can be
+    /// normalized differently, so `1.0.0` and `1.0.0.0` are one release and `1.0.07` and `1.0.7`
+    /// one number. Prerelease labels compare case-insensitively, as they do in NuGet.
+    /// <para>
+    /// Text the version grammar does not recognise falls back to a string comparison. Without that
+    /// every unrecognised string would parse as 0.0.0 and so equal every other one.
+    /// </para>
+    /// </summary>
+    public bool AreSameVersion(string? x, string? y)
+    {
+        if (x is null || y is null) return x is null && y is null;
+        if (string.Equals(x, y, StringComparison.OrdinalIgnoreCase)) return true;
+        if (!PackageVersionRegex().IsMatch(x) || !PackageVersionRegex().IsMatch(y)) return false;
+        return Compare(x, y) == 0;
+    }
+
     private static (int major, int minor, int patch, int num, string? stage) ParseVersion(string version)
     {
         var match = PackageVersionRegex().Match(version);

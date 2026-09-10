@@ -194,7 +194,10 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
                     var (drive, folder) = result.Source;
                     var versions = drive.GetPackageVersions(folder, process.ProcessKey);
                     foreach (var version in versions
-                        .Where(v => v.Version != process.ProcessVersion))
+                        // Compare version numbers, not their text: the feed and the release can
+                        // spell one version differently, and the deployed one must not be offered
+                        // as a candidate either way (same rule as Update-OrchProcessVersion).
+                        .Where(v => !VersionComparer.Instance.AreSameVersion(v.Version, process.ProcessVersion)))
                     {
                         string tiphelp = process.GetPSPath();
                         yield return new CompletionResult(PathTools.EscapePSText(version.Version), version.Version, CompletionResultType.ParameterValue, tiphelp);
