@@ -85,7 +85,7 @@ Gets all API triggers from all folders recursively. When run from the root folde
 PS Orch1:\Shared> Get-OrchApiTrigger -Recurse -ExportCsv api-triggers.csv
 ```
 
-Exports every API trigger reachable under the current folder to a CSV. Column names match parameter names on `New-OrchApiTrigger` and `Update-OrchApiTrigger`, so the same CSV pipes back through either cmdlet without rewriting. Use `-CsvEncoding` to override the default UTF-8 (no BOM).
+Exports every API trigger reachable under the current folder to a CSV. Column names match parameter names on `New-OrchApiTrigger` and `Update-OrchApiTrigger`, so the same CSV pipes back through either cmdlet without rewriting. Use `-CsvEncoding` to override the default UTF-8 with BOM.
 
 ## PARAMETERS
 
@@ -219,11 +219,11 @@ HelpMessage: ''
 
 ### -CsvEncoding
 
-Specifies the text encoding for the CSV file. Defaults to UTF-8 (no BOM). Tab-completes against available encodings.
+Specifies the text encoding for the CSV file. Defaults to UTF-8 with BOM for Excel compatibility. Tab-completes against available encodings.
 
 ```yaml
 Type: System.Text.Encoding
-DefaultValue: UTF-8 (no BOM)
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:
