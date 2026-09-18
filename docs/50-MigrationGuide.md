@@ -1012,10 +1012,11 @@ Rules that hold for every form above:
 - **A path wildcard matches one level.** `Orch1:\Dept*` selects top-level folders only, never
   `Orch1:\Sales\Dept1`. Reach deeper with `-Recurse`, or select at depth by piping
   `Get-ChildItem -Recurse` into `Copy-Item`.
-- **`-Include` / `-Exclude` filter the paths being resolved, not the recursion.**
-  `copy -Recurse Orch1:\zzz Orch2:\ -Exclude hoge` still copies `Orch1:\zzz\hoge`, because
-  `hoge` is matched against the top-level path, not against the subtree that `-Recurse`
-  walks.
+- **`-Include` / `-Exclude` are matched against the paths being resolved, never against the
+  subtree.** `copy -Recurse Orch1:\* Orch2:\ -Exclude tmp*` drops the top-level `tmp*`
+  folders, but `copy -Recurse Orch1:\zzz Orch2:\ -Exclude hoge` filters nothing at all —
+  the only path resolved is `zzz`, and `zzz` does not match `hoge`. The FileSystem provider
+  behaves the same way, so to leave a subfolder behind, name its siblings instead.
 - **Read the plan before committing to it.** With `-WhatIf` every form prints one
   `Copy Folder` line per folder it would create, plus a warning for each personal workspace
   and each event trigger it cannot carry.
