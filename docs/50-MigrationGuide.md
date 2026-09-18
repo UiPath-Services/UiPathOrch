@@ -70,6 +70,10 @@ The tenant entities are copied by the **root-to-root** form, which is why
 behind. Queue items, storage bucket files and event triggers are never carried by any of
 these; see [Important Notes](#important-notes).
 
+The same command also moves a named folder, a list of folders, or a name pattern, which is
+what a partial or staged migration is built from — see
+[Copying Folders](#copying-folders) for every path form and the rules they share.
+
 ## Choose your path
 
 This guide covers both full migrations and one-off copies. Use the questions below to read only the sections you need.
@@ -525,6 +529,11 @@ copy -Recurse OldOrch:\ NewOrch:\
 
 This alone completes most of the migration work.
 
+Migrating only part of the tenant — one folder, a list of folders, a name pattern, or
+everything except a few — is the same command with a different path. See
+[Copying Folders](#copying-folders) for every path form `copy` accepts and the rules they
+share.
+
 > **`-Recurse` is what pulls in the folders.** On a root-to-root copy,
 > `copy OldOrch:\ NewOrch:\` **without** `-Recurse` copies only the tenant-level
 > entities listed above (libraries, packages, credential stores, roles, users, machines,
@@ -974,18 +983,43 @@ and `Get-Orch*Link` on the destination verifies the result.
 
 ### Copying Folders
 
-The `copy` command (`Copy-Item`) copies folders along with all their
-contained entities (packages, processes, assets, queues, triggers, etc.):
+The `copy` command (`Copy-Item`) copies folders along with all their contained entities
+(packages, processes, assets, queues, triggers, etc.). What it copies is decided by three
+things: the path you give it, whether that path carries a wildcard, and whether you pass
+`-Recurse`.
 
-```powershell
-# Copy all folders and their entities
-copy -Recurse Orch1:\* Orch2:\
+| Command | What it copies |
+|---|---|
+| `copy Orch1:\ Orch2:\` | Tenant entities only, no folders — see [What `copy` covers](#what-copy-covers) |
+| `copy -Recurse Orch1:\ Orch2:\` | Tenant entities, every folder, and every folder entity |
+| `copy -Recurse Orch1:\* Orch2:\` | Every folder and folder entity, no tenant entities |
+| `copy Orch1:\Shared Orch2:\` | One folder and its entities — its subfolders stay behind |
+| `copy -Recurse Orch1:\Shared Orch2:\` | One folder, its entities, and its whole subtree |
+| `copy -Recurse Orch1:\Shared,Orch1:\Finance Orch2:\` | Several named folders in one command |
+| `copy -Recurse Orch1:\Dept* Orch2:\` | Every top-level folder whose name matches the pattern |
+| `copy -Recurse Orch1:\* Orch2:\ -Exclude tmp*,scratch` | Everything except the named top-level folders |
+| `copy -Recurse Orch1:\Dept2\Billing Orch2:\` | Lift a subtree out and land it at the destination root |
+| `copy -Recurse Orch1:\Template Orch1:\Shared` | Clone within one tenant — source and destination may be the same drive |
 
-# Copy a specific folder
-copy Orch1:\Shared Orch2:\
-```
+Rules that hold for every form above:
 
-Classic folders are automatically converted to modern folders when copied.
+- **`-Recurse` governs subfolders and nothing else.** A folder's own entities always
+  travel with it (unless you pass `-ExcludeEntities`); `-Recurse` only decides whether its
+  subfolders come along.
+- **The destination folder must already exist.** `copy Orch1:\Shared Orch2:\SolRoot` fails
+  with `Orch2: does not have folder 'Orch2:\SolRoot'` when `SolRoot` is not there yet.
+  Create it first (`New-Item Orch2:\SolRoot`) or copy into `Orch2:\`.
+- **A path wildcard matches one level.** `Orch1:\Dept*` selects top-level folders only, never
+  `Orch1:\Sales\Dept1`. Reach deeper with `-Recurse`, or select at depth by piping
+  `Get-ChildItem -Recurse` into `Copy-Item`.
+- **`-Include` / `-Exclude` filter the paths being resolved, not the recursion.**
+  `copy -Recurse Orch1:\zzz Orch2:\ -Exclude hoge` still copies `Orch1:\zzz\hoge`, because
+  `hoge` is matched against the top-level path, not against the subtree that `-Recurse`
+  walks.
+- **Read the plan before committing to it.** With `-WhatIf` every form prints one
+  `Copy Folder` line per folder it would create, plus a warning for each personal workspace
+  and each event trigger it cannot carry.
+- Classic folders are converted to modern folders automatically when copied.
 
 `copy` (`Copy-Item`) takes two migration-specific parameters when the path is an
 Orchestrator drive:
