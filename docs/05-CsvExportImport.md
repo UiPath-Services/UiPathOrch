@@ -196,7 +196,11 @@ Import-Csv C:\temp\assets.csv | Copy-OrchAsset -Destination Orch2:\Shared
 
 **Tips:**
 - Empty cells in CSV are treated as "not specified" and do not overwrite
-  existing values.
+  existing values. This holds for text columns. For a **numeric** column the
+  binder turns an empty cell into `0`, which the cmdlet cannot tell apart from
+  a 0 you typed — and some cmdlets write it (`Set-PmLicenseAllocation -AppTestRobot 0`
+  releases the runtime). For those, delete the column from the CSV rather than
+  leaving it blank.
 - Boolean values accept `true`/`false` (case-insensitive).
 - Preview an import with `-WhatIf` before running it for real — the
   state-changing cmdlets (New, Update, Set, Add, Copy, Remove) support it,

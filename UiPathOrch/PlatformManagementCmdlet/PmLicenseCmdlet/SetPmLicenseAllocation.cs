@@ -24,6 +24,10 @@ public class SetPmLicenseAllocationCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(PmTenantCompleter))]
     public string? Tenant { get; set; }
 
+    // On a numeric parameter the binder coerces an empty CSV cell to 0, so 0 and a blank
+    // column are indistinguishable here as they are in every other cmdlet of the module.
+    // A column you do not want written is left out of the CSV, not left blank.
+
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public int? UnattendedRobot { get; set; }
 
