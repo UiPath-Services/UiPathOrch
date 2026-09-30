@@ -2160,6 +2160,104 @@ public class VideoRecordingSettings
 }
 
 // ReleaseDto
+// added by UiPathOrch — one dependency declared by a package version, read from the
+// .nuspec inside the .nupkg. Feed-scoped on purpose: the same id and version can exist
+// with different content in the tenant feed and in a folder's own feed, so FeedId is what
+// makes a row (and its cache entry) unambiguous.
+public class PackageDependency
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch — the folder the row was read through
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? FeedId { get; set; } // added by UiPathOrch
+
+    public string? Package { get; set; }
+    public string? Version { get; set; }
+    public string? Dependency { get; set; }
+    /// <summary>The NuGet version range, e.g. "[23.10.3]" or "23.10.3". Null means any version.</summary>
+    public string? Range { get; set; }
+    /// <summary>The &lt;group targetFramework&gt; the dependency sits in, when the manifest groups them.</summary>
+    public string? TargetFramework { get; set; }
+
+    public PackageDependency ShallowClone() => (PackageDependency)MemberwiseClone();
+}
+
+// added by UiPathOrch — a package dependency reached through a process, which adds the
+// process the package is deployed as. A type of its own so the rows can lead with the
+// process in their own table view.
+public class ProcessDependency : PackageDependency
+{
+    public string? Process { get; set; }
+
+    public ProcessDependency() { }
+
+    /// <summary>Copies a cached (shared) dependency row and adds the per-process fields.</summary>
+    public ProcessDependency(PackageDependency source, string? process, string? path)
+    {
+        Package = source.Package;
+        Version = source.Version;
+        Dependency = source.Dependency;
+        Range = source.Range;
+        TargetFramework = source.TargetFramework;
+        FeedId = source.FeedId;
+        Process = process;
+        Path = path;
+    }
+}
+
+// added by UiPathOrch — one .xaml the package carries, at the path it has in the project.
+public class PackageWorkflow
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch — the folder the row was read through
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? FeedId { get; set; } // added by UiPathOrch
+
+    public string? Package { get; set; }
+    public string? Version { get; set; }
+    public string? Workflow { get; set; }
+    /// <summary>Uncompressed size of the .xaml in bytes.</summary>
+    public long? Length { get; set; }
+    /// <summary>The workflow project.json publishes as an entry point (its `entryPoints`).</summary>
+    public bool? IsEntryPoint { get; set; }
+    /// <summary>The project's main workflow (project.json `main`); also an entry point.</summary>
+    public bool? IsMain { get; set; }
+
+    public PackageWorkflow ShallowClone() => (PackageWorkflow)MemberwiseClone();
+}
+
+// added by UiPathOrch — a workflow reached through a process. Sibling of ProcessDependency.
+public class ProcessWorkflow : PackageWorkflow
+{
+    public string? Process { get; set; }
+
+    public ProcessWorkflow() { }
+
+    public ProcessWorkflow(PackageWorkflow source, string? process, string? path)
+    {
+        Package = source.Package;
+        Version = source.Version;
+        Workflow = source.Workflow;
+        Length = source.Length;
+        IsEntryPoint = source.IsEntryPoint;
+        IsMain = source.IsMain;
+        FeedId = source.FeedId;
+        Process = process;
+        Path = path;
+    }
+}
+
+// added by UiPathOrch — what one download of a package version yields, and all that is kept
+// of it. Cached per feed + package id + version: the same id and version can hold different
+// content in a folder's own feed and in the tenant feed, so the feed is part of the identity.
+public class PackageContents
+{
+    public List<PackageDependency> Dependencies { get; set; } = [];
+    public List<PackageWorkflow> Workflows { get; set; } = [];
+}
+
 public class Release
 {
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]

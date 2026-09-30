@@ -175,6 +175,8 @@ NuGet packages (automation projects) and libraries (shared components).
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchPackage | List packages |
+| Get-OrchPackageDependency | Get the activity packages a package version depends on (from its .nuspec) |
+| Get-OrchPackageWorkflow | Get the .xaml workflows inside a package version, and which are entry points |
 | Get-OrchPackageVersion | List package versions |
 | Copy-OrchPackage | Copy packages to another tenant/folder |
 | Import-OrchPackage | Upload a .nupkg file |
@@ -187,6 +189,7 @@ NuGet packages (automation projects) and libraries (shared components).
 |--------|-------------|
 | Get-OrchLibrary | List libraries |
 | Get-OrchLibraryVersion | List library versions |
+| Get-OrchLibraryDependency | Get the activity packages a library depends on (from its .nuspec) |
 | Copy-OrchLibrary | Copy libraries to another tenant |
 | Import-OrchLibrary | Upload a library .nupkg file |
 | Export-OrchLibrary | Download a library as .nupkg file |
@@ -200,6 +203,8 @@ Processes (package deployments to folders).
 |--------|-------------|
 | Get-OrchProcess | List processes in a folder |
 | Get-OrchProcessDetail | Get per-process detailed information |
+| Get-OrchProcessDependency | Get the activity packages a process depends on, for the version its folder runs |
+| Get-OrchProcessWorkflow | Get the .xaml workflows in the package a process runs, and which are entry points |
 | New-OrchProcess | Create a process from a package |
 | Copy-OrchProcess | Copy processes to another tenant/folder |
 | Compare-OrchProcess | Diff processes between two folders/tenants |

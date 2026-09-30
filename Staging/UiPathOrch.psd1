@@ -92,6 +92,7 @@ CmdletsToExport = @(
 
 'Get-OrchLibrary',
 'Get-OrchLibraryVersion',
+'Get-OrchLibraryDependency',
 'Remove-OrchLibrary',
 'Import-OrchLibrary',
 'Export-OrchLibrary',
@@ -100,6 +101,8 @@ CmdletsToExport = @(
 'Get-OrchPackage',
 'Copy-OrchPackage',
 'Get-OrchPackageVersion',
+'Get-OrchPackageDependency',
+'Get-OrchPackageWorkflow',
 'Remove-OrchPackage',
 'Import-OrchPackage',
 'Export-OrchPackage',
@@ -120,6 +123,8 @@ CmdletsToExport = @(
 
 'Get-OrchProcess',
 'Get-OrchProcessDetail',
+'Get-OrchProcessDependency',
+'Get-OrchProcessWorkflow',
 'New-OrchProcess',
 'Update-OrchProcess',
 'Copy-OrchProcess',

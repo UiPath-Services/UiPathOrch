@@ -384,6 +384,20 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     }
     #endregion
 
+    #region OrchPackageContents cache
+    /// <summary>
+    /// One package version's dependencies and workflows as seen from <paramref name="folder"/>:
+    /// the folder decides the feed, and the feed decides which package with that id and version
+    /// is meant. Served from the shared cache, so this is one download per feed + id + version
+    /// no matter how many folders, processes or cmdlets ask.
+    /// </summary>
+    public PackageContents? GetPackageContents(Folder folder, string packageId, string packageVersion)
+    {
+        string feedId = FolderFeedId.Get(folder) ?? "";
+        return PackageContents.Get((feedId, packageId, packageVersion));
+    }
+    #endregion
+
     // Backwards-compat wrapper: QueueLinks (KeyedSingleCachePerTenant) keyed by
     // (folderId, queueId). Path / PathName depend on caller's Folder + Queue
     // references; set per-call (same pattern as AssetLinks).
@@ -914,6 +928,15 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly KeyedSingleCachePerTenant<(Int64 folderId, Int64 bucketId), AccessibleFoldersDto?> BucketLinks;
     public readonly KeyedListCachePerTenant<(string feedId, string packageId), Package> PackageVersions;
     public readonly KeyedListCachePerTenant<(string feedId, string packageId, string version), PackageEntryPoint> PackageEntryPoints;
+    // What one package download yields: its dependencies and its workflows. Keyed by feed as
+    // well as id and version, because the same id and version can hold different content in a
+    // folder's own feed and in the tenant feed — those are different packages. Folders that
+    // share a feed share the entry, which is the point: one download serves every process in
+    // the tenant that runs that package version, for both questions.
+    public readonly KeyedSingleCachePerTenant<(string feedId, string packageId, string version), PackageContents?> PackageContents;
+    // The library counterpart. No feed in the key: the download endpoint for libraries takes
+    // no feedId, so only the tenant feed is reachable (same limit Export-OrchLibrary has).
+    public readonly KeyedSingleCachePerTenant<(string libraryId, string version), PackageContents?> LibraryContents;
     public readonly IncrementalCachePerFolder<long, ExecutionMedia> JobsHavingExecutionMedia;
     public readonly IncrementalCachePerFolder<long, TestCaseExecution> TestCaseExecutions;
     public readonly IncrementalCachePerFolder<long, TestSetExecution> TestSetExecutions;
@@ -1485,6 +1508,14 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         PackageEntryPoints = new(this,
             key => OrchAPISession.GetPackageEntryPoints(key.feedId, key.packageId, key.version));
         // No initializer needed: PackageEntryPoint has no per-call fields.
+
+        PackageContents = new(this,
+            key => OrchAPISession.GetPackageContents(key.feedId, key.packageId, key.version));
+        // No initializer: Path depends on the folder the caller reached the package through,
+        // so the wrappers below set it on a per-emit copy.
+
+        LibraryContents = new(this,
+            key => OrchAPISession.GetLibraryContents(key.libraryId, key.version));
 
         JobsHavingExecutionMedia = new(this,
             // OrchAPISession.GetExecutionMedia takes only (folderId, skip, first);

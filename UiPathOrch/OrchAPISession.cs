@@ -2043,6 +2043,15 @@ public partial class OrchAPISession : IDisposable
         return UploadPackage(feedId, fileName, fileContent);
     }
 
+    // The library counterpart of GetPackageContents: same reading of the same kind of archive,
+    // through the Libraries download endpoint. Tenant feed only, as Export-OrchLibrary is --
+    // DownloadLibrary takes no feedId, so a host-feed library cannot be fetched here.
+    public PackageContents GetLibraryContents(string libraryId, string libraryVersion)
+    {
+        var (_, fileContent) = DownloadLibrary(libraryId, libraryVersion);
+        return PackageContentsReader.ReadContents(fileContent, libraryId, libraryVersion);
+    }
+
     public (string? FileName, byte[] FileContent) DownloadLibrary(string libraryId, string libraryVersion)
     {
         string url = _base_url_orchestrator + $"/odata/Libraries/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(libraryId))}:{libraryVersion}')";
@@ -2078,6 +2087,20 @@ public partial class OrchAPISession : IDisposable
         using var cancel = new ConsoleCancelHandler();
         var responseBytes = response.Content.ReadAsByteArrayAsync(cancel.Token).GetAwaiter().GetResult();
         return (ret, responseBytes);
+    }
+
+    // Orchestrator exposes no endpoint for a package's dependencies or for the workflows it
+    // carries, so both come from inside the package — the same round trip the web UI's "Explore
+    // package" makes. The whole .nupkg travels once; only the two small lists are kept (cached
+    // per feed + id + version by OrchDriveInfo.PackageContents, since the same id and version
+    // can hold different content in a folder feed and in the tenant feed).
+    public PackageContents GetPackageContents(string feedId, string packageId, string packageVersion)
+    {
+        var (_, fileContent) = DownloadPackage(feedId, packageId, packageVersion);
+        var contents = PackageContentsReader.ReadContents(fileContent, packageId, packageVersion);
+        foreach (var dependency in contents.Dependencies) dependency.FeedId = feedId;
+        foreach (var workflow in contents.Workflows) workflow.FeedId = feedId;
+        return contents;
     }
 
     public (string? FileName, byte[] FileContent) DownloadPackage(string feedId, string packageId, string packageVersion)

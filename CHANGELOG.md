@@ -4,6 +4,47 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **`Get-OrchProcessDependency` answers "what does this process depend on" without the lookup
+  work.** Orchestrator has no endpoint for a package's dependencies: they live in the `.nuspec`
+  inside the `.nupkg`, which is why the web UI's "Explore package" downloads the whole package to
+  show them. Asking it of a package would leave the caller to find out which version each folder
+  deployed and which feed that folder reads, so the cmdlet starts from the process instead and
+  resolves both. `-Dependency` takes wildcards, which is the point of the thing: a
+  `-Recurse -Dependency 'UiPath.UIAutomation*'` sweep says which processes use that activity
+  package, and at which version range.
+
+- **`Get-OrchProcessWorkflow` lists the `.xaml` files in the package a process runs**, flagged
+  with `IsEntryPoint` and `IsMain` — the file list the same "Explore package" dialog shows. Both
+  come from `project.json` (`main`, `entryPoints[].filePath`), so no extra request. `-EntryPoint`
+  narrows the rows to the published ones.
+
+- **`Get-OrchPackageDependency` / `Get-OrchPackageWorkflow`** are the feed-side view of the same
+  two questions, for a package that is not deployed anywhere or to compare versions.
+
+- **`Get-OrchLibraryDependency`** asks the dependency question of a library. Without `-Version`
+  it reads each library's latest version only: a library feed keeps every version ever
+  published and each one is its own download, so `-Version *` makes that opt-in. Tenant feed
+  only, the limit `Export-OrchLibrary` already has — the Libraries download endpoint takes no
+  feedId.
+
+  All four share one cache, keyed by **feed + package id + version**: the same id and version can
+  hold different content in a folder's own feed and in the tenant feed, so those are two packages
+  and two downloads — verified against a folder feed and the tenant feed holding the same
+  `id:version`. Everything else is shared: one download serves every process in the tenant that
+  runs that package version, and the dependency and workflow cmdlets read the same entry, so
+  asking both questions costs one download. Only the two small lists are kept; the package bytes
+  are discarded. Measured on a real tenant: 25 processes over 21 distinct packages took 4.1 s
+  cold, and the second question over the same folder 0.007 s.
+
+  The work is staged so the progress bar counts what costs something. Listing folders and
+  processes runs in parallel because it is cheap; the downloads are deliberately sequential — one
+  request at a time against the server — and run in their own pass, so their count is known
+  before the first one starts and an unexpectedly large sweep can be cancelled.
+
 ## [1.18.0] - 2026-09-30
 
 ### Added

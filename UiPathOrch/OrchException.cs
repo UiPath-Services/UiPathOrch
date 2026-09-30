@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Text.Json;
 
@@ -159,6 +159,15 @@ public class ExceptionsCachePer<T> where T : IEquatable<T>
             throw cached.Exception;
         }
     }
+
+    // Passive peek: is this key currently short-circuited by a cached failure? Unlike
+    // ThrowCachedExceptionIfAny this neither throws nor drops an expired entry, so a caller
+    // that only wants to know whether a fetch would be pointless (an argument completer
+    // sizing up what the cache can cover) can ask without side effects.
+    public bool HasCachedException(T key) =>
+        _exceptionsCache.IsValueCreated &&
+        _exceptionsCache.Value.TryGetValue(key, out var cached) &&
+        !cached.IsExpired;
 
     public bool ClearCache(T? key)
     {

@@ -860,6 +860,11 @@ public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
         _supportedApiVersionFrom = supportedApiVersionFrom;
     }
 
+    // Passive peek: the entries already fetched, without triggering a fetch. Used by argument
+    // completers, which must offer what is known rather than reach for the API during wildcard
+    // expansion -- for PackageContents a fetch means downloading a .nupkg.
+    public IEnumerable<KeyValuePair<TKey, TEntity?>> CachedEntries => _cache ?? [];
+
     public TEntity? Get(TKey key)
     {
         if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
@@ -1443,6 +1448,13 @@ public class SingleCachePerFolder<T> : IFolderCacheClearable
         _supportedApiVersionFrom = supportedApiVersionFrom;
     }
 
+    // Passive peek: see ListCachePerFolder.CachedValue.
+    public bool TryGetCachedValue(Folder folder, out T? value)
+    {
+        value = default;
+        return folder?.Id is { } id && _cache is { } cache && cache.TryGetValue(id, out value);
+    }
+
     public T? Get(Folder folder)
     {
         if (folder?.Id is null || _drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)
@@ -1526,6 +1538,17 @@ public class ListCachePerFolder<T> : IFolderCacheClearable
         _initializer = initializer;
         _supportedApiVersionFrom = supportedApiVersionFrom;
     }
+
+    // Passive peek: the folder's entries if they were already fetched, null otherwise, without
+    // triggering a fetch. For argument completers, which must not call the API while the user
+    // is holding down Tab.
+    public List<T>? CachedValue(Folder folder) =>
+        _cache is { } cache && cache.TryGetValue(folder.Id ?? 0, out var list) ? list : null;
+
+    // True when a previous fetch for this folder failed and the failure is still cached, so a
+    // fetch now would only reproduce it. Lets a completer tell "not read yet" (worth a hint)
+    // from "cannot be read" (a folder with no permission, which no amount of priming fixes).
+    public bool HasCachedException(Folder folder) => _exceptions.HasCachedException(folder.Id ?? 0);
 
     public List<T> Get(Folder folder)
     {
