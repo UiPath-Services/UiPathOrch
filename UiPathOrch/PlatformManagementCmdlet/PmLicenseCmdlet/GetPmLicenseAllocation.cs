@@ -8,7 +8,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "PmLicenseAllocation")]
 [OutputType(typeof(Entities.TenantAllocation))]
-public class GetPmLicenseAllocation : OrchestratorPSCmdlet
+public class GetPmLicenseAllocationCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TenantCompleter))]

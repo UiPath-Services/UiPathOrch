@@ -4955,6 +4955,154 @@
     </View>
 
     <View>
+      <Name>TenantProductAllocation</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.TenantProductAllocation</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Tenant</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Code</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Allocated</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Total</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Available</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Consumable</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Usage</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Tenant</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>code</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>allocated</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>total</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.total -ne $null -and $_.allocated -ne $null) { $_.total - $_.allocated } else { '' }
+                </ScriptBlock>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>isConsumable</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <ScriptBlock>
+                  if ($_.total -ne $null -and $_.allocated -ne $null -and $_.total -gt 0) {
+                    $pct = [int](($_.allocated / $_.total) * 100)
+                    $filled = [Math]::Round(($_.allocated / $_.total) * 10)
+                    $bar = ('#' * $filled) + ('.' * (10 - $filled))
+                    "[$bar] $pct%"
+                  } else { '' }
+                </ScriptBlock>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
+      <Name>ServiceLicenseProduct</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.ServiceLicenseProduct</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>Tenant</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Service</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Code</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Quantity</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Used</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Available</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>TotalUnits</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>Type</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>Tenant</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>serviceType</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>code</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>quantity</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>used</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>available</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>totalUnits</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>type</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>LicenseInventory</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.LicenseInventory</TypeName>

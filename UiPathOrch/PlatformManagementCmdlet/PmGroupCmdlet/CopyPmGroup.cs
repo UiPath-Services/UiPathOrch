@@ -71,7 +71,7 @@ public class CopyPmGroupCmdlet : OrchestratorPSCmdlet
                 if (!string.IsNullOrEmpty(unresolvedEmail.email))
                     userName += $" ({unresolvedEmail.email})";
 
-                WriteWarning($"{srcGroupPath}: Failed to find {objectType} '{userName}' in '{drive.NameColonSeparator}'. Ignored.");
+                WriteWarning($"\"{srcGroupPath}\": Failed to find {objectType} '{userName}' in '{drive.NameColonSeparator}'. Ignored.");
             }
         }
         return retIdentifiers;

@@ -410,6 +410,14 @@ internal class Default_Serverless_AutomationCloudRobot : IStaticCandidates
     public static string[] Items { get; } = ["Default", "Serverless", "AutomationCloudRobot"];
 }
 
+// Services that grant licenses to a tenant. "tenant" is the pseudo-service holding the
+// consumable units (Platform Units, ScreenPlay, Test Heals, ...); the list is not closed,
+// so -ServiceType stays a free string with these as the completions.
+internal class Orchestrator_Tenant_DataService : IStaticCandidates
+{
+    public static string[] Items { get; } = ["orchestrator", "tenant", "dataservice", "testmanager"];
+}
+
 internal class Processes_FolderHierarchy : IStaticCandidates
 {
     public static string[] Items { get; } = ["Processes", "FolderHierarchy"];

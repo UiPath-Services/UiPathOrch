@@ -39,6 +39,30 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
     public int? TestAutomationSlots { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? HeadlessSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? HostingSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? AppTestSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? PerformanceTestSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? AgentSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? FunctionSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? AutomationCloudSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? AutomationCloudTestAutomationSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Any_Foreground_Background>))]
     public string? AutomationType { get; set; }
 
@@ -104,13 +128,43 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
+            // OrchAPISession.AddMachine strips fields an older server does not model; saying
+            // so here keeps a requested value from vanishing without a word. ApiVersion is
+            // only published once the session has seen an API response, so prime it — but
+            // only when a version-gated field was actually asked for, to keep a plain create
+            // at one request.
+            bool versionGatedFieldRequested =
+                AppTestSlots is not null || HostingSlots is not null ||
+                PerformanceTestSlots is not null || FunctionSlots is not null;
+            if (versionGatedFieldRequested && drive.OrchAPISession.ApiVersion is null)
+            {
+                _ = drive.Machines.Get();
+            }
+
+            double? api = drive.OrchAPISession.ApiVersion;
+            string driveTarget = drive.NameColonSeparator;
+            var appTestSlots = MachineFieldVersions.SupportedOrNull(AppTestSlots, MachineFieldVersions.AppTestSlots, api, nameof(AppTestSlots), driveTarget, WriteWarning);
+            var hostingSlots = MachineFieldVersions.SupportedOrNull(HostingSlots, MachineFieldVersions.HostingSlots, api, nameof(HostingSlots), driveTarget, WriteWarning);
+            var performanceTestSlots = MachineFieldVersions.SupportedOrNull(PerformanceTestSlots, MachineFieldVersions.PerformanceTestSlots, api, nameof(PerformanceTestSlots), driveTarget, WriteWarning);
+            var functionSlots = MachineFieldVersions.SupportedOrNull(FunctionSlots, MachineFieldVersions.FunctionSlots, api, nameof(FunctionSlots), driveTarget, WriteWarning);
+            // Tags / AutomationType / TargetFramework / RobotUsers keep going through
+            // OrchAPISession.AddMachine's long-standing per-version strips: probing an API 13.0
+            // server showed those version notes to be wrong in both directions, so re-deciding
+            // it here would only add a second, equally unreliable gate.
+            var tags = Tags;
+            var automationType = AutomationType;
+            var targetFramework = TargetFramework;
+            var driveRobotUsers = processedRobotUsers?.ToArray();
+            var automationCloudSlots = AutomationCloudSlots;
+            var automationCloudTestAutomationSlots = AutomationCloudTestAutomationSlots;
+
             foreach (var name in Name!
                 .WithProgressBar(this, $"Creating machines in {drive.NameColonSeparator}", name => name)
                 .WithCancellation(cancelHandler.Token))
             {
                 if (Scope == "PersonalWorkspace")
                 {
-                    WriteWarning($"{drive.NameColonSeparator}{name}: Machines with the \"Scope\" set to \"PersonalWorkspace\" cannot be added with this cmdlet. Please enable the personal workspace using the Enable-OrchPersonalWorkspace cmdlet.");
+                    WriteWarning($"\"{drive.NameColonSeparator}{name}\": Machines with the \"Scope\" set to \"PersonalWorkspace\" cannot be added with this cmdlet. Please enable the personal workspace using the Enable-OrchPersonalWorkspace cmdlet.");
                     continue;
                 }
 
@@ -118,10 +172,10 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
                 if (ShouldProcess(target, "New Machine"))
                 {
                     List<RobotUser>? lstRobotUsers = null;
-                    if (processedRobotUsers is not null)
+                    if (driveRobotUsers is not null)
                     {
                         var robots = drive.AllRobotsAcrossFolders.Get();
-                        var wpRobotUsers = processedRobotUsers.ConvertToWildcardPatternList();
+                        var wpRobotUsers = driveRobotUsers.ConvertToWildcardPatternList();
                         // Match on User.FullName (the CSV / manual form) OR Id (the object-pipe form a
                         // piped RobotUser is transformed to), so Get-OrchMachine | New-OrchMachine works.
                         var targetRobots = robots.FilterByWildcardsAny([r => r?.User?.FullName, r => r?.Id?.ToString()], wpRobotUsers);
@@ -140,7 +194,7 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
                     {
                         if (Scope == "Serverless")
                         {
-                            TargetFramework ??= "Portable";
+                            targetFramework ??= "Portable";
                         }
 
                         machine = new()
@@ -152,12 +206,20 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
                             NonProductionSlots = NonProductionSlots,
                             UnattendedSlots = UnattendedSlots,
                             TestAutomationSlots = TestAutomationSlots,
-                            AutomationType = AutomationType,
-                            TargetFramework = TargetFramework,
+                            HeadlessSlots = HeadlessSlots,
+                            HostingSlots = hostingSlots,
+                            AppTestSlots = appTestSlots,
+                            PerformanceTestSlots = performanceTestSlots,
+                            AgentSlots = AgentSlots,
+                            FunctionSlots = functionSlots,
+                            AutomationCloudSlots = automationCloudSlots,
+                            AutomationCloudTestAutomationSlots = automationCloudTestAutomationSlots,
+                            AutomationType = automationType,
+                            TargetFramework = targetFramework,
                             RobotUsers = lstRobotUsers?.ToArray()
                         };
 
-                        machine.AssignTags(Tags, (m, v) => m.Tags = v);
+                        machine.AssignTags(tags, (m, v) => m.Tags = v);
 
                         var newMachine = drive.OrchAPISession.AddMachine(machine);
                         drive.Machines.ClearCache();

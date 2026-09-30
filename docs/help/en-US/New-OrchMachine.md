@@ -20,11 +20,13 @@ Creates a new machine in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-New-OrchMachine [-Path <string[]>] [-LiteralPath <string[]>] [-Name] <string[]> [-AutomationType <string>]
- [-Confirm] [-Description <string>] [-NonProductionSlots <int>] [-RobotUsers <string[]>]
- [-Scope <string>] [-Tags <string[]>] [-TargetFramework <string>]
- [-TestAutomationSlots <int>] [-Type <string>] [-UnattendedSlots <int>] [-WhatIf]
- [<CommonParameters>]
+New-OrchMachine [-Path <string[]>] [-LiteralPath <string[]>] [-Name] <string[]> [-AgentSlots <int>]
+ [-AppTestSlots <int>] [-AutomationCloudSlots <int>] [-AutomationCloudTestAutomationSlots <int>]
+ [-AutomationType <string>] [-Confirm] [-Description <string>] [-FunctionSlots <int>]
+ [-HeadlessSlots <int>] [-HostingSlots <int>] [-NonProductionSlots <int>]
+ [-PerformanceTestSlots <int>] [-RobotUsers <string[]>] [-Scope <string>] [-Tags <string[]>]
+ [-TargetFramework <string>] [-TestAutomationSlots <int>] [-Type <string>]
+ [-UnattendedSlots <int>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -152,6 +154,90 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -AgentSlots
+
+Specifies the number of agent runtime slots allocated to the machine. This slot count is modelled from the v20 OpenAPI document, although the live API returned it earlier as well.
+
+```yaml
+Type: System.Nullable`1[System.Int32]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -AppTestSlots
+
+Specifies the number of App Testing runtime slots allocated to the machine. App Testing slots are consumed by App Test Robot licenses for Test Cloud application testing. Added in Orchestrator API v19.0, so the field is stripped from the request when the target server's API version is below v19.
+
+```yaml
+Type: System.Nullable`1[System.Int32]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -AutomationCloudSlots
+
+Specifies the number of Automation Cloud runtime slots allocated to the machine. Added in Orchestrator API v15.0, so the field is stripped from the request when the target server's API version is below v15.
+
+```yaml
+Type: System.Nullable`1[System.Int32]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -AutomationCloudTestAutomationSlots
+
+Specifies the number of Automation Cloud test automation runtime slots allocated to the machine. Added in Orchestrator API v16.0, so the field is stripped from the request when the target server's API version is below v16.
+
+```yaml
+Type: System.Nullable`1[System.Int32]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -AutomationType
 
 Specifies the automation type for the machine. Tab completion suggests Any, Foreground, and Background. This determines the type of automation that can run on the machine.
@@ -216,6 +302,69 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -FunctionSlots
+
+Specifies the number of function runtime slots allocated to the machine. This slot count appears only in the v20 OpenAPI document (Cloud, 2026-09), so the field is stripped from the request when the target server's API version is below v20.
+
+```yaml
+Type: System.Nullable`1[System.Int32]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -HeadlessSlots
+
+Specifies the number of headless runtime slots allocated to the machine. Headless slots are used for background automation that runs without a user interface session.
+
+```yaml
+Type: System.Nullable`1[System.Int32]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -HostingSlots
+
+Specifies the number of hosting runtime slots allocated to the machine. Added in Orchestrator API v19.0, so the field is stripped from the request when the target server's API version is below v19.
+
+```yaml
+Type: System.Nullable`1[System.Int32]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -Name
 
 Specifies the name of the new machine. This is a mandatory parameter. Tab completion suggests a unique name based on existing machines. Multiple names can be specified to create multiple machines at once.
@@ -240,6 +389,27 @@ HelpMessage: ''
 ### -NonProductionSlots
 
 Specifies the number of non-production runtime slots allocated to the machine. Non-production slots are used for development and testing purposes.
+
+```yaml
+Type: System.Nullable`1[System.Int32]
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -PerformanceTestSlots
+
+Specifies the number of performance test runtime slots allocated to the machine. Added in Orchestrator API v20.0, so the field is stripped from the request when the target server's API version is below v20.
 
 ```yaml
 Type: System.Nullable`1[System.Int32]
@@ -442,7 +612,7 @@ You can pipe the Description property to this cmdlet.
 
 ### System.Int32
 
-You can pipe slot count values (UnattendedSlots, NonProductionSlots, TestAutomationSlots) to this cmdlet.
+You can pipe slot count values (UnattendedSlots, NonProductionSlots, TestAutomationSlots, HeadlessSlots, HostingSlots, AppTestSlots, PerformanceTestSlots, AgentSlots, FunctionSlots, AutomationCloudSlots, AutomationCloudTestAutomationSlots) to this cmdlet.
 
 ### System.String[]
 

@@ -1841,12 +1841,20 @@ public partial class OrchAPISession : IDisposable
         // every swagger snapshot through the 2025-10 v20 one. AgentSlots is deliberately NOT
         // stripped here: it has been sent to older servers unchanged since it was modelled, and
         // silently zeroing it on a server that does know it would be the worse surprise.
+        // PerformanceTestSlots: added in v20.0
+        // HostingSlots, AppTestSlots: added in v19.0
         // AutomationCloudTestAutomationSlots: added in v16.0
         // AutomationCloudSlots, AutomationType, TargetFramework: added in v15.0
         if (ApiVersion < 20)
         {
             machine.FunctionSlots = null;
             machine.MachineSettings = null;
+            machine.PerformanceTestSlots = null;
+        }
+        if (ApiVersion < 19)
+        {
+            machine.HostingSlots = null;
+            machine.AppTestSlots = null;
         }
         if (ApiVersion < 16)
         {
@@ -3862,6 +3870,48 @@ public partial class OrchAPISession : IDisposable
         if (string.IsNullOrEmpty(partitionGlobalId)) return [];
         return HttpRequestPortal<TenantAllocation[]>(HttpMethod.Get, $"/api/licensing/tenantAllocations?accountGlobalId={partitionGlobalId}") ?? [];
     }
+
+    // This is an undocumented API.
+    // Returns the per-product license allocations of ONE tenant (every known product
+    // code, including the ones allocated 0).
+    public IEnumerable<TenantProductAllocation> GetPmLicenseProductAllocations(string? partitionGlobalId, string tenantGlobalId)
+    {
+        if (string.IsNullOrEmpty(partitionGlobalId) || string.IsNullOrEmpty(tenantGlobalId)) return [];
+        var res = HttpRequestPortal<TenantProductAllocationResponse>(HttpMethod.Get,
+            $"/api/licensing/tenantProductAllocation?accountGlobalId={partitionGlobalId}&tenantGlobalId={tenantGlobalId}");
+        return res?.productAllocations ?? [];
+    }
+
+    // Cache-facing overload: resolves the services to ask about from the tenant's own
+    // catalog, so the cache can be keyed by the tenant GUID alone. "tenant" is the
+    // pseudo-service granting the consumable units and is not in that catalog.
+    public IEnumerable<ServiceLicense> GetPmServiceLicenses(string? partitionGlobalId, string tenantGlobalId)
+    {
+        if (string.IsNullOrEmpty(partitionGlobalId) || string.IsNullOrEmpty(tenantGlobalId)) return [];
+        var tenantRow = GetPmLicenseAllocations(partitionGlobalId)
+            .FirstOrDefault(a => string.Equals(a?.tenant?.id, tenantGlobalId, StringComparison.OrdinalIgnoreCase));
+        var services = (tenantRow?.services ?? []).Concat(["tenant"]).Distinct();
+        return GetPmServiceLicenses(partitionGlobalId, tenantGlobalId, services);
+    }
+
+    // This is an undocumented API.
+    // Returns the tenant's license grouped by the service that grants each product code.
+    // Only codes with a non-zero allocation are returned, so an absent code means 0 —
+    // which is why Set-PmLicenseAllocation needs ServiceTypeOfProductCode as a fallback.
+    public IEnumerable<ServiceLicense> GetPmServiceLicenses(string? partitionGlobalId, string tenantGlobalId, IEnumerable<string> services)
+    {
+        if (string.IsNullOrEmpty(partitionGlobalId) || string.IsNullOrEmpty(tenantGlobalId)) return [];
+        var svc = string.Join(',', services);
+        return HttpRequestPortal<ServiceLicense[]>(HttpMethod.Get,
+            $"/api/manageLicense/api/account/{partitionGlobalId}/service-licenses/{tenantGlobalId}?services={HttpUtility.UrlEncode(svc)}") ?? [];
+    }
+
+    // This is an undocumented API.
+    // Replaces the products a service allocates to a tenant. See ServiceLicenseUpdate
+    // for the replace-all semantics: never call this with a partial list.
+    public void PutPmLicenseAllocation(string partitionGlobalId, string tenantGlobalId, string serviceType, ServiceLicenseUpdate update) =>
+        HttpRequestPortal(HttpMethod.Put,
+            $"/api/manageLicense/api/account/{partitionGlobalId}/service-license/{tenantGlobalId}/{serviceType}", null, update);
 
     // This is an undocumented API.
     // Returns the organization-level license inventory dashboard

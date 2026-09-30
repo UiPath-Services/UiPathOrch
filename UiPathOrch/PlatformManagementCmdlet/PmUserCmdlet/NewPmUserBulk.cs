@@ -138,7 +138,7 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
             // same case, because a migration must not silently produce unusable accounts).
             if (string.IsNullOrEmpty(effEmail) && drive._psDrive.ResolvedEdition == Core.OrchEdition.Cloud)
             {
-                WriteWarning($"{drive.NameColonSeparator}{effUserName}: creating without an email address. Automation Cloud signs users in by email, so this account will not be able to sign in until one is added (Update-PmUser -NewEmail).");
+                WriteWarning($"\"{drive.NameColonSeparator}{effUserName}\": creating without an email address. Automation Cloud signs users in by email, so this account will not be able to sign in until one is added (Update-PmUser -NewEmail).");
             }
 
             var groups = drive.PmGroups.Get();
@@ -174,7 +174,7 @@ public class NewPmUserCmdlet : OrchestratorPSCmdlet
             {
                 if (userName_line.TryGetValue(effUserName, out var line))
                 {
-                    WriteWarning($"{drive.NameColonSeparator}{effUserName}: duplicate entry found. This entry will be ignored.");
+                    WriteWarning($"\"{drive.NameColonSeparator}{effUserName}\": duplicate entry found. This entry will be ignored.");
                     continue;
                 }
                 if (ShouldProcess(target, "New PmUser"))

@@ -4,9 +4,62 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.18.0] - 2026-09-30
+
+### Added
+
+- **`Set-PmLicenseAllocation` allocates robot runtimes and consumable units to a tenant** —
+  the tenant column of the Admin / Licenses page, until now read-only from PowerShell. Named
+  parameters cover the common codes (`-AppTestRobot`, `-UnattendedRobot`, `-PlatformUnits`,
+  `-ScreenPlayRuns`, `-TestHeals`, …); `-Products @{ CODE = qty }` reaches the rest. The API
+  replaces a service's whole allocation — a code missing from a non-empty `products` array is set
+  to 0 — so the cmdlet re-sends the tenant's current codes with the requested ones overlaid, and
+  writes only the services whose codes change. A code it cannot place in a service is an error
+  naming `-ServiceType`, never a guess.
+
+- **`Get-PmLicenseProductAllocation` reports one tenant's allocation per product code**, including
+  the codes at 0, with `-Tenant` and `-Code` filters. It is separate from `Get-PmLicenseInventory`
+  because that cmdlet emits one org-level object carrying four more collections; a `-Tenant`
+  switch on it would have returned that object with all but one of them null.
+
+- **`Get-PmLicenseServiceAllocation` groups a tenant's licenses by the service that grants each
+  code** — which codes travel together in one write — with `quantity`, `used`, `available` and
+  `totalUnits`. Codes allocated 0 are omitted by the API; the cmdlet above is the full list.
+
+- **`New-OrchMachine` / `Update-OrchMachine` can set every runtime slot the API models.** Only
+  `-UnattendedSlots`, `-NonProductionSlots` and `-TestAutomationSlots` were writable, so the App
+  Testing slot an App Test Robot license grants could be read but only set in the portal. Added
+  `-AppTestSlots`, `-HeadlessSlots`, `-HostingSlots`, `-PerformanceTestSlots`, `-AgentSlots`,
+  `-FunctionSlots`, `-AutomationCloudSlots` and `-AutomationCloudTestAutomationSlots`. An
+  unspecified parameter never reaches the wire (PATCH plus `WhenWritingNull`), and the four newest
+  are refused on an older server with a message naming the version — a 24.10.11 Automation Suite
+  (API 18) answers `-AppTestSlots 1` with `machineDto must not be null`, which explains nothing.
+  `AgentSlots` and `HeadlessSlots` stay unguarded: they have been sent to older servers unchanged
+  since they were modelled.
+
+### Changed
+
+- **`Update-OrchMachine` explains a rejected payload beside the API's non-answer.** The error
+  record still carries `machineDto must not be null` verbatim; a warning next to it lists the
+  properties the request set and the server's API version. This stands in for a version gate on
+  the older fields, which a probe proved unsafe: a 21.10.4 Orchestrator (API 13.0) accepts
+  `AutomationType`, `TargetFramework` and `AutomationCloudSlots`, documented in `AddMachine` as
+  v15, and rejects `MaintenanceWindow`, documented there as v13.
 
 ### Fixed
+
+- **Drive-scoped warnings quote their target**, as the errors and most of the module already did.
+  A drive name ends in a colon, so a bare target ran into the sentence's own: `local:\:
+  -AppTestSlots requires ...`. Fixed in `Get-OrchBucket`, `Set-OrchRole`, `New-PmUser`,
+  `Move-OrchFolderUser`, `New-OrchMachine`, `Update-OrchMachine`, `Copy-OrchMachine`,
+  `Copy-OrchUser`, `New-OrchProcess`, `Get-OrchQueue`, `Remove-OrchQueueItem`, `Get-OrchProcess`,
+  `Get-OrchTrigger`, `Copy-PmUser`, `Copy-PmGroup` and `Copy-PmRobotAccount`.
+
+- **The `Pm*` license cmdlets' help denied that they work on Automation Suite.** Every page said
+  "works only on UiPath Automation Cloud deployments", lumping Automation Suite in with a
+  standalone Orchestrator. All of them read and write correctly against a 24.10.11 Automation
+  Suite; a standalone Orchestrator (20.10.16, API 11.1) is the only deployment that cannot, and
+  already says so. The pages now name the three deployments separately.
 
 - **`Import-OrchPackage -Recurse` says once per folder what it was saying once per package.**
   `-Recurse` replays a tree that `Export-OrchPackage -Recurse` produced, so a directory in it is

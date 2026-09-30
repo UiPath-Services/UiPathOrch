@@ -233,7 +233,7 @@ public class RemoveQueueItemCmdlet : OrchestratorPSCmdlet
                     // Output items that failed to delete. Better not to output RowVersion.
                     if (result?.FailedItems is not null && result.FailedItems.Length > 0)
                     {
-                        WriteWarning($"\"{queue.GetPSPath()}\" Failed to remove items: {result.Message}");
+                        WriteWarning($"\"{queue.GetPSPath()}\": Failed to remove items: {result.Message}");
 
                         foreach (var failedItemId in result.FailedItems)
                         {

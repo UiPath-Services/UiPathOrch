@@ -165,7 +165,7 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                 }
                 catch (Exception ex)
                 {
-                    WriteWarning($"{dstDrive.NameColonSeparator}: Failed to get PmUsers: {ex.Message}");
+                    WriteWarning($"\"{dstDrive.NameColonSeparator}\": Failed to get PmUsers: {ex.Message}");
                 }
                 #endregion
 
@@ -182,7 +182,7 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                     // username-only instead of being silently dropped.
                     if (Core.OrchProvider.MustSkipEmaillessUser(preserveUserName, srcUser))
                     {
-                        WriteWarning($"{dstDrive.NameColonSeparator}: Skipping user '{srcUser.userName}' because it has no email address. Automation Cloud signs users in by email, so a local user without one cannot sign in there — give it an email first (Update-PmUser -NewEmail at the source, or New-PmUser with an email at the destination), or migrate to Automation Suite / on-premises where the userName is enough.");
+                        WriteWarning($"\"{dstDrive.NameColonSeparator}\": Skipping user '{srcUser.userName}' because it has no email address. Automation Cloud signs users in by email, so a local user without one cannot sign in there — give it an email first (Update-PmUser -NewEmail at the source, or New-PmUser with an email at the destination), or migrate to Automation Suite / on-premises where the userName is enough.");
                         continue;
                     }
                     #endregion
@@ -199,7 +199,7 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                     // to create it with.
                     if (string.IsNullOrEmpty(mappedUserName))
                     {
-                        WriteWarning($"{dstDrive.NameColonSeparator}: Skipping a source user that has neither a userName nor an email — nothing to create it with.");
+                        WriteWarning($"\"{dstDrive.NameColonSeparator}\": Skipping a source user that has neither a userName nor an email — nothing to create it with.");
                         continue;
                     }
                     #endregion
@@ -258,7 +258,7 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
                         var detail = response?.result?.errors is { Length: > 0 } errs
                             ? string.Join("; ", errs)
                             : "no detail returned by the server";
-                        WriteWarning($"{dstDrive.NameColonSeparator}: BulkCreate did not fully succeed for {payload.users.Count} user(s) in this group. Server reported: {detail}");
+                        WriteWarning($"\"{dstDrive.NameColonSeparator}\": BulkCreate did not fully succeed for {payload.users.Count} user(s) in this group. Server reported: {detail}");
                     }
                 }
                 catch (Exception ex)

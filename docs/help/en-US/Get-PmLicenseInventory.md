@@ -45,7 +45,7 @@ OAuth required scopes: (Portal License Management API - no per-endpoint scopes)
 
 Required permissions: Organization administrator.
 
-This cmdlet works only on UiPath Automation Cloud deployments; on-premises Orchestrator does not expose the Portal Management API.
+This cmdlet works on UiPath Automation Cloud and on Automation Suite (verified on 24.10.11); a standalone Orchestrator does not expose the Portal Management API and answers with an HTML page, which the cmdlet reports as "This operation is not available on this Orchestrator".
 
 ## EXAMPLES
 

@@ -204,7 +204,7 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
                                 rolesToBeRemoved ??= [];
                                 rolesToBeRemoved.Add(role);
                                 targetUser ??= System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser));
-                                _this.WriteWarning($"{targetUser}: Folder role '{destinationRole.Name}' will be removed.");
+                                _this.WriteWarning($"\"{targetUser}\": Folder role '{destinationRole.Name}' will be removed.");
                             }
                             #endregion
                         }
@@ -284,7 +284,7 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
                             //WriteObject(createdUser);
                             if (newUser.UnattendedRobot is not null && !string.IsNullOrEmpty(newUser.UnattendedRobot.Password))
                             {
-                                _this.WriteWarning($"{System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser))}: Please update -UR_Password with Update-OrchUser cmdlet.");
+                                _this.WriteWarning($"\"{System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser))}\": Please update -UR_Password with Update-OrchUser cmdlet.");
                             }
                             dstDrive.Users.ClearCache();
                             dstDrive.UsersDetailed.ClearCache();

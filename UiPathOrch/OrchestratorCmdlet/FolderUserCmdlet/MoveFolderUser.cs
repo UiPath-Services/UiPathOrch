@@ -143,7 +143,7 @@ public class MoveFolderUserCmdlet : OrchestratorPSCmdlet
 
                     if (srcDrive != dstDrive)
                     {
-                        WriteWarning($"{target}: Moving folder users between different tenants is not supported.");
+                        WriteWarning($"\"{target}\": Moving folder users between different tenants is not supported.");
                         continue;
                     }
 

@@ -34,9 +34,29 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public int? TestAutomationSlots { get; set; }
 
-    // HeadlessSlots
-    // AutomationCloudSlots
-    // AutomationCloudTestAutomationSlots
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? HeadlessSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? HostingSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? AppTestSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? PerformanceTestSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? AgentSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? FunctionSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? AutomationCloudSlots { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public int? AutomationCloudTestAutomationSlots { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Any_Foreground_Background>))]
@@ -138,6 +158,36 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
             var existingMachines = drive.Machines.Get();
+
+            // Fields the server does not know are dropped rather than sent: this is a PATCH,
+            // and an API 18 server answers a body whose only field is AppTestSlots with
+            // "machineDto must not be null". The check runs after the fetch above, because
+            // ApiVersion is only published once the session has seen an API response.
+            double? api = drive.OrchAPISession.ApiVersion;
+            string driveTarget = drive.NameColonSeparator;
+            var appTestSlots = MachineFieldVersions.SupportedOrNull(AppTestSlots, MachineFieldVersions.AppTestSlots, api, nameof(AppTestSlots), driveTarget, WriteWarning);
+            var hostingSlots = MachineFieldVersions.SupportedOrNull(HostingSlots, MachineFieldVersions.HostingSlots, api, nameof(HostingSlots), driveTarget, WriteWarning);
+            var performanceTestSlots = MachineFieldVersions.SupportedOrNull(PerformanceTestSlots, MachineFieldVersions.PerformanceTestSlots, api, nameof(PerformanceTestSlots), driveTarget, WriteWarning);
+            var functionSlots = MachineFieldVersions.SupportedOrNull(FunctionSlots, MachineFieldVersions.FunctionSlots, api, nameof(FunctionSlots), driveTarget, WriteWarning);
+            // The older fields (Tags, AutomationType, TargetFramework, RobotUsers,
+            // UpdatePolicy, Maintenance*) are sent as before: their inherited "introduced in"
+            // notes proved wrong on a real API 13.0 server, and a wrong constant blocks a
+            // field that works. When such a field is the reason the server cannot bind the
+            // body, DescribeUnboundPayload turns its unhelpful answer into a usable one.
+            var automationCloudSlots = AutomationCloudSlots;
+            var automationCloudTestAutomationSlots = AutomationCloudTestAutomationSlots;
+            var tags = Tags;
+            var automationType = AutomationType;
+            var targetFramework = TargetFramework;
+            var robotUsers = RobotUsers;
+            var updatePolicyType = UpdatePolicyType;
+            var updatePolicyVersion = UpdatePolicyVersion;
+            var maintenanceCron = MaintenanceCron;
+            var maintenanceDuration = MaintenanceDuration;
+            var maintenanceEnabled = MaintenanceEnabled;
+            var maintenanceTimeZone = MaintenanceTimeZone;
+            var maintenanceTimeZoneId = MaintenanceTimeZoneId;
+
             var targetMachines = existingMachines.FilterByWildcards(m => m?.Name, wpName);
 
             foreach (var machine in targetMachines.OrderBy(m => m.Name)
@@ -146,7 +196,7 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
             {
                 if (machine.Scope == "AutomationCloudRobot")
                 {
-                    WriteWarning($"{machine.Name}: Updating a machine with a Scope of 'AutomationCloudRobot' is not supported.");
+                    WriteWarning($"\"{machine.Name}\": Updating a machine with a Scope of 'AutomationCloudRobot' is not supported.");
                     continue;
                 }
 
@@ -159,14 +209,14 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
                 var patch = new ExtendedMachine { Id = machine.Id };
 
                 // Resolve -RobotUsers to concrete assignments (API).
-                bool robotUsersSpecified = RobotUsers is not null;
+                bool robotUsersSpecified = robotUsers is not null;
                 RobotUser[]? resolvedRobotUsers = null;
                 if (robotUsersSpecified)
                 {
                     // CSV export joins robot users into one comma-separated cell, so split it (honoring
                     // backtick-escaped commas) to match New-OrchMachine -- otherwise a multi-user cell
                     // "Alice,Bob" bound as a single wildcard and matched no robot on re-import.
-                    var processedRobotUsers = RobotUsers!.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();
+                    var processedRobotUsers = robotUsers!.SplitValuesByUnescapedCommasPreservingEscapes()?.ToArray();
                     if (processedRobotUsers is not null && processedRobotUsers.All(string.IsNullOrWhiteSpace))
                     {
                         processedRobotUsers = null;
@@ -199,19 +249,19 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
                 // The maintenance block runs when any of Cron/Duration/Enabled/TimeZone(name) is given
                 // (matching the original guard; the hidden -MaintenanceTimeZoneId does not itself trigger it).
                 bool maintenanceSpecified =
-                    !string.IsNullOrEmpty(MaintenanceCron) ||
-                    (MaintenanceDuration is not null && MaintenanceDuration != 0) ||
-                    !string.IsNullOrEmpty(MaintenanceEnabled) ||
-                    !string.IsNullOrEmpty(MaintenanceTimeZone);
+                    !string.IsNullOrEmpty(maintenanceCron) ||
+                    (maintenanceDuration is not null && maintenanceDuration != 0) ||
+                    !string.IsNullOrEmpty(maintenanceEnabled) ||
+                    !string.IsNullOrEmpty(maintenanceTimeZone);
 
                 // Resolve the -MaintenanceTimeZone display name to a Windows timezone id (writes an
                 // error on no/multiple match, exactly as before). Null when not supplied or unmatched.
                 string? resolvedTimezoneIdFromName = null;
-                if (!string.IsNullOrEmpty(MaintenanceTimeZone))
+                if (!string.IsNullOrEmpty(maintenanceTimeZone))
                 {
                     var tzProbe = new MaintenanceWindow();
                     tzProbe.AssignIdFromName(
-                        MaintenanceTimeZone,
+                        maintenanceTimeZone,
                         TimeZoneInfo.GetSystemTimeZones,
                         e => e.DisplayName,
                         e => e.Id!,
@@ -226,18 +276,26 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
                     UnattendedSlots = UnattendedSlots,
                     NonProductionSlots = NonProductionSlots,
                     TestAutomationSlots = TestAutomationSlots,
-                    AutomationType = AutomationType,
-                    TargetFramework = TargetFramework,
-                    UpdatePolicyType = UpdatePolicyType,
-                    UpdatePolicyVersion = UpdatePolicyVersion,
-                    Tags = Tags,
+                    HeadlessSlots = HeadlessSlots,
+                    HostingSlots = hostingSlots,
+                    AppTestSlots = appTestSlots,
+                    PerformanceTestSlots = performanceTestSlots,
+                    AgentSlots = AgentSlots,
+                    FunctionSlots = functionSlots,
+                    AutomationCloudSlots = automationCloudSlots,
+                    AutomationCloudTestAutomationSlots = automationCloudTestAutomationSlots,
+                    AutomationType = automationType,
+                    TargetFramework = targetFramework,
+                    UpdatePolicyType = updatePolicyType,
+                    UpdatePolicyVersion = updatePolicyVersion,
+                    Tags = tags,
                     RobotUsersSpecified = robotUsersSpecified,
                     ResolvedRobotUsers = resolvedRobotUsers,
                     MaintenanceSpecified = maintenanceSpecified,
-                    MaintenanceCron = MaintenanceCron,
-                    MaintenanceDuration = MaintenanceDuration,
-                    MaintenanceEnabled = MaintenanceEnabled,
-                    MaintenanceTimeZoneId = MaintenanceTimeZoneId,
+                    MaintenanceCron = maintenanceCron,
+                    MaintenanceDuration = maintenanceDuration,
+                    MaintenanceEnabled = maintenanceEnabled,
+                    MaintenanceTimeZoneId = maintenanceTimeZoneId,
                     ResolvedTimezoneIdFromName = resolvedTimezoneIdFromName,
                 });
 
@@ -253,11 +311,56 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
+                        // "machineDto must not be null" is what the PATCH endpoint answers when
+                        // it cannot bind the body — typically because one property does not
+                        // exist on that Orchestrator version. The error itself stays the API's
+                        // own words; the reading of it goes to the warning stream beside it.
+                        var hint = DescribeUnboundPayload(ex, patch, api);
+                        if (hint is not null) WriteWarning($"\"{target}\": {hint}");
                         WriteError(new ErrorRecord(new OrchException(target, ex), "AddMachineError", ErrorCategory.InvalidOperation, machine));
                     }
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Builds the warning that accompanies the PATCH endpoint's "machineDto must not be null":
+    /// it names the properties the body carried and the server's API version, so the user can
+    /// tell which one that Orchestrator does not model. The error record itself keeps the API's
+    /// own words — this only reads them. Returns null for any other failure, leaving it alone.
+    ///
+    /// Verified causes: MaintenanceWindow and Tags on a 21.10.4 (API 13.0) server, AppTestSlots
+    /// on a 24.10.11 Automation Suite (API 18.0).
+    /// </summary>
+    internal static string? DescribeUnboundPayload(Exception ex, ExtendedMachine payload, double? apiVersion)
+    {
+        if (ex.Message?.Contains("machineDto must not be null", StringComparison.OrdinalIgnoreCase) != true) return null;
+
+        List<string> sent = [];
+        if (payload.Description is not null) sent.Add(nameof(payload.Description));
+        if (payload.UnattendedSlots is not null) sent.Add(nameof(payload.UnattendedSlots));
+        if (payload.NonProductionSlots is not null) sent.Add(nameof(payload.NonProductionSlots));
+        if (payload.TestAutomationSlots is not null) sent.Add(nameof(payload.TestAutomationSlots));
+        if (payload.HeadlessSlots is not null) sent.Add(nameof(payload.HeadlessSlots));
+        if (payload.HostingSlots is not null) sent.Add(nameof(payload.HostingSlots));
+        if (payload.AppTestSlots is not null) sent.Add(nameof(payload.AppTestSlots));
+        if (payload.PerformanceTestSlots is not null) sent.Add(nameof(payload.PerformanceTestSlots));
+        if (payload.AgentSlots is not null) sent.Add(nameof(payload.AgentSlots));
+        if (payload.FunctionSlots is not null) sent.Add(nameof(payload.FunctionSlots));
+        if (payload.AutomationCloudSlots is not null) sent.Add(nameof(payload.AutomationCloudSlots));
+        if (payload.AutomationCloudTestAutomationSlots is not null) sent.Add(nameof(payload.AutomationCloudTestAutomationSlots));
+        if (payload.AutomationType is not null) sent.Add(nameof(payload.AutomationType));
+        if (payload.TargetFramework is not null) sent.Add(nameof(payload.TargetFramework));
+        if (payload.Tags is not null) sent.Add(nameof(payload.Tags));
+        if (payload.RobotUsers is not null) sent.Add(nameof(payload.RobotUsers));
+        if (payload.UpdatePolicy is not null) sent.Add(nameof(payload.UpdatePolicy));
+        if (payload.MaintenanceWindow is not null) sent.Add(nameof(payload.MaintenanceWindow));
+
+        string version = apiVersion is null ? "an unknown API version" : $"API {apiVersion}";
+        return $"The Orchestrator could not bind the update payload ({version}). " +
+               $"The request set: {string.Join(", ", sent)}. One of these properties most likely does not exist " +
+               $"on this Orchestrator version — retry without it to find out which.";
     }
 
     /// <summary>
@@ -272,6 +375,14 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
         public int? UnattendedSlots { get; init; }
         public int? NonProductionSlots { get; init; }
         public int? TestAutomationSlots { get; init; }
+        public int? HeadlessSlots { get; init; }
+        public int? HostingSlots { get; init; }
+        public int? AppTestSlots { get; init; }
+        public int? PerformanceTestSlots { get; init; }
+        public int? AgentSlots { get; init; }
+        public int? FunctionSlots { get; init; }
+        public int? AutomationCloudSlots { get; init; }
+        public int? AutomationCloudTestAutomationSlots { get; init; }
         public string? AutomationType { get; init; }
         public string? TargetFramework { get; init; }
 
@@ -310,6 +421,14 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
         dirty |= payload.AssignNumberIfNotNull(input.UnattendedSlots, source, m => m.UnattendedSlots, (m, v) => m.UnattendedSlots = v);
         dirty |= payload.AssignNumberIfNotNull(input.NonProductionSlots, source, m => m.NonProductionSlots, (m, v) => m.NonProductionSlots = v);
         dirty |= payload.AssignNumberIfNotNull(input.TestAutomationSlots, source, m => m.TestAutomationSlots, (m, v) => m.TestAutomationSlots = v);
+        dirty |= payload.AssignNumberIfNotNull(input.HeadlessSlots, source, m => m.HeadlessSlots, (m, v) => m.HeadlessSlots = v);
+        dirty |= payload.AssignNumberIfNotNull(input.HostingSlots, source, m => m.HostingSlots, (m, v) => m.HostingSlots = v);
+        dirty |= payload.AssignNumberIfNotNull(input.AppTestSlots, source, m => m.AppTestSlots, (m, v) => m.AppTestSlots = v);
+        dirty |= payload.AssignNumberIfNotNull(input.PerformanceTestSlots, source, m => m.PerformanceTestSlots, (m, v) => m.PerformanceTestSlots = v);
+        dirty |= payload.AssignNumberIfNotNull(input.AgentSlots, source, m => m.AgentSlots, (m, v) => m.AgentSlots = v);
+        dirty |= payload.AssignNumberIfNotNull(input.FunctionSlots, source, m => m.FunctionSlots, (m, v) => m.FunctionSlots = v);
+        dirty |= payload.AssignNumberIfNotNull(input.AutomationCloudSlots, source, m => m.AutomationCloudSlots, (m, v) => m.AutomationCloudSlots = v);
+        dirty |= payload.AssignNumberIfNotNull(input.AutomationCloudTestAutomationSlots, source, m => m.AutomationCloudTestAutomationSlots, (m, v) => m.AutomationCloudTestAutomationSlots = v);
         dirty |= payload.AssignStringIfNotNull(input.AutomationType, source, m => m.AutomationType, (m, v) => m.AutomationType = v);
         dirty |= payload.AssignStringIfNotNull(input.TargetFramework, source, m => m.TargetFramework, (m, v) => m.TargetFramework = v);
 

@@ -67,7 +67,7 @@ public class GetBucketCmdlet : OrchestratorPSCmdlet
                 }
                 catch (Exception ex)
                 {
-                    WriteWarning($"{bucket.GetPSPath()}: Failed to retrieve CredentialStore: {ex.Message}");
+                    WriteWarning($"\"{bucket.GetPSPath()}\": Failed to retrieve CredentialStore: {ex.Message}");
                 }
             }
             #endregion

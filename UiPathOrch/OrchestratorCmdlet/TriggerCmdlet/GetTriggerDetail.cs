@@ -155,7 +155,7 @@ public class GetTriggerDetailCmdlet : OrchestratorPSCmdlet
             }
             catch (Exception ex)
             {
-                caller.WriteWarning($"{t.GetPSPath()}: Failed to retrieve ExecutorRobots: {ex.Message}");
+                caller.WriteWarning($"\"{t.GetPSPath()}\": Failed to retrieve ExecutorRobots: {ex.Message}");
             }
         }
 
@@ -170,7 +170,7 @@ public class GetTriggerDetailCmdlet : OrchestratorPSCmdlet
             }
             catch (Exception ex)
             {
-                caller.WriteWarning($"{t.GetPSPath()}: Failed to retrieve MachineRobots: {ex.Message}");
+                caller.WriteWarning($"\"{t.GetPSPath()}\": Failed to retrieve MachineRobots: {ex.Message}");
             }
         }
 

@@ -293,7 +293,7 @@ public class NewProcessCmdlet : OrchestratorPSCmdlet
             var targetPackages = packages.SelectByWildcards(id => id?.Id, wpPackageId);
             if (!targetPackages.Any())
             {
-                WriteWarning($"{folder.GetPSPath()}: No packages found with PackageId '{Id![0]}'.");
+                WriteWarning($"\"{folder.GetPSPath()}\": No packages found with PackageId '{Id![0]}'.");
                 continue;
             }
 

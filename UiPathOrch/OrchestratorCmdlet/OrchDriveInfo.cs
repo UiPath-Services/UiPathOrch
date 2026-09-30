@@ -826,6 +826,10 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly ListCachePerOrganization<ExternalResource> PmExternalApiResources;
     public readonly ListCachePerOrganization<AvailableUserBundle> PmLicenses;
     public readonly ListCachePerOrganization<TenantAllocation> PmLicenseAllocations;
+    // Per-product allocations of one tenant, keyed by the tenant's portal GUID.
+    public readonly KeyedListCachePerOrganization<string, TenantProductAllocation> PmLicenseProductAllocations;
+    // The same allocation grouped by the granting service, keyed the same way.
+    public readonly KeyedListCachePerOrganization<string, ServiceLicense> PmServiceLicenses;
     public readonly ListCachePerOrganization<NuLicensedGroup> PmLicensedGroups;
     public readonly ListCachePerOrganization<NuLicensedUser> PmLicensedUsers;
     public readonly ListCachePerOrganization<AccessAllowedMember> PmAccessAllowedMember;
@@ -1053,6 +1057,10 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         );
 
         PmLicenseAllocations = new(this, OrchAPISession.GetPmLicenseAllocations);
+
+        // Keyed by the tenant's portal GUID (TenantAllocation.tenant.id).
+        PmLicenseProductAllocations = new(this, OrchAPISession.GetPmLicenseProductAllocations);
+        PmServiceLicenses = new(this, (partitionGlobalId, tenantGlobalId) => OrchAPISession.GetPmServiceLicenses(partitionGlobalId, tenantGlobalId));
 
         PmLicensedGroups = new(this,
             OrchAPISession.GetPmLicensedGroups,

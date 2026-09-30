@@ -75,7 +75,7 @@ public class CopyMachineCmdlet : OrchestratorPSCmdlet
                     {
                         if (machine.Scope == "Cloud")
                         {
-                            _this.WriteWarning($"{System.IO.Path.Combine(srcDrive.NameColonSeparator, machine.Name!)}: Copying cloud machine is not supported.");
+                            _this.WriteWarning($"\"{System.IO.Path.Combine(srcDrive.NameColonSeparator, machine.Name!)}\": Copying cloud machine is not supported.");
                             continue;
                         }
 

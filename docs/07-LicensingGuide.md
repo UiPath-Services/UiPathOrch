@@ -45,12 +45,15 @@ Two license *kinds* run through everything:
 | `Get-PmLicenseInventory` | The org **inventory dashboard** (Robots & Services summary) | `ProductAllocations`, `UserLicensingBundles`, `EntitlementUsages`, `AvailableServices`, `MlKeys` |
 | `Get-PmLicense` | **Named-User bundles** and their seat counts | `code`, `name`, `allocated`, `total`, `inUse` |
 | `Get-PmLicenseAllocation` | **Per-tenant allocation** of the org pool (Robots & Services tab) | `tenant`, `unattendedRobot`, `nonProductionRobot`, `testingRobot`, `dataServiceUnit`, `services`, … |
+| `Get-PmLicenseProductAllocation` | One tenant's allocation **per product code**, including the codes at 0 | `code`, `total`, `allocated`, `isConsumable`, `unlimited`, `startDate`/`endDate`, `Tenant` |
+| `Get-PmLicenseServiceAllocation` | The same allocation **grouped by the service** that grants each code (what one write re-sends together) | `serviceType`, `code`, `quantity`, `used`, `available`, `totalUnits`, `type`, `Tenant` |
 | `Get-PmUserLicense` | The **licensed users** and the bundles they hold | `email`/`name`, `lastInUse`, `userBundleLicenses`, `orphan` |
 | `Get-PmGroupLicense` | The **licensed groups** and their bundles | `name`, `userBundleLicenses`, `useExternalLicense`, `orphan` |
 
 `Get-PmLicense` accepts `-Code` to filter to one bundle and `-HasCapacity` to show only
-bundles with seats still free (`allocated` < `total`). `Get-PmLicenseAllocation` accepts
-`-Tenant` to focus on one tenant. `Get-PmUserLicense`/`Get-PmGroupLicense` support
+bundles with seats still free (`allocated` < `total`). `Get-PmLicenseAllocation` and
+`Get-PmLicenseProductAllocation` accept `-Tenant` to focus on one tenant, and the latter
+also `-Code` to focus on one product. `Get-PmUserLicense`/`Get-PmGroupLicense` support
 `-ExportCsv` / `-CsvEncoding`, and `Get-PmGroupLicense` adds `-ExpandAllocation` to expand
 each group's member allocations.
 
@@ -68,6 +71,12 @@ each group's member allocations.
 | `Remove-PmGroupLicenseAllocation -GroupName <g> -UserName <u>` | Drop one user's allocation under a group |
 | `Remove-PmLicensedUser -Email <user>` | Drop a user from the licensed-users set entirely |
 | `Remove-PmLicensedGroup -GroupName <g>` | Drop a group from the licensed set |
+| `Set-PmLicenseAllocation <tenant> -AppTestRobot <n>` | Allocate robot runtimes / consumable units to a tenant |
+
+> **`Set-PmLicenseAllocation` merges.** The API replaces a service's whole allocation, so
+> the cmdlet re-sends the tenant's current codes with the requested ones overlaid. Calling
+> the endpoint directly with a partial `products` array zeroes every code left out —
+> `Get-PmLicenseServiceAllocation` shows which codes travel together in one write.
 
 ---
 
@@ -124,6 +133,18 @@ PS Orch1:\> Get-PmUserLicense | Where-Object orphan | ForEach-Object { Remove-Pm
 ```powershell
 PS Orch1:\> Get-PmLicenseAllocation | Select-Object @{ N = 'Tenant'; E = { $_.tenant.name } },
     unattendedRobot, nonProductionRobot, testingRobot, dataServiceUnit
+```
+
+**Give a tenant an App Testing runtime and the units Autonomous Test Execution needs:**
+
+```powershell
+PS Orch1:\> Set-PmLicenseAllocation DefaultTenant -AppTestRobot 1 `
+    -PlatformUnits 3000 -ScreenPlayRuns 50000 -TestHeals 2000
+# what does the tenant hold now, per product code?
+PS Orch1:\> Get-PmLicenseProductAllocation DefaultTenant | Where-Object allocated -gt 0
+# the runtime still has to be put on a machine and the machine in a folder:
+PS Orch1:\> Update-OrchMachine AppTestMachine -AppTestSlots 1
+PS Orch1:\> Add-OrchFolderMachine -Path Orch1:\Shared -Name AppTestMachine
 ```
 
 **What is this tenant allowed vs using?**
@@ -189,9 +210,10 @@ flowchart TB
     C["Get-PmLicenseContract<br/>what the org bought:<br/>subscription, products, ML keys"]
     B["Get-PmLicense<br/>Named-User bundle seats:<br/>total → allocated → inUse"]
     A["Get-PmLicenseAllocation<br/>org pool split per tenant:<br/>runtime robots, units, services"]
+    P["Get-PmLicenseProductAllocation /<br/>Get-PmLicenseServiceAllocation /<br/>Set-PmLicenseAllocation<br/>one tenant, per product code"]
     UG["Get-PmUserLicense /<br/>Get-PmGroupLicense<br/>assigned to users / groups"]
     C --> B --> UG
-    C --> A
+    C --> A --> P
   end
   subgraph TEN["Tenant layer · Orch* cmdlets (current drive)"]
     direction TB

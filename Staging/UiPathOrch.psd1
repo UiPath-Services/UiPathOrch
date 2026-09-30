@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.17.0'
+ModuleVersion = '1.18.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -154,6 +154,9 @@ CmdletsToExport = @(
 
 'Get-PmLicense',
 'Get-PmLicenseAllocation',
+'Set-PmLicenseAllocation',
+'Get-PmLicenseProductAllocation',
+'Get-PmLicenseServiceAllocation',
 'Get-PmLicenseInventory',
 'Get-PmLicenseContract',
 
@@ -503,6 +506,32 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.18.0
+
+Added: Set-PmLicenseAllocation allocates robot runtimes and consumable units to one tenant
+(-AppTestRobot, -PlatformUnits, -ScreenPlayRuns, ..., or -Products @{ CODE = qty }). The API
+replaces a service's whole allocation, so the cmdlet re-sends the tenant's current codes with the
+requested ones overlaid; a code it cannot place in a service is reported, never guessed.
+
+Added: Get-PmLicenseProductAllocation reports one tenant's allocation per product code, including
+the codes at 0, and Get-PmLicenseServiceAllocation groups it by the service that grants each code
+-- the codes one write re-sends together.
+
+Added: New-OrchMachine and Update-OrchMachine can set every runtime slot the API models:
+-AppTestSlots (the App Testing runtime Test Cloud application testing runs on), -HostingSlots,
+-HeadlessSlots, -PerformanceTestSlots, -AgentSlots, -FunctionSlots, -AutomationCloudSlots and
+-AutomationCloudTestAutomationSlots. The four newest are refused on an older server with a message
+naming the version. Nothing else is pre-empted: probing a 21.10.4 server (Web API 13.0) showed the
+inherited "introduced in" notes wrong in both directions.
+
+Changed: when the machine PATCH endpoint answers "machineDto must not be null", naming nothing, a
+warning beside the untouched error lists the properties the request set and the server's version.
+
+Fixed: the Pm* license cmdlets work on Automation Suite, which their help denied.
+
+Fixed: drive-scoped warnings quote their target, so a drive name's own colon no longer runs into
+the one the sentence needs ("local:\:").
+
 1.17.0
 
 With the August 3, 2026 Automation Cloud release, UiPath made OpenAPI 3.0 the Orchestrator API
@@ -552,76 +581,6 @@ bool both values mean "not enabled", so null is now compared as false across the
 Compare-Orch* family. null against TRUE stays a difference: that is the feature switched on at one
 end. Bool only -- a null number against 0 may mean "absent" but against a non-zero default it does
 not, and telling those apart needs each field's own default rather than one rule.
-
-1.16.0
-
-Added: the whole Compare-Orch* family takes -ExportCsv (and -CsvEncoding), like the Get-Orch*
-family already did. A comparison is the evidence a migration produced, and the documented way to
-keep it was to pipe the output into Export-Csv -- exactly the pipeline that lost the Differences
-column (below). The six columns are the ones the console shows (SideIndicator, Name,
-DifferenceName, Path, DifferencePath, Differences), in the order the piped export already
-produced them; ReferenceObject and DifferenceObject are left out. Naming a directory writes
-Compared<Nouns>.csv in it.
-
-Fixed: Compare-Orch* piped to Export-Csv wrote the type of the differences instead of the
-differences. The Differences column arrived as the List type name, so the exported file recorded
-which entities differed and nothing about how -- the one thing the console had just shown.
-Export-Csv converts each property with ToString(), and a bare list answers with its type name;
-the column now carries the same "Prop: 'ref' => 'diff'" text the console does. The console view
-and ConvertTo-Json are unchanged. ReferenceObject and DifferenceObject are whole entities kept
-for downstream piping and still export as their type name; add
-Select-Object -ExcludeProperty ReferenceObject, DifferenceObject before the export to drop them.
-
-Fixed: Remove-OrchAssetUserValue -WhatIf showed only the first matching asset and stopped. The
-confirmation loop ran per user value and answered a declined one with `return`, from inside the
-folder and asset loops, so it left the whole cmdlet -- and ShouldProcess is false for every call
-under -WhatIf. Under -Confirm, declining one value abandoned every asset still to come. The prompt
-is now per asset and continues to the next one, which is also the granularity the operation has:
-the removal is a single PutAsset rewriting that asset's whole UserValues list, so declining one
-value removed it anyway along with the rest. The target lists every value being removed, and no
-longer prints a bare separator for a value with no machine ("[me@example.com\]" is now
-"[me@example.com]").
-
-Fixed: an Orchestrator without API triggers no longer fails Copy-Item and Get-OrchApiTrigger with
-"Invalid request!". On Automation Suite 24.10.11 /odata/HttpTriggers answers 404 in every folder
-while its OData neighbours answer 200, and the web UI there offers only Time and Queue triggers
-where Automation Cloud also has Event and API. The tenant simply has no API triggers, and a
--Recurse run was reporting one error per folder for a feature that does not exist, which under
-$ErrorActionPreference = 'Stop' aborts the caller. Both cmdlets now take that 404 as the answer,
-say so once per drive and skip, the same shape 1.14.0 gave the discontinued Test Automation
-module; Clear-OrchCache re-checks. A tenant that does have API triggers is untouched.
-
-Fixed: Compare-OrchTrigger no longer reports a queue trigger's cron as a difference. A queue
-trigger fires on queue items and the web UI offers it no cron at all; ProcessScheduleDto carries
-StartProcessCron for it anyway, and the value belongs to the server. Measured on Automation Cloud
-26.3, a queue trigger created with "13 7/29 * 1/1 * ? *" reads back "39 3/30 * * * ? *" and the
-next one "40 3/30 * * * ? *"; posting the DTO directly is rewritten the same way, so it is not the
-cmdlet. A time trigger's cron survives untouched. It is version-dependent: the same raw POST
-against Automation Suite 24.10.11 kept the posted value. So the two sides of a migration can hold
-values neither user chose and neither can control -- the reported case, "0 0/30 * 1/1 * ? *" at an
-MSI source against "33 20/30 * * * ? *" at an Automation Suite destination. Copy-Item cannot fix
-it: it already sends the cron and the destination overrides it. The field is now read as absent on both sides for
-a queue trigger, leaving QueueDefinitionName to carry the real difference when only one side is
-one. A TIME trigger's cron is compared exactly as before. Skipping it silently would be its own
-bug -- an "==" row would assert an equality nothing checked -- so when the two crons actually
-differ the cmdlet says so: one notice per run, naming up to five triggers BY PATH and counting the
-rest, because with -Recurse a migration repeats one trigger name in every mirrored folder. When
-they agree nothing is withheld and nothing is said, unlike the secret-value notice in
-Compare-OrchAsset, which must fire on presence alone because a secret's drift is unknowable.
-
-Fixed: Compare-OrchTrigger and Compare-OrchProcess no longer report a correctly copied priority
-as lost. A destination trigger the web UI correctly showed as Low came back as
-"JobPriority: 'Low' => (null)". JobPriority and SpecificPriorityValue are two views of one setting
-and the server will not take both -- measured on Automation Suite 24.10, posting the name alone
-reads back the name and a filled-in value, posting the value alone reads back a null name, and
-posting both is refused with 400 [1009] "Cannot set a specific priority value when a standard job
-priority setting is selected". So a copy has to drop one of the pair, and it drops the name,
-keeping the higher-resolution value. The destination's null is therefore correct, and JobPriority
-is now compared as the name its value resolves to (61 and above High, 30 and below Low, else
-Normal -- the cut points Orchestrator itself uses). SpecificPriorityValue is carried across
-unchanged and stays compared on its own, so a genuine priority change is still reported.
-
-Full release notes: https://github.com/UiPath-Services/UiPathOrch/blob/master/CHANGELOG.md
 '@
 
         # Prerelease string of this module

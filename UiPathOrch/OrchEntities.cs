@@ -4051,8 +4051,97 @@ public class ProductAllocation
     public double? total { get; set; }
     public double? allocated { get; set; }
     public bool? isConsumable { get; set; }
+    // Only /api/licensing/tenantProductAllocation returns unlimited; the
+    // organization-level /api/license/management/account/available does not,
+    // so it stays null on rows from Get-PmLicenseInventory.
+    public bool? unlimited { get; set; }
     public long? startDate { get; set; } // Unix epoch seconds
     public long? endDate { get; set; } // Unix epoch seconds
+}
+
+// added by UiPathOrch — /api/licensing/tenantProductAllocation response
+// (per-product allocations of ONE tenant; the org-level counterpart is LicenseInventory).
+public class TenantProductAllocationResponse
+{
+    public TenantProductAllocation[]? productAllocations { get; set; }
+}
+
+// added by UiPathOrch — one product row of a tenant's allocation.
+// A type of its own rather than a bare ProductAllocation so the tenant-scoped rows can
+// carry Tenant and get their own table view: the base type's view is shared with the
+// organization inventory, which has no tenant to show.
+public class TenantProductAllocation : ProductAllocation
+{
+    // Path / Tenant are drive-local, set by the cmdlet on a per-emit ShallowClone copy —
+    // never on the cached instance. Same rationale as LicenseInventory.Path.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Tenant { get; set; } // added by UiPathOrch
+
+    public TenantProductAllocation ShallowClone() => (TenantProductAllocation)MemberwiseClone();
+}
+
+// added by UiPathOrch — one element of the
+// /api/manageLicense/api/account/{accountId}/service-licenses/{tenantId}?services=... response.
+// Names the service a product code is allocated through, which is the path segment
+// Set-PmLicenseAllocation must PUT to. Codes allocated 0 are omitted by the API.
+public class ServiceLicense
+{
+    public string? serviceType { get; set; }
+    public ServiceLicenseProduct[]? products { get; set; }
+}
+
+// added by UiPathOrch — a product entry inside ServiceLicense.
+// Path / Tenant / serviceType are drive-local additions set by the cmdlet on a per-emit
+// ShallowClone copy, so one row stands on its own in a pipeline; serviceType is lifted
+// from the parent ServiceLicense.
+public class ServiceLicenseProduct
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Tenant { get; set; } // added by UiPathOrch
+
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? serviceType { get; set; } // added by UiPathOrch
+
+    public ServiceLicenseProduct ShallowClone() => (ServiceLicenseProduct)MemberwiseClone();
+
+    public string? code { get; set; }
+    public string? type { get; set; } // STANDARD / USER / CONSUMPTION_INTERVAL ...
+    public bool? unlimited { get; set; }
+    // quantity is what a PUT sets; allocated mirrors it once applied.
+    public double? quantity { get; set; }
+    public double? allocated { get; set; }
+    public double? reserved { get; set; }
+    public double? available { get; set; }
+    public double? used { get; set; }
+    public double? allocatedAcrossOtherTenants { get; set; }
+    public double? consumedByDeletedTenants { get; set; }
+    public double? totalUnits { get; set; }
+    public double? consumedAtOrganizationLevel { get; set; }
+    public long? startDate { get; set; } // Unix epoch seconds, 0 when not applicable
+    public long? endDate { get; set; } // Unix epoch seconds, 0 when not applicable
+}
+
+// added by UiPathOrch — PUT body of
+// /api/manageLicense/api/account/{accountId}/service-license/{tenantId}/{serviceType}.
+// WARNING: the API replaces the service's allocation with exactly these entries —
+// a code left out of a NON-EMPTY products array is set to 0 (an empty array is a
+// no-op). Set-PmLicenseAllocation therefore always sends the merged full list.
+public class ServiceLicenseUpdate
+{
+    public ProductQuantity[]? products { get; set; }
+}
+
+// added by UiPathOrch — {code, quantity} pair of ServiceLicenseUpdate.
+public class ProductQuantity
+{
+    public string? code { get; set; }
+    public double? quantity { get; set; }
 }
 
 // added by UiPathOrch — full /api/license/management/account/available response

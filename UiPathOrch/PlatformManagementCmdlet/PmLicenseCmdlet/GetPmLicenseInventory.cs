@@ -6,7 +6,7 @@ namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Get, "PmLicenseInventory")]
 [OutputType(typeof(Entities.LicenseInventory))]
-public class GetPmLicenseInventory : OrchestratorPSCmdlet
+public class GetPmLicenseInventoryCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]

@@ -624,6 +624,9 @@ Organization-level license group management.
 |--------|-------------|
 | Get-PmLicense | List user license bundles assigned to the organization |
 | Get-PmLicenseAllocation | Get per-tenant license allocations (Robots & Services tab) |
+| Set-PmLicenseAllocation | Allocate robot runtimes and consumable units to a tenant |
+| Get-PmLicenseProductAllocation | Get a tenant's allocation broken down by product code |
+| Get-PmLicenseServiceAllocation | Get a tenant's allocation grouped by the service that grants each product |
 | Get-PmLicenseContract | Get the account-level license contract (subscription, products, ML keys) |
 | Get-PmLicenseInventory | Get the org-level license inventory dashboard summary |
 | Get-PmGroupLicense | List licensed groups |

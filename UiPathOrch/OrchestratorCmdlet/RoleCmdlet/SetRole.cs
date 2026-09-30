@@ -89,12 +89,12 @@ public class SetRoleCmdlet : OrchestratorPSCmdlet
 
                 if (roleParams.Type != Type)
                 {
-                    WriteWarning($"{target}: Type were specified multiple times. Using '{roleParams.Type}'.");
+                    WriteWarning($"\"{target}\": Type were specified multiple times. Using '{roleParams.Type}'.");
                 }
 
                 if (roleParams.Permissions.ContainsKey(PermissionName!))
                 {
-                    WriteWarning($"{target}: Permission '{PermissionName}' were specified multiple times. Using the one specified first.");
+                    WriteWarning($"\"{target}\": Permission '{PermissionName}' were specified multiple times. Using the one specified first.");
                 }
                 else
                 {
@@ -114,7 +114,7 @@ public class SetRoleCmdlet : OrchestratorPSCmdlet
         {
             if (existingPermission.Scope != permission.Scope)
             {
-                WriteWarning($"{System.IO.Path.Combine(target, permissionFullName)}: Scope mismatch. Existing scope is '{existingPermission.Scope}' but '{permission.Scope}' was specified. Ignoring {permissionFullName}.");
+                WriteWarning($"\"{System.IO.Path.Combine(target, permissionFullName)}\": Scope mismatch. Existing scope is '{existingPermission.Scope}' but '{permission.Scope}' was specified. Ignoring {permissionFullName}.");
             }
             else
             {
@@ -220,7 +220,7 @@ public class SetRoleCmdlet : OrchestratorPSCmdlet
 
                     if (roleParams.Type != role.Type)
                     {
-                        WriteWarning($"{target}: Type mismatch. Existing type is '{role.Type}', but '{Type}' was specified. Skipping the update.");
+                        WriteWarning($"\"{target}\": Type mismatch. Existing type is '{role.Type}', but '{Type}' was specified. Skipping the update.");
                         continue;
                     }
 

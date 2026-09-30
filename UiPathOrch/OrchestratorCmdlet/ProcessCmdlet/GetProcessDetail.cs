@@ -193,7 +193,7 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
             }
             else
             {
-                caller.WriteWarning($"{release.GetPSPath()}: {bucketIdKind} {release.RetentionBucketId} cannot be resolved.");
+                caller.WriteWarning($"\"{release.GetPSPath()}\": {bucketIdKind} {release.RetentionBucketId} cannot be resolved.");
             }
         }
         return null;

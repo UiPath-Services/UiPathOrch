@@ -92,7 +92,7 @@ public class GetQueueCmdlet : OrchestratorPSCmdlet
                 }
                 catch (Exception ex)
                 {
-                    WriteWarning($"{q.GetPSPath()}: Failed to retrieve Release: {ex.Message}");
+                    WriteWarning($"\"{q.GetPSPath()}\": Failed to retrieve Release: {ex.Message}");
                 }
             }
 
@@ -108,7 +108,7 @@ public class GetQueueCmdlet : OrchestratorPSCmdlet
                 }
                 catch (Exception ex)
                 {
-                    WriteWarning($"{q.GetPSPath()}: Failed to retrieve RetentionBucket: {ex.Message}");
+                    WriteWarning($"\"{q.GetPSPath()}\": Failed to retrieve RetentionBucket: {ex.Message}");
                 }
             }
 

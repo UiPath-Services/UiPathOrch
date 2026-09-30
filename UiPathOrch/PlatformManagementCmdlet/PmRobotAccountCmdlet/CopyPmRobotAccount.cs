@@ -58,7 +58,7 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
                 }
                 catch (Exception ex)
                 {
-                    WriteWarning($"{dstDrive.NameColonSeparator}: Failed to read existing robot accounts; the skip-existing check is disabled for this destination. {ex.Message}");
+                    WriteWarning($"\"{dstDrive.NameColonSeparator}\": Failed to read existing robot accounts; the skip-existing check is disabled for this destination. {ex.Message}");
                 }
             }
 
@@ -83,7 +83,7 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
                     if (dstExistingNames.TryGetValue(dstDrive, out var existingNames)
                         && Core.OrchProvider.RobotNameAlreadyExists(existingNames, srcRobotAccount.name))
                     {
-                        WriteWarning($"{dstDrive.NameColonSeparator}: Skipping robot account '{srcRobotAccount.displayName}' because an account named '{srcRobotAccount.name}' already exists at the destination.");
+                        WriteWarning($"\"{dstDrive.NameColonSeparator}\": Skipping robot account '{srcRobotAccount.displayName}' because an account named '{srcRobotAccount.name}' already exists at the destination.");
                         continue;
                     }
 
