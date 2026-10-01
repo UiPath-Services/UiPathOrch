@@ -43,7 +43,7 @@ public class CopyFolderMachineCmdlet : OrchestratorPSCmdlet
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        using var reporter = new ProgressReporter(this, 200, Int32.MaxValue, "Copying folder machines...");
+        using var reporter = new ProgressReporter(this, null, "Copying folder machines...");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {

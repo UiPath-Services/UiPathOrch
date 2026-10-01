@@ -44,7 +44,7 @@ public class CopyApiTriggerCmdlet : OrchestratorPSCmdlet
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        using var reporterApiTriggers = new ProgressReporter(this, 900, Int32.MaxValue, "Copying API triggers...");
+        using var reporterApiTriggers = new ProgressReporter(this, null, "Copying API triggers...");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {

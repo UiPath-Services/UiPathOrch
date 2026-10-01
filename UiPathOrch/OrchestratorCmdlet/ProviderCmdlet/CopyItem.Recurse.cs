@@ -224,7 +224,7 @@ public partial class OrchProvider
                             {
                                 reporter.WriteProgress(++rootIndex, stage.Label.Trim());
                                 stage.PreStep?.Invoke();
-                                var childReporter = new ProgressReporter(this, stage.Base, Int32.MaxValue, stage.Label);
+                                var childReporter = new ProgressReporter(this, stage.Base, null, stage.Label);
                                 childReporters.Add(childReporter);
                                 stage.Run(childReporter);
                                 cancelToken.ThrowIfCancellationRequested();
