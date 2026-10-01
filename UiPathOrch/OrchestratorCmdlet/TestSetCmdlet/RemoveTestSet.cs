@@ -28,5 +28,6 @@ public class RemoveTestSetCmdlet : RemoveFolderEntityCmdletBase<TestSet>
     {
         drive.OrchAPISession.RemoveTestSet(folder.Id ?? 0, testSet.Id ?? 0);
         drive.TestSets.ClearCache(folder);
+        drive.TestSetsDetailed.ClearCache(folder);
     }
 }

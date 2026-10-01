@@ -10,6 +10,9 @@ namespace UiPath.PowerShell.Commands;
 // Get-OrchTestSet uses the LIST endpoint, which returns TestCaseCount
 // but empty arrays; that's fine for inventory but useless for any
 // downstream pipeline that needs to recreate the TestSet elsewhere.
+// Expanding the Packages / TestCases navigation properties on the listing
+// does not avoid the per-set call either -- see OrchDriveInfo.TestSetsDetailed
+// for what the expanded shape leaves out.
 //
 // Documented clone path:
 //     Get-OrchTestSetDetail SrcSet | New-OrchTestSet -Path Dst -Name DstSet
@@ -49,45 +52,21 @@ public class GetTestSetDetailCmdlet : OrchestratorPSCmdlet
         WarnTestingModuleDeprecated(drivesFolders.Select(df => df.drive));
         var wpName = Name.ConvertToWildcardPatternList();
 
-        using var results = OrchThreadPool.RunForEach(drivesFolders,
-            df => df.folder.GetPSPath(),
-            df => df.folder,
-            df => df.drive.TestSets.Get(df.folder));
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting test set details");
-        foreach (var result in results.WithCancellation(cancelHandler.Token))
-        {
-            try
-            {
-                var entities = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
-                if (entities is null) continue;
-
-                var (drive, folder) = result.Source;
-                var targetEntities = entities
-                    .FilterByWildcards(s => s?.Name, wpName)
-                    .OrderBy(s => s.Name);
-
-                foreach (var entity in targetEntities)
-                {
-                    if (entity?.Id is null) continue;
-                    try
-                    {
-                        var detailed = drive.OrchAPISession.GetTestSetForEdit(folder.Id!.Value, entity.Id.Value);
-                        if (detailed is null) continue;
-                        detailed.Path = folder.GetPSPath();
-                        WriteObject(detailed);
-                    }
-                    catch (Exception ex)
-                    {
-                        WriteError(new ErrorRecord(new OrchException(entity.GetPSPath(), ex), "GetTestSetDetailError", ErrorCategory.InvalidOperation, entity));
-                    }
-                }
-            }
-            catch (OrchException ex)
-            {
-                WriteError(new ErrorRecord(ex, "GetTestSetDetailError", ErrorCategory.InvalidOperation, ex.Target));
-            }
-        }
+        // GetForEdit used to run here, in the consumer loop, one test set at a time on the
+        // pipeline thread, while the pool fetched only the per-folder listings. FolderFanOut
+        // moves it into a pool of its own and emits a folder's rows together, so the table
+        // view sizes its columns from the whole folder rather than from its first row.
+        FolderFanOut.Emit<TestSet, TestSet>(
+            this, drivesFolders, "GetTestSetDetailError",
+            listActivity: "Listing test sets",
+            fetchActivity: "Getting test set details",
+            list: (drive, folder) => drive.TestSets.Get(folder)
+                .FilterByWildcards(s => s?.Name, wpName)
+                .OrderBy(s => s.Name),
+            itemPath: testSet => testSet.GetPSPath(),
+            fetch: (drive, folder, testSet) => testSet.Id is null
+                ? null
+                : drive.TestSetsDetailed.Get(folder, testSet.Id.Value),
+            emit: (drive, folder, rows) => WriteObject(rows, true));
     }
 }

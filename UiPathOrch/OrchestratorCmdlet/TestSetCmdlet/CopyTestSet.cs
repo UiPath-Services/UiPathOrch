@@ -73,6 +73,7 @@ public class CopyTestSetCmdlet : OrchestratorPSCmdlet
                     dstDrive, dstFolder, reporterTestSets,
                     false, cancelHandler.Token);
                 dstDrive.TestSets.ClearCache(dstFolder);
+                dstDrive.TestSetsDetailed.ClearCache(dstFolder);
             }
             catch (OperationCanceledException)
             {

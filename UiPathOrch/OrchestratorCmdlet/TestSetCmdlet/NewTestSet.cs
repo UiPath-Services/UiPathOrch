@@ -82,6 +82,7 @@ public class NewTestSetCmdlet : OrchestratorPSCmdlet
                     {
                         var created = drive.OrchAPISession.CreateTestSet(folder.Id!.Value, newTestSet);
                         drive.TestSets.ClearCache(folder);
+                        drive.TestSetsDetailed.ClearCache(folder);
                         // Both the POST response and the LIST GET return
                         // the entity with Packages / TestCases collections
                         // empty — only the per-item GetForEdit endpoint
