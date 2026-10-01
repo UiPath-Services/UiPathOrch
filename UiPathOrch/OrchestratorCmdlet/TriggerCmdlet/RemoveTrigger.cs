@@ -24,6 +24,5 @@ public class RemoveTriggerCmdlet : RemoveFolderEntityCmdletBase<ProcessSchedule>
     {
         drive.OrchAPISession.DeleteProcessSchedule(folder.Id ?? 0, trigger.Id ?? 0);
         drive.Triggers.ClearCache(folder);
-        drive.TriggersDetailed.ClearCache(folder);
     }
 }

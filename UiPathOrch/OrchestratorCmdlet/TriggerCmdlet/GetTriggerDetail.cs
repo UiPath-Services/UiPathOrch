@@ -105,49 +105,32 @@ public class GetTriggerDetailCmdlet : OrchestratorPSCmdlet
         List<WildcardPattern>? nameWildcards,
         StreamWriter? writer)
     {
-        using var results = OrchThreadPool.RunForEach(drivesFolders,
-            df => df.folder.GetPSPath(),
-            df => df.folder,
-            df => df.drive.GetTriggers(df.folder)
-        );
-
-        using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(caller, 1, results.Count, "Getting trigger details");
-        foreach (var result in results.WithCancellation(cancelHandler.Token))
-        {
-            try
+        // The detail call used to sit in the consumer loop, one trigger at a time on the
+        // pipeline thread, while the pool fetched only the per-folder listings. FolderFanOut
+        // puts it in a pool of its own, so a folder of fifty triggers is read four at a time
+        // instead of fifty times in a row.
+        FolderFanOut.Emit<ProcessSchedule, ProcessSchedule>(
+            caller, drivesFolders, "GetTriggerDetailError",
+            listActivity: "Listing triggers",
+            fetchActivity: "Getting trigger details",
+            list: (drive, folder) => drive.GetTriggers(folder)
+                .FilterByWildcards(s => s?.Name, nameWildcards)
+                .OrderBy(s => s.Name),
+            itemPath: trigger => trigger.GetPSPath(),
+            fetch: (drive, folder, trigger) => drive.GetTriggerDetailed(folder, trigger.Id!.Value),
+            emit: (drive, folder, rows) =>
             {
-                var entities = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
-                if (entities is null) continue;
-
-                var (drive, folder) = result.Source;
-
-                var targetEntities = entities
-                        .FilterByWildcards(s => s?.Name, nameWildcards)
-                        .OrderBy(s => s.Name);
-
-                // The pipeline rows of one folder go out together: the table view groups by
-                // Path and sizes its columns from the first batch of a group, so emitting one
-                // trigger at a time let the first one decide the width for the whole folder.
-                // The CSV path keeps writing per record -- a file has no column widths.
-                var rows = writer is null ? new List<ProcessSchedule>() : null;
-
-                foreach (var entity in targetEntities)
+                // The CSV path writes record by record -- a file has no column widths -- but
+                // it still receives the rows a folder at a time, which costs it nothing.
+                if (writer is not null)
                 {
-                    var detailedEntity = drive.TriggersDetailed.Get(folder, entity.Id!.Value);
-                    if (detailedEntity is null) continue;
-
-                    if (writer is not null) { WriteCsvContent(caller, writer, detailedEntity); }
-                    else { rows!.Add(detailedEntity); }
+                    foreach (var row in rows) WriteCsvContent(caller, writer, row);
                 }
-
-                if (rows is { Count: > 0 }) caller.WriteObject(rows, true);
-            }
-            catch (OrchException ex)
-            {
-                caller.WriteError(new ErrorRecord(ex, "GetTriggerDetailError", ErrorCategory.InvalidOperation, ex.Target));
-            }
-        }
+                else
+                {
+                    caller.WriteObject(rows, true);
+                }
+            });
     }
 
     private static void WriteCsvContent(OrchestratorPSCmdlet caller, StreamWriter writer, ProcessSchedule t)

@@ -140,7 +140,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         // the entire dict; predicate-based clear is more precise).
         AssetLinks.ClearCache(k => k.folderId == folderId);
         // JobsHavingExecutionMedia auto-cleared per folder via _allFolderCache (IncrementalCachePerFolder).
-        // Triggers / TriggersDetailed auto-cleared per folder via _allFolderCache.
+        // Triggers auto-cleared per folder via _allFolderCache.
         // Drop QueueLinks entries for this folder only (matching the AssetLinks pattern).
         QueueLinks.ClearCache(k => k.folderId == folderId);
         // Drop BucketLinks entries for this folder only (matching AssetLinks / QueueLinks).
@@ -307,6 +307,16 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         if (OrchAPISession.ApiVersion < 12 && folder.FolderType == "Personal") return [];
         return Triggers.Get(folder);
     }
+
+    /// <summary>
+    /// The complete trigger, including ExecutorRobots. A lookup, not a fetch: the listing
+    /// behind <see cref="GetTriggers"/> expands ExecutorRobots and is otherwise identical to
+    /// the per-trigger detail endpoint (see OrchAPISession.GetProcessSchedules), so one
+    /// request per folder answers what used to cost two per trigger. There is no separate
+    /// cache to invalidate any more -- clearing Triggers is enough.
+    /// </summary>
+    public ProcessSchedule? GetTriggerDetailed(Folder folder, long triggerId)
+        => GetTriggers(folder).FirstOrDefault(t => t.Id == triggerId);
     #endregion
 
     #region OrchAsset cache
@@ -1007,7 +1017,6 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly KeyedSingleCachePerFolder<long, Release> ReleasesDetailed;
     public readonly KeyedSingleCachePerFolder<long, ReleaseRetentionSetting> ReleaseRetentions;
     public readonly ListCachePerFolder<ProcessSchedule> Triggers;
-    public readonly KeyedSingleCachePerFolder<long, ProcessSchedule> TriggersDetailed;
     public readonly ListCachePerFolder<TestSetSchedule> TestSetSchedules;
     public readonly ListCachePerFolder<UserRobots> UserRobots;
     public readonly ListCachePerFolder<MachineRuntime> RuntimesForFolder;
@@ -1645,24 +1654,9 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             folderId => OrchAPISession.GetProcessSchedules(folderId),
             (trigger, folderPath) => trigger.Path = folderPath);
 
-        TriggersDetailed = new(this,
-            (folderId, scheduleId) =>
-            {
-                // The detail payload omits the schedule's executor-robot assignments (they come
-                // from a separate endpoint), so enrich the cached entity with them here — the
-                // cache then always holds a complete trigger. TriggersDetailed.Get is consumed
-                // only where ExecutorRobots is needed (CopyTriggers / Get-OrchTriggerDetail /
-                // the Update-OrchTrigger ExecutorRobots completer).
-                var trigger = OrchAPISession.GetProcessSchedule(folderId, scheduleId);
-                if (trigger is not null)
-                {
-                    trigger.ExecutorRobots = OrchAPISession.GetRobotIdsForSchedule(folderId, scheduleId)
-                        .Select(id => new RobotExecutor { Id = id })
-                        .ToArray();
-                }
-                return trigger;
-            },
-            (trigger, folderPath, _) => trigger.Path = folderPath);
+        // No TriggersDetailed cache: see GetTriggerDetailed. The listing carries the whole
+        // trigger now, so a second per-trigger cache would only hold copies of what Triggers
+        // already has -- and a second thing to invalidate.
         TestSetSchedules = new(this, OrchAPISession.GetTestSetSchedules, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
         UserRobots = new(this, OrchAPISession.GetUserRobots);
 

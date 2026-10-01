@@ -22,7 +22,6 @@ public class EnableTriggerCmdletBase<Enable> : EnableFolderEntityCmdletBase<Proc
     {
         drive.OrchAPISession.EnableProcessSchedule(folder.Id ?? 0, [entity.Id ?? 0], enabled);
         drive.Triggers.ClearCache(folder);
-        drive.TriggersDetailed.ClearCache(folder);
     }
 
     internal class NameCompleter : OrchArgumentCompleter
