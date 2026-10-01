@@ -19,6 +19,15 @@ namespace UiPath.PowerShell.Commands;
 ///      the next folder's first. A pool per folder cannot do that, and on a tenant whose
 ///      folders hold one or two entities each it leaves most of the parallelism unused.
 ///
+/// Do not expect four-wide to be four times faster. The pool is not what decides: the
+/// RateLimiter on OrchAPISession allows 15 requests a second, and one thread issuing a fast
+/// call reaches that on its own, so the other three workers end up waiting for tokens rather
+/// than for the server. Measured on Get-OrchTriggerDetail over 200 triggers, 25.6 s four-wide
+/// against 27.3 s serial, with the pool genuinely running 3.99 at once. What this shape buys
+/// is the ORDER and the TIMING of the output. For throughput, cut the NUMBER of requests
+/// instead -- see the comment on that RateLimiter, and GetProcessSchedules for what it looks
+/// like when 401 requests become 1.
+///
 /// This depends on <see cref="OrchThreadPoolImpl{TSource,TResult}.RunForEach"/> starting its
 /// work in source order — which it does, a fixed crew pulling the next index. An earlier
 /// version of that pool queued one Task.Run per source behind a semaphore, and the order they

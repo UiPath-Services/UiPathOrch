@@ -110,7 +110,20 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    // Limit the number of requests that can be sent per second to 15
+    // Limit the number of requests that can be sent per second to 15.
+    //
+    // This constant, not OrchThreadPool's cap of four, is what bounds every parallel read in
+    // the module. A single thread issuing a 63 ms call already reaches 15.8 requests/second,
+    // so for anything that fast the four workers buy nothing: the extra requests just queue
+    // here. Measured on Get-OrchTriggerDetail over 200 triggers, four-wide against serial --
+    // 25.6 s vs 27.3 s, with the pool at a true concurrency of 3.99 and 189 ms per request
+    // spent waiting for a token. Parallelism only starts paying above roughly 1000/15 = 67 ms
+    // per request.
+    //
+    // The lesson for anything slow: cut the NUMBER of requests, not the time between them.
+    // The same cmdlet went from 401 requests to 1 by expanding a navigation property
+    // (see GetProcessSchedules), which took 25.6 s down to 0.3 s -- a reduction no amount of
+    // concurrency could have reached from under this ceiling.
     private readonly RateLimiter limiter = new(15);
 
     private int http_call_num = 0;
@@ -2347,7 +2360,19 @@ public partial class OrchAPISession : IDisposable
 
     #region ProcessSchedule
 
-    public IEnumerable<ProcessSchedule> GetProcessSchedules(Int64 folderId) => GetEnumerable<ProcessSchedule>("/odata/ProcessSchedules", folderId);
+    // $expand=ExecutorRobots makes this listing a complete trigger: with it the payload is a
+    // strict superset of GET /odata/ProcessSchedules({id}), which carries nothing but
+    // @odata.context that the listing does not. That is what lets a folder's trigger details
+    // come from ONE request instead of two per trigger -- the detail call and the separate
+    // GetRobotIdsForSchedule function it needed for the robots.
+    //
+    // Verified at both ends of the supported range. On Cloud (API 20) the expanded robots
+    // match GetRobotIdsForSchedule exactly. On 20.10.16 (API 11.1) the field sets line up the
+    // same way, and that server parses $expand rather than ignoring it: an unknown navigation
+    // property is rejected with "Invalid OData query options", while a known one comes back
+    // populated. So an accepted expand is an honoured expand.
+    public IEnumerable<ProcessSchedule> GetProcessSchedules(Int64 folderId)
+        => GetEnumerable<ProcessSchedule>("/odata/ProcessSchedules", folderId, "&$expand=ExecutorRobots");
 
     public ProcessSchedule? GetProcessSchedule(Int64 folderId, Int64 processScheduleId) => HttpRequest<ProcessSchedule>(HttpMethod.Get, $"/odata/ProcessSchedules({processScheduleId})", folderId);
 
