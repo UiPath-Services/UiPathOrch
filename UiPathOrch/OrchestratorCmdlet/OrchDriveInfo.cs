@@ -1005,6 +1005,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly ListCachePerFolder<TestSet> TestSets;
     public readonly ListCachePerFolder<Release> Releases;
     public readonly KeyedSingleCachePerFolder<long, Release> ReleasesDetailed;
+    public readonly KeyedSingleCachePerFolder<long, ReleaseRetentionSetting> ReleaseRetentions;
     public readonly ListCachePerFolder<ProcessSchedule> Triggers;
     public readonly KeyedSingleCachePerFolder<long, ProcessSchedule> TriggersDetailed;
     public readonly ListCachePerFolder<TestSetSchedule> TestSetSchedules;
@@ -1630,6 +1631,15 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         ReleasesDetailed = new(this,
             (folderId, releaseId) => OrchAPISession.GetReleaseById(folderId, releaseId, "?$expand=ReleaseVersions,EntryPoint"),
             (release, folderPath, _) => release.Path = folderPath);
+
+        // Retention lives behind its own endpoint, one GET per release -- the Releases listing
+        // and the release detail both omit it. Uncached it was the whole cost of a warm
+        // Get-OrchProcessDetail -Recurse (measured: 14.1 s for 212 processes, 67 ms each,
+        // while every other cache answered in 2 ms). GetReleaseRetention already returns null
+        // below the API floor, so no supportedApiVersionFrom is needed; a null is cached as a
+        // null and never re-asked.
+        ReleaseRetentions = new(this,
+            OrchAPISession.GetReleaseRetention);
 
         Triggers = new(this,
             folderId => OrchAPISession.GetProcessSchedules(folderId),

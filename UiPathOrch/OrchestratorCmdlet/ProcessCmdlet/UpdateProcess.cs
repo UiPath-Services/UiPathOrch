@@ -516,6 +516,10 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
 
                         drive.Releases.ClearCache(folder);
                         drive.ReleasesDetailed.ClearCache(folder);
+                        // Retention has its own cache because it has its own endpoint (see
+                        // OrchDriveInfo.ReleaseRetentions). This is the only cmdlet that writes
+                        // it, so this is the only place it has to be invalidated.
+                        drive.ReleaseRetentions.ClearCache(folder);
                     }
                     catch (Exception ex)
                     {

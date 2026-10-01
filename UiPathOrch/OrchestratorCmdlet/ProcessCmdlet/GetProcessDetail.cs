@@ -102,69 +102,91 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
         List<WildcardPattern>? nameWildcards,
         StreamWriter? writer)
     {
-        using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(caller, 1, 0, "Getting process details");
-        foreach (var (drive, folder) in drivesFolders)
+        FolderFanOut.Emit<Release, Release>(
+            caller, drivesFolders, "GetProcessDetailError",
+            listActivity: "Listing processes",
+            fetchActivity: "Getting process details",
+            list: (drive, folder) => drive.Releases.Get(folder)
+                .FilterByWildcards(r => r?.Name, nameWildcards)
+                .OrderBy(r => r.Name),
+            itemPath: release => release.GetPSPath(),
+            fetch: FetchDetail,
+            onRow: (drive, folder, release) => Enrich(caller, drive, folder, release),
+            emit: (drive, folder, rows) =>
+            {
+                // The CSV path writes record by record -- a file has no column widths -- but
+                // it still gets the rows a folder at a time, which costs it nothing.
+                if (writer is not null)
+                {
+                    foreach (var row in rows) WriteCsvContent(caller, writer, row);
+                }
+                else
+                {
+                    caller.WriteObject(rows, true);
+                }
+            });
+    }
+
+    /// <summary>
+    /// The per-release call, on a pool thread. Besides the detail itself it WARMS the two
+    /// caches <see cref="Enrich"/> reads, so on a cold cache those calls are paid four at a
+    /// time here instead of one at a time on the pipeline thread — which is what made the run
+    /// as slow as if nothing were parallel, and left the progress bar (which counts the pool's
+    /// completions) full while the consumer was still paying.
+    /// </summary>
+    private static Release? FetchDetail(OrchDriveInfo drive, Folder folder, Release release)
+    {
+        var detailed = drive.ReleasesDetailed.Get(folder, release.Id!.Value);
+
+        Warm(() => drive.ReleaseRetentions.Get(folder, release.Id!.Value));
+
+        if (detailed is { EntryPointId: not null })
         {
-            IEnumerable<Release> targetReleases;
-            try
+            var d = detailed;
+            Warm(() => drive.PackageEntryPoints.Get(
+                (drive.FolderFeedId.Get(folder) ?? "", d.ProcessKey ?? "", d.ProcessVersion!)));
+        }
+
+        return detailed;
+    }
+
+    /// <summary>
+    /// Run a call for its cache entry and drop whatever happens. Warming never decides
+    /// anything: Enrich repeats the call on the pipeline thread, where a hit costs nothing and
+    /// a failure can be reported against the release it belongs to.
+    /// </summary>
+    private static void Warm(Action fetch)
+    {
+        try { fetch(); } catch { }
+    }
+
+    /// <summary>
+    /// Fill in the fields that live behind their own endpoints. Runs on the pipeline thread,
+    /// against caches <see cref="FetchDetail"/> has already warmed.
+    /// </summary>
+    private static void Enrich(OrchestratorPSCmdlet caller, OrchDriveInfo drive, Folder folder, Release release)
+    {
+        if (release.EntryPointId is not null)
+        {
+            var feedId = drive.FolderFeedId.Get(folder);
+            var entryPoints = drive.PackageEntryPoints.Get((feedId ?? "", release.ProcessKey ?? "", release.ProcessVersion!));
+            release.EntryPointPath = entryPoints.FirstOrDefault(e => e.Id == release.EntryPointId)?.Path;
+        }
+
+        try
+        {
+            var retention = drive.ReleaseRetentions.Get(folder, release.Id!.Value);
+            if (retention is not null)
             {
-                var releases = drive.Releases.Get(folder);
-                targetReleases = releases
-                    .FilterByWildcards(r => r?.Name, nameWildcards)
-                    .OrderBy(r => r.Name);
+                release.RetentionAction = retention.Action;
+                release.RetentionPeriod = retention.Period;
+                release.RetentionBucketId = retention.BucketId;
             }
-            catch (Exception ex)
-            {
-                caller.WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetProcessDetailError", ErrorCategory.InvalidOperation, folder));
-                continue;
-            }
-
-            using var results = OrchThreadPool.RunForEach(targetReleases,
-                release => release.GetPSPath(),
-                release => release,
-                release => drive.ReleasesDetailed.Get(folder, release.Id!.Value));
-
-            reporter.TotalNum = results.Count;
-            reporter.Activity = $"Getting process details in {folder.GetPSPath()}";
-            foreach (var result in results.WithCancellation(cancelHandler.Token))
-            {
-                try
-                {
-                    var releaseDetailed = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
-                    if (releaseDetailed is null) continue;
-
-                    if (releaseDetailed.EntryPointId is not null)
-                    {
-                        var feedId = drive.FolderFeedId.Get(folder);
-                        var entryPoints = drive.PackageEntryPoints.Get((feedId ?? "", releaseDetailed.ProcessKey ?? "", releaseDetailed.ProcessVersion!));
-                        var entryPath = entryPoints.FirstOrDefault(e => e.Id == releaseDetailed.EntryPointId)?.Path;
-                        releaseDetailed.EntryPointPath = entryPath;
-                    }
-
-                    try
-                    {
-                        var retention = drive.OrchAPISession.GetReleaseRetention(folder.Id!.Value, releaseDetailed.Id!.Value);
-                        if (retention is not null)
-                        {
-                            releaseDetailed.RetentionAction = retention.Action;
-                            releaseDetailed.RetentionPeriod = retention.Period;
-                            releaseDetailed.RetentionBucketId = retention.BucketId;
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        caller.WriteError(new ErrorRecord(new OrchException(releaseDetailed.GetPSPath(), "Get retention info failed.", ex), "GetRetentionSettingError", ErrorCategory.InvalidOperation, releaseDetailed));
-                    }
-
-                    if (writer is not null) { WriteCsvContent(caller, writer, releaseDetailed); }
-                    else { caller.WriteObject(releaseDetailed); }
-                }
-                catch (OrchException ex)
-                {
-                    caller.WriteError(new ErrorRecord(ex, "GetProcessDetailError", ErrorCategory.InvalidOperation, ex.Target));
-                }
-            }
+        }
+        catch (Exception ex)
+        {
+            // Non-fatal by long standing: the release is still emitted, without its retention.
+            caller.WriteError(new ErrorRecord(new OrchException(release.GetPSPath(), "Get retention info failed.", ex), "GetRetentionSettingError", ErrorCategory.InvalidOperation, release));
         }
     }
 
