@@ -352,10 +352,10 @@ public class OrchTask<TSource, TResult> : IDisposable
     public TResult? Result { get; private set; }
     public Exception? Exception { get; private set; }
 
-    // Display label (the getPathFunc result), stamped as soon as the task starts running --
-    // before it even waits on the semaphore -- so a consumer that is blocked draining this
+    // Display label (the getPathFunc result), stamped the moment a worker picks this slot up
+    // and before its API call runs, so a consumer that is blocked draining this
     // not-yet-completed slot can still show "what am I waiting on". (Path above is only set on
-    // the exception path; Label is set up front on every task.)
+    // the exception path; Label is set on every slot a worker reaches.)
     public string? Label { get; private set; }
     internal void SetLabel(string label) => Label = label;
 
@@ -421,7 +421,6 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
 {
     private readonly OrchTask<TSource, TResult>[] _threads;
 
-    private readonly SemaphoreSlim _semaphore;
     private readonly CancellationTokenSource _cts = new();
     private readonly ConcurrentBag<Task> _backgroundTasks = [];
 
@@ -451,6 +450,7 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
         }
     }
 
+
     // Drains one slot in sorted order while keeping the bar filled with the TRUE number of
     // background fetches completed (CompletedCount) -- so it advances even while output is
     // blocked on an early-but-slow item, the rest fetching in parallel behind it. The status
@@ -458,8 +458,33 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
     // pipeline thread, since it calls reporter.WriteProgress. When no progress bar is needed,
     // call result.GetResult(token) directly instead -- it skips the polling wait and the
     // WriteProgress calls.
+    // The bar follows CompletedCount -- API calls that have come back -- and never the number
+    // of items the consumer has emitted. The two are not the same: slots drain in sorted
+    // order, so a consumer blocked on slot 0 emits nothing while the other three workers
+    // finish behind it, and counting emissions would hold the bar at zero for that whole
+    // stretch and then snap it to full as the backlog flushed.
+    //
     public TResult? GetResultWithProgress(OrchTask<TSource, TResult> result, ProgressReporter reporter, CancellationToken token)
     {
+        // The count is every completion; the label is only ever THIS slot -- the one the
+        // consumer is on. That is what keeps the two readable together: the consumer walks the
+        // slots in order, so the name can never run ahead into a folder whose rows have not
+        // been printed, and the write that follows GetResult below names the call that just
+        // came back.
+        //
+        // The two can therefore drift: the crew does not wait for the consumer, so while one
+        // slow call is out the other three workers keep pulling, and the count climbs while
+        // this label holds. There is no bound on that -- one call slow enough lets the rest of
+        // the crew finish the list -- and it should hold: "still waiting on this one, N others
+        // came back meanwhile" is what is actually happening.
+        //
+        // Naming the pool's most recent completion instead was tried, and it reads as a folder
+        // being finished while its rows are still queued. It was also only ever a workaround
+        // for an unordered pool, where EVERY slot drifted that way because starts were
+        // scrambled across the whole list, not just the slot behind a slow call.
+        //
+        // Label is re-read on every poll: a worker stamps it when it picks the slot up, so it
+        // can still be null for a moment on the first look.
         while (!result.CompletedEvent.Wait(150, token))
         {
             reporter.WriteProgress(CompletedCount, result.Label);
@@ -469,30 +494,37 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
         return value;
     }
 
-    // Track a background Task so Dispose can wait for it before tearing down
-    // the semaphore (otherwise tasks blocked on WaitAsync would race with
-    // SemaphoreSlim.Dispose and throw ObjectDisposedException). Internal for
-    // the same reason as Token.
+    // Track a worker Task so Dispose can give the crew a moment to signal the slots it has
+    // not reached before the OrchTasks are torn down under it. Internal for the same reason
+    // as Token.
     internal void TrackTask(Task task) => _backgroundTasks.Add(task);
 
-    private OrchThreadPoolImpl(OrchTask<TSource, TResult>[] threads, SemaphoreSlim semaphore)
+    private OrchThreadPoolImpl(OrchTask<TSource, TResult>[] threads)
     {
         _threads = threads;
-        _semaphore = semaphore;
     }
 
-    // The semaphore caps in-flight API calls and keeps thread-pool threads
-    // available; without it, all sources would race to start at once and
-    // could starve the thread pool while the consumer's GetResult is blocked
-    // on CompletedEvent.Wait.
+    // A fixed crew of workers, each pulling the next index in order, rather than one Task.Run
+    // per source queued behind a SemaphoreSlim. Same ceiling on concurrent API calls, but the
+    // work STARTS in source order: item i cannot begin before i-4 has, so completions stay
+    // within a few places of submission order.
     //
-    // SetResult is called directly on the background thread (no
-    // SynchronizationContext.Post marshaling). Each task writes to its own
-    // pre-allocated slot in `threads`, so there is no write race; calling
-    // Post would only enqueue work to a SyncContext that the consumer thread
-    // isn't pumping (it's blocked in CompletedEvent.Wait), risking a
-    // message-pump deadlock in WPF-style hosts. PowerShell pipeline threads
-    // have no SyncContext, so the marshaling was a no-op anyway.
+    // Queueing every source at once did not. Each body ran only as far as its first await, so
+    // all of them reached the semaphore within a moment, in whatever order the thread pool
+    // happened to hand them to its workers -- a scramble across the whole list, not a local
+    // one -- and the semaphore's FIFO then honoured that scrambled order for the rest of the
+    // run. Every folder's items ended up spread over the entire run, so every folder's LAST
+    // item landed near the end, and a consumer that emits a folder once its items are all in
+    // could emit almost nothing until then. Measured on 212 releases in 28 folders: the first
+    // two folders printed at 8.5 s and 10.5 s, and the other 200 rows all arrived in the final
+    // second of a 49 s run.
+    //
+    // SetResult is called directly on the worker thread (no SynchronizationContext.Post
+    // marshaling). Each item writes to its own pre-allocated slot in `threads`, so there is no
+    // write race; calling Post would only enqueue work to a SyncContext that the consumer
+    // thread isn't pumping (it's blocked in CompletedEvent.Wait), risking a message-pump
+    // deadlock in WPF-style hosts. PowerShell pipeline threads have no SyncContext, so the
+    // marshaling was a no-op anyway.
     internal static OrchThreadPoolImpl<TSource, TResult> RunForEach(IEnumerable<TSource> sources,
         Func<TSource, string> getPathFunc,
         Func<TSource, object> getTargetFunc,
@@ -500,69 +532,67 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
     {
         var srcList = sources as IList<TSource> ?? sources.ToList();
         var threads = new OrchTask<TSource, TResult>[srcList.Count];
-        var semaphore = new SemaphoreSlim(maxDegreeOfParallelism);
 
         for (int i = 0; i < threads.Length; i++)
         {
             threads[i] = new OrchTask<TSource, TResult>();
         }
 
-        var pool = new OrchThreadPoolImpl<TSource, TResult>(threads, semaphore);
+        var pool = new OrchThreadPoolImpl<TSource, TResult>(threads);
         var token = pool.Token;
 
-        foreach (var (source, index) in srcList.Select((source, index) => (source, index)))
+        int next = -1;
+        int crew = Math.Min(maxDegreeOfParallelism, srcList.Count);
+
+        for (int w = 0; w < crew; w++)
         {
-            var bgTask = Task.Run(async () =>
+            pool.TrackTask(Task.Run(() =>
             {
-                // Pre-compute path/target so the SetException calls below
-                // can't themselves throw. If the getter funcs fault (e.g.
-                // GetPSPath on a stale entity) we still need to signal the
-                // task — otherwise the consumer's CompletedEvent.Wait would
-                // block forever.
-                string pathStr;
-                object targetObj;
-                try
+                while (true)
                 {
-                    pathStr = getPathFunc(source);
-                    targetObj = getTargetFunc(source);
-                }
-                catch (Exception funcEx)
-                {
-                    threads[index].SetException(source, "<getPathFunc/getTargetFunc threw>", source!, funcEx);
-                    return;
-                }
+                    int index = Interlocked.Increment(ref next);
+                    if (index >= srcList.Count) return;
 
-                // Stamp the display label before queueing behind the semaphore so a consumer
-                // blocked on this slot can name what it is waiting for (see OrchTask.Label).
-                threads[index].SetLabel(pathStr);
+                    var source = srcList[index];
 
-                try
-                {
-                    await semaphore.WaitAsync(token);
-                }
-                catch (OperationCanceledException ex)
-                {
-                    // Mark the task cancelled so the consumer's GetResult
-                    // observes the cancel instead of blocking forever.
-                    threads[index].SetException(source, pathStr, targetObj, ex);
-                    return;
-                }
+                    // Pre-compute path/target so the SetException calls below can't themselves
+                    // throw. If the getter funcs fault (e.g. GetPSPath on a stale entity) we
+                    // still need to signal the slot — otherwise the consumer's
+                    // CompletedEvent.Wait would block forever.
+                    string pathStr;
+                    object targetObj;
+                    try
+                    {
+                        pathStr = getPathFunc(source);
+                        targetObj = getTargetFunc(source);
+                    }
+                    catch (Exception funcEx)
+                    {
+                        threads[index].SetException(source, "<getPathFunc/getTargetFunc threw>", source!, funcEx);
+                        continue;
+                    }
 
-                try
-                {
-                    var result = getResultFunc(source);
-                    threads[index].SetResult(source, result);
+                    threads[index].SetLabel(pathStr);
+
+                    // After a cancel the crew keeps pulling, but only to signal what is left:
+                    // a consumer still reading would otherwise block on a slot no one will run.
+                    if (token.IsCancellationRequested)
+                    {
+                        threads[index].SetException(source, pathStr, targetObj, new OperationCanceledException(token));
+                        continue;
+                    }
+
+                    try
+                    {
+                        var result = getResultFunc(source);
+                        threads[index].SetResult(source, result);
+                    }
+                    catch (Exception ex)
+                    {
+                        threads[index].SetException(source, pathStr, targetObj, ex);
+                    }
                 }
-                catch (Exception ex)
-                {
-                    threads[index].SetException(source, pathStr, targetObj, ex);
-                }
-                finally
-                {
-                    semaphore.Release();
-                }
-            });
-            pool.TrackTask(bgTask);
+            }));
         }
 
         return pool;
@@ -570,24 +600,22 @@ public class OrchThreadPoolImpl<TSource, TResult> : IDisposable, IEnumerable<Orc
 
     public void Dispose()
     {
-        // Cancel so background tasks waiting on the semaphore bail immediately.
+        // Cancel so the crew stops taking new work and races through what is left, signalling
+        // each remaining slot as cancelled.
         try { _cts.Cancel(); } catch { }
 
-        // Brief wait so tasks that bail via OCE on WaitAsync (microseconds)
-        // can release their slot cleanly. Don't wait for in-flight synchronous
-        // API calls — they can't be cancelled mid-flight (no token plumbed
-        // through OrchAPISession), so waiting only delays Ctrl+C response
-        // without changing what the user observes. Stragglers calling
-        // semaphore.Release / task.SetResult after dispose throw
-        // ObjectDisposedException which is silent under .NET 5+
-        // UnobservedTaskException default.
+        // Brief wait so that sweep (microseconds per slot) can finish. Don't wait for an
+        // in-flight synchronous API call — it can't be cancelled mid-flight (no token plumbed
+        // through OrchAPISession), so waiting only delays Ctrl+C response without changing
+        // what the user observes. A straggler calling task.SetResult after dispose throws
+        // ObjectDisposedException, which is silent under the .NET 5+ UnobservedTaskException
+        // default.
         try { Task.WaitAll([.. _backgroundTasks], TimeSpan.FromMilliseconds(100)); } catch { }
 
         foreach (var thread in _threads)
         {
             thread.Dispose(); // Release resources
         }
-        _semaphore.Dispose();
         _cts.Dispose();
         GC.SuppressFinalize(this);
     }
@@ -761,14 +789,46 @@ public static class ParallelResults
 
 // When the variable holding an instance of this class goes out of scope, the progress bar is automatically disposed.
 // This variable must be declared with a using statement.
-public class ProgressReporter(IWritableHost provider, int id, int totalNum, string activity) : IDisposable
+//
+// WriteProgress's first argument is simply the numerator the bar shows. Both readings are in
+// use in this module and both read correctly beside a status that names the item:
+// OrchThreadPoolImpl.GetResultWithProgress passes the number FINISHED, while the Copy* cmdlets
+// pass a 1-based "now on this one". Pick one per cmdlet and stay with it.
+//
+// Call it from the pipeline thread only -- it ends in Cmdlet.WriteProgress.
+public class ProgressReporter : IDisposable
 {
-    private IWritableHost? provider = provider;
-    //private Cmdlet? cmdlet;
-    private readonly ProgressRecord progressRecord = new(id, activity, activity);
-    private int totalNum = totalNum;
+    // Activity ids only have to be distinct among the bars that are alive at the same time, so
+    // new code lets them be allocated and uses the constructor without one. Choosing them by
+    // hand produced a registry of magic numbers -- 200, 500, 600, 900, 1000, 1300, one per
+    // Copy* cmdlet -- that existed only in the callers' heads and was maintained so that
+    // nested operations would not collide. Starts above that range so an allocated id can
+    // never land on one still written out by hand.
+    private static int nextId = 10000;
 
-    public int TotalNum
+    private IWritableHost? provider;
+    private readonly ProgressRecord progressRecord;
+    private int? totalNum;
+
+    /// <param name="totalNum">Units of work, or null when the total is not knowable. The bar
+    /// then shows the count on its own and no percentage, rather than making the caller invent
+    /// a denominator -- Int32.MaxValue was the one in use, which pins the bar at 0% forever.</param>
+    public ProgressReporter(IWritableHost provider, int? totalNum, string activity)
+        : this(provider, Interlocked.Increment(ref nextId), totalNum, activity)
+    {
+    }
+
+    public ProgressReporter(IWritableHost provider, int id, int? totalNum, string activity)
+    {
+        this.provider = provider;
+        this.totalNum = totalNum;
+        // Sanitized here too, not only in the Activity setter: an activity passed to the
+        // constructor used to reach the host raw, and a wide character in it breaks the bar
+        // exactly as one in the status does.
+        progressRecord = new ProgressRecord(id, SafeText(activity)!, SafeText(activity)!);
+    }
+
+    public int? TotalNum
     {
         get { return totalNum; }
         set { totalNum = value; }
@@ -799,12 +859,23 @@ public class ProgressReporter(IWritableHost provider, int id, int totalNum, stri
 
     public void WriteProgress(int index, string? statusDescription = null, string? activity = null)
     {
-        progressRecord.PercentComplete = totalNum > 0 ? (index * 100) / totalNum : 0;
+        // -1 is PowerShell's "no percentage": an unknown total gets a bar without one, instead
+        // of a fake 0%. Widened and clamped for the known case -- PercentComplete throws
+        // outside 0..100, so a caller whose collection outgrew the total it declared would
+        // otherwise take the cmdlet down over a progress bar.
+        progressRecord.PercentComplete = totalNum is int total && total > 0
+            ? (int)Math.Clamp(index * 100L / total, 0L, 100L)
+            : -1;
+
         if (!string.IsNullOrEmpty(activity))
         {
             progressRecord.Activity = SafeText(activity)!;
         }
-        progressRecord.StatusDescription = $"{index:D}/{totalNum} {SafeText(statusDescription)}".TrimEnd();
+
+        progressRecord.StatusDescription = (totalNum is int n
+            ? $"{index:D}/{n} {SafeText(statusDescription)}"
+            : $"{index:D} {SafeText(statusDescription)}").TrimEnd();
+
         WriteProgress();
     }
 
