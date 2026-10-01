@@ -61,6 +61,15 @@ public class CompareTriggerCmdlet : CompareOrchCmdlet
     // and neither side can control -- which is the reported case, "0 0/30 * 1/1 * ? *" at an MSI
     // source against "33 20/30 * * * ? *" at an Automation Suite destination (2026-08-31).
     //
+    // The split is narrower than "version": Automation Suite 24.10.8 rewrites where 24.10.11 does
+    // not. Copying a queue trigger between two orgs on one 24.10.8 host turned "0 0/1 * 1/1 * ? *"
+    // into "0 0/30 * 1/1 * ? *" (2026-10-01), and StartProcessCronDetails shows what happened: the
+    // source was type 0 (minutely, atMinute 1) and the copy came back type 5 (advanced cron). The
+    // destination did not store a cron at all, it regenerated one from its own
+    // QueueTrigger.ActivationFrequencyInMinutes -- 30, matching the result exactly. The time
+    // triggers copied in the same run kept their crons, so the suppression is still the queue case
+    // only.
+    //
     // This also settles what Copy-Item can do about it: nothing. CopyTriggers already sends the
     // source cron -- StartProcessCron is not among the fields it nulls -- and the destination
     // server overrides it anyway.
