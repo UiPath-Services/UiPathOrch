@@ -3373,6 +3373,27 @@ public partial class OrchAPISession : IDisposable
 
     public TestSet? GetTestSetForEdit(Int64 folderId, Int64 testSetId) => HttpRequest<TestSet>(HttpMethod.Get, $"/odata/TestSets({testSetId})/UiPath.Server.Configuration.OData.GetForEdit()", folderId);
 
+    // What GetForEdit was being called for, as a listing: one request per folder instead of
+    // one per test set. Packages and TestCases are navigation properties, and expanding them
+    // fills exactly the two collections the plain listing leaves empty.
+    //
+    // Nothing is lost by not calling GetForEdit. It returns a few fields this module cannot
+    // hold -- TestCase has no Name or UniqueId, TestSet has no EnvironmentName or RobotName --
+    // and it omits twelve that the entities do hold: Key, SourceType, OrganizationUnitId,
+    // TestCaseCount, CreationTime, CreatorUserId and the rest. Get-OrchTestSetDetail used to
+    // return those blank while Get-OrchTestSet filled them in, which is backwards.
+    //
+    // Deliberately a separate method from GetTestSets rather than an expand added to it:
+    // TestCases can run to hundreds of rows per set, and Get-OrchTestSet is an inventory call
+    // that should not have to carry them.
+    public IEnumerable<TestSet> GetTestSetsDetailed(Int64 folderId)
+    {
+        // Same Environment handling as GetTestSets: v20 returns it without being asked.
+        string environment = ApiVersion >= 20 ? "" : ",Environment";
+        return GetEnumerable<TestSet>("/odata/TestSets", folderId,
+            $"&$filter=(SourceType eq 'User')&$expand=Packages,TestCases,InputArguments{environment}");
+    }
+
     public TestSet? CreateTestSet(Int64 folderId, TestSet testSet)
     {
         string body = HttpRequest(HttpMethod.Post, "/odata/TestSets", folderId, testSet);

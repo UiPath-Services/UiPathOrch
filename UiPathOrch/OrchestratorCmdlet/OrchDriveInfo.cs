@@ -1013,7 +1013,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly ListCachePerFolder<TestCaseDefinition> TestCases;
     public readonly ListCachePerFolder<TestDataQueue> TestDataQueues;
     public readonly ListCachePerFolder<TestSet> TestSets;
-    public readonly KeyedSingleCachePerFolder<long, TestSet> TestSetsDetailed;
+    public readonly ListCachePerFolder<TestSet> TestSetsDetailed;
     public readonly ListCachePerFolder<Release> Releases;
     public readonly KeyedSingleCachePerFolder<long, Release> ReleasesDetailed;
     public readonly KeyedSingleCachePerFolder<long, ReleaseRetentionSetting> ReleaseRetentions;
@@ -1634,14 +1634,14 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         TestDataQueues = new(this, OrchAPISession.GetTestDataQueues, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
         TestSets = new(this, OrchAPISession.GetTestSets, (e, folderPath) => e.Path = folderPath); // Confirmed not in v17 web interface, but apparently not dependent on API version
 
-        // GetForEdit, because the listing cannot stand in for it: it returns Packages and
-        // TestCases as empty arrays, carrying only TestCaseCount. Expanding those navigation
-        // properties is not a substitute either -- measured on Automation Suite 24.10.8, the
-        // expanded shape has no TestCase.Name, UniqueId, PackageIdentifier or AppVersion, and
-        // no Package.HasRelease or CoverageType, all of which GetForEdit returns.
+        // The complete test set, a folder at a time. The plain TestSets listing leaves
+        // Packages and TestCases empty; this one expands them, which is one request per
+        // folder where asking GetForEdit per set was one per test set. See
+        // OrchAPISession.GetTestSetsDetailed for why that endpoint is not needed, and for
+        // why this is its own call rather than an expand bolted onto TestSets.
         TestSetsDetailed = new(this,
-            OrchAPISession.GetTestSetForEdit,
-            (e, folderPath, _) => e.Path = folderPath);
+            OrchAPISession.GetTestSetsDetailed,
+            (e, folderPath) => e.Path = folderPath);
 
         Releases = new(this,
             OrchAPISession.GetReleases,

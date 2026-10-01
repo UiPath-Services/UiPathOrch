@@ -1714,7 +1714,10 @@ public partial class OrchProvider
 
         try
         {
-            var srcTestSets = srcDrive.TestSets.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
+            // The DETAILED listing: a copy needs Packages and TestCases, which the plain one
+            // returns empty. One request carries the whole folder, where this used to be the
+            // plain listing plus a GetForEdit per test set.
+            var srcTestSets = srcDrive.TestSetsDetailed.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
             reporter.TotalNum = srcTestSets.Count;
             reporter.Activity = $"Copying test sets to {newFolder.GetPSPath()}";
 
@@ -1730,12 +1733,33 @@ public partial class OrchProvider
                     reporter.WriteProgress(++index, ts.Name);
                     try
                     {
-                        var postingTestSet = srcDrive.OrchAPISession.GetTestSetForEdit(srcFolder.Id ?? 0, ts.Id ?? 0);
+                        // DeepCopy, as CopyTriggers does: everything below mutates the object
+                        // it posts -- ids nulled, references remapped -- and ts now belongs to
+                        // a shared per-folder cache rather than being a fresh GetForEdit
+                        // response that nobody else would ever see again.
+                        var postingTestSet = OrchCollectionExtensions.DeepCopy(ts);
 
                         if (postingTestSet is not null)
                         {
                             postingTestSet.Id = null;
                             postingTestSet.CreationTime = null;
+
+                            // Everything the SOURCE instance owns, so the POST body stays what
+                            // it was. GetForEdit never returned these -- they were null and
+                            // WhenWritingNull dropped them -- but the listing this now reads
+                            // does return them, and sending the source's Key or its folder id
+                            // to a create is not something to find out about in the field.
+                            postingTestSet.Key = null;
+                            postingTestSet.SourceType = null;
+                            postingTestSet.OrganizationUnitId = null;
+                            postingTestSet.TestCaseCount = null;
+                            postingTestSet.Environment = null;
+                            postingTestSet.IsDeleted = null;
+                            postingTestSet.DeleterUserId = null;
+                            postingTestSet.DeletionTime = null;
+                            postingTestSet.LastModificationTime = null;
+                            postingTestSet.LastModifierUserId = null;
+                            postingTestSet.CreatorUserId = null;
                             foreach (var p in postingTestSet.Packages ?? [])
                             {
                                 p.Id = null;

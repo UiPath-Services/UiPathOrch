@@ -5,14 +5,15 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-// Get-OrchTestSetDetail -- one GetTestSetForEdit call per matched
-// TestSet, so the Packages[] and TestCases[] arrays come back populated.
-// Get-OrchTestSet uses the LIST endpoint, which returns TestCaseCount
-// but empty arrays; that's fine for inventory but useless for any
-// downstream pipeline that needs to recreate the TestSet elsewhere.
-// Expanding the Packages / TestCases navigation properties on the listing
-// does not avoid the per-set call either -- see OrchDriveInfo.TestSetsDetailed
-// for what the expanded shape leaves out.
+// Get-OrchTestSetDetail -- the TestSet with its Packages[] and TestCases[]
+// arrays populated, which the plain listing behind Get-OrchTestSet returns
+// empty (it carries TestCaseCount and nothing else about them). That is fine
+// for inventory and useless for any downstream pipeline that needs to
+// recreate the TestSet elsewhere.
+//
+// One request per folder, from an expanded listing -- see
+// OrchAPISession.GetTestSetsDetailed, which also records why GetForEdit, the
+// endpoint this used to call once per test set, is not needed.
 //
 // Documented clone path:
 //     Get-OrchTestSetDetail SrcSet | New-OrchTestSet -Path Dst -Name DstSet
@@ -52,21 +53,19 @@ public class GetTestSetDetailCmdlet : OrchestratorPSCmdlet
         WarnTestingModuleDeprecated(drivesFolders.Select(df => df.drive));
         var wpName = Name.ConvertToWildcardPatternList();
 
-        // GetForEdit used to run here, in the consumer loop, one test set at a time on the
-        // pipeline thread, while the pool fetched only the per-folder listings. FolderFanOut
-        // moves it into a pool of its own and emits a folder's rows together, so the table
-        // view sizes its columns from the whole folder rather than from its first row.
+        // One expanded listing per folder answers everything, so phase 2 has nothing to
+        // fetch and the pass is there only to batch the output a folder at a time -- the
+        // table view sizes its columns from the first batch it receives, and row-by-row
+        // emission let the first test set of a folder set them for the rest.
         FolderFanOut.Emit<TestSet, TestSet>(
             this, drivesFolders, "GetTestSetDetailError",
             listActivity: "Listing test sets",
             fetchActivity: "Getting test set details",
-            list: (drive, folder) => drive.TestSets.Get(folder)
+            list: (drive, folder) => drive.TestSetsDetailed.Get(folder)
                 .FilterByWildcards(s => s?.Name, wpName)
                 .OrderBy(s => s.Name),
             itemPath: testSet => testSet.GetPSPath(),
-            fetch: (drive, folder, testSet) => testSet.Id is null
-                ? null
-                : drive.TestSetsDetailed.Get(folder, testSet.Id.Value),
+            fetch: (drive, folder, testSet) => testSet,
             emit: (drive, folder, rows) => WriteObject(rows, true));
     }
 }
