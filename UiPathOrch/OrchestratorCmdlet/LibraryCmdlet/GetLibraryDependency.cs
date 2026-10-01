@@ -101,52 +101,48 @@ public class GetLibraryDependencyCmdlet : OrchestratorPSCmdlet
             }
         }
 
-        WarmLibraries(targets, cancelHandler);
+        // Downloads happen as each library is reached, so rows appear while the rest are still
+        // being fetched; the bar below is sized from the ones not already cached.
+        var pending = targets
+            .Where(t => t.drive.LibraryContents.CachedEntries.All(e => e.Key != (t.libraryId, t.version)))
+            .Select(t => (t.drive.NameColonSeparator, t.libraryId, t.version))
+            .ToHashSet();
 
-        foreach (var (drive, libraryId, version) in targets.WithCancellation(cancelHandler.Token))
+        using var downloadReporter = pending.Count > 0
+            ? new ProgressReporter(this, 2, pending.Count, "Downloading libraries")
+            : null;
+        int downloaded = 0;
+
+        // Emitted per drive, in one WriteObject: the table view sizes its columns from the
+        // first batch it receives, so row-by-row emission clipped the later, longer ids.
+        foreach (var driveGroup in targets.GroupBy(t => t.drive.NameColonSeparator).WithCancellation(cancelHandler.Token))
         {
-            try
+            var rows = new List<PackageDependency>();
+
+            foreach (var (drive, libraryId, version) in driveGroup)
             {
-                var contents = drive.LibraryContents.Get((libraryId, version));
-                WriteObject((contents?.Dependencies ?? [])
-                    .FilterByWildcards(d => d?.Dependency, wpDependency)
-                    .OrderBy(d => d?.Dependency)
-                    .Select(d => { var c = d.ShallowClone(); c.Path = drive.NameColonSeparator; return c; }),
-                    true);
+                try
+                {
+                    if (pending.Remove((drive.NameColonSeparator, libraryId, version)))
+                    {
+                        downloadReporter?.WriteProgress(++downloaded, $"{libraryId}:{version}");
+                    }
+
+                    var contents = drive.LibraryContents.Get((libraryId, version));
+                    rows.AddRange((contents?.Dependencies ?? [])
+                        .FilterByWildcards(d => d?.Dependency, wpDependency)
+                        .OrderBy(d => d?.Dependency)
+                        .Select(d => { var c = d.ShallowClone(); c.Path = drive.NameColonSeparator; return c; }));
+                }
+                catch (Exception ex)
+                {
+                    string errorTarget = $"{drive.NameColonSeparator}{libraryId}:{version}";
+                    WriteError(new ErrorRecord(new OrchException(errorTarget, ex),
+                        "GetLibraryDependencyError", ErrorCategory.InvalidOperation, libraryId));
+                }
             }
-            catch (Exception ex)
-            {
-                string errorTarget = $"{drive.NameColonSeparator}{libraryId}:{version}";
-                WriteError(new ErrorRecord(new OrchException(errorTarget, ex),
-                    "GetLibraryDependencyError", ErrorCategory.InvalidOperation, libraryId));
-            }
-        }
-    }
 
-    /// <summary>
-    /// Downloads each library version once, in sequence, so the bar counts the work that costs
-    /// something and an unexpectedly large `-Version *` can be cancelled before it is done.
-    /// Failures are left to the emit pass, which reports them against their own row.
-    /// </summary>
-    private void WarmLibraries(
-        List<(OrchDriveInfo drive, string libraryId, string version)> targets, ConsoleCancelHandler cancelHandler)
-    {
-        var distinct = targets
-            .GroupBy(t => (drive: t.drive.NameColonSeparator, t.libraryId, t.version))
-            .Select(g => g.First())
-            .ToList();
-
-        if (distinct.Count == 0) return;
-
-        using var reporter = new ProgressReporter(this, 2, distinct.Count, "Downloading libraries");
-        int index = 0;
-        foreach (var (drive, libraryId, version) in distinct)
-        {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-            reporter.WriteProgress(++index, $"{libraryId}:{version}");
-
-            try { drive.LibraryContents.Get((libraryId, version)); }
-            catch (Exception) { /* reported by the emit pass, against the row it concerns */ }
+            if (rows.Count > 0) WriteObject(rows, true);
         }
     }
 }

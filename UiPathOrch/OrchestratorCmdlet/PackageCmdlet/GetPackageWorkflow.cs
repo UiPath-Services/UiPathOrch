@@ -60,36 +60,44 @@ public class GetPackageWorkflowCmdlet : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
 
-        // Three passes: list the packages (cheap, parallel), download the versions to read
-        // (expensive, sequential, with the real count as the denominator), then emit from the
-        // warm cache in feed/package order. See PackageContentsPrefetch.
+        // List the packages first (cheap, parallel), then walk them feed by feed, downloading
+        // each as it is reached. The downloads are sequential and counted up front (see
+        // PackageContentsLoader); a feed's rows are emitted as soon as that feed is done -- in
+        // one WriteObject, because the table view sizes its columns from the first batch it
+        // receives, and row-by-row emission clipped the later, longer paths.
         var targets = FeedPackageTargets.List(this, drivesFolders, wpId, wpVersion, Version is not null,
             cancelHandler, "Listing packages", "GetPackageWorkflowError");
 
-        PackageContentsPrefetch.Warm(this, targets.Select(t => (t.Drive, t.Folder, t.Package.Id!, t.Version)),
-            cancelHandler, "Downloading packages");
+        using var loader = new PackageContentsLoader(this,
+            targets.Select(t => (t.Drive, t.Folder, t.Package.Id!, t.Version)), cancelHandler, "Downloading packages");
 
-        foreach (var target in targets.WithCancellation(cancelHandler.Token))
+        foreach (var folderGroup in targets.GroupBy(t => t.FolderPath).WithCancellation(cancelHandler.Token))
         {
-            try
-            {
-                IEnumerable<PackageWorkflow> workflows =
-                    target.Drive.GetPackageContents(target.Folder, target.Package.Id!, target.Version)?.Workflows ?? [];
+            var rows = new List<PackageWorkflow>();
 
-                if (EntryPoint.IsPresent) workflows = workflows.Where(w => w.IsEntryPoint == true);
-
-                WriteObject(workflows
-                    .FilterByWildcards(w => w?.Workflow, wpWorkflow)
-                    .OrderBy(w => w?.Workflow)
-                    .Select(w => { var c = w.ShallowClone(); c.Path = target.FolderPath; return c; }),
-                    true);
-            }
-            catch (Exception ex)
+            foreach (var target in folderGroup)
             {
-                string errorTarget = $"{target.FolderPath} {target.Package.Id}:{target.Version}";
-                WriteError(new ErrorRecord(new OrchException(errorTarget, ex),
-                    "GetPackageWorkflowError", ErrorCategory.InvalidOperation, target.Package));
+                try
+                {
+                    IEnumerable<PackageWorkflow> workflows =
+                        loader.Load(target.Drive, target.Folder, target.Package.Id!, target.Version)?.Workflows ?? [];
+
+                    if (EntryPoint.IsPresent) workflows = workflows.Where(w => w.IsEntryPoint == true);
+
+                    rows.AddRange(workflows
+                        .FilterByWildcards(w => w?.Workflow, wpWorkflow)
+                        .OrderBy(w => w?.Workflow)
+                        .Select(w => { var c = w.ShallowClone(); c.Path = target.FolderPath; return c; }));
+                }
+                catch (Exception ex)
+                {
+                    string errorTarget = $"{target.FolderPath} {target.Package.Id}:{target.Version}";
+                    WriteError(new ErrorRecord(new OrchException(errorTarget, ex),
+                        "GetPackageWorkflowError", ErrorCategory.InvalidOperation, target.Package));
+                }
             }
+
+            if (rows.Count > 0) WriteObject(rows, true);
         }
     }
 }

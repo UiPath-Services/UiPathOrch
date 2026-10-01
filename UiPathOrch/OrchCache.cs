@@ -735,6 +735,11 @@ public class KeyedListCachePerTenant<TKey, TEntity> : ITenantCacheClearable
         _supportedApiVersionFrom = supportedApiVersionFrom;
     }
 
+    // Passive peek: this key's entries if they were already fetched, null otherwise, without
+    // triggering a fetch. See ListCachePerFolder.CachedValue.
+    public List<TEntity>? CachedValue(TKey key) =>
+        _cache is { } cache && cache.TryGetValue(key, out var list) ? list : null;
+
     public ReadOnlyCollection<TEntity> Get(TKey key)
     {
         if (_drive.OrchAPISession.ApiVersion < _supportedApiVersionFrom)

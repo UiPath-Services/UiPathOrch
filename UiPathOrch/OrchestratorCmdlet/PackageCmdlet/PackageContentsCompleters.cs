@@ -28,6 +28,15 @@ internal abstract class PackageContentsCompleterBase : OrchArgumentCompleter
     /// <summary>Named in the "run this first" hint.</summary>
     protected abstract string PrimingCmdlet { get; }
 
+    /// <summary>
+    /// The parameters that narrow which packages the command will read (-Name on the process
+    /// cmdlets, -Id / -Version on the feed ones). They decide both what the coverage count
+    /// means and what the hint's suggested command has to carry: counting the whole scope
+    /// while the user typed `-Recurse Autopilot` reported 212 packages for a query that reads
+    /// a handful.
+    /// </summary>
+    protected abstract string[] ScopeParameterNames { get; }
+
     public override IEnumerable<CompletionResult> CompleteArgumentCore(
         string commandName,
         string parameterName,
@@ -38,7 +47,7 @@ internal abstract class PackageContentsCompleterBase : OrchArgumentCompleter
         var drivesFolders = ResolvePath(commandAst, fakeBoundParameters).ToList();
         var drives = drivesFolders.Select(df => df.drive).Distinct().ToList();
 
-        if (!IsScopeFullyCached(drivesFolders, out int missing, out int total, out int unlistedFolders))
+        if (!IsScopeFullyCached(drivesFolders, fakeBoundParameters, out int missing, out int total, out int unlistedFolders))
         {
             yield return HintResult(commandName, fakeBoundParameters, missing, total, unlistedFolders);
         }
@@ -65,13 +74,19 @@ internal abstract class PackageContentsCompleterBase : OrchArgumentCompleter
     /// tenant this was written against): those are skipped, because no amount of priming will
     /// ever cache them and counting them kept the hint on screen forever.
     /// </summary>
-    private static bool IsScopeFullyCached(
+    private bool IsScopeFullyCached(
         List<(OrchDriveInfo drive, Folder folder)> drivesFolders,
+        IDictionary fakeBoundParameters,
         out int missing, out int total, out int unlistedFolders)
     {
         missing = 0;
         total = 0;
         unlistedFolders = 0;
+
+        // The same filters the command itself will apply, so the count describes the query
+        // the user is typing rather than everything in the folders.
+        var wpName = GetFakeBoundParameters(fakeBoundParameters, "Name").ConvertToWildcardPatternList();
+        var wpId = GetFakeBoundParameters(fakeBoundParameters, "Id").ConvertToWildcardPatternList();
 
         var cachedByDrive = new Dictionary<string, HashSet<(string, string, string)>>();
 
@@ -97,7 +112,9 @@ internal abstract class PackageContentsCompleterBase : OrchArgumentCompleter
 
             drive.FolderFeedId.TryGetCachedValue(folder, out var feedId);
 
-            foreach (var release in releases)
+            foreach (var release in releases
+                .FilterByWildcards(r => r?.Name, wpName)
+                .FilterByWildcards(r => r?.ProcessKey, wpId))
             {
                 if (string.IsNullOrEmpty(release?.ProcessKey) || string.IsNullOrEmpty(release.ProcessVersion)) continue;
 
@@ -153,6 +170,17 @@ internal abstract class PackageContentsCompleterBase : OrchArgumentCompleter
         var depth = ResolveDepth(fakeBoundParameters);
         if (depth > 0) command.Append(" -Depth ").Append(depth);
 
+        // The narrowing parameters too: priming the whole tenant when the user asked about
+        // one process is far more work than the question needs.
+        foreach (var name in ScopeParameterNames)
+        {
+            var values = GetFakeBoundParameters(fakeBoundParameters, name)?.ToList();
+            if (values is { Count: > 0 })
+            {
+                command.Append(" -").Append(name).Append(' ').Append(string.Join(", ", values));
+            }
+        }
+
         return command.ToString();
     }
 }
@@ -161,6 +189,10 @@ internal abstract class PackageContentsCompleterBase : OrchArgumentCompleter
 internal class PackageDependencyCompleter : PackageContentsCompleterBase
 {
     protected override string PrimingCmdlet => "Get-OrchProcessDependency";
+
+    // -Name on the process cmdlets, -Id on the feed ones; whichever the command has is the
+    // one bound, so reading for both keeps one completer serving both.
+    protected override string[] ScopeParameterNames => ["Name", "Id", "Version"];
 
     protected override SortedDictionary<string, string> Collect(IEnumerable<OrchDriveInfo> drives)
     {
@@ -204,6 +236,8 @@ internal class PackageDependencyCompleter : PackageContentsCompleterBase
 internal class PackageWorkflowCompleter : PackageContentsCompleterBase
 {
     protected override string PrimingCmdlet => "Get-OrchProcessWorkflow";
+
+    protected override string[] ScopeParameterNames => ["Name", "Id", "Version"];
 
     protected override SortedDictionary<string, string> Collect(IEnumerable<OrchDriveInfo> drives)
     {

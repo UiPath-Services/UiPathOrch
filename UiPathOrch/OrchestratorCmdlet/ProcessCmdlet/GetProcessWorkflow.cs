@@ -54,36 +54,44 @@ public class GetProcessWorkflowCmdlet : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
 
-        // Three passes: list the processes (cheap, parallel), download the packages they name
-        // (expensive, sequential, with the real count as the denominator), then emit from the
-        // warm cache in folder/process order. See PackageContentsPrefetch.
+        // List the processes first (cheap, parallel), then walk them folder by folder,
+        // downloading each package as it is reached. The downloads are sequential and counted
+        // up front (see PackageContentsLoader); a folder's rows are emitted as soon as that
+        // folder is done -- in one WriteObject, because the table view sizes its columns from
+        // the first batch it receives, and row-by-row emission clipped the later, longer paths.
         var targets = ProcessPackageTargets.List(this, drivesFolders, wpName, cancelHandler,
             "Listing processes", "GetProcessWorkflowError");
 
-        PackageContentsPrefetch.Warm(this, targets.Select(t => (t.Drive, t.Folder, t.PackageId, t.Version)),
-            cancelHandler, "Downloading packages");
+        using var loader = new PackageContentsLoader(this,
+            targets.Select(t => (t.Drive, t.Folder, t.PackageId, t.Version)), cancelHandler, "Downloading packages");
 
-        foreach (var target in targets.WithCancellation(cancelHandler.Token))
+        foreach (var folderGroup in targets.GroupBy(t => t.FolderPath).WithCancellation(cancelHandler.Token))
         {
-            IEnumerable<PackageWorkflow> workflows;
-            try
+            var rows = new List<ProcessWorkflow>();
+
+            foreach (var target in folderGroup)
             {
-                workflows = target.Drive.GetPackageContents(target.Folder, target.PackageId, target.Version)?.Workflows ?? [];
-            }
-            catch (Exception ex)
-            {
-                WriteError(new ErrorRecord(new OrchException(target.Release.GetPSPath(), ex),
-                    "GetProcessWorkflowError", ErrorCategory.InvalidOperation, target.Release));
-                continue;
+                IEnumerable<PackageWorkflow> workflows;
+                try
+                {
+                    workflows = loader.Load(target.Drive, target.Folder, target.PackageId, target.Version)?.Workflows ?? [];
+                }
+                catch (Exception ex)
+                {
+                    WriteError(new ErrorRecord(new OrchException(target.Release.GetPSPath(), ex),
+                        "GetProcessWorkflowError", ErrorCategory.InvalidOperation, target.Release));
+                    continue;
+                }
+
+                if (EntryPoint.IsPresent) workflows = workflows.Where(w => w.IsEntryPoint == true);
+
+                rows.AddRange(workflows
+                    .FilterByWildcards(w => w?.Workflow, wpWorkflow)
+                    .OrderBy(w => w?.Workflow)
+                    .Select(w => new ProcessWorkflow(w, target.Release.Name, target.FolderPath)));
             }
 
-            if (EntryPoint.IsPresent) workflows = workflows.Where(w => w.IsEntryPoint == true);
-
-            WriteObject(workflows
-                .FilterByWildcards(w => w?.Workflow, wpWorkflow)
-                .OrderBy(w => w?.Workflow)
-                .Select(w => new ProcessWorkflow(w, target.Release.Name, target.FolderPath)),
-                true);
+            if (rows.Count > 0) WriteObject(rows, true);
         }
     }
 }

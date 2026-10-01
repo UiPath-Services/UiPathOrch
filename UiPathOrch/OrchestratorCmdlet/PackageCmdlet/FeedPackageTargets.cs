@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 ///
 /// Shared by Get-OrchPackageDependency and Get-OrchPackageWorkflow, which differ only in what
 /// they read out of the package afterwards. The listing is parallel because it is cheap; the
-/// downloads it feeds are not (see PackageContentsPrefetch).
+/// downloads it feeds are not (see PackageContentsLoader).
 /// </summary>
 internal static class FeedPackageTargets
 {
