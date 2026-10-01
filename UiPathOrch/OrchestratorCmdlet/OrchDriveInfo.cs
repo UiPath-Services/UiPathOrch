@@ -1642,11 +1642,15 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             (release, folderPath, _) => release.Path = folderPath);
 
         // Retention lives behind its own endpoint, one GET per release -- the Releases listing
-        // and the release detail both omit it. Uncached it was the whole cost of a warm
-        // Get-OrchProcessDetail -Recurse (measured: 14.1 s for 212 processes, 67 ms each,
-        // while every other cache answered in 2 ms). GetReleaseRetention already returns null
-        // below the API floor, so no supportedApiVersionFrom is needed; a null is cached as a
-        // null and never re-asked.
+        // omits it, and so does the release detail below API 19. Uncached it was the whole
+        // cost of a warm Get-OrchProcessDetail -Recurse (measured: 14.1 s for 212 processes,
+        // 67 ms each, while every other cache answered in 2 ms). GetReleaseRetention already
+        // returns null below the API floor, so no supportedApiVersionFrom is needed; a null is
+        // cached as a null and never re-asked.
+        //
+        // From API 19 the detail payload carries retention itself and Get-OrchProcessDetail
+        // skips this endpoint entirely (see its FetchDetail). This cache still carries the
+        // versions below that, and every other caller.
         ReleaseRetentions = new(this,
             OrchAPISession.GetReleaseRetention);
 

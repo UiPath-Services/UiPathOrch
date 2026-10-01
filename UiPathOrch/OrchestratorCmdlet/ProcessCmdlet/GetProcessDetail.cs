@@ -138,7 +138,26 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
     {
         var detailed = drive.ReleasesDetailed.Get(folder, release.Id!.Value);
 
-        Warm(() => drive.ReleaseRetentions.Get(folder, release.Id!.Value));
+        // Only ask for retention when the detail did not already bring it. From API 19 the
+        // release detail goes through the GetRelease action, and that payload carries
+        // RetentionAction / Period / BucketId: checked against the separate endpoint on Cloud
+        // (API 20) for eight releases, identical every time. Below 19 the action is not used
+        // and the plain payload has none, so this falls through to the call as before.
+        //
+        // Tested on the data rather than gated on the version, deliberately. A version gate
+        // would have to assert something about API 19 exactly, which no Orchestrator reachable
+        // from here runs -- on-prem and Automation Suite both stop at 18. This needs no such
+        // claim, and stays correct whatever a later version does.
+        //
+        // The bulk /odata/ReleaseRetention collection looks like a better answer -- one call
+        // per folder instead of one per release -- and is not. On Automation Suite 18.0 it
+        // returns nothing at all for releases whose retention is unset, while asking for them
+        // one at a time returns Action "None", Period 0. Switching to it would quietly turn
+        // those into blanks.
+        if (detailed?.RetentionAction is null)
+        {
+            Warm(() => drive.ReleaseRetentions.Get(folder, release.Id!.Value));
+        }
 
         if (detailed is { EntryPointId: not null })
         {
@@ -173,20 +192,25 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
             release.EntryPointPath = entryPoints.FirstOrDefault(e => e.Id == release.EntryPointId)?.Path;
         }
 
-        try
+        // Non-null means the detail payload already carried it -- see FetchDetail, which then
+        // skipped the warm-up too, so this would be a real call rather than a cache hit.
+        if (release.RetentionAction is null)
         {
-            var retention = drive.ReleaseRetentions.Get(folder, release.Id!.Value);
-            if (retention is not null)
+            try
             {
-                release.RetentionAction = retention.Action;
-                release.RetentionPeriod = retention.Period;
-                release.RetentionBucketId = retention.BucketId;
+                var retention = drive.ReleaseRetentions.Get(folder, release.Id!.Value);
+                if (retention is not null)
+                {
+                    release.RetentionAction = retention.Action;
+                    release.RetentionPeriod = retention.Period;
+                    release.RetentionBucketId = retention.BucketId;
+                }
             }
-        }
-        catch (Exception ex)
-        {
-            // Non-fatal by long standing: the release is still emitted, without its retention.
-            caller.WriteError(new ErrorRecord(new OrchException(release.GetPSPath(), "Get retention info failed.", ex), "GetRetentionSettingError", ErrorCategory.InvalidOperation, release));
+            catch (Exception ex)
+            {
+                // Non-fatal by long standing: the release is still emitted, without retention.
+                caller.WriteError(new ErrorRecord(new OrchException(release.GetPSPath(), "Get retention info failed.", ex), "GetRetentionSettingError", ErrorCategory.InvalidOperation, release));
+            }
         }
     }
 
