@@ -74,6 +74,11 @@ public class GetEventTriggerCmdlet : OrchestratorPSCmdlet
                     .FilterByWildcards(s => s?.Name, wpName)
                     .OrderBy(s => s.Name);
 
+                // Filled in before emitting, then emitted as one batch per folder: the table
+                // view groups by Path and sizes its columns from a group's first batch, so
+                // trigger-by-trigger emission let the first row decide the width of
+                // Name / Release for the whole folder.
+                var rows = new List<ApiTrigger>();
                 foreach (var t in filtered)
                 {
                     // The triggers endpoint rejects $expand=Release, so Release is null and the
@@ -87,8 +92,10 @@ public class GetEventTriggerCmdlet : OrchestratorPSCmdlet
                             t.Release = new TriggerRelease { Name = releaseName };
                         }
                     }
-                    WriteObject(t);
+                    rows.Add(t);
                 }
+
+                if (rows.Count > 0) WriteObject(rows, true);
             }
             catch (OrchException ex)
             {

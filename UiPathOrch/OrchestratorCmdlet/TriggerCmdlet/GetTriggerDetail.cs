@@ -126,14 +126,22 @@ public class GetTriggerDetailCmdlet : OrchestratorPSCmdlet
                         .FilterByWildcards(s => s?.Name, nameWildcards)
                         .OrderBy(s => s.Name);
 
+                // The pipeline rows of one folder go out together: the table view groups by
+                // Path and sizes its columns from the first batch of a group, so emitting one
+                // trigger at a time let the first one decide the width for the whole folder.
+                // The CSV path keeps writing per record -- a file has no column widths.
+                var rows = writer is null ? new List<ProcessSchedule>() : null;
+
                 foreach (var entity in targetEntities)
                 {
                     var detailedEntity = drive.TriggersDetailed.Get(folder, entity.Id!.Value);
                     if (detailedEntity is null) continue;
 
                     if (writer is not null) { WriteCsvContent(caller, writer, detailedEntity); }
-                    else { caller.WriteObject(detailedEntity); }
+                    else { rows!.Add(detailedEntity); }
                 }
+
+                if (rows is { Count: > 0 }) caller.WriteObject(rows, true);
             }
             catch (OrchException ex)
             {

@@ -135,6 +135,21 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
             t => t.folder,
             t => GetFoldersForEntity(t.drive, t.folder, t.entity));
 
+        // Rows of one source folder are emitted together, when that folder's last entity is
+        // done. The table view groups by Path (the source folder) and sizes its columns from
+        // the first batch of a group, so emitting link by link let the first one decide the
+        // width of the Link column -- which holds a whole folder path -- for every row after
+        // it. The entity list is built folder by folder above and the pool preserves that
+        // order, so a change of source path is the end of a folder's rows.
+        var pending = new List<EntityLink>();
+        string? pendingPath = null;
+
+        void FlushPending()
+        {
+            if (pending.Count > 0) WriteObject(pending, true);
+            pending.Clear();
+        }
+
         using var linkReporter = new ProgressReporter(this, 1, linkPool.Count, "Getting links");
         foreach (var task in linkPool)
         {
@@ -147,6 +162,9 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
                 long srcId = folder.Id ?? 0;
                 string sourcePath = folder.GetPSPath();
                 long entityId = GetEntityId(entity);
+
+                if (pendingPath is not null && pendingPath != sourcePath) FlushPending();
+                pendingPath = sourcePath;
 
                 foreach (var linkFolder in accessible.AccessibleFolders.OrderBy(f => f.FullyQualifiedName))
                 {
@@ -173,7 +191,7 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
                     }
                     else
                     {
-                        WriteObject(BuildLink(sourcePath, entity, linkFolderPath, srcId, linkId));
+                        pending.Add(BuildLink(sourcePath, entity, linkFolderPath, srcId, linkId));
                     }
                 }
             }
@@ -194,6 +212,8 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
                 WriteError(new ErrorRecord(new OrchException(target, ex), ErrorId, ErrorCategory.InvalidOperation, target));
             }
         }
+
+        FlushPending();
 
         if (writer is not null)
         {
