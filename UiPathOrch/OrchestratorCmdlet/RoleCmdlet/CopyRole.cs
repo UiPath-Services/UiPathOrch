@@ -36,7 +36,9 @@ public class CopyRoleCmdlet : OrchestratorPSCmdlet
             .OrderBy(role => role.Name)
             .ToList();
 
-        using var reporter = new ProgressReporter(_this, 1, 100, "Copying roles");
+        // Fixed label, destination in Context: see CopyCalendar for why the destination may
+        // not go in the activity of a bar that is already on screen.
+        using var reporter = new ProgressReporter(_this, 1, 100, "Roles");
 
         int index = 0;
         reporter.TotalNum = dstDrives.Count * srcRoles.Count;
@@ -52,7 +54,8 @@ public class CopyRoleCmdlet : OrchestratorPSCmdlet
                 .OrderBy(r => r.Name))
             {
                 cancelToken.ThrowIfCancellationRequested();
-                reporter.WriteProgress(++index, role.Name, $"Copying roles to {dstDrive.NameColonSeparator}");
+                reporter.Context = dstDrive.NameColonSeparator;
+                reporter.WriteProgress(++index, role.Name);
 
                 // Skip if the source role is static and a role with the same name exists at the destination
                 if (role.IsStatic.GetValueOrDefault())

@@ -51,7 +51,9 @@ public class ImportLibraryCmdlet : OrchestratorPSCmdlet
 
         int totalNum = importTasks.Count;
 
-        using var reporter = new ProgressReporter(this, 1, totalNum, "Importing libraries");
+        // Fixed label, destination in Context: see CopyCalendar for why the destination may
+        // not go in the activity of a bar that is already on screen.
+        using var reporter = new ProgressReporter(this, 1, totalNum, "Libraries");
 
         int index = 0;
         using var cancelHandler = new ConsoleCancelHandler();
@@ -61,7 +63,8 @@ public class ImportLibraryCmdlet : OrchestratorPSCmdlet
             string target = drive.NameColonSeparator;
             if (ShouldProcess(target, $"Import Library {fullPath}"))
             {
-                reporter.WriteProgress(++index, System.IO.Path.GetFileName(fullPath), $"Importing libraries to {drive.NameColonSeparator}");
+                reporter.Context = drive.NameColonSeparator;
+                reporter.WriteProgress(++index, System.IO.Path.GetFileName(fullPath));
                 try
                 {
                     // If a library with the same name already exists on the drive, show a warning and skip the import

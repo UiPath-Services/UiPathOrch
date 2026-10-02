@@ -62,7 +62,9 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
                 }
             }
 
-            using var reporter = new ProgressReporter(this, 1, 100, "Copying PmRobotAccount");
+            // Fixed label, destination in Context: see CopyCalendar for why the destination may
+        // not go in the activity of a bar that is already on screen.
+        using var reporter = new ProgressReporter(this, 1, 100, "Robot accounts");
 
             using var cancelHandler = new ConsoleCancelHandler();
 
@@ -89,7 +91,8 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
 
                     try
                     {
-                        reporter.WriteProgress(++index, srcRobotAccount.displayName, $"Copying robot accounts to {dstDrive.NameColonSeparator}");
+                        reporter.Context = dstDrive.NameColonSeparator;
+                        reporter.WriteProgress(++index, srcRobotAccount.displayName);
 
                         string target = $"Item: {System.IO.Path.Combine(srcDrive!.NameColon, srcRobotAccount!.displayName!)} Destination: {dstDrive.NameColonSeparator}";
 

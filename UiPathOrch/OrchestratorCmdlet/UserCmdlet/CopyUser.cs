@@ -63,7 +63,9 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
             .OrderBy(user => user.UserName)
             .ToList();
 
-        using var reporter = new ProgressReporter(_this, 1, 100, "Copying users");
+        // Fixed label, destination in Context: see CopyCalendar for why the destination may
+        // not go in the activity of a bar that is already on screen.
+        using var reporter = new ProgressReporter(_this, 1, 100, "Users");
 
         int index = 0;
         reporter.TotalNum = dstDrives.Count * srcUsers.Count;
@@ -80,7 +82,8 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
 
                 var target = $"Item: {srcDrive.NameColonSeparator}{OrchArgumentCompleter.TipHelp(srcUser)} Destination: {dstDrive.NameColonSeparator}";
 
-                reporter.WriteProgress(++index, srcUser.UserName, $"Copying users to {dstDrive.NameColonSeparator}");
+                reporter.Context = dstDrive.NameColonSeparator;
+                reporter.WriteProgress(++index, srcUser.UserName);
 
                 if (shouldProcess || _this.ShouldProcess(target, "Copy User"))
                 {

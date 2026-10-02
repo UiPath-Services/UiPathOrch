@@ -141,7 +141,10 @@ public class SaveJobMediaCmdlet : OrchestratorPSCmdlet
         }
         #endregion
 
-        using var reporter = new ProgressReporter(this, 1, totalFileNum, "Saving Media");
+        // Fixed label, destination in Context: see CopyCalendar. The destination happens to
+        // be constant for a run here, but it belongs inside the bar either way -- the
+        // activity is the label, not a place to put values.
+        using var reporter = new ProgressReporter(this, 1, totalFileNum, "Media");
 
         int index = 0;
         foreach (var (drive, folder) in drivesFolders)
@@ -181,7 +184,8 @@ public class SaveJobMediaCmdlet : OrchestratorPSCmdlet
 
                 if (ShouldProcess(target, "Export JobMedia"))
                 {
-                    reporter.WriteProgress(++index, $"job {media.JobId}", $"Saving media to {Destination}");
+                    reporter.Context = Destination;
+                    reporter.WriteProgress(++index, $"job {media.JobId}");
 
                     try
                     {

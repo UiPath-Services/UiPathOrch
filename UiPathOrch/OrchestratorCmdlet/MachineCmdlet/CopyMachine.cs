@@ -51,7 +51,9 @@ public class CopyMachineCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        using var reporter = new ProgressReporter(_this, 1, 100, "Copying machines");
+        // Fixed label, destination in Context: see CopyCalendar for why the destination may
+        // not go in the activity of a bar that is already on screen.
+        using var reporter = new ProgressReporter(_this, 1, 100, "Machines");
 
         int index = 0;
         reporter.TotalNum = dstDrives.Count * srcMachines.Count;
@@ -68,7 +70,8 @@ public class CopyMachineCmdlet : OrchestratorPSCmdlet
                 {
                     cancelToken.ThrowIfCancellationRequested();
 
-                    reporter.WriteProgress(++index, machine.Name, $"Copying machines to {dstDrive.NameColonSeparator}");
+                    reporter.Context = dstDrive.NameColonSeparator;
+                    reporter.WriteProgress(++index, machine.Name);
 
                     string targetMachine = machine.GetPSPath();
                     if (shouldProcess || _this.ShouldProcess($"Item: {targetMachine} Destination: {dstDrive.NameColonSeparator}", $"Copy Machine"))

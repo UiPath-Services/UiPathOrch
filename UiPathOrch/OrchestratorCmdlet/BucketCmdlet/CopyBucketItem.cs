@@ -90,7 +90,9 @@ public class CopyBucketItemCmdlet : OrchestratorPSCmdlet
         var wpFullPath = FullPath.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using ProgressReporter reporter = new(this, 1000, int.MaxValue, "Copying bucket files...");
+        // Fixed label, destination bucket in Context: see CopyCalendar for why the
+        // destination may not go in the activity of a bar that is already on screen.
+        using ProgressReporter reporter = new(this, 1000, int.MaxValue, "Bucket files");
 
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
@@ -174,7 +176,7 @@ public class CopyBucketItemCmdlet : OrchestratorPSCmdlet
                 if (files.Count == 0) continue;
 
                 reporter.TotalNum = files.Count;
-                reporter.Activity = $"Copying files to {dstBucket.GetPSPath()}";
+                reporter.Context = dstBucket.GetPSPath();
 
                 // When source and destination resolve to the SAME external storage object, copying a
                 // file would stream it onto itself. Warn once per bucket (the check below is per-file).

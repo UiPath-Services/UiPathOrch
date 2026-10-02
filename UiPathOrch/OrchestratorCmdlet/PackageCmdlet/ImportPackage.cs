@@ -61,7 +61,9 @@ public class ImportPackageCmdlet : OrchestratorPSCmdlet
 
         int totalNum = tasks.Count;
 
-        using var reporter = new ProgressReporter(this, 1, totalNum, "Importing Packages");
+        // Fixed label, destination in Context: see CopyCalendar for why the destination may
+        // not go in the activity of a bar that is already on screen.
+        using var reporter = new ProgressReporter(this, 1, totalNum, "Packages");
 
         int index = 0;
         // Warn once per (destination drive, source directory) instead of once per .nupkg: a
@@ -120,7 +122,8 @@ public class ImportPackageCmdlet : OrchestratorPSCmdlet
             string target2 = target + System.IO.Path.GetFileName(fullPath);
             if (ShouldProcess(target, $"Import Package {fullPath}"))
             {
-                reporter.WriteProgress(++index, System.IO.Path.GetFileName(fullPath), $"Importing packages to {target}");
+                reporter.Context = target;
+                reporter.WriteProgress(++index, System.IO.Path.GetFileName(fullPath));
                 try
                 {
                     // If a package with the same name already exists in targetFolder, show a warning and skip the copy

@@ -46,7 +46,9 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
         var wpName = Name.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using ProgressReporter reporterQueue = new(this, 3, int.MaxValue, "Copying new items");
+        // Fixed label, destination queue in Context: see CopyCalendar for why the
+        // destination may not go in the activity of a bar that is already on screen.
+        using ProgressReporter reporterQueue = new(this, 3, int.MaxValue, "Queue items");
 
         // Count the number of queues to be processed
         reporterQueue.TotalNum = srcDrivesFolders.CountEntities(
@@ -80,7 +82,7 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
                     // Status is "{items copied} {queue name}" -- the running item count leads so it
                     // stays at a fixed, readable position while the variable-length name follows; the
                     // destination goes on the activity line. Count is 0 before the first batch.
-                    reporterQueue.Activity = $"Copying new items to {dstQueue.GetPSPath()}";
+                    reporterQueue.Context = dstQueue.GetPSPath();
                     reporterQueue.WriteProgress(idxQueue, $"0 {srcQueue.Name}");
 
                     string target = $"Items in '{srcQueue.GetPSPath()}' Destination: '{dstQueue.GetPSPath()}'";

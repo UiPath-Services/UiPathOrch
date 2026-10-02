@@ -71,7 +71,9 @@ public class CopyCredentialStoreCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        using var reporter = new ProgressReporter(_this, 1, 100, "Copying credential stores");
+        // Fixed label, destination in Context: see CopyCalendar for why the destination may
+        // not go in the activity of a bar that is already on screen.
+        using var reporter = new ProgressReporter(_this, 1, 100, "Credential stores");
 
         int index = 0;
         reporter.TotalNum = dstDrives.Count * stores.Count;
@@ -81,7 +83,8 @@ public class CopyCredentialStoreCmdlet : OrchestratorPSCmdlet
             foreach (var store in stores)
             {
                 cancelToken.ThrowIfCancellationRequested();
-                reporter.WriteProgress(++index, store.Name, $"Copying credential stores to {dstDrive.NameColonSeparator}");
+                reporter.Context = dstDrive.NameColonSeparator;
+                reporter.WriteProgress(++index, store.Name);
 
                 // Skip if the source store is "Orchestrator Database" and a store with the same name exists at the destination
                 if (string.Compare(store.Name, "Orchestrator Database", StringComparison.OrdinalIgnoreCase) == 0)

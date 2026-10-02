@@ -51,7 +51,10 @@ public class CopyCalendarCmdlet : OrchestratorPSCmdlet
         }
         if (srcCalendars is null) return;
 
-        using var reporter = new ProgressReporter(_this, 1, 100, "Copying calendars");
+        // A fixed label, with the destination in Context inside the bar. Writing the
+        // destination into the activity rewrote the label of a bar already on screen, so with
+        // more than one destination drive the bar changed width and jumped as it went.
+        using var reporter = new ProgressReporter(_this, 1, 100, "Calendars");
 
         int index = 0;
         reporter.TotalNum = dstDrives.Count * srcCalendars.Count;
@@ -67,7 +70,8 @@ public class CopyCalendarCmdlet : OrchestratorPSCmdlet
 
                 cancelToken.ThrowIfCancellationRequested();
 
-                reporter.WriteProgress(++index, srcCalendar.Name, $"Copying calendars to {dstDrive.NameColonSeparator}");
+                reporter.Context = dstDrive.NameColonSeparator;
+                reporter.WriteProgress(++index, srcCalendar.Name);
 
                 if (shouldProcess || _this.ShouldProcess($"Item: {item} Destination: {destination}", "Copy Calendar"))
                 {
