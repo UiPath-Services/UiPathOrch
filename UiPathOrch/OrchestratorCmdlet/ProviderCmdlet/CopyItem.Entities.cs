@@ -133,15 +133,52 @@ public partial class OrchProvider
                         resolvedUserName = mappedName;
                     }
 
-                    // Need to search the directory..
-                    var (resolvedPrimary, dirResult) = ResolveDstDirectoryUserPure(
-                        dstDrive.SearchDirectory(resolvedUserName), resolvedUserName, type);
-
                     DirectoryObject resolved = null;
+
+                    // Ask the destination's own user list before the directory.
+                    //
+                    // The assignment needs two things, a domain and a directory identifier,
+                    // and a user already in the destination tenant carries both --
+                    // AssignMyselfToFolder below builds the identical payload from a tenant
+                    // User. The whole list is one cached request, where SearchDirectory costs
+                    // a request per distinct name: on a folder with seventeen users that was
+                    // seventeen round trips and about as many seconds, every one of them
+                    // asking the directory for somebody the destination already had.
+                    //
+                    // Conditions are deliberately strict -- same type, and a directory
+                    // identifier actually present -- because the shortcut is only sound when
+                    // it produces exactly what the search would have. Anything else falls
+                    // through to the search below, which is also the path for a user the
+                    // destination tenant has not got yet (the usual case cross-tenant).
+                    var dstTenantUser = dstDrive.Users.Get().FirstOrDefault(u =>
+                        !string.IsNullOrEmpty(u?.DirectoryIdentifier)
+                        && string.Equals(u!.Type, userRole.UserEntity?.Type, StringComparison.OrdinalIgnoreCase)
+                        && (string.Equals(u.UserName, resolvedUserName, StringComparison.OrdinalIgnoreCase)
+                            || string.Equals(u.EmailAddress, resolvedUserName, StringComparison.OrdinalIgnoreCase)));
+
+                    if (dstTenantUser is not null)
+                    {
+                        resolved = new DirectoryObject
+                        {
+                            domain = dstTenantUser.Domain,
+                            identifier = dstTenantUser.DirectoryIdentifier,
+                            identityName = dstTenantUser.UserName,
+                            type = type,
+                        };
+                    }
+
+                    // Need to search the directory.. unless the tenant list already answered,
+                    // in which case nothing is asked and the chain below is told "Resolved"
+                    // so that the not-found fallback does not run on a user we have found.
+                    (DirectoryObject? resolvedPrimary, FindDstDirectoryUserResult dirResult) =
+                        resolved is not null
+                            ? (null, FindDstDirectoryUserResult.Resolved)
+                            : ResolveDstDirectoryUserPure(
+                                dstDrive.SearchDirectory(resolvedUserName), resolvedUserName, type);
 
                     if (dirResult == FindDstDirectoryUserResult.Resolved)
                     {
-                        resolved = resolvedPrimary;
+                        resolved ??= resolvedPrimary;
                     }
 
                     else if (dirResult == FindDstDirectoryUserResult.Duplicated)
