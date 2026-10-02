@@ -6,6 +6,39 @@ namespace UiPath.PowerShell.Core;
 
 public partial class OrchProvider
 {
+    // How many folders the current Copy-Item has entered, for the folder bar's numerator.
+    // On the provider next to ExcludeEntities and _linkReport, and assigned unconditionally
+    // at the top of CopyItem for the same reason: the recursion has no single frame that
+    // could hold it, and a leftover value would make the next copy start part-way along.
+    private int _copiedFolderIndex;
+
+    /// <summary>
+    /// How many folders the walk about to start will enter -- the folder bar's denominator.
+    ///
+    /// Counted from the folder list the drive already holds, so it costs nothing. It is the
+    /// subtree of <paramref name="srcFolder"/>, or every folder on the drive when that is the
+    /// root. An upper bound rather than an exact figure: a folder can still be skipped (a
+    /// subfolder of a personal workspace, a declined -Confirm), which leaves the bar short of
+    /// its total at the end. Overstating by a folder is a better failure than understating,
+    /// which would drive the bar past 100%.
+    /// </summary>
+    private static int CountFoldersInWalk(OrchDriveInfo srcDrive, Folder srcFolder, bool recurse)
+    {
+        if (!recurse) return 1;
+
+        var all = srcDrive.GetFolders();
+        if (srcFolder == srcDrive.RootFolder)
+        {
+            return all.Count(f => f != srcDrive.RootFolder);
+        }
+
+        string prefix = srcFolder.GetPSPath();
+        if (prefix.Length > 0 && prefix[^1] != System.IO.Path.DirectorySeparatorChar)
+        {
+            prefix += System.IO.Path.DirectorySeparatorChar;
+        }
+        return 1 + all.Count(f => f.GetPSPath().StartsWith(prefix, StringComparison.OrdinalIgnoreCase));
+    }
 
     private bool CopyItemRecurse(
         OrchDriveInfo srcDrive,
@@ -123,12 +156,6 @@ public partial class OrchProvider
 
         if (proceed)
         {
-            // totalNum: folder itself, users, machines, packages, processes, assets, 
-            // queues, triggers, API triggers, buckets, testsets, testschedules, testdataqueues
-            int totalStageNum = 13;
-            if (srcFolder.FolderType == "Personal") totalStageNum = 9;
-            // Can Apps be copied?
-
             try
             {
                 // When srcFolder is not directly under root and dstFolder is not root,
@@ -148,13 +175,17 @@ public partial class OrchProvider
                 // One reporter for the whole recursion, not one per folder. Dispose writes a
                 // Completed record, so a reporter owned by each folder took the bar off the
                 // screen and put it back for every folder of a -Recurse. Only the outermost
-                // call owns it -- `using` on the null the inner calls get is a no-op -- and
-                // TotalNum is reset per folder because a personal workspace has fewer stages.
+                // call owns it -- `using` on the null the inner calls get is a no-op.
                 using ProgressReporter? ownedReporter = folderReporter is null
-                    ? new ProgressReporter(this, totalStageNum, "Copying folders")
+                    ? new ProgressReporter(this, CountFoldersInWalk(srcDrive, srcFolder, recurse), "Copying folders")
                     : null;
                 ProgressReporter reporter = folderReporter ?? ownedReporter!;
-                reporter.TotalNum = totalStageNum;
+
+                // This bar counts FOLDERS, for the whole walk. It used to count the thirteen
+                // stages of the folder in hand, which is progress the child bars underneath
+                // already show, one of them per stage -- so the only number not on screen
+                // anywhere was the one the operator is actually waiting on.
+                int folderIndex = ++_copiedFolderIndex;
                 // The scope starting below was introduced so that child reporters are disposed of in a timely manner.
                 {
                     // #0 Copy the folder itself (no folder creation needed for personal workspaces)
@@ -175,7 +206,7 @@ public partial class OrchProvider
                     // It goes in Context rather than the activity because the activity is a
                     // fixed-width label; a path there would move the bar on every folder.
                     reporter.Context = srcFolder.GetPSPath();
-                    reporter.WriteProgress(0);
+                    reporter.WriteProgress(folderIndex);
                     if (destinationWorkspace is not null)
                     {
                         newFolder = destinationWorkspace;
@@ -193,9 +224,7 @@ public partial class OrchProvider
 
                     if (!ExcludeEntities)
                     {
-                        int rootIndex = 0;
-
-                        // Each stage bumps the parent progress bar, optionally clears a
+                        // Each stage re-asserts the parent progress bar, optionally clears a
                         // src-side cache, then runs its per-entity copy under a child
                         // ProgressReporter. Ordering is significant — buckets before
                         // processes, packages before triggers — so keep this list in
@@ -275,10 +304,13 @@ public partial class OrchProvider
                         {
                             foreach (var stage in stages)
                             {
-                                // The count and the destination folder, and no stage name: the
-                                // child bar underneath already says which entity type is being
-                                // copied, so repeating it here only lengthens the line.
-                                reporter.WriteProgress(++rootIndex);
+                                // The same folder number each time -- the bar is counting
+                                // folders, and this folder is still the one in hand. Written
+                                // per stage all the same, not once per folder: a bar nobody
+                                // writes to can sit hidden behind ordinary console output for
+                                // as long as a slow stage takes, and the stage boundaries are
+                                // the cheap moments to put it back on screen.
+                                reporter.WriteProgress(folderIndex);
                                 stage.PreStep?.Invoke();
                                 var childReporter = new ProgressReporter(this, null, stage.Label, reporter);
                                 childReporters.Add(childReporter);
@@ -419,6 +451,7 @@ public partial class OrchProvider
         // flag into a later un-flagged copy if instances were ever pooled/reused.
         ExcludeEntities = dynamicParameters?.ExcludeEntities.IsPresent ?? false;
         var linkReport = _linkReport = new LinkCopyReport();
+        _copiedFolderIndex = 0;
 
         OrchDriveInfo srcDrive = ExtractOrchDriveInfo(path);
         OrchDriveInfo dstDrive = ExtractOrchDriveInfo(copyPath);
@@ -523,10 +556,11 @@ public partial class OrchProvider
                     // Personal workspace folders sometimes have a ParentId for some reason, but GetFolders() masks this.
                     var foldersToBeCopied = srcDrive.GetFolders().Where((f => f.ParentId is null && f != srcDrive.RootFolder));
 
-                    // Owned here, not left to the first call, so the bar survives the whole walk.
-                    // Each call resets TotalNum for the folder it is on; the 13 is only what the
-                    // bar starts at before the first one does that.
-                    using var folderReporter = new ProgressReporter(this, 13, "Copying folders");
+                    // Owned here, not left to the first call, so the bar survives the whole
+                    // walk: this loop makes one outermost call per top-level folder, and a bar
+                    // owned by the first of them would be taken down when that folder finished.
+                    using var folderReporter = new ProgressReporter(
+                        this, CountFoldersInWalk(srcDrive, srcDrive.RootFolder!, true), "Copying folders");
 
                     // WithCancellation, so Ctrl+C stops the walk between top-level folders too.
                     // The subfolder loop inside CopyItemRecurse already checks after each child;
