@@ -917,6 +917,22 @@ public class ProgressReporter : IDisposable
     // constructed with.
     private bool reported;
 
+    // Fills the bar and replaces the item name with a closing note. For a bar that is left
+    // standing after its batch is done -- Copy-Item keeps one per entity type up for the whole
+    // folder -- the alternative is a full bar still reading as though it were working on
+    // whatever happened to come last. Does nothing for a bar that never reported: a stage with
+    // nothing to copy has no bar on screen, and announcing the completion of work that was
+    // never shown would conjure one (see the `reported` flag).
+    //
+    // Upper case because the note stands where an entity name normally stands: "Completed"
+    // reads as one more queue or asset that happens to be called that, where "COMPLETED" is
+    // visibly not a name.
+    public void WriteCompleted(string note = "COMPLETED")
+    {
+        if (!reported) return;
+        WriteProgress(totalNum ?? 0, note);
+    }
+
     private void CompleteProgress()
     {
         if (!reported) return;

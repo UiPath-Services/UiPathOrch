@@ -225,13 +225,26 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
         List<(OrchDriveInfo, Folder)> dstDrivesFolders,
         bool shouldProcess, CancellationToken cancelToken)
     {
+        // Three bars are on screen at once, so their labels are short, of ONE length (8, no
+        // trailing run to trim) and hardcoded, and each is nested under the one above: the
+        // packages of a folder, the versions of a package. Shaped like Copy-Item's set: the
+        // top bar carries the whole "from -> to", the ones below name only the item they are
+        // on. The destination used to be written into the versions bar's activity, which put
+        // it on every bar on screen and made that label a different width per destination, so
+        // the bar walked left and right under the two above it.
+        //
+        // The top bar reports even for a single folder, where it used to stay silent: it is
+        // the only line that names the destination, and a copy that does not say where it is
+        // writing is worth less than the line it saves.
+        string dstLabel = string.Join(", ", dstDrivesFolders.Select(d => d.Item2.GetPSPath()));
+
         int index1 = 0;
-        using var reporterMain = new ProgressReporter(_this, 1, srcDrivesFolders.Count, "Processing folders...");
+        using var reporterMain = new ProgressReporter(_this, 1, srcDrivesFolders.Count, "Folders ");
         foreach (var (srcDrive, srcFolder) in srcDrivesFolders)
         {
             cancelToken.ThrowIfCancellationRequested();
 
-            if (srcDrivesFolders.Count > 1) reporterMain.WriteProgress(++index1, srcFolder.GetPSPath());
+            reporterMain.WriteProgress(++index1, $"{srcFolder.GetPSPath()} -> {dstLabel}");
             try
             {
                 var srcPackages = srcDrive.GetPackages(srcFolder)
@@ -242,7 +255,11 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
                 var srcFeedId = srcDrive.FolderFeedId.Get(srcFolder);
 
                 int index2 = 0;
-                using var reporter2 = new ProgressReporter(_this, 2, srcPackages.Count, "Processing packages...");
+                using var reporter2 = new ProgressReporter(_this, 2, srcPackages.Count, "Packages", 1);
+                // The packages bar stays silent for a single package (below), and a bar may
+                // not name a parent the host was never shown, so the versions bar hangs off
+                // whichever of the two above it will actually be there.
+                int packageBarId = srcPackages.Count > 1 ? 2 : 1;
                 foreach (var srcPackage in srcPackages)
                 {
                     cancelToken.ThrowIfCancellationRequested();
@@ -255,7 +272,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
                         .ToList();
 
                     int index3 = 0;
-                    using var reporter3 = new ProgressReporter(_this, 3, srcVersions.Count * dstDrivesFolders.Count, "Copying versions...   ");
+                    using var reporter3 = new ProgressReporter(_this, 3, srcVersions.Count * dstDrivesFolders.Count, "Versions", packageBarId);
                     foreach (var srcVersion in srcVersions)
                     {
                         string fileName = null;
@@ -296,7 +313,6 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
                             if (shouldProcess || _this.ShouldProcess(target, $"Copy Package"))
                             {
                                 // Progress should only be displayed when actually copying
-                                reporter3.Activity = $"Copying versions to {dstDrive.NameColonSeparator}";
                                 reporter3.WriteProgress(++index3, srcVersion.Version);
 
                                 if (fileName is null)

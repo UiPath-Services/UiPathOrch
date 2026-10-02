@@ -125,6 +125,10 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
         IList<OrchDriveInfo> dstDrives,
         bool shouldProcess, CancellationToken cancelToken)
     {
+        // Where the run is writing, named once on the top bar as Copy-Item names it on its
+        // folder bar: "<what is being copied> -> <where it goes>". Usually one destination.
+        string dstLabel = string.Join(", ", dstDrives.Select(d => d.NameColonSeparator));
+
         foreach (var srcDrive in srcDrives)
         {
             var srcLibraries = srcDrive.LibrariesInTenant.Get()
@@ -132,13 +136,20 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
                 .FilterByWildcards(l => l!.Id, wpId)
                 .OrderBy(l => l.Id);
 
+            // Two bars at once, so their labels are short, of ONE length (9) and hardcoded,
+            // with the versions bar nested under the library it belongs to. Shaped like
+            // Copy-Item's pair: the top bar carries the whole "from -> to", the lower one
+            // names only the item it is on. The destination used to be written into the
+            // versions bar -- on every bar on screen, and in its activity, so the label was
+            // a different width per destination and the bar walked left and right under the
+            // one above.
             int index1 = 0;
-            using var reporter1 = new ProgressReporter(_this, 1, srcLibraries.Count(), "Processing libraries...");
+            using var reporter1 = new ProgressReporter(_this, 1, srcLibraries.Count(), "Libraries");
             foreach (var library in srcLibraries)
             {
                 cancelToken.ThrowIfCancellationRequested();
 
-                reporter1.WriteProgress(++index1, library.Id);
+                reporter1.WriteProgress(++index1, $"{library.GetPSPath()} -> {dstLabel}");
                 try
                 {
                     srcDrive.LibraryVersions.ClearCache();
@@ -147,7 +158,7 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
                         //.OrderBy(version => version.Version!, VersionComparer.Instance)
                         .ToList();
 
-                    using var reporter2 = new ProgressReporter(_this, 2, dstDrives.Count * versions.Count, "Copying versions...    ");
+                    using var reporter2 = new ProgressReporter(_this, 2, dstDrives.Count * versions.Count, "Versions ", 1);
                     int index2 = 0;
                     foreach (var version in versions)
                     {
@@ -172,7 +183,6 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
                             if (shouldProcess || _this.ShouldProcess(target, $"Copy Library"))
                             {
                                 // Progress should only be displayed when actually copying
-                                reporter2.Activity = $"Copying versions to {dstDrive.NameColonSeparator}";
                                 reporter2.WriteProgress(++index2, version.Version);
 
                                 if (fileName is null)

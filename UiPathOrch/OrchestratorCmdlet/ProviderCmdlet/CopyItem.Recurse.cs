@@ -282,6 +282,11 @@ public partial class OrchProvider
                                 var childReporter = new ProgressReporter(this, stage.Base, null, stage.Label, FolderProgressId);
                                 childReporters.Add(childReporter);
                                 stage.Run(childReporter);
+                                // These bars stay up for the rest of the folder, so each one
+                                // has to say it is finished. Left alone, a full bar still
+                                // reads "Queues [2/2 queue-staging]" long after the queues
+                                // are done, as though that one were still being copied.
+                                childReporter.WriteCompleted();
                                 cancelToken.ThrowIfCancellationRequested();
                             }
                         }
@@ -319,6 +324,17 @@ public partial class OrchProvider
                 // unassign them from the destination folder
                 // But if we unassign, links cannot be copied..
                 // UnassignMyselfAtNewFolder(srcDrive, srcFolder, dstDrive, newFolder);
+            }
+            // Ctrl+C is not a failure of THIS folder, so it must not be reported as one. The
+            // catch below wraps all thirteen stages and the subfolder recursion, and turning a
+            // cancellation into a non-terminating error there made one Ctrl+C stop only the
+            // entity in flight: the folder returned "copied", and the caller -- the subfolder
+            // loop above, or the root-level loop in CopyItem -- moved on to the next folder
+            // and started its thirteen stages over. Rethrowing unwinds the whole walk on the
+            // first press, which is what the operator asked for by pressing it.
+            catch (OperationCanceledException)
+            {
+                throw;
             }
             catch (Exception ex)
             {
@@ -492,44 +508,65 @@ public partial class OrchProvider
         if (srcFolder == srcDrive.RootFolder)
         {
             bool isDirty = false;
-            if (recurse)
+
+            // try/finally, like the non-root path below: Ctrl+C now unwinds this loop instead
+            // of being swallowed per folder, and the cache invalidation and the link report
+            // are exactly what must still happen when it does. Half a walk leaves the folder
+            // cache describing a destination that no longer matches the server, and that
+            // stale view would then be used for the rest of the session.
+            try
             {
-                // Enumerate all personal workspaces and root-level folders.
-                // Personal workspace folders sometimes have a ParentId for some reason, but GetFolders() masks this.
-                var foldersToBeCopied = srcDrive.GetFolders().Where((f => f.ParentId is null && f != srcDrive.RootFolder));
-
-                // Owned here, not left to the first call, so the bar survives the whole walk.
-                // Each call resets TotalNum for the folder it is on; the 13 is only what the
-                // bar starts at before the first one does that.
-                using var folderReporter = new ProgressReporter(this, FolderProgressId, 13, "Copying folders");
-
-                foreach (var folderToBeCopied in foldersToBeCopied)
+                if (recurse)
                 {
-                    // Accumulate: if ANY top-level folder was actually copied the dst
-                    // folder cache must be invalidated below. Plain '=' would keep only
-                    // the last folder's result, skipping the reset when the final folder
-                    // returns false (e.g. a personal workspace) despite earlier copies.
-                    isDirty |= CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true, cancelHandler.Token, userMapping, folderReporter);
+                    // Enumerate all personal workspaces and root-level folders.
+                    // Personal workspace folders sometimes have a ParentId for some reason, but GetFolders() masks this.
+                    var foldersToBeCopied = srcDrive.GetFolders().Where((f => f.ParentId is null && f != srcDrive.RootFolder));
+
+                    // Owned here, not left to the first call, so the bar survives the whole walk.
+                    // Each call resets TotalNum for the folder it is on; the 13 is only what the
+                    // bar starts at before the first one does that.
+                    using var folderReporter = new ProgressReporter(this, FolderProgressId, 13, "Copying folders");
+
+                    // WithCancellation, so Ctrl+C stops the walk between top-level folders too.
+                    // The subfolder loop inside CopyItemRecurse already checks after each child;
+                    // this loop is the one level that did not, and it is the outermost one.
+                    foreach (var folderToBeCopied in foldersToBeCopied.WithCancellation(cancelHandler.Token))
+                    {
+                        // Accumulate: if ANY top-level folder was actually copied the dst
+                        // folder cache must be invalidated below. Plain '=' would keep only
+                        // the last folder's result, skipping the reset when the final folder
+                        // returns false (e.g. a personal workspace) despite earlier copies.
+                        isDirty |= CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true, cancelHandler.Token, userMapping, folderReporter);
+                    }
+                }
+                else if (!ExcludeEntities)
+                {
+                    // A root-to-root copy without -Recurse copies the tenant-level entities
+                    // above but no folders. Warn (in both real and -WhatIf runs) so the
+                    // missing folders aren't mistaken for an empty tenant — -Recurse would
+                    // also copy every folder and its entities. Personal workspaces are
+                    // excluded from the count since they are never copied by -Recurse anyway.
+                    int skipped = srcDrive.GetFolders().Count(f => f != srcDrive.RootFolder && f.FolderType != "Personal");
+                    if (skipped > 0)
+                    {
+                        WriteWarning($"Copying tenant-level entities only. {skipped} folder(s) and their entities are not copied without -Recurse.");
+                    }
                 }
             }
-            else if (!ExcludeEntities)
+            catch (Exception)
             {
-                // A root-to-root copy without -Recurse copies the tenant-level entities
-                // above but no folders. Warn (in both real and -WhatIf runs) so the
-                // missing folders aren't mistaken for an empty tenant — -Recurse would
-                // also copy every folder and its entities. Personal workspaces are
-                // excluded from the count since they are never copied by -Recurse anyway.
-                int skipped = srcDrive.GetFolders().Count(f => f != srcDrive.RootFolder && f.FolderType != "Personal");
-                if (skipped > 0)
-                {
-                    WriteWarning($"Copying tenant-level entities only. {skipped} folder(s) and their entities are not copied without -Recurse.");
-                }
-            }
-            if (isDirty)
-            {
+                // The walk stopped partway, so we do not know what reached the destination.
                 dstDrive.ClearFolders();
+                throw;
             }
-            linkReport.Flush(this);
+            finally
+            {
+                if (isDirty)
+                {
+                    dstDrive.ClearFolders();
+                }
+                linkReport.Flush(this);
+            }
             return;
         }
 
