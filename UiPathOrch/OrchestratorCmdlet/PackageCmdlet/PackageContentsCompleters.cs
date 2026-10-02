@@ -55,7 +55,16 @@ internal abstract class PackageContentsCompleterBase : OrchArgumentCompleter
         // Exclude the values already given on the command line from the candidates.
         var wpSelf = CreateSelfExclusionList(commandAst, parameterName, wordToComplete);
 
-        foreach (var (text, tiphelp) in Collect(drives).ExcludeByWildcards(e => e.Key, wpSelf))
+        // Narrow to what has been typed. PowerShell does not filter an ArgumentCompleter's
+        // results -- whatever is yielded is what appears -- so without this, typing *excel*
+        // and pressing Ctrl+Space listed every dependency in the cache. The parameter takes
+        // wildcards, and CreateWPFromWordToComplete reads the word the way the parameter
+        // will: *excel* as written, a bare excel as excel*, nothing typed as everything.
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        foreach (var (text, tiphelp) in Collect(drives)
+            .ExcludeByWildcards(e => e.Key, wpSelf)
+            .Where(e => wp.IsMatch(e.Key)))
         {
             yield return new CompletionResult(PathTools.EscapePSText(text), text, CompletionResultType.Text, tiphelp);
         }

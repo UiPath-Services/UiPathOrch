@@ -256,15 +256,15 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
 
                 int index2 = 0;
                 using var reporter2 = new ProgressReporter(_this, 2, srcPackages.Count, "Packages", 1);
-                // The packages bar stays silent for a single package (below), and a bar may
-                // not name a parent the host was never shown, so the versions bar hangs off
-                // whichever of the two above it will actually be there.
-                int packageBarId = srcPackages.Count > 1 ? 2 : 1;
                 foreach (var srcPackage in srcPackages)
                 {
                     cancelToken.ThrowIfCancellationRequested();
 
-                    if (reporter2.TotalNum > 1) reporter2.WriteProgress(++index2, srcPackage.Id);
+                    // Reported even for a single package, as the bar above it now is. The
+                    // old "only when there is more than one" rule saved a line and cost the
+                    // name of the package whose versions the bar below is counting -- and it
+                    // left that lower bar naming a parent the host had never been shown.
+                    reporter2.WriteProgress(++index2, srcPackage.Id);
 
                     var srcVersions = srcDrive.GetPackageVersions(srcFolder, srcPackage.Id!)
                         .FilterByWildcards(p => p?.Version, wpVersion)
@@ -272,7 +272,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
                         .ToList();
 
                     int index3 = 0;
-                    using var reporter3 = new ProgressReporter(_this, 3, srcVersions.Count * dstDrivesFolders.Count, "Versions", packageBarId);
+                    using var reporter3 = new ProgressReporter(_this, 3, srcVersions.Count * dstDrivesFolders.Count, "Versions", 2);
                     foreach (var srcVersion in srcVersions)
                     {
                         string fileName = null;

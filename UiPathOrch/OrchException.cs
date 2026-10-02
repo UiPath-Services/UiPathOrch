@@ -332,6 +332,41 @@ public class OrchException : Exception
         return ExtractMessage(ex.Message);
     }
 
+    /// <summary>
+    /// Orchestrator's numeric <c>errorCode</c> from the response body, or null when the server
+    /// sent none. Walks the inner exceptions, because the body arrives as the message of the
+    /// HttpResponseException underneath while callers hold the OrchException wrapping it.
+    ///
+    /// Branch on this, never on the message text. The text is localized and is reworded
+    /// between versions, and a text match that drifted would not merely stop working -- it
+    /// would attach a confident explanation to some unrelated failure.
+    /// </summary>
+    public static int? ExtractErrorCode(Exception? ex)
+    {
+        for (var e = ex; e is not null; e = e.InnerException)
+        {
+            // Cheap reject first: almost every exception in the chain is not a JSON body.
+            if (string.IsNullOrEmpty(e.Message) ||
+                e.Message.IndexOf("errorCode", StringComparison.OrdinalIgnoreCase) < 0) continue;
+
+            try
+            {
+                using JsonDocument doc = JsonDocument.Parse(e.Message);
+                if (doc.RootElement.ValueKind == JsonValueKind.Object &&
+                    doc.RootElement.TryGetProperty("errorCode", out JsonElement code) &&
+                    code.TryGetInt32(out int value))
+                {
+                    return value;
+                }
+            }
+            catch (JsonException)
+            {
+                // Not a JSON body after all; keep walking.
+            }
+        }
+        return null;
+    }
+
     private static string CreateExceptionMessage(string? target, string? message)
     {
         if (string.IsNullOrEmpty(target))
@@ -367,6 +402,17 @@ public class OrchException : Exception
 
     public OrchException(string target, string message, Exception ex)
         : base(CreateExceptionMessage(target, message, ex), ex)
+    {
+    }
+
+    /// <summary>
+    /// Like <c>(target, ex)</c> but with <paramref name="note"/> appended AFTER the server's
+    /// own words -- for a hint that EXPLAINS the failure rather than renaming it. The
+    /// (target, message, ex) overload puts its text in front, which reads as a different
+    /// error having occurred. Pass "" for no note.
+    /// </summary>
+    public OrchException(string? target, Exception ex, string note)
+        : base(CreateExceptionMessage(target, ExtractMessage(ex) + note), ex)
     {
     }
 }

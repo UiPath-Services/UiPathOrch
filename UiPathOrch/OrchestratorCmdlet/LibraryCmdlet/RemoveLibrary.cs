@@ -38,22 +38,38 @@ public class RemoveLibraryCmdlet : OrchestratorPSCmdlet
         {
             try
             {
+                // Two bars, shaped like Copy-OrchLibrary's pair: the top one names the
+                // library, the one nested under it the version being removed. This was a
+                // single bar carrying both in its ACTIVITY -- "Removing versions of <id> in
+                // <drive>" -- so the label was a different width for every library and the
+                // bar walked left and right as the run went on. Labels are short, hardcoded
+                // and of one length (9).
                 var libraries = drive.LibrariesInTenant.Get()
                     .FilterByWildcards(l => l?.Id, wpId!)
-                    .OrderBy(l => l.Id!.ToLower());
+                    .OrderBy(l => l.Id!.ToLower())
+                    .ToList();
+
+                int libraryIndex = 0;
+                using var libraryReporter = new ProgressReporter(this, 1, libraries.Count, "Libraries");
 
                 foreach (var library in libraries.WithCancellation(cancelHandler.Token))
                 {
+                    libraryReporter.WriteProgress(++libraryIndex, library.GetPSPath());
                     try
                     {
                         var matchingVersions = drive.LibraryVersions.Get(library.Id!)
-                            .FilterByWildcards(v => v?.Version, wpVersion);
+                            .FilterByWildcards(v => v?.Version, wpVersion)
+                            .ToList();
                         //.OrderBy(v => v.Version!, VersionComparer.Instance);
 
-                        foreach (var matchingVersion in matchingVersions
-                            .WithProgressBar(this, $"Removing versions of {library.Id} in {drive.NameColonSeparator}", v => v.Version)
-                            .WithCancellation(cancelHandler.Token))
+                        // Disposed at the end of each library, so the bar belongs to the
+                        // library above it rather than accumulating across the run.
+                        int versionIndex = 0;
+                        using var versionReporter = new ProgressReporter(this, 2, matchingVersions.Count, "Versions ", 1);
+
+                        foreach (var matchingVersion in matchingVersions.WithCancellation(cancelHandler.Token))
                         {
+                            versionReporter.WriteProgress(++versionIndex, matchingVersion.Version);
                             string target = $"{drive.NameColonSeparator}{matchingVersion.Id}:{matchingVersion.Version}";
                             if (ShouldProcess(target, "Remove Library"))
                             {

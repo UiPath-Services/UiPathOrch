@@ -79,6 +79,17 @@ public class ImportLibraryCmdlet : OrchestratorPSCmdlet
                         drive.LibrariesInTenant.ClearCache();
                     }
                 }
+                // Ctrl+C is not a failure of this file. The upload does observe the token, so
+                // without this the press produced two messages: "<file>: The operation was
+                // canceled" from here, and then the real terminating one from the loop above.
+                // Filtered on the token rather than catching every OperationCanceledException,
+                // because HttpClient.Timeout also surfaces as a cancellation (see OrchHttp) --
+                // a request that timed out IS a failure of this file and must stay a
+                // per-file error that lets the remaining files import.
+                catch (OperationCanceledException) when (cancelHandler.Token.IsCancellationRequested)
+                {
+                    throw;
+                }
                 catch (Exception ex)
                 {
                     string target2 = target + System.IO.Path.GetFileName(fullPath);

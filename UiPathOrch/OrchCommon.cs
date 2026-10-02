@@ -237,6 +237,9 @@ public class ConsoleCancelHandler : IDisposable
 
     public ConsoleCancelHandler()
     {
+        EnsureCancelNoticeHooked();
+        Interlocked.Increment(ref _liveHandlers);
+
         _handler = (sender, args) =>
         {
             _cancelKeyPressed = true;
@@ -246,10 +249,63 @@ public class ConsoleCancelHandler : IDisposable
         Console.CancelKeyPress += _handler;
     }
 
+    // --- the one-line "it is stopping, give it a moment" notice -------------------------
+    //
+    // Cancellation mostly takes effect BETWEEN steps: the token is checked at the top of each
+    // loop, and only a handful of API calls are handed the token at all, so work already
+    // started usually runs to completion. For a large package upload that is minutes of
+    // apparent silence, and an operator who concludes Ctrl+C did nothing presses it again and
+    // then kills the console -- the one outcome that leaves the destination in an unknown
+    // state. The notice is deliberately hedged ("may have to finish"): some paths, such as
+    // Import-OrchLibrary's upload, DO take the token and stop mid-request, and a notice that
+    // stated the opposite as fact would be wrong exactly there.
+    //
+    // Hooked ONCE for the process rather than per handler. A cmdlet may have several
+    // ConsoleCancelHandler instances alive at the same time -- Import-OrchLibrary does -- and
+    // a per-instance guard printed the notice once per instance, so one Ctrl+C produced two
+    // copies. One subscription fires once per key press, which is the thing being counted.
+    // It stays subscribed for the life of the process, so it also checks that an operation is
+    // actually running: Ctrl+C at an idle prompt must not explain a cancellation that is not
+    // happening.
+    private static int _noticeHooked;
+    private static int _liveHandlers;
+
+    private static void EnsureCancelNoticeHooked()
+    {
+        if (Interlocked.Exchange(ref _noticeHooked, 1) != 0) return;
+        Console.CancelKeyPress += (_, _) =>
+        {
+            if (Volatile.Read(ref _liveHandlers) > 0) WriteCancelNotice();
+        };
+    }
+
+    // Console.Error rather than WriteWarning: this runs on the Ctrl+C handler thread, and the
+    // PowerShell streams may only be written from the pipeline thread. One WriteLine, leading
+    // newline included, rather than two calls: the pipeline thread is writing at the same
+    // time, and two writes gave it twice the opportunity to cut in mid-sentence. The catch is
+    // not decoration -- an exception escaping a CancelKeyPress handler takes the process down,
+    // and a host without a console is a normal thing to be running in.
+    private static void WriteCancelNotice()
+    {
+        try
+        {
+            Console.Error.WriteLine(
+                Environment.NewLine +
+                "Cancelling. Work already started may have to finish before this stops -- a large " +
+                "upload or download can take a while -- and nothing after it will be started. " +
+                "Pressing Ctrl+C again does not make it stop sooner.");
+        }
+        catch
+        {
+        }
+    }
+
     // Dispose pattern implementation
     public void Dispose()
     {
         Console.CancelKeyPress -= _handler;
+        // Back to zero once nothing is running, so the notice stays quiet at an idle prompt.
+        Interlocked.Decrement(ref _liveHandlers);
         _cts.Dispose();
         GC.SuppressFinalize(this);
     }
