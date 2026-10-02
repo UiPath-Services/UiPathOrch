@@ -6,6 +6,10 @@ namespace UiPath.PowerShell.Core;
 
 public partial class OrchProvider
 {
+    // Activity id of the folder bar. Named because three places have to agree on it: the two
+    // entry points that may own the bar, and the per-entity bars that name it as their parent.
+    private const int FolderProgressId = 1;
+
     private bool CopyItemRecurse(
         OrchDriveInfo srcDrive,
         Folder srcFolder,
@@ -13,7 +17,13 @@ public partial class OrchProvider
         Folder dstFolder,
         bool recurse,
         CancellationToken cancelToken,
-        Dictionary<string, string>? userMapping = null)
+        Dictionary<string, string>? userMapping = null,
+        // The folder bar, owned by the OUTERMOST call and handed down. Null from the entry
+        // points, which is what makes that call the owner; see where it is created below.
+        // The per-entity bars underneath it are NOT shared: each folder gets its own set and
+        // closes them when it is done, which is what shows the operator what that folder
+        // carried.
+        ProgressReporter? folderReporter = null)
     {
         if (srcFolder == dstFolder)
         {
@@ -137,18 +147,33 @@ public partial class OrchProvider
                 }
 
                 Folder newFolder;
-                using ProgressReporter reporter = new(this, 1, totalStageNum, "Copying folder");
+
+                // One reporter for the whole recursion, not one per folder. Dispose writes a
+                // Completed record, so a reporter owned by each folder took the bar off the
+                // screen and put it back for every folder of a -Recurse. Only the outermost
+                // call owns it -- `using` on the null the inner calls get is a no-op -- and
+                // TotalNum is reset per folder because a personal workspace has fewer stages.
+                using ProgressReporter? ownedReporter = folderReporter is null
+                    ? new ProgressReporter(this, FolderProgressId, totalStageNum, "Copying folders ")
+                    : null;
+                ProgressReporter reporter = folderReporter ?? ownedReporter!;
+                reporter.TotalNum = totalStageNum;
                 // The scope starting below was introduced so that child reporters are disposed of in a timely manner.
                 {
                     // #0 Copy the folder itself (no folder creation needed for personal workspaces)
+                    // The destination goes in Context, not in the activity: the activity is the
+                    // padded label this bar shares with the child bar below, and overwriting it
+                    // with a path made the two start their "[" in different columns.
                     if (destinationWorkspace is not null)
                     {
                         newFolder = destinationWorkspace;
-                        reporter.WriteProgress(0, srcFolder.GetPSPath(), $"Copying folder to {newFolder.GetPSPath()}");
+                        reporter.Context = newFolder.GetPSPath();
+                        reporter.WriteProgress(0, srcFolder.GetPSPath());
                     }
                     else
                     {
-                        reporter.WriteProgress(0, srcFolder.GetPSPath(), $"Copying folder to {dstFolder.GetPSPath()}");
+                        reporter.Context = dstFolder.GetPSPath();
+                        reporter.WriteProgress(0, srcFolder.GetPSPath());
                         newFolder = CopyFolder(srcDrive, srcFolder, dstDrive, dstFolder, feedType!, cancelToken);
                         if (newFolder is null) return false;
                     }
@@ -179,52 +204,66 @@ public partial class OrchProvider
                         // lookup does exactly that) otherwise leaves the entity invisible for
                         // the rest of the session, so the queue trigger that needs it is
                         // silently skipped.
+                        //
+                        // Every Label is padded to 16, the length of the longest ("Test data
+                        // queues"), so this bar and the child bar below start their "[" in the
+                        // same column. Written out rather than computed, so what is here is
+                        // what is on screen -- the trailing spaces are load-bearing. A longer
+                        // stage name means re-padding the whole list, including "Copying
+                        // folders" on the parent reporter. Anything that varies, such as the
+                        // destination folder, goes in ProgressReporter.Context instead.
                         var stages = new (string Label, int Base, Action? PreStep, Action<ProgressReporter> Run)[]
                         {
-                            ("Copying folder users...      ", 100,
+                            ("Folder users    ", 100,
                                 () => { srcDrive.FolderUsersWithInherited.ClearCache(srcFolder); srcDrive.FolderUsersWithNoInherited.ClearCache(srcFolder); },
                                 r => CopyFolderUsers(this, srcDrive, srcFolder, null, null, dstDrive, newFolder, r, true, cancelToken, userMapping)),
-                            ("Copying folder machines...   ", 200,
+                            ("Folder machines ", 200,
                                 () => srcDrive.FolderMachinesAssigned.ClearCache(srcFolder),
                                 r => CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Copying buckets...           ", 300, null,
+                            ("Buckets         ", 300, null,
                                 r => { CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, _linkReport); dstDrive.Buckets.ClearCache(newFolder); }),
-                            ("Copying packages...          ", 400, null,
+                            ("Packages        ", 400, null,
                                 r => CopyPackages(this, srcDrive, srcFolder, dstDrive, newFolder, r, cancelToken)),
-                            ("Copying processes...         ", 500, null,
+                            ("Processes       ", 500, null,
                                 r => CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Copying assets...            ", 600,
+                            ("Assets          ", 600,
                                 () => srcDrive.Assets.ClearCache(srcFolder),
                                 r => { CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, userMapping, _linkReport); dstDrive.Assets.ClearCache(newFolder); }),
-                            ("Copying queues...            ", 700, null,
+                            ("Queues          ", 700, null,
                                 r => { CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, _linkReport); dstDrive.Queues.ClearCache(newFolder); }),
-                            ("Copying triggers...          ", 800,
+                            ("Triggers        ", 800,
                                 () => srcDrive.Triggers.ClearCache(srcFolder),
                                 r => CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Copying API triggers...      ", 900,
+                            ("API triggers    ", 900,
                                 () => srcDrive.ApiTriggers.ClearCache(srcFolder),
                                 r => CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Copying test sets...         ", 1000, null,
+                            ("Test sets       ", 1000, null,
                                 r => CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Copying test schedules...    ", 1100, null,
+                            ("Test schedules  ", 1100, null,
                                 r => CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Copying test data queues...  ", 1200, null,
+                            ("Test data queues", 1200, null,
                                 r => CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Copying action catalogs...   ", 1300, null,
+                            ("Action catalogs ", 1300, null,
                                 r => CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
                         };
 
-                        // Child reporters are kept alive for the whole sequence and disposed
-                        // together at the end (reverse order, like the original stacked
-                        // `using var` declarations) so the progress display timing is unchanged.
+                        // One bar per entity type, each left standing once its stage is done so
+                        // the folder reads as a list of what was copied, and all of them closed
+                        // together when the folder is (see the finally). They are nested under
+                        // the folder bar rather than put beside it: a stage IS a step of the
+                        // folder copy the parent bar is counting, and the host draws the set as
+                        // one indented tree instead of fourteen unrelated activities.
                         var childReporters = new List<ProgressReporter>(stages.Length);
                         try
                         {
                             foreach (var stage in stages)
                             {
-                                reporter.WriteProgress(++rootIndex, stage.Label.Trim());
+                                // The count and the destination folder, and no stage name: the
+                                // child bar underneath already says which entity type is being
+                                // copied, so repeating it here only lengthens the line.
+                                reporter.WriteProgress(++rootIndex);
                                 stage.PreStep?.Invoke();
-                                var childReporter = new ProgressReporter(this, stage.Base, null, stage.Label);
+                                var childReporter = new ProgressReporter(this, stage.Base, null, stage.Label, FolderProgressId);
                                 childReporters.Add(childReporter);
                                 stage.Run(childReporter);
                                 cancelToken.ThrowIfCancellationRequested();
@@ -232,6 +271,9 @@ public partial class OrchProvider
                         }
                         finally
                         {
+                            // One bar per entity type, left standing for the whole folder so
+                            // the run reads as a list of what was copied, then closed together
+                            // when the folder is done.
                             for (int i = childReporters.Count - 1; i >= 0; i--)
                             {
                                 childReporters[i].Dispose();
@@ -251,7 +293,7 @@ public partial class OrchProvider
                     {
                         foreach (var subfolder in subfolders)
                         {
-                            CopyItemRecurse(srcDrive, subfolder, dstDrive, newFolder, true, cancelToken, userMapping);
+                            CopyItemRecurse(srcDrive, subfolder, dstDrive, newFolder, true, cancelToken, userMapping, reporter);
                             cancelToken.ThrowIfCancellationRequested();
                         }
                     }
@@ -439,13 +481,19 @@ public partial class OrchProvider
                 // Enumerate all personal workspaces and root-level folders.
                 // Personal workspace folders sometimes have a ParentId for some reason, but GetFolders() masks this.
                 var foldersToBeCopied = srcDrive.GetFolders().Where((f => f.ParentId is null && f != srcDrive.RootFolder));
+
+                // Owned here, not left to the first call, so the bar survives the whole walk.
+                // Each call resets TotalNum for the folder it is on; the 13 is only what the
+                // bar starts at before the first one does that.
+                using var folderReporter = new ProgressReporter(this, FolderProgressId, 13, "Copying folders ");
+
                 foreach (var folderToBeCopied in foldersToBeCopied)
                 {
                     // Accumulate: if ANY top-level folder was actually copied the dst
                     // folder cache must be invalidated below. Plain '=' would keep only
                     // the last folder's result, skipping the reset when the final folder
                     // returns false (e.g. a personal workspace) despite earlier copies.
-                    isDirty |= CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true, cancelHandler.Token, userMapping);
+                    isDirty |= CopyItemRecurse(srcDrive, folderToBeCopied, dstDrive, dstFolder ?? dstDrive.RootFolder!, true, cancelHandler.Token, userMapping, folderReporter);
                 }
             }
             else if (!ExcludeEntities)

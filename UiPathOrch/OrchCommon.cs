@@ -818,14 +818,22 @@ public class ProgressReporter : IDisposable
     {
     }
 
-    public ProgressReporter(IWritableHost provider, int id, int? totalNum, string activity)
+    /// <param name="parentId">The activity id of the bar this one sits under, or -1 for a bar
+    /// that stands on its own. A bar whose work is a step of another bar's work says so: the
+    /// host then draws one tree, indenting this bar under its parent, instead of two unrelated
+    /// activities that happen to be on screen together. Copy-Item's per-entity bars are the
+    /// case -- they are stages of the folder the parent bar is counting.</param>
+    public ProgressReporter(IWritableHost provider, int id, int? totalNum, string activity, int parentId = -1)
     {
         this.provider = provider;
         this.totalNum = totalNum;
         // Sanitized here too, not only in the Activity setter: an activity passed to the
         // constructor used to reach the host raw, and a wide character in it breaks the bar
         // exactly as one in the status does.
-        progressRecord = new ProgressRecord(id, SafeText(activity)!, SafeText(activity)!);
+        progressRecord = new ProgressRecord(id, SafeText(activity)!, SafeText(activity)!)
+        {
+            ParentActivityId = parentId,
+        };
     }
 
     public int? TotalNum
@@ -834,13 +842,24 @@ public class ProgressReporter : IDisposable
         set { totalNum = value; }
     }
 
-    // Set once per batch (e.g. when the destination folder changes) so the activity line
-    // carries the operation + destination context while the per-item StatusDescription
-    // stays just "{index}/{total} {name}". The destination may contain a Japanese folder
-    // name, so the activity line is width-sanitized the same way as the status (see SafeText).
+    // The activity line is a LABEL: short, and padded by the caller to one width across every
+    // bar it shares the screen with, so two bars start their "[" in the same column. See the
+    // stage table in CopyItem.Recurse for a set of them. Anything that varies -- a destination
+    // folder, a drive -- goes in Context instead, inside the bar. Width-sanitized like the
+    // status (see SafeText), since a label can still carry a Japanese word.
     public string Activity
     {
         set { progressRecord.Activity = SafeText(value)!; }
+    }
+
+    // Set once per batch: the part of the status that does not change item by item, such as
+    // the folder a copy is writing into. It sits between the count and the item name, so the
+    // line reads "3/10 ASTest:\Shared queue-emails". This used to live in the activity, which
+    // made every bar a different width and pushed the bars out of alignment.
+    private string? context;
+    public string? Context
+    {
+        set { context = SafeText(value); }
     }
 
     // PowerShell #21293: the console host miscounts East Asian Wide characters when sizing the
@@ -872,15 +891,33 @@ public class ProgressReporter : IDisposable
             progressRecord.Activity = SafeText(activity)!;
         }
 
-        progressRecord.StatusDescription = (totalNum is int n
-            ? $"{index:D}/{n} {SafeText(statusDescription)}"
-            : $"{index:D} {SafeText(statusDescription)}").TrimEnd();
+        string line = totalNum is int n ? $"{index:D}/{n}" : $"{index:D}";
+        if (!string.IsNullOrEmpty(context)) line += " " + context;
 
+        string? status = SafeText(statusDescription);
+        if (!string.IsNullOrEmpty(status)) line += " " + status;
+
+        progressRecord.StatusDescription = line;
+
+        reported = true;
         WriteProgress();
     }
 
+    // A bar that never reported anything is never taken down either. A reporter is routinely
+    // created for work that turns out to be empty -- a Copy-Item stage for a folder that has
+    // no queues, say -- and disposing it used to send a Completed record for an activity the
+    // host had never been shown: traced, twelve of a folder's thirteen stage bars were
+    // completed without a single Processing record, their status still the activity name they
+    // were constructed with. Sending a record about a bar the host does not have is wrong on
+    // its own terms; it is not, as was first assumed, the explanation for Copy-Item's parent
+    // bar blinking out at every folder boundary -- that survived this fix, and replaying the
+    // real record stream through plain Write-Progress, timing and all, does not reproduce it.
+    private bool reported;
+
     private void CompleteProgress()
     {
+        if (!reported) return;
+
         progressRecord.RecordType = ProgressRecordType.Completed;
         WriteProgress();
     }

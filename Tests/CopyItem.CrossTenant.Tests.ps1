@@ -181,12 +181,36 @@ BeforeAll {
 
         # folder user: a directory user of the src tenant other than me. Under a
         # shared org directory it also resolves in the dst tenant (FindDstUser).
+        #
+        # Seeded ONLY when the dst tenant can actually resolve the user. The two
+        # drives being different tenants does not make their directories shared:
+        # two orgs on one on-prem server (AS: = org "default", ASTest: = org
+        # "Test") have separate directories, and seeding a user the dst cannot
+        # see made Copy-Item throw and took the whole container down with it --
+        # an environment mismatch reported as eight failures. Left unseeded, the
+        # folder-user test skips itself (see "no DirectoryUser other than the
+        # current user" below) and the rest of the cross-tenant surface still
+        # runs. A directory the dst cannot even enumerate (no OR.Users.Read)
+        # counts as unresolvable for the same reason.
         $me  = (Get-OrchCurrentUser -Path "$($script:SrcDrive):\").UserName
         $alt = Get-OrchUser -Path "$($script:SrcDrive):\" -Type DirectoryUser |
                     Where-Object UserName -ne $me | Select-Object -First 1
         if ($alt) {
-            $script:SeededFolderUser = if ($alt.EmailAddress) { $alt.EmailAddress } else { $alt.UserName }
-            Add-OrchFolderUser -Path $script:SrcRoot -Type DirectoryUser -UserName $script:SeededFolderUser -Roles 'Automation User' -ErrorAction Stop | Out-Null
+            $candidate = if ($alt.EmailAddress) { $alt.EmailAddress } else { $alt.UserName }
+            $resolvesInDst = $false
+            try {
+                $resolvesInDst = [bool](Get-OrchUser -Path "$($script:DstDrive):\" -Type DirectoryUser -ErrorAction Stop |
+                    Where-Object { $_.UserName -eq $alt.UserName -or ($alt.EmailAddress -and $_.EmailAddress -eq $alt.EmailAddress) })
+            }
+            catch { $resolvesInDst = $false }
+
+            if ($resolvesInDst) {
+                $script:SeededFolderUser = $candidate
+                Add-OrchFolderUser -Path $script:SrcRoot -Type DirectoryUser -UserName $script:SeededFolderUser -Roles 'Automation User' -ErrorAction Stop | Out-Null
+            }
+            else {
+                Write-Host "Not seeding a folder user: '$candidate' does not resolve in $($script:DstDrive): (separate directories). The folder-user test will skip." -ForegroundColor Yellow
+            }
         }
         Clear-OrchCache -Path $script:SrcRoot
 
