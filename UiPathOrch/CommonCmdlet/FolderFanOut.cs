@@ -88,7 +88,7 @@ internal static class FolderFanOut
         using var cancelHandler = new ConsoleCancelHandler();
 
         var folders = drivesFolders.ToList();
-        using var reporter = new ProgressReporter(caller, 1, folders.Count, listActivity);
+        using var reporter = new ProgressReporter(caller, folders.Count, listActivity);
 
         // Phase 1. Folders that matched nothing drop out here.
         var groups = new List<(OrchDriveInfo drive, Folder folder, List<TItem> items)>();

@@ -90,7 +90,7 @@ public class GetPmGroupMemberCmdlet : OrchestratorPSCmdlet
                 .ToList());
 
         var groups = new List<(OrchDriveInfo drive, PmGroup group)>();
-        using (var listReporter = new ProgressReporter(this, 1, groupPool.Count, "Listing groups"))
+        using (var listReporter = new ProgressReporter(this, groupPool.Count, "Listing groups"))
         {
             foreach (var task in groupPool)
             {
@@ -112,7 +112,7 @@ public class GetPmGroupMemberCmdlet : OrchestratorPSCmdlet
             t => t.group,
             t => t.drive.PmGroups.Get(t.group.id));
 
-        using var detailReporter = new ProgressReporter(this, 1, detailPool.Count, "Getting group members");
+        using var detailReporter = new ProgressReporter(this, detailPool.Count, "Getting group members");
         foreach (var task in detailPool)
         {
             try

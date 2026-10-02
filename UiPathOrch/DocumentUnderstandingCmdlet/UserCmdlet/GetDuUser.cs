@@ -88,7 +88,7 @@ public class GetDuUserCmdlet : OrchestratorPSCmdlet
             dp => dp.drive.GetDuUsers(dp.project));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting DU users");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting DU users");
         foreach (var result in results)
         {
             try

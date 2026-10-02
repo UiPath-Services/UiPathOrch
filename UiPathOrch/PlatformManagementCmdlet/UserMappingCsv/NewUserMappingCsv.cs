@@ -299,27 +299,29 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
         string msg = "Generating user mapping csv...";
         using var cancelHandler = new ConsoleCancelHandler();
-        using ProgressReporter reporter = new(this, 1, totalStageNum, msg);
+        using ProgressReporter reporter = new(this, totalStageNum, msg);
         try
         {
+            // The three stage bars live together under the run's bar, so they say so: all
+            // three are in scope at once from here to the end of the try.
             msg = "Enumerating PmGroup Members...          ";
-            using ProgressReporter reporterPmGroups = new(this, 100, Int32.MaxValue, msg);
+            using ProgressReporter reporterPmGroups = new(this, Int32.MaxValue, msg, reporter);
             EnumeratePmGroupMembers(srcDrive, userMappings, reporterPmGroups, cancelHandler.Token);
 
             msg = "Enumerating Tenant Users...             ";
-            using ProgressReporter reporterUsers = new(this, 200, Int32.MaxValue, msg);
+            using ProgressReporter reporterUsers = new(this, Int32.MaxValue, msg, reporter);
             EnumerateTenantUsers(srcDrive, userMappings, reporterUsers, cancelHandler.Token);
 
             // This is necessary because directory users (not just tenant users) can be assigned to folders.
             msg = "Enumerating Users assigned in Folders...";
-            using ProgressReporter reporterFolderUsers = new(this, 300, Int32.MaxValue, msg);
+            using ProgressReporter reporterFolderUsers = new(this, Int32.MaxValue, msg, reporter);
             EnumerateFolderUsers(srcDrive, userMappings, reporterFolderUsers, cancelHandler.Token);
 
             // On second thought, there's no need to search assets.
             // Only users assigned to a folder should be assignable to an asset.
             // What happens if you unassign a user after creating the asset? But we don't need to worry about that.
             //msg = "Enumerating Users assigned in Assets... ";
-            //using ProgressReporter reporterAssets = new(this, 400, Int32.MaxValue, msg);
+            //using ProgressReporter reporterAssets = new(this, Int32.MaxValue, msg);
             //EnumerateAssetUsers(srcDrive, userMappings, reporterAssets, cancelHandler.Token);
 
             // Robot rows never go through the directory searches below — robot accounts

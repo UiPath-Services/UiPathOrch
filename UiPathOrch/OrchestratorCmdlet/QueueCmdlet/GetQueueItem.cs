@@ -368,7 +368,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
         }
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using ProgressReporter reporterFolder = new(this, 1, drivesFolders.Count, "Folder");
+        using ProgressReporter reporterFolder = new(this, drivesFolders.Count, "Folder");
         int indexFolder = 0;
         foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
         {
@@ -415,7 +415,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
             var targetQueues = queues
                 .FilterByWildcards(q => q?.Name, wpName)
                 .OrderBy(q => q.Name).ToList();
-            using ProgressReporter reporterQueue = new(this, 2, targetQueues.Count, "Queue ");
+            using ProgressReporter reporterQueue = new(this, targetQueues.Count, "Queue ", reporterFolder);
             int indexQueue = 0;
             foreach (var queue in targetQueues.WithCancellation(cancelHandler.Token))
             {
@@ -425,7 +425,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
                 int skip = Math.Max(0, Skip ?? 0); // negative -Skip is meaningless; treat as 0 (it was otherwise cast to a huge $skip on the non-batched path)
 
                 int intReporterItemTotal = isBatched ? 0 : (int)first;
-                using ProgressReporter reporterItem = new(this, 3, intReporterItemTotal, "Item  ");
+                using ProgressReporter reporterItem = new(this, intReporterItemTotal, "Item  ", reporterQueue);
 
                 var allItems = isBatched ? new List<object>() : null;
                 try

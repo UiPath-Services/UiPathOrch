@@ -44,7 +44,7 @@ public class GetTestCaseCmdlet : OrchestratorPSCmdlet
         );
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting test cases");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting test cases");
         foreach (var result in results)
         {
             try

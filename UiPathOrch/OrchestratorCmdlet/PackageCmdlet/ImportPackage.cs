@@ -63,7 +63,7 @@ public class ImportPackageCmdlet : OrchestratorPSCmdlet
 
         // Fixed label, destination in Context: see CopyCalendar for why the destination may
         // not go in the activity of a bar that is already on screen.
-        using var reporter = new ProgressReporter(this, 1, totalNum, "Packages");
+        using var reporter = new ProgressReporter(this, totalNum, "Packages");
 
         int index = 0;
         // Warn once per (destination drive, source directory) instead of once per .nupkg: a

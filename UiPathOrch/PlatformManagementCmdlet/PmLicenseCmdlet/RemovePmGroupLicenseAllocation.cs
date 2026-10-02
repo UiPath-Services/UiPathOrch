@@ -110,7 +110,7 @@ public class RemovePmGroupLicenseAllocationCmdlet : OrchestratorPSCmdlet
                 }
 
                 foreach (var user in targetUsers.OrderBy(u => u?.name)
-                    .WithProgressBar(this, $"Removing allocations from {group.GetPSPath(drive.NameColonSeparator)}", u => u?.name, id: 2)
+                    .WithProgressBar(this, $"Removing allocations from {group.GetPSPath(drive.NameColonSeparator)}", u => u?.name)
                     .WithCancellation(cancelHandler.Token))
                 {
                     string target = user.name;

@@ -48,7 +48,7 @@ public class GetTmTestExecutionCmdlet : OrchestratorPSCmdlet
             dp => dp.drive.TmTestExecutions.Get(dp.project));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting test executions");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting test executions");
         foreach (var result in results)
         {
             try

@@ -76,7 +76,7 @@ public class GetFolderMachineCmdlet : OrchestratorPSCmdlet
             df => df.drive.FolderMachinesAssigned.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting folder machines");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting folder machines");
         foreach (var result in results.WithCancellation(cancelHandler.Token))
         {
             try

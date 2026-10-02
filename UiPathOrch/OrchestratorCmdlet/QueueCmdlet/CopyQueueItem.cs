@@ -48,7 +48,7 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         // Fixed label, destination queue in Context: see CopyCalendar for why the
         // destination may not go in the activity of a bar that is already on screen.
-        using ProgressReporter reporterQueue = new(this, 3, int.MaxValue, "Queue items");
+        using ProgressReporter reporterQueue = new(this, int.MaxValue, "Queue items");
 
         // Count the number of queues to be processed
         reporterQueue.TotalNum = srcDrivesFolders.CountEntities(

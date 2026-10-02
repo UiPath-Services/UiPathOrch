@@ -639,7 +639,7 @@ public class SetCredentialAssetCmdlet : OrchestratorPSCmdlet
 
         List<(OrchDriveInfo drive, Int64 id)> folderIdsThatShouldRemoveCache = [];
 
-        using var reporter = new ProgressReporter(this, 1, pendingAssets.Count, "Updating credential assets");
+        using var reporter = new ProgressReporter(this, pendingAssets.Count, "Updating credential assets");
 
         // Process the grouped parameter sets
         try

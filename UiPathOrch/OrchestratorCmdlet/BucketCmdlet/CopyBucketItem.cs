@@ -92,7 +92,7 @@ public class CopyBucketItemCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         // Fixed label, destination bucket in Context: see CopyCalendar for why the
         // destination may not go in the activity of a bar that is already on screen.
-        using ProgressReporter reporter = new(this, 1000, int.MaxValue, "Bucket files");
+        using ProgressReporter reporter = new(this, int.MaxValue, "Bucket files");
 
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {

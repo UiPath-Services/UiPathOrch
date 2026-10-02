@@ -239,7 +239,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
         string dstLabel = string.Join(", ", dstDrivesFolders.Select(d => d.Item2.GetPSPath()));
 
         int index1 = 0;
-        using var reporterMain = new ProgressReporter(_this, 1, srcDrivesFolders.Count, "Folders ");
+        using var reporterMain = new ProgressReporter(_this, srcDrivesFolders.Count, "Folders ");
         foreach (var (srcDrive, srcFolder) in srcDrivesFolders)
         {
             cancelToken.ThrowIfCancellationRequested();
@@ -255,7 +255,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
                 var srcFeedId = srcDrive.FolderFeedId.Get(srcFolder);
 
                 int index2 = 0;
-                using var reporter2 = new ProgressReporter(_this, 2, srcPackages.Count, "Packages", 1);
+                using var reporter2 = new ProgressReporter(_this, srcPackages.Count, "Packages", reporterMain);
                 foreach (var srcPackage in srcPackages)
                 {
                     cancelToken.ThrowIfCancellationRequested();
@@ -272,7 +272,7 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
                         .ToList();
 
                     int index3 = 0;
-                    using var reporter3 = new ProgressReporter(_this, 3, srcVersions.Count * dstDrivesFolders.Count, "Versions", 2);
+                    using var reporter3 = new ProgressReporter(_this, srcVersions.Count * dstDrivesFolders.Count, "Versions", reporter2);
                     foreach (var srcVersion in srcVersions)
                     {
                         string fileName = null;

@@ -50,7 +50,7 @@ public class RemoveLibraryCmdlet : OrchestratorPSCmdlet
                     .ToList();
 
                 int libraryIndex = 0;
-                using var libraryReporter = new ProgressReporter(this, 1, libraries.Count, "Libraries");
+                using var libraryReporter = new ProgressReporter(this, libraries.Count, "Libraries");
 
                 foreach (var library in libraries.WithCancellation(cancelHandler.Token))
                 {
@@ -65,7 +65,7 @@ public class RemoveLibraryCmdlet : OrchestratorPSCmdlet
                         // Disposed at the end of each library, so the bar belongs to the
                         // library above it rather than accumulating across the run.
                         int versionIndex = 0;
-                        using var versionReporter = new ProgressReporter(this, 2, matchingVersions.Count, "Versions ", 1);
+                        using var versionReporter = new ProgressReporter(this, matchingVersions.Count, "Versions ", libraryReporter);
 
                         foreach (var matchingVersion in matchingVersions.WithCancellation(cancelHandler.Token))
                         {

@@ -55,7 +55,7 @@ public class GetPackageVersionCmdlet : OrchestratorPSCmdlet
                 .ToList());
 
         var packages = new List<(OrchDriveInfo drive, Folder folder, Package package)>();
-        using (var reporter = new ProgressReporter(this, 1, packagePool.Count, "Listing packages"))
+        using (var reporter = new ProgressReporter(this, packagePool.Count, "Listing packages"))
         {
             foreach (var task in packagePool)
             {
@@ -80,7 +80,7 @@ public class GetPackageVersionCmdlet : OrchestratorPSCmdlet
             t => t.package,
             t => t.drive.GetPackageVersions(t.folder, t.package.Id!));
 
-        using var versionReporter = new ProgressReporter(this, 1, versionPool.Count, "Getting package versions");
+        using var versionReporter = new ProgressReporter(this, versionPool.Count, "Getting package versions");
         foreach (var task in versionPool)
         {
             try

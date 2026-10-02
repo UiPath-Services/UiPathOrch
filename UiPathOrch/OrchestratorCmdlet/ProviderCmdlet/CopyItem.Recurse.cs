@@ -6,9 +6,6 @@ namespace UiPath.PowerShell.Core;
 
 public partial class OrchProvider
 {
-    // Activity id of the folder bar. Named because three places have to agree on it: the two
-    // entry points that may own the bar, and the per-entity bars that name it as their parent.
-    private const int FolderProgressId = 1;
 
     private bool CopyItemRecurse(
         OrchDriveInfo srcDrive,
@@ -154,7 +151,7 @@ public partial class OrchProvider
                 // call owns it -- `using` on the null the inner calls get is a no-op -- and
                 // TotalNum is reset per folder because a personal workspace has fewer stages.
                 using ProgressReporter? ownedReporter = folderReporter is null
-                    ? new ProgressReporter(this, FolderProgressId, totalStageNum, "Copying folders")
+                    ? new ProgressReporter(this, totalStageNum, "Copying folders")
                     : null;
                 ProgressReporter reporter = folderReporter ?? ownedReporter!;
                 reporter.TotalNum = totalStageNum;
@@ -202,9 +199,13 @@ public partial class OrchProvider
                         // src-side cache, then runs its per-entity copy under a child
                         // ProgressReporter. Ordering is significant — buckets before
                         // processes, packages before triggers — so keep this list in
-                        // dependency order. Base numbers (100..1300) match the original
-                        // per-stage reporter offsets. (Test cases are intentionally absent:
-                        // they are created automatically when packages/processes copy.)
+                        // dependency order. (Test cases are intentionally absent: they are
+                        // created automatically when packages/processes copy.)
+                        //
+                        // Each stage used to carry a hand-picked activity id (100..1300).
+                        // Those are gone: the bars are allocated ids and name the folder bar
+                        // as their parent by reference, so no two can be made to collide by
+                        // editing one of them.
                         //
                         // Buckets / assets / queues also clear newFolder's dst-side list
                         // AFTER copying, exactly as the standalone Copy-OrchBucket / -OrchAsset
@@ -228,38 +229,38 @@ public partial class OrchProvider
                         // indents a child bar two columns under its parent, so the parent's
                         // label never shares a column with these and padding it only pushed
                         // its bar needlessly to the right.
-                        var stages = new (string Label, int Base, Action? PreStep, Action<ProgressReporter> Run)[]
+                        var stages = new (string Label, Action? PreStep, Action<ProgressReporter> Run)[]
                         {
-                            ("Folder users    ", 100,
+                            ("Folder users    ",
                                 () => { srcDrive.FolderUsersWithInherited.ClearCache(srcFolder); srcDrive.FolderUsersWithNoInherited.ClearCache(srcFolder); },
                                 r => CopyFolderUsers(this, srcDrive, srcFolder, null, null, dstDrive, newFolder, r, true, cancelToken, userMapping)),
-                            ("Folder machines ", 200,
+                            ("Folder machines ",
                                 () => srcDrive.FolderMachinesAssigned.ClearCache(srcFolder),
                                 r => CopyFolderMachines(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Buckets         ", 300, null,
+                            ("Buckets         ", null,
                                 r => { CopyBuckets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, _linkReport); dstDrive.Buckets.ClearCache(newFolder); }),
-                            ("Packages        ", 400, null,
+                            ("Packages        ", null,
                                 r => CopyPackages(this, srcDrive, srcFolder, dstDrive, newFolder, r, cancelToken)),
-                            ("Processes       ", 500, null,
+                            ("Processes       ", null,
                                 r => CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Assets          ", 600,
+                            ("Assets          ",
                                 () => srcDrive.Assets.ClearCache(srcFolder),
                                 r => { CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, userMapping, _linkReport); dstDrive.Assets.ClearCache(newFolder); }),
-                            ("Queues          ", 700, null,
+                            ("Queues          ", null,
                                 r => { CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, _linkReport); dstDrive.Queues.ClearCache(newFolder); }),
-                            ("Triggers        ", 800,
+                            ("Triggers        ",
                                 () => srcDrive.Triggers.ClearCache(srcFolder),
                                 r => CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("API triggers    ", 900,
+                            ("API triggers    ",
                                 () => srcDrive.ApiTriggers.ClearCache(srcFolder),
                                 r => CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Test sets       ", 1000, null,
+                            ("Test sets       ", null,
                                 r => CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Test schedules  ", 1100, null,
+                            ("Test schedules  ", null,
                                 r => CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Test data queues", 1200, null,
+                            ("Test data queues", null,
                                 r => CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
-                            ("Action catalogs ", 1300, null,
+                            ("Action catalogs ", null,
                                 r => CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
                         };
 
@@ -279,7 +280,7 @@ public partial class OrchProvider
                                 // copied, so repeating it here only lengthens the line.
                                 reporter.WriteProgress(++rootIndex);
                                 stage.PreStep?.Invoke();
-                                var childReporter = new ProgressReporter(this, stage.Base, null, stage.Label, FolderProgressId);
+                                var childReporter = new ProgressReporter(this, null, stage.Label, reporter);
                                 childReporters.Add(childReporter);
                                 stage.Run(childReporter);
                                 // These bars stay up for the rest of the folder, so each one
@@ -525,7 +526,7 @@ public partial class OrchProvider
                     // Owned here, not left to the first call, so the bar survives the whole walk.
                     // Each call resets TotalNum for the folder it is on; the 13 is only what the
                     // bar starts at before the first one does that.
-                    using var folderReporter = new ProgressReporter(this, FolderProgressId, 13, "Copying folders");
+                    using var folderReporter = new ProgressReporter(this, 13, "Copying folders");
 
                     // WithCancellation, so Ctrl+C stops the walk between top-level folders too.
                     // The subfolder loop inside CopyItemRecurse already checks after each child;

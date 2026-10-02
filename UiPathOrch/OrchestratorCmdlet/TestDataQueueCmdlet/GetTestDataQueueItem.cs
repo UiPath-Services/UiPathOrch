@@ -70,7 +70,7 @@ public class GetTestDataQueueItemCmdlet : OrchestratorPSCmdlet
                 .ToList());
 
         var queues = new List<(OrchDriveInfo drive, Folder folder, TestDataQueue queue)>();
-        using (var reporter = new ProgressReporter(this, 1, queuePool.Count, "Listing test data queues"))
+        using (var reporter = new ProgressReporter(this, queuePool.Count, "Listing test data queues"))
         {
             foreach (var task in queuePool)
             {
@@ -93,7 +93,7 @@ public class GetTestDataQueueItemCmdlet : OrchestratorPSCmdlet
             t => t.queue,
             t => t.drive.TestDataQueueItems.Get(t.folder, t.queue));
 
-        using var itemReporter = new ProgressReporter(this, 1, itemPool.Count, "Getting test data queue items");
+        using var itemReporter = new ProgressReporter(this, itemPool.Count, "Getting test data queue items");
         foreach (var task in itemPool)
         {
             try

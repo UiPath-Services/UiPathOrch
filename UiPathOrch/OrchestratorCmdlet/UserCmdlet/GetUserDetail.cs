@@ -137,7 +137,7 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
                 .ToList());
 
         var users = new List<(OrchDriveInfo drive, User user)>();
-        using (var listReporter = new ProgressReporter(caller, 1, userPool.Count, "Listing users"))
+        using (var listReporter = new ProgressReporter(caller, userPool.Count, "Listing users"))
         {
             foreach (var task in userPool)
             {
@@ -159,7 +159,7 @@ public class GetUserDetailCmdlet : OrchestratorPSCmdlet
             t => t.user,
             t => t.drive.UsersDetailed.Get(t.user.Id!.Value));
 
-        using var detailReporter = new ProgressReporter(caller, 1, detailPool.Count, "Getting user details");
+        using var detailReporter = new ProgressReporter(caller, detailPool.Count, "Getting user details");
         foreach (var task in detailPool)
         {
             try

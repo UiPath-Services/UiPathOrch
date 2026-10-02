@@ -127,7 +127,7 @@ public class GetCredentialAssetCmdlet : OrchestratorPSCmdlet
             df => df.drive.Assets.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting credential assets");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting credential assets");
         foreach (var result in results)
         {
             try

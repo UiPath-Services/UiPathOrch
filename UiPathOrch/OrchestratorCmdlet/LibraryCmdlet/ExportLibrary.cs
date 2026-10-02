@@ -59,7 +59,7 @@ public class ExportLibraryCmdlet : OrchestratorPSCmdlet
             //drive => HostFeed ? drive.LibrariesInHost.Get() : drive.LibrariesInTenant.Get());
             drive => drive.LibrariesInTenant.Get());
 
-        using var reporter = new ProgressReporter(this, 1, 100, "Export Library");
+        using var reporter = new ProgressReporter(this, 100, "Export Library");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)
         {

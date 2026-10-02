@@ -92,7 +92,7 @@ class GetDfRecordCmdlet : OrchestratorPSCmdlet
             });
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting Data Fabric records");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting Data Fabric records");
         foreach (var result in results)
         {
             try

@@ -111,7 +111,7 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
                 .ToList());
 
         var entities = new List<(OrchDriveInfo drive, Folder folder, TEntity entity)>();
-        using (var listReporter = new ProgressReporter(this, 1, entityPool.Count, "Listing entities"))
+        using (var listReporter = new ProgressReporter(this, entityPool.Count, "Listing entities"))
         {
             foreach (var task in entityPool)
             {
@@ -150,7 +150,7 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
             pending.Clear();
         }
 
-        using var linkReporter = new ProgressReporter(this, 1, linkPool.Count, "Getting links");
+        using var linkReporter = new ProgressReporter(this, linkPool.Count, "Getting links");
         foreach (var task in linkPool)
         {
             try

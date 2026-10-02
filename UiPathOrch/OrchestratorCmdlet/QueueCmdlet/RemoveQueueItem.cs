@@ -160,7 +160,7 @@ public class RemoveQueueItemCmdlet : OrchestratorPSCmdlet
         {
             #region Verify RowVersion for all _csvLines
             {
-                using ProgressReporter reporterRowVersion = new(this, 105, csvLines.Count, "Confirming RowVersions");
+                using ProgressReporter reporterRowVersion = new(this, csvLines.Count, "Confirming RowVersions");
                 int idxRowVersion = 0;
                 foreach (var line in csvLines)
                 {
@@ -208,7 +208,7 @@ public class RemoveQueueItemCmdlet : OrchestratorPSCmdlet
             // At this point, the list of items to delete has been built. Delete them in chunks of ChunkSize
 
             int idxRemove = 0;
-            using ProgressReporter reporterRemove = new(this, 5, linesToRemove.Count, "Removing items");
+            using ProgressReporter reporterRemove = new(this, linesToRemove.Count, "Removing items");
             foreach (var chunk in linesToRemove.Chunk(ChunkSize))
             {
                 reporterRemove.WriteProgress(idxRemove++ * ChunkSize + chunk.Length, queue.GetPSPath());

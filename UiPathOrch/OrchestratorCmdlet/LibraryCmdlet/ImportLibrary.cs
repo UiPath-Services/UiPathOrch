@@ -53,7 +53,7 @@ public class ImportLibraryCmdlet : OrchestratorPSCmdlet
 
         // Fixed label, destination in Context: see CopyCalendar for why the destination may
         // not go in the activity of a bar that is already on screen.
-        using var reporter = new ProgressReporter(this, 1, totalNum, "Libraries");
+        using var reporter = new ProgressReporter(this, totalNum, "Libraries");
 
         int index = 0;
         using var cancelHandler = new ConsoleCancelHandler();

@@ -64,7 +64,7 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
 
             // Fixed label, destination in Context: see CopyCalendar for why the destination may
         // not go in the activity of a bar that is already on screen.
-        using var reporter = new ProgressReporter(this, 1, 100, "Robot accounts");
+        using var reporter = new ProgressReporter(this, 100, "Robot accounts");
 
             using var cancelHandler = new ConsoleCancelHandler();
 

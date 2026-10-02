@@ -176,7 +176,7 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
                     .ToList());
 
             var groups = new List<(OrchDriveInfo drive, NuLicensedGroup group)>();
-            using (var listReporter = new ProgressReporter(this, 1, groupPool.Count, "Listing licensed groups"))
+            using (var listReporter = new ProgressReporter(this, groupPool.Count, "Listing licensed groups"))
             {
                 foreach (var task in groupPool)
                 {
@@ -198,7 +198,7 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
                 t => t.group,
                 t => t.drive.GetPmLicensedGroupAllocations(t.group));
 
-            using var allocationReporter = new ProgressReporter(this, 1, allocationPool.Count, "Getting group allocations");
+            using var allocationReporter = new ProgressReporter(this, allocationPool.Count, "Getting group allocations");
             foreach (var task in allocationPool)
             {
                 try

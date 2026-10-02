@@ -88,7 +88,7 @@ public class GetProcessCmdlet : OrchestratorPSCmdlet
             df => df.folder,
             df => df.drive.Releases.Get(df.folder));
 
-        using var reporter = new ProgressReporter(this, 1, pool.Count, "Getting processes");
+        using var reporter = new ProgressReporter(this, pool.Count, "Getting processes");
         foreach (var task in pool)
         {
             try

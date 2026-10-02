@@ -51,7 +51,7 @@ public class GetLibraryVersionCmdlet : OrchestratorPSCmdlet
                 .ToList());
 
         var libraries = new List<(OrchDriveInfo drive, Library lib)>();
-        using (var reporter = new ProgressReporter(this, 1, libraryPool.Count, "Listing libraries"))
+        using (var reporter = new ProgressReporter(this, libraryPool.Count, "Listing libraries"))
         {
             foreach (var task in libraryPool)
             {
@@ -75,7 +75,7 @@ public class GetLibraryVersionCmdlet : OrchestratorPSCmdlet
             t => (HostFeed ? t.drive.LibraryVersionsInHostFeed.Get(t.lib.Id!) : t.drive.LibraryVersions.Get(t.lib.Id!))
                 .FilterByWildcards(l => l?.Version, wpVersion));
 
-        using var versionReporter = new ProgressReporter(this, 1, versionPool.Count, "Getting library versions");
+        using var versionReporter = new ProgressReporter(this, versionPool.Count, "Getting library versions");
         foreach (var task in versionPool)
         {
             try

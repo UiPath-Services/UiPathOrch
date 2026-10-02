@@ -42,7 +42,7 @@ internal static class FeedPackageTargets
                 .OrderBy(p => p.Id!.ToLower())
                 .ToList());
 
-        using var reporter = new ProgressReporter(cmdlet, 1, pool.Count, activity);
+        using var reporter = new ProgressReporter(cmdlet, pool.Count, activity);
         foreach (var task in pool)
         {
             try

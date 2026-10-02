@@ -213,7 +213,7 @@ public class GetFolderUserCmdlet : OrchestratorPSCmdlet
             });
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting folder users");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting folder users");
         foreach (var result in results)
         {
             try

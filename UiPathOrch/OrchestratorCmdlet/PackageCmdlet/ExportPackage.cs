@@ -142,7 +142,7 @@ public class ExportPackageCmdlet : OrchestratorPSCmdlet
         }
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using ProgressReporter reporter = new(this, 1, 100, "Export packages");
+        using ProgressReporter reporter = new(this, 100, "Export packages");
         foreach (var (drive, folder) in drivesFolders)
         {
             try

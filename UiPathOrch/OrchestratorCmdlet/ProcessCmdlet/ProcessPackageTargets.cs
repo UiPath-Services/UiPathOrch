@@ -43,7 +43,7 @@ internal static class ProcessPackageTargets
             df => df,
             df => df.drive.Releases.Get(df.folder));
 
-        using var reporter = new ProgressReporter(cmdlet, 1, pool.Count, activity);
+        using var reporter = new ProgressReporter(cmdlet, pool.Count, activity);
         foreach (var task in pool)
         {
             try

@@ -165,7 +165,7 @@ public class GetQueueCmdlet : OrchestratorPSCmdlet
             df => df.drive.Queues.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting queues");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting queues");
         foreach (var result in results)
         {
             try

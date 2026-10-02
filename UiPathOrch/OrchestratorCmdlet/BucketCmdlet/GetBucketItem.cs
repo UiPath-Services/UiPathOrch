@@ -49,7 +49,7 @@ public class GetBucketItemCmdlet : OrchestratorPSCmdlet
             df => df.drive.Buckets.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting bucket items");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting bucket items");
         foreach (var result in results)
         {
             try

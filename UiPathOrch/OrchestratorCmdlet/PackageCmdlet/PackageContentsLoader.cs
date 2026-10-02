@@ -55,7 +55,7 @@ internal sealed class PackageContentsLoader : IDisposable
 
         if (_pending.Count > 0)
         {
-            _reporter = new ProgressReporter(cmdlet, 2, _pending.Count, activity);
+            _reporter = new ProgressReporter(cmdlet, _pending.Count, activity);
         }
     }
 

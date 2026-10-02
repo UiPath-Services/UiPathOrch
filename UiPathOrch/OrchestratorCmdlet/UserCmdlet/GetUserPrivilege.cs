@@ -45,7 +45,7 @@ public class GetUserPrivilegeCmdlet : OrchestratorPSCmdlet
                     user => user,
                     user => drive.UserPrivileges.Get(user));
 
-                using var reporter = new ProgressReporter(this, 1, results.Count, "Getting user privileges");
+                using var reporter = new ProgressReporter(this, results.Count, "Getting user privileges");
                 foreach (var result in results)
                 {
                     try

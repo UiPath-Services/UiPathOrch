@@ -371,14 +371,12 @@ public static class ProgressExtensions
     /// <param name="total">Item count for the percentage. Defaults to the source count,
     /// materializing the source once if it isn't already an <see cref="ICollection{T}"/>.
     /// Pass a known total to avoid materializing a lazy/expensive source.</param>
-    /// <param name="id">Progress activity id; give nested bars distinct ids (1, 2, 3...).</param>
     public static IEnumerable<T> WithProgressBar<T>(
         this IEnumerable<T> source,
         IWritableHost host,
         string activity,
         Func<T, string?>? getName = null,
-        int total = -1,
-        int id = 1)
+        int total = -1)
     {
         IEnumerable<T> sequence = source;
         if (total < 0)
@@ -388,7 +386,10 @@ public static class ProgressExtensions
             sequence = materialized;
         }
 
-        using var reporter = new ProgressReporter(host, id, total, activity);
+        // The id is allocated, not chosen. There used to be an `id` parameter defaulting to 1
+        // so that a caller nesting two of these could keep them apart by hand; the one caller
+        // that did got two bars side by side either way, since this helper never set a parent.
+        using var reporter = new ProgressReporter(host, total, activity);
         int index = 0;
         foreach (var item in sequence)
         {
@@ -854,12 +855,13 @@ public static class ParallelResults
 // Call it from the pipeline thread only -- it ends in Cmdlet.WriteProgress.
 public class ProgressReporter : IDisposable
 {
-    // Activity ids only have to be distinct among the bars that are alive at the same time, so
-    // new code lets them be allocated and uses the constructor without one. Choosing them by
-    // hand produced a registry of magic numbers -- 200, 500, 600, 900, 1000, 1300, one per
-    // Copy* cmdlet -- that existed only in the callers' heads and was maintained so that
-    // nested operations would not collide. Starts above that range so an allocated id can
-    // never land on one still written out by hand.
+    // Activity ids only have to be distinct among the bars alive at the same time, so they are
+    // allocated rather than chosen. Not merely a convenience: a hand-picked id is a promise
+    // about every other bar that might be on screen, made by someone who cannot see them, and
+    // the promise was kept only by accident (see the private constructor below). Nothing
+    // hands one in any more, so the starting point is arbitrary -- it stays above the old
+    // range so that a bar left over from an unloaded older copy of the module cannot alias one
+    // of these.
     private static int nextId = 10000;
 
     private IWritableHost? provider;
@@ -874,12 +876,39 @@ public class ProgressReporter : IDisposable
     {
     }
 
+    /// <summary>
+    /// A bar nested under <paramref name="parent"/>, with an allocated id.
+    ///
+    /// Takes the parent BAR, not its id, so that neither end has to name a number. Hand-chosen
+    /// ids were safe only as long as nothing changed: Copy-OrchBucketItem used 1000, which is
+    /// also Copy-Item's "Test sets" stage, and the two never met only because Copy-Item does
+    /// not call that cmdlet. Nothing in the code said so.
+    /// </summary>
+    public ProgressReporter(IWritableHost provider, int? totalNum, string activity, ProgressReporter? parent)
+        : this(provider, Interlocked.Increment(ref nextId), totalNum, activity, parent?.Id ?? -1)
+    {
+    }
+
+    /// <summary>This bar's activity id, for another bar to nest under it.</summary>
+    public int Id => progressRecord.ActivityId;
+
+    /// <summary>
+    /// The one place an activity id is chosen, and it is PRIVATE. Callers reach it through the
+    /// two constructors above, which allocate; a caller that needs nesting hands over the
+    /// parent bar rather than its number.
+    ///
+    /// Ids used to be written by hand, and the registry lived only in the authors' heads: 1
+    /// for "the main bar", 2 and 3 for whatever nested under it, 100..1300 for Copy-Item's
+    /// stages, 1000 for Copy-OrchBucketItem -- which is also Copy-Item's "Test sets" stage.
+    /// Those two never met, but only because Copy-Item happens not to call that cmdlet, and
+    /// nothing anywhere recorded the dependency. Allocating removes the question.
+    /// </summary>
     /// <param name="parentId">The activity id of the bar this one sits under, or -1 for a bar
     /// that stands on its own. A bar whose work is a step of another bar's work says so: the
     /// host then draws one tree, indenting this bar under its parent, instead of two unrelated
     /// activities that happen to be on screen together. Copy-Item's per-entity bars are the
     /// case -- they are stages of the folder the parent bar is counting.</param>
-    public ProgressReporter(IWritableHost provider, int id, int? totalNum, string activity, int parentId = -1)
+    private ProgressReporter(IWritableHost provider, int id, int? totalNum, string activity, int parentId = -1)
     {
         this.provider = provider;
         this.totalNum = totalNum;

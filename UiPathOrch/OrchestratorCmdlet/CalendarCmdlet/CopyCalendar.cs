@@ -54,7 +54,7 @@ public class CopyCalendarCmdlet : OrchestratorPSCmdlet
         // A fixed label, with the destination in Context inside the bar. Writing the
         // destination into the activity rewrote the label of a bar already on screen, so with
         // more than one destination drive the bar changed width and jumped as it went.
-        using var reporter = new ProgressReporter(_this, 1, 100, "Calendars");
+        using var reporter = new ProgressReporter(_this, 100, "Calendars");
 
         int index = 0;
         reporter.TotalNum = dstDrives.Count * srcCalendars.Count;

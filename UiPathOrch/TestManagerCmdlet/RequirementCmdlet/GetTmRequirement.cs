@@ -48,7 +48,7 @@ public class GetTmRequirementCmdlet : OrchestratorPSCmdlet
             dp => dp.drive.TmRequirements.Get(dp.project));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting requirements");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting requirements");
         foreach (var result in results)
         {
             try

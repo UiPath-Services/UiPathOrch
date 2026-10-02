@@ -144,7 +144,7 @@ public class SaveJobMediaCmdlet : OrchestratorPSCmdlet
         // Fixed label, destination in Context: see CopyCalendar. The destination happens to
         // be constant for a run here, but it belongs inside the bar either way -- the
         // activity is the label, not a place to put values.
-        using var reporter = new ProgressReporter(this, 1, totalFileNum, "Media");
+        using var reporter = new ProgressReporter(this, totalFileNum, "Media");
 
         int index = 0;
         foreach (var (drive, folder) in drivesFolders)

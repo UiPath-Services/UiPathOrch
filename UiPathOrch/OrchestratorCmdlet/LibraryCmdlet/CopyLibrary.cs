@@ -144,7 +144,7 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
             // a different width per destination and the bar walked left and right under the
             // one above.
             int index1 = 0;
-            using var reporter1 = new ProgressReporter(_this, 1, srcLibraries.Count(), "Libraries");
+            using var reporter1 = new ProgressReporter(_this, srcLibraries.Count(), "Libraries");
             foreach (var library in srcLibraries)
             {
                 cancelToken.ThrowIfCancellationRequested();
@@ -158,7 +158,7 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
                         //.OrderBy(version => version.Version!, VersionComparer.Instance)
                         .ToList();
 
-                    using var reporter2 = new ProgressReporter(_this, 2, dstDrives.Count * versions.Count, "Versions ", 1);
+                    using var reporter2 = new ProgressReporter(_this, dstDrives.Count * versions.Count, "Versions ", reporter1);
                     int index2 = 0;
                     foreach (var version in versions)
                     {

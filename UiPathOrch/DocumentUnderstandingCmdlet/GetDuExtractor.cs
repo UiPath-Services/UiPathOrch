@@ -76,7 +76,7 @@ public class GetDuExtractorCmdlet : OrchestratorPSCmdlet
             dp => dp.drive.GetDuExtractors(dp.project));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting DU extractors");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting DU extractors");
         foreach (var result in results)
         {
             try

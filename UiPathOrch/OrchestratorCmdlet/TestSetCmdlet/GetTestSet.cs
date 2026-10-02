@@ -39,7 +39,7 @@ public class GetTestSetCmdlet : OrchestratorPSCmdlet
             df => df.drive.TestSets.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting test sets");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting test sets");
         foreach (var result in results)
         {
             try

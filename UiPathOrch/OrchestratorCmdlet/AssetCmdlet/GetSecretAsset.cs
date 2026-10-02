@@ -145,7 +145,7 @@ public class GetSecretAssetCmdlet : OrchestratorPSCmdlet
             df => df.drive.Assets.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting secret assets");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting secret assets");
         foreach (var result in results)
         {
             try

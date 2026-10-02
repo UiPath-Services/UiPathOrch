@@ -66,7 +66,7 @@ public class GetDuRoleCmdlet : OrchestratorPSCmdlet
             drive => drive.GetDuRoles());
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, 1, results.Count, "Getting DU roles");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting DU roles");
         foreach (var result in results)
         {
             try

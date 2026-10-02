@@ -546,7 +546,7 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
         }
 
         List<(OrchDriveInfo drive, Int64 id)> folderIdsThatShouldRemoveCache = [];
-        using var reporter = new ProgressReporter(this, 1, pendingAssets.Count, "Updating secret assets");
+        using var reporter = new ProgressReporter(this, pendingAssets.Count, "Updating secret assets");
 
         try
         {

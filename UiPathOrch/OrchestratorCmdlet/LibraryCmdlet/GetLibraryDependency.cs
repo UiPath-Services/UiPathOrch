@@ -67,7 +67,7 @@ public class GetLibraryDependencyCmdlet : OrchestratorPSCmdlet
                 .ToList());
 
         var targets = new List<(OrchDriveInfo drive, string libraryId, string version)>();
-        using (var reporter = new ProgressReporter(this, 1, libraryPool.Count, "Listing libraries"))
+        using (var reporter = new ProgressReporter(this, libraryPool.Count, "Listing libraries"))
         {
             foreach (var task in libraryPool)
             {
@@ -109,7 +109,7 @@ public class GetLibraryDependencyCmdlet : OrchestratorPSCmdlet
             .ToHashSet();
 
         using var downloadReporter = pending.Count > 0
-            ? new ProgressReporter(this, 2, pending.Count, "Downloading libraries")
+            ? new ProgressReporter(this, pending.Count, "Downloading libraries")
             : null;
         int downloaded = 0;
 

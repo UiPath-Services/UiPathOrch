@@ -763,7 +763,7 @@ public class SetAssetCmdlet : OrchestratorPSCmdlet
 
         List<(OrchDriveInfo drive, Int64 id)> folderIdsThatShouldRemoveCache = [];
 
-        using var reporter = new ProgressReporter(this, 1, pendingAssets.Count, "Updating Assets");
+        using var reporter = new ProgressReporter(this, pendingAssets.Count, "Updating Assets");
 
         // Process the grouped parameter sets
         try

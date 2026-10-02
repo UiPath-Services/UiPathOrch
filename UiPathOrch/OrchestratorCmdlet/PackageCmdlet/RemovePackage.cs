@@ -312,7 +312,7 @@ public class RemovePackageCmdlet : OrchestratorPSCmdlet
                     .ToList();
 
                 int packageIndex = 0;
-                using var packageReporter = new ProgressReporter(this, 1, packages.Count, "Packages");
+                using var packageReporter = new ProgressReporter(this, packages.Count, "Packages");
 
                 foreach (var package in packages)
                 {
@@ -327,7 +327,7 @@ public class RemovePackageCmdlet : OrchestratorPSCmdlet
                         // Disposed at the end of each package, so the bar belongs to the
                         // package above it rather than accumulating across the run.
                         int versionIndex = 0;
-                        using var versionReporter = new ProgressReporter(this, 2, versions.Count, "Versions", 1);
+                        using var versionReporter = new ProgressReporter(this, versions.Count, "Versions", packageReporter);
 
                         foreach (var version in versions)
                         {
