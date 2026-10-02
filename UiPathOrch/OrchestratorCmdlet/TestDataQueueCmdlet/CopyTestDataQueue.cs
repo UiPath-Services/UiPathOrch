@@ -67,6 +67,7 @@ public class CopyTestDataQueueCmdlet : OrchestratorPSCmdlet
 
             try
             {
+                reporterTestDataQueues.Context = dstFolder.GetPSPath();
                 Core.OrchProvider.CopyTestDataQueues(this,
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterTestDataQueues,

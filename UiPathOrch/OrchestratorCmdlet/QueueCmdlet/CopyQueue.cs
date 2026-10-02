@@ -75,6 +75,7 @@ public class CopyQueueCmdlet : OrchestratorPSCmdlet
 
             try
             {
+                reporterQueues.Context = dstFolder.GetPSPath();
                 Core.OrchProvider.CopyQueues(this,
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterQueues,

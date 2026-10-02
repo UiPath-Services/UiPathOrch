@@ -127,6 +127,7 @@ public class CopyFolderUserCmdlet : OrchestratorPSCmdlet
 
             try
             {
+                reporter.Context = dstFolder.GetPSPath();
                 Core.OrchProvider.CopyFolderUsers(this,
                     srcDrive, srcFolder, wpUserName, wpType,
                     dstDrive, dstFolder, reporter,

@@ -154,29 +154,41 @@ public partial class OrchProvider
                 // call owns it -- `using` on the null the inner calls get is a no-op -- and
                 // TotalNum is reset per folder because a personal workspace has fewer stages.
                 using ProgressReporter? ownedReporter = folderReporter is null
-                    ? new ProgressReporter(this, FolderProgressId, totalStageNum, "Copying folders ")
+                    ? new ProgressReporter(this, FolderProgressId, totalStageNum, "Copying folders")
                     : null;
                 ProgressReporter reporter = folderReporter ?? ownedReporter!;
                 reporter.TotalNum = totalStageNum;
                 // The scope starting below was introduced so that child reporters are disposed of in a timely manner.
                 {
                     // #0 Copy the folder itself (no folder creation needed for personal workspaces)
-                    // The destination goes in Context, not in the activity: the activity is the
-                    // padded label this bar shares with the child bar below, and overwriting it
-                    // with a path made the two start their "[" in different columns.
+                    //
+                    // Both paths in full: "<source folder> -> <folder being created>". Neither
+                    // can be inferred from the other -- how much of the source path is
+                    // reproduced under the destination depends on where the walk started, so
+                    // naming only the destination root would leave it unsaid whether this is
+                    // creating Orch2:\TestFixture_Base\Development or Orch2:\Development. Long
+                    // enough that the host may cut the line short; the whole destination is
+                    // worth that risk, an ambiguous one is not. The child bars below name the
+                    // entity only (see the stage loop), so no path is repeated per bar.
+                    //
+                    // The destination half can only be filled in once the folder exists, so
+                    // the bar first goes up with the source alone -- that write is what shows
+                    // the operator which folder the creation about to happen belongs to.
+                    //
+                    // It goes in Context rather than the activity because the activity is a
+                    // fixed-width label; a path there would move the bar on every folder.
+                    reporter.Context = srcFolder.GetPSPath();
+                    reporter.WriteProgress(0);
                     if (destinationWorkspace is not null)
                     {
                         newFolder = destinationWorkspace;
-                        reporter.Context = newFolder.GetPSPath();
-                        reporter.WriteProgress(0, srcFolder.GetPSPath());
                     }
                     else
                     {
-                        reporter.Context = dstFolder.GetPSPath();
-                        reporter.WriteProgress(0, srcFolder.GetPSPath());
                         newFolder = CopyFolder(srcDrive, srcFolder, dstDrive, dstFolder, feedType!, cancelToken);
                         if (newFolder is null) return false;
                     }
+                    reporter.Context = $"{srcFolder.GetPSPath()} -> {newFolder.GetPSPath()}";
 
                     srcDrive.Releases.ClearCache(srcFolder);
                     dstDrive.Releases.ClearCache(dstFolder);
@@ -206,12 +218,16 @@ public partial class OrchProvider
                         // silently skipped.
                         //
                         // Every Label is padded to 16, the length of the longest ("Test data
-                        // queues"), so this bar and the child bar below start their "[" in the
-                        // same column. Written out rather than computed, so what is here is
-                        // what is on screen -- the trailing spaces are load-bearing. A longer
-                        // stage name means re-padding the whole list, including "Copying
-                        // folders" on the parent reporter. Anything that varies, such as the
+                        // queues"), so these bars start their "[" in the same column. Written
+                        // out rather than computed, so what is here is what is on screen --
+                        // the trailing spaces are load-bearing. A longer stage name means
+                        // re-padding the whole list. Anything that varies, such as the
                         // destination folder, goes in ProgressReporter.Context instead.
+                        //
+                        // The parent's "Copying folders" is NOT padded to match: the host
+                        // indents a child bar two columns under its parent, so the parent's
+                        // label never shares a column with these and padding it only pushed
+                        // its bar needlessly to the right.
                         var stages = new (string Label, int Base, Action? PreStep, Action<ProgressReporter> Run)[]
                         {
                             ("Folder users    ", 100,
@@ -485,7 +501,7 @@ public partial class OrchProvider
                 // Owned here, not left to the first call, so the bar survives the whole walk.
                 // Each call resets TotalNum for the folder it is on; the 13 is only what the
                 // bar starts at before the first one does that.
-                using var folderReporter = new ProgressReporter(this, FolderProgressId, 13, "Copying folders ");
+                using var folderReporter = new ProgressReporter(this, FolderProgressId, 13, "Copying folders");
 
                 foreach (var folderToBeCopied in foldersToBeCopied)
                 {

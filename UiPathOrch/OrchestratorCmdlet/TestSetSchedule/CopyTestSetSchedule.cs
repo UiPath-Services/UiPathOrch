@@ -68,6 +68,7 @@ public class CopyTestSetScheduleCmdlet : OrchestratorPSCmdlet
 
             try
             {
+                reporterTestSchedules.Context = dstFolder.GetPSPath();
                 Core.OrchProvider.CopyTestSetSchedules(this,
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterTestSchedules,

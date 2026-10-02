@@ -67,6 +67,7 @@ public class CopyProcessCmdlet : OrchestratorPSCmdlet
 
             try
             {
+                reporterProcesses.Context = dstFolder.GetPSPath();
                 Core.OrchProvider.CopyProcesses(this,
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterProcesses,

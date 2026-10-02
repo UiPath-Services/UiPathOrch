@@ -88,6 +88,7 @@ public class CopyAssetCmdlet : OrchestratorPSCmdlet
 
             try
             {
+                reporterAssets.Context = dstFolder.GetPSPath();
                 Core.OrchProvider.CopyAssets(this,
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterAssets,

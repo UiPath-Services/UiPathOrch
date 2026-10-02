@@ -70,6 +70,7 @@ public class CopyApiTriggerCmdlet : OrchestratorPSCmdlet
 
             try
             {
+                reporterApiTriggers.Context = dstFolder.GetPSPath();
                 Core.OrchProvider.CopyApiTriggers(this,
                     srcDrive, srcFolder, wpName!,
                     dstDrive, dstFolder, reporterApiTriggers,

@@ -66,6 +66,7 @@ public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
 
             try
             {
+                reporterActionCatalogs.Context = dstFolder.GetPSPath();
                 Core.OrchProvider.CopyActionCatalogs(this,
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterActionCatalogs,

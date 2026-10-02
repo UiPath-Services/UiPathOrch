@@ -856,6 +856,12 @@ public class ProgressReporter : IDisposable
     // the folder a copy is writing into. It sits between the count and the item name, so the
     // line reads "3/10 ASTest:\Shared queue-emails". This used to live in the activity, which
     // made every bar a different width and pushed the bars out of alignment.
+    //
+    // Set by whoever OWNS the bar, never by a shared helper that was handed one. The Copy*
+    // methods in CopyItem.Entities used to set it themselves, which was right for the
+    // standalone Copy-Orch* cmdlets -- one bar, so it has to carry the destination -- and
+    // wrong under Copy-Item, where the folder bar above already names the folder and every
+    // child bar repeated the same long path. Only the owner knows what else is on screen.
     private string? context;
     public string? Context
     {
@@ -906,12 +912,9 @@ public class ProgressReporter : IDisposable
     // A bar that never reported anything is never taken down either. A reporter is routinely
     // created for work that turns out to be empty -- a Copy-Item stage for a folder that has
     // no queues, say -- and disposing it used to send a Completed record for an activity the
-    // host had never been shown: traced, twelve of a folder's thirteen stage bars were
-    // completed without a single Processing record, their status still the activity name they
-    // were constructed with. Sending a record about a bar the host does not have is wrong on
-    // its own terms; it is not, as was first assumed, the explanation for Copy-Item's parent
-    // bar blinking out at every folder boundary -- that survived this fix, and replaying the
-    // real record stream through plain Write-Progress, timing and all, does not reproduce it.
+    // host had never been shown: twelve of a folder's thirteen stage bars were completed
+    // without a single Processing record, their status still the activity name they were
+    // constructed with.
     private bool reported;
 
     private void CompleteProgress()

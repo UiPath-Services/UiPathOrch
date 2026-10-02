@@ -67,6 +67,7 @@ public class CopyFolderMachineCmdlet : OrchestratorPSCmdlet
 
             try
             {
+                reporter.Context = dstFolder.GetPSPath();
                 Core.OrchProvider.CopyFolderMachines(this,
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporter,

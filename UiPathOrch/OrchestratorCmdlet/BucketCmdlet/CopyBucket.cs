@@ -72,6 +72,7 @@ public class CopyBucketCmdlet : OrchestratorPSCmdlet
 
             try
             {
+                reporterBuckets.Context = dstFolder.GetPSPath();
                 Core.OrchProvider.CopyBuckets(this,
                     srcDrive, srcFolder, wpName,
                     dstDrive, dstFolder, reporterBuckets,
