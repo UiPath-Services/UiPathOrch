@@ -21,6 +21,11 @@
 .PARAMETER CredentialPassword
     Password to populate empty CredentialPassword columns. Default: 'TestPassw0rd!'.
 
+.PARAMETER Force
+    Remove the fixture's own leftovers (the TestFixture_Base tree and the tenant
+    machines named in machines.csv) before importing, instead of refusing to start.
+    Touches nothing else in the tenant.
+
 .EXAMPLE
     .\Import-Fixture.ps1 -TargetDrive OrchTest
 
@@ -34,7 +39,9 @@ param(
 
     [string]$FixturePath = (Join-Path $PSScriptRoot '..\TestData\Fixture'),
 
-    [string]$CredentialPassword = 'TestPassw0rd!'
+    [string]$CredentialPassword = 'TestPassw0rd!',
+
+    [switch]$Force
 )
 
 $ErrorActionPreference = 'Stop'
@@ -55,10 +62,44 @@ function Remap-Path {
     }
 }
 
-# 1. Root folder
-if (-not (Test-Path $root)) {
-    New-Item -Path $root -ItemType Directory | Out-Null
+# 0. Refuse before touching anything, or clear up with -Force.
+#
+# The script assumes an empty tenant (see .DESCRIPTION) and that is kept: a
+# half-present fixture is not reused, because a folder that merely has the right
+# name is not the fixture. What changes is WHEN it gives up. It used to create
+# the folder tree, then fail on the first machine that already existed -- leaving
+# more behind than it found, so the next run failed differently ("The name
+# Development is already used") and the operator had to work out by hand what to
+# delete. Folders go when the fixture tree is deleted; the tenant machines do not,
+# which is exactly the asymmetry that produced that second failure.
+$fixtureMachineNames = @(Import-Csv "$FixturePath\machines.csv" | ForEach-Object { $_.Name })
+$leftoverMachines = @(
+    Get-OrchMachine -Path "${TargetDrive}:\" -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -in $fixtureMachineNames }
+)
+$leftoverRoot = Test-Path $root
+
+if ($leftoverRoot -or $leftoverMachines.Count -gt 0) {
+    if (-not $Force) {
+        $what = @()
+        if ($leftoverRoot) { $what += $root }
+        if ($leftoverMachines.Count -gt 0) { $what += "machine(s) " + (($leftoverMachines.Name | Sort-Object) -join ', ') }
+        throw ("The target is not clean, so nothing was imported: " + ($what -join '; ') + ". " +
+               "Re-run with -Force to remove just these, or Reset-Tenant.ps1 to clear the whole tenant.")
+    }
+
+    Write-Host "[ 0/11] Removing fixture leftovers"
+    if ($leftoverRoot) {
+        Remove-Item -Path $root -Recurse -Force
+    }
+    if ($leftoverMachines.Count -gt 0) {
+        $leftoverMachines | Remove-OrchMachine -Confirm:$false
+    }
+    Clear-OrchCache -Path "${TargetDrive}:\"
 }
+
+# 1. Root folder
+New-Item -Path $root -ItemType Directory | Out-Null
 
 # 2. Subfolders (children of TestFixture_Base, hierarchy preserved by Path column)
 Write-Host "[ 1/11] Folders"
