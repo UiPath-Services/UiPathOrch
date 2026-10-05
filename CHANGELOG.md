@@ -6,6 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **`Get-OrchProcessDetail` reads entry point paths from the listing.** `EntryPointPath` cost a
+  request per package version, plus one for the folder's feed id, to ask the feed for the
+  package's entry points. The process listing already carries each process's entry point with its
+  path, from API 12, so a folder now costs its listing plus one detail request per process. The
+  paths were checked against the feed's on Automation Cloud (API 20, 25 processes) and Automation
+  Suite 24.10.8 (API 18, 5 processes) and were identical. The feed lookup remains for a process
+  whose listing row lacks the path.
+
+### Fixed
+
+- **`Get-OrchTriggerDetail` and `Get-OrchTestSetDetail` print each folder as it arrives.** Since
+  1.19.0 both read a folder's whole answer from one listing, but they still went through the
+  list-then-fetch pass built for one request per entity, which lists every folder before the first
+  row goes out — so nothing appeared until the last folder had been read. Each folder's rows now
+  go out as soon as its own listing is back, still in folder order and sorted by name within a
+  folder. On 8 triggers in 6 folders, the first folder printed at 2.8 s of an 8.1 s run. This also
+  covers `Get-OrchTrigger -ExportCsv` and `-ExpandDetails`, which share the code.
+
 ## [1.19.0] - 2026-10-05
 
 ### Added

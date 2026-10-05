@@ -159,11 +159,24 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
             Warm(() => drive.ReleaseRetentions.Get(folder, release.Id!.Value));
         }
 
+        // The entry point's path normally comes from `release`, the listing row, which carries
+        // the expanded EntryPoint from API 12 -- checked against the package's own entry points
+        // on Automation Suite (API 18) and Cloud (API 20), every one identical. The feed lookup
+        // stays as the fallback for a row without it. Not from `detailed`: the "$expand" handed
+        // to GetReleaseById goes out as the request body, not the query, so the detail payload
+        // never carries EntryPoint.
         if (detailed is { EntryPointId: not null })
         {
-            var d = detailed;
-            Warm(() => drive.PackageEntryPoints.Get(
-                (drive.FolderFeedId.Get(folder) ?? "", d.ProcessKey ?? "", d.ProcessVersion!)));
+            if (release.EntryPoint is { Path: not null } listed && listed.Id == detailed.EntryPointId)
+            {
+                detailed.EntryPointPath = listed.Path;
+            }
+            else
+            {
+                var d = detailed;
+                Warm(() => drive.PackageEntryPoints.Get(
+                    (drive.FolderFeedId.Get(folder) ?? "", d.ProcessKey ?? "", d.ProcessVersion!)));
+            }
         }
 
         return detailed;
@@ -185,7 +198,8 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
     /// </summary>
     private static void Enrich(OrchestratorPSCmdlet caller, OrchDriveInfo drive, Folder folder, Release release)
     {
-        if (release.EntryPointId is not null)
+        // Already set means FetchDetail took it from the listing and skipped the feed lookup.
+        if (release.EntryPointId is not null && release.EntryPointPath is null)
         {
             var feedId = drive.FolderFeedId.Get(folder);
             var entryPoints = drive.PackageEntryPoints.Get((feedId ?? "", release.ProcessKey ?? "", release.ProcessVersion!));
