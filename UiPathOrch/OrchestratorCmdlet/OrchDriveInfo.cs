@@ -1648,7 +1648,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
             (release, folderPath) => release.Path = folderPath);
 
         ReleasesDetailed = new(this,
-            (folderId, releaseId) => OrchAPISession.GetReleaseById(folderId, releaseId, "?$expand=ReleaseVersions,EntryPoint"),
+            (folderId, releaseId) => OrchAPISession.GetReleaseById(folderId, releaseId),
             (release, folderPath, _) => release.Path = folderPath);
 
         // Retention lives behind its own endpoint, one GET per release -- the Releases listing

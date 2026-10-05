@@ -162,9 +162,8 @@ public class GetProcessDetailCmdlet : OrchestratorPSCmdlet
         // The entry point's path normally comes from `release`, the listing row, which carries
         // the expanded EntryPoint from API 12 -- checked against the package's own entry points
         // on Automation Suite (API 18) and Cloud (API 20), every one identical. The feed lookup
-        // stays as the fallback for a row without it. Not from `detailed`: the "$expand" handed
-        // to GetReleaseById goes out as the request body, not the query, so the detail payload
-        // never carries EntryPoint.
+        // stays as the fallback for a row without it. Not from `detailed`: the detail request
+        // carries no $expand (see GetReleaseById), so its payload has no EntryPoint.
         if (detailed is { EntryPointId: not null })
         {
             if (release.EntryPoint is { Path: not null } listed && listed.Id == detailed.EntryPointId)

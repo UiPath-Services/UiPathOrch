@@ -1017,13 +1017,16 @@ public partial class OrchAPISession : IDisposable
     // For calling undocumented/private APIs
     public string HttpRequestPortal(HttpMethod method, string endPoint, Int64? folderId = null, object? payload = null) => HttpRequestImpl(method, _base_url_portal, endPoint, folderId, payload);
 
-    public T? HttpRequest<T>(HttpMethod method, string endPoint, Int64? folderId = null, object? query = null)
+    // `payload` is the request BODY. A query string goes in endPoint. This parameter used to be
+    // named `query`, and GetReleaseById took the name at its word: its "?$expand=..." went out as
+    // the JSON body of a GET for years, never reaching the server as a query.
+    public T? HttpRequest<T>(HttpMethod method, string endPoint, Int64? folderId = null, object? payload = null)
     {
-        // When query is already a string, call the string overload directly
+        // When payload is already a string, call the string overload directly
         // to avoid double-serialization via JsonSerializer.Serialize(string).
-        string body = query is string strQuery
-            ? HttpRequest(method, endPoint, folderId, strQuery)
-            : HttpRequest(method, endPoint, folderId, query);
+        string body = payload is string strPayload
+            ? HttpRequest(method, endPoint, folderId, strPayload)
+            : HttpRequest(method, endPoint, folderId, payload);
         if (string.IsNullOrEmpty(body)) return default;
         return DeserializeApiJson<T>(body);
     }
@@ -2177,15 +2180,21 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<Release>("/odata/Releases", folderId, query);
     }
 
-    public Release? GetReleaseById(Int64 folderId, Int64 releaseId, string? query = null)
+    // No $expand. The only caller used to pass "?$expand=ReleaseVersions,EntryPoint", which went
+    // out as the body of the GET (see HttpRequest<T>) and so was never applied -- and nothing
+    // reads either navigation from the detail: ReleaseVersions comes from the listing
+    // (Reset-OrchProcessVersion), and so does EntryPoint (Get-OrchProcessDetail). Putting it in
+    // the URL instead would not be neutral either: 20.10.16 (API 11.1) has no EntryPoint
+    // navigation and answers 400 "Invalid OData query options" for it.
+    public Release? GetReleaseById(Int64 folderId, Int64 releaseId)
     {
         if (Supports(OrchApiFloor.ReleaseGetAction))
         {
-            return HttpRequest<Release>(HttpMethod.Get, $"/odata/Releases({releaseId})/UiPath.Server.Configuration.OData.GetRelease", folderId, query);
+            return HttpRequest<Release>(HttpMethod.Get, $"/odata/Releases({releaseId})/UiPath.Server.Configuration.OData.GetRelease", folderId);
         }
         else
         {
-            return HttpRequest<Release>(HttpMethod.Get, $"/odata/Releases({releaseId})", folderId, query);
+            return HttpRequest<Release>(HttpMethod.Get, $"/odata/Releases({releaseId})", folderId);
         }
     }
 
