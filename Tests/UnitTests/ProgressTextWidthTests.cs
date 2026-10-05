@@ -97,7 +97,7 @@ public class ProgressTextWidthTests
     public void WriteProgress_BuggyHost_LeadingWideName_ShowsWideRunCount()
     {
         var host = new CapturingHost(rendersWideProgress: false);
-        using var reporter = new ProgressReporter(host, id: 1, totalNum: 10, activity: "Copy");
+        using var reporter = new ProgressReporter(host, 10, "Copy");
 
         reporter.WriteProgress(3, "請求書キュー");
 
@@ -109,7 +109,7 @@ public class ProgressTextWidthTests
     public void WriteProgress_BuggyHost_NoNamePassed_NoEllipsis()
     {
         var host = new CapturingHost(rendersWideProgress: false);
-        using var reporter = new ProgressReporter(host, id: 1, totalNum: 10, activity: "Copy");
+        using var reporter = new ProgressReporter(host, 10, "Copy");
 
         reporter.WriteProgress(3);
 
@@ -121,7 +121,7 @@ public class ProgressTextWidthTests
     public void WriteProgress_BuggyHost_InteriorWideRun_KeepsBothAsciiSides()
     {
         var host = new CapturingHost(rendersWideProgress: false);
-        using var reporter = new ProgressReporter(host, id: 1, totalNum: 10, activity: "Copy");
+        using var reporter = new ProgressReporter(host, 10, "Copy");
 
         reporter.WriteProgress(3, "Invoice請求Folder");
 
@@ -132,7 +132,7 @@ public class ProgressTextWidthTests
     public void WriteProgress_BuggyHost_KeepsNarrowName()
     {
         var host = new CapturingHost(rendersWideProgress: false);
-        using var reporter = new ProgressReporter(host, id: 1, totalNum: 10, activity: "Copy");
+        using var reporter = new ProgressReporter(host, 10, "Copy");
 
         reporter.WriteProgress(3, "Invoice");
 
@@ -140,43 +140,135 @@ public class ProgressTextWidthTests
     }
 
     [Fact]
-    public void WriteProgress_BuggyHost_SanitizesActivityLineToo()
+    public void Constructor_Activity_IsSanitizedOnBuggyHost()
     {
         var host = new CapturingHost(rendersWideProgress: false);
-        using var reporter = new ProgressReporter(host, id: 1, totalNum: 10, activity: "Copy");
-
-        // A Japanese destination folder name in the activity line must be collapsed as well,
-        // otherwise the bug just moves from the status line to the activity line.
-        reporter.WriteProgress(3, "Invoice", "Copying assets to Orch2:\\営業");
-
-        Assert.Equal("Copying assets to Orch2:\\[2]", host.Last!.Activity);
-        Assert.Equal("3/10 Invoice", host.Last!.StatusDescription);
-    }
-
-    [Fact]
-    public void Activity_Setter_IsSanitizedOnBuggyHost()
-    {
-        var host = new CapturingHost(rendersWideProgress: false);
-        using var reporter = new ProgressReporter(host, id: 1, totalNum: 10, activity: "Copy")
-        {
-            Activity = "Copying assets to Orch2:\\給与"
-        };
+        using var reporter = new ProgressReporter(host, 10, "給与 assets");
 
         reporter.WriteProgress(1, "A");
 
-        Assert.Equal("Copying assets to Orch2:\\[2]", host.Last!.Activity);
+        // The label is fixed at construction, so that is where it has to be collapsed.
+        Assert.Equal("[2] assets", host.Last!.Activity);
     }
 
     [Fact]
-    public void WriteProgress_FixedHost_KeepsWideTextInBothFields()
+    public void Context_IsSanitizedOnBuggyHost_AndSitsBetweenCountAndName()
+    {
+        var host = new CapturingHost(rendersWideProgress: false);
+        using var reporter = new ProgressReporter(host, 10, "Assets");
+        reporter.Context = "Orch2:\\営業";
+
+        reporter.WriteProgress(3, "Invoice");
+
+        // A Japanese destination folder must be collapsed in Context as well, otherwise the
+        // bug just moves from the item name to the destination.
+        Assert.Equal("3/10 Orch2:\\[2] Invoice", host.Last!.StatusDescription);
+        Assert.Equal("Assets", host.Last!.Activity);
+    }
+
+    [Fact]
+    public void WriteProgress_FixedHost_KeepsWideTextInEveryField()
     {
         var host = new CapturingHost(rendersWideProgress: true);
-        using var reporter = new ProgressReporter(host, id: 1, totalNum: 10, activity: "Copy");
+        using var reporter = new ProgressReporter(host, 10, "給与");
+        reporter.Context = "Orch2:\\営業";
 
-        reporter.WriteProgress(3, "請求書キュー", "Copying assets to Orch2:\\営業");
+        reporter.WriteProgress(3, "請求書キュー");
 
-        Assert.Equal("3/10 請求書キュー", host.Last!.StatusDescription);
-        Assert.Equal("Copying assets to Orch2:\\営業", host.Last!.Activity);
+        Assert.Equal("3/10 Orch2:\\営業 請求書キュー", host.Last!.StatusDescription);
+        Assert.Equal("給与", host.Last!.Activity);
+    }
+
+    // --- shape of the bar: total, ids, nesting, completion -------------------------------
+
+    [Fact]
+    public void NoTotal_ShowsCountAlone_AndNoPercentage()
+    {
+        var host = new CapturingHost();
+        using var reporter = new ProgressReporter(host, null, "Queues");
+
+        reporter.WriteProgress(5, "q");
+
+        Assert.Equal("5 q", host.Last!.StatusDescription);
+        Assert.Equal(-1, host.Last!.PercentComplete);
+    }
+
+    [Fact]
+    public void Percentage_IsClampedWhenTheCountOutgrowsTheTotal()
+    {
+        var host = new CapturingHost();
+        using var reporter = new ProgressReporter(host, 4, "Queues");
+
+        reporter.WriteProgress(9);
+
+        Assert.Equal(100, host.Last!.PercentComplete);
+    }
+
+    [Fact]
+    public void Ids_AreAllocated_AndAChildNamesItsParent()
+    {
+        var host = new CapturingHost();
+        using var parent = new ProgressReporter(host, 2, "Folders");
+        using var child = new ProgressReporter(host, null, "Queues", parent);
+        using var loose = new ProgressReporter(host, null, "Assets");
+
+        Assert.NotEqual(parent.Id, child.Id);
+        Assert.NotEqual(child.Id, loose.Id);
+
+        child.WriteProgress(1);
+        Assert.Equal(parent.Id, host.Last!.ParentActivityId);
+
+        loose.WriteProgress(1);
+        Assert.Equal(-1, host.Last!.ParentActivityId);
+    }
+
+    [Fact]
+    public void BarNeverWritten_IsNeverCompleted_NorConjuredByWriteCompleted()
+    {
+        var host = new CapturingHost();
+        using (var reporter = new ProgressReporter(host, null, "Queues"))
+        {
+            reporter.WriteCompleted();
+        }
+
+        Assert.Empty(host.All);
+    }
+
+    [Fact]
+    public void WriteCompleted_KnownTotal_FillsTheBar()
+    {
+        var host = new CapturingHost();
+        using var reporter = new ProgressReporter(host, 3, "Queues");
+
+        reporter.WriteProgress(2, "q2");
+        reporter.WriteCompleted();
+
+        Assert.Equal("3/3 COMPLETED", host.Last!.StatusDescription);
+        Assert.Equal(100, host.Last!.PercentComplete);
+    }
+
+    [Fact]
+    public void WriteCompleted_NoTotal_KeepsTheLastCount()
+    {
+        var host = new CapturingHost();
+        using var reporter = new ProgressReporter(host, null, "Queues");
+
+        reporter.WriteProgress(12, "q12");
+        reporter.WriteCompleted();
+
+        Assert.Equal("12 COMPLETED", host.Last!.StatusDescription);
+    }
+
+    [Fact]
+    public void Dispose_AfterAWrite_SendsOneCompletedRecord()
+    {
+        var host = new CapturingHost();
+        using (var reporter = new ProgressReporter(host, 2, "Queues"))
+        {
+            reporter.WriteProgress(1);
+        }
+
+        Assert.Single(host.All, r => r.RecordType == ProgressRecordType.Completed);
     }
 
     [Fact]

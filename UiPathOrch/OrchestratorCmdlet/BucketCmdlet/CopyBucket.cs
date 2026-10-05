@@ -45,7 +45,7 @@ public class CopyBucketCmdlet : OrchestratorPSCmdlet
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        using var reporterBuckets = new ProgressReporter(this, null, "Copying buckets...");
+        using var reporterBuckets = new ProgressReporter(this, null, "Buckets");
         using var cancelHandler = new ConsoleCancelHandler();
 
         // One report for the whole run: a shared bucket that isn't linked in one folder's pass

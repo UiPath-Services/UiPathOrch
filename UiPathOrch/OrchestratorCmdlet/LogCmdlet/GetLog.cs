@@ -348,7 +348,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        using ProgressReporter reporter = new(this, drivesFolders.Count, "Get log");
+        using ProgressReporter reporter = new(this, drivesFolders.Count, "Getting logs");
         int index = 0;
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))

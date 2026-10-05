@@ -73,10 +73,9 @@ public class CopyCredentialStoreCmdlet : OrchestratorPSCmdlet
 
         // Fixed label, destination in Context: see CopyCalendar for why the destination may
         // not go in the activity of a bar that is already on screen.
-        using var reporter = new ProgressReporter(_this, 100, "Credential stores");
+        using var reporter = new ProgressReporter(_this, dstDrives.Count * stores.Count, "Credential stores");
 
         int index = 0;
-        reporter.TotalNum = dstDrives.Count * stores.Count;
 
         foreach (var dstDrive in dstDrives)
         {

@@ -912,9 +912,8 @@ public class ProgressReporter : IDisposable
     {
         this.provider = provider;
         this.totalNum = totalNum;
-        // Sanitized here too, not only in the Activity setter: an activity passed to the
-        // constructor used to reach the host raw, and a wide character in it breaks the bar
-        // exactly as one in the status does.
+        // Width-sanitized like the status: an activity passed here used to reach the host raw,
+        // and a wide character in it breaks the bar exactly as one in the status does.
         progressRecord = new ProgressRecord(id, SafeText(activity)!, SafeText(activity)!)
         {
             ParentActivityId = parentId,
@@ -927,15 +926,16 @@ public class ProgressReporter : IDisposable
         set { totalNum = value; }
     }
 
-    // The activity line is a LABEL: short, and padded by the caller to one width across every
-    // bar it shares the screen with, so two bars start their "[" in the same column. See the
-    // stage table in CopyItem.Recurse for a set of them. Anything that varies -- a destination
-    // folder, a drive -- goes in Context instead, inside the bar. Width-sanitized like the
-    // status (see SafeText), since a label can still carry a Japanese word.
-    public string Activity
-    {
-        set { progressRecord.Activity = SafeText(value)!; }
-    }
+    // The activity line is a LABEL, given once to the constructor and never changed: there is
+    // no setter. Short, a noun for what is being processed, and -- for child bars that share a
+    // parent -- padded by the caller to one width so they start their "[" in the same column
+    // (see the stage table in CopyItem.Recurse). A parent bar is not padded: the host indents
+    // each level two columns, so it never shares a column with its children. Anything that
+    // varies -- a destination folder, a drive -- goes in Context instead, inside the bar.
+    //
+    // There used to be a setter, and a WriteProgress overload that took an activity. Both were
+    // used to relabel a bar already on screen, which changed its width as it ran; and a shared
+    // helper that set the label was right for only one of the callers handing it a bar.
 
     // Set once per batch: the part of the status that does not change item by item, such as
     // the folder a copy is writing into. It sits between the count and the item name, so the
@@ -967,8 +967,10 @@ public class ProgressReporter : IDisposable
         provider?.WriteProgress(progressRecord);
     }
 
-    public void WriteProgress(int index, string? statusDescription = null, string? activity = null)
+    public void WriteProgress(int index, string? statusDescription = null)
     {
+        lastIndex = index;
+
         // -1 is PowerShell's "no percentage": an unknown total gets a bar without one, instead
         // of a fake 0%. Widened and clamped for the known case -- PercentComplete throws
         // outside 0..100, so a caller whose collection outgrew the total it declared would
@@ -976,11 +978,6 @@ public class ProgressReporter : IDisposable
         progressRecord.PercentComplete = totalNum is int total && total > 0
             ? (int)Math.Clamp(index * 100L / total, 0L, 100L)
             : -1;
-
-        if (!string.IsNullOrEmpty(activity))
-        {
-            progressRecord.Activity = SafeText(activity)!;
-        }
 
         string line = totalNum is int n ? $"{index:D}/{n}" : $"{index:D}";
         if (!string.IsNullOrEmpty(context)) line += " " + context;
@@ -1002,6 +999,9 @@ public class ProgressReporter : IDisposable
     // constructed with.
     private bool reported;
 
+    // The numerator last written, for WriteCompleted on a bar with no total.
+    private int lastIndex;
+
     // Fills the bar and replaces the item name with a closing note. For a bar that is left
     // standing after its batch is done -- Copy-Item keeps one per entity type up for the whole
     // folder -- the alternative is a full bar still reading as though it were working on
@@ -1009,13 +1009,16 @@ public class ProgressReporter : IDisposable
     // nothing to copy has no bar on screen, and announcing the completion of work that was
     // never shown would conjure one (see the `reported` flag).
     //
+    // A bar with no total keeps the count it last showed. It used to write 0, so a bar that
+    // had counted to 12 closed reading "0 COMPLETED".
+    //
     // Upper case because the note stands where an entity name normally stands: "Completed"
     // reads as one more queue or asset that happens to be called that, where "COMPLETED" is
     // visibly not a name.
     public void WriteCompleted(string note = "COMPLETED")
     {
         if (!reported) return;
-        WriteProgress(totalNum ?? 0, note);
+        WriteProgress(totalNum ?? lastIndex, note);
     }
 
     private void CompleteProgress()

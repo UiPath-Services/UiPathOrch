@@ -62,7 +62,7 @@ public class CopyAssetCmdlet : OrchestratorPSCmdlet
         //dstDrive._dicUsers = null;
         //srcDrive._dicExtendedMachines = null; // No need to clear dstDrive's cache, since we need to get folder machines.
 
-        using var reporterAssets = new ProgressReporter(this, null, "Copying assets...");
+        using var reporterAssets = new ProgressReporter(this, null, "Assets");
         using var cancelHandler = new ConsoleCancelHandler();
 
         // One report for the whole run: a shared asset that isn't linked in one folder's pass

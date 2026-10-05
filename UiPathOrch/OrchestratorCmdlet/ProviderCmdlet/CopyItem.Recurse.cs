@@ -7,10 +7,29 @@ namespace UiPath.PowerShell.Core;
 public partial class OrchProvider
 {
     // How many folders the current Copy-Item has entered, for the folder bar's numerator.
-    // On the provider next to ExcludeEntities and _linkReport, and assigned unconditionally
-    // at the top of CopyItem for the same reason: the recursion has no single frame that
-    // could hold it, and a leftover value would make the next copy start part-way along.
+    // On the provider next to ExcludeEntities and _linkReport, because the recursion has no
+    // single frame that could hold it. It spans the whole INVOCATION, not one call: see the
+    // token below.
     private int _copiedFolderIndex;
+
+    // The dynamic-parameters object of the Copy-Item in progress, used only for its identity.
+    // PowerShell makes one per invocation and hands it to every per-path CopyItem call, which
+    // is the only thing distinguishing "the next of this command's paths" from "a new
+    // command". Held, so the reference cannot be reused by a later allocation.
+    private object? _copyInvocationToken;
+
+    // Whether the walk's folder total is knowable. True while the invocation has produced a
+    // single resolved path -- then the subtree count is the real total. False from the moment
+    // a second path arrives: a wildcard's full reach never reaches the provider, and no call
+    // says it is the last.
+    private bool _copyFolderTotalKnown;
+
+    // What the folder bar is a fraction OF, fixed for the life of one bar. See where it is
+    // assigned, in CopyItemRecurse.
+    private bool _folderBarCountsFolders;
+
+    private int? FolderBarTotal(OrchDriveInfo srcDrive, Folder srcFolder, bool recurse)
+        => _copyFolderTotalKnown ? CountFoldersInWalk(srcDrive, srcFolder, recurse) : null;
 
     /// <summary>
     /// How many folders the walk about to start will enter -- the folder bar's denominator.
@@ -177,15 +196,30 @@ public partial class OrchProvider
                 // screen and put it back for every folder of a -Recurse. Only the outermost
                 // call owns it -- `using` on the null the inner calls get is a no-op.
                 using ProgressReporter? ownedReporter = folderReporter is null
-                    ? new ProgressReporter(this, CountFoldersInWalk(srcDrive, srcFolder, recurse), "Copying folders")
+                    ? new ProgressReporter(this, FolderBarTotal(srcDrive, srcFolder, recurse), "Folders")
                     : null;
                 ProgressReporter reporter = folderReporter ?? ownedReporter!;
 
-                // This bar counts FOLDERS, for the whole walk. It used to count the thirteen
-                // stages of the folder in hand, which is progress the child bars underneath
-                // already show, one of them per stage -- so the only number not on screen
-                // anywhere was the one the operator is actually waiting on.
+                // The bar counts FOLDERS when the walk's folder total is knowable, which is
+                // every run but a wildcard source, and is the number the operator is actually
+                // waiting on. When it is not knowable it counts this folder's STAGES instead,
+                // out of thirteen -- the old behaviour, and the only other whole that is
+                // always known. A bar has to be a fraction of something; the choice is which
+                // something, not whether to have one.
+                //
+                // Decided per bar, and a bar is created per resolved path, so the mode holds
+                // for the length of one. A wildcard that matched several folders therefore
+                // shows folders while walking the first (the total was right for it) and
+                // stages from the second on, by which point that total is known to be short.
+                if (folderReporter is null) _folderBarCountsFolders = _copyFolderTotalKnown;
+
                 int folderIndex = ++_copiedFolderIndex;
+                int stageIndex = 0;
+                if (!_folderBarCountsFolders)
+                {
+                    // Per folder, because a personal workspace runs fewer of them.
+                    reporter.TotalNum = srcFolder.FolderType == "Personal" ? 9 : 13;
+                }
                 // The scope starting below was introduced so that child reporters are disposed of in a timely manner.
                 {
                     // #0 Copy the folder itself (no folder creation needed for personal workspaces)
@@ -206,7 +240,7 @@ public partial class OrchProvider
                     // It goes in Context rather than the activity because the activity is a
                     // fixed-width label; a path there would move the bar on every folder.
                     reporter.Context = srcFolder.GetPSPath();
-                    reporter.WriteProgress(folderIndex);
+                    reporter.WriteProgress(_folderBarCountsFolders ? folderIndex : stageIndex);
                     if (destinationWorkspace is not null)
                     {
                         newFolder = destinationWorkspace;
@@ -254,7 +288,14 @@ public partial class OrchProvider
                         // re-padding the whole list. Anything that varies, such as the
                         // destination folder, goes in ProgressReporter.Context instead.
                         //
-                        // The parent's "Copying folders" is NOT padded to match: the host
+                        // The label is given here, when the bar is made, and the Copy* methods
+                        // never touch it. They are shared with the standalone Copy-Orch*
+                        // cmdlets, whose single bar wants the same noun unpadded; a method
+                        // that set the label itself would be right for one caller only, and
+                        // it used to be -- every Copy-OrchQueue run showed this padded label,
+                        // and the "Copying queues..." it was constructed with never appeared.
+                        //
+                        // The parent's "Folders" is NOT padded to match: the host
                         // indents a child bar two columns under its parent, so the parent's
                         // label never shares a column with these and padding it only pushed
                         // its bar needlessly to the right.
@@ -304,13 +345,13 @@ public partial class OrchProvider
                         {
                             foreach (var stage in stages)
                             {
-                                // The same folder number each time -- the bar is counting
-                                // folders, and this folder is still the one in hand. Written
-                                // per stage all the same, not once per folder: a bar nobody
-                                // writes to can sit hidden behind ordinary console output for
-                                // as long as a slow stage takes, and the stage boundaries are
-                                // the cheap moments to put it back on screen.
-                                reporter.WriteProgress(folderIndex);
+                                // Counting folders, the number does not change here -- this
+                                // folder is still the one in hand -- but it is written per
+                                // stage all the same: a bar nobody writes to can sit hidden
+                                // behind ordinary console output for as long as a slow stage
+                                // takes, and the stage boundaries are the cheap moments to
+                                // put it back on screen. Counting stages, this IS the move.
+                                reporter.WriteProgress(_folderBarCountsFolders ? folderIndex : ++stageIndex);
                                 stage.PreStep?.Invoke();
                                 var childReporter = new ProgressReporter(this, null, stage.Label, reporter);
                                 childReporters.Add(childReporter);
@@ -451,7 +492,27 @@ public partial class OrchProvider
         // flag into a later un-flagged copy if instances were ever pooled/reused.
         ExcludeEntities = dynamicParameters?.ExcludeEntities.IsPresent ?? false;
         var linkReport = _linkReport = new LinkCopyReport();
-        _copiedFolderIndex = 0;
+
+        // A wildcard source is resolved by PowerShell BEFORE the provider is called, and this
+        // method is then called once per matched path. Resetting the folder counter here made
+        // the bar restart on every one of them -- "copy orch1:\s* orch2:\" over four folders
+        // read 1/1 four times. The dynamic-parameters object is created once per Copy-Item
+        // and handed to each of those calls, so its identity says which calls belong to one
+        // invocation; the counter is reset only when it changes.
+        if (!ReferenceEquals(DynamicParameters, _copyInvocationToken))
+        {
+            _copyInvocationToken = DynamicParameters;
+            _copiedFolderIndex = 0;
+            // The first path's subtree is a real total. See the field.
+            _copyFolderTotalKnown = true;
+        }
+        else
+        {
+            // A second path has arrived, so the total shown while walking the first one was
+            // only that path's. How many more are coming is not knowable from here: the
+            // pattern never reaches the provider and nothing says which call is the last.
+            _copyFolderTotalKnown = false;
+        }
 
         OrchDriveInfo srcDrive = ExtractOrchDriveInfo(path);
         OrchDriveInfo dstDrive = ExtractOrchDriveInfo(copyPath);
@@ -559,8 +620,11 @@ public partial class OrchProvider
                     // Owned here, not left to the first call, so the bar survives the whole
                     // walk: this loop makes one outermost call per top-level folder, and a bar
                     // owned by the first of them would be taken down when that folder finished.
+                    // Owning it also means setting the mode, which CopyItemRecurse only does
+                    // for a bar it creates itself.
+                    _folderBarCountsFolders = _copyFolderTotalKnown;
                     using var folderReporter = new ProgressReporter(
-                        this, CountFoldersInWalk(srcDrive, srcDrive.RootFolder!, true), "Copying folders");
+                        this, FolderBarTotal(srcDrive, srcDrive.RootFolder!, true), "Folders");
 
                     // WithCancellation, so Ctrl+C stops the walk between top-level folders too.
                     // The subfolder loop inside CopyItemRecurse already checks after each child;

@@ -59,7 +59,9 @@ public class ExportLibraryCmdlet : OrchestratorPSCmdlet
             //drive => HostFeed ? drive.LibrariesInHost.Get() : drive.LibrariesInTenant.Get());
             drive => drive.LibrariesInTenant.Get());
 
-        using var reporter = new ProgressReporter(this, 100, "Export Library");
+        // Named for what is exported, as Import-OrchLibrary's bar is. The total is per library,
+        // set once its version list is in hand.
+        using var reporter = new ProgressReporter(this, null, "Libraries");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)
         {

@@ -63,12 +63,11 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
             }
 
             // Fixed label, destination in Context: see CopyCalendar for why the destination may
-        // not go in the activity of a bar that is already on screen.
-        using var reporter = new ProgressReporter(this, 100, "Robot accounts");
+            // not go in the activity of a bar that is already on screen.
+            using var reporter = new ProgressReporter(this, targetRobots.Count * dstDrives.Count, "Robot accounts");
 
             using var cancelHandler = new ConsoleCancelHandler();
 
-            reporter.TotalNum = targetRobots.Count * dstDrives.Count;
             int index = 0;
             foreach (var srcRobotAccount in targetRobots.OrderBy(r => r!.displayName).WithCancellation(cancelHandler.Token))
             {

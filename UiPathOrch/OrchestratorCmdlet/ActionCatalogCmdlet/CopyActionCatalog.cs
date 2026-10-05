@@ -44,7 +44,7 @@ public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        using var reporterActionCatalogs = new ProgressReporter(this, null, "Copying action catalogs...");
+        using var reporterActionCatalogs = new ProgressReporter(this, null, "Action catalogs");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {

@@ -342,7 +342,7 @@ public class GetJobCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         if (Id is null || Id.Length == 0)
         {
-            using ProgressReporter reporter = new(this, drivesFolders.Count, "Get Job");
+            using ProgressReporter reporter = new(this, drivesFolders.Count, "Getting jobs");
             int index = 0;
             foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
             {

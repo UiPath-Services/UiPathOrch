@@ -552,7 +552,7 @@ public class AddUserCmdlet : OrchestratorPSCmdlet
         Dictionary<OrchDriveInfo, Dictionary<string, Entities.User>> existingUsersPerDrive = [];
 
         int index = 0;
-        using var reporter = new ProgressReporter(this, _csvLines.Count, "Add users... ");
+        using var reporter = new ProgressReporter(this, _csvLines.Count, "Adding users");
         foreach (var key_line in _csvLines
             .OrderBy(kl => kl.Key.drive.NameColon)
             .ThenBy(kl => kl.Key.userName)

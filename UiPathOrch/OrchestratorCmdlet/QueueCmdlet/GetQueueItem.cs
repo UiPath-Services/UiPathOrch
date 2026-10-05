@@ -368,14 +368,21 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
         }
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using ProgressReporter reporterFolder = new(this, drivesFolders.Count, "Folder");
+        // Up to three bars, each nested under the one above: folders, the queues of a folder,
+        // the items of a queue. The two child labels are of one length (6) so their "[" line
+        // up; the top bar's is not padded, being the only one at its indent.
+        //
+        // No folder bar at all for a single folder. It was created anyway and only ever
+        // written when there were two or more, so for one folder the queue bar named a
+        // parent the host had never been shown. Counting to 1/1 says nothing, so the queue
+        // bar becomes the top one instead, as Copy-OrchPackage's packages bar does.
+        using ProgressReporter? reporterFolder = drivesFolders.Count > 1
+            ? new ProgressReporter(this, drivesFolders.Count, "Folders")
+            : null;
         int indexFolder = 0;
         foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
         {
-            if (drivesFolders.Count > 1)
-            {
-                reporterFolder.WriteProgress(++indexFolder, folder.GetPSPath());
-            }
+            reporterFolder?.WriteProgress(++indexFolder, folder.GetPSPath());
 
             IEnumerable<QueueDefinition> queues = null;
             try
@@ -415,7 +422,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
             var targetQueues = queues
                 .FilterByWildcards(q => q?.Name, wpName)
                 .OrderBy(q => q.Name).ToList();
-            using ProgressReporter reporterQueue = new(this, targetQueues.Count, "Queue ", reporterFolder);
+            using ProgressReporter reporterQueue = new(this, targetQueues.Count, "Queues", reporterFolder);
             int indexQueue = 0;
             foreach (var queue in targetQueues.WithCancellation(cancelHandler.Token))
             {
@@ -424,8 +431,12 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
                 int first = First ?? int.MaxValue; // first is reset per queue
                 int skip = Math.Max(0, Skip ?? 0); // negative -Skip is meaningless; treat as 0 (it was otherwise cast to a huge $skip on the non-batched path)
 
-                int intReporterItemTotal = isBatched ? 0 : (int)first;
-                using ProgressReporter reporterItem = new(this, intReporterItemTotal, "Item  ", reporterQueue);
+                // Counts the items read from this queue so far. The total is -First when it was
+                // given and unknown otherwise: the default `first` is int.MaxValue, which as a
+                // denominator pinned the bar at 0%. A batched read collects everything before
+                // emitting and never writes this bar, so it never appears.
+                int? itemTotal = isBatched || First is null ? null : first;
+                using ProgressReporter reporterItem = new(this, itemTotal, "Items ", reporterQueue);
 
                 var allItems = isBatched ? new List<object>() : null;
                 try
@@ -441,7 +452,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
                             while (localFirst > 0)
                             {
                                 cancelHandler.Token.ThrowIfCancellationRequested();
-                                if (!isBatched) reporterItem?.WriteProgress(localSkip % intReporterItemTotal);
+                                if (!isBatched) reporterItem.WriteProgress(localSkip - skip);
 
                                 var first2 = int.Min(100, localFirst);
                                 var items = drive.GetQueueItems(folder, queue, query, (ulong)localSkip, (ulong)first2, OrderBy, OrderAscending.IsPresent);

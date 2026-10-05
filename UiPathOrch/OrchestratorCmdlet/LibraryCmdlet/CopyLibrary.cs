@@ -136,8 +136,9 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
                 .FilterByWildcards(l => l!.Id, wpId)
                 .OrderBy(l => l.Id);
 
-            // Two bars at once, so their labels are short, of ONE length (9) and hardcoded,
-            // with the versions bar nested under the library it belongs to. Shaped like
+            // Two bars at once, so their labels are short and hardcoded, with the versions bar
+            // nested under the library it belongs to. Neither is padded: each is the only bar
+            // at its indent, so there is no column to line up with. Shaped like
             // Copy-Item's pair: the top bar carries the whole "from -> to", the lower one
             // names only the item it is on. The destination used to be written into the
             // versions bar -- on every bar on screen, and in its activity, so the label was
@@ -158,7 +159,7 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
                         //.OrderBy(version => version.Version!, VersionComparer.Instance)
                         .ToList();
 
-                    using var reporter2 = new ProgressReporter(_this, dstDrives.Count * versions.Count, "Versions ", reporter1);
+                    using var reporter2 = new ProgressReporter(_this, dstDrives.Count * versions.Count, "Versions", reporter1);
                     int index2 = 0;
                     foreach (var version in versions)
                     {

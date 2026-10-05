@@ -42,8 +42,8 @@ public class RemoveLibraryCmdlet : OrchestratorPSCmdlet
                 // library, the one nested under it the version being removed. This was a
                 // single bar carrying both in its ACTIVITY -- "Removing versions of <id> in
                 // <drive>" -- so the label was a different width for every library and the
-                // bar walked left and right as the run went on. Labels are short, hardcoded
-                // and of one length (9).
+                // bar walked left and right as the run went on. Labels are short and
+                // hardcoded, and unpadded: each is the only bar at its indent.
                 var libraries = drive.LibrariesInTenant.Get()
                     .FilterByWildcards(l => l?.Id, wpId!)
                     .OrderBy(l => l.Id!.ToLower())
@@ -65,7 +65,7 @@ public class RemoveLibraryCmdlet : OrchestratorPSCmdlet
                         // Disposed at the end of each library, so the bar belongs to the
                         // library above it rather than accumulating across the run.
                         int versionIndex = 0;
-                        using var versionReporter = new ProgressReporter(this, matchingVersions.Count, "Versions ", libraryReporter);
+                        using var versionReporter = new ProgressReporter(this, matchingVersions.Count, "Versions", libraryReporter);
 
                         foreach (var matchingVersion in matchingVersions.WithCancellation(cancelHandler.Token))
                         {

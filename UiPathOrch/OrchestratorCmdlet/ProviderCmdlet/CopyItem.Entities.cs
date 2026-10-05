@@ -76,7 +76,6 @@ public partial class OrchProvider
         string targetFolder = newFolder.GetPSPath();
 
         reporter.TotalNum = srcFolderUsers.Count;
-        reporter.Activity = "Folder users    ";
         int index = 0;
         foreach (var userRole in srcFolderUsers.OrderBy(u => u.UserEntity?.UserName))
         {
@@ -450,7 +449,6 @@ public partial class OrchProvider
         });
 
         reporter.TotalNum = totalNum;
-        reporter.Activity = "Packages        ";
 
         string srcFeedFolder = System.IO.Path.Combine(srcDrive.NameColon, srcFolder.GetPackageFeedFolder());
         string dstFeedFolder = System.IO.Path.Combine(dstDrive.NameColon, newFolder.GetPackageFeedFolder());
@@ -531,7 +529,6 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = processes.Count;
-        reporter.Activity = "Processes       ";
 
         int index = 0;
         bool isNewFolderProcessCacheDirty = false;
@@ -793,7 +790,6 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcAssets.Count;
-        reporter.Activity = "Assets          ";
 
         // One budget shared across every asset in this folder so that copying many assets that
         // all reference the same unassigned users / machines collapses into a few warnings plus a
@@ -1102,7 +1098,6 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcQueues.Count;
-        reporter.Activity = "Queues          ";
 
         int index = 0;
         foreach (var queue in srcQueues.OrderBy(q => q.Name))
@@ -1359,7 +1354,6 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcTriggers.Count;
-        reporter.Activity = "Triggers        ";
 
         int index = 0;
         foreach (var srcTrigger in srcTriggers.OrderBy(t => t.Name))
@@ -1520,7 +1514,6 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcTriggers.Count;
-        reporter.Activity = "API triggers    ";
         target = newFolder.GetPSPath();
 
         int index = 0;
@@ -1609,7 +1602,6 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcBuckets.Count;
-        reporter.Activity = "Buckets         ";
         target = newFolder.GetPSPath();
 
         int index = 0;
@@ -1756,7 +1748,6 @@ public partial class OrchProvider
             // plain listing plus a GetForEdit per test set.
             var srcTestSets = srcDrive.TestSetsDetailed.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
             reporter.TotalNum = srcTestSets.Count;
-            reporter.Activity = "Test sets       ";
 
             int index = 0;
             foreach (var ts in srcTestSets.OrderBy(t => t.Name))
@@ -1970,7 +1961,6 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcTestSetSchedules.Count;
-        reporter.Activity = "Test schedules  ";
 
         int index = 0;
         foreach (var testSetSchedule in srcTestSetSchedules.OrderBy(t => t.Name))
@@ -2033,7 +2023,6 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcTestDataQueues.Count;
-        reporter.Activity = "Test data queues";
 
         int index = 0;
         foreach (var testDataQueue in srcTestDataQueues
@@ -2119,7 +2108,6 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcTaskCatalogs.Count;
-        reporter.Activity = "Action catalogs ";
 
         int index = 0;
         foreach (var srcTaskCatalog in srcTaskCatalogs.OrderBy(t => t.Name))

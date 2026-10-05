@@ -134,10 +134,16 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
         Dictionary<string, MappingCsvLine> userMappings,
         ProgressReporter reporter, CancellationToken cancelToken)
     {
-        ICollection<User> users = null;
+        List<User> users = null;
         try
         {
-            users = srcDrive.Users.Get();
+            // DirectoryRobot too: robot accounts own most per-user asset values in practice,
+            // and their names routinely differ between tenants — leaving them out of the CSV
+            // meant the rows had to be discovered by watching the copy's drop warnings.
+            // Filtered before counting, so the total is what the loop below walks.
+            users = srcDrive.Users.Get()
+                .Where(u => u is not null && (u.Type == "DirectoryUser" || u.Type == "DirectoryRobot"))
+                .ToList();
             reporter.TotalNum = users.Count;
         }
         catch (Exception ex)
@@ -146,14 +152,17 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
         }
         if (users is null) return;
 
-        // DirectoryRobot too: robot accounts own most per-user asset values in practice,
-        // and their names routinely differ between tenants — leaving them out of the CSV
-        // meant the rows had to be discovered by watching the copy's drop warnings.
-        foreach (var user in users.Where(u => u.Type == "DirectoryUser" || u.Type == "DirectoryRobot"))
+        int index = 0;
+        foreach (var user in users)
         {
             cancelToken.ThrowIfCancellationRequested();
 
-            if (user is null || string.IsNullOrEmpty(user.UserName)) continue;
+            // Written per user although nothing here calls the server: it is the only write this
+            // bar gets, and a bar never written never appears -- the stage used to run with no
+            // bar on screen at all.
+            reporter.WriteProgress(++index, user.UserName);
+
+            if (string.IsNullOrEmpty(user.UserName)) continue;
 
             if (!userMappings.ContainsKey(user.UserName))
             {
@@ -294,34 +303,44 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
         // key: SourceUserName
         var userMappings = new Dictionary<string, MappingCsvLine>(StringComparer.OrdinalIgnoreCase);
 
-        // totalNum: PmGroups, folders, assets
-        int totalStageNum = 3;
-
-        string msg = "Generating user mapping csv...";
         using var cancelHandler = new ConsoleCancelHandler();
-        using ProgressReporter reporter = new(this, totalStageNum, msg);
+
+        // One bar for the run, counting its steps, with a child bar under it for each of the
+        // three enumerations -- the shape Copy-Item gives a folder and its entity types. The
+        // parent is written at the start of every step: a child names its parent by id, and a
+        // parent never written leaves the host holding children of an activity it was never
+        // shown. The last three steps have no child bar, so the parent's status names the step;
+        // without them the bar would sit at its end through the directory searches, which are
+        // the slow part on a large tenant.
+        //
+        // The child labels share one width (13) so their "[" line up; the parent's is not
+        // padded, being the only bar at its indent. Each child stays up once its stage is done,
+        // saying so, and all are taken down together at the end of the try.
+        const int totalStepNum = 6;
+        using ProgressReporter reporter = new(this, totalStepNum, "User mapping");
+        reporter.Context = $"{srcDrive.NameColonSeparator} -> {dstDrive.NameColonSeparator}";
         try
         {
-            // The three stage bars live together under the run's bar, so they say so: all
-            // three are in scope at once from here to the end of the try.
-            msg = "Enumerating PmGroup Members...          ";
-            using ProgressReporter reporterPmGroups = new(this, Int32.MaxValue, msg, reporter);
+            reporter.WriteProgress(1, "group members");
+            using ProgressReporter reporterPmGroups = new(this, null, "Group members", reporter);
             EnumeratePmGroupMembers(srcDrive, userMappings, reporterPmGroups, cancelHandler.Token);
+            reporterPmGroups.WriteCompleted();
 
-            msg = "Enumerating Tenant Users...             ";
-            using ProgressReporter reporterUsers = new(this, Int32.MaxValue, msg, reporter);
+            reporter.WriteProgress(2, "tenant users");
+            using ProgressReporter reporterUsers = new(this, null, "Tenant users ", reporter);
             EnumerateTenantUsers(srcDrive, userMappings, reporterUsers, cancelHandler.Token);
+            reporterUsers.WriteCompleted();
 
             // This is necessary because directory users (not just tenant users) can be assigned to folders.
-            msg = "Enumerating Users assigned in Folders...";
-            using ProgressReporter reporterFolderUsers = new(this, Int32.MaxValue, msg, reporter);
+            reporter.WriteProgress(3, "folder users");
+            using ProgressReporter reporterFolderUsers = new(this, null, "Folder users ", reporter);
             EnumerateFolderUsers(srcDrive, userMappings, reporterFolderUsers, cancelHandler.Token);
+            reporterFolderUsers.WriteCompleted();
 
             // On second thought, there's no need to search assets.
             // Only users assigned to a folder should be assignable to an asset.
             // What happens if you unassign a user after creating the asset? But we don't need to worry about that.
-            //msg = "Enumerating Users assigned in Assets... ";
-            //using ProgressReporter reporterAssets = new(this, Int32.MaxValue, msg);
+            //using ProgressReporter reporterAssets = new(this, null, "Assets       ", reporter);
             //EnumerateAssetUsers(srcDrive, userMappings, reporterAssets, cancelHandler.Token);
 
             // Robot rows never go through the directory searches below — robot accounts
@@ -329,7 +348,7 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
             // list instead, which is what the copy cmdlets match per-user values against
             // (robot accounts do appear there). Same-named robots auto-fill; the rest are
             // left empty for the operator to map (or delete when not needed).
-            msg = $"Resolving robots against destination tenant users...";
+            reporter.WriteProgress(4, "robot accounts");
             var robotRows = userMappings.Values.Where(l => l.IsRobot && string.IsNullOrEmpty(l.DestinationUserName)).ToList();
             if (robotRows.Count > 0)
             {
@@ -348,7 +367,7 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
                 }
             }
 
-            msg = $"Searching Source directory...          ";
+            reporter.WriteProgress(5, "source directory");
             var srcResolvedUsers = srcDrive.PmBulkResolveByName("user",
                 userMappings.Where(u => !u.Value.IsRobot && (string.IsNullOrEmpty(u.Value.SourceEmail) || string.IsNullOrEmpty(u.Value.SourceSource))),
                 u => u.Key);
@@ -360,7 +379,7 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
                 line.SourceSource = srcResolvedUser.Value?.source;
             }
 
-            msg = $"Searching Destination directory...     ";
+            reporter.WriteProgress(6, "destination directory");
             #region First, search by UserName
             var dstResolvedUsersByUserName = dstDrive.PmBulkResolveByName("user",
                 userMappings.Where(u => !u.Value.IsRobot && string.IsNullOrEmpty(u.Value.DestinationUserName)),

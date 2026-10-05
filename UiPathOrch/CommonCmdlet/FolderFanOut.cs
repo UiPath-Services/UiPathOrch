@@ -88,11 +88,16 @@ internal static class FolderFanOut
         using var cancelHandler = new ConsoleCancelHandler();
 
         var folders = drivesFolders.ToList();
-        using var reporter = new ProgressReporter(caller, folders.Count, listActivity);
 
         // Phase 1. Folders that matched nothing drop out here.
+        //
+        // One bar per phase, the first taken down before the second goes up, as every other
+        // list-then-fetch cmdlet does. Relabelling one bar between the phases rewrote the
+        // label of a bar already on screen, which is what moving every varying value out of
+        // the activity line was meant to stop.
         var groups = new List<(OrchDriveInfo drive, Folder folder, List<TItem> items)>();
 
+        using (var reporter = new ProgressReporter(caller, folders.Count, listActivity))
         using (var listPool = OrchThreadPool.RunForEach(folders,
             df => df.folder.GetPSPath(),
             df => df.folder,
@@ -131,10 +136,8 @@ internal static class FolderFanOut
             }
         }
 
-        // Phase 2.
-        reporter.Activity = fetchActivity;
-        reporter.TotalNum = targets.Count;
-        reporter.WriteProgress(0);
+        // Phase 2. Nothing to fetch puts no bar up; the reporter only shows once written to.
+        using var fetchReporter = new ProgressReporter(caller, targets.Count, fetchActivity);
 
         using var results = OrchThreadPool.RunForEach(targets,
             t => itemPath(t.item),
@@ -152,7 +155,7 @@ internal static class FolderFanOut
             var (drive, folder, _) = targets[index];
             try
             {
-                var row = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
+                var row = results.GetResultWithProgress(result, fetchReporter, cancelHandler.Token);
                 if (row is null) continue;
 
                 onRow?.Invoke(drive, folder, row);

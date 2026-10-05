@@ -142,7 +142,9 @@ public class ExportPackageCmdlet : OrchestratorPSCmdlet
         }
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using ProgressReporter reporter = new(this, 100, "Export packages");
+        // Named for what is exported, as Import-OrchPackage's bar is. The total is per package,
+        // set once its version list is in hand.
+        using ProgressReporter reporter = new(this, null, "Packages");
         foreach (var (drive, folder) in drivesFolders)
         {
             try

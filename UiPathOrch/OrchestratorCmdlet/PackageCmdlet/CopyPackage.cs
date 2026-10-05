@@ -225,26 +225,32 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
         List<(OrchDriveInfo, Folder)> dstDrivesFolders,
         bool shouldProcess, CancellationToken cancelToken)
     {
-        // Three bars are on screen at once, so their labels are short, of ONE length (8, no
-        // trailing run to trim) and hardcoded, and each is nested under the one above: the
-        // packages of a folder, the versions of a package. Shaped like Copy-Item's set: the
+        // Three bars are on screen at once, so their labels are short and hardcoded, and each
+        // is nested under the one above: the packages of a folder, the versions of a package.
+        // The child labels are of one length (8) so their "[" line up; the top bar's is not
+        // padded, since it is the only one at its indent. Shaped like Copy-Item's set: the
         // top bar carries the whole "from -> to", the ones below name only the item they are
         // on. The destination used to be written into the versions bar's activity, which put
         // it on every bar on screen and made that label a different width per destination, so
         // the bar walked left and right under the two above it.
         //
-        // The top bar reports even for a single folder, where it used to stay silent: it is
-        // the only line that names the destination, and a copy that does not say where it is
-        // writing is worth less than the line it saves.
+        // There is no folder bar when there is only one source folder. Counting to 1/1 says
+        // nothing, and Copy-Item's tenant-entity stage calls this with exactly one folder --
+        // the tenant feed -- so that is not a corner case but the common one. The destination
+        // still has to be named, so it moves onto the packages bar, which is then the top one.
         string dstLabel = string.Join(", ", dstDrivesFolders.Select(d => d.Item2.GetPSPath()));
+        bool manyFolders = srcDrivesFolders.Count > 1;
 
         int index1 = 0;
-        using var reporterMain = new ProgressReporter(_this, srcDrivesFolders.Count, "Folders ");
+        using ProgressReporter? reporterMain = manyFolders
+            ? new ProgressReporter(_this, srcDrivesFolders.Count, "Folders")
+            : null;
+
         foreach (var (srcDrive, srcFolder) in srcDrivesFolders)
         {
             cancelToken.ThrowIfCancellationRequested();
 
-            reporterMain.WriteProgress(++index1, $"{srcFolder.GetPSPath()} -> {dstLabel}");
+            reporterMain?.WriteProgress(++index1, $"{srcFolder.GetPSPath()} -> {dstLabel}");
             try
             {
                 var srcPackages = srcDrive.GetPackages(srcFolder)
@@ -256,6 +262,11 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
 
                 int index2 = 0;
                 using var reporter2 = new ProgressReporter(_this, srcPackages.Count, "Packages", reporterMain);
+                // Top bar when there is no folder bar, so it carries the "from -> to".
+                if (reporterMain is null)
+                {
+                    reporter2.Context = $"{srcFolder.GetPSPath()} -> {dstLabel}";
+                }
                 foreach (var srcPackage in srcPackages)
                 {
                     cancelToken.ThrowIfCancellationRequested();

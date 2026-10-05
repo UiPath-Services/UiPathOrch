@@ -48,7 +48,7 @@ public class CopyQueueCmdlet : OrchestratorPSCmdlet
 
         // Since the cache is cleared just before copying, there is no point in retrieving it here
 
-        using var reporterQueues = new ProgressReporter(this, null, "Copying queues...");
+        using var reporterQueues = new ProgressReporter(this, null, "Queues");
         using var cancelHandler = new ConsoleCancelHandler();
 
         // One report for the whole run: a shared queue that isn't linked in one folder's pass

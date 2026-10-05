@@ -47,14 +47,13 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
         // Fixed label, destination queue in Context: see CopyCalendar for why the
-        // destination may not go in the activity of a bar that is already on screen.
-        using ProgressReporter reporterQueue = new(this, int.MaxValue, "Queue items");
-
-        // Count the number of queues to be processed
-        reporterQueue.TotalNum = srcDrivesFolders.CountEntities(
+        // destination may not go in the activity of a bar that is already on screen. The bar
+        // counts QUEUES, so that is its label; the items copied so far are in the status.
+        int queueCount = srcDrivesFolders.CountEntities(
             drive => drive.Queues,
             e => e.FilterByWildcards(q => q?.Name, wpName)
         );
+        using ProgressReporter reporterQueue = new(this, queueCount, "Queues");
 
         int idxQueue = 0;
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
@@ -79,11 +78,12 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
                         continue;
                     }
 
-                    // Status is "{items copied} {queue name}" -- the running item count leads so it
-                    // stays at a fixed, readable position while the variable-length name follows; the
-                    // destination goes on the activity line. Count is 0 before the first batch.
+                    // Status is "{queue name}: {n} items", after the destination queue in Context.
+                    // The count follows the name it belongs to: put first, it sat between the
+                    // destination path and the source name and read as part of neither. It
+                    // counts the items read so far, 0 before the first batch.
                     reporterQueue.Context = dstQueue.GetPSPath();
-                    reporterQueue.WriteProgress(idxQueue, $"0 {srcQueue.Name}");
+                    reporterQueue.WriteProgress(idxQueue, $"{srcQueue.Name}: 0 items");
 
                     string target = $"Items in '{srcQueue.GetPSPath()}' Destination: '{dstQueue.GetPSPath()}'";
 
@@ -106,7 +106,8 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
                             {
                                 srcItems = srcDrive.GetQueueItems(srcFolder, srcQueue, query, 100 * first, 100);
                                 if (srcItems.Count == 0) break;
-                                reporterQueue.WriteProgress(idxQueue, $"{(first++ * 100) + (ulong)srcItems.Count} {srcQueue.Name}");
+                                ulong itemsRead = (first++ * 100) + (ulong)srcItems.Count;
+                                reporterQueue.WriteProgress(idxQueue, $"{srcQueue.Name}: {itemsRead} items");
                             }
                             catch (Exception ex)
                             {
