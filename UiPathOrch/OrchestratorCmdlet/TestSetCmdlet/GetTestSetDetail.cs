@@ -53,19 +53,17 @@ public class GetTestSetDetailCmdlet : OrchestratorPSCmdlet
         WarnTestingModuleDeprecated(drivesFolders.Select(df => df.drive));
         var wpName = Name.ConvertToWildcardPatternList();
 
-        // One expanded listing per folder answers everything, so phase 2 has nothing to
-        // fetch and the pass is there only to batch the output a folder at a time -- the
-        // table view sizes its columns from the first batch it receives, and row-by-row
-        // emission let the first test set of a folder set them for the rest.
-        FolderFanOut.Emit<TestSet, TestSet>(
+        // One expanded listing per folder answers everything, so there is no per-test-set
+        // call to fan out: the one-phase shape prints each folder as soon as its listing is
+        // back, still a folder at a time -- the table view sizes its columns from the first
+        // batch it receives, and row-by-row emission let the first test set of a folder set
+        // them for the rest.
+        FolderFanOut.EmitListed<TestSet>(
             this, drivesFolders, "GetTestSetDetailError",
-            listActivity: "Listing test sets",
-            fetchActivity: "Getting test set details",
+            activity: "Getting test set details",
             list: (drive, folder) => drive.TestSetsDetailed.Get(folder)
                 .FilterByWildcards(s => s?.Name, wpName)
                 .OrderBy(s => s.Name),
-            itemPath: testSet => testSet.GetPSPath(),
-            fetch: (drive, folder, testSet) => testSet,
             emit: (drive, folder, rows) => WriteObject(rows, true));
     }
 }

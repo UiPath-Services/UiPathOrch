@@ -180,4 +180,55 @@ internal static class FolderFanOut
             }
         }
     }
+
+    /// <summary>
+    /// The one-phase shape, for when a folder's listing already IS the detail — one request
+    /// per folder answers everything, as with Get-OrchTriggerDetail's expanded listing.
+    /// </summary>
+    /// <remarks>
+    /// Do not pass such a listing to <see cref="Emit{TItem,TRow}"/> with a fetch that returns
+    /// its argument. Phase 2 then issues no requests, so all the waiting sits in phase 1,
+    /// which lists EVERY folder before anything is printed. Here each folder is emitted the
+    /// moment its own listing is back; the pool drains in submission order, so the folders
+    /// still come out in the order they were given.
+    /// </remarks>
+    /// <param name="errorId">ErrorRecord id, e.g. "GetTriggerDetailError".</param>
+    /// <param name="activity">Progress activity, e.g. "Getting trigger details".</param>
+    /// <param name="list">A folder's rows, in output order. Runs on a pool thread.</param>
+    /// <param name="emit">One folder's rows, never empty. Runs on the pipeline thread.</param>
+    public static void EmitListed<TRow>(
+        OrchestratorPSCmdlet caller,
+        IEnumerable<(OrchDriveInfo drive, Folder folder)> drivesFolders,
+        string errorId,
+        string activity,
+        Func<OrchDriveInfo, Folder, IEnumerable<TRow>> list,
+        Action<OrchDriveInfo, Folder, List<TRow>> emit)
+        where TRow : class
+    {
+        using var cancelHandler = new ConsoleCancelHandler();
+
+        var folders = drivesFolders.ToList();
+
+        using var reporter = new ProgressReporter(caller, folders.Count, activity);
+        using var results = OrchThreadPool.RunForEach(folders,
+            df => df.folder.GetPSPath(),
+            df => df.folder,
+            df => list(df.drive, df.folder).ToList());
+
+        int f = 0;
+        foreach (var result in results.WithCancellation(cancelHandler.Token))
+        {
+            // folders[f], not result.Source, for the same reason as in Emit's phase 2.
+            var (drive, folder) = folders[f++];
+            try
+            {
+                var rows = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
+                if (rows is { Count: > 0 }) emit(drive, folder, rows);
+            }
+            catch (OrchException ex)
+            {
+                caller.WriteError(new ErrorRecord(ex, errorId, ErrorCategory.InvalidOperation, ex.Target));
+            }
+        }
+    }
 }

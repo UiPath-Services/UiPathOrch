@@ -105,19 +105,15 @@ public class GetTriggerDetailCmdlet : OrchestratorPSCmdlet
         List<WildcardPattern>? nameWildcards,
         StreamWriter? writer)
     {
-        // The detail call used to sit in the consumer loop, one trigger at a time on the
-        // pipeline thread, while the pool fetched only the per-folder listings. FolderFanOut
-        // puts it in a pool of its own, so a folder of fifty triggers is read four at a time
-        // instead of fifty times in a row.
-        FolderFanOut.Emit<ProcessSchedule, ProcessSchedule>(
+        // The folder listing already carries the whole trigger (see GetTriggerDetailed), so
+        // there is no per-trigger call to fan out: the one-phase shape prints each folder as
+        // soon as its listing is back.
+        FolderFanOut.EmitListed<ProcessSchedule>(
             caller, drivesFolders, "GetTriggerDetailError",
-            listActivity: "Listing triggers",
-            fetchActivity: "Getting trigger details",
+            activity: "Getting trigger details",
             list: (drive, folder) => drive.GetTriggers(folder)
                 .FilterByWildcards(s => s?.Name, nameWildcards)
                 .OrderBy(s => s.Name),
-            itemPath: trigger => trigger.GetPSPath(),
-            fetch: (drive, folder, trigger) => drive.GetTriggerDetailed(folder, trigger.Id!.Value),
             emit: (drive, folder, rows) =>
             {
                 // The CSV path writes record by record -- a file has no column widths -- but
