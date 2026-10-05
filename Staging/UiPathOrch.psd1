@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.18.0'
+ModuleVersion = '1.19.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -511,6 +511,31 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.19.0
+
+Added: Get-OrchProcessDependency and Get-OrchProcessWorkflow read the dependencies and the .xaml
+files of the package a process runs -- the "Explore package" view, which Orchestrator has no
+endpoint for, so the package is downloaded once and only the two lists are kept.
+-Dependency takes wildcards: -Recurse -Dependency 'UiPath.UIAutomation*' names every process using
+that activity package. Get-OrchPackageDependency, Get-OrchPackageWorkflow and
+Get-OrchLibraryDependency ask the same of a feed package or a library.
+
+Changed: Remove-OrchPackage names the processes that block a delete, after Orchestrator's own
+"referred in active processes" refusal.
+
+Changed: Get-OrchTriggerDetail reads a folder in one request (200 triggers: 401 requests and 25.6 s
+became 1 and 0.32 s), and ExecutorRobots carries the robots' names. Get-OrchProcessDetail skips the
+retention request when the release detail already has it (API 19+) and caches retention;
+Get-OrchTestSetDetail fetches in parallel and caches. Rows from parallel reads appear as they
+arrive instead of mostly at the end.
+
+Changed: progress bars have a fixed noun label, with the destination inside the bar, and nested
+bars are shown under the bar they belong to. Copy-Item's folder bar counts folders.
+
+Fixed: one Ctrl+C stops Copy-Item, where it used to begin the next folder.
+
+Fixed: tables grouped by Path no longer clip later rows to the width of a folder's first row.
+
 1.18.0
 
 Added: Set-PmLicenseAllocation allocates robot runtimes and consumable units to one tenant
@@ -575,17 +600,6 @@ folders, so nothing is lost.
 
 Changed: the Test* cmdlets say once per drive that Orchestrator has deprecated its Test
 Automation API in favour of Test Manager. They keep working; Clear-OrchCache resets the notice.
-
-1.16.1
-
-Fixed: a flag the source Orchestrator is too old to have is no longer a difference. An Orchestrator
-that predates a boolean field returns null for it; a newer one returns the field's default, so a
-comparison across the two reported every such field -- "RetryAbandonedItems: (null) => 'False'" on
-a queue that had copied perfectly, from the same MSI-to-Automation-Suite migration as 1.16.0. For a
-bool both values mean "not enabled", so null is now compared as false across the whole
-Compare-Orch* family. null against TRUE stays a difference: that is the feature switched on at one
-end. Bool only -- a null number against 0 may mean "absent" but against a non-zero default it does
-not, and telling those apart needs each field's own default rather than one rule.
 '@
 
         # Prerelease string of this module

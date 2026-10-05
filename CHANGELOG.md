@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.19.0] - 2026-10-05
+
 ### Added
 
 - **`Get-OrchProcessDependency` answers "what does this process depend on" without the lookup
@@ -42,8 +44,100 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
   The work is staged so the progress bar counts what costs something. Listing folders and
   processes runs in parallel because it is cheap; the downloads are deliberately sequential — one
-  request at a time against the server — and run in their own pass, so their count is known
-  before the first one starts and an unexpectedly large sweep can be cancelled.
+  request at a time against the server. The packages not yet cached are counted before the first
+  download starts, so an unexpectedly large sweep shows its size at once and can be cancelled,
+  and each is then downloaded when the walk first reaches it, so rows appear while the rest are
+  still downloading. Completion of `-Dependency` and `-Workflow` offers what the cache holds,
+  filtered by what has been typed and by the command's own `-Name` / `-Id`; when the scope has
+  not been read it says so and names the command that would fill it. It never downloads a package
+  itself.
+
+### Changed
+
+- **`Remove-OrchPackage` names the processes that block a delete.** Orchestrator refuses with
+  "Package is referred in active processes and cannot be deleted." and stops there; the
+  refusal is now followed by `Referred by: Orch2:\Folder\Process` for every process pinned to
+  that package version. The search covers the folder that owns the feed and its subtree — the
+  whole tenant for the tenant feed — since only a process served by that feed can name the
+  package. It recognises the refusal by Orchestrator's error code (1013), never by the message
+  text, which is localized. When no process is found it says so, with the number of folders it
+  could not list. `Get-OrchProcessDependency` is not the tool for this question: it reports what
+  a package declares, not what runs it.
+
+- **`Get-OrchTriggerDetail` reads a folder in one request.** It cost two requests per trigger
+  plus the listing: the trigger detail and the separate robot-id function. The robots are a
+  navigation property of the listing, and the expanded listing carries everything the detail
+  endpoint did. Measured on 200 triggers in one folder: 401 requests and 25.6 s became 1 request
+  and 0.32 s. `ExecutorRobots` now also carries each robot's `Name`, `MachineName` and
+  `Description`, where it held bare ids. The expansion goes into the listing that
+  `Get-OrchTrigger` and `Copy-OrchTrigger` share, so it was checked on an on-premises 20.10.16
+  (API 11.1), Automation Suite 24.10.8 (API 18) and Automation Cloud (API 20).
+
+- **`Get-OrchProcessDetail` stops asking for retention it already has, and caches the rest.**
+  From API 19 the release detail already carries `RetentionAction`, `RetentionPeriod` and
+  `RetentionBucketId`; the separate retention request is now made only when the detail lacked
+  them, which is every server below 19. Measured on 212 processes on Automation Cloud: 47.8–51.3 s
+  became 33.9 s. Retention is now cached as well, so a warm `-Recurse` over the same 212 went from
+  14.1 s to 0.004 s. `Update-OrchProcess` clears that cache.
+
+- **`Get-OrchTestSetDetail` fetches in parallel and caches.** The per-test-set call ran one at a
+  time on the pipeline thread and was never cached. A warm re-run on Automation Suite 24.10.8 went
+  from 0.88 s to 0.0025 s, and its progress bar now counts test sets rather than folders.
+
+- **Rows from a parallel read appear as they arrive.** The worker pool behind the `Get-Orch*`
+  cmdlets that read many folders or entities at once started its work in a scrambled order, so
+  the item the output was waiting on could be among the last to start. On
+  `Get-OrchProcessDetail -Recurse` over 212 releases in 28 folders, the first two folders' rows
+  appeared at 8.5 s and 10.5 s and the other 200 all arrived in the last second of a 49 s run.
+  Work now starts in output order, with the same limit of four concurrent requests.
+
+- **`Copy-Item` copies folder users and test sets with fewer requests.** A folder user the
+  destination tenant already has is assigned from the tenant's user list — one cached request for
+  all of them — instead of a directory search each, which cost about a second per user. A
+  folder's test sets are read in one listing instead of one request each.
+
+- **Progress bars have a fixed label, with what varies inside the bar.** The label is a short
+  noun for what is being processed — `Queues`, `Folder users` — and no longer carries the
+  destination, which moved inside the bar between the count and the item name:
+  `Calendars [3/4 Orch2:\ JapanHolidays]`. A label that held the destination was rewritten as the
+  run moved between destinations, and the bar changed width and moved sideways as it went.
+  Where several bars are shown at once they are nested under the one they belong to:
+  `Copy-Item`'s per-entity bars sit under its folder bar, and `Copy-OrchPackage`,
+  `Copy-OrchLibrary`, `Remove-OrchPackage`, `Remove-OrchLibrary`, `Get-OrchQueueItem` and
+  `New-OrchUserMappingCsv` show a parent with its children under it.
+
+  `Copy-Item`'s folder bar counts folders (`3/24`) rather than the stages of the folder in hand,
+  and reads `<source folder> -> <folder being created>`. Its per-entity bars stay up for the
+  folder and say `COMPLETED` when their stage is done; a stage with nothing to copy shows no bar.
+  A bar whose total cannot be known shows the count alone, where thirteen `Copy-Orch*` cmdlets
+  showed `5/2147483647` and sat at 0%.
+
+### Fixed
+
+- **One Ctrl+C stops `Copy-Item`.** It stopped the entity being copied and then began the next
+  folder: the cancellation was caught as an ordinary per-folder failure, and the loop over a
+  root-to-root copy's top-level folders did not check for it at all. The walk now stops, and the
+  destination folder cache and the link report are still cleaned up when it does.
+
+- **The Ctrl+C notice is printed once.** It was printed once for each cancel handler alive at
+  the time, so `Import-OrchLibrary` printed it twice. `Import-OrchLibrary` and `Import-OrchPackage` also stopped reporting a cancellation as an
+  extra per-file error on top of the real one; a request that only timed out is still a per-file
+  error, and the remaining files still go through.
+
+- **Grouped tables no longer clip later rows.** The table views group by `Path` and size their
+  columns from the first rows they receive, and these cmdlets emitted one row at a time, so the
+  first row of a folder set the widths for every longer value behind it. They now emit a folder's
+  rows together: `Get-OrchAssetLink`, `Get-OrchBucketLink`, `Get-OrchQueueLink`,
+  `Get-OrchApiTrigger`, `Get-OrchEventTrigger`, `Get-OrchTriggerDetail` and the five dependency
+  and workflow cmdlets above.
+
+- **`Get-OrchQueueItem`'s item bar shows progress.** Without `-First` its total was 2147483647,
+  so it stayed at 0%; it now counts the items read, against `-First` when one is given.
+
+- **The CSV guide says what an empty numeric cell does.** It said empty cells never overwrite
+  existing values. That holds for text columns only: an empty numeric cell is read as 0, and for
+  `Set-PmLicenseAllocation` 0 releases the allocation. The guide and the cmdlet's help now say so,
+  and that the way to leave a numeric value alone is to delete the column.
 
 ## [1.18.0] - 2026-09-30
 
