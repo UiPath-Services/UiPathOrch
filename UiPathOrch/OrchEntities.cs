@@ -2260,6 +2260,8 @@ public class PackageContents
 
 public class Release
 {
+    public Release ShallowClone() => (Release)MemberwiseClone();
+
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string? Path { get; set; } // added by UiPathOrch
     public Int64? Id { get; set; }

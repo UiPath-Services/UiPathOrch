@@ -551,7 +551,12 @@ public partial class OrchProvider
                 Release srcRelease = null;
                 try
                 {
-                    srcRelease = srcDrive.ReleasesDetailed.Get(srcFolder, process.Id ?? 0);
+                    // A copy, not the cached entry: the entry point migration below rewrites
+                    // EntryPointId to the DESTINATION's id. On the cached entry that rewrite
+                    // outlived the copy -- the next copy of the same process looked the
+                    // destination's id up in the source package, did not find it, and copied
+                    // with no entry point; Get-OrchProcessDetail showed the foreign id too.
+                    srcRelease = srcDrive.ReleasesDetailed.Get(srcFolder, process.Id ?? 0)?.ShallowClone();
                 }
                 catch (Exception ex)
                 {

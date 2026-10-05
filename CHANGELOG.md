@@ -26,6 +26,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   folder. On 8 triggers in 6 folders, the first folder printed at 2.8 s of an 8.1 s run. This also
   covers `Get-OrchTrigger -ExportCsv` and `-ExpandDetails`, which share the code.
 
+- **Copying the same process a second time keeps its entry point.** `Copy-Item` and
+  `Copy-OrchProcess` mapped the entry point to the destination's by rewriting `EntryPointId` on
+  the cached source process rather than on a copy of it, so the destination's id stayed in the
+  cache for the rest of the session. The next copy of that process looked the foreign id up in the
+  source package, warned `source entry point id … not found`, and created the process without an
+  entry point — which the server fills with the package's main workflow, so a process that runs
+  any other entry point lost it. Reading the source afterwards, as `Get-OrchProcessDetail` does,
+  showed the foreign id too. This only showed where the entry point ids differ between source and
+  destination — across tenants, or between feeds — and had been there since the first release.
+
 ## [1.19.0] - 2026-10-05
 
 ### Added
