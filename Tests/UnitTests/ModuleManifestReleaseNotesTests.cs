@@ -1,6 +1,7 @@
+using System.Collections;
 using System.IO;
 using System.Linq;
-using System.Management.Automation;
+using System.Management.Automation.Language;
 using System.Reflection;
 using Xunit;
 
@@ -38,18 +39,33 @@ public class ModuleManifestReleaseNotesTests
         }
     }
 
-    private static string ReleaseNotes()
+    // Read the manifest the way Import-PowerShellDataFile does -- parse it, then take the value of
+    // its one hashtable with SafeGetValue, which accepts only literals -- but without a runspace.
+    //
+    // It used to call Import-PowerShellDataFile through PowerShell.Create(), and that failed on the
+    // v1.19.0 release run with "Cannot find drive. A drive with the name 'D' does not exist." while
+    // the CI run of the same commit, on the same runner image, passed. A runspace resolves -Path
+    // through the FileSystem provider's drives, and the first runspace of a test process was being
+    // created while OrchProviderHarness built others in parallel test classes. Parsing needs no
+    // provider, no drive and no runspace, so there is nothing left to race.
+    private static Hashtable Manifest()
     {
         Assert.True(File.Exists(ManifestPath), $"not found: {ManifestPath}");
 
-        using var ps = PowerShell.Create();
-        ps.AddCommand("Import-PowerShellDataFile").AddParameter("Path", ManifestPath);
-        var manifest = (System.Collections.Hashtable)ps.Invoke()[0].BaseObject;
+        var ast = Parser.ParseFile(ManifestPath, out _, out ParseError[] errors);
+        Assert.True(errors.Length == 0,
+            "the module manifest does not parse: " + string.Join("; ", errors.Select(e => e.Message)));
 
-        Assert.False(ps.HadErrors, "the module manifest does not parse");
+        var table = ast.Find(a => a is HashtableAst, searchNestedScriptBlocks: false) as HashtableAst;
+        Assert.NotNull(table);
 
-        var privateData = (System.Collections.Hashtable)manifest["PrivateData"]!;
-        var psData = (System.Collections.Hashtable)privateData["PSData"]!;
+        return (Hashtable)table!.SafeGetValue();
+    }
+
+    private static string ReleaseNotes()
+    {
+        var privateData = (Hashtable)Manifest()["PrivateData"]!;
+        var psData = (Hashtable)privateData["PSData"]!;
 
         return (string)psData["ReleaseNotes"]!;
     }
@@ -73,11 +89,7 @@ public class ModuleManifestReleaseNotesTests
         // The Gallery shows these notes on the module's page, newest first. A bump that updated
         // ModuleVersion but not the notes would ship the previous version's text.
         string notes = ReleaseNotes();
-
-        using var ps = PowerShell.Create();
-        ps.AddCommand("Import-PowerShellDataFile").AddParameter("Path", ManifestPath);
-        var manifest = (System.Collections.Hashtable)ps.Invoke()[0].BaseObject;
-        string version = (string)manifest["ModuleVersion"]!;
+        string version = (string)Manifest()["ModuleVersion"]!;
 
         Assert.StartsWith(version, notes.TrimStart());
     }
