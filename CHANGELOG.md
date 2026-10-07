@@ -21,7 +21,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `DirectoryUser` (or `DirectoryRobot`) instead of stopping at "does not have the User". Only
   when the destination has no local accounts at all; `-UserMappingCsv` still decides the name.
 
+- **A re-sign-in after a 401 renews the token instead of opening the browser.** When a request
+  was refused and the session signed in again, it went straight back to the interactive sign-in
+  even though it held a refresh token. In a long script that meant a browser tab mid-run, and
+  against a server that had just restarted, a three-minute wait on the local callback port per
+  request — holding that port against every other PowerShell window signing in. The refresh
+  token is tried first now; the browser opens only if it is refused.
+
+- **`Get-OrchUserPrivilege` reports once per drive where privileges are unavailable.** Its
+  endpoint exists on Automation Cloud only; on-premises servers and Automation Suite answer 404
+  for every user and group, which printed one identical error per user. The first user is asked
+  alone, and a 404 there is reported once for the drive.
+
 ### Fixed
+
+- **`Enable-OrchLicenseRuntime` / `Disable-OrchLicenseRuntime` no longer stop at the first robot
+  type a server lacks.** A failed listing for one type ended the whole command, so on an older
+  server `-RobotType *` stopped at the first type it didn't have. Each type's failure is its own
+  now, and types the server lacks are handled as in `Get-OrchLicenseRuntime`.
 
 - **Two on-premises drives no longer share organization data.** Organization-level results
   (Platform Management users, groups, robot accounts, external applications, the product version,
