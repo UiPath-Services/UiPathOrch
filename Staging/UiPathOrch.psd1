@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.19.0'
+ModuleVersion = '1.19.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -511,6 +511,28 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.19.1
+
+Fixed: triggers keep their robot assignment on on-premises servers and Automation Suite. 1.19.0
+read it from an expanded trigger listing that only Automation Cloud fills, so there
+Get-OrchTriggerDetail showed no robots, -ExportCsv wrote none and Copy-Item copied triggers without
+them. Get-OrchTriggerDetail is back to one request per trigger.
+
+Fixed: Update-OrchTrigger no longer clears a trigger's robot assignment, which any update did since
+1.0.0.
+
+Fixed: a 401 from a service other than Orchestrator (Identity, for the Pm cmdlets on 20.10) no
+longer makes the whole drive fail until Import-OrchConfig.
+
+Fixed: copying the same process twice in a session keeps its entry point.
+
+Fixed on 20.10: exported trigger rows name their robots; a trigger priority is sent as Low / Normal
+/ High; Copy-Item copies local-account folder users; Add-OrchFolderUser -Type User / Robot assigns
+local accounts.
+
+Changed: Get-OrchProcessDetail reads entry point paths from the listing, one request fewer per
+process; Get-OrchTestSetDetail prints each folder as it arrives.
+
 1.19.0
 
 Added: Get-OrchProcessDependency and Get-OrchProcessWorkflow read the dependencies and the .xaml

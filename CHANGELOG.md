@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.19.1] - 2026-10-07
+
 ### Changed
 
 - **`Get-OrchProcessDetail` reads entry point paths from the listing.** `EntryPointPath` cost a
