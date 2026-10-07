@@ -517,7 +517,30 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         // WildcardPattern.Escape each robot name (New-OrchTrigger matches ExecutorRobots as
         // wildcard patterns) and escape an in-name comma as `, so the comma-joined cell
         // round-trips: the importer un-escapes both and treats `, as a literal comma.
-        return string.Join(',', targetRobots.Select(r => r.Name is { } n ? WildcardPattern.Escape(n).Replace(",", "`,") : null).Order());
+        return string.Join(',', targetRobots.Select(r => ExecutorRobotLabel(r) is { } n ? WildcardPattern.Escape(n).Replace(",", "`,") : null).Order());
+    }
+
+    /// <summary>
+    /// The text an executor robot is written as: its Name, else its Username. A modern-folder
+    /// robot on 20.10 (API 11) is user-based and has no Name -- /odata/Robots lists it with only
+    /// Username ("localhost\hoge") -- so writing the Name alone left the -ExportCsv cell empty,
+    /// and re-importing that row cleared the assignment. <see cref="DeserializeExecutorRobots"/>
+    /// reads either form back.
+    /// </summary>
+    internal static string? ExecutorRobotLabel(Robot robot)
+        => string.IsNullOrEmpty(robot.Name) ? (string.IsNullOrEmpty(robot.Username) ? null : robot.Username) : robot.Name;
+
+    /// <summary>
+    /// The robots an -ExecutorRobots entry names: by Name first, and only if no Name matches,
+    /// by Username -- the form <see cref="ExecutorRobotLabel"/> writes for a robot without a
+    /// Name. Name stays first so an entry that has always resolved by Name resolves the same.
+    /// </summary>
+    internal static IEnumerable<Robot> MatchExecutorRobots(IEnumerable<Robot> robots, WildcardPattern pattern)
+    {
+        var byName = robots.Where(r => !string.IsNullOrEmpty(r.Name) && pattern.IsMatch(r.Name)).ToList();
+        return byName.Count > 0
+            ? byName
+            : robots.Where(r => !string.IsNullOrEmpty(r.Username) && pattern.IsMatch(r.Username));
     }
 
     internal static string? SerializeMachineRobotSessions(OrchDriveInfo drive, Folder folder, IEnumerable<MachineRobotSession>? machineRobots)
@@ -599,7 +622,7 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
                 {
                     // Extract matching robots
                     var wpRobotName = new WildcardPattern(executorRobot, WildcardOptions.IgnoreCase);
-                    var targetRobots = robots.Where(r => wpRobotName.IsMatch(r.Name));
+                    var targetRobots = MatchExecutorRobots(robots, wpRobotName);
 
                     if (!targetRobots.Any())
                     {
