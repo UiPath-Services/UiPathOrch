@@ -64,6 +64,26 @@ public abstract class OrchDriveInfoBase : PSDriveInfo
     // because PartitionGlobalId was doing the fetch.
     internal abstract string? GetPartitionGlobalId();
 
+    // The organization's identity across servers: the server plus the partition. The partition
+    // alone is not unique: every on-premises install's default organization has the same
+    // partition id (identical from 20.10.16 to 25.10.2, 2026-10-07), so two on-premises drives
+    // mounted together looked like one organization -- the process-wide org caches served one
+    // server's Pm users, groups and robot accounts to the other, and the Copy-Pm* cmdlets
+    // skipped every item as "same organization". Key org caches and compare organizations by
+    // this, never by the bare partition id; the partition id stays what the API calls take.
+    internal string OrgKeyFor(string partitionGlobalId) => OrgKey(OrchAPISession.ServerAuthority, partitionGlobalId);
+
+    internal static string OrgKey(string serverAuthority, string partitionGlobalId) => $"{serverAuthority}|{partitionGlobalId}";
+
+    // PASSIVE, like PartitionGlobalId: null until the drive has authenticated.
+    internal string? OrgCacheKey => string.IsNullOrEmpty(PartitionGlobalId) ? null : OrgKeyFor(PartitionGlobalId);
+
+    // ACTIVE, like GetPartitionGlobalId: may authenticate.
+    internal string? GetOrgCacheKey() => GetPartitionGlobalId() is { Length: > 0 } p ? OrgKeyFor(p) : null;
+
+    internal bool IsSameOrganization(OrchDriveInfoBase other)
+        => GetOrgCacheKey() is { } key && key == other.GetOrgCacheKey();
+
     // Resolves the parent Orchestrator drive of a shadow (DU / TM) drive by name: this drive's
     // name minus its 2-char suffix, so "Orch1Du" -> "Orch1".
     //

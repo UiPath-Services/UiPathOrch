@@ -1560,7 +1560,7 @@ internal static class SessionStateExtensions
             return null;
         }
 
-        if (srcDrive.GetPartitionGlobalId() == dstDrive.GetPartitionGlobalId())
+        if (srcDrive.IsSameOrganization(dstDrive))
         {
             _this.WriteWarning("The specified SourceTenant and DestinationTenant belong to the same organization. Ignoring -UserMappingCsv parameter.");
             return null;

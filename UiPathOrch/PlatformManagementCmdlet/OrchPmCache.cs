@@ -31,9 +31,10 @@ public class PmGroupMembersCache : ITenantCacheClearable
 
     private readonly OrchDriveInfoBase _drive;
 
-    // Shared static storage keyed by (partitionGlobalId, kind, name). null value
+    // Shared static storage keyed by (org key, kind, name) -- the org key being the server
+    // plus the partitionGlobalId (OrchDriveInfoBase.OrgKeyFor). null value
     // = "API confirmed this name has no member" (negative caching).
-    private static readonly ConcurrentDictionary<(string partitionGlobalId, string kind, string name), PmGroupMember?> _cache = new();
+    private static readonly ConcurrentDictionary<(string orgKey, string kind, string name), PmGroupMember?> _cache = new();
     private static readonly ExceptionsCachePer<string> _exceptions = new();
     private static readonly object _lock = new();
 
@@ -57,8 +58,9 @@ public class PmGroupMembersCache : ITenantCacheClearable
         // Data-fetch path: force the partition lookup (the property is passive).
         var partitionGlobalId = _drive.GetPartitionGlobalId();
         if (string.IsNullOrEmpty(partitionGlobalId)) return new Dictionary<string, PmGroupMember?>();
+        var orgKey = _drive.OrgKeyFor(partitionGlobalId);
 
-        _exceptions.ThrowCachedExceptionIfAny(partitionGlobalId);
+        _exceptions.ThrowCachedExceptionIfAny(orgKey);
 
         var inputNames = names
             .Where(n => !string.IsNullOrEmpty(n))
@@ -67,7 +69,7 @@ public class PmGroupMembersCache : ITenantCacheClearable
         if (inputNames.Count == 0) return new Dictionary<string, PmGroupMember?>();
 
         var uncached = inputNames
-            .Where(n => !_cache.ContainsKey((partitionGlobalId, kind, n)))
+            .Where(n => !_cache.ContainsKey((orgKey, kind, n)))
             .ToList();
 
         if (uncached.Count > 0)
@@ -76,7 +78,7 @@ public class PmGroupMembersCache : ITenantCacheClearable
             {
                 // Re-check inside the lock — another thread may have populated.
                 uncached = uncached
-                    .Where(n => !_cache.ContainsKey((partitionGlobalId, kind, n)))
+                    .Where(n => !_cache.ContainsKey((orgKey, kind, n)))
                     .ToList();
 
                 if (uncached.Count > 0)
@@ -88,13 +90,13 @@ public class PmGroupMembersCache : ITenantCacheClearable
                             var result = _drive.OrchAPISession.PmBulkResolveByName(partitionGlobalId, kind, chunk);
                             foreach (var kvp in result ?? new Dictionary<string, PmGroupMember>())
                             {
-                                _cache[(partitionGlobalId, kind, kvp.Key)] = kvp.Value;
+                                _cache[(orgKey, kind, kvp.Key)] = kvp.Value;
                             }
                         }
                     }
                     catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
-                        _exceptions.CacheException(partitionGlobalId, ex);
+                        _exceptions.CacheException(orgKey, ex);
                         throw;
                     }
                 }
@@ -104,7 +106,7 @@ public class PmGroupMembersCache : ITenantCacheClearable
         var ret = new Dictionary<string, PmGroupMember?>();
         foreach (var name in inputNames)
         {
-            if (_cache.TryGetValue((partitionGlobalId, kind, name), out var value))
+            if (_cache.TryGetValue((orgKey, kind, name), out var value))
             {
                 ret[name] = value;
             }
@@ -118,12 +120,12 @@ public class PmGroupMembersCache : ITenantCacheClearable
 
     public void ClearCache()
     {
-        var partitionGlobalId = _drive.PartitionGlobalId;
-        if (string.IsNullOrEmpty(partitionGlobalId)) return;
-        foreach (var k in _cache.Keys.Where(k => k.partitionGlobalId == partitionGlobalId).ToList())
+        var orgKey = _drive.OrgCacheKey;
+        if (string.IsNullOrEmpty(orgKey)) return;
+        foreach (var k in _cache.Keys.Where(k => k.orgKey == orgKey).ToList())
         {
             _cache.TryRemove(k, out _);
         }
-        _exceptions.ClearCache(partitionGlobalId);
+        _exceptions.ClearCache(orgKey);
     }
 }

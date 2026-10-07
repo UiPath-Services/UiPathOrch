@@ -277,7 +277,8 @@ public class FolderCache : ITenantCacheClearable
     internal void SeedForTest(List<Folder> main, List<Folder> enumView) => _cache = new Views(main, enumView);
 }
 
-// Organization entities keyed by partitionGlobalId.
+// Organization entities keyed by organization: OrchDriveInfoBase.OrgKeyFor, the server plus
+// the partitionGlobalId (the partition alone repeats across on-premises servers).
 // This represents the cache of unique entities across all organizations.
 public class ListCachePerOrganization<T> : ITenantCacheClearable
 {
@@ -296,16 +297,16 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
     // The following is also needed for entities that support -ExpandDetail
     private readonly Func<T, string?>? _getterId;
-    // Detailed cache of organization entities keyed by (partitionGlobalId, id).
+    // Detailed cache of organization entities keyed by (org key, id).
     // Eagerly initialized — the empty ConcurrentDictionary cost is trivial and
     // the null state was only there to avoid that cost.
-    private static readonly ConcurrentDictionary<(string partitionGlobalId, string id), T?> _cacheDetailed = new();
+    private static readonly ConcurrentDictionary<(string orgKey, string id), T?> _cacheDetailed = new();
     // Separate per-partition lock dict for the detail path so a list fetch and
     // a detail fetch on the same org can proceed concurrently.
     private static readonly ConcurrentDictionary<string, object> _detailedPartitionLocks = new();
     private readonly Func<string, string, T?>? _getterDetailed;
-    // Exception cache for detailed organization entity retrieval keyed by (partitionGlobalId, id)
-    private static readonly ExceptionsCachePer<(string partitionGlobalId, string id)> _exceptionDetailed = new(); // Holds per (org, id) exceptions
+    // Exception cache for detailed organization entity retrieval keyed by (org key, id)
+    private static readonly ExceptionsCachePer<(string orgKey, string id)> _exceptionDetailed = new(); // Holds per (org, id) exceptions
 
     public ListCachePerOrganization(
         OrchDriveInfoBase drive,
@@ -330,15 +331,17 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
         // session start would silently yield nothing instead of authenticating.
         var partitionGlobalId = _drive.GetPartitionGlobalId();
         if (string.IsNullOrEmpty(partitionGlobalId)) yield break;
+        // Stored under the org key (server + partition), fetched by the partition.
+        var orgKey = _drive.OrgKeyFor(partitionGlobalId);
 
-        _exception.ThrowCachedExceptionIfAny(partitionGlobalId);
+        _exception.ThrowCachedExceptionIfAny(orgKey);
 
-        if (!_cache.TryGetValue(partitionGlobalId, out var cachePerOrg))
+        if (!_cache.TryGetValue(orgKey, out var cachePerOrg))
         {
-            var partitionLock = _partitionLocks.GetOrAdd(partitionGlobalId, _ => new object());
+            var partitionLock = _partitionLocks.GetOrAdd(orgKey, _ => new object());
             lock (partitionLock)
             {
-                if (!_cache.TryGetValue(partitionGlobalId, out cachePerOrg))
+                if (!_cache.TryGetValue(orgKey, out cachePerOrg))
                 {
                     try
                     {
@@ -353,11 +356,11 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
                                 if (t is not null) _initializer(t);
                             }
                         }
-                        _cache[partitionGlobalId] = cachePerOrg;
+                        _cache[orgKey] = cachePerOrg;
                     }
                     catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
-                        _exception.CacheException(partitionGlobalId, ex);
+                        _exception.CacheException(orgKey, ex);
                         throw;
                     }
                 }
@@ -373,7 +376,7 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
             {
                 var id = _getterId(t);
                 if (id is not null
-                    && _cacheDetailed.TryGetValue((partitionGlobalId, id), out var detailedEntity)
+                    && _cacheDetailed.TryGetValue((orgKey, id), out var detailedEntity)
                     && detailedEntity is not null)
                 {
                     yield return detailedEntity;
@@ -392,15 +395,16 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
 
         // Data-fetch path: force the partition lookup (the property is passive).
         var partitionGlobalId = _drive.GetPartitionGlobalId()!;
+        var orgKey = _drive.OrgKeyFor(partitionGlobalId);
 
-        _exceptionDetailed.ThrowCachedExceptionIfAny((partitionGlobalId, id));
+        _exceptionDetailed.ThrowCachedExceptionIfAny((orgKey, id));
 
-        if (!_cacheDetailed.TryGetValue((partitionGlobalId, id), out var cachePerOrgDetailed))
+        if (!_cacheDetailed.TryGetValue((orgKey, id), out var cachePerOrgDetailed))
         {
-            var partitionLock = _detailedPartitionLocks.GetOrAdd(partitionGlobalId, _ => new object());
+            var partitionLock = _detailedPartitionLocks.GetOrAdd(orgKey, _ => new object());
             lock (partitionLock)
             {
-                if (!_cacheDetailed.TryGetValue((partitionGlobalId, id), out cachePerOrgDetailed))
+                if (!_cacheDetailed.TryGetValue((orgKey, id), out cachePerOrgDetailed))
                 {
                     try
                     {
@@ -412,11 +416,11 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
                         {
                             _initializer(cachePerOrgDetailed);
                         }
-                        _cacheDetailed[(partitionGlobalId, id)] = cachePerOrgDetailed;
+                        _cacheDetailed[(orgKey, id)] = cachePerOrgDetailed;
                     }
                     catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
-                        _exceptionDetailed.CacheException((partitionGlobalId, id), ex);
+                        _exceptionDetailed.CacheException((orgKey, id), ex);
                         throw;
                     }
                 }
@@ -430,12 +434,12 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
     public void Set(T t)
     {
         // Data-fetch path: force the partition lookup (the property is passive).
-        var partitionGlobalId = _drive.GetPartitionGlobalId();
+        var orgKey = _drive.GetOrgCacheKey();
         var id = _getterId?.Invoke(t);
-        if (string.IsNullOrEmpty(partitionGlobalId) || string.IsNullOrEmpty(id)) return;
+        if (string.IsNullOrEmpty(orgKey) || string.IsNullOrEmpty(id)) return;
 
         // Update _cache (do nothing if the list does not exist)
-        if (_cache.TryGetValue(partitionGlobalId, out var list))
+        if (_cache.TryGetValue(orgKey, out var list))
         {
             // No lock: this in-place list mutation is reached only from the cmdlet's
             // main pipeline thread. Verified invariant — the sole caller of Set() is
@@ -466,45 +470,47 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
         // Upsert into _cacheDetailed
         if (_cacheDetailed is not null)
         {
-            _cacheDetailed[(partitionGlobalId, id)] = t;
+            _cacheDetailed[(orgKey, id)] = t;
         }
     }
 
     public void ClearCache(string? id)
     {
-        if (string.IsNullOrEmpty(_drive.PartitionGlobalId)) return;
+        var orgKey = _drive.OrgCacheKey;
+        if (string.IsNullOrEmpty(orgKey)) return;
 
         if (!string.IsNullOrEmpty(id))
         {
-            _cacheDetailed?.TryRemove((_drive.PartitionGlobalId, id), out var _);
+            _cacheDetailed?.TryRemove((orgKey, id), out var _);
         }
-        _cache.TryRemove(_drive.PartitionGlobalId, out var _);
-        _exception.ClearCache(_drive.PartitionGlobalId);
+        _cache.TryRemove(orgKey, out var _);
+        _exception.ClearCache(orgKey);
     }
 
     public void ClearCache()
     {
-        if (string.IsNullOrEmpty(_drive.PartitionGlobalId)) return;
+        var orgKey = _drive.OrgCacheKey;
+        if (string.IsNullOrEmpty(orgKey)) return;
 
         if (_cacheDetailed != null && !_cacheDetailed.IsEmpty)
         {
             foreach (var pair in _cacheDetailed)
             {
                 var key = pair.Key;
-                if (key.partitionGlobalId == _drive.PartitionGlobalId)
+                if (key.orgKey == orgKey)
                 {
                     _cacheDetailed.TryRemove(key, out _);
                 }
             }
         }
 
-        _cache.TryRemove(_drive.PartitionGlobalId, out _);
-        _exception.ClearCache(_drive.PartitionGlobalId);
+        _cache.TryRemove(orgKey, out _);
+        _exception.ClearCache(orgKey);
     }
 
 }
 
-// Single organization entity keyed by partitionGlobalId.
+// Single organization entity keyed by organization (server + partitionGlobalId; see OrgKeyFor).
 // This represents the cache of a single entity shared across the entire organization.
 public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : class
 {
@@ -537,15 +543,17 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
         // Data-fetch path: force the partition lookup (the property is passive).
         var partitionGlobalId = _drive.GetPartitionGlobalId();
         if (string.IsNullOrEmpty(partitionGlobalId)) return null;
+        // Stored under the org key (server + partition), fetched by the partition.
+        var orgKey = _drive.OrgKeyFor(partitionGlobalId);
 
-        _exception.ThrowCachedExceptionIfAny(partitionGlobalId);
+        _exception.ThrowCachedExceptionIfAny(orgKey);
 
-        if (!_cache.TryGetValue(partitionGlobalId, out var entity))
+        if (!_cache.TryGetValue(orgKey, out var entity))
         {
-            var partitionLock = _partitionLocks.GetOrAdd(partitionGlobalId, _ => new object());
+            var partitionLock = _partitionLocks.GetOrAdd(orgKey, _ => new object());
             lock (partitionLock)
             {
-                if (!_cache.TryGetValue(partitionGlobalId, out entity))
+                if (!_cache.TryGetValue(orgKey, out entity))
                 {
                     try
                     {
@@ -555,12 +563,12 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
                             // Run initializer before publishing to the dictionary so concurrent readers
                             // never observe an entity whose initialization is still in progress.
                             _initializer?.Invoke(entity);
-                            _cache[partitionGlobalId] = entity;
+                            _cache[orgKey] = entity;
                         }
                     }
                     catch (Exception ex) when (ex is HttpResponseException or DeterministicApiException)
                     {
-                        _exception.CacheException(partitionGlobalId, ex);
+                        _exception.CacheException(orgKey, ex);
                         throw;
                     }
                 }
@@ -585,19 +593,19 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
     {
         get
         {
-            var partitionGlobalId = _drive.PartitionGlobalId;
-            if (string.IsNullOrEmpty(partitionGlobalId)) return null;
-            return _cache.TryGetValue(partitionGlobalId, out var entity) ? entity : null;
+            var orgKey = _drive.OrgCacheKey;
+            if (string.IsNullOrEmpty(orgKey)) return null;
+            return _cache.TryGetValue(orgKey, out var entity) ? entity : null;
         }
     }
 
     public void ClearCache()
     {
-        var partitionGlobalId = _drive.PartitionGlobalId;
-        if (string.IsNullOrEmpty(partitionGlobalId)) return;
+        var orgKey = _drive.OrgCacheKey;
+        if (string.IsNullOrEmpty(orgKey)) return;
 
-        _cache.TryRemove(partitionGlobalId, out _);
-        _exception.ClearCache(partitionGlobalId);
+        _cache.TryRemove(orgKey, out _);
+        _exception.ClearCache(orgKey);
     }
 }
 
@@ -956,7 +964,8 @@ public class KeyedSingleCachePerTenant<TKey, TEntity> : ITenantCacheClearable
 /// <summary>
 /// Organization-scoped sibling of <see cref="KeyedSingleCachePerTenant{TKey, TEntity}"/>.
 /// Caches a single <typeparamref name="TEntity"/> per
-/// <c>(partitionGlobalId, TKey)</c>. Storage is <c>static</c>, so all
+/// <c>(organization, TKey)</c> -- the organization being the server plus the
+/// <c>partitionGlobalId</c> (<see cref="OrchDriveInfoBase.OrgKeyFor"/>). Storage is <c>static</c>, so all
 /// <see cref="OrchDriveInfo"/> instances pointing to the same organization
 /// share one cache (no duplicate fetch / storage when multiple drives map to
 /// the same org).
@@ -980,8 +989,9 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
     where TKey : notnull, IEquatable<TKey>
 {
     // Storage shared across all drives in the same closed generic instantiation.
-    private static readonly ConcurrentDictionary<(string partitionGlobalId, TKey key), TEntity?> _cache = new();
-    private static readonly ExceptionsCachePer<(string partitionGlobalId, TKey key)> _exceptions = new();
+    // Keyed by (org key = server + partition, TKey); see OrchDriveInfoBase.OrgKeyFor.
+    private static readonly ConcurrentDictionary<(string orgKey, TKey key), TEntity?> _cache = new();
+    private static readonly ExceptionsCachePer<(string orgKey, TKey key)> _exceptions = new();
     // Per-partition lock: same partition → serialized fetch; different
     // partitions → parallel. Previously a single global static lock serialized
     // every fetch across all orgs, which was correct but unnecessarily coarse.
@@ -1017,15 +1027,16 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
         // Data-fetch path: force the partition lookup (the property is passive).
         var partitionGlobalId = _drive.GetPartitionGlobalId();
         if (string.IsNullOrEmpty(partitionGlobalId)) return default;
+        var orgKey = _drive.OrgKeyFor(partitionGlobalId);
 
-        var compositeKey = (partitionGlobalId, key);
+        var compositeKey = (orgKey, key);
         _exceptions.ThrowCachedExceptionIfAny(compositeKey);
 
         if (_cache.TryGetValue(compositeKey, out var cached)) return cached;
 
-        // Serialize fetches within the same partition only — different orgs
+        // Serialize fetches within the same organization only — different orgs
         // are independent and can fetch in parallel.
-        var partitionLock = _partitionLocks.GetOrAdd(partitionGlobalId, _ => new object());
+        var partitionLock = _partitionLocks.GetOrAdd(orgKey, _ => new object());
         lock (partitionLock)
         {
             // Re-check after acquiring the lock (another thread may have populated).
@@ -1054,32 +1065,32 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
         // (_partitionGlobalId is null), it can't have contributed entries
         // to this static cache, so a no-op is correct — and avoids
         // triggering PKCE for every unauthed drive on Clear-OrchCache -AllDrives.
-        var partitionGlobalId = _drive.PartitionGlobalId;
-        if (string.IsNullOrEmpty(partitionGlobalId)) return;
+        var orgKey = _drive.OrgCacheKey;
+        if (string.IsNullOrEmpty(orgKey)) return;
 
-        var compositeKey = (partitionGlobalId, key);
+        var compositeKey = (orgKey, key);
         _cache.TryRemove(compositeKey, out _);
         _exceptions.ClearCache(compositeKey);
     }
 
     public void ClearCache()
     {
-        var partitionGlobalId = _drive.PartitionGlobalId;
-        if (string.IsNullOrEmpty(partitionGlobalId)) return;
+        var orgKey = _drive.OrgCacheKey;
+        if (string.IsNullOrEmpty(orgKey)) return;
 
-        // Drop every entry whose first tuple element is this drive's partition.
+        // Drop every entry whose first tuple element is this drive's organization.
         // Other orgs' entries (from drives mapped elsewhere) stay intact.
-        foreach (var k in _cache.Keys.Where(k => k.partitionGlobalId == partitionGlobalId).ToList())
+        foreach (var k in _cache.Keys.Where(k => k.orgKey == orgKey).ToList())
         {
             _cache.TryRemove(k, out _);
         }
-        _exceptions.ClearCache(k => k.partitionGlobalId == partitionGlobalId);
+        _exceptions.ClearCache(k => k.orgKey == orgKey);
     }
 }
 
 /// <summary>
 /// Organization-scoped sibling of <see cref="KeyedListCachePerTenant{TKey, TEntity}"/>.
-/// Caches a <see cref="List{TEntity}"/> per <c>(partitionGlobalId, TKey)</c>.
+/// Caches a <see cref="List{TEntity}"/> per <c>(organization, TKey)</c>.
 /// Same storage / locking / clearing pattern as
 /// <see cref="KeyedSingleCachePerOrganization{TKey, TEntity}"/>; see that class
 /// for the design rationale.
@@ -1087,8 +1098,8 @@ public class KeyedSingleCachePerOrganization<TKey, TEntity> : ITenantCacheCleara
 public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearable
     where TKey : notnull, IEquatable<TKey>
 {
-    private static readonly ConcurrentDictionary<(string partitionGlobalId, TKey key), List<TEntity>> _cache = new();
-    private static readonly ExceptionsCachePer<(string partitionGlobalId, TKey key)> _exceptions = new();
+    private static readonly ConcurrentDictionary<(string orgKey, TKey key), List<TEntity>> _cache = new();
+    private static readonly ExceptionsCachePer<(string orgKey, TKey key)> _exceptions = new();
     // Per-partition lock — see KeyedSingleCachePerOrganization.
     private static readonly ConcurrentDictionary<string, object> _partitionLocks = new();
 
@@ -1125,13 +1136,14 @@ public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearabl
         {
             return new List<TEntity>().AsReadOnly();
         }
+        var orgKey = _drive.OrgKeyFor(partitionGlobalId);
 
-        var compositeKey = (partitionGlobalId, key);
+        var compositeKey = (orgKey, key);
         _exceptions.ThrowCachedExceptionIfAny(compositeKey);
 
         if (_cache.TryGetValue(compositeKey, out var list)) return list.AsReadOnly();
 
-        var partitionLock = _partitionLocks.GetOrAdd(partitionGlobalId, _ => new object());
+        var partitionLock = _partitionLocks.GetOrAdd(orgKey, _ => new object());
         lock (partitionLock)
         {
             if (_cache.TryGetValue(compositeKey, out list)) return list.AsReadOnly();
@@ -1158,24 +1170,24 @@ public class KeyedListCachePerOrganization<TKey, TEntity> : ITenantCacheClearabl
     {
         // Read the cached partition id directly; see KeyedSingleCachePerOrganization
         // for the rationale (don't trigger auth on Clear-OrchCache).
-        var partitionGlobalId = _drive.PartitionGlobalId;
-        if (string.IsNullOrEmpty(partitionGlobalId)) return;
+        var orgKey = _drive.OrgCacheKey;
+        if (string.IsNullOrEmpty(orgKey)) return;
 
-        var compositeKey = (partitionGlobalId, key);
+        var compositeKey = (orgKey, key);
         _cache.TryRemove(compositeKey, out _);
         _exceptions.ClearCache(compositeKey);
     }
 
     public void ClearCache()
     {
-        var partitionGlobalId = _drive.PartitionGlobalId;
-        if (string.IsNullOrEmpty(partitionGlobalId)) return;
+        var orgKey = _drive.OrgCacheKey;
+        if (string.IsNullOrEmpty(orgKey)) return;
 
-        foreach (var k in _cache.Keys.Where(k => k.partitionGlobalId == partitionGlobalId).ToList())
+        foreach (var k in _cache.Keys.Where(k => k.orgKey == orgKey).ToList())
         {
             _cache.TryRemove(k, out _);
         }
-        _exceptions.ClearCache(k => k.partitionGlobalId == partitionGlobalId);
+        _exceptions.ClearCache(k => k.orgKey == orgKey);
     }
 }
 

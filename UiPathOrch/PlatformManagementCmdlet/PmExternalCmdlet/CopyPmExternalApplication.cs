@@ -46,7 +46,7 @@ public class CopyPmExternalApplicationCmdlet : OrchestratorPSCmdlet
             {
                 var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
                 if (string.IsNullOrEmpty(dstPartitionGlobalId)) continue;
-                if (srcPartitionGlobalId == dstPartitionGlobalId) continue;
+                if (srcDrive.IsSameOrganization(dstDrive)) continue;
 
                 if (ShouldProcess(target, "Copy PmExternalApplication"))
                 {

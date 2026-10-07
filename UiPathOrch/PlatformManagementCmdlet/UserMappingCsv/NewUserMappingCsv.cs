@@ -294,7 +294,7 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        if (srcDrive.GetPartitionGlobalId() == dstDrive.GetPartitionGlobalId())
+        if (srcDrive.IsSameOrganization(dstDrive))
         {
             WriteWarning("The specified SourceTenant and DestinationTenant belong to the same organization. User migration can proceed without a UserMapping CSV.");
             return;

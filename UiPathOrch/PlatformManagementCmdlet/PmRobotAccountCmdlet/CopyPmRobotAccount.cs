@@ -76,7 +76,7 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
                     var dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
 
                     // Do nothing if source and destination are the same
-                    if (srcPartitionGlobalId == dstPartitionGlobalId) continue;
+                    if (srcDrive.IsSameOrganization(dstDrive)) continue;
 
                     // Skip if a robot account with the same name already exists at
                     // the destination, rather than letting the create surface a raw

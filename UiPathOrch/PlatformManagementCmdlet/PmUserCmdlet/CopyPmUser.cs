@@ -96,7 +96,7 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
 
         foreach (var dstDrive in dstDrives)
         {
-            if (srcDrive.GetPartitionGlobalId() == dstDrive.GetPartitionGlobalId())
+            if (srcDrive.IsSameOrganization(dstDrive))
             {
                 WriteWarning($"The drives '{srcDrive.NameColonSeparator}' and '{dstDrive.NameColonSeparator}' belong to the same organization, so this operation will be skipped.");
                 continue;

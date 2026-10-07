@@ -415,6 +415,15 @@ public partial class OrchAPISession : IDisposable
     internal readonly string _base_url_orchestrator;
     internal readonly string _base_url_identity;
     internal readonly string _base_url_portal;
+
+    // "https://op2510.local" -- which server this session talks to; half of an organization's
+    // key (OrchDriveInfoBase.OrgKeyFor), since on-premises partition ids repeat across servers.
+    private string? _serverAuthority;
+    internal string ServerAuthority => _serverAuthority ??= ToServerAuthority(_base_url);
+
+    internal static string ToServerAuthority(string baseUrl)
+        => Uri.TryCreate(baseUrl, UriKind.Absolute, out var u) ? u.GetLeftPart(UriPartial.Authority).ToLowerInvariant() : baseUrl;
+
     internal volatile bool _isAuthenticated = false;
     private bool _disposed = false;
     private readonly OrchDriveInfo _drive;

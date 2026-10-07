@@ -81,7 +81,7 @@ public class CopyPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
                 WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, ex), "GetGlobalPartitionIdError", ErrorCategory.InvalidOperation, dstDrive));
                 continue;
             }
-            if (string.IsNullOrEmpty(dstPartition) || srcPartition == dstPartition) continue;
+            if (string.IsNullOrEmpty(dstPartition) || srcDrive.IsSameOrganization(dstDrive)) continue;
 
             PmNotificationSubscriptionResponse? dstResp;
             try

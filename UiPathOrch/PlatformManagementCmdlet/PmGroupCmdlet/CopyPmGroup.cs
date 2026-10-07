@@ -110,7 +110,7 @@ public class CopyPmGroupCmdlet : OrchestratorPSCmdlet
 
             foreach (var dstDrive in dstDrives.WithCancellation(cancelHandler.Token))
             {
-                if (srcDrive.GetPartitionGlobalId() == dstDrive.GetPartitionGlobalId()) continue;
+                if (srcDrive.IsSameOrganization(dstDrive)) continue;
 
                 string target = $"Item: {srcGroup.GetPSPath(srcDrive.NameColonSeparator)} Destination: {dstDrive.NameColonSeparator}";
                 if (ShouldProcess(target, "Copy PmGroup"))
