@@ -612,6 +612,23 @@ public partial class OrchAPISession : IDisposable
         EntraIdWarningChecked = true;
     }
 
+    // The renewed access token, or null when there is no refresh token to use or the renewal
+    // failed (the caller then signs in from scratch, which reports any real failure).
+    private string? TryRenewWithRefreshToken()
+    {
+        if (!_authManager.HasRefreshToken) return null;
+        try
+        {
+            string? token = _authManager.RenewAccessToken();
+            return string.IsNullOrEmpty(token) ? null : token;
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Refresh-token renewal failed, signing in again: {ex.Message}");
+            return null;
+        }
+    }
+
     internal void EnsureAuthenticated()
     {
         // Fail fast if a prior call proved the credential is broken (re-issued token still
@@ -624,8 +641,14 @@ public partial class OrchAPISession : IDisposable
             {
                 if (!_isAuthenticated)
                 {
-                    // Set initial token
-                    string token = _authManager.RequestToken();
+                    // Set initial token -- or, when this session already signed in through the
+                    // browser and holds a refresh token (a 401 sent it back here through
+                    // ClearAuthentication), renew with that first. Going straight to RequestToken
+                    // re-ran the interactive PKCE sign-in for every re-auth: a browser tab mid
+                    // script, and on a server that had just gone away a 3-minute wait on
+                    // localhost:8085 per request, holding the port against every other console
+                    // (seen on 2026-10-07 while on-premises VMs restarted under a long run).
+                    string token = TryRenewWithRefreshToken() ?? _authManager.RequestToken();
                     if (!SetToken(token))
                     {
                         // A 200 token response with no access_token leaves the session

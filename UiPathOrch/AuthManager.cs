@@ -253,6 +253,9 @@ internal class OrchestratorAuthManager
         }
     }
 
+    // Whether a refresh token is held -- only the interactive (PKCE) sign-in obtains one.
+    internal bool HasRefreshToken => !string.IsNullOrEmpty(_refresh_token);
+
     public string? RenewAccessToken()
     {
         // The refresh_token grant is only valid for the interactive external-app
