@@ -220,9 +220,14 @@ public partial class OrchAPISession : IDisposable
                 continue;
             }
 
-            // Returning. If a freshly re-authenticated token is still 401, the credential
-            // is genuinely broken — latch the breaker so later calls fail fast.
-            if (response.StatusCode == HttpStatusCode.Unauthorized && reauthUsed)
+            // Returning. If a freshly re-authenticated token is still 401 from ORCHESTRATOR,
+            // the credential is genuinely broken — latch the breaker so later calls fail fast.
+            // Only from Orchestrator: another service on the same token (Identity for the Pm
+            // cmdlets, Test Manager, ...) can reject a perfectly good one. 20.10.16's Identity
+            // answers every Pm call 401, and before this one Get-PmRobotAccount latched the
+            // whole drive until Import-OrchConfig. That 401 still reaches its own caller.
+            if (response.StatusCode == HttpStatusCode.Unauthorized && reauthUsed
+                && IsOrchestratorApiRequest(message.RequestUri, _base_url_orchestrator))
             {
                 _authBreaker.Trip(new HttpResponseException(
                     "Authentication failed: a newly issued access token was still rejected with 401. " +
@@ -231,6 +236,22 @@ public partial class OrchAPISession : IDisposable
             }
             return response;
         }
+    }
+
+    // Whether a request is to Orchestrator's own API: /odata/ or /api/ directly under the
+    // Orchestrator base. On-premises the Identity (/identity) and portal (/portal) bases sit
+    // under the same root, and other services (/testmanager_, /du_, ...) are reached through
+    // that base too, so starting with the base is not enough.
+    internal static bool IsOrchestratorApiRequest(Uri? requestUri, string orchestratorBase)
+    {
+        if (requestUri is null) return false;
+        string url = requestUri.GetLeftPart(UriPartial.Path);
+        string root = orchestratorBase.TrimEnd('/');
+        if (!url.StartsWith(root + "/", StringComparison.OrdinalIgnoreCase)) return false;
+        // TrimStart: a Root written with a trailing slash puts "//" before the endpoint.
+        string rest = url[root.Length..].TrimStart('/');
+        return rest.StartsWith("odata/", StringComparison.OrdinalIgnoreCase)
+            || rest.StartsWith("api/", StringComparison.OrdinalIgnoreCase);
     }
 
     // Clone a request so a retry can be sent (the original is already spent). Copies the
