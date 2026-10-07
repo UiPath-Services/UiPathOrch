@@ -8,17 +8,17 @@
     populated via Tests\Import-Fixture.ps1.
 
     Set the env var UIPATHORCH_TEST_DRIVE to target a specific drive. Defaults
-    to 'local'.
+    to 'Orch2', the disposable tenant Invoke-AllTests.ps1 targets.
 
     Run:
-        $env:UIPATHORCH_TEST_DRIVE = 'local'
+        $env:UIPATHORCH_TEST_DRIVE = 'Orch2'
         .\Reset-Tenant.ps1   -TargetDrive $env:UIPATHORCH_TEST_DRIVE -Confirm:$false
         .\Import-Fixture.ps1 -TargetDrive $env:UIPATHORCH_TEST_DRIVE
         Invoke-Pester -Path .\CleanTenant.Tests.ps1 -Output Detailed
 #>
 
 BeforeAll {
-    $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'local' }
+    $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     $script:Root  = "${script:Drive}:\TestFixture_Base"
 
     Get-PSDrive -Name $script:Drive -ErrorAction Stop | Out-Null
@@ -559,8 +559,8 @@ Describe 'Copy-Item within one tenant copies linked entities independently' {
 # logic must work for both same-drive AND cross-drive cases.
 #
 # Run prerequisites:
-#   $env:UIPATHORCH_TEST_DRIVE     = 'local'   # source (must hold imported fixture)
-#   $env:UIPATHORCH_TEST_DST_DRIVE = 'local2'  # destination (clean / no fixture)
+#   $env:UIPATHORCH_TEST_DRIVE     = 'Orch2'   # source (must hold imported fixture)
+#   $env:UIPATHORCH_TEST_DST_DRIVE = '<drive>' # destination (clean / no fixture)
 # When UIPATHORCH_TEST_DST_DRIVE is unset, equals the src drive, or names an
 # unmounted drive, all tests in this Describe are Set-ItResult -Skipped.
 Describe 'Cross-drive Copy-Item link reproduction' {
