@@ -49,6 +49,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   1–100 priority value with "model must not be null". Below API 14 the value is now sent as its
   Low / Normal / High bucket, as process creation already did.
 
+- **A 401 from a service other than Orchestrator no longer locks the drive.** When a request
+  was still refused after a fresh token, the drive was marked as having broken credentials and
+  every later command on it failed until `Import-OrchConfig`. That is right for Orchestrator,
+  but other services on the same token can refuse a good one: on 20.10 Identity answers every
+  `*-Pm*` call that way, so one `Get-PmRobotAccount` made the whole drive unusable. Only
+  Orchestrator's own 401 locks the drive now; the other service's 401 still fails its command.
+
+- **20.10: `Add-OrchFolderUser` assigns local accounts.** `-Type` now also takes `User` and
+  `Robot`, the 20.10 local accounts that `Get-OrchFolderUser -ExportCsv` writes with those
+  types. They are found in the tenant's user list and assigned by user id, so an exported
+  folder-user CSV re-imports on 20.10 too. Before, those types were rejected, and the directory
+  search the other types use fails on 20.10.
+
 - **20.10: `Copy-Item` copies folder users that are local accounts, and finds robots in the
   destination.** Local user and robot accounts were not copied to the destination folder, and
   looking up a destination robot called an API that 20.10 does not have.

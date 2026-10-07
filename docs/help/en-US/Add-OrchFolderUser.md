@@ -29,7 +29,7 @@ Add-OrchFolderUser [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Dep
 
 ## DESCRIPTION
 
-Assigns directory users, groups, robots, or external applications to UiPath Orchestrator folders with optional folder roles. The -Type parameter specifies the kind of directory entity to assign. Valid types are: DirectoryUser, DirectoryGroup, DirectoryRobot, and DirectoryExternalApplication.
+Assigns directory users, groups, robots, or external applications to UiPath Orchestrator folders with optional folder roles. The -Type parameter specifies the kind of directory entity to assign. Valid types are: DirectoryUser, DirectoryGroup, DirectoryRobot, and DirectoryExternalApplication. On Orchestrator 20.10, whose users can be local accounts outside the directory, User and Robot are valid too.
 
 When assigning a user, the cmdlet searches the directory service to resolve the specified username. The -UserName parameter requires at least one character to be entered for tab completion to search the directory. A 600ms delay is applied after each assignment to avoid API rate limiting.
 
@@ -224,6 +224,8 @@ HelpMessage: ''
 ### -Type
 
 Specifies the directory entity type to assign. Valid values are: DirectoryUser, DirectoryGroup, DirectoryRobot, and DirectoryExternalApplication. Tab completion suggests available types.
+
+User and Robot assign the local user and robot accounts of Orchestrator 20.10, the types `Get-OrchFolderUser -ExportCsv` writes for them there. They are looked up in the tenant's user list by type and user name, not in the directory, and assigned by Orchestrator user id; -Domain does not apply.
 
 ```yaml
 Type: System.String

@@ -39,6 +39,18 @@ internal class DirectoryTypeItems : IDictionaryItems<int>
     };
 }
 
+// Add-OrchFolderUser's -Type: the directory types, plus the local accounts of 20.10 (API 11),
+// "User" and "Robot", which Get-OrchFolderUser -ExportCsv writes there. Those are assigned by
+// Orchestrator user id, not through the directory; the values are not directory type codes.
+internal class FolderUserTypeItems : IDictionaryItems<int>
+{
+    public static Dictionary<string, int> Items { get; } = new(DirectoryTypeItems.Items)
+    {
+        { "User",  -1 },
+        { "Robot", -2 },
+    };
+}
+
 internal class DirectoryTypes2 : IDictionaryItems<string>
 {
     public static Dictionary<string, string> Items { get; } = new()

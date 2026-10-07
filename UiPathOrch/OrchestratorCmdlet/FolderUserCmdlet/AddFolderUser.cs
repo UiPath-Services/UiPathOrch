@@ -14,8 +14,8 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
     List<(string type, string userName, string[] roles, string? domain, OrchDriveInfo drive, Folder folder)>? parameters = null;
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<DirectoryTypeItems, int>))]
-    [ValidateDictionaryKey<DirectoryTypeItems, int>]
+    [ArgumentCompleter(typeof(KeyOfDictionaryCompleter<FolderUserTypeItems, int>))]
+    [ValidateDictionaryKey<FolderUserTypeItems, int>]
     public string? Type { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -74,6 +74,25 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
             }
 
             var paramType = GetFakeBoundParameter(fakeBoundParameters, "Type");
+
+            // 20.10's local accounts are not in the directory: offer the tenant's users of that type.
+            if (Core.OrchProvider.IsLocalAccountType(paramType))
+            {
+                var wpLocal = CreateWPFromWordToComplete(wordToComplete);
+                var excludeLocal = GetSelfExclusionValues(commandAst, parameterName, wordToComplete);
+                foreach (var drive in ResolveOrchDrives(fakeBoundParameters))
+                {
+                    foreach (var u in (drive.Users.Get() ?? [])
+                        .Where(u => string.Equals(u?.Type, paramType, StringComparison.OrdinalIgnoreCase) && wpLocal.IsMatch(u!.UserName))
+                        .ExcludeByClassValues(u => u?.UserName, excludeLocal)
+                        .OrderBy(u => u!.UserName))
+                    {
+                        yield return new CompletionResult(PathTools.EscapePSText(u!.UserName), u.UserName, CompletionResultType.Text, u.UserName);
+                    }
+                }
+                yield break;
+            }
+
             if (!DirectoryTypeItems.Items.TryGetValue(paramType ?? "", out var objectType))
             {
                 //yield return new CompletionResult(PathTools.EscapePSText("Invalid Type."));
@@ -207,6 +226,8 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
                 // Robots cannot be searched via PmBulkResolveByName!
                 // Since Robots cannot be queried in bulk, it's better to search just before registration.
                 if (type == "DirectoryRobot") continue;
+                // Nor are 20.10's local accounts, which are not in the directory at all.
+                if (Core.OrchProvider.IsLocalAccountType(type)) continue;
 
                 var userNames = param.Select(p => p.userName);
                 try
@@ -245,8 +266,34 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
                 // surfaces as "An unknown failure has occurred" on the server.
                 string? foundUserDomain = null;
 
+                // 20.10's local accounts: found in the tenant's user list by type and name.
+                long? localUserId = null;
+
                 #region Search for user from cache
-                if (type == "DirectoryRobot")
+                if (Core.OrchProvider.IsLocalAccountType(type))
+                {
+                    User? local;
+                    try
+                    {
+                        local = drive.Users.Get()?.FirstOrDefault(u =>
+                            string.Equals(u?.Type, type, StringComparison.OrdinalIgnoreCase)
+                            && string.Equals(u!.UserName, userName, StringComparison.OrdinalIgnoreCase));
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, "Failed to get users.", ex), "GetUsersError", ErrorCategory.InvalidOperation, drive));
+                        continue;
+                    }
+                    if (local?.Id is null)
+                    {
+                        WriteWarning($"'{folder.GetPSPath()}': {type} '{userName}' was not found.");
+                        continue;
+                    }
+                    localUserId = local.Id;
+                    foundUserName = local.UserName;
+                    foundUserDisplayName = local.FullName;
+                }
+                else if (type == "DirectoryRobot")
                 {
                     // Search for Robot here
                     DirectoryObject? member = null;
@@ -347,6 +394,26 @@ public class AddFolderUserCmdlet : OrchestratorPSCmdlet
                     var addingRoles = existingRoles?.SelectByWildcards(role => role?.Name, wpRoles);
 
                     #endregion
+
+                    // A local account goes in by its Orchestrator user id, as the 20.10 web UI
+                    // assigns it; the directory assignment below needs an identifier it lacks.
+                    if (localUserId is not null)
+                    {
+                        try
+                        {
+                            drive.OrchAPISession.AssignUsers([localUserId.Value],
+                                [new FolderRoles { FolderId = folder.Id, RoleIds = addingRoles?.Select(r => r.Id ?? 0).ToList() }]);
+
+                            drive.FolderUsersWithNoInherited.ClearCache();
+                            drive.FolderUsersWithInherited.ClearCache();
+                            drive.ClearFolderCache(folder);
+                        }
+                        catch (Exception ex)
+                        {
+                            WriteError(new ErrorRecord(new OrchException(target, ex), "AddFolderUserError", ErrorCategory.InvalidOperation, folder));
+                        }
+                        continue;
+                    }
 
                     DomainUserAssignment assignment = new()
                     {
