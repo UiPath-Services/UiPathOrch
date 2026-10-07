@@ -1,5 +1,5 @@
 // -----------------------------------------------------------------------------
-// This file is large (~3,700 lines, ~170 API methods) ON PURPOSE — do not split it.
+// This file is large (~4,500 lines, ~300 API methods) ON PURPOSE — do not split it.
 //
 // It is a flat REGISTRY of independent REST calls, not a "god class": each method
 // is thin, wrapping one endpoint, with no shared mutable state or tangled control
