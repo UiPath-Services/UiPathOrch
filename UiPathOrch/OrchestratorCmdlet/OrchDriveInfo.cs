@@ -1612,6 +1612,11 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         // this cache returns [] SILENTLY, so the Automation Suite case would go back to producing
         // nothing and explaining nothing. Asking the server costs one request and is true on
         // versions no one has measured yet. See OrchAPISession.ApiTriggersUnavailable.
+        // From 18, deliberately. Standalone 24.10.0, 24.10.8 and 25.10.2 (API 17) do serve
+        // /odata/HttpTriggers -- New-OrchApiTrigger even creates one there -- but their web UI has no
+        // API triggers at all (no tab, a created one not shown; checked on 24.10.8, 2026-10-07), so
+        // it is not a feature of those servers and is not listed. 23.4 (16) answers 400, earlier
+        // 404; Automation Suite 24.10.11 (18) 404s, handled by ApiTriggersUnavailable.
         ApiTriggers = new(this, OrchAPISession.GetHttpTriggers, (e, folderPath) => e.Path = folderPath, 18);
         BusinessRules = new(this, OrchAPISession.GetBusinessRules, (e, folderPath) => e.Path = folderPath);
         Connections = new(this, OrchAPISession.GetConnections, (e, folderPath) => e.Path = folderPath, 20); // Connection Service v1 (Integration Service); gated at API v20
