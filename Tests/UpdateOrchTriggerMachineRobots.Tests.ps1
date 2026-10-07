@@ -15,90 +15,73 @@
     the merged robot view (UnattendedRobot ?? RobotProvision, plus the account
     login) and takes RobotId from the matched robot.
 
-    This is inherently an environment fixture test: it needs a folder with a
-    machine and an unattended robot. It drives an existing trigger that currently
-    has an EMPTY MachineRobots binding, sets the binding by the robot's account
-    login, asserts the RobotId is written, and restores the trigger to empty.
+    The file seeds everything it drives, in a folder of its own: the tenant's first
+    Standard machine (else its first machine) added to the folder, a throwaway robot
+    account (Set-PmRobotAccount -> Add-OrchUser with a dummy Default credential, so the
+    server lets it bind a trigger -> Add-OrchFolderUser), a BlankProcess19 process and a
+    disabled trigger with an EMPTY MachineRobots binding. Each test sets the binding by
+    the robot's account login, asserts the RobotId is written, and empties it again.
+    AfterAll removes the folder, the user and the robot account.
 
-    The robot is provisioned by the test itself when no UIPATHORCH_TEST_ROBOT_LOGIN
-    is given: a throwaway robot account is created (Set-PmRobotAccount) and
-    assigned to the tenant (Add-OrchUser, with a dummy Default credential so the
-    server lets it bind an interactive trigger) and the folder (Add-OrchFolderUser),
-    then torn down in AfterAll. Everything is overridable by environment variable.
+      UIPATHORCH_TEST_DRIVE   (default 'Orch2'; any drive whose feed holds BlankProcess19)
 
-      UIPATHORCH_TEST_DRIVE         (default 'local')
-      UIPATHORCH_TEST_TRIGGER_FOLDER(default 'Shared')
-      UIPATHORCH_TEST_TRIGGER       (default 'DispatcherTrigger')  # must start empty
-      UIPATHORCH_TEST_MACHINE       (default 'orchestrator.local')
-      UIPATHORCH_TEST_ROBOT_LOGIN   (optional; a throwaway robot is provisioned if unset)
+    It used to drive a hand-made fixture on a 'local:' drive (trigger 'DispatcherTrigger'
+    in 'Shared', machine 'orchestrator.local'). That drive was retired on 2026-10-07, when
+    the on-premises servers got a drive each (op2010: .. op2510:), and every test here
+    skipped from then on without anyone noticing -- hence the self-seeding.
 
-    Self-skips (Set-ItResult -Skipped) when the drive isn't connected or the
-    fixture (trigger/machine, empty binding) isn't present, since Pester
-    evaluates -Skip at discovery before BeforeAll runs.
+    Self-skips (Set-ItResult -Skipped) when the setup cannot be built, e.g. 20.10.16,
+    which has no robot accounts reachable this way.
 #>
 
 BeforeAll {
-    $script:DriveName = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'local' }
-    $script:Folder = if ($env:UIPATHORCH_TEST_TRIGGER_FOLDER) { $env:UIPATHORCH_TEST_TRIGGER_FOLDER } else { 'Shared' }
-    $script:Trigger = if ($env:UIPATHORCH_TEST_TRIGGER) { $env:UIPATHORCH_TEST_TRIGGER } else { 'DispatcherTrigger' }
-    $script:Machine = if ($env:UIPATHORCH_TEST_MACHINE) { $env:UIPATHORCH_TEST_MACHINE } else { 'orchestrator.local' }
+    $script:DriveName = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     $script:Drive = "$($script:DriveName):"
-    $script:FolderPath = "$($script:DriveName):\$($script:Folder)"
+    $script:SkipReason = $null
 
-    Import-OrchConfig | Out-Null
-    $script:hasDrive = $null -ne (Get-OrchPSDrive | Where-Object Name -eq $script:DriveName)
+    $stamp = [guid]::NewGuid().ToString('N').Substring(0, 6)
+    $script:RobotLogin = "ZZBot_$stamp"
+    $script:FolderPath = "$($script:Drive)\_utm_$stamp"
+    $script:Trigger    = 'utmTrigger'
+    $script:Done       = @{}
 
-    # The fixture (folder + trigger + machine) is environment-specific. If the folder
-    # isn't even present, skip cleanly: probing a non-existent path throws (terminating,
-    # not suppressed by -ErrorAction SilentlyContinue), which would abort BeforeAll and
-    # FAIL every test instead of skipping it.
-    $script:folderExists = $false
-    if ($script:hasDrive) {
-        try { $script:folderExists = [bool](Test-Path $script:FolderPath) } catch { $script:folderExists = $false }
+    try {
+        $machines = @(Get-OrchMachine -Path "$($script:Drive)\" -ErrorAction Stop)
+        $machine = @($machines | Where-Object Type -eq 'Standard')[0]
+        if (-not $machine) { $machine = $machines[0] }
+        if (-not $machine) { throw "no machine in $($script:Drive)" }
+        $script:Machine = $machine.Name
+        $pkg = @(Get-OrchPackage -Path "$($script:Drive)\" -ErrorAction Stop | Where-Object Id -eq 'BlankProcess19')[0]
+        if (-not $pkg) { throw "BlankProcess19 is not in the $($script:Drive) tenant feed" }
+
+        New-Item -ItemType Directory -Path $script:FolderPath -ErrorAction Stop | Out-Null; $script:Done.folder = $true
+        Add-OrchFolderMachine -Path $script:FolderPath -Name $script:Machine -ErrorAction Stop | Out-Null
+        Set-PmRobotAccount -Path $script:Drive -Name $script:RobotLogin -GroupName 'Automation Users' -Confirm:$false -ErrorAction Stop *>$null
+        $script:Done.pm = $true
+        Add-OrchUser -Path $script:Drive -UserName $script:RobotLogin -Type DirectoryRobot -MayHaveUnattendedSession $true `
+            -UR_CredentialType Default -UR_UserName "localhost\$($script:RobotLogin)" -UR_Password 'P@ssw0rd1!' -Confirm:$false -ErrorAction Stop *>$null
+        $script:Done.user = $true
+        # 'Automation User' from 22.4 on; 21.10 names the folder role a robot needs 'Robot'.
+        $role = @('Automation User', 'Robot' | Where-Object { $_ -in (Get-OrchRole -Path "$($script:Drive)\" -ErrorAction Stop).Name })[0]
+        Add-OrchFolderUser -Path $script:FolderPath -UserName $script:RobotLogin -Type DirectoryRobot -Roles $role -Confirm:$false -ErrorAction Stop *>$null
+        Clear-OrchCache -Path $script:Drive | Out-Null
+
+        New-OrchProcess -Path $script:FolderPath -Id BlankProcess19 -Version $pkg.Version -Name utmProc -ErrorAction Stop | Out-Null
+        # Disabled, so nothing ever starts a job; no robots, which is what each test starts from.
+        New-OrchTrigger -Path $script:FolderPath -Name $script:Trigger -ReleaseName utmProc -StartProcessCron '0 0 9 ? * *' `
+            -TimeZoneId 'Tokyo Standard Time' -Enabled false -ErrorAction Stop *>$null
+        Clear-OrchCache -Path $script:Drive | Out-Null
+
+        $t = Get-OrchTriggerDetail -Path $script:FolderPath -Name $script:Trigger -ErrorAction Stop
+        if (@($t.MachineRobots).Count -ne 0) { throw "the new trigger came with a robot binding" }
     }
-
-    # Robot: use a caller-supplied one if given (UIPATHORCH_TEST_ROBOT_LOGIN);
-    # otherwise provision a throwaway robot account end to end — org
-    # (Set-PmRobotAccount) -> tenant (Add-OrchUser, with a dummy Default
-    # credential so the server lets it bind an interactive trigger) -> folder
-    # (Add-OrchFolderUser) — and tear it down in AfterAll.
-    $script:Provisioned = $false
-    $script:ProvisionFailed = $false
-    if ($env:UIPATHORCH_TEST_ROBOT_LOGIN) {
-        $script:RobotLogin = $env:UIPATHORCH_TEST_ROBOT_LOGIN
-    }
-    elseif ($script:folderExists) {
-        $script:RobotLogin = "ZZBot_$([guid]::NewGuid().ToString('N').Substring(0,8))"
-        try {
-            Set-PmRobotAccount -Path $script:Drive -UserName $script:RobotLogin -GroupName 'Automation Users' -Confirm:$false -ErrorAction Stop *>$null
-            Add-OrchUser -Path $script:Drive -UserName $script:RobotLogin -Type DirectoryRobot `
-                -MayHaveUnattendedSession $true -UR_CredentialType Default `
-                -UR_UserName "localhost\$($script:RobotLogin)" -UR_Password 'P@ssw0rd1!' -Confirm:$false -ErrorAction Stop *>$null
-            Add-OrchFolderUser -Path $script:FolderPath -UserName $script:RobotLogin -Type DirectoryRobot -Roles 'Automation User' -Confirm:$false -ErrorAction SilentlyContinue *>$null
-            Clear-OrchCache -Path $script:Drive -ErrorAction SilentlyContinue | Out-Null
-            $script:Provisioned = $true
-        }
-        catch {
-            $script:ProvisionFailed = $true
-            $script:ProvError = "$($_.Exception.Message)"
-        }
-    }
-
-    if ($script:folderExists) {
-        $t = Get-OrchTriggerDetail -Path $script:FolderPath -Name $script:Trigger -ErrorAction SilentlyContinue
-        $m = Get-OrchFolderMachine -Path $script:FolderPath -ErrorAction SilentlyContinue |
-            Where-Object Name -eq $script:Machine
-        $robot = Get-OrchUser -Path $script:Drive -ErrorAction SilentlyContinue | Where-Object UserName -eq $script:RobotLogin
-        # Only operate on a trigger that currently has no robot binding, so the
-        # toggle-and-restore can't clobber a real one.
-        $origEmpty = ($null -ne $t) -and (@($t.MachineRobots).Count -eq 0)
-        $script:ready = ($null -ne $t) -and ($null -ne $m) -and ($null -ne $robot) -and $origEmpty
+    catch {
+        $script:SkipReason = "setup failed on $($script:Drive) $($_.Exception.Message)"
+        Write-Host "SKIPPING: $($script:SkipReason)" -ForegroundColor Yellow
     }
 
     function script:Require {
-        if (-not $script:hasDrive) { Set-ItResult -Skipped -Because "drive '$script:DriveName' is not connected"; return $false }
-        if ($script:ProvisionFailed) { Set-ItResult -Skipped -Because "could not provision a test robot account: $($script:ProvError)"; return $false }
-        if (-not $script:ready) { Set-ItResult -Skipped -Because "fixture not present (need trigger '$script:Trigger' with empty MachineRobots, machine '$script:Machine', and robot '$script:RobotLogin' in $script:FolderPath)"; return $false }
+        if ($script:SkipReason) { Set-ItResult -Skipped -Because $script:SkipReason; return $false }
         return $true
     }
 
@@ -108,14 +91,20 @@ BeforeAll {
 }
 
 AfterAll {
-    if ($script:hasDrive) {
-        if ($script:ready) { script:ClearBinding }
-        if ($script:Provisioned -eq $true) {
-            Remove-OrchFolderUser -Path $script:FolderPath -UserName $script:RobotLogin -Confirm:$false -ErrorAction SilentlyContinue *>$null
-            Remove-OrchUser -Path $script:Drive -UserName $script:RobotLogin -Type DirectoryRobot -Confirm:$false -ErrorAction SilentlyContinue *>$null
-            Remove-PmRobotAccount -Path $script:Drive -Name $script:RobotLogin -Confirm:$false -ErrorAction SilentlyContinue *>$null
-            Clear-OrchCache -Path $script:Drive -ErrorAction SilentlyContinue | Out-Null
+    if ($script:Done.folder -and (Test-Path $script:FolderPath)) {
+        Remove-Item -Path $script:FolderPath -Recurse -Confirm:$false -ErrorAction SilentlyContinue
+    }
+    # On-premises servers drop a deleted trigger's robot link a moment after the folder goes;
+    # removing the user before that fails with "The user is assigned to trigger ...".
+    Start-Sleep -Seconds 8
+    Clear-OrchCache -Path $script:Drive -ErrorAction SilentlyContinue | Out-Null
+    if ($script:Done.user) {
+        foreach ($u in @(Get-OrchUser -Path "$($script:Drive)\" -ErrorAction SilentlyContinue | Where-Object UserName -eq $script:RobotLogin)) {
+            Remove-OrchUser -Path $script:Drive -UserName $u.UserName -Type $u.Type -Confirm:$false -ErrorAction SilentlyContinue *>$null
         }
+    }
+    if ($script:Done.pm) {
+        Remove-PmRobotAccount -Path $script:Drive -Name $script:RobotLogin -Confirm:$false -ErrorAction SilentlyContinue *>$null
     }
 }
 
