@@ -2305,9 +2305,7 @@ public partial class OrchAPISession : IDisposable
             // measurements.
             if (Below(OrchApiFloor.ReleaseSpecificPriority) && release.SpecificPriorityValue is not null)
             {
-                if (release.SpecificPriorityValue >= 61) release.JobPriority = "High";
-                else if (release.SpecificPriorityValue <= 30) release.JobPriority = "Low";
-                else release.JobPriority = "Normal";
+                release.JobPriority = PriorityBucket(release.SpecificPriorityValue.Value);
                 release.SpecificPriorityValue = null;
             }
             release.VideoRecordingSettings = null;
@@ -2436,7 +2434,24 @@ public partial class OrchAPISession : IDisposable
         {
             schedule.ResumeOnSameContext = null;
         }
+
+        // SpecificPriorityValue: the same conversion the Release POST makes below the same floor.
+        // On 20.10.16 (API 11.1) a trigger PUT carrying it fails with 400 "model must not be
+        // null", while the identical PUT with JobPriority instead succeeds (2026-10-06). So
+        // Update-OrchTrigger -Priority, and re-importing any exported trigger row with a priority,
+        // had always failed there. JobPriority and SpecificPriorityValue are exclusive anyway
+        // (see EntityComparison.EffectiveJobPriority), so the value becomes its bucket.
+        if (Below(OrchApiFloor.ReleaseSpecificPriority) && schedule.SpecificPriorityValue is not null)
+        {
+            schedule.JobPriority = PriorityBucket(schedule.SpecificPriorityValue.Value);
+            schedule.SpecificPriorityValue = null;
+        }
     }
+
+    // A 1-100 priority value as the Low / Normal / High bucket an older server takes instead:
+    // 61 and above High, 30 and below Low. The same cut EntityComparison.EffectiveJobPriority uses.
+    internal static string PriorityBucket(int specificPriorityValue)
+        => specificPriorityValue >= 61 ? "High" : specificPriorityValue <= 30 ? "Low" : "Normal";
 
     public ProcessSchedule? PostProcessSchedule(Int64 folderId, ProcessSchedule schedule)
     {
