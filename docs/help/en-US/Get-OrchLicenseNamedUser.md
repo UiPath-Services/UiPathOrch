@@ -123,6 +123,8 @@ HelpMessage: ''
 
 Specifies the RobotType of the licenses to be retrieved. If not specified, results for all robot types are returned. Tab completion suggests available robot type values.
 
+A type you do not name (all types, or a wildcard) is left out on a server known not to have it, and a server's "no such type" answer for it is written as verbose output instead of an error. A type you name is always requested, and the server's answer shown as it is.
+
 ```yaml
 Type: System.String[]
 DefaultValue: None
