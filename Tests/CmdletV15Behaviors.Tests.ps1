@@ -81,6 +81,13 @@ BeforeAll {
     if (-not $script:Release) {
         throw "No releases in $script:Folder; fixture didn't import processes."
     }
+
+    # Standalone servers (API 17 and below) answer the API-trigger endpoints, but their web UI has
+    # no API triggers and UiPathOrch does not list them there, so a created one cannot be read
+    # back. RunAsCaller is newer still: Automation Cloud (API 20) only. (2026-10-07, on 25.10.2.)
+    $api = (Get-OrchPSDrive | Where-Object Name -eq $script:TargetDrive).ApiVersion
+    $script:ApiTriggerSkip  = if ($api -and $api -lt 18) { "API triggers are not a feature of this server (API $api)" }
+    $script:RunAsCallerSkip = if ($api -and $api -lt 20) { "RunAsCaller needs API 20 (this server: $api)" }
 }
 
 Describe 'v1.5.1: New-OrchApiTrigger server-required defaults' {
@@ -100,6 +107,7 @@ Describe 'v1.5.1: New-OrchApiTrigger server-required defaults' {
     }
 
     It '-RunAsCaller round-trips via Get' {
+        if ($script:RunAsCallerSkip) { Set-ItResult -Skipped -Because $script:RunAsCallerSkip; return }
         $name = "${script:Prefix}runascaller"
         try {
             New-OrchApiTrigger -Path $script:Folder -Name $name -Release $script:Release `
@@ -116,6 +124,7 @@ Describe 'v1.5.1: New-OrchApiTrigger server-required defaults' {
 
 Describe 'v1.5.1: Update-OrchApiTrigger CSV round-trip' {
     It 'Description and Enabled round-trip through Export-Csv | Update' {
+        if ($script:ApiTriggerSkip) { Set-ItResult -Skipped -Because $script:ApiTriggerSkip; return }
         $name = "${script:Prefix}csvroundtrip"
         $csv = Join-Path $env:TEMP "regression-v15-$PID-$([Guid]::NewGuid().Guid.Substring(0,8)).csv"
         try {
@@ -411,6 +420,7 @@ Describe 'v1.5.3: -ExportCsv value-population on fixture-seeded entities' {
     # 11c steps from v1.5.3). For each entity, fixture rows have known
     # non-empty values in known columns; CSV emission must preserve them.
     It 'Get-OrchApiTrigger -ExportCsv populates Method, Slug, CallingMode, Release' {
+        if ($script:ApiTriggerSkip) { Set-ItResult -Skipped -Because $script:ApiTriggerSkip; return }
         $csv = Join-Path $env:TEMP "${script:Prefix}api_triggers.csv"
         try {
             Get-OrchApiTrigger -Path "${script:TargetDrive}:\TestFixture_Base" -Recurse -ExportCsv $csv | Out-Null

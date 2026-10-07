@@ -28,6 +28,17 @@ BeforeAll {
 
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
 
+    # A standalone server has no notification service (Get-PmNotificationSubscription says so);
+    # Automation Cloud and Automation Suite do. Every test then skips.
+    $script:NoNotifications = if ((Get-OrchPSDrive | Where-Object Name -eq $script:Drive).Edition -eq 'OnPremises') {
+        "${script:Drive}: is a standalone server, which has no notification service"
+    }
+    function script:SkipWithoutNotifications {
+        if ($script:NoNotifications) { Set-ItResult -Skipped -Because $script:NoNotifications; return $true }
+        return $false
+    }
+    if ($script:NoNotifications) { return }
+
     # Pick a non-mandatory (topic, mode) to toggle, and remember its current state.
     $script:Subject = Get-PmNotificationSubscription -Path $script:DrivePath |
         Where-Object { -not $_.IsMandatory -and $_.Topic -and $_.Mode } |
@@ -52,6 +63,7 @@ BeforeAll {
 
 Describe 'Get-PmNotificationSubscription' {
     It 'returns rows with the expected shape' {
+        if (script:SkipWithoutNotifications) { return }
         $rows = @(Get-PmNotificationSubscription -Path $script:DrivePath)
         $rows.Count | Should -BeGreaterThan 0
         $names = $rows[0].PSObject.Properties.Name
@@ -62,11 +74,15 @@ Describe 'Get-PmNotificationSubscription' {
     }
 
     It 'filters by -Mode' {
+
+        if (script:SkipWithoutNotifications) { return }
         $rows = @(Get-PmNotificationSubscription -Path $script:DrivePath -Mode Email)
         $rows | Where-Object { $_.Mode -ne 'Email' } | Should -BeNullOrEmpty
     }
 
     It 'filters by -Publisher (wildcard)' {
+
+        if (script:SkipWithoutNotifications) { return }
         $rows = @(Get-PmNotificationSubscription -Path $script:DrivePath -Publisher 'App*')
         $rows.Count | Should -BeGreaterThan 0
         $rows | Where-Object { $_.Publisher -notlike 'App*' } | Should -BeNullOrEmpty
@@ -75,12 +91,15 @@ Describe 'Get-PmNotificationSubscription' {
 
 Describe 'Set-PmNotificationSubscription' {
     It 'toggles a subscription and reads it back' {
+        if (script:SkipWithoutNotifications) { return }
         $target = -not $script:Original
         Set-PmNotificationSubscription $script:Topic $script:Mode "$target" -Path $script:DrivePath -Confirm:$false | Out-Null
         Get-State $script:Topic $script:Mode | Should -Be $target
     }
 
     It 'accepts the string "false"/"true" (CSV style)' {
+
+        if (script:SkipWithoutNotifications) { return }
         Set-PmNotificationSubscription $script:Topic $script:Mode 'false' -Path $script:DrivePath -Confirm:$false | Out-Null
         Get-State $script:Topic $script:Mode | Should -BeFalse
         Set-PmNotificationSubscription $script:Topic $script:Mode 'true' -Path $script:DrivePath -Confirm:$false | Out-Null
@@ -88,11 +107,15 @@ Describe 'Set-PmNotificationSubscription' {
     }
 
     It 'errors on an invalid -Subscribed value' {
+
+        if (script:SkipWithoutNotifications) { return }
         { Set-PmNotificationSubscription $script:Topic $script:Mode 'maybe' -Path $script:DrivePath -Confirm:$false -ErrorAction Stop } |
             Should -Throw
     }
 
     It 'errors on an unknown topic' {
+
+        if (script:SkipWithoutNotifications) { return }
         { Set-PmNotificationSubscription 'No.Such.Topic' Email true -Path $script:DrivePath -Confirm:$false -ErrorAction Stop } |
             Should -Throw
     }
@@ -100,6 +123,7 @@ Describe 'Set-PmNotificationSubscription' {
 
 Describe 'CSV round-trip (-ExportCsv | Import-Csv | Set)' {
     It 'exports the binding columns and re-applies via Import-Csv | Set' {
+        if (script:SkipWithoutNotifications) { return }
         $csv = Join-Path ([System.IO.Path]::GetTempPath()) "pmnotif_$PID.csv"
         try {
             Get-PmNotificationSubscription -Path $script:DrivePath -Publisher 'App*' -ExportCsv $csv
@@ -122,27 +146,36 @@ Describe 'CSV round-trip (-ExportCsv | Import-Csv | Set)' {
 
 Describe 'Argument completers' {
     It '-Publisher completes publisher names' {
+        if (script:SkipWithoutNotifications) { return }
         $c = Complete-Parameter "Get-PmNotificationSubscription -Path $script:DrivePath -Publisher "
         @($c.CompletionText) | Should -Contain 'Apps'
     }
 
     It '-Publisher excludes an already-entered wildcard value' {
+
+        if (script:SkipWithoutNotifications) { return }
         $c = Complete-Parameter "Get-PmNotificationSubscription -Path $script:DrivePath -Publisher Apps,"
         @($c.CompletionText) | Should -Not -Contain 'Apps'
     }
 
     It '-Mode completes InApp / Email' {
+
+        if (script:SkipWithoutNotifications) { return }
         $c = Complete-Parameter "Set-PmNotificationSubscription -Path $script:DrivePath -Topic x -Mode "
         @($c.CompletionText) | Should -Contain 'InApp'
         @($c.CompletionText) | Should -Contain 'Email'
     }
 
     It '-Topic completes topic names' {
+
+        if (script:SkipWithoutNotifications) { return }
         $c = Complete-Parameter "Set-PmNotificationSubscription -Path $script:DrivePath -Topic Apps."
         @($c.CompletionText) | Should -Contain 'Apps.Shared'
     }
 
     It '-Subscribed completes true / false' {
+
+        if (script:SkipWithoutNotifications) { return }
         $c = Complete-Parameter "Set-PmNotificationSubscription -Path $script:DrivePath -Topic x -Mode Email -Subscribed "
         @($c.CompletionText) | Should -Contain 'True'
         @($c.CompletionText) | Should -Contain 'False'
@@ -151,6 +184,7 @@ Describe 'Argument completers' {
 
 Describe 'Copy-PmNotificationSubscription' {
     It 'is a no-op when source and destination are the same organization' {
+        if (script:SkipWithoutNotifications) { return }
         # Same partition -> nothing copied, no error.
         $r = Copy-PmNotificationSubscription $script:DrivePath -Path $script:DrivePath -Confirm:$false 2>&1
         $r | Should -BeNullOrEmpty

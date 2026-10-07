@@ -81,6 +81,21 @@ BeforeAll {
     $script:ExportDir   = Join-Path $env:TEMP "CopyItemXT_$rnd"
     $script:SeededFolderUser = $null
 
+    # Copy-Item with every error fatal except one: the source's signed-in user, which the server
+    # put on each folder it created for this test, absent from the destination's directory. That
+    # is the case between two servers with separate directories (on-premises -> Cloud, Automation
+    # Suite -> on-premises, ...), where Copy-Item rightly reports "does not have the ... '<me>'"
+    # and carries on; it says nothing about what this file checks.
+    function script:Copy-ToleratingSigner {
+        param([string]$Source, [string]$Destination, [string]$Me)
+        $copyErrors = $null
+        Copy-Item -Path $Source -Destination $Destination -Recurse -ErrorAction SilentlyContinue -ErrorVariable copyErrors
+        $unexpected = @($copyErrors | Where-Object {
+            -not ($Me -and "$($_.Exception.Message)" -match 'does not have the' -and "$($_.Exception.Message)".Contains("""$Me"""))
+        })
+        if ($unexpected) { throw $unexpected[0] }
+    }
+
     # --- generic helpers (ported verbatim from CopyItem.RoundTrip.Tests.ps1;
     #     they are drive-agnostic, so they work cross-tenant unchanged) -------
     function script:Normalize-Rows {
@@ -193,6 +208,7 @@ BeforeAll {
         # runs. A directory the dst cannot even enumerate (no OR.Users.Read)
         # counts as unresolvable for the same reason.
         $me  = (Get-OrchCurrentUser -Path "$($script:SrcDrive):\").UserName
+        $script:SrcMe = $me
         $alt = Get-OrchUser -Path "$($script:SrcDrive):\" -Type DirectoryUser |
                     Where-Object UserName -ne $me | Select-Object -First 1
         if ($alt) {
@@ -217,7 +233,7 @@ BeforeAll {
         # ---- cross-tenant copy ----
         Write-Host "Copy-Item -Recurse (cross-tenant) to '$($script:DstRoot)' ..." -ForegroundColor Cyan
         New-Item -ItemType Directory -Path $script:DstRoot -Force -ErrorAction Stop | Out-Null
-        Copy-Item -Path $script:SrcRoot -Destination $script:DstRoot -Recurse -ErrorAction Stop
+        script:Copy-ToleratingSigner -Source $script:SrcRoot -Destination $script:DstRoot -Me $me
         Clear-OrchCache -Path $script:DstRoot
     }
     else {
@@ -327,6 +343,9 @@ Describe 'Copy-Item -Recurse cross-tenant preserves per-folder entities' {
         $dstByKey = @{}
         foreach ($r in $dst) { $dstByKey[$r.Key] = $r }
         foreach ($e in $src) {
+            # The source's signed-in user, put on the folder by the server, may not exist in the
+            # destination's directory; Copy-ToleratingSigner let that one go, so does this check.
+            if ($script:SrcMe -and $e.Key -like "*|$($script:SrcMe)" -and -not $dstByKey.ContainsKey($e.Key)) { continue }
             $dstByKey.ContainsKey($e.Key) | Should -BeTrue `
                 -Because "folder user '$($e.Key)' should be resolved + assigned on the cross-tenant copy destination"
             $dstByKey[$e.Key].Type  | Should -Be $e.Type
@@ -393,7 +412,8 @@ Describe 'Copy-Item -Recurse cross-tenant leaves no stale destination queue cach
 
             Clear-OrchCache
             Write-Host "Copy-Item -Recurse (shared queue, pre-existing dst folders) ..." -ForegroundColor Cyan
-            Copy-Item -Path $script:StaleSrcRoot -Destination $script:StaleDstRoot -Recurse -ErrorAction Stop
+            script:Copy-ToleratingSigner -Source $script:StaleSrcRoot -Destination $script:StaleDstRoot `
+                -Me (Get-OrchCurrentUser -Path "$($script:SrcDrive):\").UserName
         }
     }
 

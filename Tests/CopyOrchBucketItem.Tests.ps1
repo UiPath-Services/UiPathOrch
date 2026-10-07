@@ -217,6 +217,12 @@ Describe 'Bucket-item pipe composition (Get-OrchBucketItem | Copy/Export via Buc
     It 'Get-OrchBucketItem | Copy-OrchBucketItem copies a Where-Object-filtered set' {
         # Filter by ContentType -- something the cmdlet's own -FullPath wildcard cannot express --
         # then copy exactly those files. The piped BlobFile binds Copy's -Name from its Bucket alias.
+        # On-premises Orchestrator-storage buckets list files without ContentType (or Size) --
+        # 24.10.8 and 25.10.2, 2026-10-07 -- so there is nothing to filter on there.
+        if (-not (@(Get-OrchBucketItem -Path $script:Src -Name 'zzPipe' *) | Where-Object ContentType)) {
+            Set-ItResult -Skipped -Because 'this server lists bucket files without ContentType'
+            return
+        }
         Get-OrchBucketItem -Path $script:Src -Name 'zzPipe' * |
             Where-Object ContentType -eq 'application/json' |
             Copy-OrchBucketItem -Destination $script:Dst

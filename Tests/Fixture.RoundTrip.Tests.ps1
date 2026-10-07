@@ -193,6 +193,10 @@ Describe 'Fixture CSV round-trip (Orch1: → OrchTest: → CSV) preserves source
     }
 
     It 'api_triggers.csv round-trips Path / Name / Release / Method / Slug / CallingMode' {
+        # Standalone servers (API 17 and below) take the fixture's API triggers but have no API
+        # triggers in their web UI, and UiPathOrch does not list them there (2026-10-07).
+        $api = (Get-OrchPSDrive | Where-Object Name -eq $script:TargetDrive).ApiVersion
+        if ($api -and $api -lt 18) { Set-ItResult -Skipped -Because "API triggers are not a feature of this server (API $api)"; return }
         $exportPath = Join-Path $script:ExportDir 'api_triggers.csv'
         Get-OrchApiTrigger -Path $script:FixtureRoot -Recurse -ExportCsv $exportPath | Out-Null
         $expected = Normalize-Rows (Read-FixtureCsv 'api_triggers.csv')

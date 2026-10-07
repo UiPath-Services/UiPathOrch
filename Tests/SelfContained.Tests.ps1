@@ -19,11 +19,22 @@
     Run with: Invoke-Pester -Path Tests\SelfContained.Tests.ps1 -Output Detailed
 #>
 
+# Secret assets are a newer asset type: a standalone server (API 17 and below) rejects one with
+# "assetDto must not be null" (24.10.8 and 25.10.2, 2026-10-07), so the tests that create them skip
+# there. Decided at discovery, where -Skip is evaluated; the BeforeAll below repeats it for setup.
+BeforeDiscovery {
+    $d = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
+    $null = Get-ChildItem "${d}:\" -ErrorAction SilentlyContinue
+    $api = (Get-OrchPSDrive | Where-Object Name -eq $d).ApiVersion
+    $NoSecretAssets = [bool]($api -and $api -lt 18)
+}
 BeforeAll {
     # Orch2 is the destructive test target (same tenant as OrchTest but a
     # separate drive instance so cache state lines up with Import-Fixture).
     # Orch1 stays read-only — used only to discover a reference package.
     $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
+    $null = Get-ChildItem "$($script:Drive):\" -ErrorAction SilentlyContinue
+    $script:NoSecretAssets = [bool]((Get-OrchPSDrive | Where-Object Name -eq $script:Drive).ApiVersion -lt 18 -and (Get-OrchPSDrive | Where-Object Name -eq $script:Drive).ApiVersion)  # see BeforeDiscovery
     $script:RefDrive = if ($env:UIPATHORCH_TEST_REF_DRIVE) { $env:UIPATHORCH_TEST_REF_DRIVE } else { 'Orch1' }
     $script:Prefix = "PesterTest_$(Get-Random -Maximum 9999)_"
     $script:RootFolder = "${script:Drive}:\${script:Prefix}Root"
@@ -640,7 +651,7 @@ Describe 'Asset' {
     }
 
     # T1.10 — Set-OrchAsset with -ValueType Secret silent no-op (new behavior, was error)
-    It 'T1.10 Set-OrchAsset -ValueType Secret silent no-op' {
+    It 'T1.10 Set-OrchAsset -ValueType Secret silent no-op' -Skip:$NoSecretAssets {
         $sec = "${script:AssetName}_T110Sec"
         Set-OrchSecretAsset -Name $sec -SecretValue 'x'
         Clear-OrchCache
@@ -929,7 +940,7 @@ Describe 'Get-OrchCredentialAsset' {
         Set-OrchCredentialAsset -Name "${script:GcaName}_A" -CredentialUsername 'userA' -CredentialPassword 'passA' -Description 'A'
         Set-OrchCredentialAsset -Name "${script:GcaName}_B" -CredentialUsername 'userB' -CredentialPassword 'passB'
         Set-OrchAsset -ValueType Text -Name "${script:GcaName}_Text" -Value 't'        # noise
-        Set-OrchSecretAsset -Name "${script:GcaName}_Sec" -SecretValue 's'              # noise
+        if (-not $script:NoSecretAssets) { Set-OrchSecretAsset -Name "${script:GcaName}_Sec" -SecretValue 's' }  # noise
         # PerRobot UserValue for round-trip / populated-username check
         Set-OrchCredentialAsset -Name "${script:GcaName}_A" -UserName $script:TestUserA `
             -CredentialUsername 'uvUser' -CredentialPassword 'uvPass'
@@ -1019,7 +1030,7 @@ Describe 'Get-OrchCredentialAsset' {
 # ---------------------------------------------------------------------------
 # Set-OrchSecretAsset (Section 6)
 # ---------------------------------------------------------------------------
-Describe 'Set-OrchSecretAsset' {
+Describe 'Set-OrchSecretAsset' -Skip:$NoSecretAssets {
     BeforeAll {
         $script:SsaName = "${script:Prefix}Ssa"
         Push-Location $script:RootFolder
@@ -1122,7 +1133,7 @@ Describe 'Set-OrchSecretAsset' {
 # ---------------------------------------------------------------------------
 # Get-OrchSecretAsset (Section 7)
 # ---------------------------------------------------------------------------
-Describe 'Get-OrchSecretAsset' {
+Describe 'Get-OrchSecretAsset' -Skip:$NoSecretAssets {
     BeforeAll {
         $script:GsaName = "${script:Prefix}Gsa"
         Push-Location $script:RootFolder
@@ -1211,7 +1222,7 @@ Describe 'Remove-OrchAssetUserValue' {
         ($a.UserValues | Where-Object UserId -eq $script:TestUserAId) | Should -BeNullOrEmpty
     }
 
-    It 'T8.2/T8.10 Remove UserValue from Secret asset (type-agnostic)' {
+    It 'T8.2/T8.10 Remove UserValue from Secret asset (type-agnostic)' -Skip:$NoSecretAssets {
         $nm = "${script:RuvName}_Sec"
         Set-OrchSecretAsset -Name $nm -SecretValue 'g'
         Set-OrchSecretAsset -Name $nm -UserName $script:TestUserA -SecretValue 'uv'
@@ -1222,7 +1233,7 @@ Describe 'Remove-OrchAssetUserValue' {
         ($a.UserValues | Where-Object UserId -eq $script:TestUserAId) | Should -BeNullOrEmpty
     }
 
-    It 'T8.4 Wildcard -UserName matches UserValue' {
+    It 'T8.4 Wildcard -UserName matches UserValue' -Skip:$NoSecretAssets {
         # OrchTest has only one usable non-self DirectoryUser, so this tests wildcard resolution
         # against a single UserValue rather than multiple.
         $nm = "${script:RuvName}_Wc"
@@ -1235,7 +1246,7 @@ Describe 'Remove-OrchAssetUserValue' {
         $a.UserValues | Should -BeNullOrEmpty
     }
 
-    It 'T8.5 Removing all UserValues reverts to Global scope preserving HasDefaultValue' {
+    It 'T8.5 Removing all UserValues reverts to Global scope preserving HasDefaultValue' -Skip:$NoSecretAssets {
         $nm = "${script:RuvName}_Revert"
         Set-OrchSecretAsset -Name $nm -SecretValue 'g'
         Set-OrchSecretAsset -Name $nm -UserName $script:TestUserA -SecretValue 'uv'
@@ -1265,7 +1276,7 @@ Describe 'Remove-OrchAssetUserValue' {
     #
     # -WhatIf text goes straight to the host: no redirection captures it (6>&1 / 4>&1 / *>&1 all
     # come back empty), so the transcript is the only way to read it back.
-    It 'T8.6b -WhatIf previews EVERY matching asset, not just the first' {
+    It 'T8.6b -WhatIf previews EVERY matching asset, not just the first' -Skip:$NoSecretAssets {
         $a1 = "${script:RuvName}_WiAll1"
         $a2 = "${script:RuvName}_WiAll2"
         foreach ($nm in @($a1, $a2)) {
@@ -1300,7 +1311,7 @@ Describe 'Remove-OrchAssetUserValue' {
         }
     }
 
-    It 'T8.8 Non-existent user name is a no-op' {
+    It 'T8.8 Non-existent user name is a no-op' -Skip:$NoSecretAssets {
         $nm = "${script:RuvName}_NoMatch"
         Set-OrchSecretAsset -Name $nm -SecretValue 'g'
         Set-OrchSecretAsset -Name $nm -UserName $script:TestUserA -SecretValue 'uv'
@@ -1311,7 +1322,7 @@ Describe 'Remove-OrchAssetUserValue' {
         ((Get-OrchAsset -Name $nm).UserValues | Where-Object UserId -eq $script:TestUserAId) | Should -Not -BeNullOrEmpty
     }
 
-    It 'T8.9/T8.11 Global-only asset (no UserValues) is silently skipped' {
+    It 'T8.9/T8.11 Global-only asset (no UserValues) is silently skipped' -Skip:$NoSecretAssets {
         $nm = "${script:RuvName}_GlobalOnly"
         Set-OrchSecretAsset -Name $nm -SecretValue 'g'
         Clear-OrchCache
@@ -1364,7 +1375,7 @@ Describe 'Asset Round-trip' {
         $a.CredentialUsername | Should -Be 'u1'
     }
 
-    It 'T9.2 Secret round-trip: empty SecretValue does not clobber' {
+    It 'T9.2 Secret round-trip: empty SecretValue does not clobber' -Skip:$NoSecretAssets {
         $nm = "${script:RtName}_Sec"
         Set-OrchSecretAsset -Name $nm -SecretValue 's1' -Description 'D1'
         Clear-OrchCache
@@ -1379,7 +1390,7 @@ Describe 'Asset Round-trip' {
         $a.HasDefaultValue | Should -Be $true
     }
 
-    It 'T9.4 Asset partition: Get-OrchAsset + Get-OrchCredentialAsset + Get-OrchSecretAsset covers all types' {
+    It 'T9.4 Asset partition: Get-OrchAsset + Get-OrchCredentialAsset + Get-OrchSecretAsset covers all types' -Skip:$NoSecretAssets {
         Set-OrchAsset -ValueType Text -Name "${script:RtName}_Part_T" -Value 't'
         Set-OrchCredentialAsset -Name "${script:RtName}_Part_C" -CredentialUsername 'u' -CredentialPassword 'p'
         Set-OrchSecretAsset -Name "${script:RtName}_Part_S" -SecretValue 's'
@@ -1394,7 +1405,7 @@ Describe 'Asset Round-trip' {
             Should -Be $all.Count
     }
 
-    It 'T9.6 Unicode/Japanese name round-trip for Secret' {
+    It 'T9.6 Unicode/Japanese name round-trip for Secret' -Skip:$NoSecretAssets {
         $nm = "${script:RtName}_シークレット"
         Set-OrchSecretAsset -Name $nm -SecretValue 's'
         Clear-OrchCache
@@ -1406,7 +1417,7 @@ Describe 'Asset Round-trip' {
         Remove-OrchAsset -Name $nm -Confirm:$false -ErrorAction SilentlyContinue
     }
 
-    It 'T9.8 Copy-OrchAsset handles all 5 types including Secret (placeholder + warning)' {
+    It 'T9.8 Copy-OrchAsset handles all 5 types including Secret (placeholder + warning)' -Skip:$NoSecretAssets {
         # Regression guard: Secret used to fail with "asset secret value cannot be null"
         # because CopyAssets had no Secret branch. Now inserts !!!PLEASE UPDATE!!! placeholder
         # and emits a warning like Credential.
@@ -1472,7 +1483,7 @@ Describe 'Asset Negative' {
         $err | Should -Not -BeNullOrEmpty
     }
 
-    It 'T11.9 Guard: Set-OrchSecretAsset with folder-unassigned user still succeeds (admin API is permissive)' {
+    It 'T11.9 Guard: Set-OrchSecretAsset with folder-unassigned user still succeeds (admin API is permissive)' -Skip:$NoSecretAssets {
         # If server behavior changes to enforce folder assignment, this test will flip to failure
         # — that's intentional (guard test).
         $nm = "${script:NegName}_Guard"
@@ -1485,7 +1496,7 @@ Describe 'Asset Negative' {
 # ---------------------------------------------------------------------------
 # Asset Performance / Batching (Section 12) — Tag 'Performance'
 # ---------------------------------------------------------------------------
-Describe 'Asset Performance' -Tag 'Performance' {
+Describe 'Asset Performance' -Tag 'Performance' -Skip:$NoSecretAssets {
     BeforeAll {
         $script:PerfName = "${script:Prefix}Perf"
         Push-Location $script:RootFolder
@@ -2781,7 +2792,7 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         $sc | Should -Be 200 -Because 'on Orch1 this endpoint is supported; the trailing-quote bug caused 404'
     }
 
-    It 'R7: Set-OrchSecretAsset -Description "" clears the existing description (single-row case)' {
+    It 'R7: Set-OrchSecretAsset -Description "" clears the existing description (single-row case)' -Skip:$NoSecretAssets {
         # New behavior from the merge-aggregation refactor (resolves the Q1 spec): a single
         # direct call with empty Description and no other rows clears the existing value.
         # Without per-asset Description aggregation + isDirty tracking, this previously
@@ -2800,7 +2811,7 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         }
     }
 
-    It 'R8: Set-OrchSecretAsset multi-row pipe: non-empty Description wins over empty cells' {
+    It 'R8: Set-OrchSecretAsset multi-row pipe: non-empty Description wins over empty cells' -Skip:$NoSecretAssets {
         # Critical interaction: Get-OrchSecretAsset's CSV exporter writes Description on the
         # first row of each asset only; subsequent UserValue rows leave it empty. The merge
         # rule (non-empty > "" > null, last-writer-wins among non-empty) must keep the value
@@ -2928,7 +2939,7 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         }
     }
 
-    It 'R14: Set-OrchSecretAsset scope — machine still gated, user delegated to the API' {
+    It 'R14: Set-OrchSecretAsset scope — machine still gated, user delegated to the API' -Skip:$NoSecretAssets {
         # SetSecretAsset mirrors SetAsset: the MACHINE folder-scope preflight is UNCHANGED (an
         # unassigned machine is still rejected up front), while the USER folder-scope preflight
         # was REMOVED (PR #20) — a per-User value for a folder-unassigned tenant user is now

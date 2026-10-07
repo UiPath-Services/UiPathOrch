@@ -43,6 +43,17 @@ BeforeAll {
     # Sanity: drive mounted
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
 
+    # Licensing lives on Automation Cloud and Automation Suite; a standalone server has none (its
+    # portal answers these endpoints with an HTML page). Every test then skips.
+    $script:NoLicensing = if ((Get-OrchPSDrive | Where-Object Name -eq $script:Drive).Edition -eq 'OnPremises') {
+        "${script:Drive}: is a standalone server, which has no licensing"
+    }
+    function script:SkipWithoutLicensing {
+        if ($script:NoLicensing) { Set-ItResult -Skipped -Because $script:NoLicensing; return $true }
+        return $false
+    }
+    if ($script:NoLicensing) { return }
+
     # Sanity: bundles exist on the drive with free slots
     $licenses = Get-PmLicense -Path $script:DrivePath -ErrorAction Stop
     foreach ($code in @($script:License1, $script:License2)) {
@@ -74,6 +85,7 @@ AfterAll {
 
 Describe 'Add-PmUserLicense' {
     It 'allocates a single bundle to a previously-unlicensed user' {
+        if (script:SkipWithoutLicensing) { return }
         Add-PmUserLicense -Path $script:DrivePath -Email $script:TestUser -License $script:License1 -Confirm:$false
         $u = Get-PmUserLicense -Path $script:DrivePath | Where-Object email -eq $script:TestUser
         $u | Should -Not -BeNullOrEmpty
@@ -81,6 +93,8 @@ Describe 'Add-PmUserLicense' {
     }
 
     It 'is idempotent — re-adding the same bundle keeps the list unchanged' {
+
+        if (script:SkipWithoutLicensing) { return }
         # Atomic-replace PUT: re-submitting the same set is a no-op on the
         # server side; the cmdlet should also short-circuit when the merge
         # produces no new codes (NOTES in the help md spells this out).
@@ -91,6 +105,8 @@ Describe 'Add-PmUserLicense' {
     }
 
     It 'merges a second bundle without dropping the first (atomic-replace + merge)' {
+
+        if (script:SkipWithoutLicensing) { return }
         Add-PmUserLicense -Path $script:DrivePath -Email $script:TestUser -License $script:License2 -Confirm:$false
         $u = Get-PmUserLicense -Path $script:DrivePath | Where-Object email -eq $script:TestUser
         $u.userBundleLicenses | Should -Contain $script:License1
@@ -100,6 +116,7 @@ Describe 'Add-PmUserLicense' {
 
 Describe 'Remove-PmUserLicense' {
     It 'removes a specific bundle while leaving others intact' {
+        if (script:SkipWithoutLicensing) { return }
         Remove-PmUserLicense -Path $script:DrivePath -Email $script:TestUser -License $script:License1 -Confirm:$false
         $u = Get-PmUserLicense -Path $script:DrivePath | Where-Object email -eq $script:TestUser
         $u | Should -Not -BeNullOrEmpty
@@ -108,6 +125,8 @@ Describe 'Remove-PmUserLicense' {
     }
 
     It '-License * strips every remaining bundle but leaves the row' {
+
+        if (script:SkipWithoutLicensing) { return }
         # The contract: the user record stays in the licensed-users set
         # with an empty bundle list (the "No license" row in the Portal UI).
         # Dropping the row entirely is Remove-PmLicensedUser's job.
@@ -120,6 +139,7 @@ Describe 'Remove-PmUserLicense' {
 
 Describe 'Remove-PmLicensedUser' {
     It 'drops the licensed-user row entirely' {
+        if (script:SkipWithoutLicensing) { return }
         Remove-PmLicensedUser -Path $script:DrivePath -Email $script:TestUser -Confirm:$false
         $u = Get-PmUserLicense -Path $script:DrivePath | Where-Object email -eq $script:TestUser
         $u | Should -BeNullOrEmpty
@@ -132,6 +152,7 @@ Describe 'Get-PmUserLicense -ExportCsv' {
     # there is a known multi-license user to export. AfterAll (top of file)
     # drops the user regardless.
     BeforeAll {
+        if ($script:NoLicensing) { return }
         Add-PmUserLicense -Path $script:DrivePath -Email $script:TestUser `
             -License $script:License1, $script:License2 -Confirm:$false
         $script:CsvPath = Join-Path ([IO.Path]::GetTempPath()) "pmlu_$([guid]::NewGuid().ToString('N')).csv"
@@ -141,12 +162,16 @@ Describe 'Get-PmUserLicense -ExportCsv' {
     }
 
     It 'emits Path / UserName / License columns (not Email)' {
+
+        if (script:SkipWithoutLicensing) { return }
         Get-PmUserLicense -Path $script:DrivePath -ExportCsv $script:CsvPath | Out-Null
         $cols = (Import-Csv $script:CsvPath | Select-Object -First 1).PSObject.Properties.Name | Sort-Object
         $cols | Should -Be (@('License', 'Path', 'UserName') | Sort-Object)
     }
 
     It 'writes one row per (user, license) with the test user present' {
+
+        if (script:SkipWithoutLicensing) { return }
         $rows = Import-Csv $script:CsvPath
         $mine = $rows | Where-Object UserName -eq $script:TestUser
         # The user was given two bundles, so two rows carry their login.
@@ -156,6 +181,8 @@ Describe 'Get-PmUserLicense -ExportCsv' {
     }
 
     It 'excludes orphan license-pool rows (UserName is never a bundle name)' {
+
+        if (script:SkipWithoutLicensing) { return }
         $rows = Import-Csv $script:CsvPath
         # Orphan rows would carry a bundle display name in UserName; real rows
         # carry a login. None of the exported UserNames should be empty.
@@ -163,6 +190,8 @@ Describe 'Get-PmUserLicense -ExportCsv' {
     }
 
     It 're-imports into Add-PmUserLicense without error (-WhatIf)' {
+
+        if (script:SkipWithoutLicensing) { return }
         # The UserName column binds to -Email via its alias; a full unedited
         # re-import is a no-op (every license already held), so -WhatIf just
         # previews and binds cleanly.

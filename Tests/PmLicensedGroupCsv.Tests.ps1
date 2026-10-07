@@ -28,6 +28,9 @@ BeforeAll {
 
     Import-OrchConfig | Out-Null
     $script:hasDrive = $null -ne (Get-OrchPSDrive | Where-Object Name -eq $script:DriveName)
+    # Licensing lives on Automation Cloud and Automation Suite; a standalone server has none (its
+    # portal answers these endpoints with an HTML page).
+    $script:noLicensing = $script:hasDrive -and (Get-OrchPSDrive | Where-Object Name -eq $script:DriveName).Edition -eq 'OnPremises'
 
     # Catalog friendly-name map, mirroring the module's static AvailableUserBundlesItems
     # so assertions read in human terms.
@@ -54,7 +57,7 @@ BeforeAll {
     $script:grp2 = $null
     $script:unheld2Names = $null
     $script:unheld2Codes = $null
-    if ($script:hasDrive) {
+    if ($script:hasDrive -and -not $script:noLicensing) {
         Clear-OrchCache -Path $script:drive -ErrorAction SilentlyContinue | Out-Null
         # Skip orphans: a dangling license allocation whose group was deleted from the directory.
         # It has no group to ask about, so the licensing endpoint 404s on its id ("Cannot resolve
@@ -82,12 +85,14 @@ BeforeAll {
 
     function script:RequireGroup {
         if (-not $script:hasDrive) { Set-ItResult -Skipped -Because "drive '$script:DriveName' is not connected"; return $false }
+        if ($script:noLicensing)   { Set-ItResult -Skipped -Because "$script:drive is a standalone server, which has no licensing"; return $false }
         if (-not $script:hasGroup) { Set-ItResult -Skipped -Because "no licensed group with an available-but-unheld license on $script:drive"; return $false }
         return $true
     }
 
     function script:RequireGroup2 {
         if (-not $script:hasDrive)  { Set-ItResult -Skipped -Because "drive '$script:DriveName' is not connected"; return $false }
+        if ($script:noLicensing)    { Set-ItResult -Skipped -Because "$script:drive is a standalone server, which has no licensing"; return $false }
         if (-not $script:hasGroup2) { Set-ItResult -Skipped -Because "no ASCII-named licensed group with >=2 available-but-unheld licenses on $script:drive"; return $false }
         return $true
     }

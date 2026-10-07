@@ -113,6 +113,9 @@ Describe 'Regression: post-1.9.1 fixes (fail on v1.9.1, pass on HEAD)' {
 
     It 'B2 Copy-OrchQueue carries RetryAbandonedItems to the copy' {
         if (-not (script:Require)) { return }
+        # The field exists from API 18 (OrchApiFloor.QueueRetryAbandonedItems) and is not sent below.
+        $api = (Get-OrchPSDrive | Where-Object Name -eq $script:DriveName).ApiVersion
+        if ($api -and $api -lt 18) { Set-ItResult -Skipped -Because "RetryAbandonedItems needs API 18 (this server: $api)"; return }
         $q = 'ZZcopyq'
         New-OrchQueue -Path $script:src -Name $q -RetryAbandonedItems $true -Confirm:$false | Out-Null
         Clear-OrchCache -Path $script:d -ErrorAction SilentlyContinue | Out-Null
