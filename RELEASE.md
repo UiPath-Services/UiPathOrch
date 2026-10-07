@@ -147,22 +147,13 @@ Invoke-Pester -Path Tests\SelfContained.Tests.ps1,Tests\Completer.Tests.ps1 `
 
 > Skip this step if shipping an unsigned release. See [Code signing](#code-signing-optional) below for when signing matters.
 
-Sign the following files with the project's code signing certificate:
+Sign **only** `Staging\UiPathOrch.dll` (the built binary from `UiPathOrch\bin\Release\net8.0\`) with the project's code signing certificate. This matches what `release.yml` does.
 
-- `Staging\UiPathOrch.dll` (the built binary from `UiPathOrch\bin\Release\net8.0\`)
-- `Staging\UiPathOrch.psd1`
-- `Staging\UiPathOrch.psm1`
-- All `.ps1` files under `Staging\Functions\`
-- `Staging\UiPathOrch.Format.ps1xml`
+> Do **not** sign the script files (`.psd1` / `.psm1` / `.ps1xml` / `Functions\*.ps1`). `Install-Module` verifies Authenticode signatures on script files but not on `.dll`, so a self-signed script signature makes installation fail on any machine where the certificate is not pre-trusted (this broke 0.9.16.5). WDAC / AppLocker only gate native binaries anyway.
 
 ```powershell
-$cert = Get-PfxCertificate -FilePath <path-to-pfx>   # out-of-band path
-$files = @(
-    'Staging\UiPathOrch.dll',
-    'Staging\UiPathOrch.psd1',
-    'Staging\UiPathOrch.psm1',
-    'Staging\UiPathOrch.Format.ps1xml'
-) + (Get-ChildItem Staging\Functions\*.ps1 | ForEach-Object FullName)
+$cert = Get-PfxCertificate -FilePath <path-to-pfx>   # see Certificate lifecycle below
+$files = @('Staging\UiPathOrch.dll')
 
 Set-AuthenticodeSignature -FilePath $files -Certificate $cert `
     -TimestampServer http://timestamp.digicert.com
@@ -246,9 +237,9 @@ If the workflow is broken or a maintainer needs to publish manually:
 # Stage a clean copy (the deployed module directory is suitable)
 $modulePath = 'C:\Program Files\PowerShell\7\Modules\UiPathOrch'
 
-# If this is a signed release, verify signatures one more time
-Get-ChildItem $modulePath -Recurse -Include *.dll,*.psd1,*.psm1,*.ps1,*.ps1xml |
-    Get-AuthenticodeSignature | Where-Object Status -ne 'Valid'
+# If this is a signed release, verify the DLL's signature one more time
+# (only the DLL is signed; see step 5)
+Get-AuthenticodeSignature "$modulePath\UiPathOrch.dll" | Where-Object Status -ne 'Valid'
 # (Above should output nothing for a signed release. Skip for unsigned releases.)
 
 # Publish — use your own PSGallery API key
@@ -317,7 +308,44 @@ Skip signing when:
 
 - The additional maintainer overhead (certificate rotation, secret management, per-release signing) outweighs the above benefits for your user base
 
-If you do sign, see step 4 of the release procedure for the commands, and configure the GHA secrets below.
+If you do sign, see step 5 of the release procedure for the commands, and configure the GHA secrets below.
+
+### Certificate lifecycle
+
+The project currently signs with a **self-signed** certificate:
+
+| Field | Value |
+| --- | --- |
+| Subject | `CN=yotsuda, O=Yoshifumi Tsuda, C=JP` |
+| Thumbprint | `74E5208228DFB12A067747D536BF497B6E98C73C` |
+| Valid until | 2036-04-18 |
+
+Users can compare this thumbprint with `(Get-AuthenticodeSignature <module dir>\UiPathOrch.dll).SignerCertificate.Thumbprint` to confirm a release was signed by this project.
+
+**Normal releases do not need the `.pfx` file.** The certificate and its password live in the repo secrets below, so any maintainer who can push a release tag gets a signed release from CI. Signatures are timestamped, so existing releases stay valid after the certificate expires.
+
+GitHub secrets are write-only and cannot be read back. If the secrets ever need to be re-registered (e.g. they were deleted, or the repository moved) and the current `.pfx` is not at hand, replace the certificate as described below instead of trying to recover it. The only cost is the thumbprint change in step 5. Never commit a `.pfx` or its password to this repository.
+
+**Replacing the certificate** (on expiry, compromise, or loss of the `.pfx`):
+
+1. Create a new code signing certificate. For a self-signed one:
+
+   ```powershell
+   $cert = New-SelfSignedCertificate -Type CodeSigningCert `
+       -Subject 'CN=<maintainer>, O=<maintainer or organization>, C=<country>' `
+       -CertStoreLocation Cert:\CurrentUser\My -NotAfter (Get-Date).AddYears(10)
+   $pw = Read-Host -AsSecureString 'PFX password'
+   Export-PfxCertificate -Cert $cert -FilePath .\codesign.pfx -Password $pw
+   [Convert]::ToBase64String([IO.File]::ReadAllBytes('.\codesign.pfx')) | Set-Clipboard
+   ```
+
+2. Update `CODE_SIGNING_PFX_BASE64` (the clipboard contents) and `CODE_SIGNING_PFX_PASSWORD` in the repo secrets.
+3. Delete the exported `.pfx` file. The secrets are all that CI needs.
+4. Update the table above with the new subject, thumbprint, and expiry.
+5. **The thumbprint changes.** Announce the new thumbprint in `CHANGELOG.md` and the release notes of the first release signed with it, because users who pre-trusted the old certificate, or who allow the module by thumbprint or publisher in WDAC / AppLocker rules, must update their configuration.
+6. If the certificate was compromised, remove the old one from your machine and tell users to remove it from their trust stores.
+
+If the signing secrets are removed altogether, `release.yml` skips signing and still publishes an unsigned release.
 
 ---
 
@@ -331,7 +359,7 @@ The `release.yml` workflow requires the following repo secrets (configured in Se
 | `CODE_SIGNING_PFX_BASE64` | Optional | Base64-encoded `.pfx` certificate (signed releases only) |
 | `CODE_SIGNING_PFX_PASSWORD` | Optional | Password for the `.pfx` (signed releases only) |
 
-Rotation procedure and certificate lifecycle are documented out-of-band among maintainers.
+See [Certificate lifecycle](#certificate-lifecycle) for how the signing certificate is kept and replaced. Rotate `PSGALLERY_API_KEY` from the PSGallery account of any package owner before it expires.
 
 ---
 
@@ -349,7 +377,7 @@ To request co-owner access, open an issue or contact an existing maintainer dire
 - [ ] `CHANGELOG.md` updated (and the matching `ReleaseNotes` block in `Staging/UiPathOrch.psd1` copied from it)
 - [ ] `.\Build-Deploy.ps1` clean
 - [ ] All [release acceptance gates](#4-release-acceptance-gates) pass
-- [ ] (If signing) Module files signed, all signatures `Valid`
+- [ ] (If signing) `UiPathOrch.dll` signed and `Valid`; script files left unsigned
 - [ ] PR merged to `master`
 - [ ] Tag `vX.Y.Z` pushed
 - [ ] Automated workflow succeeded (or manual publish completed)
