@@ -6,6 +6,33 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **Two on-premises drives no longer share organization data.** Organization-level results
+  (Platform Management users, groups, robot accounts, external applications, the product version,
+  and the errors cached for them) are shared between drives of the same organization, and the
+  organization was told apart by its partition id alone. Every on-premises install's default
+  organization has the same partition id, so with two on-premises servers mounted, `Get-PmUser`
+  on one listed the other server's users, `Get-OrchProductVersion` on 21.10 and 22.4 replayed the
+  "not supported" error cached for 20.10, and `Copy-PmUser`, `Copy-PmGroup`,
+  `Copy-PmRobotAccount`, `Copy-PmExternalApplication`, `Copy-PmUserPreference` and
+  `Copy-PmNotificationSubscription` skipped every item between them as "same organization". An
+  organization is now the server plus the partition id.
+
+- **`Get-OrchFolderMachineAccountMapping` works on 22.10 and later.** It failed with "An error has
+  occurred." for every folder with a machine on 22.10, 23.4, 24.10 and 25.10.2: the machine's
+  robot mappings were read page by page, and that endpoint answers any `$skip` with a server
+  error there. They are read in one request now.
+
+- **`Get-OrchLibraryDependency` reads libraries whose version carries build metadata.** The
+  library listing reports such a version as, say, `1.1.1+1385.220515020318.release.39f4e48`, but
+  the download takes `1.1.1`, so the library failed with a 404. Downloads now drop the build
+  metadata, which NuGet leaves out of a package's identity anyway; package downloads do the same.
+
+- **`Get-PmNotificationSubscription` says when a server has no notification service**, as the
+  other Platform Management cmdlets do, instead of "'<' is an invalid start of a value" on
+  on-premises servers.
+
 ## [1.19.1] - 2026-10-07
 
 ### Changed
