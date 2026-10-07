@@ -135,8 +135,13 @@ Get-OrchRole -Path $root -ErrorAction SilentlyContinue |
     Where-Object { $_.IsEditable -eq $true } |
     Remove-OrchRole -Confirm:$false -ErrorAction SilentlyContinue
 
+# Administrators stay too, not only the signed-in user: on a server where the run signs in as an
+# app or as another account, removing the tenant's administrators (the installer's 'admin', the
+# 'administrators' group, anyone holding the Administrator role) could leave nobody able to manage
+# it. Only matters for the on-premises / Automation Suite tenants the suite also runs against.
 Get-OrchUser -Path $root -ErrorAction SilentlyContinue |
     Where-Object { $_.UserName -and $_.UserName -ne $currentUser -and $_.UserType -ne 'Robot' } |
+    Where-Object { $_.UserName -notin 'admin', 'administrators' -and -not (@($_.RolesList) | Where-Object { $_ -in 'Administrator', 'Orchestrator Administrator' }) } |
     Remove-OrchUser -Confirm:$false -ErrorAction SilentlyContinue
 
 # Reset the target drive's cwd. Any folder the caller had cd'd into is now
