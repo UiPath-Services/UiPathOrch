@@ -25,8 +25,8 @@ namespace UiPath.PowerShell.Commands;
 /// than for the server. Measured on Get-OrchTriggerDetail over 200 triggers, 25.6 s four-wide
 /// against 27.3 s serial, with the pool genuinely running 3.99 at once. What this shape buys
 /// is the ORDER and the TIMING of the output. For throughput, cut the NUMBER of requests
-/// instead -- see the comment on that RateLimiter, and GetProcessSchedules for what it looks
-/// like when 401 requests become 1.
+/// instead -- see the comment on that RateLimiter, including why its 401-to-1 example had
+/// to be withdrawn.
 ///
 /// This depends on <see cref="OrchThreadPoolImpl{TSource,TResult}.RunForEach"/> starting its
 /// work in source order — which it does, a fixed crew pulling the next index. An earlier
@@ -183,7 +183,7 @@ internal static class FolderFanOut
 
     /// <summary>
     /// The one-phase shape, for when a folder's listing already IS the detail — one request
-    /// per folder answers everything, as with Get-OrchTriggerDetail's expanded listing.
+    /// per folder answers everything, as with Get-OrchTestSetDetail's expanded listing.
     /// </summary>
     /// <remarks>
     /// Do not pass such a listing to <see cref="Emit{TItem,TRow}"/> with a fetch that returns
@@ -191,9 +191,13 @@ internal static class FolderFanOut
     /// which lists EVERY folder before anything is printed. Here each folder is emitted the
     /// moment its own listing is back; the pool drains in submission order, so the folders
     /// still come out in the order they were given.
+    ///
+    /// Be sure the listing really is the detail on every server generation before choosing
+    /// this. Get-OrchTriggerDetail did, in 1.19.0, on an expanded listing that on-premises
+    /// servers accept and return empty; it is back on <see cref="Emit{TItem,TRow}"/>.
     /// </remarks>
-    /// <param name="errorId">ErrorRecord id, e.g. "GetTriggerDetailError".</param>
-    /// <param name="activity">Progress activity, e.g. "Getting trigger details".</param>
+    /// <param name="errorId">ErrorRecord id, e.g. "GetTestSetDetailError".</param>
+    /// <param name="activity">Progress activity, e.g. "Getting test set details".</param>
     /// <param name="list">A folder's rows, in output order. Runs on a pool thread.</param>
     /// <param name="emit">One folder's rows, never empty. Runs on the pipeline thread.</param>
     public static void EmitListed<TRow>(

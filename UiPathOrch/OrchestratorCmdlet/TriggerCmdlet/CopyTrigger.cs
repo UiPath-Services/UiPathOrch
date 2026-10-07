@@ -75,6 +75,7 @@ public class CopyTriggerCmdlet : OrchestratorPSCmdlet
                     dstDrive, dstFolder, reporterTriggers,
                     false, cancelHandler.Token);
                 dstDrive.Triggers.ClearCache(dstFolder);
+                dstDrive.TriggersDetailed.ClearCache(dstFolder);
             }
             catch (OperationCanceledException)
             {

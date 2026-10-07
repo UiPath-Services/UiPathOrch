@@ -121,9 +121,11 @@ public partial class OrchAPISession : IDisposable
     // per request.
     //
     // The lesson for anything slow: cut the NUMBER of requests, not the time between them.
-    // The same cmdlet went from 401 requests to 1 by expanding a navigation property
-    // (see GetProcessSchedules), which took 25.6 s down to 0.3 s -- a reduction no amount of
-    // concurrency could have reached from under this ceiling.
+    // In 1.19.0 the same cmdlet went from 401 requests to 1 by expanding a navigation
+    // property, which took 25.6 s down to 0.3 s -- a reduction no amount of concurrency could
+    // have reached from under this ceiling. It was withdrawn in 1.19.1: the on-premises
+    // servers return that expansion empty (see GetProcessSchedules). A cut has to hold on
+    // every server generation, checked with data that would show the difference.
     private readonly RateLimiter limiter = new(15);
 
     private int http_call_num = 0;
@@ -2369,19 +2371,16 @@ public partial class OrchAPISession : IDisposable
 
     #region ProcessSchedule
 
-    // $expand=ExecutorRobots makes this listing a complete trigger: with it the payload is a
-    // strict superset of GET /odata/ProcessSchedules({id}), which carries nothing but
-    // @odata.context that the listing does not. That is what lets a folder's trigger details
-    // come from ONE request instead of two per trigger -- the detail call and the separate
-    // GetRobotIdsForSchedule function it needed for the robots.
-    //
-    // Verified at both ends of the supported range. On Cloud (API 20) the expanded robots
-    // match GetRobotIdsForSchedule exactly. On 20.10.16 (API 11.1) the field sets line up the
-    // same way, and that server parses $expand rather than ignoring it: an unknown navigation
-    // property is rejected with "Invalid OData query options", while a known one comes back
-    // populated. So an accepted expand is an honoured expand.
+    // No $expand=ExecutorRobots. 1.19.0 added it to read whole triggers from this listing, on
+    // the belief that the expanded listing is a superset of the detail endpoint. It is on
+    // Automation Cloud only. Measured 2026-10-06 with a robot-bound trigger: on 20.10.16 (API
+    // 11.1), 22.4.4 (15), 25.10.2 (17) and Automation Suite 24.10.11 (18) the server ACCEPTS the
+    // expand and returns ExecutorRobots as an empty array while GetRobotIdsForSchedule names
+    // the robot, and MachineRobots[].RobotUserName comes back null where the detail endpoint
+    // fills it. An accepted expand is not an honoured one. So the robots come from
+    // GetRobotIdsForSchedule again (TriggersDetailed in OrchDriveInfo), as before 1.19.0.
     public IEnumerable<ProcessSchedule> GetProcessSchedules(Int64 folderId)
-        => GetEnumerable<ProcessSchedule>("/odata/ProcessSchedules", folderId, "&$expand=ExecutorRobots");
+        => GetEnumerable<ProcessSchedule>("/odata/ProcessSchedules", folderId);
 
     public ProcessSchedule? GetProcessSchedule(Int64 folderId, Int64 processScheduleId) => HttpRequest<ProcessSchedule>(HttpMethod.Get, $"/odata/ProcessSchedules({processScheduleId})", folderId);
 

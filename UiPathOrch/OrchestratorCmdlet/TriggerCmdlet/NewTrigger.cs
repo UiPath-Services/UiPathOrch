@@ -363,6 +363,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
                             created.Path = folder.GetPSPath();
                             WriteObject(created);
                             drive.Triggers.ClearCache(folder);
+                            drive.TriggersDetailed.ClearCache(folder);
                         }
                     }
                     catch (Exception ex)

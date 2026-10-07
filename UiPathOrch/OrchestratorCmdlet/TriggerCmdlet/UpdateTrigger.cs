@@ -375,6 +375,7 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
                     {
                         drive.OrchAPISession.PutProcessSchedule(folder.Id!.Value, postTrigger);
                         drive.Triggers.ClearCache(folder);
+                        drive.TriggersDetailed.ClearCache(folder);
                     }
                     catch (Exception ex)
                     {
