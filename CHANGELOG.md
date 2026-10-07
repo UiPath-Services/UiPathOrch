@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **API triggers and Secret assets follow what each server's web UI offers.** `New-OrchApiTrigger`
+  refuses a server below API 18: standalone 24.10 and 25.10 (API 17) accept the request, but their
+  web UI has no API triggers and `Get-OrchApiTrigger` never listed them there, so the trigger it
+  made could be neither seen nor removed. `Set-OrchSecretAsset` refuses below API 20, saying why,
+  where the server answered only "assetDto must not be null" (standalone 24.10/25.10 and Automation
+  Suite 24.10 have no Secret type), and `Copy-Item` skips Secret assets for such a destination with
+  a warning.
+
 - **`Get-OrchLicenseRuntime` and `Get-OrchLicenseNamedUser` no longer report robot types an older
   server doesn't have.** Without `-RobotType` they ask for every type UiPathOrch knows, and older
   servers reject the newer ones — up to six errors per call on 20.10, several on 21.10 to 23.4,

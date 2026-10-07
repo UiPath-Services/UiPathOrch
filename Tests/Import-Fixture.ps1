@@ -199,7 +199,14 @@ Import-Csv "$FixturePath\triggers.csv" | Remap-Path | New-OrchTrigger | Out-Null
 # The cmdlet defaults Tags=[], MachineRobots=[{}], Slug=Name when omitted —
 # all server-required, so barebones-ish CSV rows still POST cleanly.
 Write-Host "[11a/17] API triggers"
-Import-Csv "$FixturePath\api_triggers.csv" | Remap-Path | New-OrchApiTrigger | Out-Null
+# Below API 18 there are none (standalone servers; New-OrchApiTrigger refuses), so skip them there.
+$apiVersion = (Get-OrchPSDrive | Where-Object Name -eq $TargetDrive).ApiVersion
+if ($apiVersion -and $apiVersion -lt 18) {
+    Write-Host "         skipped: ${TargetDrive}: is API $apiVersion, which has no API triggers"
+}
+else {
+    Import-Csv "$FixturePath\api_triggers.csv" | Remap-Path | New-OrchApiTrigger | Out-Null
+}
 
 # 12b. Test data queues. ContentJsonSchema defaults to '{}' when omitted.
 Write-Host "[11b/17] Test data queues"

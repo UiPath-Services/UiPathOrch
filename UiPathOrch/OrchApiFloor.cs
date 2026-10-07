@@ -48,6 +48,12 @@ internal static class OrchApiFloor
     // --- Test data queues ---
     public const double TestDataQueues = 17;           // usable from standalone 24.10 (API 17): created, listed and shown in its web UI (24.10.8, 2026-10-07); 23.4 (16) answers 500. Copy-Item's queue and item copies both check it.
 
+    // --- API triggers ---
+    public const double ApiTriggers = 18;              // listed, copied and created from 18. Standalone 24.10 / 25.10.2 (17) answer /odata/HttpTriggers and accept a POST, but their web UI has no API triggers (24.10.8, 2026-10-07); 23.4 (16) 400, earlier 404. Automation Suite 24.10.11 (18) has none (404, ApiTriggersUnavailable); Cloud (20) has them.
+
+    // --- Assets ---
+    public const double SecretAssets = 20;             // Asset ValueType "Secret" (SecretValue is a v20 field): 17 (standalone 24.10/25.10) and 18 (Automation Suite 24.10.11) reject it with "assetDto must not be null" and offer no Secret type in the web UI; Cloud (20) has it (2026-10-07). Set-OrchSecretAsset and Copy-Item check it.
+
     // --- Robots ---
     public const double RobotsFromFolder = 15;         // GET .../OData.GetRobotsFromFolder (absent on 20.10 / API 11.1)
 

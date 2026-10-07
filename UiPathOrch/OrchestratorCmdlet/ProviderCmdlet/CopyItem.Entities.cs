@@ -967,6 +967,15 @@ public partial class OrchProvider
 
         string target = newFolder.GetPSPath();
 
+        // A destination without the Secret asset type (below API 20) cannot take one: say so and
+        // move on, rather than POSTing into "assetDto must not be null".
+        if (asset.ValueType == "Secret"
+            && OrchApiFloor.Below(dstDrive.OrchAPISession.ApiVersion, OrchApiFloor.SecretAssets))
+        {
+            _this.WriteWarning($"{msg}: skipped; {dstDrive.NameColon} is API {dstDrive.OrchAPISession.ApiVersion:0.#} and has no Secret asset type (needs {OrchApiFloor.SecretAssets:0}).");
+            return;
+        }
+
         bool bCredentialWarningNeeded = false;
         bool bSecretWarningNeeded = false;
         try
@@ -1540,7 +1549,7 @@ public partial class OrchProvider
         // without error, though the web UI only exposes API triggers from 18 (see the ApiTriggers
         // cache note in OrchDriveInfo). The ApiTriggers cache floor (18) already yields [] below
         // 18, so this early-out is behavior-neutral; it is aligned with that floor.
-        if (srcDrive.OrchAPISession.ApiVersion < 18) return;
+        if (OrchApiFloor.Below(srcDrive.OrchAPISession.ApiVersion, OrchApiFloor.ApiTriggers)) return;
 
         // Already established that this Orchestrator has no API triggers -- nothing to copy, and
         // nothing to say a second time.

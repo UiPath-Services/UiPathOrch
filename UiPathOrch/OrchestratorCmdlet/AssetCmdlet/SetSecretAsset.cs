@@ -2,6 +2,7 @@ using System.Collections;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Security;
+using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
@@ -291,6 +292,17 @@ public class SetSecretAssetCmdlet : OrchestratorPSCmdlet
             {
                 if (string.IsNullOrEmpty(param.SecretValue) && string.IsNullOrEmpty(param.ExternalName))
                     return null;
+
+                // The Secret type exists from API 20, as in the web UI: standalone 24.10.8 / 25.10.2
+                // (17) and Automation Suite 24.10.11 (18) have no Secret option and reject the POST
+                // with a bare "assetDto must not be null" (2026-10-07). Say why instead.
+                if (OrchApiFloor.Below(drive.OrchAPISession.ApiVersion, OrchApiFloor.SecretAssets))
+                {
+                    WriteError(new ErrorRecord(new OrchException(target,
+                        $"Secret assets need Orchestrator API {OrchApiFloor.SecretAssets:0}; {drive.NameColon} is API {drive.OrchAPISession.ApiVersion:0.#}, which has no Secret asset type."),
+                        "SecretAssetUnsupported", ErrorCategory.NotImplemented, target));
+                    return null;
+                }
 
                 isDirty = true;
                 // Description is intentionally omitted here; it's resolved across all input

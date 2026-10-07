@@ -92,6 +92,7 @@ BeforeAll {
 
 Describe 'v1.5.1: New-OrchApiTrigger server-required defaults' {
     It 'barebones (Name + Release only) succeeds — Tags/MachineRobots/Slug auto-supplied' {
+        if ($script:ApiTriggerSkip) { Set-ItResult -Skipped -Because $script:ApiTriggerSkip; return }
         $name = "${script:Prefix}barebones"
         try {
             $created = New-OrchApiTrigger -Path $script:Folder -Name $name -Release $script:Release
@@ -513,6 +514,7 @@ Describe 'v1.5.x: New-OrchApiTrigger pipeline binding' {
     # a PSCustomObject (the shape Import-Csv produces) piped in must bind
     # Name / Release / per-field columns and create the trigger.
     It 'binds Name / Release / Method from a piped PSCustomObject' {
+        if ($script:ApiTriggerSkip) { Set-ItResult -Skipped -Because $script:ApiTriggerSkip; return }
         $name = "${script:Prefix}pipe"
         try {
             $row = [pscustomobject]@{

@@ -4,6 +4,8 @@ using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Positional;
 
+using UiPath.OrchAPI;
+
 namespace UiPath.PowerShell.Commands;
 
 // New-OrchApiTrigger -- wraps POST to the HttpTrigger create endpoint.
@@ -118,6 +120,17 @@ public class NewApiTriggerCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
         {
+            // Same floor as the listing (OrchApiFloor.ApiTriggers). Standalone 24.10 / 25.10.2 (API
+            // 17) accept the POST, but their web UI has no API triggers and Get-OrchApiTrigger does
+            // not list them there, so what this created could be neither seen nor removed.
+            if (OrchApiFloor.Below(drive.OrchAPISession.ApiVersion, OrchApiFloor.ApiTriggers))
+            {
+                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(),
+                    $"API triggers need Orchestrator API {OrchApiFloor.ApiTriggers:0}; {drive.NameColon} is API {drive.OrchAPISession.ApiVersion:0.#}, whose web UI has no API triggers."),
+                    "ApiTriggersUnsupported", ErrorCategory.NotImplemented, folder));
+                continue;
+            }
+
             foreach (var name in Name!.WithCancellation(cancelHandler.Token))
             {
                 string target = System.IO.Path.Combine(folder.GetPSPath(), name);

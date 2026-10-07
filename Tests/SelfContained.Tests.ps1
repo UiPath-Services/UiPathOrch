@@ -19,14 +19,14 @@
     Run with: Invoke-Pester -Path Tests\SelfContained.Tests.ps1 -Output Detailed
 #>
 
-# Secret assets are a newer asset type: a standalone server (API 17 and below) rejects one with
-# "assetDto must not be null" (24.10.8 and 25.10.2, 2026-10-07), so the tests that create them skip
-# there. Decided at discovery, where -Skip is evaluated; the BeforeAll below repeats it for setup.
+# Secret assets exist from API 20 (OrchApiFloor.SecretAssets): standalone 24.10.8 / 25.10.2 (17) and
+# Automation Suite 24.10.11 (18) have none, and Set-OrchSecretAsset says so, so the tests that create
+# them skip there. Decided at discovery, where -Skip is evaluated; the BeforeAll below repeats it for setup.
 BeforeDiscovery {
     $d = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     $null = Get-ChildItem "${d}:\" -ErrorAction SilentlyContinue
     $api = (Get-OrchPSDrive | Where-Object Name -eq $d).ApiVersion
-    $NoSecretAssets = [bool]($api -and $api -lt 18)
+    $NoSecretAssets = [bool]($api -and $api -lt 20)
 }
 BeforeAll {
     # Orch2 is the destructive test target (same tenant as OrchTest but a
@@ -34,7 +34,7 @@ BeforeAll {
     # Orch1 stays read-only — used only to discover a reference package.
     $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     $null = Get-ChildItem "$($script:Drive):\" -ErrorAction SilentlyContinue
-    $script:NoSecretAssets = [bool]((Get-OrchPSDrive | Where-Object Name -eq $script:Drive).ApiVersion -lt 18 -and (Get-OrchPSDrive | Where-Object Name -eq $script:Drive).ApiVersion)  # see BeforeDiscovery
+    $script:NoSecretAssets = [bool]((Get-OrchPSDrive | Where-Object Name -eq $script:Drive).ApiVersion -lt 20 -and (Get-OrchPSDrive | Where-Object Name -eq $script:Drive).ApiVersion)  # see BeforeDiscovery
     $script:RefDrive = if ($env:UIPATHORCH_TEST_REF_DRIVE) { $env:UIPATHORCH_TEST_REF_DRIVE } else { 'Orch1' }
     $script:Prefix = "PesterTest_$(Get-Random -Maximum 9999)_"
     $script:RootFolder = "${script:Drive}:\${script:Prefix}Root"

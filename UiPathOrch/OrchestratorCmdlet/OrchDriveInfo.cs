@@ -1617,7 +1617,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         // API triggers at all (no tab, a created one not shown; checked on 24.10.8, 2026-10-07), so
         // it is not a feature of those servers and is not listed. 23.4 (16) answers 400, earlier
         // 404; Automation Suite 24.10.11 (18) 404s, handled by ApiTriggersUnavailable.
-        ApiTriggers = new(this, OrchAPISession.GetHttpTriggers, (e, folderPath) => e.Path = folderPath, 18);
+        ApiTriggers = new(this, OrchAPISession.GetHttpTriggers, (e, folderPath) => e.Path = folderPath, (int)OrchApiFloor.ApiTriggers);
         BusinessRules = new(this, OrchAPISession.GetBusinessRules, (e, folderPath) => e.Path = folderPath);
         Connections = new(this, OrchAPISession.GetConnections, (e, folderPath) => e.Path = folderPath, 20); // Connection Service v1 (Integration Service); gated at API v20
         EventTriggers = new(this, OrchAPISession.GetEventTriggers, (e, folderPath) => e.Path = folderPath, 18);
