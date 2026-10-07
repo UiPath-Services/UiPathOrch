@@ -4260,7 +4260,9 @@ public partial class OrchAPISession : IDisposable
     public PmNotificationSubscriptionResponse? GetUserSubscriptions(string partitionGlobalId)
     {
         string body = HttpRequestImpl(HttpMethod.Get, NotificationServiceBase(partitionGlobalId), "/UserSubscription/", null, (string?)null);
-        return string.IsNullOrEmpty(body) ? null : JsonSerializer.Deserialize<PmNotificationSubscriptionResponse>(body);
+        // DeserializeApiJson: on-premises servers (20.10 to 22.4 at least, 2026-10-07) have no
+        // notification service and answer this path with the portal's HTML page.
+        return string.IsNullOrEmpty(body) ? null : DeserializeApiJson<PmNotificationSubscriptionResponse>(body);
     }
 
     // Updates one or more (topicId, mode) subscription toggles for the connected user.
