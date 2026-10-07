@@ -52,6 +52,11 @@ public partial class OrchProvider
         return (null, FindDstDirectoryUserResult.NotFound);
     }
 
+    /// <summary>An Orchestrator-local account (20.10's "User" / "Robot"), not a directory object.</summary>
+    internal static bool IsLocalAccountType(string? type)
+        => string.Equals(type, "User", StringComparison.OrdinalIgnoreCase)
+        || string.Equals(type, "Robot", StringComparison.OrdinalIgnoreCase);
+
     internal static void CopyFolderUsers(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpUserName, List<WildcardPattern>? wpType,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
@@ -118,6 +123,30 @@ public partial class OrchProvider
                 try
                 {
                     DomainUserAssignment postingUser = null;
+
+                    // A local account (20.10, API 11: Type "User" or "Robot") is not a directory
+                    // object, so the directory resolution below cannot place it -- it used to stop
+                    // at "Invalid Type", leaving the user out of the copied folder and, with it,
+                    // every trigger bound to that user's robot. Such an account is assigned by
+                    // its id in the destination tenant, matched by user name and type.
+                    if (IsLocalAccountType(userRole.UserEntity?.Type))
+                    {
+                        string localName = userMapping is not null && userMapping.TryGetValue(userName, out var mappedLocal)
+                            && !string.IsNullOrEmpty(mappedLocal) ? mappedLocal : userName;
+                        var dstLocal = dstDrive.Users.Get().FirstOrDefault(u =>
+                            string.Equals(u?.Type, userRole.UserEntity?.Type, StringComparison.OrdinalIgnoreCase)
+                            && string.Equals(u!.UserName, localName, StringComparison.OrdinalIgnoreCase));
+                        if (dstLocal?.Id is null)
+                        {
+                            _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: {dstDrive.Name}: does not have the {userRole.UserEntity?.Type} \"{localName}\"."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
+                            continue;
+                        }
+                        dstDrive.OrchAPISession.AssignUsers([dstLocal.Id.Value], newRolesPerFolder);
+                        dstDrive.FolderUsersWithInherited.ClearCache(newFolder);
+                        dstDrive.FolderUsersWithNoInherited.ClearCache(newFolder);
+                        continue;
+                    }
+
                     if (!DirectoryTypeItems.Items.TryGetValue(userRole.UserEntity?.Type ?? "", out var type))
                     {
                         _this.WriteError(new ErrorRecord(new OrchException(userRole.GetPSPath(), $"Invalid Type: '{userRole.UserEntity?.Type}'."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));

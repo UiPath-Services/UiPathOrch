@@ -1,4 +1,5 @@
 using System.Management.Automation;
+using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Entities;
 
@@ -666,7 +667,7 @@ public partial class OrchProvider
             }
             //msg = $"Migrating id of the robot {Path.Combine(srcDrive.NameColon, srcRobot.Name!)}";
 
-            var dstRobots = dstDrive.RobotsFromFolder.Get(dstFolder);
+            var dstRobots = DstFolderRobots(dstDrive, dstFolder);
             var dstRobot = ResolveDstByName(dstRobots, srcRobot.Name, r => r.Name);
             if (dstRobot is null)
             {
@@ -682,6 +683,16 @@ public partial class OrchProvider
             return null;
         }
     }
+
+    // The robots a destination folder offers. GetRobotsFromFolder exists from API 15; on 20.10
+    // (API 11.1) it returns nothing, so every robot looked "not configured" and a copied trigger
+    // lost its executor robots even once the folder's users were copied (2026-10-06). The tenant
+    // robot list, which that server does serve, carries the Name, Username and Type the callers
+    // match on, and the server still checks the robot against the folder when the trigger lands.
+    private static IEnumerable<RobotsFromFolderModel>? DstFolderRobots(OrchDriveInfo dstDrive, Folder dstFolder)
+        => OrchApiFloor.Below(dstDrive.OrchAPISession.ApiVersion, OrchApiFloor.RobotsFromFolder)
+            ? dstDrive.Robots.Get()?.Select(r => new RobotsFromFolderModel { Id = r.Id, Name = r.Name, Username = r.Username, Type = r.Type })
+            : dstDrive.RobotsFromFolder.Get(dstFolder);
 
     internal static RobotsFromFolderModel? FindDstRobotByUnattendedAccount(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder,
@@ -723,7 +734,7 @@ public partial class OrchProvider
             // Would it be better to search by the robot's own name? (Is that possible?)
             // For classic robots, no matching robot name can be found
 
-            var dstRobots = dstDrive.RobotsFromFolder.Get(dstFolder);
+            var dstRobots = DstFolderRobots(dstDrive, dstFolder);
             // Both fields case-insensitive. Type is server-stable ("Unattended"
             // / "Development" / etc.) so case variation is unlikely in
             // practice, but the comparison costs nothing extra and any

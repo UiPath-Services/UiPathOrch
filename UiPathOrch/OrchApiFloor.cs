@@ -45,6 +45,9 @@ internal static class OrchApiFloor
     public const double ReleaseSpecificPriority = 14;  // SpecificPriorityValue accepted (else mapped to a JobPriority bucket)
     public const double ReleaseRetentionReadable = 17; // GET /odata/ReleaseRetention
 
+    // --- Robots ---
+    public const double RobotsFromFolder = 15;         // GET .../OData.GetRobotsFromFolder (absent on 20.10 / API 11.1)
+
     // Null-safe predicates.
     //
     // IMPORTANT: an UNKNOWN version (apiVersion == null) yields false for BOTH Supports and

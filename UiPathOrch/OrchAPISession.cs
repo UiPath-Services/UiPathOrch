@@ -1654,6 +1654,14 @@ public partial class OrchAPISession : IDisposable
 
     public void AssignDirectoryUser(DomainUserAssignment user) => HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignDirectoryUser", null, new { assignment = user });
 
+    // Assigns tenant users that are NOT directory objects -- the local accounts of 20.10 (API 11),
+    // Type "User" / "Robot" -- by their Orchestrator user id. AssignDomainUser/AssignDirectoryUser
+    // need a directory identifier these accounts do not have; this is what the 20.10 web UI sends
+    // for them (verified on 20.10.16, 2026-10-06).
+    public void AssignUsers(IEnumerable<Int64> userIds, List<FolderRoles> rolesPerFolder)
+        => HttpRequest(HttpMethod.Post, "/odata/Folders/UiPath.Server.Configuration.OData.AssignUsers", null,
+            new { assignments = new { UserIds = userIds.ToArray(), RolesPerFolder = rolesPerFolder } });
+
     // Routes folder-user assignment based on the Orchestrator edition: Cloud
     // takes /AssignDirectoryUser; OnPrem takes /AssignDomainUser. Calling the
     // wrong one surfaces as either "An unknown failure has occurred" or
