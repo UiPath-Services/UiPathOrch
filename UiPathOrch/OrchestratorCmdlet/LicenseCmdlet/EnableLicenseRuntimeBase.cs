@@ -97,12 +97,34 @@ public class EnableLicenseRuntimeCmdletBase<Enable> : OrchestratorPSCmdlet where
             .OrderBy(rt => rt)
             .ToList();
 
+        var named = LicenseRobotTypeSupport.NamedTypes(RobotType);
+        string errorId = $"{(Enable.Value ? "Enable" : "Disable")}LicenseRuntimeError";
+
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives)
         {
-            foreach (var robotType in specifiedRobotType.WithCancellation(cancelHandler.Token))
+            // Types the user did not name that this server is known not to have are left out,
+            // and its "no such type" answer for the rest is verbose (see LicenseRobotTypeSupport,
+            // shared with Get-OrchLicenseRuntime).
+            var api = LicenseRobotTypeSupport.ApiVersionOf(drive);
+            var reporter = new UnknownRobotTypeReporter(this, errorId, named);
+            foreach (var robotType in specifiedRobotType
+                .Where(rt => named.Contains(rt) || !LicenseRobotTypeSupport.KnownAbsent(rt, api, runtime: true))
+                .WithCancellation(cancelHandler.Token))
             {
-                var licenses = drive.LicenseRuntimes.Get(robotType);
+                // One type's listing failing used to end the whole command (terminating), so on
+                // an older server `-RobotType *` stopped at the first type it lacked.
+                IEnumerable<LicenseRuntime> licenses;
+                try
+                {
+                    licenses = drive.LicenseRuntimes.Get(robotType);
+                    reporter.Answered(drive);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException and not PipelineStoppedException)
+                {
+                    reporter.Failed(drive, robotType, ex as OrchException ?? new OrchException(drive.NameColonSeparator, ex));
+                    continue;
+                }
 
                 foreach (var license in licenses
                     .Where(t => Enable.Value
@@ -123,12 +145,12 @@ public class EnableLicenseRuntimeCmdletBase<Enable> : OrchestratorPSCmdlet where
                         }
                         catch (Exception ex)
                         {
-                            string errorId = $"{(Enable.Value ? "Enable" : "Disable")}LicenseRuntimeError";
                             WriteError(new ErrorRecord(new OrchException(target, ex), errorId, ErrorCategory.InvalidOperation, license));
                         }
                     }
                 }
             }
+            reporter.Finish();
         }
     }
 }
