@@ -287,7 +287,19 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
                     }
                 }
 
-                bool dirty = ComputeTriggerUpdate(postTrigger, trigger, new TriggerUpdateInputs
+                // The trigger's current executor robots. The listing never carries them on an
+                // on-premises server (see OrchAPISession.GetProcessSchedules), and the server
+                // takes a PUT without ExecutorRobots as "no robots": before 1.19.1 every update,
+                // even -Enabled alone, wiped the assignment. So they are read fresh, the way the
+                // web trigger dialog does, and only when this trigger needs them: to diff an
+                // -ExecutorRobots value, or to resend them with an update that does not set them.
+                RobotExecutor[]? currentRobots = null;
+                RobotExecutor[] CurrentRobots() => currentRobots ??=
+                    drive.OrchAPISession.GetRobotIdsForSchedule(folder.Id!.Value, trigger.Id!.Value)
+                        .Select(id => new RobotExecutor { Id = id })
+                        .ToArray();
+
+                var updateInputs = new TriggerUpdateInputs
                 {
                     NewName = NewName,
                     Enabled = Enabled,
@@ -326,10 +338,37 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
                     ResolvedMachineRobots = resolvedMachineRobots,
                     ExecutorRobotsSpecified = executorRobotsSpecified,
                     ResolvedExecutorRobots = resolvedExecutorRobots,
-                });
+                };
 
-                if (!dirty)
+                // Diff -ExecutorRobots against what the trigger has, not against the listing's
+                // null -- otherwise re-sending the same robots always counted as a change. The
+                // payload starts from the same current robots: ComputeTriggerUpdate writes the
+                // field only when it CHANGES, so an unchanged -ExecutorRobots (an exported row
+                // piped back in) would otherwise leave it null and the PUT would clear them.
+                var source = trigger;
+                try
                 {
+                    if (executorRobotsSpecified)
+                    {
+                        source = OrchCollectionExtensions.DeepCopy(trigger);
+                        source.ExecutorRobots = CurrentRobots();
+                        postTrigger.ExecutorRobots = CurrentRobots();
+                    }
+
+                    bool dirty = ComputeTriggerUpdate(postTrigger, source, updateInputs);
+                    if (!dirty)
+                    {
+                        continue;
+                    }
+
+                    KeepCurrentExecutorRobots(postTrigger, updateInputs, CurrentRobots);
+                }
+                catch (Exception ex)
+                {
+                    // Without the current robots the PUT would clear them, so this trigger is
+                    // not updated at all.
+                    WriteError(new ErrorRecord(new OrchException(target, "Could not read the trigger's executor robots; not updated, as the update would have cleared them.", ex),
+                        "UpdateTriggerError", ErrorCategory.InvalidOperation, trigger));
                     continue;
                 }
 
@@ -511,5 +550,20 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
         }
 
         return dirty;
+    }
+
+    /// <summary>
+    /// When the update sets neither -ExecutorRobots nor -MachineRobots, puts the trigger's
+    /// current executor robots into <paramref name="payload"/>. Orchestrator takes a PUT
+    /// without ExecutorRobots as "no robots", so leaving them out cleared the assignment on
+    /// every update -- measured with 1.18.0 on Automation Cloud and on Automation Suite. The
+    /// two robot parameters already decide the field themselves (see
+    /// <see cref="ComputeTriggerUpdate"/>), so they are left alone. <paramref name="current"/>
+    /// is called only when needed. No API access of its own — unit-testable.
+    /// </summary>
+    internal static void KeepCurrentExecutorRobots(ProcessSchedule payload, TriggerUpdateInputs input, Func<RobotExecutor[]> current)
+    {
+        if (input.ExecutorRobotsSpecified || input.MachineRobotsSpecified) return;
+        payload.ExecutorRobots = current();
     }
 }

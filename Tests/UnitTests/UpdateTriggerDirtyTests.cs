@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using UiPath.PowerShell.Commands;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -164,5 +165,69 @@ public class ComputeTriggerUpdate_EveryFieldTests
         var s = Baseline();
         Assert.False(UpdateTriggerCmdlet.ComputeTriggerUpdate(OrchCollectionExtensions.DeepCopy(s), s,
             new UpdateTriggerCmdlet.TriggerUpdateInputs()));
+    }
+}
+
+// Update-OrchTrigger must resend the trigger's current executor robots with an update that does
+// not set them. Orchestrator takes a PUT without ExecutorRobots as "no robots", and the payload is
+// built from the listing, which carries none (on-premises servers return the expansion empty), so
+// until 1.19.1 every update -- -Enabled alone -- cleared the assignment. Measured with 1.18.0 on
+// Automation Cloud and Automation Suite 24.10.11.
+public class KeepCurrentExecutorRobotsTests
+{
+    private static readonly RobotExecutor[] Current = [new RobotExecutor { Id = 7 }, new RobotExecutor { Id = 8 }];
+
+    [Fact]
+    public void Update_that_sets_no_robots_resends_the_current_ones()
+    {
+        // The listing row: no ExecutorRobots at all.
+        var payload = new ProcessSchedule { Id = 1, Name = "Trig", Enabled = false };
+        UpdateTriggerCmdlet.ComputeTriggerUpdate(payload, new ProcessSchedule { Id = 1, Name = "Trig", Enabled = false },
+            new UpdateTriggerCmdlet.TriggerUpdateInputs { Enabled = "true" });
+
+        UpdateTriggerCmdlet.KeepCurrentExecutorRobots(payload, new UpdateTriggerCmdlet.TriggerUpdateInputs { Enabled = "true" }, () => Current);
+
+        Assert.NotNull(payload.ExecutorRobots);
+        Assert.Equal(new long?[] { 7, 8 }, payload.ExecutorRobots!.Select(r => r.Id).ToArray());
+    }
+
+    [Fact]
+    public void ExecutorRobots_parameter_decides_the_field_itself()
+    {
+        RobotExecutor[] requested = [new RobotExecutor { Id = 9 }];
+        var payload = new ProcessSchedule { ExecutorRobots = requested };
+        bool asked = false;
+
+        UpdateTriggerCmdlet.KeepCurrentExecutorRobots(payload,
+            new UpdateTriggerCmdlet.TriggerUpdateInputs { ExecutorRobotsSpecified = true, ResolvedExecutorRobots = requested },
+            () => { asked = true; return Current; });
+
+        Assert.Same(requested, payload.ExecutorRobots);
+        Assert.False(asked, "the current robots must not even be read when -ExecutorRobots sets them");
+    }
+
+    [Fact]
+    public void MachineRobots_parameter_keeps_its_derived_ExecutorRobots()
+    {
+        // ComputeTriggerUpdate derives ExecutorRobots from -MachineRobots; that must survive.
+        var resolved = new[] { new MachineRobotSession { MachineId = 1, RobotId = 5 } };
+        var inputs = new UpdateTriggerCmdlet.TriggerUpdateInputs { MachineRobotsSpecified = true, ResolvedMachineRobots = resolved };
+        var payload = new ProcessSchedule();
+        UpdateTriggerCmdlet.ComputeTriggerUpdate(payload, new ProcessSchedule(), inputs);
+
+        UpdateTriggerCmdlet.KeepCurrentExecutorRobots(payload, inputs, () => Current);
+
+        Assert.Equal(new long?[] { 5 }, payload.ExecutorRobots!.Select(r => r.Id).ToArray());
+    }
+
+    [Fact]
+    public void A_trigger_with_no_robots_is_resent_with_none()
+    {
+        var payload = new ProcessSchedule { Enabled = false };
+
+        UpdateTriggerCmdlet.KeepCurrentExecutorRobots(payload, new UpdateTriggerCmdlet.TriggerUpdateInputs { Enabled = "true" }, () => []);
+
+        Assert.NotNull(payload.ExecutorRobots);
+        Assert.Empty(payload.ExecutorRobots!);
     }
 }
