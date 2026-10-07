@@ -6,6 +6,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **`Get-OrchLicenseRuntime` and `Get-OrchLicenseNamedUser` no longer report robot types an older
+  server doesn't have.** Without `-RobotType` they ask for every type UiPathOrch knows, and older
+  servers reject the newer ones — up to six errors per call on 20.10, several on 21.10 to 23.4,
+  and a server error for StudioPro runtimes on every standalone server. A type you did not name
+  is now left out where it is known to be missing, and a server's "no such type" answer for it
+  is verbose output. A type you name is always requested and its error shown, as before.
+
+- **`Copy-Item` assigns a 20.10 local account to the same-named directory user of a later
+  version.** Upgrading 20.10 turns each local account (type `User` or `Robot`) into a user of
+  Identity's local directory, so copying a folder from 20.10 to a later server now assigns that
+  `DirectoryUser` (or `DirectoryRobot`) instead of stopping at "does not have the User". Only
+  when the destination has no local accounts at all; `-UserMappingCsv` still decides the name.
+
 ### Fixed
 
 - **Two on-premises drives no longer share organization data.** Organization-level results
