@@ -149,6 +149,9 @@ public interface IWritableHost
 {
     public void WriteError(ErrorRecord errorRecord);
     public void WriteWarning(string text);
+    // Default body for hosts without one; Cmdlet and CmdletProvider bind their own public
+    // WriteVerbose(string) to this.
+    public void WriteVerbose(string text) { }
     public void WriteProgress(ProgressRecord progressRecord);
     public bool ShouldProcess(string target, string action);
 

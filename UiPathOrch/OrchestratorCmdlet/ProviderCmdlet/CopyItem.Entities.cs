@@ -57,6 +57,10 @@ public partial class OrchProvider
         => string.Equals(type, "User", StringComparison.OrdinalIgnoreCase)
         || string.Equals(type, "Robot", StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>The directory type a 20.10 local account becomes on a later version.</summary>
+    internal static string LocalToDirectoryType(string localType)
+        => string.Equals(localType, "Robot", StringComparison.OrdinalIgnoreCase) ? "DirectoryRobot" : "DirectoryUser";
+
     internal static void CopyFolderUsers(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpUserName, List<WildcardPattern>? wpType,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
@@ -124,30 +128,48 @@ public partial class OrchProvider
                 {
                     DomainUserAssignment postingUser = null;
 
+                    // The type the user is assigned under in the destination: the source's, unless
+                    // a 20.10 local account lands on a server without local accounts (below).
+                    string dstType = userRole.UserEntity?.Type ?? "";
+
                     // A local account (20.10, API 11: Type "User" or "Robot") is not a directory
                     // object, so the directory resolution below cannot place it -- it used to stop
                     // at "Invalid Type", leaving the user out of the copied folder and, with it,
                     // every trigger bound to that user's robot. Such an account is assigned by
                     // its id in the destination tenant, matched by user name and type.
-                    if (IsLocalAccountType(userRole.UserEntity?.Type))
+                    if (IsLocalAccountType(dstType))
                     {
                         string localName = userMapping is not null && userMapping.TryGetValue(userName, out var mappedLocal)
                             && !string.IsNullOrEmpty(mappedLocal) ? mappedLocal : userName;
-                        var dstLocal = dstDrive.Users.Get().FirstOrDefault(u =>
-                            string.Equals(u?.Type, userRole.UserEntity?.Type, StringComparison.OrdinalIgnoreCase)
+                        var dstUsers = dstDrive.Users.Get().ToList();
+                        var dstLocal = dstUsers.FirstOrDefault(u =>
+                            string.Equals(u?.Type, dstType, StringComparison.OrdinalIgnoreCase)
                             && string.Equals(u!.UserName, localName, StringComparison.OrdinalIgnoreCase));
-                        if (dstLocal?.Id is null)
+                        if (dstLocal?.Id is not null)
                         {
-                            _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: {dstDrive.Name}: does not have the {userRole.UserEntity?.Type} \"{localName}\"."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
+                            dstDrive.OrchAPISession.AssignUsers([dstLocal.Id.Value], newRolesPerFolder);
+                            dstDrive.FolderUsersWithInherited.ClearCache(newFolder);
+                            dstDrive.FolderUsersWithNoInherited.ClearCache(newFolder);
                             continue;
                         }
-                        dstDrive.OrchAPISession.AssignUsers([dstLocal.Id.Value], newRolesPerFolder);
-                        dstDrive.FolderUsersWithInherited.ClearCache(newFolder);
-                        dstDrive.FolderUsersWithNoInherited.ClearCache(newFolder);
-                        continue;
+
+                        // A destination with no local accounts at all is a later version: upgrading
+                        // 20.10 turns each local account into the same-named user of Identity's local
+                        // directory, so that user -- DirectoryUser, or DirectoryRobot for a robot --
+                        // is the account to assign, and the directory path below finds it by name.
+                        // A directory user from AD or Entra carries its domain in the name
+                        // ("CORP\alice", an e-mail), so a bare local name cannot reach one. A
+                        // destination that does have local accounts keeps the strict match.
+                        if (dstUsers.Any(u => IsLocalAccountType(u?.Type)))
+                        {
+                            _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: {dstDrive.Name}: does not have the {dstType} \"{localName}\"."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
+                            continue;
+                        }
+                        dstType = LocalToDirectoryType(dstType);
+                        _this.WriteVerbose($"{msg}: {dstDrive.Name}: has no local accounts; assigning the {dstType} of that name.");
                     }
 
-                    if (!DirectoryTypeItems.Items.TryGetValue(userRole.UserEntity?.Type ?? "", out var type))
+                    if (!DirectoryTypeItems.Items.TryGetValue(dstType, out var type))
                     {
                         _this.WriteError(new ErrorRecord(new OrchException(userRole.GetPSPath(), $"Invalid Type: '{userRole.UserEntity?.Type}'."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
                         continue;
@@ -180,7 +202,7 @@ public partial class OrchProvider
                     // destination tenant has not got yet (the usual case cross-tenant).
                     var dstTenantUser = dstDrive.Users.Get().FirstOrDefault(u =>
                         !string.IsNullOrEmpty(u?.DirectoryIdentifier)
-                        && string.Equals(u!.Type, userRole.UserEntity?.Type, StringComparison.OrdinalIgnoreCase)
+                        && string.Equals(u!.Type, dstType, StringComparison.OrdinalIgnoreCase)
                         && (string.Equals(u.UserName, resolvedUserName, StringComparison.OrdinalIgnoreCase)
                             || string.Equals(u.EmailAddress, resolvedUserName, StringComparison.OrdinalIgnoreCase)));
 
@@ -251,7 +273,7 @@ public partial class OrchProvider
                     {
                         Domain = string.IsNullOrEmpty(resolved.domain) ? "autogen" : resolved.domain,
                         DirectoryIdentifier = resolved.identifier,
-                        UserType = userRole.UserEntity?.Type,
+                        UserType = dstType,
                         RolesPerFolder = newRolesPerFolder
                     };
                     dstDrive.OrchAPISession.AssignFolderUser(postingUser);
