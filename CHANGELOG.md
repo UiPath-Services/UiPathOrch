@@ -23,11 +23,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **Triggers keep their robot assignment on on-premises servers.** 1.19.0 read whole triggers
   from the folder listing with `$expand=ExecutorRobots`. Automation Cloud fills that expansion;
   on-premises Orchestrator (measured on 20.10.16, 22.4.4 and 25.10.2) and Automation Suite
-  24.10.11 accept it and return it empty. So on those servers `Get-OrchTriggerDetail` showed no
-  robots, `Get-OrchTrigger -ExportCsv` wrote an empty `ExecutorRobots` column, and `Copy-Item` /
-  `Copy-OrchTrigger` created the copy without its robots. The robots come from the trigger's own
-  robot list again, one request per trigger as before 1.19.0; each folder is still printed as soon
-  as its triggers are back.
+  24.10.11 accept it and return it empty. So on those servers `Get-OrchTriggerDetail` (and
+  `Get-OrchTrigger -ExpandDetails`) showed no robots, `-ExportCsv` on either cmdlet wrote an empty
+  `ExecutorRobots` column, and `Copy-Item` / `Copy-OrchTrigger` created the copy without its
+  robots. The robots come from the trigger's own robot list again, one request per trigger as
+  before 1.19.0, which withdraws 1.19.0's one-request-per-folder speed-up for these cmdlets; each
+  folder is still printed as soon as its triggers are back.
 
 - **`Update-OrchTrigger` no longer clears a trigger's robot assignment.** The update was built
   from the trigger listing, which carries no robots, and Orchestrator reads an update without
@@ -61,7 +62,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **20.10: `Add-OrchFolderUser` assigns local accounts.** `-Type` now also takes `User` and
   `Robot`, the 20.10 local accounts that `Get-OrchFolderUser -ExportCsv` writes with those
   types. They are found in the tenant's user list and assigned by user id, so an exported
-  folder-user CSV re-imports on 20.10 too. Before, those types were rejected, and the directory
+  folder-user CSV re-imports on 20.10 too; `-UserName` completes from that list for these types. Before, those types were rejected, and the directory
   search the other types use fails on 20.10.
 
 - **20.10: `Copy-Item` copies folder users that are local accounts, and finds robots in the
