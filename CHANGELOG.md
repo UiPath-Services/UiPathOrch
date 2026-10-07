@@ -18,13 +18,40 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
-- **`Get-OrchTriggerDetail` and `Get-OrchTestSetDetail` print each folder as it arrives.** Since
-  1.19.0 both read a folder's whole answer from one listing, but they still went through the
-  list-then-fetch pass built for one request per entity, which lists every folder before the first
-  row goes out — so nothing appeared until the last folder had been read. Each folder's rows now
-  go out as soon as its own listing is back, still in folder order and sorted by name within a
-  folder. On 8 triggers in 6 folders, the first folder printed at 2.8 s of an 8.1 s run. This also
-  covers `Get-OrchTrigger -ExportCsv` and `-ExpandDetails`, which share the code.
+- **Triggers keep their robot assignment on on-premises servers.** 1.19.0 read whole triggers
+  from the folder listing with `$expand=ExecutorRobots`. Automation Cloud fills that expansion;
+  on-premises Orchestrator (measured on 20.10.16, 22.4.4 and 25.10.2) and Automation Suite
+  24.10.11 accept it and return it empty. So on those servers `Get-OrchTriggerDetail` showed no
+  robots, `Get-OrchTrigger -ExportCsv` wrote an empty `ExecutorRobots` column, and `Copy-Item` /
+  `Copy-OrchTrigger` created the copy without its robots. The robots come from the trigger's own
+  robot list again, one request per trigger as before 1.19.0; each folder is still printed as soon
+  as its triggers are back.
+
+- **`Update-OrchTrigger` no longer clears a trigger's robot assignment.** The update was built
+  from the trigger listing, which carries no robots, and Orchestrator reads an update without
+  them as "no robots" — so any update, even `-Enabled` alone, removed the robots that run the
+  trigger. This had been so since 1.0.0. The current robots are now sent with every update that
+  does not set `-ExecutorRobots` or `-MachineRobots`, and an `-ExecutorRobots` value equal to the
+  current one (re-importing an exported row) is no longer taken as a change. If the current robots
+  cannot be read, the trigger is not updated.
+
+- **`Get-OrchTestSetDetail` prints each folder as it arrives.** Since 1.19.0 it reads a folder's
+  whole answer from one listing, but it still went through the list-then-fetch pass built for one
+  request per test set, which lists every folder before the first row goes out — so nothing
+  appeared until the last folder had been read. Each folder's rows now go out as soon as its own
+  listing is back, still in folder order and sorted by name within a folder.
+
+- **20.10: exported trigger rows name their robots, and re-import.** 20.10 robots have an empty
+  `Name`, so the `ExecutorRobots` column was empty there. The column now falls back to the robot's
+  user name, and `-ExecutorRobots` matches either.
+
+- **20.10: a trigger with a priority can be created or updated.** 20.10 rejects a trigger's
+  1–100 priority value with "model must not be null". Below API 14 the value is now sent as its
+  Low / Normal / High bucket, as process creation already did.
+
+- **20.10: `Copy-Item` copies folder users that are local accounts, and finds robots in the
+  destination.** Local user and robot accounts were not copied to the destination folder, and
+  looking up a destination robot called an API that 20.10 does not have.
 
 - **Copying the same process a second time keeps its entry point.** `Copy-Item` and
   `Copy-OrchProcess` mapped the entry point to the destination's by rewriting `EntryPointId` on
