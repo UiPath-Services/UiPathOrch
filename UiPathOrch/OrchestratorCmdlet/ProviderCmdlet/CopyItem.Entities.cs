@@ -1923,9 +1923,10 @@ public partial class OrchProvider
     {
         if (newFolder.FolderType == "Personal") return;
 
-        // TestDataQueue endpoints stabilised in v18; older Orch returns HTTP 500.
-        if (srcDrive.OrchAPISession.ApiVersion < 18) return;
-        if (dstDrive.OrchAPISession.ApiVersion < 18) return;
+        // Test data queues need API 17 on both sides; 23.4 (16) answers 500. The floor was 18,
+        // which skipped them on standalone 24.10 / 25.10.2 although those have the feature.
+        if (OrchApiFloor.Below(srcDrive.OrchAPISession.ApiVersion, OrchApiFloor.TestDataQueues)) return;
+        if (OrchApiFloor.Below(dstDrive.OrchAPISession.ApiVersion, OrchApiFloor.TestDataQueues)) return;
 
         ICollection<TestDataQueueItem> items;
         try
@@ -2059,11 +2060,11 @@ public partial class OrchProvider
     {
         if (newFolder.FolderType == "Personal") return;
 
-        // TestDataQueue endpoints stabilised in v18; older Orch returns HTTP 500.
-        // (Pre-fix: the second guard accidentally checked srcDrive twice; fixed below
-        // to guard dstDrive as the symmetric src/dst pair the other helpers use.)
-        if (srcDrive.OrchAPISession.ApiVersion < 18) return;
-        if (dstDrive.OrchAPISession.ApiVersion < 18) return;
+        // Test data queues need API 17 on both sides (OrchApiFloor.TestDataQueues); 23.4 (16)
+        // answers 500. (Pre-fix: the second guard accidentally checked srcDrive twice; it guards
+        // dstDrive, the symmetric src/dst pair the other helpers use.)
+        if (OrchApiFloor.Below(srcDrive.OrchAPISession.ApiVersion, OrchApiFloor.TestDataQueues)) return;
+        if (OrchApiFloor.Below(dstDrive.OrchAPISession.ApiVersion, OrchApiFloor.TestDataQueues)) return;
 
         string msg = $"Copying test data queues";
 

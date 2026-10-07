@@ -35,6 +35,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`Copy-Item` copies test data queues on standalone 24.10 and 25.10.** It skipped them, and their
+  items, below API 18, but standalone 24.10 and 25.10.2 (API 17) have test data queues — the web UI
+  shows them, and the other test-data-queue cmdlets already worked there. The copy now runs from
+  API 17; 23.4 and earlier still don't have the feature.
+
 - **`Enable-OrchLicenseRuntime` / `Disable-OrchLicenseRuntime` no longer stop at the first robot
   type a server lacks.** A failed listing for one type ended the whole command, so on an older
   server `-RobotType *` stopped at the first type it didn't have. Each type's failure is its own

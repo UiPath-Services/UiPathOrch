@@ -45,6 +45,9 @@ internal static class OrchApiFloor
     public const double ReleaseSpecificPriority = 14;  // SpecificPriorityValue accepted (else mapped to a JobPriority bucket)
     public const double ReleaseRetentionReadable = 17; // GET /odata/ReleaseRetention
 
+    // --- Test data queues ---
+    public const double TestDataQueues = 17;           // usable from standalone 24.10 (API 17): created, listed and shown in its web UI (24.10.8, 2026-10-07); 23.4 (16) answers 500. Copy-Item's queue and item copies both check it.
+
     // --- Robots ---
     public const double RobotsFromFolder = 15;         // GET .../OData.GetRobotsFromFolder (absent on 20.10 / API 11.1)
 
