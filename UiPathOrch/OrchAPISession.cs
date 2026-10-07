@@ -1740,7 +1740,12 @@ public partial class OrchAPISession : IDisposable
             null,
             "&$filter=Type eq '2' and ProvisionType eq 'Automatic'&$expand=User");
 
-    public IEnumerable<RobotUser> GetMachineRobots(Int64 folderId, MachineFolder machine) => GetEnumerable<RobotUser>($"/odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machine.Id})");
+    // Not paged: this function rejects $skip -- 500 "An error has occurred." on 22.10, 23.4,
+    // 24.10.0, 24.10.8 and 25.10.2 with $skip=0, while $top alone or no option succeeds
+    // (2026-10-07) -- which made Get-OrchFolderMachineAccountMapping fail for every folder with a
+    // machine there. It returns one machine's robot mappings, a short list.
+    public IEnumerable<RobotUser> GetMachineRobots(Int64 folderId, MachineFolder machine)
+        => GetEnumerableWithoutPaging<RobotUser>($"/odata/Folders/UiPath.Server.Configuration.OData.GetMachineRobots(folderId={folderId},machineId={machine.Id})") ?? [];
 
     public void SetMachineRobots(SetMachineRobotsCmd cmd) =>
         // Returns nothing
