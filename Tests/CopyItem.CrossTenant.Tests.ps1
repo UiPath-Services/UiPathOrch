@@ -373,7 +373,17 @@ Describe 'Copy-Item -Recurse cross-tenant leaves no stale destination queue cach
             New-Item -ItemType Directory -Path $script:StaleSrcA    -Force -ErrorAction Stop | Out-Null
             New-Item -ItemType Directory -Path $script:StaleSrcB    -Force -ErrorAction Stop | Out-Null
             New-OrchQueue -Path $script:StaleSrcA -Name xtSharedQueue -Description 'xt shared queue' -ErrorAction Stop | Out-Null
-            Add-OrchQueueLink -Path $script:StaleSrcA -Name xtSharedQueue -Link $script:StaleSrcB -ErrorAction Stop | Out-Null
+            # A queue shared by two folders needs the source server's queue-link API, which
+            # 20.10 (API 11.1) does not have ("Not Found"); there is nothing to test there.
+            try {
+                Add-OrchQueueLink -Path $script:StaleSrcA -Name xtSharedQueue -Link $script:StaleSrcB -ErrorAction Stop | Out-Null
+            }
+            catch {
+                if ("$($_.Exception.Message)" -notmatch 'Not Found') { throw }
+                $script:StaleSkip = "$($script:SrcDrive): cannot share a queue between folders: $($_.Exception.Message)"
+                Write-Host "SKIPPING shared-queue tests: $($script:StaleSkip)" -ForegroundColor Yellow
+                return
+            }
 
             # Pre-create the destination tree so both folders exist before the copy.
             New-Item -ItemType Directory -Path $script:StaleDstRoot -Force -ErrorAction Stop | Out-Null
