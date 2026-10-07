@@ -2113,9 +2113,20 @@ public partial class OrchAPISession : IDisposable
         return PackageContentsReader.ReadContents(fileContent, libraryId, libraryVersion);
     }
 
+    // The version as DownloadPackage's key takes it: without SemVer build metadata. The library
+    // and package listings report a version with it ("1.1.1+1385.220515020318.release.39f4e48"),
+    // but the key wants "1.1.1" -- the full string is a 404, raw or with the '+' escaped (24.10.8,
+    // 2026-10-07), while GetVersions lists "1.1.1". NuGet leaves build metadata out of a
+    // package's identity, so the two name the same package.
+    internal static string DownloadKeyVersion(string version)
+    {
+        int plus = version.IndexOf('+');
+        return plus < 0 ? version : version[..plus];
+    }
+
     public (string? FileName, byte[] FileContent) DownloadLibrary(string libraryId, string libraryVersion)
     {
-        string url = _base_url_orchestrator + $"/odata/Libraries/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(libraryId))}:{libraryVersion}')";
+        string url = _base_url_orchestrator + $"/odata/Libraries/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(libraryId))}:{DownloadKeyVersion(libraryVersion)}')";
         var request = new HttpRequestMessage(HttpMethod.Get, url);
 
         using var response = HttpClient_Send(request);
@@ -2166,7 +2177,7 @@ public partial class OrchAPISession : IDisposable
 
     public (string? FileName, byte[] FileContent) DownloadPackage(string feedId, string packageId, string packageVersion)
     {
-        string url = _base_url_orchestrator + $"/odata/Processes/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(packageId))}:{packageVersion}')";
+        string url = _base_url_orchestrator + $"/odata/Processes/UiPath.Server.Configuration.OData.DownloadPackage(key='{HttpUtility.UrlEncode(PathTools.EscapeODataLiteral(packageId))}:{DownloadKeyVersion(packageVersion)}')";
         if (!string.IsNullOrEmpty(feedId))
         {
             url += $"?feedId={feedId}";
