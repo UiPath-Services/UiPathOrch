@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`Measure-OrchLog` counts robot logs without fetching them.** It takes the filter parameters of
+  `Get-OrchLog` (`-Last`, `-Level`, `-ProcessName`, `-Machine`, `-WindowsIdentity`, `-JobKey`,
+  `-TimeStampAfter`/`-TimeStampBefore`, `-Recurse`) and returns each folder's path and count, the
+  number of logs `Get-OrchLog` would return for the same arguments. For sizing questions such as
+  "how many logs does a day produce". It asks Orchestrator's GetTotalCount, so the count is not
+  capped at the 10,000 that `@odata.count` reports when the logs are kept in Elasticsearch, as on
+  Automation Cloud.
 - **`Start-OrchJob` sets the job options of the web Start Job dialog.** `-Priority` (or
   `-SpecificPriorityValue`), `-StopStrategy`, `-StopProcessExpression` (seconds until the job is
   stopped), `-KillProcessExpression` (seconds after a soft stop until it is killed),

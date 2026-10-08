@@ -115,6 +115,7 @@ CmdletsToExport = @(
 'Open-OrchJob',
 
 'Get-OrchLog',
+'Measure-OrchLog',
 'Get-OrchAuditLog',
 
 'Get-OrchJobMedia',

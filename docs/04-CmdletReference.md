@@ -536,6 +536,7 @@ Logs, audit trails, and alerts.
 | Cmdlet | Description |
 |--------|-------------|
 | Get-OrchLog | Get robot execution logs (supports filtering) |
+| Measure-OrchLog | Count robot execution logs per folder with Get-OrchLog's filters, without fetching them |
 | Get-OrchLogLocation | Get log storage location info |
 | Open-OrchLogLocation | Open log storage in browser/explorer |
 | Get-OrchAuditLog | Get audit log entries (supports filtering) |

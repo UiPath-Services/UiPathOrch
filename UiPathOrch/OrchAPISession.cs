@@ -3027,6 +3027,16 @@ public partial class OrchAPISession : IDisposable
         return GetEnumerable<Log>("/odata/RobotLogs", folderId, $"{query}{order}", skip, first);
     }
 
+    // GetTotalCount, not $count on /odata/RobotLogs: with an Elasticsearch log store (Cloud)
+    // @odata.count stops at its max_result_window (10000), as the swagger notes and
+    // #jp-help-infra saw. Measured on Cloud (2026-10-08): 37337 for a folder whose
+    // listing past 10000 is refused. query is RobotLogFilterCmdlet.MakeFilter's "&$filter=...".
+    public long GetRobotLogsTotalCount(Int64 folderId, string? query)
+    {
+        string endPoint = $"/odata/RobotLogs/UiPath.Server.Configuration.OData.GetTotalCount?{query?.TrimStart('&')}";
+        return HttpRequest<HttpBodyValue<long>>(HttpMethod.Get, endPoint, folderId)?.value ?? 0;
+    }
+
     public IEnumerable<AuditLog> GetAuditLogs(string? query, ulong skip, ulong first) => GetEnumerable<AuditLog>("/odata/AuditLogs", null, query, skip, first);
 
     public IEnumerable<AuditLogEntity> GetAuditLogDetails(Int64 auditLogId) => GetEnumerable<AuditLogEntity>($"/odata/AuditLogs/UiPath.Server.Configuration.OData.GetAuditLogDetails(auditLogId={auditLogId})");

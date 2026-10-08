@@ -503,6 +503,8 @@ When the `-Level` parameter is omitted, it defaults to `Info`, returning logs at
 
 ## RELATED LINKS
 
+[Measure-OrchLog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Measure-OrchLog.md)
+
 [Get-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchJob.md)
 
 [Get-OrchAuditLog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchAuditLog.md)

@@ -8,9 +8,9 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchLog")]
-[OutputType(typeof(Log))]
-public class GetLogCmdlet : OrchestratorPSCmdlet
+// The filter parameters Get-OrchLog and Measure-OrchLog share, and the $filter they build, so
+// that a count always means the logs Get-OrchLog would return for the same arguments.
+public abstract class RobotLogFilterCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(StaticTextsCompleter<Hour_Day_Week_Month_3Month_6Month_Year_3Year>))]
@@ -52,23 +52,9 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
     public string[]? WindowsIdentity { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    public ulong? Skip { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
-    public ulong? First { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(JobKeyCompleter))]
     [Alias("Key")]
     public string? JobKey { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(StaticTextsCompleter<LogOrderableItems>))]
-    public string? OrderBy { get; set; }
-
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public SwitchParameter OrderAscending { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public string[]? Path { get; set; }
@@ -179,7 +165,8 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
     // -JobKey completes through the shared Completer.JobKeyCompleter (OrchCompleter.cs), which
     // Get-OrchTaskAcrossFolder -JobKey uses as well.
 
-    private string? MakeFilter(OrchDriveInfo drive, Folder folder)
+    // "null" when the folder cannot hold a matching log (the -ProcessName is not there).
+    protected string? MakeFilter(OrchDriveInfo drive, Folder folder)
     {
         List<string> filter = [];
 
@@ -300,6 +287,35 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
         throw new ArgumentException($"-JobKey must be a GUID; got '{jobKey}'.");
     }
 
+    protected bool HasFilterParameter =>
+        Last is not null ||
+        TimeStampAfter is not null ||
+        TimeStampBefore is not null ||
+        Level is not null ||
+        Machine is not null ||
+        ProcessName is not null ||
+        WindowsIdentity is not null ||
+        JobKey is not null;
+}
+
+[Cmdlet(VerbsCommon.Get, "OrchLog")]
+[OutputType(typeof(Log))]
+public class GetLogCmdlet : RobotLogFilterCmdlet
+{
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public ulong? Skip { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<Item10>))]
+    public ulong? First { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<LogOrderableItems>))]
+    public string? OrderBy { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public SwitchParameter OrderAscending { get; set; }
+
     // Ordering for the no-filter cache-output path. Extracted as a pure,
     // testable function. The default arm is the regression guard: -OrderBy is
     // offered via LogOrderableItems but is a completer, not a ValidateSet, so an
@@ -322,16 +338,7 @@ public class GetLogCmdlet : OrchestratorPSCmdlet
         var orderBy = string.IsNullOrEmpty(OrderBy) ? "TimeStamp" : OrderBy;
 
         // If no parameters are specified, return the contents of the cache
-        bool bOutCache = (
-            Last is null &&
-            TimeStampAfter is null &&
-            TimeStampBefore is null &&
-            Level is null &&
-            Machine is null &&
-            ProcessName is null &&
-            WindowsIdentity is null &&
-            JobKey is null &&
-            Skip is null && First is null);
+        bool bOutCache = !HasFilterParameter && Skip is null && First is null;
 
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
 
