@@ -289,8 +289,9 @@ internal class OrchestratorAuthManager
     // A confidential app's refused token request: invalid_scope may mean the Scope is too long
     // (see BuildScopeTooLongAdvice). Only a scope longer than the smallest limit asks the server
     // its version -- one anonymous request, and only on this failure.
-    private string? AdviseOnClientCredentialsError(string oauthError)
+    private string? AdviseOnClientCredentialsError(string oauthError, string? description)
     {
+        if (BuildUserScopeAdvice(oauthError, description, _drive.NameColon) is string userScope) return userScope;
         if (!string.Equals(oauthError, "invalid_scope", StringComparison.OrdinalIgnoreCase)) return null;
         int length = (_drive._psDrive.Scope ?? "").Length;
         if (length <= SmallestScopeLengthLimit) return null;
@@ -302,6 +303,22 @@ internal class OrchestratorAuthManager
             productVersion = product?.version;
         }
         return BuildScopeTooLongAdvice(_drive.NameColon, length, productVersion, lengthIsCertain: false);
+    }
+
+    // A confidential application whose scopes include a user scope: the drive has an AppSecret, so
+    // it signs in with client credentials, which take application scopes only. Identity answers
+    // invalid_request "Client=... is not allowed to access User scopes" and names no scope
+    // (Cloud, 2026-10-08). Keyed on the description as well, since invalid_request has other
+    // causes. Pure, so unit-testable.
+    internal static string? BuildUserScopeAdvice(string oauthError, string? description, string driveName)
+    {
+        if (!string.Equals(oauthError, "invalid_request", StringComparison.OrdinalIgnoreCase)) return null;
+        if (description is null || !description.Contains("User scopes", StringComparison.OrdinalIgnoreCase)) return null;
+        return "The Scope includes a user scope of this application. A drive with an AppSecret signs in with "
+            + "client credentials, which receive application scopes only: register the scopes as application "
+            + "scopes, or sign in in the browser with a non-confidential application (no AppSecret). "
+            + $"Test-PmExternalApplication -Path {driveName} names the scopes, from a drive of the same "
+            + "organization that is signed in.";
     }
 
     // Cloud and AS use the /identity_ suffix; on-prem uses /identity.
@@ -351,8 +368,9 @@ internal class OrchestratorAuthManager
         return new ClientCredentialsProbeResult((int)response.StatusCode, error, description, granted, expiresIn);
     }
 
-    // adviseOnError: given the OAuth error code of a refused request, more to say about it, or null.
-    private (string access_token, string refresh_token) GetAccessToken(Dictionary<string, string> postData, Func<string, string?>? adviseOnError = null)
+    // adviseOnError: given the OAuth error code and description of a refused request, more to say
+    // about it, or null.
+    private (string access_token, string refresh_token) GetAccessToken(Dictionary<string, string> postData, Func<string, string?, string?>? adviseOnError = null)
     {
         // Confidential App's client_credentials and refresh_token flows both
         // funnel through here; PKCE's code → token exchange also reuses this
@@ -385,9 +403,10 @@ internal class OrchestratorAuthManager
                 if (errRoot.TryGetProperty("error", out var err))
                 {
                     summary += $" — {err.GetString()}";
-                    if (errRoot.TryGetProperty("error_description", out var desc))
-                        summary += $": {desc.GetString()}";
-                    if (adviseOnError?.Invoke(err.GetString() ?? "") is string advice)
+                    string? description = errRoot.TryGetProperty("error_description", out var desc) ? desc.GetString() : null;
+                    if (description is not null)
+                        summary += $": {description}";
+                    if (adviseOnError?.Invoke(err.GetString() ?? "", description) is string advice)
                         summary += $". {advice}";
                 }
             }

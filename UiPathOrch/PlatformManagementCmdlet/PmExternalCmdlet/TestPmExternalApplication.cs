@@ -1,4 +1,6 @@
+using System.Collections;
 using System.Management.Automation;
+using System.Management.Automation.Language;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
@@ -22,9 +24,11 @@ public class ExternalApplicationTestResult
 }
 
 // Requests a token for an external application with client credentials, as a script using the
-// application would, and says why it is refused. The token endpoint answers invalid_client or
-// invalid_scope with no description, on purpose; #jp-help-infra spent a thread finding that an
-// application's user scopes and application scopes had been mixed up. The cause is read from the
+// application would, and says why it is refused. The token endpoint answers a wrong secret or an
+// unregistered scope with a bare invalid_client / invalid_scope, and a user scope with
+// invalid_request "Client=... is not allowed to access User scopes", naming no scope (Cloud,
+// 2026-10-08); #jp-help-infra spent a thread finding that an application's user scopes and
+// application scopes had been mixed up. The cause is read from the
 // application's registration in the organization, when a mounted drive of that organization can
 // read it.
 [Cmdlet(VerbsDiagnostic.Test, "PmExternalApplication")]
@@ -33,6 +37,7 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
 {
     // Omitted: the drive's own confidential application (its AppId, AppSecret and Scope).
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(AppIdCompleter))]
     [Alias("ClientId", "id")]
     public string? AppId { get; set; }
 
@@ -40,9 +45,36 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
     [Alias("ClientSecret")]
     public string? AppSecret { get; set; }
 
+    // Comma-separated, or space-separated as in the configuration file; wildcards expand against the
+    // application scopes registered on the application (else the organization's catalog).
     // Omitted with -AppId: every application scope registered on the application.
     [Parameter(Position = 2, ValueFromPipelineByPropertyName = true)]
-    public string? Scope { get; set; }
+    [ArgumentCompleter(typeof(TestApplicationScopeCompleter))]
+    [SupportsWildcards]
+    public string[]? Scope { get; set; }
+
+    // The organization's external applications; the App ID is inserted, the name is the tip.
+    // What is typed is matched against both, so "OCM<Tab>" finds the application named OCM.
+    private class AppIdCompleter : OrchArgumentCompleter
+    {
+        public override IEnumerable<CompletionResult> CompleteArgumentCore(
+            string commandName, string parameterName, string wordToComplete,
+            CommandAst commandAst, IDictionary fakeBoundParameters)
+        {
+            var wp = CreateWPFromWordToComplete(wordToComplete);
+            var results = ParallelResults.GroupBy(ResolvePmDrives(fakeBoundParameters), drive => drive.PmExternalClients.Get());
+
+            foreach (var app in results.SelectMany(r => r)
+                .Where(a => !string.IsNullOrEmpty(a?.id))
+                .Where(a => wp.IsMatch(a.id) || (a.name is not null && wp.IsMatch(a.name)))
+                .DistinctBy(a => a.id)
+                .OrderBy(a => a.name))
+            {
+                string tip = app.isConfidential == false ? $"{app.name} (non-confidential)" : app.name ?? app.id!;
+                yield return new CompletionResult(app.id, app.id, CompletionResultType.ParameterValue, tip);
+            }
+        }
+    }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -63,7 +95,8 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
         {
             string target = drive.NameColonSeparator;
 
-            string? clientId = AppId, secret = AppSecret, scope = Scope;
+            string? clientId = AppId, secret = AppSecret;
+            string[]? scopeValues = Scope;
             if (string.IsNullOrEmpty(clientId))
             {
                 if (string.IsNullOrEmpty(drive._psDrive.AppSecret))
@@ -75,7 +108,7 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
                 }
                 clientId = drive._psDrive.AppId;
                 secret = drive._psDrive.AppSecret;
-                scope ??= drive._psDrive.Scope;
+                scopeValues ??= string.IsNullOrEmpty(drive._psDrive.Scope) ? null : [drive._psDrive.Scope];
             }
             else if (string.IsNullOrEmpty(secret))
             {
@@ -85,11 +118,12 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
-            var (registration, registrationNote) = FindRegistration(drive, clientId!);
+            var (registration, registrationNote) = FindRegistration(SessionState, drive, clientId!);
 
-            if (string.IsNullOrEmpty(scope))
+            var registered = ApplicationScopes(registration);
+            string[] requested;
+            if (scopeValues is null || scopeValues.All(string.IsNullOrWhiteSpace))
             {
-                var registered = ApplicationScopes(registration);
                 if (registered.Length == 0)
                 {
                     WriteError(new ErrorRecord(
@@ -97,15 +131,33 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
                         "TestPmExternalApplicationNoScope", ErrorCategory.InvalidArgument, clientId));
                     continue;
                 }
-                scope = string.Join(' ', registered);
+                requested = registered;
             }
-
-            string[] requested = scope!.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            else
+            {
+                // Wildcards expand against the application's own application scopes; when its
+                // registration cannot be read, against every scope that can be an application scope.
+                IEnumerable<string> known = registered;
+                if (registered.Length == 0 && ExternalScopeArguments.HasWildcard(scopeValues))
+                {
+                    try { known = ExternalScopeArguments.Catalog(drive, 1, 2).Select(c => c.name).ToList(); }
+                    catch (Exception ex) when (ex is not OperationCanceledException) { known = []; }
+                }
+                requested = [.. ExternalScopeArguments.Expand(scopeValues, known, out var unmatched)];
+                if (unmatched.Count > 0)
+                {
+                    WriteError(new ErrorRecord(
+                        new ArgumentException($"-Scope {string.Join(", ", unmatched)} matches no application scope{(registration is null ? "" : $" of '{registration.name}'")}."),
+                        "TestPmExternalApplicationScopeNotMatched", ErrorCategory.InvalidArgument, unmatched));
+                    continue;
+                }
+            }
+            string scope = string.Join(' ', requested);
 
             AuthManagerProbe probe;
             try
             {
-                var r = drive.OrchAPISession.AuthManager.ProbeClientCredentials(clientId!, secret!, scope!);
+                var r = drive.OrchAPISession.AuthManager.ProbeClientCredentials(clientId!, secret!, scope);
                 probe = new(r.StatusCode, r.Error, r.ErrorDescription, r.GrantedScope, r.ExpiresInSeconds);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
@@ -121,7 +173,7 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
                 problems.Add($"The application's registration could not be read, so the cause is not narrowed down: {registrationNote}");
             }
             if (!succeeded && string.Equals(probe.Error, "invalid_scope", StringComparison.OrdinalIgnoreCase)
-                && OrchestratorAuthManager.BuildScopeTooLongAdvice(target, scope!.Length, drive.ProductVersion.CachedValue?.version, lengthIsCertain: false) is string tooLong)
+                && OrchestratorAuthManager.BuildScopeTooLongAdvice(target, scope.Length, drive.ProductVersion.CachedValue?.version, lengthIsCertain: false) is string tooLong)
             {
                 problems.Add(tooLong);
             }
@@ -203,7 +255,7 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
     // needs. Drives not signed in are not tried: that would start a sign-in. Returns the
     // registration, or null with null note when the organization has none with this ID, or null
     // with a note when it could not be read.
-    private (ExternalClient? registration, string? note) FindRegistration(OrchDriveInfo drive, string clientId)
+    internal static (ExternalClient? registration, string? note) FindRegistration(SessionState? sessionState, OrchDriveInfo drive, string clientId)
     {
         // The passive OrgCacheKey (null until a drive has signed in), never IsSameOrganization:
         // that one signs a drive in to learn its organization, which started a browser sign-in
@@ -212,7 +264,7 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
         string? orgKey = drive.GetOrgCacheKey();
         if (orgKey is not null)
         {
-            candidates.AddRange(SessionState.EnumAllOrchDrives()
+            candidates.AddRange(sessionState.EnumAllOrchDrives()
                 .Where(d => d != drive && d.OrchAPISession.AuthManager.IsAuthenticated && d.OrgCacheKey == orgKey));
         }
 
@@ -221,8 +273,7 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var list = d.PmExternalClients.Get().ToList();
-                var match = list.FirstOrDefault(c => string.Equals(c.id, clientId, StringComparison.OrdinalIgnoreCase));
+                var match = d.PmExternalClients.Get().FirstOrDefault(c => string.Equals(c.id, clientId, StringComparison.OrdinalIgnoreCase));
                 if (match is null) return (null, null);
                 var detail = d.OrchAPISession.GetPmExternalClient(d.GetPartitionGlobalId(), match.id!);
                 return (detail ?? match, null);

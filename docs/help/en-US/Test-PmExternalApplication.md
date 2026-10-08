@@ -20,7 +20,7 @@ Requests a token for an external application with client credentials and explain
 ### __AllParameterSets
 
 ```
-Test-PmExternalApplication [[-AppId] <string>] [[-AppSecret] <string>] [[-Scope] <string>]
+Test-PmExternalApplication [[-AppId] <string>] [[-AppSecret] <string>] [[-Scope] <string[]>]
  [-Path <string[]>] [-LiteralPath <string[]>] [<CommonParameters>]
 ```
 
@@ -30,7 +30,7 @@ Test-PmExternalApplication [[-AppId] <string>] [[-AppSecret] <string>] [[-Scope]
 
 The `Test-PmExternalApplication` cmdlet requests a token from the identity server of the target drive with the client credentials grant, as a script or tool using a confidential external application does, and returns one result per drive: whether a token was issued, the error when it was not, the scopes requested and granted, and the likely causes of a refusal.
 
-The token endpoint answers a refused request with only `invalid_client` or `invalid_scope`, without a description. The cmdlet reads the application's registration in the organization to name the cause:
+The token endpoint says little about a refusal: a wrong App Secret or an unknown App ID gets a bare `invalid_client`, a scope not registered on the application a bare `invalid_scope`, and a user scope `invalid_request` "Client=... is not allowed to access User scopes" without saying which scope. The cmdlet reads the application's registration in the organization to name the cause:
 
 - no application with this App ID is registered in the organization;
 - the application is non-confidential, so it cannot use client credentials;
@@ -41,6 +41,8 @@ The token endpoint answers a refused request with only `invalid_client` or `inva
 The registration is read through the target drive or another drive of the same organization that is already signed in, such as a drive using your own account, since the drive under test often lacks the Platform Management scopes needed to read it. Drives not signed in are not used, so no sign-in starts. When the registration cannot be read, the result says so and only the error is reported.
 
 Without -AppId, the cmdlet tests the confidential application the target drive is configured with (its AppId, AppSecret and Scope in the configuration file). The token is used only to read the scopes granted and is then dropped: it is not stored on the drive and not returned.
+
+Tab completion of -AppId offers the organization's applications, with each name as the tip; what you type is matched against the name as well, so typing part of a name finds the App ID. Tab completion of -Scope offers the application scopes registered on the application, leaving out those already given.
 
 Primary Endpoint: POST /identity_/connect/token (Automation Cloud, Automation Suite) or /identity/connect/token (standalone)
 
@@ -59,10 +61,10 @@ Requests a token with the AppId, AppSecret and Scope that the Orch1c drive is co
 ### Example 2: Test an application before configuring it
 
 ```powershell
-PS C:\> Test-PmExternalApplication 32ae9da7-db02-4f16-bd32-bd75a19d70bc $secret 'OR.Jobs OR.Assets' -Path Orch1:
+PS C:\> Test-PmExternalApplication 32ae9da7-db02-4f16-bd32-bd75a19d70bc $secret OR.Jobs*, OR.Assets -Path Orch1:
 ```
 
-Requests a token for the application with these scopes on the identity server of Orch1, and lists the causes when it is refused.
+Requests a token for the application with OR.Assets and every application scope of the application that begins with OR.Jobs, on the identity server of Orch1, and lists the causes when it is refused.
 
 ### Example 3: Request every application scope registered on an application
 
@@ -121,12 +123,12 @@ HelpMessage: ''
 
 ### -Scope
 
-Specifies the scopes to request, separated by spaces. When omitted with -AppId, every application scope registered on the application is requested; when omitted without -AppId, the drive's configured Scope is used.
+Specifies the scopes to request: several values separated by commas, or by spaces within one value, as in the configuration file's Scope. A wildcard pattern expands against the application scopes registered on the application (or, when the registration cannot be read, against the organization's scopes that can be application scopes); a pattern matching none is an error, and no token is requested. A plain name is sent as given, registered or not, so the server's answer to it can be seen. When omitted with -AppId, every application scope registered on the application is requested; when omitted without -AppId, the drive's configured Scope is used.
 
 ```yaml
-Type: System.String
+Type: System.String[]
 DefaultValue: None
-SupportsWildcards: false
+SupportsWildcards: true
 Aliases: []
 ParameterSets:
 - Name: (All)
@@ -204,7 +206,7 @@ One object per drive: **Path**, **AppId**, **Name** and **IsConfidential** (from
 
 ## NOTES
 
-A non-confidential application is refused with `unauthorized_client`; a wrong App Secret or an unknown App ID with `invalid_client`; a scope the application cannot receive with `invalid_scope`.
+Answers measured on Automation Cloud (2026-10-08): a non-confidential application is refused with `unauthorized_client`; a wrong App Secret or an unknown App ID with `invalid_client`; a scope not registered on the application with `invalid_scope`; a user scope, even one among valid application scopes, with `invalid_request` "is not allowed to access User scopes". Application scopes of different services (Orchestrator, Test Manager, Platform Management, Conversational Agents) can be requested together.
 
 ## RELATED LINKS
 

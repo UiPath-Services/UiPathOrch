@@ -99,6 +99,64 @@ public class TestPmExternalApplicationTests
         Assert.Empty(TestPmExternalApplicationCmdlet.Diagnose(true, null, "cid", App(), true, ["or.jobs"], Now));
     }
 
+    [Theory]
+    [InlineData("", "", "")]
+    [InlineData("OR.Jo", "", "OR.Jo")]
+    [InlineData("'OR.Jobs OR.As", "OR.Jobs", "OR.As")]
+    [InlineData("'OR.Jobs OR.Assets '", "OR.Jobs,OR.Assets", "")]
+    [InlineData("\"OR.Jobs  TM.Pro\"", "OR.Jobs", "TM.Pro")]
+    public void SplitScopeWord_separates_the_typed_scopes_from_the_word_being_completed(string word, string typed, string partial)
+    {
+        var (t, p) = ExternalScopeCompleter.SplitScopeWord(word);
+        Assert.Equal(typed.Split(',', StringSplitOptions.RemoveEmptyEntries), t);
+        Assert.Equal(partial, p);
+    }
+
+    [Fact]
+    public void User_scope_refusal_gets_advice_naming_the_cause_and_the_test()
+    {
+        var advice = UiPath.OrchAPI.OrchestratorAuthManager.BuildUserScopeAdvice(
+            "invalid_request", "Client=7d8c4a2e-3408-4b40-b949-a063be5bc1b3 is not allowed to access User scopes", "Orch1c:");
+        Assert.NotNull(advice);
+        Assert.Contains("application scopes only", advice);
+        Assert.Contains("Test-PmExternalApplication -Path Orch1c:", advice);
+    }
+
+    [Theory]
+    [InlineData("invalid_request", "Some other request problem")]   // invalid_request has other causes
+    [InlineData("invalid_request", null)]
+    [InlineData("invalid_scope", "is not allowed to access User scopes")]
+    public void Other_refusals_get_no_user_scope_advice(string error, string? description)
+    {
+        Assert.Null(UiPath.OrchAPI.OrchestratorAuthManager.BuildUserScopeAdvice(error, description, "Orch1c:"));
+    }
+
+    private static readonly string[] Known = ["OR.Jobs", "OR.Jobs.Read", "OR.Assets", "TM.Projects"];
+
+    [Fact]
+    public void Expand_takes_commas_and_spaces_and_keeps_plain_names_as_given()
+    {
+        var r = ExternalScopeArguments.Expand(["OR.Jobs OR.Queues", "TM.Projects"], Known, out var unmatched);
+        Assert.Equal(["OR.Jobs", "OR.Queues", "TM.Projects"], r);   // OR.Queues is unknown but sent: the server judges it
+        Assert.Empty(unmatched);
+    }
+
+    [Fact]
+    public void Expand_expands_wildcards_ignoring_case_without_duplicates()
+    {
+        var r = ExternalScopeArguments.Expand(["or.jobs*", "OR.Jobs"], Known, out var unmatched);
+        Assert.Equal(["OR.Jobs", "OR.Jobs.Read"], r);
+        Assert.Empty(unmatched);
+    }
+
+    [Fact]
+    public void Expand_reports_a_pattern_matching_nothing()
+    {
+        var r = ExternalScopeArguments.Expand(["PM.*", "OR.Assets"], Known, out var unmatched);
+        Assert.Equal(["OR.Assets"], r);
+        Assert.Equal(["PM.*"], unmatched);
+    }
+
     [Fact]
     public void ApplicationScopes_lists_application_scopes_only()
     {

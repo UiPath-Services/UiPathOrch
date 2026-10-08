@@ -8,13 +8,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`New-PmExternalApplication` registers an external application**, as the portal's Add
+  Application page does: `-Name`, `-IsConfidential` (default true), `-ApplicationScope`,
+  `-UserScope`, `-RedirectUri`. It returns the App ID and, for a confidential application, the App
+  Secret, shown only then. Scope parameters take commas or spaces, and wildcards that expand
+  against the organization's scopes of that kind (`GET /api/ExternalApiResource`); tab completion
+  offers them. `-ApplicationScope` on a non-confidential application, a pattern matching nothing
+  and an existing name are refused before anything is sent.
+- **A drive whose confidential application has a user scope in its Scope says what to do.** Such a
+  drive signs in with client credentials, which receive application scopes only, and Identity
+  answers `invalid_request` "not allowed to access User scopes". The error now adds that the
+  scopes must be application scopes, or the drive must sign in in the browser with a
+  non-confidential application, and that `Test-PmExternalApplication` names them.
 - **`Test-PmExternalApplication` tells why an external application gets no token.** It requests a
   token with client credentials, as a script using the application would (`-AppId`, `-AppSecret`,
   `-Scope`; without them, the drive's own confidential application), and returns whether one was
   issued, the scopes requested and granted, and **Problems**: no application with this App ID in
   the organization, a non-confidential application, every secret expired or the App Secret not
   matching, a scope registered as a user scope or not registered at all, a scope value too long.
-  The token endpoint itself says only `invalid_client` or `invalid_scope`. The application's
+  The token endpoint itself says only `invalid_client`, `invalid_scope`, or for a user scope
+  `invalid_request` "not allowed to access User scopes" without naming it. `-Scope` takes commas
+  or spaces and wildcards that expand against the application's own scopes; `-AppId` and `-Scope`
+  complete (the application name is the tip). The application's
   registration is read through the drive or another signed-in drive of the same organization; no
   other drive is signed in for it. The token is dropped, never stored or returned.
 - **`Wait-OrchJob` waits until jobs end, and `Start-OrchJob -Wait` starts and waits.** Jobs come
