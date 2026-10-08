@@ -40,12 +40,26 @@ public class StartProcessStripTests
         Assert.Equal(["AlertPendingExpression", "AlertRunningExpression"], dropped);
         Assert.Null(sp.AlertPendingExpression);
         Assert.Null(sp.AlertRunningExpression);
-        // stop / kill are not version-gated
+        // stop / kill are kept from API 15
         Assert.Equal("SoftStop", sp.StopStrategy);
         Assert.Equal("3600", sp.StopProcessExpression);
         Assert.Equal("600", sp.KillProcessExpression);
         // 15 is at the SpecificPriorityValue floor (14), so the value stays
         Assert.Equal(65, sp.SpecificPriorityValue);
+    }
+
+    [Fact]
+    public void Strip_v13_drops_the_stop_fields_and_names_them()
+    {
+        // 20.10 (11.1) and 21.10 (13) refuse the whole StartJobs request when they are present.
+        var sp = Full();
+        var dropped = OrchAPISession.StripStartProcessFieldsForApiVersion(sp, 13.0);
+        Assert.Contains("StopStrategy", dropped);
+        Assert.Contains("StopProcessExpression", dropped);
+        Assert.Contains("KillProcessExpression", dropped);
+        Assert.Null(sp.StopStrategy);
+        Assert.Null(sp.StopProcessExpression);
+        Assert.Null(sp.KillProcessExpression);
     }
 
     [Fact]

@@ -64,8 +64,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   stopped), `-KillProcessExpression` (seconds after a soft stop until it is killed),
   `-AlertPendingExpression` and `-AlertRunningExpression` (seconds until an alert). The names are
   the StartProcessDto property names, as in `New-OrchTrigger`. A job started from a script can now
-  carry a time limit without a disabled time trigger kept for the purpose. Below API version 16 the
-  two alert values are not sent and the cmdlet warns; below 14 the priority is sent as the Low /
+  carry a time limit without a disabled time trigger kept for the purpose. Below API version 15
+  the three stop values are not sent (20.10 and 21.10 refuse the whole request with them), below
+  16 the two alert values, and the cmdlet warns; below 14 the priority is sent as the Low /
   Normal / High bucket it falls in. The help of `New-OrchTrigger` and `Update-OrchTrigger` called
   the same four values cron expressions; it now says they are seconds.
 - **The sign-in success page names the server.** Under "Connected", above the URL, it shows the
@@ -136,6 +137,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`Start-OrchJob` without `-JobsCount` starts one job on Orchestrator 20.10 to 22.10.** It sent
+  no job count, which Automation Cloud and 24.10 take as one but 20.10, 21.10, 22.4 and 22.10
+  refuse with "Invalid JobsCount". It now sends 1 unless told otherwise, as the web dialog does.
 - **`Get-OrchLog -Machine` / `-WindowsIdentity` with a name that matches nothing returns no logs.**
   The condition used to be dropped instead, so a mistyped name returned every log of the folder.
   `-Machine` now looks the name up among the tenant's machines, not only those assigned to the

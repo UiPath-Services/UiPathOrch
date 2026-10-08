@@ -292,7 +292,7 @@ HelpMessage: ''
 
 ### -JobsCount
 
-Specifies the number of jobs to start for each matching process.
+Specifies the number of jobs to start for each matching process. When omitted, one job is started.
 
 ```yaml
 Type: System.Nullable`1[System.Int32]
@@ -439,7 +439,7 @@ HelpMessage: ''
 
 ### -StopStrategy
 
-Specifies how a job is ended when -StopProcessExpression elapses: SoftStop asks the job to stop, Kill ends it at once. When omitted, Orchestrator uses Kill.
+Specifies how a job is ended when -StopProcessExpression elapses: SoftStop asks the job to stop, Kill ends it at once. When omitted, Orchestrator uses Kill. -StopStrategy, -StopProcessExpression and -KillProcessExpression are not sent below API version 15 (Orchestrator 20.10 and 21.10 refuse the whole request with them); the cmdlet warns when it drops them.
 
 ```yaml
 Type: System.String

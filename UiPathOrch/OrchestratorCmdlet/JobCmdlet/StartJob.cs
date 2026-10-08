@@ -246,7 +246,10 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
                                 ReleaseKey = process.Key!,
                                 Strategy = "ModernJobsCount",
                                 RuntimeType = RuntimeType,
-                                JobsCount = JobsCount,
+                                // One job unless asked otherwise, as the web dialog sends. Cloud and
+                                // 24.10 take an absent JobsCount as 1; 20.10 to 22.10 refuse it with
+                                // "Invalid JobsCount" (2026-10-08).
+                                JobsCount = JobsCount ?? 1,
                                 InputArguments = InputArguments,
                                 SpecificPriorityValue = specificPriorityValue,
                                 StopStrategy = NullIfEmpty(StopStrategy),

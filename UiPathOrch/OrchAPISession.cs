@@ -1914,6 +1914,17 @@ public partial class OrchAPISession : IDisposable
     {
         List<string> dropped = [];
 
+        // StopStrategy / StopProcessExpression / KillProcessExpression: refused by 20.10 (API 11.1)
+        // and 21.10 (API 13) -- the whole request fails with "startJobParameters must not be null" --
+        // and accepted by 22.4.4 and 22.10 (API 15) and 23.4 (API 16) (2026-10-08). No API 14 server
+        // was at hand, so the floor is the first version measured to take them.
+        if (OrchApiFloor.Below(apiVersion, 15))
+        {
+            if (sp.StopStrategy is not null) { dropped.Add(nameof(sp.StopStrategy)); sp.StopStrategy = null; }
+            if (sp.StopProcessExpression is not null) { dropped.Add(nameof(sp.StopProcessExpression)); sp.StopProcessExpression = null; }
+            if (sp.KillProcessExpression is not null) { dropped.Add(nameof(sp.KillProcessExpression)); sp.KillProcessExpression = null; }
+        }
+
         // AlertPendingExpression / AlertRunningExpression: taken to arrive in StartProcessDto with
         // the same release as in ProcessScheduleDto (v16, see StripProcessScheduleFieldsForApiVersion).
         // Not probed on StartJobs itself.
