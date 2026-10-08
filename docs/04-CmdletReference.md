@@ -226,6 +226,7 @@ Job execution, monitoring, and execution media (video recordings).
 | Get-OrchJob | List jobs (supports filtering) |
 | Start-OrchJob | Start a job |
 | Stop-OrchJob | Stop/kill a running job |
+| Wait-OrchJob | Wait until jobs end and return each as it ends |
 | Restart-OrchJob | Restart a Faulted job |
 | Resume-OrchJob | Resume a Suspended job |
 | Open-OrchJob | Open a job in the browser |

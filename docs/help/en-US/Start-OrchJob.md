@@ -24,7 +24,7 @@ Start-OrchJob [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <u
  [[-RuntimeType] <string>] [[-JobsCount] <int>] [[-InputArguments] <string>] [-Priority <string>]
  [-SpecificPriorityValue <int>] [-StopStrategy <string>] [-StopProcessExpression <string>]
  [-KillProcessExpression <string>] [-AlertPendingExpression <string>]
- [-AlertRunningExpression <string>] [-Confirm] [-WhatIf] [<CommonParameters>]
+ [-AlertRunningExpression <string>] [-Wait] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -108,6 +108,14 @@ PS Orch1:\Shared> Start-OrchJob BlankProcess19 -Priority High
 ```
 
 Starts a job with the priority High (SpecificPriorityValue 65) instead of the process default.
+
+### Example 9: Start jobs and wait until they end
+
+```powershell
+PS Orch1:\Shared> Start-OrchJob Report* -Wait
+```
+
+Starts a job for every process whose name begins with Report, waits until all of them have ended, and returns each job, with its final State, as it ends. The same as `Start-OrchJob Report* | Wait-OrchJob`.
 
 ## PARAMETERS
 
@@ -452,6 +460,27 @@ AcceptedValues:
 HelpMessage: ''
 ```
 
+### -Wait
+
+Waits until every job the cmdlet started has ended (Successful, Faulted, Stopped or Suspended) and returns each job, read again, as it ends, instead of the jobs as created. All the jobs are started first and then waited for together, so -Wait does not run the processes one after another. The output is the same as piping to `Wait-OrchJob`; for a time limit, pipe to `Wait-OrchJob -Timeout` instead.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -WhatIf
 
 Shows what would happen if the cmdlet runs.
@@ -511,5 +540,7 @@ The cmdlet iterates through the target folders, matches processes by the specifi
 [Get-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchJob.md)
 
 [Stop-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Stop-OrchJob.md)
+
+[Wait-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Wait-OrchJob.md)
 
 [Open-OrchJob](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Open-OrchJob.md)

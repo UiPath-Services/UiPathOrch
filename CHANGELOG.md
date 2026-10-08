@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`Wait-OrchJob` waits until jobs end, and `Start-OrchJob -Wait` starts and waits.** Jobs come
+  from the pipeline (`Start-OrchJob`, `Get-OrchJob`), from `-Id` (several, separated by commas) or
+  from `-BatchExecutionKey`. Each job is written, read again, as soon as it is Successful,
+  Faulted, Stopped or Suspended (Suspended as for `Wait-Job`, so a job waiting on a person does not
+  hold the caller). `-Timeout` (seconds, alias `-TimeoutSec`) reports the jobs still running as
+  OperationTimeout errors and leaves them running. `Start-OrchJob -Wait` starts every matching job
+  first and then waits for all of them, with the same output as piping to `Wait-OrchJob`. The
+  state is read every 5 seconds, one request per folder for all its jobs. A job just created can
+  be missing from Orchestrator's job list for a few seconds; the cmdlet reads such a job by its
+  key, and looks for `-Id` / `-BatchExecutionKey` again for about 8 seconds before reporting it
+  as not found. For example, to stop a machine once its jobs have ended:
+  `Get-OrchJob -Recurse -State Running,Pending | Where-Object HostMachineName -eq PC01 | Wait-OrchJob`.
 - **`Measure-OrchLog` counts robot logs without fetching them.** It takes the filter parameters of
   `Get-OrchLog` (`-Last`, `-Level`, `-ProcessName`, `-Machine`, `-WindowsIdentity`, `-JobKey`,
   `-TimeStampAfter`/`-TimeStampBefore`, `-Recurse`) and returns each folder's path and count, the

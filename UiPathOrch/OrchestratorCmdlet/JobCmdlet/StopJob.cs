@@ -57,7 +57,8 @@ public class StopJobCmdlet : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
-    private class IdCompleter : OrchArgumentCompleter
+    // The jobs not yet ended; Wait-OrchJob -Id offers the same.
+    internal class IdCompleter : OrchArgumentCompleter
     {
         public override IEnumerable<CompletionResult> CompleteArgumentCore(
             string commandName,

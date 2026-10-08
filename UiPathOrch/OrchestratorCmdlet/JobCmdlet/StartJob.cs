@@ -81,6 +81,10 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public string? AlertRunningExpression { get; set; }
 
+    // As Start-Process -Wait: the same output as piping to Wait-OrchJob (no time limit).
+    [Parameter]
+    public SwitchParameter Wait { get; set; }
+
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
@@ -181,6 +185,15 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
         }
     }
 
+    private readonly List<(OrchDriveInfo drive, Folder folder, Int64 id)> startedJobs = [];
+
+    protected override void EndProcessing()
+    {
+        if (!Wait || startedJobs.Count == 0) return;
+        using var cancelHandler = new ConsoleCancelHandler();
+        JobWaiter.Wait(this, startedJobs, null, cancelHandler.Token);
+    }
+
     // An empty CSV cell binds as "": send it as absent, as New-OrchTrigger does.
     private static string? NullIfEmpty(string? value) => string.IsNullOrEmpty(value) ? null : value;
 
@@ -250,7 +263,19 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
                                 WriteWarning($"[{MyInvocation.MyCommand.Name}] {drive.NameColonSeparator} (API v{drive.OrchAPISession.ApiVersion}) does not accept {string.Join(", ", dropped)}; the job is started without them.");
                             }
 
-                            WriteObject(drive.StartJobs(folder, startProcess), true);
+                            var jobs = drive.StartJobs(folder, startProcess);
+                            if (Wait)
+                            {
+                                // All of them are started first, then waited for together in EndProcessing.
+                                foreach (var job in jobs)
+                                {
+                                    if (job.Id is Int64 id) startedJobs.Add((drive, folder, id));
+                                }
+                            }
+                            else
+                            {
+                                WriteObject(jobs, true);
+                            }
                         }
                         catch (Exception ex)
                         {
