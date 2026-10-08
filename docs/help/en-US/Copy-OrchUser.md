@@ -31,7 +31,9 @@ Copy-OrchUser [-Path <string>] [-LiteralPath <string>] [-UserName] <string[]> [-
 
 Copies user registrations from a source Orchestrator tenant to one or more destination tenants. The cmdlet retrieves detailed user information from the source, resolves the user in the destination directory service, and creates the user at the destination with matching roles, license settings, unattended robot configuration, and execution settings.
 
-The -UserName parameter supports wildcards to copy multiple users at once. The -FullName and -Type parameters provide additional filtering. If the source and destination are the same drive, the copy is skipped silently.
+The -UserName parameter supports wildcards to copy multiple users at once. The -FullName and -Type parameters provide additional filtering. If the source and destination are the same drive, the copy is skipped silently, unless -UserMappingCsv is given (see below).
+
+**Within one tenant.** With the same drive as source and destination and a mapping CSV, each source user in the CSV gives its tenant roles and robot settings to the user its row maps it to, for a domain change or a switch of identity provider (`New-OrchUserMappingCsv -SourceDomain -DestinationDomain` writes such a CSV). Only rows that map a user onto another user are used. The source users are not changed. When the mapped user is not in the tenant yet, it is created from the directory; the e-mail fallback is not used, since it would find the source user itself. When it is already in the tenant, only the tenant roles it lacks are added and its own settings are kept, so the copy can be run again. An unattended robot is not copied: Orchestrator allows one robot per Windows account, and the source user still holds it. The new user is created with unattended sessions turned off, and a warning gives the steps for the switch-over: move the triggers that run on the robot, take the robot off the source user, and set it on the new one.
 
 For cross-instance migration, the cmdlet searches the destination organization's directory for a matching user by username (and email address as a fallback). If found, the directory identifier is used; if not found, a warning is displayed and the user is skipped.
 
@@ -209,7 +211,7 @@ HelpMessage: ''
 
 ### -UserMappingCsv
 
-Specifies the path to a user mapping CSV file for cross-instance migration. The CSV maps source usernames to destination usernames, which is required when copying users across Orchestrator instances where usernames differ. Use New-OrchUserMappingCsv to generate the mapping file. Requires a filesystem path (not an Orch: drive path). Only supported when the destination is a single drive.
+Specifies the path to a user mapping CSV file for cross-instance migration. The CSV maps source usernames to destination usernames, which is required when copying users across Orchestrator instances where usernames differ. Use New-OrchUserMappingCsv to generate the mapping file. Requires a filesystem path (not an Orch: drive path). Only supported when the destination is a single drive. With the source drive as the destination, the CSV moves the tenant's users onto other users of the same tenant (see DESCRIPTION).
 
 ```yaml
 Type: System.String
@@ -320,9 +322,9 @@ This cmdlet does not produce pipeline output. Created users are managed at the d
 
 The -Path parameter is a single string, not a string array. This differs from most other cmdlets in the module that accept string arrays for -Path.
 
-When the source and destination are the same drive, the copy is silently skipped.
+When the source and destination are the same drive and no -UserMappingCsv is given, the copy is silently skipped.
 
-Unattended robot passwords cannot be read from the source; only the credential structure is copied. If the source user has an unattended robot with a password, a warning is displayed advising to update the password using Update-OrchUser at the destination.
+Unattended robot passwords cannot be read from the source; only the credential structure is copied. If the source user's unattended robot keeps its password in Orchestrator (default credential type, no external name), a warning is displayed advising to set the password using Update-OrchUser at the destination.
 
 Classic folder (OrganizationUnit) assignments are migrated by matching folder names between source and destination. Only top-level classic folders with ProvisionType "Manual" are matched.
 

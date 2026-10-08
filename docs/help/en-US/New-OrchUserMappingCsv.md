@@ -13,7 +13,7 @@ title: New-OrchUserMappingCsv
 
 ## SYNOPSIS
 
-Generates a user mapping CSV file for cross-organization tenant migration.
+Generates a user mapping CSV file for cross-organization tenant migration, or for moving a tenant's users from one domain to another.
 
 ## SYNTAX
 
@@ -21,7 +21,7 @@ Generates a user mapping CSV file for cross-organization tenant migration.
 
 ```
 New-OrchUserMappingCsv [-SourceTenant] <string> [-DestinationTenant] <string> [-ExportCsv] <string>
- [-CsvEncoding <Encoding>] [<CommonParameters>]
+ [-CsvEncoding <Encoding>] [-SourceDomain <string>] [-DestinationDomain <string>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -39,6 +39,8 @@ The cmdlet performs the following steps:
 5. Exports the results to a CSV file with columns: SourceUserName, SourceEmail, SourceDisplayName, SourceSource, DestinationUserName, Name, SurName, DisplayName.
 
 If all destination users are automatically resolved, the CSV is ready to use. Otherwise, you must manually fill in the DestinationUserName column for unresolved entries and validate the file using Test-OrchUserMappingCsv.
+
+**Within one tenant.** When -SourceTenant and -DestinationTenant are the same drive, specify -SourceDomain and -DestinationDomain. The CSV then maps the tenant's users and groups of the source domain onto their counterparts in the destination domain, for a domain change or a switch of identity provider: `OLD\taro` becomes `NEW\taro`, and `taro@old.example` becomes `taro@new.example`. Users and groups come from the tenant users and the folder assignments; robot accounts and names without a domain are not included. DestinationUserName is filled when the directory knows the rewritten name, and left empty otherwise. `Copy-OrchUser` and `Copy-OrchFolderUser` take this CSV within the tenant and give the new users the old users' tenant roles, robot settings and folder assignments.
 
 The -SourceTenant and -DestinationTenant parameters support tab completion. Press [Ctrl+Space] or [Tab] to see available drives.
 
@@ -66,6 +68,17 @@ PS C:\> New-OrchUserMappingCsv -SourceTenant Orch1: -DestinationTenant Orch2: -E
 
 Generates the user mapping CSV with UTF-8 encoding.
 
+### Example 3: Move a tenant's users to a new domain
+
+```powershell
+PS C:\> New-OrchUserMappingCsv Orch1: Orch1: map.csv -SourceDomain OLD -DestinationDomain NEW
+PS C:\> Test-OrchUserMappingCsv map.csv Orch1: Orch1:
+PS C:\> Copy-OrchUser -Path Orch1: * -Destination Orch1: -UserMappingCsv map.csv
+PS C:\> Copy-OrchFolderUser -Path Orch1:\ -Recurse * -Destination Orch1:\ -UserMappingCsv map.csv
+```
+
+Maps every user and group of the domain OLD onto the same name in the domain NEW, checks the file, and gives the NEW users and groups the tenant roles, robot settings and folder assignments of the OLD ones. The OLD users are left as they are; remove them with `Remove-OrchUser` once the NEW users work.
+
 ## PARAMETERS
 
 ### -CsvEncoding
@@ -74,6 +87,27 @@ Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compa
 
 ```yaml
 Type: System.Text.Encoding
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -DestinationDomain
+
+Within one tenant, the domain the users and groups move to: the domain part of `DOMAIN\name` or of `name@domain` is replaced with this value. Required, with -SourceDomain, when -SourceTenant and -DestinationTenant are the same drive; ignored otherwise.
+
+```yaml
+Type: System.String
 DefaultValue: ''
 SupportsWildcards: false
 Aliases: []
@@ -131,6 +165,27 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -SourceDomain
+
+Within one tenant, the domain the users and groups move from. Only users and groups whose name carries this domain, as `DOMAIN\name` or `name@domain` (compared ignoring case), get a row. Required, with -DestinationDomain, when -SourceTenant and -DestinationTenant are the same drive; ignored otherwise.
+
+```yaml
+Type: System.String
+DefaultValue: ''
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -SourceTenant
 
 Specifies the source tenant drive name. All directory users from this tenant are enumerated by scanning PmGroup members, tenant users, and folder user assignments.
@@ -175,7 +230,7 @@ Outputs status messages indicating whether the user mapping is complete or requi
 
 This cmdlet enumerates directory users (Type = "DirectoryUser") and robot accounts (Type = "DirectoryRobot") — robot accounts own most per-user asset values in practice, and their names routinely differ between tenants. Local users are not included in the mapping because they can be recreated directly using New-PmUser.
 
-If the source and destination tenants are the same drive, a warning is issued. If they belong to the same organization (same partition global ID), a warning indicates that user mapping is not needed.
+If the source and destination tenants are the same drive and -SourceDomain or -DestinationDomain is missing, a warning is issued. If they are different tenants that belong to the same organization (same partition global ID), a warning indicates that user mapping is not needed.
 
 The cmdlet shows progress as it enumerates PmGroup members, tenant users, and folder users.
 

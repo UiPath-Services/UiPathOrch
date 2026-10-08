@@ -92,10 +92,13 @@ public class CopyFolderUserCmdlet : OrchestratorPSCmdlet
         var (dstDrive, dstRootFolder) = SessionState.ResolveToSingleFolder(Destination);
         var dstFolderCache = new Dictionary<string, Folder?>();
 
-        var userMapping = SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv);
+        var userMapping = SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv, allowSameDrive: true);
 
-        // Do nothing if source and destination are the same
-        if (srcRootFolder == dstRootFolder) return;
+        // Within one tenant, a mapping CSV gives the mapped users the source users' assignments,
+        // folder by folder in place (a domain or identity-provider change). Without one, copying
+        // a folder onto itself does nothing.
+        bool inPlace = srcDrive == dstDrive && userMapping is not null;
+        if (srcRootFolder == dstRootFolder && !inPlace) return;
 
         var wpUserName = UserName.ConvertToWildcardPatternList();
         var wpType = Type.ConvertToWildcardPatternList();
@@ -123,7 +126,7 @@ public class CopyFolderUserCmdlet : OrchestratorPSCmdlet
             }
 
             Folder? dstFolder = this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder, createIfMissing: true, createCache: dstFolderCache);
-            if (dstFolder is null || srcFolder == dstFolder) continue;
+            if (dstFolder is null || (srcFolder == dstFolder && !inPlace)) continue;
 
             try
             {

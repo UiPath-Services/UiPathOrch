@@ -1548,19 +1548,24 @@ internal static class SessionStateExtensions
         return ret.First();
     }
 
-    public static Dictionary<string, string>? LoadUserMappingCsv(this SessionState? sessionState, IWritableHost _this, OrchDriveInfo srcDrive, OrchDriveInfo dstDrive, string? path)
+    // allowSameDrive: the caller can apply the mapping within one tenant, re-homing its users onto
+    // other users of the same tenant (Copy-OrchUser, Copy-OrchFolderUser: a domain or identity-
+    // provider change). There, only the rows that name another user are returned -- an empty or
+    // identical destination would copy a user onto itself.
+    public static Dictionary<string, string>? LoadUserMappingCsv(this SessionState? sessionState, IWritableHost _this, OrchDriveInfo srcDrive, OrchDriveInfo dstDrive, string? path, bool allowSameDrive = false)
     {
         OrchDriveInfo.SessionState = sessionState;
 
         if (path is null) return null;
 
-        if (srcDrive == dstDrive)
+        bool sameDrive = srcDrive == dstDrive;
+        if (sameDrive && !allowSameDrive)
         {
             _this.WriteWarning("The specified SourceTenant and DestinationTenant drives are the same. Ignoring -UserMappingCsv parameter.");
             return null;
         }
 
-        if (srcDrive.IsSameOrganization(dstDrive))
+        if (!sameDrive && srcDrive.IsSameOrganization(dstDrive))
         {
             _this.WriteWarning("The specified SourceTenant and DestinationTenant belong to the same organization. Ignoring -UserMappingCsv parameter.");
             return null;
@@ -1629,8 +1634,22 @@ internal static class SessionStateExtensions
             throw new InvalidOperationException($"Error reading the CSV file at {physicalPath}: {ex.Message}", ex);
         }
 
+        if (sameDrive)
+        {
+            userMapping = KeepRenamingRows(userMapping);
+            if (userMapping.Count == 0)
+            {
+                _this.WriteWarning($"No row of '{path}' maps a user to another user. Nothing is copied within '{srcDrive.NameColon}'.");
+            }
+        }
+
         return userMapping;
     }
+
+    internal static Dictionary<string, string> KeepRenamingRows(Dictionary<string, string> userMapping) =>
+        userMapping
+            .Where(kv => !string.IsNullOrWhiteSpace(kv.Value) && !string.Equals(kv.Key, kv.Value, StringComparison.OrdinalIgnoreCase))
+            .ToDictionary(kv => kv.Key, kv => kv.Value, StringComparer.OrdinalIgnoreCase);
 
     #region DuDrive
 

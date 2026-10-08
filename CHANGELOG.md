@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **A user mapping CSV moves a tenant's users onto other users of the same tenant**, for a domain
+  change or a switch of identity provider. `New-OrchUserMappingCsv Orch1: Orch1: map.csv
+  -SourceDomain OLD -DestinationDomain NEW` maps the users and groups of OLD (`OLD\taro`,
+  `taro@old.example`) onto the same names in NEW, filled where the directory knows them.
+  `Copy-OrchUser` and `Copy-OrchFolderUser` take the CSV within one tenant and give the new users
+  the old users' tenant roles, robot settings and folder assignments. Nothing is removed from the
+  old users, and a run can be repeated: a new user already in the tenant only gains the roles it
+  lacks. An unattended robot is not copied, since Orchestrator allows one robot per Windows
+  account; the warning gives the switch-over steps. Per-user asset values and trigger robots are
+  left to `Find-OrchAccountReference`.
 - **`Find-OrchAccountReference` finds where a Windows account is used**, for example before its
   password changes: users (sign-in, unattended robot credential, attended robot), classic robots,
   credential assets (global and per-user values), and one step further, the per-user asset
@@ -144,6 +154,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`Copy-OrchFolderUser` with `-UserMappingCsv` no longer replaces the roles of a user already in
+  the folder.** An assignment replaces the user's roles in the folder, so the copy merges in the
+  roles already there — but it looked for the user under its source name. A user mapped to
+  another name lost its existing roles in the destination folder; it is now found by its mapped
+  name.
+- **`Copy-OrchUser` warns when the unattended robot's password has to be set again.** The warning
+  existed but was checked after the password had been cleared, so it never showed.
 - **`Start-OrchJob` without `-JobsCount` starts one job on Orchestrator 20.10 to 22.10.** It sent
   no job count, which Automation Cloud and 24.10 take as one but 20.10, 21.10, 22.4 and 22.10
   refuse with "Invalid JobsCount". It now sends 1 unless told otherwise, as the web dialog does.

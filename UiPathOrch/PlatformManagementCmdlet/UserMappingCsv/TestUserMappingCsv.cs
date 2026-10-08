@@ -186,10 +186,21 @@ public class TestUserMappingCsvCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
+            // Within one tenant a row maps a user onto ANOTHER user of the tenant (Copy-OrchUser /
+            // Copy-OrchFolderUser re-home its assignments); mapping onto itself does nothing, and
+            // the source's e-mail would only find the source user again.
+            bool sameTenant = srcDrive == dstDrive;
+            if (sameTenant && string.Equals(sourceUserName, destinationUserName, StringComparison.OrdinalIgnoreCase))
+            {
+                WriteWarning($"[WARNING] SourceUserName '{sourceUserName}' is mapped onto itself; the row does nothing within '{srcDrive.NameColon}'.");
+                warningCount++;
+                continue;
+            }
+
             // Reachable as a destination tenant user? This is the check that predicts copy
             // behavior — per-user values are re-homed against the tenant user list — and it
             // also covers robot accounts, which the directory search below may not return.
-            if (IsDestinationTenantUser(destinationUserName, srcUser?.EmailAddress, dstUsers))
+            if (IsDestinationTenantUser(destinationUserName, sameTenant ? null : srcUser?.EmailAddress, dstUsers))
             {
                 okCount++;
                 continue;

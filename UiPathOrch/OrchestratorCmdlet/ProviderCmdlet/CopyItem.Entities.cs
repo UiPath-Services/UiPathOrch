@@ -77,10 +77,15 @@ public partial class OrchProvider
             return;
         }
 
-        // Get already-assigned users
-        var dstFolderUsers = dstDrive.FolderUsersWithNoInherited.Get(newFolder)
-            .FilterFolderUsersByUserName(dstDrive, wpUserName)
-            .FilterByWildcards(u => u?.UserEntity?.Type, wpType).ToList();
+        // Within one tenant a mapping CSV re-homes the source users onto other users of the same
+        // tenant: only its rows are copied, and nothing may resolve back to the source user.
+        bool inPlace = srcDrive == dstDrive && userMapping is not null;
+
+        // Get already-assigned users. Not narrowed by -UserName: those patterns name SOURCE users,
+        // and a mapped user is already here under its DESTINATION name. Missing it would drop its
+        // current roles, because an assignment replaces the user's roles in the folder (25.10,
+        // 2026-10-08) -- the merge below is what keeps them.
+        var dstFolderUsers = dstDrive.FolderUsersWithNoInherited.Get(newFolder).ToList();
 
         string targetFolder = newFolder.GetPSPath();
 
@@ -92,10 +97,23 @@ public partial class OrchProvider
 
             reporter.WriteProgress(++index, userRole.UserEntity!.UserName);
 
-            if (shouldProcess || _this.ShouldProcess($"Item: '{userRole.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy FolderUser"))
+            string userName = userRole.UserEntity?.UserName ?? "";
+
+            // Name resolution via UserMappingCsv
+            string resolvedUserName = userName;
+            if (userMapping is not null && userMapping.TryGetValue(userName, out var mappedName)
+                && !string.IsNullOrEmpty(mappedName))
             {
-                string userName = userRole.UserEntity?.UserName ?? "";
-                string msg = $"Assigning the {userRole.UserEntity?.Type} \"{userName}\"";
+                resolvedUserName = mappedName;
+            }
+            if (inPlace && string.Equals(resolvedUserName, userName, StringComparison.OrdinalIgnoreCase)) continue;
+
+            string destinationLabel = inPlace ? $"{newFolder.GetPSPath()} as {resolvedUserName}" : newFolder.GetPSPath();
+            if (shouldProcess || _this.ShouldProcess($"Item: '{userRole.GetPSPath()}' Destination: '{destinationLabel}'", "Copy FolderUser"))
+            {
+                string msg = inPlace
+                    ? $"Assigning the {userRole.UserEntity?.Type} \"{resolvedUserName}\" (mapped from \"{userName}\")"
+                    : $"Assigning the {userRole.UserEntity?.Type} \"{userName}\"";
 
                 // assert(userRoles.Roles.Any())
                 List<Int64> newRoleIds = FindDstRoles(_this, srcDrive, userRole.Roles!, dstDrive, msg);
@@ -118,7 +136,7 @@ public partial class OrchProvider
 
                 // If the same user is already assigned to this folder,
                 // preserve the existing roles
-                var existingSameNameUser = dstFolderUsers.FirstOrDefault(u => string.Compare(u.UserEntity?.UserName, userRole.UserEntity?.UserName, StringComparison.OrdinalIgnoreCase) == 0);
+                var existingSameNameUser = dstFolderUsers.FirstOrDefault(u => string.Compare(u.UserEntity?.UserName, resolvedUserName, StringComparison.OrdinalIgnoreCase) == 0);
                 if (existingSameNameUser is not null)
                 {
                     newRolesPerFolder.First().RoleIds?.AddRange(existingSameNameUser.Roles!.Select(r => r.Id ?? 0));
@@ -173,14 +191,6 @@ public partial class OrchProvider
                     {
                         _this.WriteError(new ErrorRecord(new OrchException(userRole.GetPSPath(), $"Invalid Type: '{userRole.UserEntity?.Type}'."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
                         continue;
-                    }
-
-                    // Name resolution via UserMappingCsv
-                    string resolvedUserName = userName;
-                    if (userMapping is not null && userMapping.TryGetValue(userName, out var mappedName)
-                        && !string.IsNullOrEmpty(mappedName))
-                    {
-                        resolvedUserName = mappedName;
                     }
 
                     DirectoryObject resolved = null;
@@ -255,7 +265,8 @@ public partial class OrchProvider
                         //    srcUserEmail = srcDirectoryUser?.email;
                         //}
 
-                        if (!string.IsNullOrEmpty(srcUserEmail) && srcUserEmail != userName)
+                        // Not within one tenant: the source user's e-mail finds the source user itself.
+                        if (!inPlace && !string.IsNullOrEmpty(srcUserEmail) && srcUserEmail != userName)
                         {
                             resolved = dstDrive.SearchDirectory(srcUserEmail)?
                                 .Where(u => u.type == type)
@@ -265,7 +276,7 @@ public partial class OrchProvider
                     }
                     if (resolved is null)
                     {
-                        _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: {dstDrive.Name}: does not have the DirectoryUser \"{userName}\"."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
+                        _this.WriteError(new ErrorRecord(new OrchException(targetFolder, $"{msg}: {dstDrive.Name}: does not have the {dstType} \"{resolvedUserName}\"."), "AssignFolderUserError", ErrorCategory.InvalidOperation, targetFolder));
                         continue;
                     }
 

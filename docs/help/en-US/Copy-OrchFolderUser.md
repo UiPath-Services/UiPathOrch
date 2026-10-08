@@ -224,6 +224,8 @@ HelpMessage: ''
 
 Specifies the path to a user mapping CSV file for cross-instance migration. The CSV maps source usernames to destination usernames, which is required when copying folder users across Orchestrator instances where user accounts have different names. Use New-OrchUserMappingCsv to generate the mapping file. Requires a filesystem path (not an Orch: drive path).
 
+Within one tenant (-Destination on the same drive as -Path, even the same folder), the CSV gives each mapped user the folder assignments and roles of its source user, folder by folder, for a domain change or a switch of identity provider. Only rows that map a user onto another user are used, and the source users keep their assignments. A mapped user already assigned to a folder keeps its roles there and gains the source user's, so the copy can be run again.
+
 ```yaml
 Type: System.String
 DefaultValue: ''

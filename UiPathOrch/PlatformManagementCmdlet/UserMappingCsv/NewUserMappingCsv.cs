@@ -3,6 +3,7 @@ using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
+using UiPath.PowerShell.Positional;
 using User = UiPath.PowerShell.Entities.User;
 
 namespace UiPath.PowerShell.Commands;
@@ -25,6 +26,15 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(EncodingCompleter))]
     [EncodingArgumentTransformation]
     public Encoding? CsvEncoding { get; set; }
+
+    // Within one tenant (SourceTenant = DestinationTenant): the domain the users and groups move
+    // from, and the one they move to. OLD\taro becomes NEW\taro, taro@old.example becomes
+    // taro@new.example.
+    [Parameter]
+    public string? SourceDomain { get; set; }
+
+    [Parameter]
+    public string? DestinationDomain { get; set; }
 
     private static readonly string DefaultCsvName = "UserMapping.csv";
     private static readonly string[] CsvHeaders = ["SourceUserName", "SourceEmail", "SourceDisplayName", "SourceSource", "DestinationUserName", "Name", "SurName", "DisplayName"];
@@ -280,6 +290,107 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
     //    }
     //}
 
+    // The name a user or group of sourceDomain has in destinationDomain, or null when the name
+    // does not carry sourceDomain: DOMAIN\name and name@domain are rewritten; a bare name is not,
+    // since nothing in it says which domain it belongs to.
+    internal static string? RewriteDomain(string name, string sourceDomain, string destinationDomain)
+    {
+        int bs = name.IndexOf('\\');
+        if (bs > 0)
+        {
+            return string.Equals(name[..bs], sourceDomain, StringComparison.OrdinalIgnoreCase)
+                ? $"{destinationDomain}\\{name[(bs + 1)..]}" : null;
+        }
+        int at = name.LastIndexOf('@');
+        if (at > 0)
+        {
+            return string.Equals(name[(at + 1)..], sourceDomain, StringComparison.OrdinalIgnoreCase)
+                ? $"{name[..at]}@{destinationDomain}" : null;
+        }
+        return null;
+    }
+
+    // Within one tenant: one row per user and group of -SourceDomain (tenant users and folder
+    // assignments; robot accounts belong to no domain). DestinationUserName is the rewritten name
+    // when the directory knows it, otherwise empty for the operator to fill or delete.
+    private void WriteSameTenantMapping(OrchDriveInfo drive, StreamWriter? writer, string? providerCsvPath)
+    {
+        string[] types = ["DirectoryUser", "DirectoryGroup"];
+        var candidates = new Dictionary<string, (string type, string? email)>(StringComparer.OrdinalIgnoreCase);
+        void Add(string? name, string? type, string? email)
+        {
+            if (string.IsNullOrEmpty(name) || type is null || !types.Contains(type)) return;
+            if (RewriteDomain(name, SourceDomain!, DestinationDomain!) is null) return;
+            candidates.TryAdd(name, (type, email));
+        }
+
+        using var cancelHandler = new ConsoleCancelHandler();
+        try
+        {
+            foreach (var user in drive.Users.Get()) Add(user.UserName, user.Type, user.EmailAddress);
+        }
+        catch (Exception ex)
+        {
+            WriteWarning($"'{drive.NameColonSeparator}': Failed to get Tenant Users. Skipping. {ex.Message}");
+        }
+
+        foreach (var folder in drive.GetFolders().WithProgressBar(this, "Folder users", f => f.GetPSPath()))
+        {
+            cancelHandler.Token.ThrowIfCancellationRequested();
+            try
+            {
+                foreach (var fu in drive.FolderUsersWithNoInherited.Get(folder)) Add(fu.UserEntity?.UserName, fu.UserEntity?.Type, null);
+            }
+            catch (Exception ex)
+            {
+                WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetFolderUserError", ErrorCategory.InvalidOperation, folder));
+            }
+        }
+
+        var rows = new Dictionary<string, MappingCsvLine>(StringComparer.OrdinalIgnoreCase);
+        foreach (var (name, (type, email)) in candidates.OrderBy(c => c.Key, StringComparer.OrdinalIgnoreCase)
+            .WithProgressBar(this, "Destination directory", c => c.Key, candidates.Count))
+        {
+            cancelHandler.Token.ThrowIfCancellationRequested();
+            string rewritten = RewriteDomain(name, SourceDomain!, DestinationDomain!)!;
+            string? found = null;
+            try
+            {
+                var (resolved, result) = Core.OrchProvider.ResolveDstDirectoryUserPure(
+                    drive.SearchDirectory(rewritten), rewritten, DirectoryTypeItems.Items[type]);
+                if (result == Core.OrchProvider.FindDstDirectoryUserResult.Resolved) found = resolved!.identityName;
+            }
+            catch (Exception ex)
+            {
+                WriteWarning($"'{rewritten}': Failed to search the directory. {ex.Message}");
+            }
+
+            rows[name] = new MappingCsvLine
+            {
+                SourceUserName = name,
+                SourceEmail = email,
+                SourceSource = type == "DirectoryGroup" ? "group" : null,
+                DestinationUserName = found,
+            };
+        }
+
+        if (writer is null) return;
+        WriteCsvContent(writer, rows);
+        WriteCSVExportedMessage(this, providerCsvPath);
+        if (rows.Count == 0)
+        {
+            WriteWarning($"No user or group of '{SourceDomain}' was found in '{drive.NameColon}'.");
+        }
+        else if (rows.Values.All(r => !string.IsNullOrEmpty(r.DestinationUserName)))
+        {
+            WriteWarning($"Every user and group of '{SourceDomain}' has a counterpart in '{DestinationDomain}'. Copy-OrchUser and Copy-OrchFolderUser can use this CSV within '{drive.NameColon}'.");
+        }
+        else
+        {
+            WriteWarning($"Some users or groups of '{SourceDomain}' were not found in '{DestinationDomain}'. Fill out their 'DestinationUserName', or delete the rows, and verify the file with Test-OrchUserMappingCsv.");
+        }
+    }
+
     protected override void ProcessRecord()
     {
         var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
@@ -290,7 +401,12 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
         if (srcDrive == dstDrive)
         {
-            WriteWarning("The specified SourceTenant and DestinationTenant drives are the same. Please ensure that they are different and try again.");
+            if (string.IsNullOrWhiteSpace(SourceDomain) || string.IsNullOrWhiteSpace(DestinationDomain))
+            {
+                WriteWarning("The specified SourceTenant and DestinationTenant drives are the same. To map the users of one domain onto another within this tenant, specify -SourceDomain and -DestinationDomain.");
+                return;
+            }
+            WriteSameTenantMapping(srcDrive, writer, providerCsvPath);
             return;
         }
 

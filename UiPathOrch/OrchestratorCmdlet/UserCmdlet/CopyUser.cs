@@ -71,15 +71,25 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
 
         foreach (var dstDrive in dstDrives)
         {
-            if (srcDrive == dstDrive) continue;
+            // Within one tenant only with a mapping CSV: each mapped user gets the source
+            // user's tenant roles and robot settings (a domain or identity-provider change).
+            bool inPlace = srcDrive == dstDrive && userMapping is not null;
+            if (srcDrive == dstDrive && !inPlace) continue;
 
             foreach (var srcUser in srcUsers)
             {
                 cancelToken.ThrowIfCancellationRequested();
 
-                if (dstDrive.NameColonSeparator == srcUser.Path) continue;
+                string? inPlaceName = null;
+                if (inPlace)
+                {
+                    if (srcUser.UserName is null || !userMapping!.TryGetValue(srcUser.UserName, out inPlaceName)) continue;
+                }
+                else if (dstDrive.NameColonSeparator == srcUser.Path) continue;
 
-                var target = $"Item: {srcDrive.NameColonSeparator}{OrchArgumentCompleter.TipHelp(srcUser)} Destination: {dstDrive.NameColonSeparator}";
+                var target = inPlace
+                    ? $"Item: {srcDrive.NameColonSeparator}{OrchArgumentCompleter.TipHelp(srcUser)} Destination: {dstDrive.NameColonSeparator}{inPlaceName}"
+                    : $"Item: {srcDrive.NameColonSeparator}{OrchArgumentCompleter.TipHelp(srcUser)} Destination: {dstDrive.NameColonSeparator}";
 
                 reporter.Context = dstDrive.NameColonSeparator;
                 reporter.WriteProgress(++index, srcUser.UserName);
@@ -88,6 +98,15 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
                 {
                     try
                     {
+                        // The mapped user may already be in the tenant -- signed in once through a
+                        // directory group, or copied on an earlier run. Then only the tenant roles
+                        // it lacks are added; its own settings are left alone.
+                        if (inPlace && FindTenantUser(dstDrive.Users.Get(), inPlaceName!, srcUser.Type) is User existing)
+                        {
+                            AddMissingTenantRoles(_this, srcDrive, srcUser, dstDrive, existing, cancelToken);
+                            continue;
+                        }
+
                         string srcPartitionGlobalId = srcDrive.GetPartitionGlobalId();
                         string dstPartitionGlobalId = dstDrive.GetPartitionGlobalId();
 
@@ -127,6 +146,13 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
                             .ToList();
                         DirectoryObject dstPmUser = null;
                         if (dstPmUsers.Count == 1) dstPmUser = dstPmUsers.First(); // Only process when exactly one match is found
+
+                        if (inPlace && dstPmUser is null)
+                        {
+                            // Within one tenant the e-mail fallback below would find the source user itself.
+                            _this.WriteError(new ErrorRecord(new OrchException(target, $"'{inPlaceName}' was not found in the directory of {dstDrive.NameColonSeparator}."), "SearchUserError", ErrorCategory.ObjectNotFound, srcUser));
+                            continue;
+                        }
 
                         if (dstPmUser is null && !string.IsNullOrEmpty(newUser.EmailAddress) && newUser.UserName != newUser.EmailAddress)
                         {
@@ -240,7 +266,19 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
                             //    newUser.UnattendedRobot.CredentialStoreId, srcUser.GetPSPath())?.Id;
                             newUser.UnattendedRobot.Password = null;
 
-                            // TODO: Perhaps we should issue a warning to update the UR password.
+                            // Within one tenant the source user still holds the account, and
+                            // Orchestrator allows one robot per Windows account ("There already
+                            // exists a floating robot for CORP\svc_rpa!", 25.10, 2026-10-08), and an
+                            // unattended robot without an account is refused too ("Username should
+                            // be present in the Provision Settings."). So the user is created
+                            // without one, and the robot is moved by hand when the users switch
+                            // over -- after a domain change it is often a new account anyway.
+                            if (inPlace && !string.IsNullOrEmpty(newUser.UnattendedRobot.UserName))
+                            {
+                                _this.WriteWarning($"\"{dstDrive.NameColonSeparator}{inPlaceName}\": Created without the unattended robot of '{srcUser.UserName}', which runs as '{newUser.UnattendedRobot.UserName}': Orchestrator allows one robot per Windows account. When switching over, move the triggers that run on that robot (Find-OrchAccountReference lists them), take the robot off '{srcUser.UserName}' (Update-OrchUser -MayHaveUnattendedSession false), and set it here (Update-OrchUser -MayHaveUnattendedSession true -UR_UserName -UR_Password).");
+                                newUser.UnattendedRobot = null;
+                                newUser.MayHaveUnattendedSession = false;
+                            }
                         }
 
                         // migrating classic folders list. I am not sure this is needed;
@@ -284,9 +322,11 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
                             createdUser.Path = dstDrive.NameColonSeparator;
                             //dstDrive._dicUsers?.Add(createdUser);
                             //WriteObject(createdUser);
-                            if (newUser.UnattendedRobot is not null && !string.IsNullOrEmpty(newUser.UnattendedRobot.Password))
+                            // The API never returns the robot's password, so it was not copied.
+                            if (!inPlace && NeedsUnattendedPassword(detailedUser.UnattendedRobot))
                             {
-                                _this.WriteWarning($"\"{System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser))}\": Please update -UR_Password with Update-OrchUser cmdlet.");
+                                string created = inPlace ? $"{dstDrive.NameColonSeparator}{inPlaceName}" : System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser));
+                                _this.WriteWarning($"\"{created}\": The unattended robot's password of '{detailedUser.UnattendedRobot!.UserName}' is not copied. Set it with Update-OrchUser -UR_Password.");
                             }
                             dstDrive.Users.ClearCache();
                             dstDrive.UsersDetailed.ClearCache();
@@ -299,6 +339,70 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
                 }
             }
         }
+    }
+
+    // The tenant user an in-place copy lands on, by user name or e-mail and of the same type.
+    internal static User? FindTenantUser(IEnumerable<User> users, string name, string? type) =>
+        users.FirstOrDefault(u =>
+            string.Equals(u.Type, type, StringComparison.OrdinalIgnoreCase)
+            && (string.Equals(u.UserName, name, StringComparison.OrdinalIgnoreCase)
+                || string.Equals(u.EmailAddress, name, StringComparison.OrdinalIgnoreCase)));
+
+    // The source's tenant roles the existing user lacks. Folder roles and roles the tenant no
+    // longer has are left out, as on a create.
+    internal static string[] MissingTenantRoles(IEnumerable<string>? sourceRoles, IEnumerable<string>? existingRoles, IEnumerable<Role> tenantRoles)
+    {
+        var have = new HashSet<string>(existingRoles ?? [], StringComparer.OrdinalIgnoreCase);
+        var tenantRoleNames = new HashSet<string>(
+            tenantRoles.Where(r => r.Type != "Folder" && r.Name is not null).Select(r => r.Name!), StringComparer.OrdinalIgnoreCase);
+        return (sourceRoles ?? [])
+            .Where(r => tenantRoleNames.Contains(r) && !have.Contains(r))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+    }
+
+    // A password lives in Orchestrator only for the default credential type with no external
+    // name; then the copy, which cannot read it, leaves the robot without one.
+    internal static bool NeedsUnattendedPassword(UnattendedRobot? ur) =>
+        ur is not null
+        && !string.IsNullOrEmpty(ur.UserName)
+        && (string.IsNullOrEmpty(ur.CredentialType) || string.Equals(ur.CredentialType, "Default", StringComparison.OrdinalIgnoreCase))
+        && string.IsNullOrEmpty(ur.CredentialExternalName);
+
+    private static void AddMissingTenantRoles(IWritableHost _this, OrchDriveInfo srcDrive, User srcUser,
+        OrchDriveInfo dstDrive, User existing, CancellationToken cancelToken)
+    {
+        cancelToken.ThrowIfCancellationRequested();
+        string target = existing.GetPSPath();
+
+        var detailedSrc = srcDrive.UsersDetailed.Get(srcUser.Id!.Value);
+        var detailedDst = dstDrive.UsersDetailed.Get(existing.Id!.Value);
+        if (detailedSrc is null || detailedDst is null)
+        {
+            _this.WriteError(new ErrorRecord(new OrchException(target, $"Failed to retrieve {target}."), "GetUserError", ErrorCategory.InvalidOperation, existing));
+            return;
+        }
+
+        if (!string.IsNullOrEmpty(detailedSrc.UnattendedRobot?.UserName) && string.IsNullOrEmpty(detailedDst.UnattendedRobot?.UserName))
+        {
+            _this.WriteWarning($"\"{target}\": Already in the tenant, so its robot settings are kept. '{srcUser.UserName}' runs its unattended robot as '{detailedSrc.UnattendedRobot!.UserName}'; set it with Update-OrchUser if this user should too.");
+        }
+
+        var missing = MissingTenantRoles(detailedSrc.RolesList, detailedDst.RolesList, dstDrive.Roles.Get());
+        if (missing.Length == 0)
+        {
+            _this.WriteVerbose($"\"{target}\": Already has the tenant roles of '{srcUser.UserName}'.");
+            return;
+        }
+
+        detailedDst.LoginProviders = null;
+        detailedDst.CreatorUserId = null;
+        detailedDst.UserRoles = null;
+        detailedDst.RolesList = (detailedDst.RolesList ?? []).Concat(missing).ToArray();
+        dstDrive.OrchAPISession.PutUser(detailedDst);
+        _this.WriteVerbose($"\"{target}\": Added the tenant roles {string.Join(", ", missing.Select(r => $"'{r}'"))}.");
+        dstDrive.Users.ClearCache();
+        dstDrive.UsersDetailed.ClearCache();
     }
 
     protected override void ProcessRecord()
@@ -315,7 +419,7 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
 
         using var cancelHandler = new ConsoleCancelHandler();
         var userMapping = dstDrives.Count == 1
-            ? SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrives[0], UserMappingCsv)
+            ? SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrives[0], UserMappingCsv, allowSameDrive: true)
             : null;
         CopyUsers(this, srcDrive, wpUserName, wpFullName, wpType, dstDrives, false, cancelHandler.Token, userMapping);
     }
