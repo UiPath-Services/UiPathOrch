@@ -884,7 +884,7 @@ public partial class OrchAPISession : IDisposable
             throw new DeterministicApiException(
                 "This operation is not available on this Orchestrator: the server returned an HTML page "
                 + "instead of JSON. Platform Management / licensing endpoints like this one are available "
-                + "only on Automation Cloud.");
+                + "on Automation Cloud and Automation Suite, not on a standalone Orchestrator.");
         }
     }
 

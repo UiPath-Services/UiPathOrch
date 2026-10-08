@@ -43,6 +43,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **Platform Management list cmdlets report a server without the feature and carry on.**
+  `Get-PmLicense`, `Get-PmUser`, `Get-PmGroup`, `Get-PmExternalApplication` and seven others
+  stopped the whole command when one drive lacked the endpoint (a standalone server) or refused
+  the request, so the drives after it were never read. That drive now gets an error and the
+  others still answer. The "not available on this Orchestrator" message also names Automation
+  Suite alongside Automation Cloud, where it used to say Automation Cloud only.
+
 - **`Copy-Item` copies test data queues on standalone 24.10 and 25.10.** It skipped them, and their
   items, below API 18, but standalone 24.10 and 25.10.2 (API 17) have test data queues — the web UI
   shows them, and the other test-data-queue cmdlets already worked there. The copy now runs from

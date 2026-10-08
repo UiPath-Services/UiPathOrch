@@ -57,8 +57,8 @@ public class GetPmGroupCmdlet : OrchestratorPSCmdlet
 
         // Fetch in parallel; per-org caches serialize same-partition fetches
         // internally. Filtering / WriteObject / CSV stay on the pipeline
-        // thread. No try/catch here — as in the original, a fetch failure
-        // propagates and terminates the cmdlet (surfaced by GetResult).
+        // thread. A drive whose fetch fails is reported and the others still
+        // run, as in the other Pm list cmdlets (it used to end the command).
         using var results = OrchThreadPool.RunForEach(drives,
             drive => drive.NameColonSeparator,
             drive => drive,
@@ -67,7 +67,16 @@ public class GetPmGroupCmdlet : OrchestratorPSCmdlet
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var result in results)
         {
-            var entities = result.GetResult(cancelHandler.Token);
+            IEnumerable<PmGroup>? entities;
+            try
+            {
+                entities = result.GetResult(cancelHandler.Token);
+            }
+            catch (OrchException ex)
+            {
+                WriteError(new ErrorRecord(ex, "GetPmGroupError", ErrorCategory.InvalidOperation, ex.Target));
+                continue;
+            }
             if (entities is null) continue;
             var drive = result.Source;
             var groups = entities

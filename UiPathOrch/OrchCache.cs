@@ -324,13 +324,19 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
         _getterDetailed = getterDetailed;
     }
 
+    // Not an iterator: the fetch -- and any API error -- happens in this call, not when the
+    // result is first enumerated. As an iterator, a cmdlet that called Get() in its worker pool
+    // received an unstarted enumerator; the request ran later inside WriteObject, outside the
+    // pool's OrchException wrapping, so a server without the endpoint ("HTML page instead of
+    // JSON") ended the whole command instead of failing that drive (Get-PmLicense and ten other
+    // Pm cmdlets on standalone servers, 2026-10-07).
     public IEnumerable<T> Get()
     {
         // Data-fetch path: force the partition lookup. The PartitionGlobalId
         // property is passive (returns null until populated) so a Get() at
         // session start would silently yield nothing instead of authenticating.
         var partitionGlobalId = _drive.GetPartitionGlobalId();
-        if (string.IsNullOrEmpty(partitionGlobalId)) yield break;
+        if (string.IsNullOrEmpty(partitionGlobalId)) return [];
         // Stored under the org key (server + partition), fetched by the partition.
         var orgKey = _drive.OrgKeyFor(partitionGlobalId);
 
@@ -366,6 +372,11 @@ public class ListCachePerOrganization<T> : ITenantCacheClearable
                 }
             }
         }
+        return Enumerate(orgKey, cachePerOrg);
+    }
+
+    private IEnumerable<T> Enumerate(string orgKey, List<T> cachePerOrg)
+    {
         foreach (var t in cachePerOrg.Where(t => t is not null))
         {
             // Prefer the detailed cache entry when one exists (initializer was
