@@ -297,7 +297,7 @@ HelpMessage: ''
 
 ### -Machine
 
-Filters logs by machine name. Tab completion suggests machine names assigned to the target folder.
+Filters logs by machine name. The name is looked up among all machines of the tenant, not only those assigned to the target folder, since a folder's logs can come from a machine it is not assigned (a personal workspace machine, for example). A name no machine of the tenant has returns no logs. Tab completion suggests the machines assigned to the target folder first, then the tenant's other machines.
 
 ```yaml
 Type: System.String
@@ -445,7 +445,7 @@ HelpMessage: ''
 
 ### -WindowsIdentity
 
-Filters logs by the Windows identity (user name) of the robot. Wildcard characters are permitted. Tab completion suggests Windows identities from the target folder's user robots.
+Filters logs by the Windows identity (domain\user) the job ran under. One value without wildcard characters is compared with the identity each log records, ignoring case, so it also finds the logs of attended robots. A wildcard pattern, or several values, is compared instead with the user names configured on the target folder's robots and filters by those robots, because Orchestrator does not combine several identities in one query; the logs of an attended robot, whose configured user name is generated ("autogen\..."), are not found that way. A value that matches nothing returns no logs. Tab completion suggests the user names configured on the target folder's robots.
 
 ```yaml
 Type: System.String[]

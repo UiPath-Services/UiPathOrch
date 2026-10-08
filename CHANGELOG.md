@@ -92,6 +92,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`Get-OrchLog -Machine` / `-WindowsIdentity` with a name that matches nothing returns no logs.**
+  The condition used to be dropped instead, so a mistyped name returned every log of the folder.
+  `-Machine` now looks the name up among the tenant's machines, not only those assigned to the
+  folder: a folder's logs can come from a machine it is not assigned, such as a personal
+  workspace machine, which could not be named before; its tab completion offers the folder's
+  machines first, then the tenant's others. One `-WindowsIdentity` value without wildcards now
+  filters on the identity each log records (ignoring case), so it finds attended logs: through
+  the robot's configured user name, which is "autogen\..." for an attended robot, it found none.
+  A wildcard or several values still go through the robots' configured user names, because
+  Orchestrator on Automation Cloud does not combine several identities in one query (an "or" of
+  two counts nothing, an "in" is ignored). The same applies to `Measure-OrchLog`.
 - **`Get-OrchLog` reads past 10,000 logs on Automation Cloud.** Where Orchestrator keeps the logs in
   Elasticsearch, a page whose position plus size reaches 10,000 is refused ("Depth of pagination is
   limited in Elasticsearch by the max_result_window index setting"), and `Get-OrchLog` then

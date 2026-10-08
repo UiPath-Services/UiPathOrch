@@ -226,7 +226,7 @@ HelpMessage: ''
 
 ### -Machine
 
-Counts only the logs of this machine. Tab completion suggests machine names assigned to the target folder.
+Counts only the logs of this machine. The name is looked up among all machines of the tenant, as in `Get-OrchLog`; a name no machine of the tenant has counts no logs. Tab completion suggests the machines assigned to the target folder first, then the tenant's other machines.
 
 ```yaml
 Type: System.String
@@ -310,7 +310,7 @@ HelpMessage: ''
 
 ### -WindowsIdentity
 
-Counts only the logs of robots with these Windows identities (user names). Wildcard characters are permitted. Tab completion suggests Windows identities from the target folder's user robots.
+Counts only the logs of jobs that ran under these Windows identities (domain\user). One value without wildcard characters is compared with the identity each log records, ignoring case; a wildcard pattern or several values are compared with the user names configured on the target folder's robots, as in `Get-OrchLog`. A value that matches nothing counts no logs. Tab completion suggests the user names configured on the target folder's robots.
 
 ```yaml
 Type: System.String[]

@@ -113,17 +113,24 @@ public abstract class RobotLogFilterCmdlet : OrchestratorPSCmdlet
 
             var wp = CreateWPFromWordToComplete(wordToComplete);
 
-            var results = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            // -Machine resolves against the tenant's machines (see MakeFilter), so every tenant
+            // machine is a candidate; those assigned to the folder come first, as the likelier
+            // ones. A folder's logs can come from a machine it is not assigned.
+            var assignedPerFolder = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
+            var assigned = assignedPerFolder.SelectMany(g => g).Select(m => m.Name).ToList();
+            var tenant = drivesFolders.Select(df => df.drive).Distinct().SelectMany(d => d.Machines.Get()).Select(m => m.Name).ToList();
 
-            foreach (var result in results)
+            HashSet<string> offered = new(StringComparer.OrdinalIgnoreCase);
+            foreach (var (names, tip) in new[] { (assigned, "Assigned to the folder"), (tenant, "Machine of the tenant") })
             {
-                foreach (var machineFolder in result
-                    .Where(q => wp.IsMatch(q.Name))
-                    .ExcludeByWildcards(q => q?.Name, wpName)
-                    .OrderBy(q => q.Name))
+                foreach (var name in names
+                    .Where(n => !string.IsNullOrEmpty(n))
+                    .Where(n => wp.IsMatch(n))
+                    .ExcludeByWildcards(n => n, wpName)
+                    .OrderBy(n => n))
                 {
-                    //string tiphelp = TipHelp(e);
-                    yield return new CompletionResult(PathTools.EscapePSText(machineFolder.Name), machineFolder.Name, CompletionResultType.ParameterValue, machineFolder.Name);
+                    if (!offered.Add(name!)) continue;
+                    yield return new CompletionResult(PathTools.EscapePSText(name), name, CompletionResultType.ParameterValue, tip);
                 }
             }
         }
@@ -242,27 +249,30 @@ public abstract class RobotLogFilterCmdlet : OrchestratorPSCmdlet
         }
         #endregion
 
+        // A -Machine or -WindowsIdentity that matches nothing makes the folder hold no matching
+        // log ("null"), as -ProcessName does. It used to drop the condition instead, so an unknown
+        // name returned every log of the folder.
+
         #region Machine
         if (!string.IsNullOrEmpty(Machine))
         {
-            var machines = drive.FolderMachinesAssigned.Get(folder);
-            filter.AddIfNotNull(machines
-                //.SelectByWildcards(m => m?.Name, Machine)
-                .Where(m => string.Compare(m?.Name, WildcardPattern.Unescape(Machine), StringComparison.OrdinalIgnoreCase) == 0)
-                .CreateOrFilter(m => $"MachineKey eq {m.Key}"));
+            // Against the tenant's machines, not only those assigned to the folder: a folder's
+            // logs can come from a machine it is not assigned (Orch1:\Autopilot, 2026-10-08:
+            // every log from the personal workspace machine, no machine assigned).
+            var machines = drive.Machines.Get()
+                .Where(m => string.Equals(m?.Name, WildcardPattern.Unescape(Machine), StringComparison.OrdinalIgnoreCase))
+                .ToList();
+            if (machines.Count == 0) return "null";
+            filter.AddIfNotNull(machines.CreateOrFilter(m => $"MachineKey eq {m.Key}"));
         }
         #endregion
 
         #region HostIdentity
         if (WindowsIdentity is not null)
         {
-            var userRobots = drive.UserRobots.Get(folder);
-            filter.AddIfNotNull(userRobots
-                .SelectByWildcards(u => u?.UserName, WindowsIdentity)
-                .Where(u => u.RobotNames is not null)
-                .SelectMany(u => u?.RobotNames!)
-                .Where(r => !string.IsNullOrEmpty(r))
-                .CreateOrFilter(r => $"RobotName eq '{Uri.EscapeDataString(PathTools.EscapeODataLiteral(r))}'"));
+            string? clause = BuildWindowsIdentityClause(WindowsIdentity, drive.UserRobots.Get(folder));
+            if (clause is null) return "null";
+            filter.Add(clause);
         }
         #endregion
 
@@ -285,6 +295,35 @@ public abstract class RobotLogFilterCmdlet : OrchestratorPSCmdlet
             return $"(JobKey eq {jobKeyGuid})";
         }
         throw new ArgumentException($"-JobKey must be a GUID; got '{jobKey}'.");
+    }
+
+    // The -WindowsIdentity condition, or null when it can match no log.
+    //
+    // One plain value filters the log's own WindowsIdentity field (case-insensitive). That is
+    // the Windows login the job ran under, so it finds attended logs too: those carry the
+    // user's login while their robot is configured as "autogen\..." -- the robot-name route
+    // below never reaches them (Orch1:\Autopilot, 2026-10-08: 0 logs that way, 6568 by the field).
+    //
+    // A wildcard or several values go through the folder's robots instead: each identity the
+    // folder knows is matched against the patterns and turned into its robot names. The
+    // robot-name route stays because "or" is honoured on RobotName but not on WindowsIdentity:
+    // on Cloud, "(WindowsIdentity eq 'a') or (WindowsIdentity eq 'b')" counts 0 even when 'a'
+    // alone counts thousands, and "WindowsIdentity in (...)" is ignored outright.
+    // Pure, so both routes are unit-testable.
+    internal static string? BuildWindowsIdentityClause(string[] windowsIdentity, IEnumerable<UserRobots> folderUserRobots)
+    {
+        if (windowsIdentity.Length == 1 && !WildcardPattern.ContainsWildcardCharacters(windowsIdentity[0]))
+        {
+            return $"(WindowsIdentity eq '{Uri.EscapeDataString(PathTools.EscapeODataLiteral(windowsIdentity[0]))}')";
+        }
+
+        return folderUserRobots
+            .SelectByWildcards(u => u?.UserName, windowsIdentity)
+            .Where(u => u.RobotNames is not null)
+            .SelectMany(u => u.RobotNames!)
+            .Where(r => !string.IsNullOrEmpty(r))
+            .Distinct()
+            .CreateOrFilter(r => $"RobotName eq '{Uri.EscapeDataString(PathTools.EscapeODataLiteral(r))}'");
     }
 
     protected bool HasFilterParameter =>
