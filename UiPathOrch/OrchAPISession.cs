@@ -945,19 +945,22 @@ public partial class OrchAPISession : IDisposable
             : $"{baseUrl}{endPoint}?top={top}&skip={skip}{query}";
 
     private IEnumerable<T> GetEnumerable<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
-        => Paginate<T>((top, pageSkip) =>
+        => Paginate<T>((top, pageSkip) => GetPage<T>(endPoint, folderId, query, top, pageSkip), skip, first, stopOnPartialPage: true);
+
+    // One OData page ($top / $skip) of an Orchestrator list endpoint.
+    private T[]? GetPage<T>(string endPoint, Int64? folderId, string? query, ulong top, ulong skip)
+    {
+        string url = BuildPagedUrl(_base_url_orchestrator, endPoint, top, skip, query, odataStyle: true);
+        var request = new HttpRequestMessage(HttpMethod.Get, url);
+        if (folderId.HasValue)
         {
-            string url = BuildPagedUrl(_base_url_orchestrator, endPoint, top, pageSkip, query, odataStyle: true);
-            var request = new HttpRequestMessage(HttpMethod.Get, url);
-            if (folderId.HasValue)
-            {
-                request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
-            }
-            using var response = HttpClient_Send(request);
-            EnsureSuccessStatusCode(response);
-            string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
-            return DeserializeApiJson<HttpBodyValues<T>>(strBody)?.value;
-        }, skip, first, stopOnPartialPage: true);
+            request.Headers.Add("X-UIPATH-OrganizationUnitId", folderId.ToString());
+        }
+        using var response = HttpClient_Send(request);
+        EnsureSuccessStatusCode(response);
+        string strBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+        return DeserializeApiJson<HttpBodyValues<T>>(strBody)?.value;
+    }
 
     // identity uses non-$ "top"/"skip" (see Paginate for the page-size assumption).
     private IEnumerable<T> GetEnumerableIdentity<T>(string endPoint, Int64? folderId = null, string? query = null, ulong skip = 0, ulong first = ulong.MaxValue)
@@ -3024,7 +3027,112 @@ public partial class OrchAPISession : IDisposable
         {
             order = $"&$orderby={orderBy} desc";
         }
-        return GetEnumerable<Log>("/odata/RobotLogs", folderId, $"{query}{order}", skip, first);
+
+        // Another order (Level) has no key to resume from; it keeps $skip paging and the
+        // 10000 limit below.
+        if (orderBy != "TimeStamp")
+        {
+            return GetEnumerable<Log>("/odata/RobotLogs", folderId, $"{query}{order}", skip, first);
+        }
+
+        return PageRobotLogsByTimeStamp(
+            (anchor, top, pageSkip) => GetPage<Log>("/odata/RobotLogs", folderId, $"{AddFilterClause(query, anchor)}{order}", top, pageSkip),
+            orderAscending, skip, first);
+    }
+
+    // With an Elasticsearch log store (Cloud) a page is refused once $skip + $top reaches its
+    // max_result_window: "Depth of pagination is limited in Elasticsearch by the
+    // max_result_window index setting. Make sure skip + take is lower than 10000." So
+    // Get-OrchLog returned nothing at all for a folder holding more matching logs than that
+    // (Orch1, 2026-10-08: 37337 at Trace). Pages are therefore read in windows: before $skip
+    // would reach the limit, the next window starts again at $skip 0 from the millisecond of
+    // the last row read ("TimeStamp lt <that ms + 1ms>" descending, "ge <that ms>" ascending),
+    // and the rows of that millisecond already read are dropped. A millisecond, not the full
+    // timestamp, because the store may keep milliseconds only. A SQL log store (standalone)
+    // takes any $skip; there the windows only cost an extra request per 9000 rows.
+    //
+    // fetchPage(anchorClause, top, skip) returns one page in TimeStamp order. Pure apart from
+    // it, so the windowing is unit-testable.
+    internal static IEnumerable<Log> PageRobotLogsByTimeStamp(
+        Func<string?, ulong, ulong, Log[]?> fetchPage, bool ascending, ulong skip, ulong first,
+        ulong pageSize = 1000, ulong maxResultWindow = 10000)
+    {
+        if (first == 0) yield break;
+
+        // A -Skip that fits in the first window goes to the server; a larger one is counted off here.
+        ulong pageSkip = skip + pageSize < maxResultWindow ? skip : 0;
+        ulong toSkip = skip - pageSkip;
+        ulong emitted = 0;
+
+        string? anchor = null;
+        long anchorMs = long.MinValue;
+        HashSet<Log> readInAnchorMs = [];   // rows of the anchor's millisecond read before the window moved
+        long lastMs = long.MinValue;
+        HashSet<Log> readInLastMs = [];     // rows of the last row's millisecond read so far
+
+        while (true)
+        {
+            ulong want = first == ulong.MaxValue ? pageSize : Math.Min(pageSize, SaturatingAdd(first - emitted, toSkip));
+            if (anchor is not null && pageSkip == 0) want = Math.Min(pageSize, SaturatingAdd(want, (ulong)readInAnchorMs.Count));
+
+            if (pageSkip + want >= maxResultWindow)
+            {
+                if (lastMs == long.MinValue) yield break;
+                if (anchor is not null && lastMs == anchorMs)
+                {
+                    throw new InvalidOperationException($"More than {maxResultWindow} robot logs share the millisecond {new DateTime(lastMs * TimeSpan.TicksPerMillisecond, DateTimeKind.Utc):O}; they cannot be paged past.");
+                }
+                anchorMs = lastMs;
+                var anchorTime = new DateTime(anchorMs * TimeSpan.TicksPerMillisecond, DateTimeKind.Utc);
+                anchor = ascending
+                    ? $"(TimeStamp ge {anchorTime.ToODataUtc()})"
+                    : $"(TimeStamp lt {anchorTime.AddMilliseconds(1).ToODataUtc()})";
+                readInAnchorMs = [.. readInLastMs];
+                pageSkip = 0;
+                continue;
+            }
+
+            var page = fetchPage(anchor, want, pageSkip);
+            if (page is null || page.Length == 0) yield break;
+
+            foreach (var log in page)
+            {
+                long ms = (log.TimeStamp?.ToUniversalTime().Ticks ?? 0) / TimeSpan.TicksPerMillisecond;
+                if (ms != lastMs)
+                {
+                    lastMs = ms;
+                    readInLastMs.Clear();
+                }
+                bool readBefore = anchor is not null && ms == anchorMs && readInAnchorMs.Contains(log);
+                readInLastMs.Add(log);
+                if (readBefore) continue;
+
+                if (toSkip > 0)
+                {
+                    toSkip--;
+                    continue;
+                }
+                yield return log;
+                if (++emitted == first) yield break;
+            }
+
+            if ((ulong)page.Length < want) yield break;
+            pageSkip += (ulong)page.Length;
+        }
+    }
+
+    private static ulong SaturatingAdd(ulong a, ulong b) => a > ulong.MaxValue - b ? ulong.MaxValue : a + b;
+
+    // Adds one clause to the "&$filter=..." that RobotLogFilterCmdlet.MakeFilter builds, or
+    // starts one when there is none.
+    internal static string? AddFilterClause(string? query, string? clause)
+    {
+        if (string.IsNullOrEmpty(clause)) return query;
+        const string filterKey = "&$filter=";
+        int i = query?.IndexOf(filterKey, StringComparison.Ordinal) ?? -1;
+        if (i < 0) return $"{query}{filterKey}{clause}";
+        int start = i + filterKey.Length;
+        return $"{query![..start]}{clause} and {query[start..]}";
     }
 
     // GetTotalCount, not $count on /odata/RobotLogs: with an Elasticsearch log store (Cloud)

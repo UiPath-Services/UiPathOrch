@@ -339,7 +339,7 @@ HelpMessage: ''
 
 ### -OrderBy
 
-Specifies the field to sort the results by. If not specified, the default sort field is `TimeStamp`. Tab completion suggests available sort fields.
+Specifies the field to sort the results by. If not specified, the default sort field is `TimeStamp`. Tab completion suggests available sort fields. When the logs are kept in Elasticsearch (Automation Cloud), sorting by `Level` returns at most 10,000 logs per folder; past that the folder's request is refused with an error.
 
 ```yaml
 Type: System.String
@@ -500,6 +500,8 @@ This cmdlet returns Log objects representing UiPath Orchestrator robot execution
 If no filter parameters are specified, the cmdlet outputs the contents of the local log cache and writes a warning. You must specify at least one filter parameter to query Orchestrator.
 
 When the `-Level` parameter is omitted, it defaults to `Info`, returning logs at the Info level and above.
+
+When Orchestrator keeps the logs in Elasticsearch, as Automation Cloud does, it refuses a page whose position plus size reaches 10,000. Sorted by `TimeStamp` (the default), the cmdlet reads past that point in windows: each window starts again from the millisecond of the last log read, and the logs of that millisecond already returned are left out, so every log is returned once and in order. A large `-Skip` is counted off on the client, which reads the skipped logs. To learn only how many logs match, use `Measure-OrchLog`, which asks the count without reading the logs.
 
 ## RELATED LINKS
 

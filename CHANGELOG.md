@@ -92,6 +92,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`Get-OrchLog` reads past 10,000 logs on Automation Cloud.** Where Orchestrator keeps the logs in
+  Elasticsearch, a page whose position plus size reaches 10,000 is refused ("Depth of pagination is
+  limited in Elasticsearch by the max_result_window index setting"), and `Get-OrchLog` then
+  returned no logs at all for that folder, not even the first 10,000. It now reads in windows of
+  9,000: each window starts again from the millisecond of the last log read, and the logs of that
+  millisecond already returned are left out, so every log comes once and in order. Measured on
+  Cloud: 37,445 logs of one folder, the count `Measure-OrchLog` gives, in 44 seconds; `-Skip` past
+  10,000 and `-OrderAscending` work too. `-OrderBy Level` has no position to resume from and
+  remains limited to 10,000.
 - **A server error that passed through a background task is shown readably.** It used to read
   `One or more errors occurred. ({"message":"You are not authorized!",...})`, the raw response body
   inside the task wrapper's text; the wrapper is now looked through, so it reads `You are not
