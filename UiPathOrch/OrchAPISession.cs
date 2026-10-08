@@ -317,18 +317,10 @@ public partial class OrchAPISession : IDisposable
             // version that omits the header). Concurrent first responses converge
             // on the same value and publish it through ApiVersion's volatile-flag
             // setter, so a reader never observes a torn value.
-            if (ApiVersion is null && ret.Headers.TryGetValues("api-supported-versions", out var apiVersionHeaders))
+            if (ApiVersion is null && ret.Headers.TryGetValues("api-supported-versions", out var apiVersionHeaders)
+                && ParseApiSupportedVersions(apiVersionHeaders) is double discovered)
             {
-                double max = 0;
-                foreach (var entry in apiVersionHeaders)
-                {
-                    foreach (var token in entry.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
-                    {
-                        if (double.TryParse(token, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double n) && n > max)
-                            max = n;
-                    }
-                }
-                if (max > 0) ApiVersion = max;
+                ApiVersion = discovered;
             }
 
             // Buffer response body when the async logger will need to read it,
@@ -4331,6 +4323,54 @@ public partial class OrchAPISession : IDisposable
     /// produced. It also gives up on a short timeout: the browser tab is waiting on this
     /// response, and an advisory is never worth making someone watch a blank page.
     /// </remarks>
+    // The api-supported-versions header: the highest version listed (comma-separated, possibly
+    // over several header lines), or null when none parses. Every server measured sends one
+    // "NN.N" value, the same one GetActivitySettings reports as ApiVersion (2026-10-08, 21.10
+    // through Cloud).
+    internal static double? ParseApiSupportedVersions(IEnumerable<string> headerValues)
+    {
+        double max = 0;
+        foreach (var entry in headerValues)
+        {
+            foreach (var token in entry.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+            {
+                if (double.TryParse(token, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double n) && n > max)
+                    max = n;
+            }
+        }
+        return max > 0 ? max : null;
+    }
+
+    // For the sign-in page: the product build and API version, from one anonymous request. Every
+    // server measured answers /api/Status/Version without a token and sends the API version as
+    // api-supported-versions on that response (Cloud 20.0, Automation Suite 24.10.11 18.0,
+    // standalone 25.10.2 17.0; 2026-10-08). 20.10 has no such endpoint (404): nulls. Errors and
+    // timeouts are nulls too -- the page simply leaves the versions out. The caller files what
+    // came back into the session's ApiVersion and the org's ProductVersion cache.
+    internal async Task<(OrchProductVersion? Product, double? ApiVersion)> ProbeServerVersionAsync(TimeSpan timeout, CancellationToken ct)
+    {
+        try
+        {
+            using var timeoutCts = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            timeoutCts.CancelAfter(timeout);
+
+            using var request = new HttpRequestMessage(HttpMethod.Get, _base_url_orchestrator + "/api/Status/Version");
+            using var response = await _httpClient.SendAsync(request, timeoutCts.Token);
+            if (!response.IsSuccessStatusCode) return (null, null);
+
+            double? apiVersion = response.Headers.TryGetValues("api-supported-versions", out var values)
+                ? ParseApiSupportedVersions(values)
+                : null;
+            string body = await response.Content.ReadAsStringAsync(timeoutCts.Token);
+            var product = JsonSerializer.Deserialize<OrchProductVersion>(body);
+            return (string.IsNullOrEmpty(product?.version) ? null : product, apiVersion);
+        }
+        catch
+        {
+            return (null, null);
+        }
+    }
+
     internal async Task<string?> ProbeAuthenticationSettingTypeAsync(
         string partitionGlobalId, string accessToken, TimeSpan timeout, CancellationToken ct)
     {

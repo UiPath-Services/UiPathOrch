@@ -610,6 +610,15 @@ public class SingleCachePerOrganization<T> : ITenantCacheClearable where T : cla
         }
     }
 
+    // Files a value obtained some other way -- e.g. the sign-in page's anonymous version probe --
+    // as if Get() had fetched it, so the next Get() makes no call. An existing entry wins: this
+    // never replaces what a real fetch stored.
+    internal void Seed(string partitionGlobalId, T entity)
+    {
+        _initializer?.Invoke(entity);
+        _cache.TryAdd(_drive.OrgKeyFor(partitionGlobalId), entity);
+    }
+
     public void ClearCache()
     {
         var orgKey = _drive.OrgCacheKey;

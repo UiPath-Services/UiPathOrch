@@ -329,7 +329,33 @@ public class OrchException : Exception
 
     internal static string? ExtractMessage(Exception ex)
     {
+        // A failure that crossed a Task boundary arrives as AggregateException, whose Message is
+        // "One or more errors occurred. (<inner message>)" -- the server's JSON body inside the
+        // parentheses, where the parse above cannot see it. Read the inner exceptions instead.
+        if (ex is AggregateException agg)
+        {
+            var inner = agg.Flatten().InnerExceptions;
+            if (inner.Count > 0)
+                return string.Join(" ", inner.Select(ExtractMessage).Where(m => !string.IsNullOrEmpty(m)).Distinct());
+        }
         return ExtractMessage(ex.Message);
+    }
+
+    /// <summary>
+    /// The HTTP status of the server response under <paramref name="ex"/> (looking through
+    /// wrappers and AggregateException), or null when the failure was not an HTTP answer.
+    /// </summary>
+    internal static HttpStatusCode? FindHttpStatus(Exception? ex)
+    {
+        if (ex is null) return null;
+        if (ex is HttpResponseException hre) return hre.StatusCode;
+        if (ex is AggregateException agg)
+        {
+            foreach (var e in agg.Flatten().InnerExceptions)
+                if (FindHttpStatus(e) is HttpStatusCode code) return code;
+            return null;
+        }
+        return FindHttpStatus(ex.InnerException);
     }
 
     /// <summary>

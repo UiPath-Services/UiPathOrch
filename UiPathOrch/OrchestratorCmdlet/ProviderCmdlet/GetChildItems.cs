@@ -68,6 +68,15 @@ public partial class OrchProvider
         return providerCsvPath;
     }
 
+    // A refused folder listing on a drive whose Scope has no folder scope: name the cause and the
+    // fix after the server's own words. Only for 401/403, so an outage is not blamed on the Scope.
+    internal static string FolderScopeNote(OrchDriveInfo drive, Exception ex)
+        => LacksFolderScope(drive._psDrive)
+           && OrchException.FindHttpStatus(ex) is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden
+            ? $" The Scope of {drive.NameColon} has no OR.Folders scope, so folders cannot be read. "
+              + "Run Edit-OrchConfig, add OR.Folders.Read (or OR.Folders) to its Scope, then run Import-OrchConfig."
+            : "";
+
     protected override void GetChildItems(string path, bool recurse, uint depth)
     {
         var drive = GetOrchDriveInfo(path);
@@ -191,7 +200,7 @@ public partial class OrchProvider
         }
         catch (Exception ex)
         {
-            var errorRecord = new ErrorRecord(new OrchException(path, ex), "GetChildItemsError", ErrorCategory.InvalidOperation, path);
+            var errorRecord = new ErrorRecord(new OrchException(path, ex, FolderScopeNote(drive, ex)), "GetChildItemsError", ErrorCategory.InvalidOperation, path);
             WriteError(errorRecord);
         }
 

@@ -178,7 +178,7 @@ internal class OrchestratorAuthManager
                     { "client_id", _drive._psDrive.AppId! },
                     { "client_secret", _drive._psDrive.AppSecret! },
                     { "scope", _drive._psDrive.Scope! }
-                });
+                }, AdviseOnClientCredentialsError);
                 return _access_token;
 
             case AuthFlow.Pkce:
@@ -286,7 +286,26 @@ internal class OrchestratorAuthManager
         return _access_token;
     }
 
-    private (string access_token, string refresh_token) GetAccessToken(Dictionary<string, string> postData)
+    // A confidential app's refused token request: invalid_scope may mean the Scope is too long
+    // (see BuildScopeTooLongAdvice). Only a scope longer than the smallest limit asks the server
+    // its version -- one anonymous request, and only on this failure.
+    private string? AdviseOnClientCredentialsError(string oauthError)
+    {
+        if (!string.Equals(oauthError, "invalid_scope", StringComparison.OrdinalIgnoreCase)) return null;
+        int length = (_drive._psDrive.Scope ?? "").Length;
+        if (length <= SmallestScopeLengthLimit) return null;
+        string? productVersion = _drive.ProductVersion.CachedValue?.version;
+        if (productVersion is null)
+        {
+            var (product, _) = _drive.OrchAPISession.ProbeServerVersionAsync(TimeSpan.FromSeconds(5), CancellationToken.None)
+                .GetAwaiter().GetResult();
+            productVersion = product?.version;
+        }
+        return BuildScopeTooLongAdvice(_drive.NameColon, length, productVersion, lengthIsCertain: false);
+    }
+
+    // adviseOnError: given the OAuth error code of a refused request, more to say about it, or null.
+    private (string access_token, string refresh_token) GetAccessToken(Dictionary<string, string> postData, Func<string, string?>? adviseOnError = null)
     {
         // Confidential App's client_credentials and refresh_token flows both
         // funnel through here; PKCE's code → token exchange also reuses this
@@ -335,6 +354,8 @@ internal class OrchestratorAuthManager
                     summary += $" — {err.GetString()}";
                     if (errRoot.TryGetProperty("error_description", out var desc))
                         summary += $": {desc.GetString()}";
+                    if (adviseOnError?.Invoke(err.GetString() ?? "") is string advice)
+                        summary += $". {advice}";
                 }
             }
             catch (Exception ex)
@@ -446,7 +467,9 @@ internal class OrchestratorAuthManager
     // Compose the error surfaced when Identity calls the loopback listener back with
     // an OAuth error instead of an authorization code (RFC 6749 §4.1.2.1). Pure and
     // internal so the wording is unit-testable without a live Identity server.
-    internal static string BuildOAuthCallbackErrorMessage(string error, string? description, string? errorUri)
+    // scopeTooLongAdvice replaces the generic advice when Identity refused the scope for its length
+    // (see IsScopeLengthRejection / BuildScopeTooLongAdvice).
+    internal static string BuildOAuthCallbackErrorMessage(string error, string? description, string? errorUri, string? scopeTooLongAdvice = null)
     {
         var sb = new StringBuilder();
         sb.Append("PKCE sign-in failed: Identity returned '")
@@ -470,6 +493,10 @@ internal class OrchestratorAuthManager
               .Append(" necessarily work on another. Compare the drive's Scope against the external")
               .Append(" application's allowed scopes (Edit-OrchConfig opens the configuration file),")
               .Append(" then run Import-OrchConfig.");
+        }
+        else if (!string.IsNullOrEmpty(scopeTooLongAdvice))
+        {
+            sb.Append(' ').Append(scopeTooLongAdvice);
         }
         else
         {
@@ -734,6 +761,64 @@ internal class OrchestratorAuthManager
         context.Response.Close();
     }
 
+    // The scope value the authorize request carries: the configured Scope (already collapsed by
+    // ShortenScope) plus offline_access for the refresh token.
+    internal static string RequestedScope(string? scope) => $"{scope} offline_access";
+
+    // Identity caps the length of the scope value and answers a longer one with invalid_request
+    // "Invalid scope" -- though every scope in it exists and is granted, which sends the reader
+    // looking at the wrong thing. (A scope it does not know or has not granted comes back as
+    // invalid_scope instead.) The cap per server, measured 2026-10-08 by sending authorize requests
+    // of exact lengths, offline_access included: 21.10.4 300, 22.10.1 and 23.4.0 500, 24.10.0 750,
+    // 24.10.8 / Automation Suite 24.10.11 / 25.10.2 / Cloud 1250. 24.10.0 and 24.10.8 share API
+    // version 17, so only the product version tells them apart. Unmeasured builds: null.
+    internal static int? KnownScopeLengthLimit(string? productVersion)
+    {
+        var m = System.Text.RegularExpressions.Regex.Match(productVersion ?? "", @"^(\d+)\.(\d+)\.(\d+)");
+        if (!m.Success) return null;
+        int major = int.Parse(m.Groups[1].Value), minor = int.Parse(m.Groups[2].Value), patch = int.Parse(m.Groups[3].Value);
+        return (major, minor) switch
+        {
+            (21, 10) => 300,
+            (22, 10) or (23, 4) => 500,
+            (24, 10) when patch == 0 => 750,
+            (24, 10) when patch >= 8 => 1250,
+            (25, 10) => 1250,
+            _ => null,
+        };
+    }
+
+    internal static bool IsScopeLengthRejection(string? error, string? description)
+        => string.Equals(error, "invalid_request", StringComparison.OrdinalIgnoreCase)
+           && string.Equals(description?.Trim().TrimEnd('.'), "Invalid scope", StringComparison.OrdinalIgnoreCase);
+
+    // The smallest limit measured (21.10). A scope within it is never refused for its length.
+    internal const int SmallestScopeLengthLimit = 300;
+
+    // What to do about a scope Identity may have refused as too long. With the server's limit
+    // known, how much to cut; otherwise the length alone. Null when length is not the reason: within
+    // the known limit, or -- when the refusal itself is ambiguous -- within the smallest one.
+    // lengthIsCertain: the refusal can only mean length (the authorize endpoint's invalid_request
+    // "Invalid scope"). The token endpoint (confidential app) answers a scope that is too long with a
+    // bare invalid_scope, the same as one not granted (21.10.4: 300 issues a token, 301 is refused).
+    internal static string? BuildScopeTooLongAdvice(string driveName, int requestedScopeLength, string? productVersion, bool lengthIsCertain = true)
+    {
+        const string fix = "Run Edit-OrchConfig, remove {0}unneeded scopes (e.g. OR.Hypervisor, OR.ML), then run Import-OrchConfig.";
+        int? limit = KnownScopeLengthLimit(productVersion);
+        if (limit is int max)
+        {
+            if (requestedScopeLength <= max) return null;
+            return $"{driveName} \"Scope\" is too long for Orchestrator {productVersion} "
+                + $"({requestedScopeLength} characters as sent; the limit is {max}). "
+                + string.Format(fix, $"at least {requestedScopeLength - max} characters of ");
+        }
+        if (lengthIsCertain)
+            return $"{driveName} \"Scope\" is probably too long ({requestedScopeLength} characters as sent). " + string.Format(fix, "");
+        if (requestedScopeLength <= SmallestScopeLengthLimit) return null;
+        return $"{driveName} \"Scope\" may be too long ({requestedScopeLength} characters as sent; "
+            + $"some servers accept only {SmallestScopeLengthLimit}). " + string.Format(fix, "");
+    }
+
     // Builds the Identity authorize URL. Extracted as a pure, testable function:
     // endpoint selection (explicit IdentityUrl / Cloud common path + acr_values /
     // on-prem) and the scope URL-encoding the v1.9.2 macOS fix depends on (a raw
@@ -771,7 +856,7 @@ internal class OrchestratorAuthManager
         // on macOS the launch path splits the URL at the first raw space, so
         // everything after the scope value (including redirect_uri) was lost
         // and Identity rejected the request with "Invalid redirect_uri".
-        string encodedScope = WebUtility.UrlEncode($"{scope} offline_access");
+        string encodedScope = WebUtility.UrlEncode(RequestedScope(scope));
 
         // RFC 8252 §8.9: the loopback redirect has to carry `state`, because PKCE alone does not
         // close the injection direction. PKCE stops an attacker from USING a code stolen from us;
@@ -917,6 +1002,48 @@ internal class OrchestratorAuthManager
         }
     }
 
+    // The sign-in page's server line: "Automation Cloud 26.3.0-s203.8780 (API v20.0)". The edition
+    // is always known (configuration); the versions only when the server reported them.
+    // The API version prints as the header carries it ("20.0", "11.1").
+    internal static string FormatServerLine(OrchEdition edition, string? productVersion, double? apiVersion)
+    {
+        string line = edition switch
+        {
+            OrchEdition.Cloud => "Automation Cloud",
+            OrchEdition.AutomationSuite => "Automation Suite",
+            _ => "Standalone Orchestrator",
+        };
+        if (!string.IsNullOrEmpty(productVersion)) line += $" {productVersion}";
+        if (apiVersion is double api) line += $" (API v{api.ToString("0.0", System.Globalization.CultureInfo.InvariantCulture)})";
+        return line;
+    }
+
+    // Both versions from what this session already knows -- the ApiVersion learned from an
+    // earlier response and the org's cached product version -- so signing in again does not ask
+    // the server twice. Otherwise the anonymous probe, started now so it runs during the sign-in.
+    private Task<(OrchProductVersion? Product, double? ApiVersion)> StartServerVersionLookup()
+    {
+        var cachedProduct = _drive.ProductVersion.CachedValue;
+        var cachedApi = _drive.OrchAPISession.ApiVersion;
+        if (cachedProduct is not null && cachedApi is not null)
+            return Task.FromResult<(OrchProductVersion?, double?)>((cachedProduct, cachedApi));
+        return _drive.OrchAPISession.ProbeServerVersionAsync(TimeSpan.FromSeconds(15), CancellationToken.None);
+    }
+
+    // What the probe learned serves the rest of the session: ApiVersion, when no response has set
+    // it yet (the header is the one SendOnce reads), and the org's ProductVersion cache, which
+    // Get-OrchProductVersion and Get-OrchPSDrive read. The partition comes from the token just
+    // exchanged; without it the product version is simply not cached.
+    private void FileServerVersion(OrchProductVersion? product, double? apiVersion)
+    {
+        if (apiVersion is not null && _drive.OrchAPISession.ApiVersion is null)
+            _drive.OrchAPISession.ApiVersion = apiVersion;
+        if (product is null) return;
+        var partitionGlobalId = _drive.PartitionGlobalId ?? GetPartitionGlobalIdFromJwt();
+        if (!string.IsNullOrEmpty(partitionGlobalId))
+            _drive.ProductVersion.Seed(partitionGlobalId, product);
+    }
+
     private string GetAuthorizationCode(string? codeVerifier)
     {
         // See _pkceLock declaration for the rationale. Held for the full
@@ -943,6 +1070,11 @@ internal class OrchestratorAuthManager
             LogAuthorizeUrl(authUrl);
 
             using var listener = StartAuthListener();
+
+            // The product and API version for the success page, fetched while the user signs in
+            // (one anonymous request, under a second) so the page does not wait for it.
+            var serverVersionTask = StartServerVersionLookup();
+
             LaunchSignInBrowser(authUrl);
 
             string? authorizationCode = null;
@@ -1073,9 +1205,21 @@ internal class OrchestratorAuthManager
                                 string noticeHtml = BuildNoticeHtml(_drive.OrchAPISession.PendingWarning);
                                 string noticeStyle = noticeHtml.Length == 0 ? "display:none" : "";
 
+                                // Edition from the configuration; versions if the probe started before the
+                                // browser opened has answered -- given at most a moment more, never a wait.
+                                OrchProductVersion? product = null;
+                                double? apiVersion = null;
+                                if (await Task.WhenAny(serverVersionTask, Task.Delay(1500, cts)) == serverVersionTask)
+                                {
+                                    (product, apiVersion) = await serverVersionTask;
+                                    FileServerVersion(product, apiVersion);
+                                }
+                                string serverEncoded = System.Net.WebUtility.HtmlEncode(
+                                    FormatServerLine(_drive._psDrive.ResolvedEdition, product?.version, apiVersion));
+
                                 // {6} shows or hides the block; the body is substituted afterwards so the
                                 // notice markup needs no brace escaping of its own.
-                                string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, mountedDrivesStr, versionStr, LoadBotImageRandomly(), userStyle, userEncoded, noticeStyle)
+                                string responseString = string.Format(htmlTemplate, _drive._psDrive.Root, mountedDrivesStr, versionStr, LoadBotImageRandomly(), userStyle, userEncoded, noticeStyle, serverEncoded)
                                     .Replace("<!--WARNINGS-->", noticeHtml);
 
                                 byte[] buffer = Encoding.UTF8.GetBytes(responseString);
@@ -1120,11 +1264,30 @@ internal class OrchestratorAuthManager
                                 continue;
                             }
 
+                            // invalid_request "Invalid scope" is Identity refusing the scope for its
+                            // length. Say so, with the server's limit when its version is known --
+                            // the refusal comes back at once, so the version probe gets a moment.
+                            string? oauthDescription = context.Request.QueryString["error_description"];
+                            string? scopeTooLongAdvice = null;
+                            if (IsScopeLengthRejection(oauthError, oauthDescription))
+                            {
+                                string? productVersion = null;
+                                if (await Task.WhenAny(serverVersionTask, Task.Delay(1500, cts)) == serverVersionTask)
+                                {
+                                    var (product, apiVersion) = await serverVersionTask;
+                                    FileServerVersion(product, apiVersion);
+                                    productVersion = product?.version;
+                                }
+                                scopeTooLongAdvice = BuildScopeTooLongAdvice(
+                                    _drive.NameColon, RequestedScope(_drive._psDrive.Scope).Length, productVersion);
+                            }
+
                             capturedException = new InvalidOperationException(
                                 BuildOAuthCallbackErrorMessage(
                                     oauthError,
-                                    context.Request.QueryString["error_description"],
-                                    context.Request.QueryString["error_uri"]));
+                                    oauthDescription,
+                                    context.Request.QueryString["error_uri"],
+                                    scopeTooLongAdvice));
 
                             await WriteCallbackErrorPageAsync(context, capturedException.Message, cts);
 

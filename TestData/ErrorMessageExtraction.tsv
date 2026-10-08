@@ -29,6 +29,8 @@ Cannot resolve users	{"StatusCode":404,"StatusDescription":"NotFound","Message":
 Error converting value	{"errors":{"entityType":["Error converting value \"robot\" to type 'UiPath.IdentityServer.Directory.Abstractions.DataContracts.DirectoryEntityType'. Path 'entityType', line 1, position 43."]},"type":"https://tools.ietf.org/html/rfc9110#section-15.5.1","title":"One or more validation errors occurred.","status":400,"traceId":"00-b4356a07063fc3fcc9cfc85d93806940-b5a1b0c76e7b0974-00"}
 One or more validation errors occurred	{"errors":{"entityType":["Error converting value \"DirectoryUser\" to type 'UiPath.IdentityServer.Directory.Abstractions.DataContracts.DirectoryEntityType'. Path 'entityType', line 1, position 126."]},"title":"One or more validation errors occurred.","status":400}
 # --- ABP envelope: error.details is a STRING (was being dropped) ---
+# Also arrives wrapped in AggregateException (21.10.4 folder listing without OR.Folders, 2026-10-08):
+# a wrapper this string corpus cannot express -- see ExtractMessage_ReadsThroughAggregateException.
 not allowed to perform this operation	{"message":"You are not authorized!","errorCode":0,"result":null,"targetUrl":null,"success":false,"error":{"code":0,"message":"You are not authorized!","details":"You are not allowed to perform this operation.","validationErrors":null},"unAuthorizedRequest":true,"__abp":true}
 # --- bulk add: nested result.errors[] of { code, description } (was raw-dumped) ---
 Username 'wenqi.li@uipath.com' is already taken.	{"result":{"succeeded":false,"errors":[{"code":"DuplicateUserName","description":"Username 'wenqi.li@uipath.com' is already taken."},{"code":"DuplicateEmail","description":"Email 'wenqi.li@uipath.com' is already taken."}]},"users":[]}

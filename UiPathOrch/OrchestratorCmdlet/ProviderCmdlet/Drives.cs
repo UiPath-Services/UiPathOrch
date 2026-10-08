@@ -341,6 +341,16 @@ public partial class OrchProvider
         }
     }
 
+    // An OAuth drive whose Scope names Orchestrator scopes but none for folders: it signs in, then
+    // cannot list a single folder. Warned at mount (below) and repeated on the refused listing
+    // (GetChildItems), where the mount-time warning has long scrolled away. PAT and user/password
+    // drives are exempt: their rights do not come from Scope.
+    internal static bool LacksFolderScope(PSDrive drive)
+        => string.IsNullOrEmpty(drive.Password) && string.IsNullOrEmpty(drive.AccessToken)
+           && drive.Scope is string scope
+           && scope.Contains("or.", StringComparison.OrdinalIgnoreCase)
+           && !scope.Contains("or.folders", StringComparison.OrdinalIgnoreCase);
+
     private void WarningPSDriveConfig(PSDrive drive)
     {
         // Only output Scope warnings when no password is set. PAT drives are
@@ -361,7 +371,7 @@ public partial class OrchProvider
 
                 if (lowerScope.Contains("or."))
                 {
-                    if (!lowerScope.Contains("or.folders"))
+                    if (LacksFolderScope(drive))
                     {
                         WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
                     }

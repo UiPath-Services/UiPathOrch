@@ -54,6 +54,42 @@ public class ErrorMessageExtractionTests
         Assert.Equal(plain, OrchException.ExtractMessage(plain));
     }
 
+    // A failure that crossed a Task boundary: the body is the inner exception's message, and the
+    // AggregateException's own "One or more errors occurred. (...)" must not be what is shown.
+    // The body is the one 21.10.4 returned for a folder listing without OR.Folders (2026-10-08).
+    private const string AbpUnauthorized =
+        "{\"message\":\"You are not authorized!\",\"errorCode\":0,\"result\":null,\"targetUrl\":null,\"success\":false,"
+        + "\"error\":{\"code\":0,\"message\":\"You are not authorized!\",\"details\":\"You are not allowed to perform this operation.\",\"validationErrors\":null},"
+        + "\"unAuthorizedRequest\":true,\"__abp\":true}";
+
+    [Fact]
+    public void ExtractMessage_ReadsThroughAggregateException()
+    {
+        var ex = new AggregateException(new HttpResponseException(AbpUnauthorized, new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized)));
+        Assert.Equal("You are not authorized! You are not allowed to perform this operation.", OrchException.ExtractMessage(ex));
+    }
+
+    [Fact]
+    public void OrchException_over_AggregateException_carries_the_readable_text_and_the_note()
+    {
+        var ex = new AggregateException(new HttpResponseException(AbpUnauthorized, new System.Net.Http.HttpResponseMessage(System.Net.HttpStatusCode.Unauthorized)));
+        var wrapped = new OrchException("op2110:\\", ex, " NOTE.");
+        Assert.Equal("\"op2110:\\\": You are not authorized! You are not allowed to perform this operation. NOTE.", wrapped.Message);
+    }
+
+    [Theory]
+    [InlineData(System.Net.HttpStatusCode.Unauthorized)]
+    [InlineData(System.Net.HttpStatusCode.Forbidden)]
+    public void FindHttpStatus_looks_through_wrappers(System.Net.HttpStatusCode code)
+    {
+        var inner = new HttpResponseException("{}", new System.Net.Http.HttpResponseMessage(code));
+        Assert.Equal(code, OrchException.FindHttpStatus(new AggregateException(new OrchException("x:", inner))));
+    }
+
+    [Fact]
+    public void FindHttpStatus_is_null_without_an_http_answer()
+        => Assert.Null(OrchException.FindHttpStatus(new AggregateException(new TimeoutException())));
+
     private static string LocateTestData(string fileName)
     {
         var dir = new DirectoryInfo(AppContext.BaseDirectory);

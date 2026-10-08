@@ -6,6 +6,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **The sign-in success page names the server.** Under "Connected", above the URL, it shows the
+  edition (Automation Cloud, Automation Suite or Standalone Orchestrator) and, when the server
+  reports them, its product version and API version, e.g. "Automation Cloud 26.3.0-s203.8780
+  (API v20.0)". The anonymous `/api/Status/Version` request runs while you sign in in the browser,
+  so it adds no wait in practice; the page waits at most 1.5 seconds for it, and a server without
+  that endpoint (20.10) shows the edition alone. What it learns is kept: `Get-OrchProductVersion`
+  and the ProductVersion column of `Get-OrchPSDrive` answer from it without another request, and
+  signing in again uses the cached values instead of asking the server.
+- **A sign-in refused because the Scope is too long now says so.** Identity limits the length of
+  the scope value and answers a longer one with `invalid_request` "Invalid scope", although every
+  scope in it exists and is granted to the application; the error used to advise checking the
+  registration. It now names the drive, the length as sent (the Scope with Read/Write pairs
+  collapsed to their parent, plus `offline_access`) and, for a measured server, its limit and how
+  much to remove, and points to `Edit-OrchConfig`. Measured limits: 21.10.4 300, 22.10.1 and
+  23.4.0 500, 24.10.0 750, 24.10.8, Automation Suite 24.10.11, 25.10.2 and Cloud 1250. The request
+  is still sent as configured; the server decides. A confidential application's token request
+  meets the same limit (21.10.4: 300) but is refused with a bare `invalid_scope`, the same answer as
+  for a scope not granted, so its error adds the length note only when the Scope is longer than the
+  server's limit (or, when the version is unknown, longer than 300).
+
 ### Changed
 
 - **API triggers and Secret assets follow what each server's web UI offers.** `New-OrchApiTrigger`
@@ -43,6 +65,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **A server error that passed through a background task is shown readably.** It used to read
+  `One or more errors occurred. ({"message":"You are not authorized!",...})`, the raw response body
+  inside the task wrapper's text; the wrapper is now looked through, so it reads `You are not
+  authorized! You are not allowed to perform this operation.` Seen on `Get-ChildItem`, and it
+  applies wherever such an error is reported.
+- **`Get-ChildItem` says when the Scope is why folders cannot be listed.** A drive whose Scope has
+  no OR.Folders scope signs in and is then refused every folder listing. The mount-time warning
+  about it has long scrolled away by then, so a refused listing (401/403) on such a drive now ends
+  with the cause and the fix: add OR.Folders.Read (or OR.Folders) with `Edit-OrchConfig`, then run
+  `Import-OrchConfig`.
 - **Platform Management list cmdlets report a server without the feature and carry on.**
   `Get-PmLicense`, `Get-PmUser`, `Get-PmGroup`, `Get-PmExternalApplication` and seven others
   stopped the whole command when one drive lacked the endpoint (a standalone server) or refused
