@@ -2115,7 +2115,7 @@ public class StartProcess
     public string? InputArguments { get; set; }
     public string? EnvironmentVariables { get; set; } // added in V19.0
     public string? Reference { get; set; }
-    public MachineRobot? MachineRobots { get; set; }
+    public MachineRobot[]? MachineRobots { get; set; } // MachineRobotDto[] in the swagger
     public string? TargetFramework { get; set; }
     public bool? ResumeOnSameContext { get; set; }
     public string? BatchExecutionKey { get; set; } // Guid

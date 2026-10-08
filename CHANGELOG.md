@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`Start-OrchJob` sets the job options of the web Start Job dialog.** `-Priority` (or
+  `-SpecificPriorityValue`), `-StopStrategy`, `-StopProcessExpression` (seconds until the job is
+  stopped), `-KillProcessExpression` (seconds after a soft stop until it is killed),
+  `-AlertPendingExpression` and `-AlertRunningExpression` (seconds until an alert). The names are
+  the StartProcessDto property names, as in `New-OrchTrigger`. A job started from a script can now
+  carry a time limit without a disabled time trigger kept for the purpose. Below API version 16 the
+  two alert values are not sent and the cmdlet warns; below 14 the priority is sent as the Low /
+  Normal / High bucket it falls in. The help of `New-OrchTrigger` and `Update-OrchTrigger` called
+  the same four values cron expressions; it now says they are seconds.
 - **The sign-in success page names the server.** Under "Connected", above the URL, it shows the
   edition (Automation Cloud, Automation Suite or Standalone Orchestrator) and, when the server
   reports them, its product version and API version, e.g. "Automation Cloud 26.3.0-s203.8780

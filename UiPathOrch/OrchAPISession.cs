@@ -1873,23 +1873,37 @@ public partial class OrchAPISession : IDisposable
         return ret;
     }
 
-    public Job[] StartJobs(Int64 folderId, string processKey, string? runtimeType, int? jobsCount, string? inputArguments)
+    public Job[] StartJobs(Int64 folderId, StartProcess sp)
     {
-        StartProcess sp = new()
-        {
-            ReleaseKey = processKey,
-            Strategy = "ModernJobsCount",
-            RuntimeType = runtimeType,
-            JobsCount = jobsCount,
-            InputArguments = inputArguments
-        };
+        StripStartProcessFieldsForApiVersion(sp, ApiVersion);
 
-        Dictionary<string, object> payload = new() {
-            { "startInfo", sp }
-        };
-
-        var httpBody = HttpRequest<HttpBodyValues<Job>>(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs", folderId, payload);
+        var httpBody = HttpRequest<HttpBodyValues<Job>>(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.StartJobs", folderId, new { startInfo = sp });
         return httpBody?.value ?? [];
+    }
+
+    // Mutates sp in place and returns the names of the fields it dropped, so Start-OrchJob can
+    // say which of the values the caller gave were not sent. Idempotent: StartJobs runs it again.
+    internal static string[] StripStartProcessFieldsForApiVersion(StartProcess sp, double? apiVersion)
+    {
+        List<string> dropped = [];
+
+        // AlertPendingExpression / AlertRunningExpression: taken to arrive in StartProcessDto with
+        // the same release as in ProcessScheduleDto (v16, see StripProcessScheduleFieldsForApiVersion).
+        // Not probed on StartJobs itself.
+        if (OrchApiFloor.Below(apiVersion, 16))
+        {
+            if (sp.AlertPendingExpression is not null) { dropped.Add(nameof(sp.AlertPendingExpression)); sp.AlertPendingExpression = null; }
+            if (sp.AlertRunningExpression is not null) { dropped.Add(nameof(sp.AlertRunningExpression)); sp.AlertRunningExpression = null; }
+        }
+
+        // SpecificPriorityValue: the same bucket conversion the Release and trigger writes make below the floor.
+        if (OrchApiFloor.Below(apiVersion, OrchApiFloor.ReleaseSpecificPriority) && sp.SpecificPriorityValue is not null)
+        {
+            sp.JobPriority = PriorityBucket(sp.SpecificPriorityValue.Value);
+            sp.SpecificPriorityValue = null;
+        }
+
+        return [.. dropped];
     }
 
     public void StopJobs(Int64 folderId, IEnumerable<Int64> jobIds, bool force = false) => HttpRequest(HttpMethod.Post, "/odata/Jobs/UiPath.Server.Configuration.OData.StopJobs", folderId, new { strategy = force ? "2" : "1", jobIds });

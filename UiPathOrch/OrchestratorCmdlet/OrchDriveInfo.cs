@@ -163,9 +163,9 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         return true;
     }
 
-    public ReadOnlyCollection<Job> StartJobs(Folder folder, string processKey, string? runtimeType, int? jobsCount, string? inputArguments = null)
+    public ReadOnlyCollection<Job> StartJobs(Folder folder, StartProcess startProcess)
     {
-        var jobs = OrchAPISession.StartJobs(folder.Id ?? 0, processKey, runtimeType, jobsCount, inputArguments).ToList();
+        var jobs = OrchAPISession.StartJobs(folder.Id ?? 0, startProcess).ToList();
         foreach (var job in jobs)
         {
             job.Path = folder.GetPSPath();

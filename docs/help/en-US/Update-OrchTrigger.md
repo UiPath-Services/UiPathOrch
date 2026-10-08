@@ -223,7 +223,7 @@ HelpMessage: ''
 
 ### -AlertPendingExpression
 
-Specifies the cron expression for alerting when a triggered job remains in the Pending state. This defines when alert notifications are sent for jobs that have not yet started.
+Specifies, in seconds, how long a job started by the trigger may stay Pending or Resumed before Orchestrator raises an alert.
 
 ```yaml
 Type: System.String
@@ -244,7 +244,7 @@ HelpMessage: ''
 
 ### -AlertRunningExpression
 
-Specifies the cron expression for alerting when a triggered job remains in the Running state. This defines when alert notifications are sent for jobs that are still running.
+Specifies, in seconds, how long a job started by the trigger may run before Orchestrator raises an alert.
 
 ```yaml
 Type: System.String
@@ -478,7 +478,7 @@ HelpMessage: ''
 
 ### -KillProcessExpression
 
-Specifies the cron expression that defines when a running job should be forcefully killed. This is a more aggressive termination compared to StopProcessExpression.
+Specifies, in seconds, the grace period after a soft stop. A job that has not stopped when it ends is killed. Used with StopStrategy SoftStop and StopProcessExpression.
 
 ```yaml
 Type: System.String
@@ -816,7 +816,7 @@ HelpMessage: ''
 
 ### -StopProcessExpression
 
-Specifies the cron expression that defines when a running job should be gracefully stopped. This sends a stop signal to the running process.
+Specifies, in seconds, how long after it is created a job started by the trigger is ended. How it is ended is set by StopStrategy.
 
 ```yaml
 Type: System.String

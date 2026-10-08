@@ -3,6 +3,7 @@ using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
 using System.Text.Json;
+using UiPath.OrchAPI;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -50,6 +51,35 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
     [Parameter(Position = 3, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(InputArgumentsCompleter))]
     public string? InputArguments { get; set; }
+
+    // The parameters below carry the StartProcessDto property names, as New-OrchTrigger does.
+
+    // This parameter does not accept CSV import
+    [Parameter]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<JobPriorityItems>))]
+    public string? Priority { get; set; }
+
+    // Since we can just treat "" in CSV as 45, the type is int
+    [Parameter(DontShow = true, ValueFromPipelineByPropertyName = true)]
+    public int? SpecificPriorityValue { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [ArgumentCompleter(typeof(StaticTextsCompleter<SoftStop_Kill>))]
+    public string? StopStrategy { get; set; }
+
+    // Seconds after which a running job is stopped (the swagger's description).
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public string? StopProcessExpression { get; set; }
+
+    // Grace period in seconds after a soft stop, after which the job is killed.
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public string? KillProcessExpression { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public string? AlertPendingExpression { get; set; }
+
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public string? AlertRunningExpression { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -151,6 +181,9 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
         }
     }
 
+    // An empty CSV cell binds as "": send it as absent, as New-OrchTrigger does.
+    private static string? NullIfEmpty(string? value) => string.IsNullOrEmpty(value) ? null : value;
+
     protected override void ProcessRecord()
     {
         if (!string.IsNullOrEmpty(RuntimeType) && !validRuntimeType.Contains(RuntimeType))
@@ -163,8 +196,25 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
             return;
         }
 
+        // Priority wins over SpecificPriorityValue, as in New-OrchTrigger.
+        int? specificPriorityValue = SpecificPriorityValue;
+        if (!string.IsNullOrEmpty(Priority))
+        {
+            specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
+            if (specificPriorityValue is null)
+            {
+                WriteError(new ErrorRecord(
+                    new ArgumentException($"Invalid Priority: '{Priority}'. Valid values are: {string.Join(", ", JobPriorityItems.Items)}.", nameof(Priority)),
+                    "InvalidPriority",
+                    ErrorCategory.InvalidArgument,
+                    Priority));
+                return;
+            }
+        }
+
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
         var wpName = Name!.ConvertToWildcardPatternList();
+        HashSet<OrchDriveInfo> warnedDrives = [];
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, folder) in drivesFolders)
@@ -178,7 +228,29 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
                     {
                         try
                         {
-                            WriteObject(drive.StartJobs(folder, process.Key!, RuntimeType, JobsCount, InputArguments), true);
+                            StartProcess startProcess = new()
+                            {
+                                ReleaseKey = process.Key!,
+                                Strategy = "ModernJobsCount",
+                                RuntimeType = RuntimeType,
+                                JobsCount = JobsCount,
+                                InputArguments = InputArguments,
+                                SpecificPriorityValue = specificPriorityValue,
+                                StopStrategy = NullIfEmpty(StopStrategy),
+                                StopProcessExpression = NullIfEmpty(StopProcessExpression),
+                                KillProcessExpression = NullIfEmpty(KillProcessExpression),
+                                AlertPendingExpression = NullIfEmpty(AlertPendingExpression),
+                                AlertRunningExpression = NullIfEmpty(AlertRunningExpression),
+                            };
+
+                            // Say once per drive which of the given values this server's API does not take.
+                            var dropped = OrchAPISession.StripStartProcessFieldsForApiVersion(startProcess, drive.OrchAPISession.ApiVersion);
+                            if (dropped.Length > 0 && warnedDrives.Add(drive))
+                            {
+                                WriteWarning($"[{MyInvocation.MyCommand.Name}] {drive.NameColonSeparator} (API v{drive.OrchAPISession.ApiVersion}) does not accept {string.Join(", ", dropped)}; the job is started without them.");
+                            }
+
+                            WriteObject(drive.StartJobs(folder, startProcess), true);
                         }
                         catch (Exception ex)
                         {
