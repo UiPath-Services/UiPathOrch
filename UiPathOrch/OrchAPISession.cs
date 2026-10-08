@@ -310,11 +310,10 @@ public partial class OrchAPISession : IDisposable
             // response header (always present on Orchestrator responses, no
             // scope dependency). Set on the very first API response in the
             // session so subsequent per-version routing decisions see it.
-            // The fallback path in EnsureAuthenticated (GetActivitySettings,
-            // gated on OR.Settings scope) remains as defense-in-depth; the
-            // `ApiVersion is null` guard there means it only runs when this
-            // primary path didn't fire (e.g. on a hypothetical Orchestrator
-            // version that omits the header). Concurrent first responses converge
+            // EnsureAuthenticated learns it earlier still, right after sign-in,
+            // from the anonymous /api/Status/Version (falling back to
+            // GetActivitySettings on 20.10); this path covers whatever that
+            // left unset. Concurrent first responses converge
             // on the same value and publish it through ApiVersion's volatile-flag
             // setter, so a reader never observes a torn value.
             if (ApiVersion is null && ret.Headers.TryGetValues("api-supported-versions", out var apiVersionHeaders)
@@ -653,11 +652,24 @@ public partial class OrchAPISession : IDisposable
                     _isAuthenticated = true;
                     Volatile.Write(ref _expiryTimeTicks, ComputeTokenExpiry(DateTime.Now).Ticks);
 
-                    // The Scope gate is an optimization that skips a doomed call when
-                    // the OAuth request is known not to include OR.Settings. A PAT is
-                    // opaque — its scopes cannot be known client-side — so for PAT
-                    // drives always attempt the fetch; the catch below already falls
-                    // back gracefully when the token lacks the scope.
+                    // Learn the API version before the first real request, so a call that
+                    // picks its endpoint by version does not go out on a guess. The
+                    // anonymous /api/Status/Version carries it as api-supported-versions and
+                    // needs no scope (21.10 onward; a PKCE sign-in has already asked it for
+                    // the success page). Its product version fills the org cache too.
+                    if (ApiVersion is null && _drive is not null)
+                    {
+                        var (product, probedApiVersion) = ProbeServerVersionAsync(TimeSpan.FromSeconds(5), CancellationToken.None)
+                            .GetAwaiter().GetResult();
+                        _authManager.FileServerVersion(product, probedApiVersion);
+                    }
+
+                    // 20.10 has no /api/Status/Version: there GetActivitySettings is the way,
+                    // and it needs OR.Settings. The Scope gate skips a doomed call when the
+                    // OAuth request is known not to include it. A PAT is opaque — its scopes
+                    // cannot be known client-side — so for PAT drives always attempt the
+                    // fetch; the catch below already falls back gracefully when the token
+                    // lacks the scope. Without either, the first response's header sets it.
                     if (ApiVersion is null && _drive is not null &&
                         ((_drive._psDrive.Scope?.Contains("OR.Settings") ?? false)
                          || !string.IsNullOrEmpty(_drive._psDrive.AccessToken)))

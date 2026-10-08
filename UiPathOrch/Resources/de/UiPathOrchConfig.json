@@ -30,7 +30,7 @@
   // PSDrive-Konfiguration.
   // Um die für die Ausführung eines Cmdlets erforderlichen Scopes zu
   // überprüfen, führen Sie aus: Get-Help <cmdlet name>
-  "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+  "Scope": "OR.Folders.Read OR.Users.Read",
 
   // Um Cmdlets zu verwenden, deren Substantiv mit OrchPm beginnt, fügen Sie
   // den Scope "Platform Management API Access" hinzu. Beachten Sie, dass zur
@@ -98,7 +98,6 @@
     // WICHTIG: Die Scopes eines Tokens werden serverseitig bei der
     // Erstellung festgelegt. Wählen Sie bei der Erstellung mindestens:
     //   OR.Folders.Read   (Ordnerstruktur)
-    //   OR.Settings.Read  (Erkennung der API-Version)
     //   OR.Users.Read     (Zugriff auf den persönlichen Arbeitsbereich)
     // sowie die Scopes für alles, was Sie verwalten möchten (OR.Assets,
     // OR.Queues, ...). "Scope" fehlt in diesem Beispiel absichtlich --
@@ -127,7 +126,7 @@
       "Description": "Einstellungen für nicht-vertrauliche Apps.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false
     },
 
@@ -151,7 +150,7 @@
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "AppSecret": "YOUR_APP_SECRET",
-      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Scope": "OR.Folders.Read",
       "Enabled": false
     },
 
@@ -167,7 +166,7 @@
       "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
       "Username": "USERNAME_OR_EMAILADDR",
       "Password": "PASSWORD",
-      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Scope": "OR.Folders.Read",
       "Enabled": false
     },
 
@@ -183,7 +182,7 @@
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false
     },
 
@@ -200,7 +199,7 @@
       "Root": "https://YOUR_AS_HOST/YOUR_ORGANIZATION/YOUR_TENANT",
       "Edition": "AutomationSuite",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false
     },
 
@@ -214,7 +213,7 @@
       "Description": "Diese Konfiguration enthält Proxy-Einstellungen.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false,
       "Proxy": {
         "UseDefaultWebProxy": false,

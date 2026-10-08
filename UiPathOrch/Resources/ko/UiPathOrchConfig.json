@@ -26,7 +26,7 @@
   // 이 Scope를 사용하려면 해당 PSDrive 구성에서 Scope 키를 제거하세요.
   // 각 Cmdlet을 실행하는 데 필요한 Scope를 확인하려면 다음을 실행하세요:
   // Get-Help <cmdlet name>
-  "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+  "Scope": "OR.Folders.Read OR.Users.Read",
 
   // OrchPm으로 시작하는 명사를 가진 Cmdlet을 사용하려면 플랫폼 관리
   // API 액세스 Scope를 추가하세요.
@@ -86,7 +86,6 @@
     // 중요: 토큰의 스코프는 서버에서 토큰을 생성할 때 확정됩니다.
     // 토큰 생성 시 최소한 다음 스코프를 선택하세요:
     //   OR.Folders.Read   (폴더 트리 조회)
-    //   OR.Settings.Read  (API 버전 감지)
     //   OR.Users.Read     (개인 작업 영역 액세스)
     // 또한 관리하려는 대상의 스코프(OR.Assets, OR.Queues 등)도
     // 선택하세요. 이 예시에 "Scope"가 없는 것은 의도적입니다.
@@ -113,7 +112,7 @@
       "Description": "기밀이 아닌 애플리케이션 설정.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false
     },
 
@@ -134,7 +133,7 @@
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "AppSecret": "YOUR_APP_SECRET",
-      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Scope": "OR.Folders.Read",
       "Enabled": false
     },
 
@@ -149,7 +148,7 @@
       "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
       "Username": "USERNAME_OR_EMAILADDR",
       "Password": "PASSWORD",
-      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Scope": "OR.Folders.Read",
       "Enabled": false
     },
 
@@ -164,7 +163,7 @@
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false
     },
 
@@ -181,7 +180,7 @@
       "Root": "https://YOUR_AS_HOST/YOUR_ORGANIZATION/YOUR_TENANT",
       "Edition": "AutomationSuite",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false
     },
 
@@ -194,7 +193,7 @@
       "Description": "이 구성에는 프록시 설정이 포함됩니다.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false,
       "Proxy": {
         "UseDefaultWebProxy": false,

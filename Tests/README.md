@@ -82,7 +82,9 @@ Invoke-Pester -Path Tests\CleanTenant.Tests.ps1 -Output Detailed
 `Tests\Interactive\` holds checks that need someone at the browser, so the runner (which reads
 only `Tests\*.Tests.ps1`) never picks them up. `SignIn.Tests.ps1` signs in to a PKCE drive and
 checks that the sign-in cached the server's product version (and asks you to confirm the
-success page's server line), then mounts a temporary confidential-app drive with a 307-character
+success page's server line), checks the same for a confidential-app drive (no browser; the
+version comes from the anonymous `/api/Status/Version`, so OR.Settings is not needed), then mounts
+a temporary confidential-app drive with a 307-character
 Scope on Orchestrator 21.10 and checks that the refusal explains the 300-character limit.
 It runs `Import-OrchConfig` first, so every drive in the session signs in again on next use.
 

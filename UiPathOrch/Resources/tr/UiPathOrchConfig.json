@@ -27,7 +27,7 @@
   // ilgili PSDrive yapılandırmasından Scope anahtarını kaldırın.
   // Her Cmdlet'in çalıştırılması için gerekli Scope'ları kontrol etmek
   // için şunu çalıştırın: Get-Help <cmdlet name>
-  "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+  "Scope": "OR.Folders.Read OR.Users.Read",
 
   // İsmi OrchPm ile başlayan Cmdlet'leri kullanmak için Platform Yönetimi
   // API Erişim kapsamını ekleyin. Active Directory'yi yönetmek için kiracıya
@@ -91,7 +91,6 @@
     // ÖNEMLİ: Bir belirtecin kapsamları, belirteç oluşturulurken sunucu
     // tarafında sabitlenir. Oluştururken en azından şunları seçin:
     //   OR.Folders.Read   (klasör ağacı)
-    //   OR.Settings.Read  (API sürümü algılama)
     //   OR.Users.Read     (kişisel çalışma alanı erişimi)
     // ve yönettiğiniz öğelerin kapsamlarını da ekleyin (OR.Assets,
     // OR.Queues, ...). "Scope" bu örnekte bilerek atlanmıştır --
@@ -119,7 +118,7 @@
       "Description": "Gizli Olmayan Uygulama Ayarları.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false
     },
 
@@ -140,7 +139,7 @@
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "AppSecret": "YOUR_APP_SECRET",
-      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Scope": "OR.Folders.Read",
       "Enabled": false
     },
 
@@ -155,7 +154,7 @@
       "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
       "Username": "USERNAME_OR_EMAILADDR",
       "Password": "PASSWORD",
-      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Scope": "OR.Folders.Read",
       "Enabled": false
     },
 
@@ -170,7 +169,7 @@
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false
     },
 
@@ -187,7 +186,7 @@
       "Root": "https://YOUR_AS_HOST/YOUR_ORGANIZATION/YOUR_TENANT",
       "Edition": "AutomationSuite",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false
     },
 
@@ -200,7 +199,7 @@
       "Description": "Bu yapılandırma proxy ayarlarını içerir.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false,
       "Proxy": {
         "UseDefaultWebProxy": false,

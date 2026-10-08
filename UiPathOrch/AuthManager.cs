@@ -1034,7 +1034,7 @@ internal class OrchestratorAuthManager
     // it yet (the header is the one SendOnce reads), and the org's ProductVersion cache, which
     // Get-OrchProductVersion and Get-OrchPSDrive read. The partition comes from the token just
     // exchanged; without it the product version is simply not cached.
-    private void FileServerVersion(OrchProductVersion? product, double? apiVersion)
+    internal void FileServerVersion(OrchProductVersion? product, double? apiVersion)
     {
         if (apiVersion is not null && _drive.OrchAPISession.ApiVersion is null)
             _drive.OrchAPISession.ApiVersion = apiVersion;

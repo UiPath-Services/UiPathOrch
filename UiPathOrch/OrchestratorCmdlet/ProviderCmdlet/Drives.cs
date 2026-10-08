@@ -376,10 +376,10 @@ public partial class OrchProvider
                         WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Folders.Read\" scope is included to retrieve folder information.");
                     }
 
-                    if (!lowerScope.Contains("or.settings"))
-                    {
-                        WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Settings.Read\" scope is included to retrieve the API version needed to properly call Orchestrator APIs.");
-                    }
+                    // No OR.Settings warning: the API version comes from the anonymous
+                    // /api/Status/Version after sign-in (see EnsureAuthenticated), not from
+                    // the settings endpoint -- except on 20.10, where the first response's
+                    // header still supplies it.
 
                     if (string.IsNullOrEmpty(drive.AppSecret) && !lowerScope.Contains("or.users"))
                     {

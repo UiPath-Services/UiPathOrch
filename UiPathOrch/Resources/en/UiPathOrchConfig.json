@@ -27,7 +27,7 @@
   // configuration.
   // To check the scopes required for executing each cmdlet,
   // run: Get-Help <cmdlet name>
-  "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+  "Scope": "OR.Folders.Read OR.Users.Read",
 
   // To use cmdlets whose noun starts with OrchPm, add the Platform
   // Management API Access scope.
@@ -90,7 +90,6 @@
     // IMPORTANT: A token's scopes are fixed on the server when the token
     // is created. When creating it, select at least:
     //   OR.Folders.Read   (folder tree)
-    //   OR.Settings.Read  (API version detection)
     //   OR.Users.Read     (personal workspace access)
     // plus the scopes for whatever you manage (OR.Assets, OR.Queues, ...).
     // "Scope" is intentionally omitted from this sample -- it cannot
@@ -117,7 +116,7 @@
       "Description": "Non-Confidential App settings.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false
     },
 
@@ -138,7 +137,7 @@
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "AppSecret": "YOUR_APP_SECRET",
-      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Scope": "OR.Folders.Read",
       "Enabled": false
     },
 
@@ -153,7 +152,7 @@
       "Root": "https://YOUR_ORCHESTRATOR_URL/YOUR_TENANT",
       "Username": "USERNAME_OR_EMAILADDR",
       "Password": "PASSWORD",
-      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Scope": "OR.Folders.Read",
       "Enabled": false
     },
 
@@ -168,7 +167,7 @@
       "Root": "https://XXX.azurewebsites.net",
       "IdentityUrl": "https://YYY.azurewebsites.net/identity",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false
     },
 
@@ -184,7 +183,7 @@
       "Root": "https://YOUR_AS_HOST/YOUR_ORGANIZATION/YOUR_TENANT",
       "Edition": "AutomationSuite",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false
     },
 
@@ -197,7 +196,7 @@
       "Description": "This configuration includes proxy settings.",
       "Root": "https://cloud.uipath.com/YOUR_ORGANIZATION/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": false,
 
       "Proxy": {

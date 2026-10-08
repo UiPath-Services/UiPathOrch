@@ -156,7 +156,7 @@ entries for all authentication patterns. The structure is:
 {
   // Global settings (shared across all PSDrives)
   "RedirectUrl": "http://localhost:8085/Temporary_Listen_Addresses",
-  "Scope": "OR.Folders.Read OR.Settings.Read",
+  "Scope": "OR.Folders.Read",
   "Logging": { "Level": "Verbose", "Enabled": true },
   "IgnoreSslErrors": false,
   "Proxy": { ... },
@@ -167,7 +167,7 @@ entries for all authentication patterns. The structure is:
       "Name": "MyTenant",
       "Root": "https://cloud.uipath.com/YOUR_ORG/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read OR.Users.Read",
+      "Scope": "OR.Folders.Read OR.Users.Read",
       "Enabled": true
     },
     // Confidential App (for unattended scripts)
@@ -176,7 +176,7 @@ entries for all authentication patterns. The structure is:
       "Root": "https://cloud.uipath.com/YOUR_ORG/YOUR_TENANT",
       "AppId": "YOUR_APP_ID",
       "AppSecret": "YOUR_APP_SECRET",
-      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Scope": "OR.Folders.Read",
       "Enabled": true
     },
     // On-premises with Identity Server
@@ -185,7 +185,7 @@ entries for all authentication patterns. The structure is:
       "Root": "https://orchestrator.example.com/TENANT",
       "IdentityUrl": "https://identity.example.com/identity",
       "AppId": "YOUR_APP_ID",
-      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Scope": "OR.Folders.Read",
       "Enabled": true
     },
     // Legacy username/password (pre-21.4 on-premises only)
@@ -194,7 +194,7 @@ entries for all authentication patterns. The structure is:
       "Root": "https://orchestrator.example.com/TENANT",
       "Username": "USERNAME",
       "Password": "PASSWORD",
-      "Scope": "OR.Folders.Read OR.Settings.Read",
+      "Scope": "OR.Folders.Read",
       "Enabled": false
     }
   ]

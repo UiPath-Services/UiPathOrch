@@ -28,17 +28,32 @@ BeforeAll {
         $line
     }
 
+    # The org cache's entry for this drive's server, read directly. CachedValue is no good here:
+    # it finds the entry only once something has read the drive's partition, and Get-ChildItem
+    # does not -- while Get() reads it first, so Get-OrchProductVersion would always "find" it.
+    # $ServerRoot: Get-OrchPSDrive's Root (the server URL; Get-PSDrive's Root is the drive name),
+    # read before the sign-in -- on a signed-in drive Get-OrchPSDrive fetches the version itself.
+    function Get-CachedProductVersion([string]$DriveName, [string]$ServerRoot) {
+        $drive = Get-PSDrive $DriveName
+        $field = $drive.ProductVersion.GetType().GetField('_cache', [Reflection.BindingFlags]'NonPublic,Static')
+        $root = [uri]$ServerRoot
+        $prefix = '{0}://{1}|' -f $root.Scheme, $root.Authority
+        $field.GetValue($null).GetEnumerator() |
+            Where-Object { $_.Key.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase) } |
+            Select-Object -First 1 -ExpandProperty Value
+    }
+
     Import-OrchConfig
 }
 
 Describe 'PKCE sign-in learns the server version' {
     BeforeAll {
+        $serverRoot = (Get-OrchPSDrive -Path "${PkceDrive}:\").Root
         Write-Host "Sign in to ${PkceDrive}: in the browser that opens, and leave the success page open." -ForegroundColor Yellow
         Get-ChildItem "${PkceDrive}:\" -ErrorAction Stop | Out-Null
-        $script:drive = Get-PSDrive $PkceDrive
         # Get-ChildItem lists folders only; nothing on that path fetches the product version. A
         # value in the cache now was put there by the sign-in's version probe.
-        $script:cached = $drive.ProductVersion.CachedValue
+        $script:cached = Get-CachedProductVersion $PkceDrive $serverRoot
         $script:info = Get-OrchPSDrive -Path "${PkceDrive}:\"
     }
 
@@ -59,6 +74,28 @@ Describe 'PKCE sign-in learns the server version' {
         $expected = Get-ExpectedServerLine $info.Edition $cached.version $info.ApiVersion
         $answer = Read-Host "Did the sign-in page show the line '$expected' under 'Connected'? (y/n)"
         $answer | Should -Be 'y'
+    }
+}
+
+Describe 'Confidential app sign-in learns the server version (no browser)' {
+    BeforeAll {
+        # The version comes from the anonymous /api/Status/Version right after the token, not
+        # from GetActivitySettings -- so OR.Settings in the Scope does not matter.
+        $serverRoot = (Get-OrchPSDrive -Path "${ConfDrive}:\").Root
+        Get-ChildItem "${ConfDrive}:\" -ErrorAction Stop | Out-Null
+        $script:confCached = Get-CachedProductVersion $ConfDrive $serverRoot
+    }
+
+    It 'files the product version into the org cache at sign-in' {
+        $confCached.version | Should -Not -BeNullOrEmpty
+    }
+
+    It 'Get-OrchProductVersion answers with that value' {
+        (Get-OrchProductVersion -Path "${ConfDrive}:\").version | Should -Be $confCached.version
+    }
+
+    It 'knows the API version' {
+        (Get-OrchPSDrive -Path "${ConfDrive}:\").ApiVersion | Should -BeGreaterThan 0
     }
 }
 

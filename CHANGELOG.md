@@ -30,6 +30,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **The API version no longer depends on the OR.Settings scope, and its mount-time warning is
+  gone.** Right after sign-in UiPathOrch learned the version from GetActivitySettings, which needs
+  OR.Settings, and warned at mount when the Scope lacked it. It now asks the anonymous
+  `/api/Status/Version`, whose `api-supported-versions` header is the version and which needs no
+  scope (the same request the sign-in page uses; its product version fills the cache as well).
+  20.10, which has no such endpoint, still uses GetActivitySettings when the Scope allows it, and
+  otherwise takes the version from the first response, as before. OR.Settings is now needed only
+  by the cmdlets that read or change settings, calendars, credential stores and the license, like
+  any other resource scope, so the configuration templates (all languages) and Getting Started no
+  longer include `OR.Settings.Read` in their starting Scope, which is back to what UiPathOrch
+  itself needs: `OR.Folders.Read OR.Users.Read`. Existing configuration files are not changed.
 - **API triggers and Secret assets follow what each server's web UI offers.** `New-OrchApiTrigger`
   refuses a server below API 18: standalone 24.10 and 25.10 (API 17) accept the request, but their
   web UI has no API triggers and `Get-OrchApiTrigger` never listed them there, so the trigger it
