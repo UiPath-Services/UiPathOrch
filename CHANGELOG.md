@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`Test-PmExternalApplication` tells why an external application gets no token.** It requests a
+  token with client credentials, as a script using the application would (`-AppId`, `-AppSecret`,
+  `-Scope`; without them, the drive's own confidential application), and returns whether one was
+  issued, the scopes requested and granted, and **Problems**: no application with this App ID in
+  the organization, a non-confidential application, every secret expired or the App Secret not
+  matching, a scope registered as a user scope or not registered at all, a scope value too long.
+  The token endpoint itself says only `invalid_client` or `invalid_scope`. The application's
+  registration is read through the drive or another signed-in drive of the same organization; no
+  other drive is signed in for it. The token is dropped, never stored or returned.
 - **`Wait-OrchJob` waits until jobs end, and `Start-OrchJob -Wait` starts and waits.** Jobs come
   from the pipeline (`Start-OrchJob`, `Get-OrchJob`), from `-Id` (several, separated by commas) or
   from `-BatchExecutionKey`. Each job is written, read again, as soon as it is Successful,

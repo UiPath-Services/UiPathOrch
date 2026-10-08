@@ -435,6 +435,7 @@ CmdletsToExport = @(
 'Get-PmExternalApiResource',
 'Get-PmExternalApplication',
 'Copy-PmExternalApplication',
+'Test-PmExternalApplication',
 'Remove-PmExternalApplication',
 
 'Get-PmAccessAllowedMember',

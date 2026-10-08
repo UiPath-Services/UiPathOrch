@@ -658,6 +658,7 @@ External applications, directory search, audit, and settings.
 | Get-PmExternalApplication | List external applications |
 | Get-PmExternalApiResource | List available API resources/scopes |
 | Copy-PmExternalApplication | Copy external applications |
+| Test-PmExternalApplication | Request a client-credentials token for an external application and explain a refusal |
 | Remove-PmExternalApplication | Remove an external application |
 
 ### Directory

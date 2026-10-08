@@ -304,6 +304,53 @@ internal class OrchestratorAuthManager
         return BuildScopeTooLongAdvice(_drive.NameColon, length, productVersion, lengthIsCertain: false);
     }
 
+    // Cloud and AS use the /identity_ suffix; on-prem uses /identity.
+    internal string TokenEndpoint => !string.IsNullOrEmpty(_drive._psDrive.IdentityUrl)
+        ? _drive._psDrive.IdentityUrl + "/connect/token"
+        : _drive._psDrive.IsCloud
+            ? BaseUrl + "/identity_/connect/token"
+            : BaseUrl + "/identity/connect/token";
+
+    internal sealed record ClientCredentialsProbeResult(int StatusCode, string? Error, string? ErrorDescription, string? GrantedScope, int? ExpiresInSeconds);
+
+    // One client_credentials request to this drive's identity server, for
+    // Test-PmExternalApplication. The token is read for its granted scope and dropped: nothing is
+    // stored on the drive, and the token never leaves this method.
+    internal ClientCredentialsProbeResult ProbeClientCredentials(string clientId, string clientSecret, string scope)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, TokenEndpoint)
+        {
+            Content = new FormUrlEncodedContent(new Dictionary<string, string>
+            {
+                { "grant_type", "client_credentials" },
+                { "client_id", clientId },
+                { "client_secret", clientSecret },
+                { "scope", scope }
+            })
+        };
+
+        using var cts = new ConsoleCancelHandler();
+        using HttpResponseMessage response = SendWithLogging(request, cts.Token);
+        string body = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
+
+        string? error = null, description = null, granted = null;
+        int? expiresIn = null;
+        try
+        {
+            using var doc = JsonDocument.Parse(body);
+            var root = doc.RootElement;
+            if (root.TryGetProperty("error", out var e)) error = e.GetString();
+            if (root.TryGetProperty("error_description", out var d)) description = d.GetString();
+            if (root.TryGetProperty("scope", out var s)) granted = s.GetString();
+            if (response.IsSuccessStatusCode) expiresIn = ParseExpiresInSeconds(root);
+        }
+        catch (JsonException)
+        {
+            // Not JSON (a proxy page, an HTML error): the status code is what there is to report.
+        }
+        return new ClientCredentialsProbeResult((int)response.StatusCode, error, description, granted, expiresIn);
+    }
+
     // adviseOnError: given the OAuth error code of a refused request, more to say about it, or null.
     private (string access_token, string refresh_token) GetAccessToken(Dictionary<string, string> postData, Func<string, string?>? adviseOnError = null)
     {
@@ -315,21 +362,7 @@ internal class OrchestratorAuthManager
         // paths are harmless.
         LogAuthSettings();
 
-        string endPoint;
-
-        if (!string.IsNullOrEmpty(_drive._psDrive.IdentityUrl))
-        {
-            endPoint = _drive._psDrive.IdentityUrl + "/connect/token";
-        }
-        else
-        {
-            // Cloud and AS use the /identity_ suffix; on-prem uses /identity.
-            endPoint = _drive._psDrive.IsCloud
-                ? BaseUrl + "/identity_/connect/token"
-                : BaseUrl + "/identity/connect/token";
-        }
-
-        var request = new HttpRequestMessage(HttpMethod.Post, endPoint)
+        var request = new HttpRequestMessage(HttpMethod.Post, TokenEndpoint)
         {
             Content = new FormUrlEncodedContent(postData)
         };
