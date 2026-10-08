@@ -77,6 +77,20 @@ Set-Location Orch2:\                       # keep stray null-path ops on the dis
 Invoke-Pester -Path Tests\CleanTenant.Tests.ps1 -Output Detailed
 ```
 
+### Interactive sign-in tests
+
+`Tests\Interactive\` holds checks that need someone at the browser, so the runner (which reads
+only `Tests\*.Tests.ps1`) never picks them up. `SignIn.Tests.ps1` signs in to a PKCE drive and
+checks that the sign-in cached the server's product version (and asks you to confirm the
+success page's server line), then mounts a temporary confidential-app drive with a 307-character
+Scope on Orchestrator 21.10 and checks that the refusal explains the 300-character limit.
+It runs `Import-OrchConfig` first, so every drive in the session signs in again on next use.
+
+```powershell
+Invoke-Pester -Container (New-PesterContainer -Path Tests\Interactive\SignIn.Tests.ps1 `
+    -Data @{ PkceDrive = 'op2510'; ConfDrive = 'op2110c' }) -Output Detailed
+```
+
 ### Helpers
 
 - `Reset-Tenant.ps1 -TargetDrive <drive>` — **DESTRUCTIVE**: removes triggers,
