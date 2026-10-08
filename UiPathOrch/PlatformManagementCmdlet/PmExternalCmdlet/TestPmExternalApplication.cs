@@ -14,12 +14,16 @@ public class ExternalApplicationTestResult
     public string? AppId { get; set; }
     public string? Name { get; set; }
     public bool? IsConfidential { get; set; }
-    public bool Succeeded { get; set; }
+    // Null when no token was requested: a non-confidential application is checked without signing in.
+    public bool? Succeeded { get; set; }
     public string? Error { get; set; }
     public string? ErrorDescription { get; set; }
     public string[]? RequestedScope { get; set; }
     public string[]? GrantedScope { get; set; }
     public int? ExpiresIn { get; set; }
+    // The application's own token (client credentials), to call the API with as the application
+    // would -- as Get-OrchPSDrive gives a drive's, a documented diagnostic feature.
+    public string? AccessToken { get; set; }
     public string[] Problems { get; set; } = [];
 }
 
@@ -52,6 +56,11 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(TestApplicationScopeCompleter))]
     [SupportsWildcards]
     public string[]? Scope { get; set; }
+
+    // A non-confidential application only: the redirect URL the other tool signs in with, compared
+    // with the one registered.
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public string? RedirectUri { get; set; }
 
     // The organization's external applications; the App ID is inserted, the name is the tip.
     // What is typed is matched against both, so "OCM<Tab>" finds the application named OCM.
@@ -110,15 +119,36 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
                 secret = drive._psDrive.AppSecret;
                 scopeValues ??= string.IsNullOrEmpty(drive._psDrive.Scope) ? null : [drive._psDrive.Scope];
             }
-            else if (string.IsNullOrEmpty(secret))
+            var (registration, registrationNote) = FindRegistration(SessionState, drive, clientId!);
+
+            // No secret: a non-confidential application is checked against its registration without
+            // signing in -- its sign-in runs in the other tool's browser flow and returns to that
+            // tool's redirect URL. Anything else needs the secret.
+            if (string.IsNullOrEmpty(secret))
             {
-                WriteError(new ErrorRecord(
-                    new ArgumentException("-AppSecret is required with -AppId."),
-                    "TestPmExternalApplicationNoSecret", ErrorCategory.InvalidArgument, clientId));
+                if (registration is null && registrationNote is null)
+                {
+                    WriteObject(new ExternalApplicationTestResult
+                    {
+                        Path = target, AppId = clientId,
+                        Problems = [.. Diagnose(false, null, clientId!, null, true, [], DateTime.Now)],
+                    });
+                }
+                else if (registration?.isConfidential == false)
+                {
+                    TestNonConfidential(target, registration, scopeValues);
+                }
+                else
+                {
+                    string why = registration is null
+                        ? $"the application's registration could not be read to tell whether it is confidential ({registrationNote})"
+                        : $"'{registration.name}' is a confidential application";
+                    WriteError(new ErrorRecord(
+                        new ArgumentException($"-AppSecret is required: {why}."),
+                        "TestPmExternalApplicationNoSecret", ErrorCategory.InvalidArgument, clientId));
+                }
                 continue;
             }
-
-            var (registration, registrationNote) = FindRegistration(SessionState, drive, clientId!);
 
             var registered = ApplicationScopes(registration);
             string[] requested;
@@ -158,7 +188,7 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
             try
             {
                 var r = drive.OrchAPISession.AuthManager.ProbeClientCredentials(clientId!, secret!, scope);
-                probe = new(r.StatusCode, r.Error, r.ErrorDescription, r.GrantedScope, r.ExpiresInSeconds);
+                probe = new(r.StatusCode, r.Error, r.ErrorDescription, r.GrantedScope, r.ExpiresInSeconds, r.AccessToken);
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
@@ -190,12 +220,72 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
                 RequestedScope = requested,
                 GrantedScope = probe.GrantedScope?.Split(' ', StringSplitOptions.RemoveEmptyEntries),
                 ExpiresIn = probe.ExpiresIn,
+                AccessToken = probe.AccessToken,
                 Problems = [.. problems],
             });
         }
     }
 
-    private sealed record AuthManagerProbe(int StatusCode, string? Error, string? ErrorDescription, string? GrantedScope, int? ExpiresIn);
+    private void TestNonConfidential(string target, ExternalClient registration, string[]? scopeValues)
+    {
+        string[]? requested = null;
+        if (scopeValues is not null && !scopeValues.All(string.IsNullOrWhiteSpace))
+        {
+            requested = [.. ExternalScopeArguments.Expand(scopeValues, UserScopes(registration), out var unmatched)];
+            if (unmatched.Count > 0)
+            {
+                WriteError(new ErrorRecord(
+                    new ArgumentException($"-Scope {string.Join(", ", unmatched)} matches no user scope of '{registration.name}'."),
+                    "TestPmExternalApplicationScopeNotMatched", ErrorCategory.InvalidArgument, unmatched));
+                return;
+            }
+        }
+
+        WriteObject(new ExternalApplicationTestResult
+        {
+            Path = target,
+            AppId = registration.id,
+            Name = registration.name,
+            IsConfidential = false,
+            RequestedScope = requested,
+            Problems = [.. DiagnoseNonConfidential(registration, requested, RedirectUri)],
+        });
+    }
+
+    private sealed record AuthManagerProbe(int StatusCode, string? Error, string? ErrorDescription, string? GrantedScope, int? ExpiresIn, string? AccessToken);
+
+    internal static string[] UserScopes(ExternalClient? registration) =>
+        registration?.resources?
+            .SelectMany(r => r.scopes ?? [])
+            .Where(s => s.type == UserScopeType && !string.IsNullOrEmpty(s.name))
+            .Select(s => s.name!)
+            .Distinct()
+            .ToArray() ?? [];
+
+    // What a non-confidential application's registration shows without signing in: its sign-in
+    // (authorization code with PKCE, in the browser) receives user scopes only, and returns to the
+    // registered redirect URL. requestedScope null: none given, so only the registration itself is
+    // checked. Pure.
+    internal static List<string> DiagnoseNonConfidential(ExternalClient registration, string[]? requestedScope, string? redirectUri)
+    {
+        List<string> problems = [];
+        string name = registration.name ?? registration.id ?? "";
+        var user = UserScopes(registration).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        if (user.Count == 0)
+            problems.Add($"'{name}' has no user scope, so a sign-in with it receives no scope. Add the user scopes the tool needs.");
+        if (string.IsNullOrEmpty(registration.redirectUri))
+            problems.Add($"'{name}' has no redirect URL registered, so a browser sign-in with it has nowhere to return.");
+
+        foreach (var s in (requestedScope ?? []).Where(s => !user.Contains(s)))
+            problems.Add($"'{s}' is not registered on '{name}' as a user scope. Add it as a user scope, or leave it out of the request.");
+
+        if (!string.IsNullOrEmpty(redirectUri) && !string.IsNullOrEmpty(registration.redirectUri)
+            && !string.Equals(redirectUri.TrimEnd('/'), registration.redirectUri.TrimEnd('/'), StringComparison.OrdinalIgnoreCase))
+            problems.Add($"Redirect URL {redirectUri} differs from the one registered on '{name}', {registration.redirectUri}; the sign-in would be refused.");
+
+        return problems;
+    }
 
     internal static string[] ApplicationScopes(ExternalClient? registration) =>
         registration?.resources?
@@ -222,7 +312,7 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
 
         if (registration.isConfidential == false)
         {
-            problems.Add($"'{name}' is a non-confidential application. It has no secret and cannot request a token with client credentials; sign in with it interactively instead, or register a confidential application.");
+            problems.Add($"'{name}' is a non-confidential application. It has no secret and cannot request a token with client credentials; it signs in in the browser. Run Test-PmExternalApplication without -AppSecret to check its registration, or register a confidential application.");
             return problems;
         }
 

@@ -157,6 +157,32 @@ public class TestPmExternalApplicationTests
         Assert.Equal(["PM.*"], unmatched);
     }
 
+    private static ExternalClient Public(string? redirect = "http://localhost:8765", params string[] userScopes) => new()
+    {
+        name = "Tool", id = "pid", isConfidential = false, redirectUri = redirect,
+        resources = [new ExternalResource { name = "UiPath.Orchestrator", scopes = [.. userScopes.Select(s => new ExternalScope { name = s, type = TestPmExternalApplicationCmdlet.UserScopeType })] }],
+    };
+
+    [Fact]
+    public void NonConfidential_registered_scopes_and_redirect_pass()
+    {
+        Assert.Empty(TestPmExternalApplicationCmdlet.DiagnoseNonConfidential(Public("http://localhost:8765/", "OR.Jobs"), ["or.jobs"], "http://localhost:8765"));
+        Assert.Empty(TestPmExternalApplicationCmdlet.DiagnoseNonConfidential(Public("http://localhost:8765", "OR.Jobs"), null, null));
+    }
+
+    [Fact]
+    public void NonConfidential_problems_are_named()
+    {
+        var p = TestPmExternalApplicationCmdlet.DiagnoseNonConfidential(Public("http://localhost:8765", "OR.Jobs"), ["OR.Jobs", "OR.Queues"], "http://localhost:9000");
+        Assert.Equal(2, p.Count);
+        Assert.Contains("'OR.Queues' is not registered on 'Tool' as a user scope", p[0]);
+        Assert.Contains("differs from the one registered", p[1]);
+
+        var bare = TestPmExternalApplicationCmdlet.DiagnoseNonConfidential(Public(null), null, null);
+        Assert.Contains(bare, x => x.Contains("has no user scope"));
+        Assert.Contains(bare, x => x.Contains("no redirect URL registered"));
+    }
+
     [Fact]
     public void ApplicationScopes_lists_application_scopes_only()
     {

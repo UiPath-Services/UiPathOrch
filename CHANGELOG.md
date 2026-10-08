@@ -29,9 +29,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   The token endpoint itself says only `invalid_client`, `invalid_scope`, or for a user scope
   `invalid_request` "not allowed to access User scopes" without naming it. `-Scope` takes commas
   or spaces and wildcards that expand against the application's own scopes; `-AppId` and `-Scope`
-  complete (the application name is the tip). The application's
+  complete (the application name is the tip). A successful request returns the token
+  (**AccessToken**), to call the API with as the application would. Without `-AppSecret`, a
+  non-confidential application is not signed in (it returns to the other tool's redirect URL);
+  its registration is checked instead: user scopes and a redirect URL registered, the `-Scope`
+  values registered as user scopes, `-RedirectUri` the registered one. The application's
   registration is read through the drive or another signed-in drive of the same organization; no
-  other drive is signed in for it. The token is dropped, never stored or returned.
+  other drive is signed in for it. The token is not stored on any drive.
 - **`Wait-OrchJob` waits until jobs end, and `Start-OrchJob -Wait` starts and waits.** Jobs come
   from the pipeline (`Start-OrchJob`, `Get-OrchJob`), from `-Id` (several, separated by commas) or
   from `-BatchExecutionKey`. Each job is written, read again, as soon as it is Successful,

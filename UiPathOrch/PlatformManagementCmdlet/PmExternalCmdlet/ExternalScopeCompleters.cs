@@ -141,10 +141,13 @@ internal class TestApplicationScopeCompleter : ExternalScopeCompleter
         if (!string.IsNullOrEmpty(appId))
         {
             var (registration, _) = TestPmExternalApplicationCmdlet.FindRegistration(SessionState, drive, appId);
+            // A non-confidential application is checked against its user scopes.
+            bool user = registration?.isConfidential == false;
+            int type = user ? TestPmExternalApplicationCmdlet.UserScopeType : TestPmExternalApplicationCmdlet.ApplicationScopeType;
             var registered = registration?.resources?
                 .SelectMany(r => (r.scopes ?? [])
-                    .Where(s => s.type == TestPmExternalApplicationCmdlet.ApplicationScopeType)
-                    .Select(s => (s.name!, $"{r.name}: application scope of '{registration.name}'")))
+                    .Where(s => s.type == type)
+                    .Select(s => (s.name!, $"{r.name}: {(user ? "user" : "application")} scope of '{registration.name}'")))
                 .ToList();
             if (registered is { Count: > 0 }) return registered;
         }

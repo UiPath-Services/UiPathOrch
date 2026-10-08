@@ -328,11 +328,11 @@ internal class OrchestratorAuthManager
             ? BaseUrl + "/identity_/connect/token"
             : BaseUrl + "/identity/connect/token";
 
-    internal sealed record ClientCredentialsProbeResult(int StatusCode, string? Error, string? ErrorDescription, string? GrantedScope, int? ExpiresInSeconds);
+    internal sealed record ClientCredentialsProbeResult(int StatusCode, string? Error, string? ErrorDescription, string? GrantedScope, int? ExpiresInSeconds, string? AccessToken);
 
     // One client_credentials request to this drive's identity server, for
-    // Test-PmExternalApplication. The token is read for its granted scope and dropped: nothing is
-    // stored on the drive, and the token never leaves this method.
+    // Test-PmExternalApplication. Nothing is stored on the drive; the token is returned to the
+    // caller, as Get-OrchPSDrive returns a drive's own (a documented diagnostic feature).
     internal ClientCredentialsProbeResult ProbeClientCredentials(string clientId, string clientSecret, string scope)
     {
         var request = new HttpRequestMessage(HttpMethod.Post, TokenEndpoint)
@@ -350,7 +350,7 @@ internal class OrchestratorAuthManager
         using HttpResponseMessage response = SendWithLogging(request, cts.Token);
         string body = response.Content.ReadAsStringAsync(cts.Token).GetAwaiter().GetResult();
 
-        string? error = null, description = null, granted = null;
+        string? error = null, description = null, granted = null, accessToken = null;
         int? expiresIn = null;
         try
         {
@@ -359,13 +359,17 @@ internal class OrchestratorAuthManager
             if (root.TryGetProperty("error", out var e)) error = e.GetString();
             if (root.TryGetProperty("error_description", out var d)) description = d.GetString();
             if (root.TryGetProperty("scope", out var s)) granted = s.GetString();
-            if (response.IsSuccessStatusCode) expiresIn = ParseExpiresInSeconds(root);
+            if (response.IsSuccessStatusCode)
+            {
+                expiresIn = ParseExpiresInSeconds(root);
+                accessToken = ParseTokens(root).accessToken;
+            }
         }
         catch (JsonException)
         {
             // Not JSON (a proxy page, an HTML error): the status code is what there is to report.
         }
-        return new ClientCredentialsProbeResult((int)response.StatusCode, error, description, granted, expiresIn);
+        return new ClientCredentialsProbeResult((int)response.StatusCode, error, description, granted, expiresIn, string.IsNullOrEmpty(accessToken) ? null : accessToken);
     }
 
     // adviseOnError: given the OAuth error code and description of a refused request, more to say
