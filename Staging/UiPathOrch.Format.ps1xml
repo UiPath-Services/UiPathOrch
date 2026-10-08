@@ -41,6 +41,38 @@
     </View>
 
     <!--
+      Find-OrchAccountReference output. Name is left out: it is the last segment of Path.
+    -->
+    <View>
+      <Name>UiPath.PowerShell.Commands.AccountReference</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Commands.AccountReference</TypeName>
+      </ViewSelectedBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader><Label>Type</Label></TableColumnHeader>
+          <TableColumnHeader><Label>Path</Label></TableColumnHeader>
+          <TableColumnHeader><Label>Property</Label></TableColumnHeader>
+          <TableColumnHeader><Label>Account</Label></TableColumnHeader>
+          <TableColumnHeader><Label>Via</Label></TableColumnHeader>
+          <TableColumnHeader><Label>CredentialStore</Label></TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem><PropertyName>Type</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Path</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Property</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Account</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>Via</PropertyName></TableColumnItem>
+              <TableColumnItem><PropertyName>CredentialStore</PropertyName></TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <!--
       Compare-Orch* family output. Rendered as a LIST (not a table) so the per-property
       Differences are never truncated. One record per entity: SideIndicator (<=, =>, <>, ==), the
       reference-side Name/Path and the difference-side DifferenceName/DifferencePath. The

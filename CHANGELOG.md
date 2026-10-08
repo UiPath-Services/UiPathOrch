@@ -8,6 +8,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **`Find-OrchAccountReference` finds where a Windows account is used**, for example before its
+  password changes: users (sign-in, unattended robot credential, attended robot), classic robots,
+  credential assets (global and per-user values), and one step further, the per-user asset
+  values of a matched user and the triggers that run on its robot. A name without a domain
+  matches `DOMAIN\name`, `name@domain` and `name` alike; wildcards are accepted. Rows that hold a
+  password name the credential store, so "Orchestrator Database" marks a password to re-enter in
+  Orchestrator.
 - **`New-PmExternalApplication` registers an external application**, as the portal's Add
   Application page does: `-Name`, `-IsConfidential` (default true), `-ApplicationScope`,
   `-UserScope`, `-RedirectUri`. It returns the App ID and, for a confidential application, the App

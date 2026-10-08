@@ -82,6 +82,7 @@ Tenant-level user accounts, authentication, sessions, and personal workspaces.
 | Compare-OrchUser | Diff users between two tenants |
 | Update-OrchUser | Update user properties |
 | Remove-OrchUser | Remove a user from the tenant |
+| Find-OrchAccountReference | Find where a Windows account is used: users, robots, credential assets, triggers |
 
 ### User Status & Sessions
 

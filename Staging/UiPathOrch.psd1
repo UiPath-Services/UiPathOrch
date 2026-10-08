@@ -150,6 +150,7 @@ CmdletsToExport = @(
 'Remove-OrchRoleFromUser',
 'Get-OrchCurrentUser',
 'Update-OrchCurrentUserURPassword',
+'Find-OrchAccountReference',
 
 'Get-OrchLicenseNamedUser',
 'Get-OrchLicenseRuntime',
