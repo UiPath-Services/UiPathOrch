@@ -1,18 +1,12 @@
 using System.Collections.ObjectModel;
-using System.Data;
 using System.Diagnostics;
 using System.Globalization;
 using System.Management.Automation;
-using System.Management.Automation.Provider;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text;
 using System.Text.Json;
 using UiPath.OrchAPI;
 using UiPath.PowerShell.Commands;
-using UiPath.PowerShell.Completer;
-using UiPath.PowerShell.Positional;
-using UiPath.PowerShell.Entities;
 using UiPath.PowerShell.Entities.JsonConverter;
 
 namespace UiPath.PowerShell.Core;
@@ -199,7 +193,7 @@ public partial class OrchProvider
         out bool notFound,
         bool bypassMemo = false)
     {
-        string key = resolution.Path + " " + (resolution.FolderCandidate ?? "");
+        string key = resolution.Path + "\0" + (resolution.FolderCandidate ?? "");
 
         lock (_configReadLock)
         {
@@ -341,15 +335,23 @@ public partial class OrchProvider
         }
     }
 
-    // An OAuth drive whose Scope names Orchestrator scopes but none for folders: it signs in, then
-    // cannot list a single folder. Warned at mount (below) and repeated on the refused listing
-    // (GetChildItems), where the mount-time warning has long scrolled away. PAT and user/password
-    // drives are exempt: their rights do not come from Scope.
+    // An OAuth drive whose Scope names Orchestrator scopes but none that can read folders: it signs
+    // in, then cannot list a single folder. Warned at mount (below) and repeated on the refused
+    // listing (GetChildItems), where the mount-time warning has long scrolled away. PAT and
+    // user/password drives are exempt: their rights do not come from Scope.
     internal static bool LacksFolderScope(PSDrive drive)
         => string.IsNullOrEmpty(drive.Password) && string.IsNullOrEmpty(drive.AccessToken)
            && drive.Scope is string scope
            && scope.Contains("or.", StringComparison.OrdinalIgnoreCase)
-           && !scope.Contains("or.folders", StringComparison.OrdinalIgnoreCase);
+           && !CanRead(scope, "OR.Folders");
+
+    // Whether the Scope grants reading the resource: the resource scope itself or its .Read, as
+    // whole names. .Write alone does not -- measured on 21.10.4 (2026-10-08): a token with
+    // OR.Folders.Write but not .Read is refused the folder listing ("You are not authorized!").
+    internal static bool CanRead(string scope, string resource)
+        => scope.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).Any(s =>
+               s.Equals(resource, StringComparison.OrdinalIgnoreCase)
+               || s.Equals(resource + ".Read", StringComparison.OrdinalIgnoreCase));
 
     private void WarningPSDriveConfig(PSDrive drive)
     {
@@ -381,7 +383,7 @@ public partial class OrchProvider
                     // the settings endpoint -- except on 20.10, where the first response's
                     // header still supplies it.
 
-                    if (string.IsNullOrEmpty(drive.AppSecret) && !lowerScope.Contains("or.users"))
+                    if (string.IsNullOrEmpty(drive.AppSecret) && !CanRead(drive.Scope!, "OR.Users"))
                     {
                         WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
                     }

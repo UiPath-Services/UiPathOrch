@@ -85,7 +85,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   no OR.Folders scope signs in and is then refused every folder listing. The mount-time warning
   about it has long scrolled away by then, so a refused listing (401/403) on such a drive now ends
   with the cause and the fix: add OR.Folders.Read (or OR.Folders) with `Edit-OrchConfig`, then run
-  `Import-OrchConfig`.
+  `Import-OrchConfig`. `OR.Folders.Write` alone now counts as missing, in this note and in the
+  mount-time warning (likewise `OR.Users.Write` for the personal-workspace warning): a token with
+  only the Write scope is refused the folder listing (measured on 21.10.4), but any scope whose
+  name began with "OR.Folders" used to silence both.
 - **Platform Management list cmdlets report a server without the feature and carry on.**
   `Get-PmLicense`, `Get-PmUser`, `Get-PmGroup`, `Get-PmExternalApplication` and seven others
   stopped the whole command when one drive lacked the endpoint (a standalone server) or refused

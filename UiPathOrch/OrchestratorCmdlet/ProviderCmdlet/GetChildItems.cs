@@ -73,7 +73,7 @@ public partial class OrchProvider
     internal static string FolderScopeNote(OrchDriveInfo drive, Exception ex)
         => LacksFolderScope(drive._psDrive)
            && OrchException.FindHttpStatus(ex) is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden
-            ? $" The Scope of {drive.NameColon} has no OR.Folders scope, so folders cannot be read. "
+            ? $" The Scope of {drive.NameColon} has neither OR.Folders.Read nor OR.Folders, so folders cannot be read. "
               + "Run Edit-OrchConfig, add OR.Folders.Read (or OR.Folders) to its Scope, then run Import-OrchConfig."
             : "";
 
