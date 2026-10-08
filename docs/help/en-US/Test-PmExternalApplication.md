@@ -13,28 +13,34 @@ title: Test-PmExternalApplication
 
 ## SYNOPSIS
 
-Requests a token for a confidential external application, or checks a non-confidential one's registration, and explains what keeps it from working.
+Checks external applications you registered for other tools: requests a token for a confidential one, or checks the registration, and explains what keeps it from working.
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Test-PmExternalApplication [[-AppId] <string>] [[-AppSecret] <string>] [[-Scope] <string[]>]
- [-RedirectUri <string>] [-Path <string[]>] [-LiteralPath <string[]>] [<CommonParameters>]
+Test-PmExternalApplication [[-Name] <string[]>] [[-AppSecret] <string>] [[-Scope] <string[]>]
+ [-AppId <string>] [-RedirectUri <string>] [-Path <string[]>] [-LiteralPath <string[]>]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
 
 ## DESCRIPTION
 
-The `Test-PmExternalApplication` cmdlet checks an external application that you registered for another tool or script -- for example with `New-PmExternalApplication` -- before you hand it over.
+The `Test-PmExternalApplication` cmdlet checks external applications that you registered for another tool or script -- for example with `New-PmExternalApplication` -- before you hand them over. Name them with -Name (wildcards allowed) or -AppId; it returns one result per application.
 
-With -AppSecret, it requests a token from the identity server of the target drive with the client credentials grant, as a script using a confidential application does, and returns whether a token was issued, the error when it was not, the scopes requested and granted, the token itself (**AccessToken**, valid for **ExpiresIn** seconds, to call the API with as the application would) and the likely causes of a refusal.
+With -AppSecret, it requests a token from the identity server of the target drive with the client credentials grant, as a script using a confidential application does, and returns whether a token was issued, the error when it was not, the scopes requested and granted, the token itself (**AccessToken**, valid for **ExpiresIn** seconds, to call the API with as the application would) and the likely causes of a refusal. A secret belongs to one application, so -Name must then match one.
 
-Without -AppSecret, for a non-confidential application, it does not sign in: such an application signs in in the browser and returns to the other tool's redirect URL. It checks the registration instead -- that the application has user scopes and a redirect URL, that the scopes given with -Scope are registered as user scopes, and that the URL given with -RedirectUri is the registered one -- and returns the result with **Succeeded** empty. For a confidential application, -AppSecret is required.
+Without -AppSecret, it signs nothing in and checks each application's registration instead, returning the result with **Succeeded** empty:
 
-The token endpoint says little about a refusal: a wrong App Secret or an unknown App ID gets a bare `invalid_client`, a scope not registered on the application a bare `invalid_scope`, and a user scope `invalid_request` "Client=... is not allowed to access User scopes" without saying which scope. The cmdlet reads the application's registration in the organization to name the cause:
+- a confidential application: it has a secret, not all of its secrets have expired or expire within 30 days, it has scopes, an application with user scopes only has a redirect URL, and the scopes given with -Scope are registered as application scopes;
+- a non-confidential application, which signs in in the browser and returns to the other tool's redirect URL: it has user scopes and a redirect URL, the scopes given with -Scope are registered as user scopes, and the URL given with -RedirectUri is the registered one.
+
+So `Test-PmExternalApplication *` reviews every application of the organization.
+
+When a token is refused, the token endpoint says little: a wrong App Secret or an unknown App ID gets a bare `invalid_client`, a scope not registered on the application a bare `invalid_scope`, and a user scope `invalid_request` "Client=... is not allowed to access User scopes" without saying which scope. The cmdlet reads the application's registration to name the cause:
 
 - no application with this App ID is registered in the organization;
 - the application is non-confidential, so it cannot use client credentials;
@@ -42,11 +48,11 @@ The token endpoint says little about a refusal: a wrong App Secret or an unknown
 - a requested scope is registered on the application as a user scope (a token requested with client credentials carries application scopes only), or is not registered at all;
 - the scope value is longer than the server accepts.
 
-The registration is read through the target drive or another drive of the same organization that is already signed in, such as a drive using your own account, since the drive under test often lacks the Platform Management scopes needed to read it. Drives not signed in are not used, so no sign-in starts. When the registration cannot be read, the result says so and only the error is reported.
+The registrations are read through the target drive or another drive of the same organization that is already signed in, such as a drive using your own account. Drives not signed in are not used, so no sign-in starts. A name without wildcards that matches no application is an error; a pattern that matches none is not.
 
-Without -AppId, the cmdlet tests the confidential application the target drive is configured with (its AppId, AppSecret and Scope in the configuration file). The token is not stored on the drive.
+With neither -Name nor -AppId, the cmdlet tests the confidential application the target drive is configured with (its AppId, AppSecret and Scope in the configuration file). The token is not stored on the drive.
 
-Tab completion of -AppId offers the organization's applications, with each name as the tip; what you type is matched against the name as well, so typing part of a name finds the App ID. Tab completion of -Scope offers the scopes registered on the application -- application scopes, or user scopes for a non-confidential one -- leaving out those already given.
+Tab completion of -Name offers the organization's applications. Tab completion of -Scope offers the scopes registered on the application -- application scopes, or user scopes for a non-confidential one -- leaving out those already given.
 
 Primary Endpoint: POST /identity_/connect/token (Automation Cloud, Automation Suite) or /identity/connect/token (standalone)
 
@@ -54,21 +60,21 @@ OAuth required scopes: none for the token request. Reading the registration need
 
 ## EXAMPLES
 
-### Example 1: Test the confidential application of a drive
+### Example 1: Review every application of the organization
 
 ```powershell
-PS C:\> Test-PmExternalApplication -Path Orch1c:
+PS C:\> Test-PmExternalApplication * -Path Orch1: | Where-Object Problems
 ```
 
-Requests a token with the AppId, AppSecret and Scope that the Orch1c drive is configured with.
+Checks the registration of every external application, without signing in, and shows those with problems: no secret, secrets expired or expiring within 30 days, no scope, no redirect URL where one is needed.
 
-### Example 2: Test an application before configuring it
+### Example 2: Test an application before handing it over
 
 ```powershell
-PS C:\> Test-PmExternalApplication 32ae9da7-db02-4f16-bd32-bd75a19d70bc $secret OR.Jobs*, OR.Assets -Path Orch1:
+PS C:\> Test-PmExternalApplication NightlyBatch $secret OR.Jobs*, OR.Queues -Path Orch1:
 ```
 
-Requests a token for the application with OR.Assets and every application scope of the application that begins with OR.Jobs, on the identity server of Orch1, and lists the causes when it is refused.
+Requests a token for the application named NightlyBatch with OR.Queues and every application scope of it that begins with OR.Jobs, and lists the causes when it is refused.
 
 ### Example 3: Request every application scope registered on an application
 
@@ -76,7 +82,7 @@ Requests a token for the application with OR.Assets and every application scope 
 PS C:\> Get-PmExternalApplication -Path Orch1: -Name OCM | Test-PmExternalApplication -AppSecret $secret -Path Orch1:
 ```
 
-Pipes the application (its id binds to -AppId) and, since -Scope is omitted, requests all the application scopes registered on it.
+Pipes the application (its name binds to -Name and its id to -AppId) and, since -Scope is omitted, requests all the application scopes registered on it.
 
 ### Example 4: Call the API with the application's token
 
@@ -90,16 +96,37 @@ Requests a token as the Orch1c drive's confidential application and calls Orches
 ### Example 5: Check a non-confidential application without signing in
 
 ```powershell
-PS C:\> Test-PmExternalApplication 3f6c0d1e-2b4a-4c8e-9a71-5d2e8f0b6c34 -Scope OR.Folders*, OR.Jobs -RedirectUri http://localhost:8085/callback -Path Orch1:
+PS C:\> Test-PmExternalApplication MyTool -Scope OR.Folders*, OR.Jobs -RedirectUri http://localhost:8085/callback -Path Orch1:
 ```
 
 Checks that the scopes are registered on the application as user scopes and that the redirect URL is the registered one, and lists what is not.
 
 ## PARAMETERS
 
+### -Name
+
+Specifies the names of the applications to test, as `Get-PmExternalApplication` shows them. Wildcard characters are permitted; each application that matches is tested. With neither -Name nor -AppId, the drive's own confidential application is tested.
+
+```yaml
+Type: System.String[]
+DefaultValue: None
+SupportsWildcards: true
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: 0
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### -AppId
 
-Specifies the App ID (client ID) of the external application. Without it, the cmdlet tests the confidential application the target drive is configured with.
+Specifies the App ID (client ID) of one application, instead of -Name; it wins when both are given, as when Get-PmExternalApplication is piped.
 
 ```yaml
 Type: System.String
@@ -110,7 +137,7 @@ Aliases:
 - id
 ParameterSets:
 - Name: (All)
-  Position: 0
+  Position: Named
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true

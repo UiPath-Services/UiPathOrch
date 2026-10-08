@@ -184,6 +184,37 @@ public class TestPmExternalApplicationTests
     }
 
     [Fact]
+    public void Confidential_registration_without_a_request_checks_secrets_and_scopes()
+    {
+        Assert.Empty(TestPmExternalApplicationCmdlet.DiagnoseConfidentialRegistration(App(), null, Now));
+        Assert.Empty(TestPmExternalApplicationCmdlet.DiagnoseConfidentialRegistration(App(), ["OR.Jobs"], Now));
+
+        var noSecret = App();
+        noSecret.secrets = [];
+        Assert.Contains(TestPmExternalApplicationCmdlet.DiagnoseConfidentialRegistration(noSecret, null, Now), x => x.Contains("has no secret"));
+
+        Assert.Contains(TestPmExternalApplicationCmdlet.DiagnoseConfidentialRegistration(App(expiries: [Now.AddDays(-1)]), null, Now), x => x.Contains("Every secret"));
+
+        var soon = TestPmExternalApplicationCmdlet.DiagnoseConfidentialRegistration(App(expiries: [Now.AddDays(-5), Now.AddDays(10)]), null, Now);
+        Assert.Contains(soon, x => x.Contains("expires within 30 days"));
+        Assert.Empty(TestPmExternalApplicationCmdlet.DiagnoseConfidentialRegistration(App(expiries: [Now.AddDays(10), null]), null, Now));
+
+        var scopes = TestPmExternalApplicationCmdlet.DiagnoseConfidentialRegistration(App(), ["OR.Users", "OR.Queues"], Now);
+        Assert.Contains(scopes, x => x.Contains("'OR.Users' is registered on 'MyApp' as a user scope"));
+        Assert.Contains(scopes, x => x.Contains("'OR.Queues' is not registered"));
+    }
+
+    [Fact]
+    public void Confidential_registration_with_user_scopes_only_needs_a_redirect()
+    {
+        var web = App();
+        web.resources = [new ExternalResource { name = "UiPath.Orchestrator", scopes = [new ExternalScope { name = "OR.Users", type = TestPmExternalApplicationCmdlet.UserScopeType }] }];
+        Assert.Contains(TestPmExternalApplicationCmdlet.DiagnoseConfidentialRegistration(web, null, Now), x => x.Contains("user scopes only and no redirect URL"));
+        web.redirectUri = "https://web.example.com/signin";
+        Assert.Empty(TestPmExternalApplicationCmdlet.DiagnoseConfidentialRegistration(web, null, Now));
+    }
+
+    [Fact]
     public void ApplicationScopes_lists_application_scopes_only()
     {
         Assert.Equal(["OR.Jobs", "OR.Assets"], TestPmExternalApplicationCmdlet.ApplicationScopes(App()));

@@ -134,13 +134,20 @@ internal class TestApplicationScopeCompleter : ExternalScopeCompleter
 {
     protected override IEnumerable<(string name, string tip)> GetCandidates(OrchDriveInfo drive, IDictionary fakeBoundParameters)
     {
+        // As the cmdlet: -AppId, else -Name, else the drive's own application.
         string? appId = new[] { "AppId", "ClientId", "id" }
             .SelectMany(n => GetFakeBoundParameters(fakeBoundParameters, n))
-            .FirstOrDefault(v => !string.IsNullOrEmpty(v)) ?? drive._psDrive.AppId;
+            .FirstOrDefault(v => !string.IsNullOrEmpty(v));
+        string? name = GetFakeBoundParameters(fakeBoundParameters, "Name").FirstOrDefault(v => !string.IsNullOrEmpty(v));
 
-        if (!string.IsNullOrEmpty(appId))
+        if (!string.IsNullOrEmpty(appId) || !string.IsNullOrEmpty(name) || !string.IsNullOrEmpty(drive._psDrive.AppId))
         {
-            var (registration, _) = TestPmExternalApplicationCmdlet.FindRegistration(SessionState, drive, appId);
+            // A -Name pattern names one application here only when it matches exactly one.
+            ExternalClient? registration = !string.IsNullOrEmpty(appId)
+                ? TestPmExternalApplicationCmdlet.FindRegistration(SessionState, drive, appId).registration
+                : !string.IsNullOrEmpty(name)
+                    ? TestPmExternalApplicationCmdlet.FindRegistrationsByName(SessionState, drive, [name]).found is { Count: 1 } one ? one[0] : null
+                    : TestPmExternalApplicationCmdlet.FindRegistration(SessionState, drive, drive._psDrive.AppId!).registration;
             // A non-confidential application is checked against its user scopes.
             bool user = registration?.isConfidential == false;
             int type = user ? TestPmExternalApplicationCmdlet.UserScopeType : TestPmExternalApplicationCmdlet.ApplicationScopeType;

@@ -20,9 +20,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   answers `invalid_request` "not allowed to access User scopes". The error now adds that the
   scopes must be application scopes, or the drive must sign in in the browser with a
   non-confidential application, and that `Test-PmExternalApplication` names them.
-- **`Test-PmExternalApplication` tells why an external application gets no token.** It requests a
-  token with client credentials, as a script using the application would (`-AppId`, `-AppSecret`,
-  `-Scope`; without them, the drive's own confidential application), and returns whether one was
+- **`Test-PmExternalApplication` checks the external applications you registered for other
+  tools.** Name them with `-Name` (wildcards; each match gets a result) or `-AppId`. Without
+  `-AppSecret` nothing is signed in and each registration is checked, so
+  `Test-PmExternalApplication *` reviews the whole organization: no secret, every secret expired
+  or expiring within 30 days, no scope, no redirect URL where a sign-in needs one. With
+  `-AppSecret` it requests a token with client credentials, as a script using the application
+  would (without `-Name`/`-AppId`, the drive's own confidential application), and returns whether one was
   issued, the scopes requested and granted, and **Problems**: no application with this App ID in
   the organization, a non-confidential application, every secret expired or the App Secret not
   matching, a scope registered as a user scope or not registered at all, a scope value too long.
