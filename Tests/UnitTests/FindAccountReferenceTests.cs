@@ -78,7 +78,7 @@ public class FindAccountReferenceTests
         Assert.Collection(match.References,
             r => { Assert.Equal("alice", r.Name); Assert.Equal("UnattendedRobot.UserName", r.Property); Assert.Equal("Orchestrator Database", r.CredentialStore); },
             r => { Assert.Equal("svc_rpa", r.Name); Assert.Equal("UserName", r.Property); Assert.Equal(@"CORP\svc_rpa", r.Account); Assert.Null(r.CredentialStore); },
-            r => { Assert.Equal("Robot", r.Type); Assert.Equal("classic-1", r.Name); Assert.Equal("CyberArk", r.CredentialStore); Assert.Equal(@"T:\classic-1", r.Path); });
+            r => { Assert.Equal("Robot", r.Type); Assert.Equal("classic-1", r.Name); Assert.Equal("CyberArk", r.CredentialStore); Assert.Equal(System.IO.Path.Combine(@"T:\", "classic-1"), r.Path); });
 
         // The modern robot is alice's own and is not reported twice, but triggers can still name it.
         Assert.DoesNotContain(match.References, r => r.Name == "alice-unattended");
@@ -122,7 +122,7 @@ public class FindAccountReferenceTests
 
         var rows = FindAccountReferenceCmdlet.ScanAssets(assets, matcher, tenant).ToList();
         Assert.Collection(rows,
-            r => { Assert.Equal("CredentialUsername", r.Property); Assert.Equal("Orchestrator Database", r.CredentialStore); Assert.Equal(@"T:\F\Cred", r.Path); },
+            r => { Assert.Equal("CredentialUsername", r.Property); Assert.Equal("Orchestrator Database", r.CredentialStore); Assert.Equal(System.IO.Path.Combine(@"T:\F", "Cred"), r.Path); },
             r => { Assert.Equal("UserValues.CredentialUsername", r.Property); Assert.Equal("bob", r.Via); Assert.Equal("CyberArk", r.CredentialStore); },
             r => { Assert.Equal("UserValues.UserName", r.Property); Assert.Equal("alice", r.Via); Assert.Equal(@"CORP\svc_rpa", r.Account); Assert.Equal("Text", r.Name); });
     }
