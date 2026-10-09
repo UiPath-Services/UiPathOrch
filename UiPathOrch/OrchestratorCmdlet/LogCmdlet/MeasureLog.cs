@@ -27,15 +27,23 @@ public class MeasureLogCmdlet : RobotLogFilterCmdlet
         {
             reporter.WriteProgress(++index, folder.GetPSPath());
 
-            string query = MakeFilter(drive, folder);
-            if (query == "null") continue;
-
             try
             {
-                long count = drive.OrchAPISession.GetRobotLogsTotalCount(folder.Id ?? 0, query);
+                // A bad -JobKey is the same for every folder: it ends the command (ArgumentException).
+                // A folder whose releases or machines cannot be read fails only that folder.
+                string? query = MakeFilter(drive, folder);
+
+                // "null": nothing in the folder can match (the -ProcessName, -Machine or
+                // -WindowsIdentity is not there), so the count is 0 -- written, so that a folder
+                // with none shows as 0 rather than not at all.
+                long count = query == "null" ? 0 : drive.OrchAPISession.GetRobotLogsTotalCount(folder.Id ?? 0, query);
                 WriteObject(new LogCount { Path = folder.GetPSPath(), Count = count });
             }
-            catch (Exception ex)
+            catch (ArgumentException)
+            {
+                throw;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException and not PipelineStoppedException)
             {
                 WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "MeasureLogError", ErrorCategory.InvalidOperation, folder));
             }

@@ -28,22 +28,11 @@ public class WaitJobTests
     public void In_form_takes_up_to_100_ids_per_request_without_duplicates()
     {
         var ids = Enumerable.Range(1, 250).Select(i => (long)i).Concat([1L, 2L]);
-        var filters = OrchAPISession.BuildJobIdFilters(ids, useOr: false).ToList();
+        var filters = OrchAPISession.BuildJobIdFilters(ids).ToList();
 
         Assert.Equal(3, filters.Count);
         Assert.StartsWith("&$filter=Id in (1,2,3,", filters[0]);
         Assert.EndsWith(",250)", filters[2]);
         Assert.Equal(250, filters.Sum(f => f.Split(',').Length));
-    }
-
-    [Fact]
-    public void Or_form_stays_under_the_node_limit()
-    {
-        // OData refuses more than 100 nodes; an "or" of 20 "Id eq" passed and 40 failed (Cloud, 2026-10-08).
-        var filters = OrchAPISession.BuildJobIdFilters(Enumerable.Range(1, 31).Select(i => (long)i), useOr: true).ToList();
-
-        Assert.Equal(3, filters.Count);
-        Assert.Equal("&$filter=(Id eq 1 or Id eq 2 or Id eq 3 or Id eq 4 or Id eq 5 or Id eq 6 or Id eq 7 or Id eq 8 or Id eq 9 or Id eq 10 or Id eq 11 or Id eq 12 or Id eq 13 or Id eq 14 or Id eq 15)", filters[0]);
-        Assert.Equal("&$filter=(Id eq 31)", filters[2]);
     }
 }

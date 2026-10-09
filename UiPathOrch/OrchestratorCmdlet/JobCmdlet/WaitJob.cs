@@ -33,7 +33,6 @@ internal static class JobWaiter
         if (total == 0) return;
 
         var stopwatch = Stopwatch.StartNew();
-        HashSet<OrchDriveInfo> refusesIn = [];
         int done = 0;
 
         using ProgressReporter reporter = new(cmdlet, total, "Waiting for jobs");
@@ -47,7 +46,7 @@ internal static class JobWaiter
                 List<Job> read;
                 try
                 {
-                    read = ReadJobs(drive, folder, jobs.Keys, refusesIn);
+                    read = drive.OrchAPISession.GetJobsByIds(folder.Id ?? 0, jobs.Keys).ToList();
                 }
                 catch (OperationCanceledException)
                 {
@@ -124,11 +123,18 @@ internal static class JobWaiter
 
             if (timeoutSeconds is >= 0 && stopwatch.Elapsed >= TimeSpan.FromSeconds(timeoutSeconds.Value))
             {
-                foreach (var job in waiting)
+                // A job never read successfully (every round failed) has no Job yet; its id and
+                // folder still say which one timed out.
+                foreach (var ((_, folder), jobs) in pending)
                 {
-                    cmdlet.WriteError(new ErrorRecord(
-                        new TimeoutException($"{job?.Path}: Job {job?.Id} ({job?.ReleaseName}) is still {job?.State} after {timeoutSeconds} seconds."),
-                        "WaitJobTimeout", ErrorCategory.OperationTimeout, job));
+                    foreach (var (id, job) in jobs)
+                    {
+                        string state = job?.State is { } s ? $"still {s}" : "not read";
+                        string release = job?.ReleaseName is { } r ? $" ({r})" : "";
+                        cmdlet.WriteError(new ErrorRecord(
+                            new TimeoutException($"{folder.GetPSPath()}: Job {id}{release} is {state} after {timeoutSeconds} seconds."),
+                            "WaitJobTimeout", ErrorCategory.OperationTimeout, (object?)job ?? id));
+                    }
                 }
                 return;
             }
@@ -152,22 +158,6 @@ internal static class JobWaiter
         return false;
     }
 
-    // "Id in (...)" first; a server that refuses it gets the "or" form from then on.
-    private static List<Job> ReadJobs(OrchDriveInfo drive, Folder folder, IEnumerable<Int64> ids, HashSet<OrchDriveInfo> refusesIn)
-    {
-        if (!refusesIn.Contains(drive))
-        {
-            try
-            {
-                return drive.OrchAPISession.GetJobsByIds(folder.Id ?? 0, ids, useOr: false).ToList();
-            }
-            catch (Exception ex) when (ex is not OperationCanceledException)
-            {
-                refusesIn.Add(drive);
-            }
-        }
-        return drive.OrchAPISession.GetJobsByIds(folder.Id ?? 0, ids, useOr: true).ToList();
-    }
 }
 
 [Cmdlet(VerbsLifecycle.Wait, "OrchJob", DefaultParameterSetName = "FromCommandLine")]
@@ -261,6 +251,9 @@ public class WaitJobCmdlet : OrchestratorPSCmdlet
         var wantedKeys = batchSearches.Select(b => (b.drive, b.key)).ToHashSet();
         var foundKeys = new HashSet<(OrchDriveInfo, Guid)>();
         var readErrors = new Dictionary<Folder, Exception>();
+        // A batch's jobs already queued for waiting, and how many the last search of it returned.
+        var batchTargets = new HashSet<(OrchDriveInfo, Folder, Int64)>();
+        var batchCounts = new Dictionary<(OrchDriveInfo, Folder, Guid), int>();
 
         for (int attempt = 1; ; attempt++)
         {
@@ -271,7 +264,7 @@ public class WaitJobCmdlet : OrchestratorPSCmdlet
                 if (missing.Count == 0) continue;
                 try
                 {
-                    foreach (var job in drive.OrchAPISession.GetJobsByIds(folder.Id ?? 0, missing, useOr: false))
+                    foreach (var job in drive.OrchAPISession.GetJobsByIds(folder.Id ?? 0, missing))
                     {
                         if (job.Id is Int64 id && foundIds.Add((drive, id))) targets.Add((drive, folder, id));
                     }
@@ -289,12 +282,19 @@ public class WaitJobCmdlet : OrchestratorPSCmdlet
                 if (foundKeys.Contains((drive, key))) continue;
                 try
                 {
-                    foreach (var job in drive.OrchAPISession.GetJobsByBatchExecutionKey(folder.Id ?? 0, key))
+                    // The list can show some of a batch's jobs before the rest, so a batch counts
+                    // as found only once two searches in a row return the same jobs.
+                    var ids = drive.OrchAPISession.GetJobsByBatchExecutionKey(folder.Id ?? 0, key)
+                        .Where(j => j.Id is not null).Select(j => j.Id!.Value).ToHashSet();
+                    foreach (var id in ids)
                     {
-                        if (job.Id is not Int64 id) continue;
-                        foundKeys.Add((drive, key));
-                        targets.Add((drive, folder, id));
+                        if (batchTargets.Add((drive, folder, id))) targets.Add((drive, folder, id));
                     }
+                    if (ids.Count > 0 && batchCounts.TryGetValue((drive, folder, key), out var previous) && previous == ids.Count)
+                    {
+                        foundKeys.Add((drive, key));
+                    }
+                    batchCounts[(drive, folder, key)] = ids.Count;
                     readErrors.Remove(folder);
                 }
                 catch (Exception ex) when (ex is not OperationCanceledException)
@@ -316,7 +316,10 @@ public class WaitJobCmdlet : OrchestratorPSCmdlet
         {
             WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, $"Job {id} was not found in the target folders."), "WaitJobNotFound", ErrorCategory.ObjectNotFound, id));
         }
-        foreach (var (drive, key) in wantedKeys.Where(k => !foundKeys.Contains(k)))
+        // A batch whose count was still changing at the last search is waited for with the jobs
+        // found so far; only a batch with no job at all is reported.
+        foreach (var (drive, key) in wantedKeys.Where(k => !foundKeys.Contains(k)
+            && !batchCounts.Any(c => c.Key.Item1 == k.drive && c.Key.Item3 == k.key && c.Value > 0)))
         {
             WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, $"No job with BatchExecutionKey {key} was found in the target folders."), "WaitJobNotFound", ErrorCategory.ObjectNotFound, key));
         }

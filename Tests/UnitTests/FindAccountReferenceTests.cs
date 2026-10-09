@@ -36,7 +36,21 @@ public class FindAccountReferenceTests
         Assert.False(m.IsMatch(@"CORP\someone"));
     }
 
-    private static readonly CredentialStore[] Stores = [new() { Id = 1, Name = "Orchestrator Database" }, new() { Id = 7, Name = "CyberArk" }];
+    // A directory user can carry its domain in UserName and in Domain at once; the sign-in must
+    // not repeat it ("CORP\CORP\alice" matches nothing).
+    [Theory]
+    [InlineData("alice", "CORP", @"CORP\alice")]
+    [InlineData(@"CORP\alice", "CORP", @"CORP\alice")]
+    [InlineData(@"CORP\alice", "corp.example.com", @"CORP\alice")]
+    [InlineData("alice@corp.example.com", "CORP", "alice@corp.example.com")]
+    [InlineData("alice", null, "alice")]
+    [InlineData(null, "CORP", null)]
+    public void User_sign_in(string? userName, string? domain, string? expected)
+    {
+        Assert.Equal(expected, FindAccountReferenceCmdlet.UserSignIn(new User { UserName = userName, Domain = domain }));
+    }
+
+    private static readonly CredentialStore[] Stores =[new() { Id = 1, Name = "Orchestrator Database" }, new() { Id = 7, Name = "CyberArk" }];
 
     private static User[] Users() =>
     [

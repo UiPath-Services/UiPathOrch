@@ -31,7 +31,7 @@ Copy-OrchFolderUser [-Path <string>] [-LiteralPath <string>] [-Recurse] [-Depth 
 
 Copies folder user assignments from a source folder to a destination folder in UiPath Orchestrator. The destination can be a different folder on the same Orchestrator instance or a folder on a different Orchestrator instance (cross-drive copy). Each user's folder roles are preserved during the copy.
 
-If the source and destination resolve to the same folder, the operation is silently skipped. The -UserName parameter supports wildcards to copy multiple user assignments at once. The -Type parameter can filter which directory types to copy (e.g., DirectoryUser, DirectoryGroup).
+If the source and destination resolve to the same folder, the operation is silently skipped, unless -UserMappingCsv is given (see that parameter). The -UserName parameter supports wildcards to copy multiple user assignments at once. The -Type parameter can filter which directory types to copy (e.g., DirectoryUser, DirectoryGroup).
 
 With -Recurse, the cmdlet preserves the folder hierarchy relative to the source root. Subfolders are matched by relative path on the destination.
 
@@ -224,7 +224,7 @@ HelpMessage: ''
 
 Specifies the path to a user mapping CSV file for cross-instance migration. The CSV maps source usernames to destination usernames, which is required when copying folder users across Orchestrator instances where user accounts have different names. Use New-OrchUserMappingCsv to generate the mapping file. Requires a filesystem path (not an Orch: drive path).
 
-Within one tenant (-Destination on the same drive as -Path, even the same folder), the CSV gives each mapped user the folder assignments and roles of its source user, folder by folder, for a domain change or a switch of identity provider. Only rows that map a user onto another user are used, and the source users keep their assignments. A mapped user already assigned to a folder keeps its roles there and gains the source user's, so the copy can be run again.
+With -Destination the same folder as -Path, the CSV gives each mapped user the folder assignments and roles of its source user, folder by folder, for a domain change or a switch of identity provider. Only rows that map a user onto another user are used, and the source users keep their assignments. A mapped user already assigned to a folder keeps its roles there and gains the source user's, so the copy can be run again; several source users mapped onto one user give it the roles of all of them. Between two different folders, of one tenant or two, the CSV only renames: mapped users are assigned under their destination names and unmapped users are copied as they are.
 
 ```yaml
 Type: System.String
@@ -335,7 +335,7 @@ This cmdlet produces no pipeline output. Progress is reported through Write-Prog
 
 The -Path parameter is a single string, not a string array. This differs from most other cmdlets in the module that accept string arrays for -Path.
 
-When the source and destination resolve to the same folder, the operation is silently skipped without error.
+When the source and destination resolve to the same folder and no -UserMappingCsv is given, the operation is silently skipped without error.
 
 For cross-instance migration, a user mapping CSV is required because user identifiers differ between instances. Without -UserMappingCsv, users may not be matched correctly if usernames do not correspond. Use New-OrchUserMappingCsv to generate the mapping file.
 

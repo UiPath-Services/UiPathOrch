@@ -41,25 +41,36 @@ public class GetUserPrivilegeCmdlet : OrchestratorPSCmdlet
                 // /api/Users/GetPrivileges answers on Automation Cloud only: on every standalone
                 // server measured (20.10.16 to 25.10.2) and on Automation Suite 24.10.11 it is a
                 // 404 for every user and group (2026-10-07), which printed one identical error per
-                // user. Ask for the first one alone; a 404 there is the server's answer for the
-                // whole drive, reported once.
-                if (targetUsers.Count > 0)
+                // user. Ask for the first few alone: a 404 for each of them is the server's
+                // answer for the whole drive, reported once. One user's 404 is not -- on Cloud a
+                // user removed from the directory since the list was read gives one too.
+                const int probeCount = 3;
+                Exception? notFound = null;
+                foreach (var probe in targetUsers.Take(probeCount))
                 {
                     try
                     {
-                        drive.UserPrivileges.Get(targetUsers[0]);
+                        drive.UserPrivileges.Get(probe);
+                        notFound = null;
+                        break;
                     }
                     catch (Exception ex) when (IsNotFound(ex))
                     {
-                        WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator,
-                            "User privileges are not available on this Orchestrator (/api/Users/GetPrivileges)", ex),
-                            "GetUserPrivilegesError", ErrorCategory.NotImplemented, drive));
-                        continue;
+                        notFound = ex;
                     }
-                    catch
+                    catch (Exception ex) when (ex is not OperationCanceledException and not PipelineStoppedException)
                     {
                         // Anything else is that user's own error, reported with the rest below.
+                        notFound = null;
+                        break;
                     }
+                }
+                if (notFound is not null)
+                {
+                    WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator,
+                        "User privileges are not available on this Orchestrator (/api/Users/GetPrivileges)", notFound),
+                        "GetUserPrivilegesError", ErrorCategory.NotImplemented, drive));
+                    continue;
                 }
 
                 using var results = OrchThreadPool.RunForEach(targetUsers

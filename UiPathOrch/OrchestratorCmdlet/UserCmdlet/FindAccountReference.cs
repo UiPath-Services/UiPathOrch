@@ -188,10 +188,11 @@ public class FindAccountReferenceCmdlet : OrchestratorPSCmdlet
             if (store.Id is long id && store.Name is not null) match.CredentialStoreNames[id] = store.Name;
         }
 
-        var userIds = new HashSet<long>();
+        // User id -> user name, for the robots below (one lookup per robot, not a scan).
+        var userNamesById = new Dictionary<long, string?>();
         foreach (var user in users.OrderBy(u => u.UserName, StringComparer.OrdinalIgnoreCase))
         {
-            if (user.Id is long uid) userIds.Add(uid);
+            if (user.Id is long uid) userNamesById.TryAdd(uid, user.UserName);
             string path = user.GetPSPath();
 
             string? signIn = UserSignIn(user);
@@ -225,7 +226,7 @@ public class FindAccountReferenceCmdlet : OrchestratorPSCmdlet
             if (robot.Id is long rid) match.Robots.TryAdd(rid, (robot.Name, robot.Username!));
 
             // A modern-folder robot is the user's own robot, already reported on the user row.
-            if (robot.UserId is long uid && userIds.Contains(uid)) continue;
+            if (robot.UserId is long uid && userNamesById.ContainsKey(uid)) continue;
 
             match.References.Add(new()
             {
@@ -239,7 +240,8 @@ public class FindAccountReferenceCmdlet : OrchestratorPSCmdlet
         foreach (var robot in robots)
         {
             if (robot.Id is not long rid || match.Robots.ContainsKey(rid)) continue;
-            string? owner = robot.User?.UserName ?? users.FirstOrDefault(u => u.Id is not null && u.Id == robot.UserId)?.UserName;
+            string? owner = robot.User?.UserName
+                ?? (robot.UserId is long ownerId && userNamesById.TryGetValue(ownerId, out var ownerName) ? ownerName : null);
             if (owner is not null && match.UserNames.TryGetValue(owner, out var account))
             {
                 match.Robots[rid] = (robot.Name, account);
@@ -310,11 +312,15 @@ public class FindAccountReferenceCmdlet : OrchestratorPSCmdlet
     }
 
     // The account a user signs in with: DOMAIN\name for a directory user that carries its
-    // domain, the plain user name otherwise (Cloud users carry their e-mail form there).
+    // domain, the plain user name otherwise (Cloud users carry their e-mail form there). A user
+    // name that already names its domain ("CORP\alice", as Copy-Item and New-OrchUserMappingCsv
+    // read directory users, or an e-mail) is the sign-in as it stands: prefixing Domain again
+    // would give "CORP\CORP\alice" and match nothing.
     internal static string? UserSignIn(User user)
     {
         if (string.IsNullOrEmpty(user.UserName)) return null;
-        return string.IsNullOrEmpty(user.Domain) ? user.UserName : $"{user.Domain}\\{user.UserName}";
+        if (string.IsNullOrEmpty(user.Domain) || user.UserName.Contains('\\') || user.UserName.Contains('@')) return user.UserName;
+        return $"{user.Domain}\\{user.UserName}";
     }
 
     private static void Remember(Dictionary<string, string> map, string? name, string? account)

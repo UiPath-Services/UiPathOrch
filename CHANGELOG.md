@@ -13,9 +13,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   -SourceDomain OLD -DestinationDomain NEW` maps the users and groups of OLD (`OLD\taro`,
   `taro@old.example`) onto the same names in NEW, filled where the directory knows them.
   `Copy-OrchUser` and `Copy-OrchFolderUser` take the CSV within one tenant and give the new users
-  the old users' tenant roles, robot settings and folder assignments. Nothing is removed from the
-  old users, and a run can be repeated: a new user already in the tenant only gains the roles it
-  lacks. An unattended robot is not copied, since Orchestrator allows one robot per Windows
+  the old users' tenant roles, robot settings and folder assignments (`Copy-OrchFolderUser` with
+  the same folder as source and destination; between two different folders the CSV only renames,
+  and unmapped users are copied as they are). Nothing is removed from the old users, and a run
+  can be repeated: a new user already in the tenant only gains the roles it lacks, and several
+  old users mapped onto one new user give it the roles of all of them. An unattended robot is not copied, since Orchestrator allows one robot per Windows
   account; the warning gives the switch-over steps. Per-user asset values and trigger robots are
   left to `Find-OrchAccountReference`.
 - **`Find-OrchAccountReference` finds where a Windows account is used**, for example before its
@@ -67,12 +69,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   state is read every 5 seconds, one request per folder for all its jobs. A job just created can
   be missing from Orchestrator's job list for a few seconds; the cmdlet reads such a job by its
   key, and looks for `-Id` / `-BatchExecutionKey` again for about 8 seconds before reporting it
-  as not found. For example, to stop a machine once its jobs have ended:
+  as not found; a batch counts as found once two searches 2 seconds apart return the same jobs,
+  so jobs listed late are not left out. For example, to stop a machine once its jobs have ended:
   `Get-OrchJob -Recurse -State Running,Pending | Where-Object HostMachineName -eq PC01 | Wait-OrchJob`.
 - **`Measure-OrchLog` counts robot logs without fetching them.** It takes the filter parameters of
   `Get-OrchLog` (`-Last`, `-Level`, `-ProcessName`, `-Machine`, `-WindowsIdentity`, `-JobKey`,
   `-TimeStampAfter`/`-TimeStampBefore`, `-Recurse`) and returns each folder's path and count, the
-  number of logs `Get-OrchLog` would return for the same arguments. For sizing questions such as
+  number of logs `Get-OrchLog` would return for the same arguments; a folder where nothing can
+  match (the `-ProcessName`, `-Machine` or `-WindowsIdentity` is not there) shows 0, and a folder
+  that cannot be read is an error for that folder alone. For sizing questions such as
   "how many logs does a day produce". It asks Orchestrator's GetTotalCount, so the count is not
   capped at the 10,000 that `@odata.count` reports when the logs are kept in Elasticsearch, as on
   Automation Cloud.
@@ -149,8 +154,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **`Get-OrchUserPrivilege` reports once per drive where privileges are unavailable.** Its
   endpoint exists on Automation Cloud only; on-premises servers and Automation Suite answer 404
-  for every user and group, which printed one identical error per user. The first user is asked
-  alone, and a 404 there is reported once for the drive.
+  for every user and group, which printed one identical error per user. The first users (up to
+  three) are asked alone, and a 404 for each of them is reported once for the drive; one user's
+  404, such as a user removed from the directory meanwhile, is that user's error.
 
 ### Fixed
 
@@ -169,7 +175,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   `-Machine` now looks the name up among the tenant's machines, not only those assigned to the
   folder: a folder's logs can come from a machine it is not assigned, such as a personal
   workspace machine, which could not be named before; its tab completion offers the folder's
-  machines first, then the tenant's others. One `-WindowsIdentity` value without wildcards now
+  machines first, then the tenant's others. Where the drive cannot read the tenant's machines
+  (no tenant machine rights), the name is looked up among the folder's machines, as before. One `-WindowsIdentity` value without wildcards now
   filters on the identity each log records (ignoring case), so it finds attended logs: through
   the robot's configured user name, which is "autogen\..." for an attended robot, it found none.
   A wildcard or several values still go through the robots' configured user names, because

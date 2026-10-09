@@ -325,7 +325,7 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
                             // The API never returns the robot's password, so it was not copied.
                             if (!inPlace && NeedsUnattendedPassword(detailedUser.UnattendedRobot))
                             {
-                                string created = inPlace ? $"{dstDrive.NameColonSeparator}{inPlaceName}" : System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser));
+                                string created = System.IO.Path.Combine(dstDrive.NameColonSeparator, OrchArgumentCompleter.TipHelp(srcUser));
                                 _this.WriteWarning($"\"{created}\": The unattended robot's password of '{detailedUser.UnattendedRobot!.UserName}' is not copied. Set it with Update-OrchUser -UR_Password.");
                             }
                             dstDrive.Users.ClearCache();

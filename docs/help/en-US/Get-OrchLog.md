@@ -297,7 +297,7 @@ HelpMessage: ''
 
 ### -Machine
 
-Filters logs by machine name. The name is looked up among all machines of the tenant, not only those assigned to the target folder, since a folder's logs can come from a machine it is not assigned (a personal workspace machine, for example). A name no machine of the tenant has returns no logs. Tab completion suggests the machines assigned to the target folder first, then the tenant's other machines.
+Filters logs by machine name. The name is looked up among all machines of the tenant, not only those assigned to the target folder, since a folder's logs can come from a machine it is not assigned (a personal workspace machine, for example). A name no machine of the tenant has returns no logs. Where the drive cannot read the tenant's machines (no tenant-level machine rights), the name is looked up among the machines assigned to the folder, and -Verbose says so. Tab completion suggests the machines assigned to the target folder first, then the tenant's other machines.
 
 ```yaml
 Type: System.String

@@ -49,8 +49,10 @@ internal static class LicenseRobotTypeSupport
     // and the second layer handles that drive's unknown types.
     internal static double? ApiVersionOf(Core.OrchDriveInfo drive)
     {
+        // A Ctrl+C during the sign-in ends the command rather than moving on to the next drive's.
         try { drive.OrchAPISession.EnsureAuthenticated(); }
-        catch { /* the listing request reports any sign-in failure itself */ }
+        catch (Exception ex) when (ex is not OperationCanceledException and not System.Management.Automation.PipelineStoppedException)
+        { /* the listing request reports any sign-in failure itself */ }
         return drive.OrchAPISession.ApiVersion;
     }
 

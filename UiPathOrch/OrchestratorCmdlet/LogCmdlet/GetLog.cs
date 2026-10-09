@@ -259,11 +259,28 @@ public abstract class RobotLogFilterCmdlet : OrchestratorPSCmdlet
             // Against the tenant's machines, not only those assigned to the folder: a folder's
             // logs can come from a machine it is not assigned (Orch1:\Autopilot, 2026-10-08:
             // every log from the personal workspace machine, no machine assigned).
-            var machines = drive.Machines.Get()
-                .Where(m => string.Equals(m?.Name, WildcardPattern.Unescape(Machine), StringComparison.OrdinalIgnoreCase))
-                .ToList();
-            if (machines.Count == 0) return "null";
-            filter.AddIfNotNull(machines.CreateOrFilter(m => $"MachineKey eq {m.Key}"));
+            // Reading the tenant's machines needs tenant machine rights a folder-level user may
+            // not have; then the folder's assigned machines are what we can still match, which is
+            // what -Machine resolved against before.
+            string machineName = WildcardPattern.Unescape(Machine);
+            List<string?> machineKeys;
+            try
+            {
+                machineKeys = drive.Machines.Get()
+                    .Where(m => string.Equals(m?.Name, machineName, StringComparison.OrdinalIgnoreCase))
+                    .Select(m => m.Key)
+                    .ToList();
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException and not PipelineStoppedException)
+            {
+                WriteVerbose($"{drive.NameColonSeparator}: the tenant's machines could not be read ({ex.Message}); matching -Machine against the machines assigned to {folder.GetPSPath()}.");
+                machineKeys = drive.FolderMachinesAssigned.Get(folder)
+                    .Where(m => string.Equals(m?.Name, machineName, StringComparison.OrdinalIgnoreCase))
+                    .Select(m => m.Key)
+                    .ToList();
+            }
+            if (machineKeys.Count == 0) return "null";
+            filter.AddIfNotNull(machineKeys.CreateOrFilter(k => $"MachineKey eq {k}"));
         }
         #endregion
 
@@ -401,15 +418,21 @@ public class GetLogCmdlet : RobotLogFilterCmdlet
         {
             reporter.WriteProgress(++index, folder.GetPSPath());
 
-            string query = MakeFilter(drive, folder);
-            if (query == "null") continue;
-
             try
             {
+                // A bad -JobKey ends the command (ArgumentException); a folder whose releases or
+                // machines cannot be read fails only that folder.
+                string? query = MakeFilter(drive, folder);
+                if (query == "null") continue;
+
                 var logs = drive.RobotLogs.Fetch(folder, query, skip, first, orderBy, OrderAscending.IsPresent);
                 WriteObject(logs, true);
             }
-            catch (Exception ex)
+            catch (ArgumentException)
+            {
+                throw;
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException and not PipelineStoppedException)
             {
                 WriteError(new ErrorRecord(new OrchException(folder.GetPSPath(), ex), "GetLogError", ErrorCategory.InvalidOperation, folder));
             }

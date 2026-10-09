@@ -77,15 +77,19 @@ public partial class OrchProvider
             return;
         }
 
-        // Within one tenant a mapping CSV re-homes the source users onto other users of the same
-        // tenant: only its rows are copied, and nothing may resolve back to the source user.
-        bool inPlace = srcDrive == dstDrive && userMapping is not null;
+        // Copying a folder onto itself with a mapping CSV re-homes the source users onto other users
+        // of the same tenant: only its rows are copied, and nothing may resolve back to the source
+        // user. Between two different folders the CSV only renames -- unmapped users are copied
+        // as they are, the same as across tenants.
+        bool inPlace = srcDrive == dstDrive && srcFolder.Id == newFolder.Id && userMapping is not null;
 
         // Get already-assigned users. Not narrowed by -UserName: those patterns name SOURCE users,
         // and a mapped user is already here under its DESTINATION name. Missing it would drop its
         // current roles, because an assignment replaces the user's roles in the folder (25.10,
         // 2026-10-08) -- the merge below is what keeps them.
         var dstFolderUsers = dstDrive.FolderUsersWithNoInherited.Get(newFolder).ToList();
+        // Destination user name -> the role ids this call has assigned it in this folder.
+        var assignedHere = new Dictionary<string, List<Int64>>(StringComparer.OrdinalIgnoreCase);
 
         string targetFolder = newFolder.GetPSPath();
 
@@ -141,6 +145,21 @@ public partial class OrchProvider
                 {
                     newRolesPerFolder.First().RoleIds?.AddRange(existingSameNameUser.Roles!.Select(r => r.Id ?? 0));
                 }
+                // dstFolderUsers was read before the loop, so it does not show what an earlier
+                // iteration gave this destination user -- the case when the CSV maps several source
+                // users onto one. Without this, the second assignment would replace the roles the
+                // first one gave.
+                if (assignedHere.TryGetValue(resolvedUserName, out var earlierRoleIds))
+                {
+                    newRolesPerFolder.First().RoleIds?.AddRange(earlierRoleIds);
+                }
+                if (newRolesPerFolder.First().RoleIds is { } roleIds)
+                {
+                    var distinctRoleIds = roleIds.Distinct().ToList();
+                    roleIds.Clear();
+                    roleIds.AddRange(distinctRoleIds);
+                    assignedHere[resolvedUserName] = distinctRoleIds;
+                }
 
                 try
                 {
@@ -157,8 +176,7 @@ public partial class OrchProvider
                     // its id in the destination tenant, matched by user name and type.
                     if (IsLocalAccountType(dstType))
                     {
-                        string localName = userMapping is not null && userMapping.TryGetValue(userName, out var mappedLocal)
-                            && !string.IsNullOrEmpty(mappedLocal) ? mappedLocal : userName;
+                        string localName = resolvedUserName;
                         var dstUsers = dstDrive.Users.Get().ToList();
                         var dstLocal = dstUsers.FirstOrDefault(u =>
                             string.Equals(u?.Type, dstType, StringComparison.OrdinalIgnoreCase)

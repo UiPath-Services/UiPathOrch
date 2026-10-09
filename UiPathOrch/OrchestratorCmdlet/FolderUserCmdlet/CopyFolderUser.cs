@@ -94,10 +94,11 @@ public class CopyFolderUserCmdlet : OrchestratorPSCmdlet
 
         var userMapping = SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrive, UserMappingCsv, allowSameDrive: true);
 
-        // Within one tenant, a mapping CSV gives the mapped users the source users' assignments,
-        // folder by folder in place (a domain or identity-provider change). Without one, copying
-        // a folder onto itself does nothing.
-        bool inPlace = srcDrive == dstDrive && userMapping is not null;
+        // Copying a folder onto itself with a mapping CSV gives the mapped users the source users'
+        // assignments, folder by folder in place (a domain or identity-provider change). Without
+        // one, copying a folder onto itself does nothing. Between two different folders of one
+        // tenant the CSV only renames; CopyFolderUsers decides that per folder.
+        bool inPlace = srcDrive == dstDrive && srcRootFolder.Id == dstRootFolder.Id && userMapping is not null;
         if (srcRootFolder == dstRootFolder && !inPlace) return;
 
         var wpUserName = UserName.ConvertToWildcardPatternList();

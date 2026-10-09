@@ -1870,12 +1870,13 @@ public partial class OrchAPISession : IDisposable
     public Job? GetJob(Int64 folderId, Int64 jobId) => HttpRequest<Job>(HttpMethod.Get, $"/odata/Jobs({jobId})?$expand=Robot,Machine,Release", folderId);
 
     // The jobs among ids that the folder holds, in as few requests as the server allows.
-    // "Id in (...)" takes hundreds of ids in one query (Cloud, 2026-10-08: 500); an "or" of
-    // "Id eq" stops at OData's node-count limit of 100 -- 20 terms pass, 40 are refused -- so
-    // useOr, for a server that refuses "in", sends 15 at a time.
-    public IEnumerable<Job> GetJobsByIds(Int64 folderId, IEnumerable<Int64> ids, bool useOr)
+    // "Id in (...)" takes hundreds of ids in one query (Cloud, 2026-10-08: 500) -- an "or" of
+    // "Id eq" would stop at OData's node-count limit of 100. Every server measured honours "in"
+    // on Id (20.10.16, 21.10.4, 22.4.4, 22.10.1, 23.4.0, 24.10.0, 24.10.8, 25.10.2 and Cloud,
+    // 2026-10-09: two ids in, the same two rows out), so there is no "or" fallback.
+    public IEnumerable<Job> GetJobsByIds(Int64 folderId, IEnumerable<Int64> ids)
     {
-        foreach (var filter in BuildJobIdFilters(ids, useOr))
+        foreach (var filter in BuildJobIdFilters(ids))
         {
             foreach (var job in GetJobs(folderId, filter, 0, ulong.MaxValue, "Id", true))
             {
@@ -1884,10 +1885,8 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
-    internal static IEnumerable<string> BuildJobIdFilters(IEnumerable<Int64> ids, bool useOr)
-        => ids.Distinct().Chunk(useOr ? 15 : 100).Select(chunk => useOr
-            ? $"&$filter=({string.Join(" or ", chunk.Select(id => $"Id eq {id}"))})"
-            : $"&$filter=Id in ({string.Join(",", chunk)})");
+    internal static IEnumerable<string> BuildJobIdFilters(IEnumerable<Int64> ids)
+        => ids.Distinct().Chunk(100).Select(chunk => $"&$filter=Id in ({string.Join(",", chunk)})");
 
     // Every job one StartJobs call created shares its BatchExecutionKey.
     public IEnumerable<Job> GetJobsByBatchExecutionKey(Int64 folderId, Guid batchExecutionKey)

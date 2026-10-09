@@ -36,7 +36,7 @@ The filter parameters are those of `Get-OrchLog` and mean the same: the count is
 
 The count comes from the GetTotalCount endpoint, not from `@odata.count` on `/odata/RobotLogs`. When Orchestrator keeps the logs in Elasticsearch, as Automation Cloud does, `@odata.count` stops at 10,000 (the index's max_result_window), while GetTotalCount gives the full number.
 
-A folder that does not hold the process named by `-ProcessName` is skipped, as in `Get-OrchLog`.
+A folder where nothing can match (it does not hold the process named by `-ProcessName`, or the `-Machine` or `-WindowsIdentity` value names nothing there) is written with a count of 0. A folder whose processes or machines cannot be read is reported as an error for that folder, and the other folders are still counted.
 
 When specifying the -Path, -Recurse, and -Depth parameters, place them immediately after the cmdlet name. This placement ensures that autocomplete for subsequent parameters functions correctly.
 
@@ -226,7 +226,7 @@ HelpMessage: ''
 
 ### -Machine
 
-Counts only the logs of this machine. The name is looked up among all machines of the tenant, as in `Get-OrchLog`; a name no machine of the tenant has counts no logs. Tab completion suggests the machines assigned to the target folder first, then the tenant's other machines.
+Counts only the logs of this machine. The name is looked up among all machines of the tenant, as in `Get-OrchLog`; a name no machine of the tenant has counts no logs. Where the drive cannot read the tenant's machines, the name is looked up among the machines assigned to the folder. Tab completion suggests the machines assigned to the target folder first, then the tenant's other machines.
 
 ```yaml
 Type: System.String
