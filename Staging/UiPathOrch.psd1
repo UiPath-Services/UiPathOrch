@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.19.1'
+ModuleVersion = '1.20.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -516,6 +516,41 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.20.0
+
+Added: Wait-OrchJob waits until jobs end, and Start-OrchJob -Wait starts and waits. Jobs come from
+the pipeline, -Id or -BatchExecutionKey; -Timeout leaves the jobs still running as errors.
+
+Added: Measure-OrchLog counts robot logs per folder with Get-OrchLog's filters, without fetching
+them and without the 10,000 cap of @odata.count on Automation Cloud.
+
+Added: Find-OrchAccountReference finds where a Windows account is used -- users, robots,
+credential assets, per-user asset values and the triggers on a matched user's robot -- for
+example before its password changes.
+
+Added: a user mapping CSV moves a tenant's users onto other users of the same tenant, for a domain
+change or a switch of identity provider (New-OrchUserMappingCsv -SourceDomain/-DestinationDomain,
+then Copy-OrchUser and Copy-OrchFolderUser within one tenant).
+
+Added: New-PmExternalApplication registers an external application; Test-PmExternalApplication
+reviews registrations (secrets, scopes, redirect URLs) and tests a client-credentials sign-in.
+
+Added: Start-OrchJob sets the Start Job dialog's options (-Priority, -StopStrategy, stop, kill and
+alert times). The sign-in page names the server's edition and version, and a Scope refused for its
+length says so with the server's limit.
+
+Changed: the API version is read from /api/Status/Version, so OR.Settings is no longer needed or
+warned about at mount. API triggers and Secret assets follow each server's web UI. License cmdlets
+skip robot types an older server lacks. A 401 re-sign-in tries the refresh token before the browser.
+
+Fixed: Get-OrchLog reads past 10,000 logs on Automation Cloud; -Machine and -WindowsIdentity with a
+name that matches nothing return no logs, and -Machine finds machines not assigned to the folder.
+Copy-OrchFolderUser -UserMappingCsv keeps the roles of a user already in the folder. Start-OrchJob
+starts one job on 20.10 to 22.10. Two on-premises drives no longer share organization data.
+Get-OrchFolderMachineAccountMapping works on 22.10 and later. Copy-Item copies test data queues on
+standalone 24.10 and 25.10. Platform Management list cmdlets carry on past a drive without the
+feature.
+
 1.19.1
 
 Fixed: triggers keep their robot assignment on on-premises servers and Automation Suite. 1.19.0

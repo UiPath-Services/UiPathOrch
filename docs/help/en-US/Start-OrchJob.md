@@ -20,11 +20,12 @@ Starts jobs for specified processes in UiPath Orchestrator.
 ### __AllParameterSets
 
 ```
-Start-OrchJob [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <uint>] [-Name] <string[]>
- [[-RuntimeType] <string>] [[-JobsCount] <int>] [[-InputArguments] <string>] [-Priority <string>]
- [-SpecificPriorityValue <int>] [-StopStrategy <string>] [-StopProcessExpression <string>]
- [-KillProcessExpression <string>] [-AlertPendingExpression <string>]
- [-AlertRunningExpression <string>] [-Wait] [-Confirm] [-WhatIf] [<CommonParameters>]
+Start-OrchJob [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <uint>]
+ [-Name] <string[]> [[-RuntimeType] <string>] [[-JobsCount] <int>]
+ [[-InputArguments] <string>] [-AlertPendingExpression <string>]
+ [-AlertRunningExpression <string>] [-Confirm] [-KillProcessExpression <string>]
+ [-Priority <string>] [-SpecificPriorityValue <int>] [-StopProcessExpression <string>]
+ [-StopStrategy <string>] [-Wait] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

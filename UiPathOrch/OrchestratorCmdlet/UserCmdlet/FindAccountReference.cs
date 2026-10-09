@@ -207,7 +207,11 @@ public class FindAccountReferenceCmdlet : OrchestratorPSCmdlet
             {
                 match.References.Add(new()
                 {
-                    Path = path, Type = "User", Name = user.UserName, Property = "UnattendedRobot.UserName", Account = ur!.UserName,
+                    Path = path,
+                    Type = "User",
+                    Name = user.UserName,
+                    Property = "UnattendedRobot.UserName",
+                    Account = ur!.UserName,
                     CredentialStore = StoreName(match, ur.CredentialStoreId),
                 });
                 Remember(match.UserNames, user.UserName, ur.UserName);
@@ -230,7 +234,11 @@ public class FindAccountReferenceCmdlet : OrchestratorPSCmdlet
 
             match.References.Add(new()
             {
-                Path = System.IO.Path.Combine(drivePath, robot.Name ?? ""), Type = "Robot", Name = robot.Name, Property = "Username", Account = robot.Username,
+                Path = System.IO.Path.Combine(drivePath, robot.Name ?? ""),
+                Type = "Robot",
+                Name = robot.Name,
+                Property = "Username",
+                Account = robot.Username,
                 CredentialStore = StoreName(match, robot.CredentialStoreId),
             });
         }
@@ -261,7 +269,11 @@ public class FindAccountReferenceCmdlet : OrchestratorPSCmdlet
             {
                 yield return new()
                 {
-                    Path = path, Type = "Asset", Name = asset.Name, Property = "CredentialUsername", Account = asset.CredentialUsername,
+                    Path = path,
+                    Type = "Asset",
+                    Name = asset.Name,
+                    Property = "CredentialUsername",
+                    Account = asset.CredentialUsername,
                     CredentialStore = StoreName(tenant, asset.CredentialStoreId),
                 };
             }
@@ -273,8 +285,13 @@ public class FindAccountReferenceCmdlet : OrchestratorPSCmdlet
                 {
                     yield return new()
                     {
-                        Path = path, Type = "Asset", Name = asset.Name, Property = "UserValues.CredentialUsername", Account = uv.CredentialUsername,
-                        Via = owner, CredentialStore = StoreName(tenant, uv.CredentialStoreId),
+                        Path = path,
+                        Type = "Asset",
+                        Name = asset.Name,
+                        Property = "UserValues.CredentialUsername",
+                        Account = uv.CredentialUsername,
+                        Via = owner,
+                        CredentialStore = StoreName(tenant, uv.CredentialStoreId),
                     };
                 }
                 else if (uv.UserName is not null && tenant.UserNames.TryGetValue(uv.UserName, out var account))

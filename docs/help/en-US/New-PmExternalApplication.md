@@ -20,9 +20,9 @@ Registers an external application in the organization.
 ### __AllParameterSets
 
 ```
-New-PmExternalApplication [-Name] <string> [-IsConfidential <string>] [-ApplicationScope <string[]>]
- [-UserScope <string[]>] [-RedirectUri <string>] [-Path <string[]>] [-LiteralPath <string[]>]
- [-WhatIf] [-Confirm] [<CommonParameters>]
+New-PmExternalApplication [-Path <string[]>] [-LiteralPath <string[]>] [-Name] <string>
+ [-ApplicationScope <string[]>] [-Confirm] [-IsConfidential <string>]
+ [-RedirectUri <string>] [-UserScope <string[]>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

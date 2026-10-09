@@ -159,7 +159,10 @@ public class TestPmExternalApplicationTests
 
     private static ExternalClient Public(string? redirect = "http://localhost:8765", params string[] userScopes) => new()
     {
-        name = "Tool", id = "pid", isConfidential = false, redirectUri = redirect,
+        name = "Tool",
+        id = "pid",
+        isConfidential = false,
+        redirectUri = redirect,
         resources = [new ExternalResource { name = "UiPath.Orchestrator", scopes = [.. userScopes.Select(s => new ExternalScope { name = s, type = TestPmExternalApplicationCmdlet.UserScopeType })] }],
     };
 

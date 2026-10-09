@@ -50,7 +50,7 @@ public class FindAccountReferenceTests
         Assert.Equal(expected, FindAccountReferenceCmdlet.UserSignIn(new User { UserName = userName, Domain = domain }));
     }
 
-    private static readonly CredentialStore[] Stores =[new() { Id = 1, Name = "Orchestrator Database" }, new() { Id = 7, Name = "CyberArk" }];
+    private static readonly CredentialStore[] Stores = [new() { Id = 1, Name = "Orchestrator Database" }, new() { Id = 7, Name = "CyberArk" }];
 
     private static User[] Users() =>
     [

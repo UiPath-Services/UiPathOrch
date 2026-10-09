@@ -20,9 +20,9 @@ Checks external applications you registered for other tools: requests a token fo
 ### __AllParameterSets
 
 ```
-Test-PmExternalApplication [[-Name] <string[]>] [[-AppSecret] <string>] [[-Scope] <string[]>]
- [-AppId <string>] [-RedirectUri <string>] [-Path <string[]>] [-LiteralPath <string[]>]
- [<CommonParameters>]
+Test-PmExternalApplication [-Path <string[]>] [-LiteralPath <string[]>]
+ [[-Name] <string[]>] [[-AppSecret] <string>] [[-Scope] <string[]>] [-AppId <string>]
+ [-RedirectUri <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

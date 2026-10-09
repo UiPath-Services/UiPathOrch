@@ -20,8 +20,9 @@ Generates a user mapping CSV file for cross-organization tenant migration, or fo
 ### __AllParameterSets
 
 ```
-New-OrchUserMappingCsv [-SourceTenant] <string> [-DestinationTenant] <string> [-ExportCsv] <string>
- [-CsvEncoding <Encoding>] [-SourceDomain <string>] [-DestinationDomain <string>] [<CommonParameters>]
+New-OrchUserMappingCsv [-SourceTenant] <string> [-DestinationTenant] <string>
+ [-ExportCsv] <string> [-CsvEncoding <Encoding>] [-DestinationDomain <string>]
+ [-SourceDomain <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

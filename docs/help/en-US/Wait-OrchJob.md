@@ -20,15 +20,15 @@ Waits until jobs end and returns each job as it ends.
 ### FromCommandLine (Default)
 
 ```
-Wait-OrchJob [-Id] <long[]> [-Timeout <int>] [-Path <string[]>] [-LiteralPath <string[]>]
- [-Recurse] [-Depth <uint>] [<CommonParameters>]
+Wait-OrchJob [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <uint>]
+ [-Id] <long[]> [-Timeout <int>] [<CommonParameters>]
 ```
 
 ### ByBatch
 
 ```
-Wait-OrchJob -BatchExecutionKey <string[]> [-Timeout <int>] [-Path <string[]>]
- [-LiteralPath <string[]>] [-Recurse] [-Depth <uint>] [<CommonParameters>]
+Wait-OrchJob [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <uint>]
+ -BatchExecutionKey <string[]> [-Timeout <int>] [<CommonParameters>]
 ```
 
 ## ALIASES

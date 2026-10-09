@@ -184,7 +184,8 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
             {
                 WriteObject(new ExternalApplicationTestResult
                 {
-                    Path = target, AppId = id,
+                    Path = target,
+                    AppId = id,
                     Problems = [.. Diagnose(false, null, id, null, true, [], DateTime.Now)],
                 });
             }

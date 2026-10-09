@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-10-09
+
 ### Added
 
 - **A user mapping CSV moves a tenant's users onto other users of the same tenant**, for a domain

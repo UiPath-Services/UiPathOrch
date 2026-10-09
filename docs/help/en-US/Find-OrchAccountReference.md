@@ -20,8 +20,8 @@ Finds where a Windows account is used in Orchestrator: users, robots, credential
 ### __AllParameterSets
 
 ```
-Find-OrchAccountReference [-Account] <string[]> [-Path <string[]>] [-LiteralPath <string[]>]
- [-Recurse] [-Depth <uint>] [<CommonParameters>]
+Find-OrchAccountReference [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+ [-Depth <uint>] [-Account] <string[]> [<CommonParameters>]
 ```
 
 ## ALIASES
