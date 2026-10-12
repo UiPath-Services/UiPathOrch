@@ -106,7 +106,8 @@ public class EnableLicenseRuntimeCmdletBase<Enable> : OrchestratorPSCmdlet where
             // Types the user did not name that this server is known not to have are left out,
             // and its "no such type" answer for the rest is verbose (see LicenseRobotTypeSupport,
             // shared with Get-OrchLicenseRuntime).
-            var api = LicenseRobotTypeSupport.ApiVersionOf(drive);
+            var api = LicenseRobotTypeSupport.ApiVersionOf(this, drive, errorId, out bool signedIn);
+            if (!signedIn) continue;
             var reporter = new UnknownRobotTypeReporter(this, errorId, named);
             foreach (var robotType in specifiedRobotType
                 .Where(rt => named.Contains(rt) || !LicenseRobotTypeSupport.KnownAbsent(rt, api, runtime: true))

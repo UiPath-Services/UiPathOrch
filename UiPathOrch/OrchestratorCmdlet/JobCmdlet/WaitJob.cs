@@ -34,6 +34,9 @@ internal static class JobWaiter
 
         var stopwatch = Stopwatch.StartNew();
         int done = 0;
+        // Consecutive failed reads, per folder listing and per job read by its key.
+        var readFailures = new Dictionary<(OrchDriveInfo, Folder), int>();
+        var keyReadFailures = new Dictionary<(OrchDriveInfo, Int64), int>();
 
         using ProgressReporter reporter = new(cmdlet, total, "Waiting for jobs");
 
@@ -54,10 +57,27 @@ internal static class JobWaiter
                 }
                 catch (Exception ex)
                 {
-                    // A failed round is retried on the next one; the timeout still applies.
-                    cmdlet.WriteError(new ErrorRecord(new OrchException(path, ex), "WaitJobReadError", ErrorCategory.ReadError, folder));
+                    // A failed round is retried on the next one, but not forever: without a
+                    // -Timeout (Start-OrchJob -Wait never has one) a folder that can never be
+                    // read -- a Scope with OR.Jobs.Write but no read, a revoked sign-in -- would
+                    // be polled until Ctrl+C. A refusal (401/403) ends it at once.
+                    int failed = readFailures.GetValueOrDefault((drive, folder)) + 1;
+                    readFailures[(drive, folder)] = failed;
+                    if (IsRefusal(ex) || failed >= MaxReadFailures)
+                    {
+                        cmdlet.WriteError(new ErrorRecord(
+                            new OrchException(path, $"Stopped waiting for job(s) {string.Join(", ", jobs.Keys)}: the folder's jobs could not be read ({failed} attempt(s)).", ex),
+                            "WaitJobReadError", ErrorCategory.ReadError, folder));
+                        done += jobs.Count;
+                        pending.Remove((drive, folder));
+                    }
+                    else
+                    {
+                        cmdlet.WriteVerbose($"{path}: reading the jobs failed ({failed} of {MaxReadFailures}), retrying: {OrchException.ExtractMessage(ex)}");
+                    }
                     continue;
                 }
+                readFailures.Remove((drive, folder));
 
                 foreach (var job in read)
                 {
@@ -90,9 +110,24 @@ internal static class JobWaiter
                     }
                     catch (Exception ex) when (ex is not OperationCanceledException)
                     {
-                        cmdlet.WriteError(new ErrorRecord(new OrchException(path, ex), "WaitJobReadError", ErrorCategory.ReadError, id));
+                        // As for the folder above: retried, but not forever.
+                        int failed = keyReadFailures.GetValueOrDefault((drive, id)) + 1;
+                        keyReadFailures[(drive, id)] = failed;
+                        if (IsRefusal(ex) || failed >= MaxReadFailures)
+                        {
+                            jobs.Remove(id);
+                            done++;
+                            cmdlet.WriteError(new ErrorRecord(
+                                new OrchException(path, $"Stopped waiting for job {id}: it could not be read ({failed} attempt(s)).", ex),
+                                "WaitJobReadError", ErrorCategory.ReadError, id));
+                        }
+                        else
+                        {
+                            cmdlet.WriteVerbose($"{path}: reading job {id} failed ({failed} of {MaxReadFailures}), retrying: {OrchException.ExtractMessage(ex)}");
+                        }
                         continue;
                     }
+                    keyReadFailures.Remove((drive, id));
 
                     if (byKey is null)
                     {
@@ -149,14 +184,15 @@ internal static class JobWaiter
         }
     }
 
+    // Five failed rounds in a row, 5 seconds apart: about 25 seconds of a folder that cannot be read.
+    private const int MaxReadFailures = 5;
+
     private static bool IsNotFound(Exception? ex)
-    {
-        for (var e = ex; e is not null; e = e.InnerException)
-        {
-            if (e is HttpResponseException { StatusCode: System.Net.HttpStatusCode.NotFound }) return true;
-        }
-        return false;
-    }
+        => OrchException.FindHttpStatus(ex) == System.Net.HttpStatusCode.NotFound;
+
+    // Refused rather than failed: asking again will not change the answer.
+    private static bool IsRefusal(Exception? ex)
+        => OrchException.FindHttpStatus(ex) is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden;
 
 }
 
@@ -225,7 +261,7 @@ public class WaitJobCmdlet : OrchestratorPSCmdlet
         if (Job is not null)
         {
             if (Job.Id is not Int64 jobId || string.IsNullOrEmpty(Job.Path)) return;
-            foreach (var (drive, folder) in SessionState.EnumFolders(new string[] { Job.Path }))
+            foreach (var (drive, folder) in SessionState.EnumFolders([WildcardPattern.Escape(Job.Path)]))
             {
                 targets.Add((drive, folder, jobId));
             }

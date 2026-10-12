@@ -81,7 +81,7 @@ public class RestartJobCmdlet : OrchestratorPSCmdlet
         if (Job is not null)
         {
             // Pipeline input from Get-OrchJob
-            var drivesFolders = SessionState.EnumFolders(new string[] { Job.Path! });
+            var drivesFolders = SessionState.EnumFolders([WildcardPattern.Escape(Job.Path!)]);
             foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
             {
                 RestartOne(drive, folder, Job.Id ?? 0);

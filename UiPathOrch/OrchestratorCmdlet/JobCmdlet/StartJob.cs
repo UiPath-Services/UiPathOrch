@@ -59,7 +59,7 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
     [ArgumentCompleter(typeof(StaticTextsCompleter<JobPriorityItems>))]
     public string? Priority { get; set; }
 
-    // Since we can just treat "" in CSV as 45, the type is int
+    // An empty CSV cell binds as 0, which ProcessRecord treats as not given.
     [Parameter(DontShow = true, ValueFromPipelineByPropertyName = true)]
     public int? SpecificPriorityValue { get; set; }
 
@@ -209,8 +209,11 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        // Priority wins over SpecificPriorityValue, as in New-OrchTrigger.
-        int? specificPriorityValue = SpecificPriorityValue;
+        // Priority wins over SpecificPriorityValue, as in New-OrchTrigger. An empty numeric CSV
+        // cell binds as 0, which is no valid priority (1-100) nor job count (1 or more), so 0
+        // means "not given" for both, as AssignNumberIfNotNullOrZero treats it in New-OrchTrigger.
+        int? specificPriorityValue = SpecificPriorityValue is 0 ? null : SpecificPriorityValue;
+        int jobsCount = JobsCount is null or 0 ? 1 : JobsCount.Value;
         if (!string.IsNullOrEmpty(Priority))
         {
             specificPriorityValue = ConvertPriorityToSpecificPriorityValue(Priority);
@@ -249,7 +252,7 @@ public class StartJobCmdlet : OrchestratorPSCmdlet
                                 // One job unless asked otherwise, as the web dialog sends. Cloud and
                                 // 24.10 take an absent JobsCount as 1; 20.10 to 22.10 refuse it with
                                 // "Invalid JobsCount" (2026-10-08).
-                                JobsCount = JobsCount ?? 1,
+                                JobsCount = jobsCount,
                                 InputArguments = InputArguments,
                                 SpecificPriorityValue = specificPriorityValue,
                                 StopStrategy = NullIfEmpty(StopStrategy),

@@ -29,7 +29,7 @@ public class RemoveTaskCmdlet : OrchestratorPSCmdlet
 
         if (Task is not null)
         {
-            var dfs = SessionState.EnumFolders(new string[] { Task.Path! });
+            var dfs = SessionState.EnumFolders([WildcardPattern.Escape(Task.Path!)]);
             foreach (var (drive, folder) in dfs.WithCancellation(cancelHandler.Token))
             {
                 RemoveOne(drive, folder, Task.Id ?? 0);

@@ -55,7 +55,7 @@ public class SetTaskCmdlet : OrchestratorPSCmdlet
         if (Task is not null)
         {
             // Pipeline input: resolve folder context from the task's Path
-            var dfs = SessionState.EnumFolders(new string[] { Task.Path! });
+            var dfs = SessionState.EnumFolders([WildcardPattern.Escape(Task.Path!)]);
             foreach (var (drive, folder) in dfs)
             {
                 EditOne(drive, folder, Task.Id ?? 0);

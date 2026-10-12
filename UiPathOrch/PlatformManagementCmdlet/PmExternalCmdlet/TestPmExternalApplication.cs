@@ -282,7 +282,7 @@ public class TestPmExternalApplicationCmdlet : OrchestratorPSCmdlet
             problems.Add($"The application's registration could not be read, so the cause is not narrowed down: {note}");
         }
         if (!succeeded && string.Equals(probe.Error, "invalid_scope", StringComparison.OrdinalIgnoreCase)
-            && OrchestratorAuthManager.BuildScopeTooLongAdvice(target, scope.Length, drive.ProductVersion.CachedValue?.version, lengthIsCertain: false) is string tooLong)
+            && OrchestratorAuthManager.BuildScopeTooLongAdvice(target, scope.Length, drive.ProductVersion.CachedValue?.version, lengthIsCertain: false, edition: drive._psDrive.ResolvedEdition) is string tooLong)
         {
             problems.Add(tooLong);
         }

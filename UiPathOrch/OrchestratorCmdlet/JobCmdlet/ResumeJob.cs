@@ -80,7 +80,7 @@ public class ResumeJobCmdlet : OrchestratorPSCmdlet
 
         if (Job is not null)
         {
-            var drivesFolders = SessionState.EnumFolders(new string[] { Job.Path! });
+            var drivesFolders = SessionState.EnumFolders([WildcardPattern.Escape(Job.Path!)]);
             foreach (var (drive, folder) in drivesFolders.WithCancellation(cancelHandler.Token))
             {
                 ResumeOne(drive, folder, Job.Key ?? "");

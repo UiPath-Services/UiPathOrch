@@ -19,8 +19,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   the same folder as source and destination; between two different folders the CSV only renames,
   and unmapped users are copied as they are). Nothing is removed from the old users, and a run
   can be repeated: a new user already in the tenant only gains the roles it lacks, and several
-  old users mapped onto one new user give it the roles of all of them. An unattended robot is not copied, since Orchestrator allows one robot per Windows
-  account; the warning gives the switch-over steps. Per-user asset values and trigger robots are
+  old users mapped onto one new user give it the roles of all of them. The robots' Windows
+  accounts are not copied, since Orchestrator allows one robot per Windows account and the old
+  user still holds it: an unattended robot is left off (the warning gives the switch-over steps),
+  and an attended robot's account and license type are left off while the attended permission is
+  kept (with them the new user was refused, "There already exists a floating robot"). The
+  warnings give the switch-over steps. Per-user asset values and trigger robots are
   left to `Find-OrchAccountReference`.
 - **`Find-OrchAccountReference` finds where a Windows account is used**, for example before its
   password changes: users (sign-in, unattended robot credential, attended robot), classic robots,
@@ -72,7 +76,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   be missing from Orchestrator's job list for a few seconds; the cmdlet reads such a job by its
   key, and looks for `-Id` / `-BatchExecutionKey` again for about 8 seconds before reporting it
   as not found; a batch counts as found once two searches 2 seconds apart return the same jobs,
-  so jobs listed late are not left out. For example, to stop a machine once its jobs have ended:
+  so jobs listed late are not left out. A folder whose jobs cannot be read stops being waited for,
+  with an error, when the read is refused (401/403) or has failed 5 times in a row, so a wait
+  without `-Timeout` cannot poll forever. For example, to stop a machine once its jobs have ended:
   `Get-OrchJob -Recurse -State Running,Pending | Where-Object HostMachineName -eq PC01 | Wait-OrchJob`.
 - **`Measure-OrchLog` counts robot logs without fetching them.** It takes the filter parameters of
   `Get-OrchLog` (`-Last`, `-Level`, `-ProcessName`, `-Machine`, `-WindowsIdentity`, `-JobKey`,
@@ -139,7 +145,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   servers reject the newer ones — up to six errors per call on 20.10, several on 21.10 to 23.4,
   and a server error for StudioPro runtimes on every standalone server. A type you did not name
   is now left out where it is known to be missing, and a server's "no such type" answer for it
-  is verbose output. A type you name is always requested and its error shown, as before.
+  is verbose output. A type you name is always requested and its error shown, as before. To know
+  the server's version each drive signs in first; a drive whose sign-in fails is reported once
+  and left out, rather than signing in again for every robot type.
 
 - **`Copy-Item` assigns a 20.10 local account to the same-named directory user of a later
   version.** Upgrading 20.10 turns each local account (type `User` or `Robot`) into a user of
@@ -156,9 +164,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - **`Get-OrchUserPrivilege` reports once per drive where privileges are unavailable.** Its
   endpoint exists on Automation Cloud only; on-premises servers and Automation Suite answer 404
-  for every user and group, which printed one identical error per user. The first users (up to
-  three) are asked alone, and a 404 for each of them is reported once for the drive; one user's
-  404, such as a user removed from the directory meanwhile, is that user's error.
+  for every user and group, which printed one identical error per user. Off Automation Cloud the
+  first user is asked alone, and a 404 there is reported once for the drive; on Cloud nothing is
+  probed, so one user's 404 (a user removed from the directory meanwhile) stays that user's error.
 
 ### Fixed
 
@@ -172,6 +180,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`Start-OrchJob` without `-JobsCount` starts one job on Orchestrator 20.10 to 22.10.** It sent
   no job count, which Automation Cloud and 24.10 take as one but 20.10, 21.10, 22.4 and 22.10
   refuse with "Invalid JobsCount". It now sends 1 unless told otherwise, as the web dialog does.
+  An empty `JobsCount` or `SpecificPriorityValue` cell in a CSV piped in binds as 0, which is no
+  valid count or priority, so 0 is taken as not given, as `New-OrchTrigger` does.
+- **Piping a job or a task from a folder whose name contains `[` or `]` works.** `Wait-OrchJob`,
+  `Stop-OrchJob`, `Resume-OrchJob`, `Restart-OrchJob`, `Set-OrchTask` and `Remove-OrchTask` resolved
+  the piped object's folder as a wildcard path, so a folder such as `Finance [JP]` matched nothing
+  and the object was skipped without an error. The path is now taken literally.
 - **`Get-OrchLog -Machine` / `-WindowsIdentity` with a name that matches nothing returns no logs.**
   The condition used to be dropped instead, so a mistyped name returned every log of the folder.
   `-Machine` now looks the name up among the tenant's machines, not only those assigned to the

@@ -121,9 +121,16 @@ public class FindAccountReferenceCmdlet : OrchestratorPSCmdlet
                 tenantMatches[drive] = match;
                 WriteObject(match.References, true);
             }
-            catch (Exception ex)
+            catch (Exception ex) when (ex is not OperationCanceledException and not PipelineStoppedException)
             {
-                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "FindAccountReferenceError", ErrorCategory.InvalidOperation, drive));
+                // Users or robots could not be read. The folders' credential assets still name the
+                // account by themselves, so they are still checked -- skipping them would miss
+                // exactly the rows a password change needs. What needs the users and robots (a
+                // matched user's per-user values, the triggers on its robot) cannot be followed.
+                WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator,
+                    "The tenant's users and robots could not be read; credential assets are still checked, but per-user values and triggers of matched users cannot be followed.", ex),
+                    "FindAccountReferenceError", ErrorCategory.InvalidOperation, drive));
+                tenantMatches[drive] = ScanTenant([], [], ReadStores(drive), matcher, drive.NameColonSeparator);
             }
         }
 
@@ -171,12 +178,13 @@ public class FindAccountReferenceCmdlet : OrchestratorPSCmdlet
     }
 
     private static TenantMatch ScanTenant(OrchDriveInfo drive, AccountMatcher matcher)
-    {
-        ICollection<CredentialStore>? stores = null;
-        try { stores = drive.CredentialStores.Get(); }
-        catch (Exception) { } // without the permission the store column stays empty; the rows still come out
+        => ScanTenant(drive.Users.Get(), drive.Robots.Get(), ReadStores(drive), matcher, drive.NameColonSeparator);
 
-        return ScanTenant(drive.Users.Get(), drive.Robots.Get(), stores, matcher, drive.NameColonSeparator);
+    // Without the permission the store column stays empty; the rows still come out.
+    private static ICollection<CredentialStore>? ReadStores(OrchDriveInfo drive)
+    {
+        try { return drive.CredentialStores.Get(); }
+        catch (Exception ex) when (ex is not OperationCanceledException and not PipelineStoppedException) { return null; }
     }
 
     internal static TenantMatch ScanTenant(IEnumerable<User> users, IEnumerable<Robot> robots,

@@ -302,7 +302,7 @@ internal class OrchestratorAuthManager
                 .GetAwaiter().GetResult();
             productVersion = product?.version;
         }
-        return BuildScopeTooLongAdvice(_drive.NameColon, length, productVersion, lengthIsCertain: false);
+        return BuildScopeTooLongAdvice(_drive.NameColon, length, productVersion, lengthIsCertain: false, edition: _drive._psDrive.ResolvedEdition);
     }
 
     // A confidential application whose scopes include a user scope: the drive has an AppSecret, so
@@ -827,8 +827,13 @@ internal class OrchestratorAuthManager
     // invalid_scope instead.) The cap per server, measured 2026-10-08 by sending authorize requests
     // of exact lengths, offline_access included: 21.10.4 300, 22.10.1 and 23.4.0 500, 24.10.0 750,
     // 24.10.8 / Automation Suite 24.10.11 / 25.10.2 / Cloud 1250. 24.10.0 and 24.10.8 share API
-    // version 17, so only the product version tells them apart. Unmeasured builds: null.
-    internal static int? KnownScopeLengthLimit(string? productVersion)
+    // version 17, so only the product version tells them apart. Unmeasured builds: null -- except
+    // on Automation Cloud, whose versions (26.3.0-s203...) the table does not list but whose limit
+    // is the measured 1250.
+    internal static int? KnownScopeLengthLimit(string? productVersion, OrchEdition? edition = null)
+        => KnownScopeLengthLimitByVersion(productVersion) ?? (edition == OrchEdition.Cloud ? 1250 : null);
+
+    private static int? KnownScopeLengthLimitByVersion(string? productVersion)
     {
         var m = System.Text.RegularExpressions.Regex.Match(productVersion ?? "", @"^(\d+)\.(\d+)\.(\d+)");
         if (!m.Success) return null;
@@ -857,10 +862,10 @@ internal class OrchestratorAuthManager
     // lengthIsCertain: the refusal can only mean length (the authorize endpoint's invalid_request
     // "Invalid scope"). The token endpoint (confidential app) answers a scope that is too long with a
     // bare invalid_scope, the same as one not granted (21.10.4: 300 issues a token, 301 is refused).
-    internal static string? BuildScopeTooLongAdvice(string driveName, int requestedScopeLength, string? productVersion, bool lengthIsCertain = true)
+    internal static string? BuildScopeTooLongAdvice(string driveName, int requestedScopeLength, string? productVersion, bool lengthIsCertain = true, OrchEdition? edition = null)
     {
         const string fix = "Run Edit-OrchConfig, remove {0}unneeded scopes (e.g. OR.Hypervisor, OR.ML), then run Import-OrchConfig.";
-        int? limit = KnownScopeLengthLimit(productVersion);
+        int? limit = KnownScopeLengthLimit(productVersion, edition);
         if (limit is int max)
         {
             if (requestedScopeLength <= max) return null;
@@ -1335,7 +1340,7 @@ internal class OrchestratorAuthManager
                                     productVersion = product?.version;
                                 }
                                 scopeTooLongAdvice = BuildScopeTooLongAdvice(
-                                    _drive.NameColon, RequestedScope(_drive._psDrive.Scope).Length, productVersion);
+                                    _drive.NameColon, RequestedScope(_drive._psDrive.Scope).Length, productVersion, edition: _drive._psDrive.ResolvedEdition);
                             }
 
                             capturedException = new InvalidOperationException(

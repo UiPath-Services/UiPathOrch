@@ -118,7 +118,14 @@ public abstract class RobotLogFilterCmdlet : OrchestratorPSCmdlet
             // ones. A folder's logs can come from a machine it is not assigned.
             var assignedPerFolder = ParallelResults.GroupBy(drivesFolders, df => df.drive.FolderMachinesAssigned.Get(df.folder));
             var assigned = assignedPerFolder.SelectMany(g => g).Select(m => m.Name).ToList();
-            var tenant = drivesFolders.Select(df => df.drive).Distinct().SelectMany(d => d.Machines.Get()).Select(m => m.Name).ToList();
+            // A drive that cannot read the tenant's machines still gets the folder's ones offered,
+            // as MakeFilter still matches them.
+            List<string?> tenant = [];
+            foreach (var d in drivesFolders.Select(df => df.drive).Distinct())
+            {
+                try { tenant.AddRange(d.Machines.Get().Select(m => m.Name)); }
+                catch (Exception ex) when (ex is not OperationCanceledException and not PipelineStoppedException) { }
+            }
 
             HashSet<string> offered = new(StringComparer.OrdinalIgnoreCase);
             foreach (var (names, tip) in new[] { (assigned, "Assigned to the folder"), (tenant, "Machine of the tenant") })

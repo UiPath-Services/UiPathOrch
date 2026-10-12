@@ -122,7 +122,7 @@ public class StopJobCmdlet : OrchestratorPSCmdlet
                 return;
 
             // Resolve Path, then add to the parameters list
-            var drivesFolders = SessionState.EnumFolders(new string[] { Job.Path! });
+            var drivesFolders = SessionState.EnumFolders([WildcardPattern.Escape(Job.Path!)]);
             foreach (var (drive, folder) in drivesFolders)
             {
                 var parameter = new StopJobCommandParameter()

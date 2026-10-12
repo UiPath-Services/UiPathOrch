@@ -138,9 +138,26 @@ public partial class OrchProvider
                     }
                 ];
 
+                // The destination user under the name the folder lists it by. A CSV can name it by
+                // e-mail (the tenant lookup below accepts that), while the folder's users carry the
+                // user name; matching the e-mail alone missed the user and dropped its roles.
+                string dstUserName = resolvedUserName;
+                try
+                {
+                    dstUserName = dstDrive.Users.Get().FirstOrDefault(u =>
+                        string.Equals(u?.EmailAddress, resolvedUserName, StringComparison.OrdinalIgnoreCase)
+                        && !string.IsNullOrEmpty(u!.UserName))?.UserName ?? resolvedUserName;
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException and not PipelineStoppedException)
+                {
+                    // Without the tenant's users the folder's own list is matched by the CSV name.
+                }
+
                 // If the same user is already assigned to this folder,
                 // preserve the existing roles
-                var existingSameNameUser = dstFolderUsers.FirstOrDefault(u => string.Compare(u.UserEntity?.UserName, resolvedUserName, StringComparison.OrdinalIgnoreCase) == 0);
+                var existingSameNameUser = dstFolderUsers.FirstOrDefault(u =>
+                    string.Equals(u.UserEntity?.UserName, resolvedUserName, StringComparison.OrdinalIgnoreCase)
+                    || string.Equals(u.UserEntity?.UserName, dstUserName, StringComparison.OrdinalIgnoreCase));
                 if (existingSameNameUser is not null)
                 {
                     newRolesPerFolder.First().RoleIds?.AddRange(existingSameNameUser.Roles!.Select(r => r.Id ?? 0));
@@ -148,17 +165,18 @@ public partial class OrchProvider
                 // dstFolderUsers was read before the loop, so it does not show what an earlier
                 // iteration gave this destination user -- the case when the CSV maps several source
                 // users onto one. Without this, the second assignment would replace the roles the
-                // first one gave.
-                if (assignedHere.TryGetValue(resolvedUserName, out var earlierRoleIds))
+                // first one gave. Recorded only once an assignment has gone through (below), so
+                // the roles of a failed one are not passed on.
+                if (assignedHere.TryGetValue(dstUserName, out var earlierRoleIds))
                 {
                     newRolesPerFolder.First().RoleIds?.AddRange(earlierRoleIds);
                 }
+                List<Int64> postedRoleIds = [];
                 if (newRolesPerFolder.First().RoleIds is { } roleIds)
                 {
-                    var distinctRoleIds = roleIds.Distinct().ToList();
+                    postedRoleIds = roleIds.Distinct().ToList();
                     roleIds.Clear();
-                    roleIds.AddRange(distinctRoleIds);
-                    assignedHere[resolvedUserName] = distinctRoleIds;
+                    roleIds.AddRange(postedRoleIds);
                 }
 
                 try
@@ -184,6 +202,7 @@ public partial class OrchProvider
                         if (dstLocal?.Id is not null)
                         {
                             dstDrive.OrchAPISession.AssignUsers([dstLocal.Id.Value], newRolesPerFolder);
+                            assignedHere[dstUserName] = postedRoleIds;
                             dstDrive.FolderUsersWithInherited.ClearCache(newFolder);
                             dstDrive.FolderUsersWithNoInherited.ClearCache(newFolder);
                             continue;
@@ -283,8 +302,10 @@ public partial class OrchProvider
                         //    srcUserEmail = srcDirectoryUser?.email;
                         //}
 
-                        // Not within one tenant: the source user's e-mail finds the source user itself.
-                        if (!inPlace && !string.IsNullOrEmpty(srcUserEmail) && srcUserEmail != userName)
+                        // Not within one tenant -- whether into the same folder or another --
+                        // since there the source user's e-mail finds the source user itself, which
+                        // would assign the user the CSV maps away from.
+                        if (!IsSameTenant(srcDrive, dstDrive) && !string.IsNullOrEmpty(srcUserEmail) && srcUserEmail != userName)
                         {
                             resolved = dstDrive.SearchDirectory(srcUserEmail)?
                                 .Where(u => u.type == type)
@@ -306,6 +327,7 @@ public partial class OrchProvider
                         RolesPerFolder = newRolesPerFolder
                     };
                     dstDrive.OrchAPISession.AssignFolderUser(postingUser);
+                    assignedHere[dstUserName] = postedRoleIds;
 
                     dstDrive.FolderUsersWithInherited.ClearCache(newFolder);
                     dstDrive.FolderUsersWithNoInherited.ClearCache(newFolder);

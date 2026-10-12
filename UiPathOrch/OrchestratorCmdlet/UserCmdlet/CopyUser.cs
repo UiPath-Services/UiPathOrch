@@ -246,6 +246,21 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
                         {
                             // Setting RobotProvision.RobotId to null should be sufficient
                             newUser.RobotProvision.RobotId = null;
+
+                            // The attended robot is bound by the same rule as the unattended one
+                            // below: within one tenant the source user still holds its Windows
+                            // account, and creating the new user with it is refused ("There already
+                            // exists a floating robot for orchestrator\admin_1!", 25.10.2,
+                            // 2026-10-12). So the robot settings are left off. Its license type goes
+                            // with them: a LicenseType without RobotProvision is refused ("Robot
+                            // Provision settings are required.", same date), while the attended
+                            // permission itself (MayHaveRobotSession) is accepted without either.
+                            if (inPlace && !string.IsNullOrEmpty(newUser.RobotProvision.UserName))
+                            {
+                                _this.WriteWarning($"\"{dstDrive.NameColonSeparator}{inPlaceName}\": Created without the attended robot settings of '{srcUser.UserName}', whose robot runs as '{newUser.RobotProvision.UserName}' with the {newUser.LicenseType} license: Orchestrator allows one robot per Windows account. When switching over, set that account and license on this user's attended robot once '{srcUser.UserName}' no longer uses them.");
+                                newUser.RobotProvision = null;
+                                newUser.LicenseType = null;
+                            }
                             //newUser.RobotProvision.RobotId = OrchFolderProvider.FindDstRobot(
                             //    this, srcDrive, dstDrive, dstDrive.RootFolder!,
                             //    newUser.RobotProvision.RobotId, srcUser.GetPSPath())?.Id;
@@ -395,11 +410,14 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        detailedDst.LoginProviders = null;
-        detailedDst.CreatorUserId = null;
-        detailedDst.UserRoles = null;
-        detailedDst.RolesList = (detailedDst.RolesList ?? []).Concat(missing).ToArray();
-        dstDrive.OrchAPISession.PutUser(detailedDst);
+        // A copy: detailedDst is the cached user, and a refused PUT would leave the cache
+        // claiming roles the user does not hold (and a re-run then finding none missing).
+        var putting = OrchCollectionExtensions.DeepCopy(detailedDst);
+        putting.LoginProviders = null;
+        putting.CreatorUserId = null;
+        putting.UserRoles = null;
+        putting.RolesList = (detailedDst.RolesList ?? []).Concat(missing).ToArray();
+        dstDrive.OrchAPISession.PutUser(putting);
         _this.WriteVerbose($"\"{target}\": Added the tenant roles {string.Join(", ", missing.Select(r => $"'{r}'"))}.");
         dstDrive.Users.ClearCache();
         dstDrive.UsersDetailed.ClearCache();

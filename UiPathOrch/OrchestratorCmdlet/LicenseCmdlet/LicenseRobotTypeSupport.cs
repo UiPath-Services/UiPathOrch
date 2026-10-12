@@ -47,12 +47,23 @@ internal static class LicenseRobotTypeSupport
     // The drive's API version for the table: signing in first, which learns it on most drives.
     // Still null (a drive that learns it only from a first API response) means no skipping,
     // and the second layer handles that drive's unknown types.
-    internal static double? ApiVersionOf(Core.OrchDriveInfo drive)
+    //
+    // A drive whose sign-in fails is reported here, once, and signedIn is false: the caller
+    // leaves the drive out, since its listings would only sign in again -- for a browser
+    // sign-in, a second wait of minutes for the same failure. A Ctrl+C ends the command.
+    internal static double? ApiVersionOf(Cmdlet cmdlet, Core.OrchDriveInfo drive, string errorId, out bool signedIn)
     {
-        // A Ctrl+C during the sign-in ends the command rather than moving on to the next drive's.
-        try { drive.OrchAPISession.EnsureAuthenticated(); }
-        catch (Exception ex) when (ex is not OperationCanceledException and not System.Management.Automation.PipelineStoppedException)
-        { /* the listing request reports any sign-in failure itself */ }
+        try
+        {
+            drive.OrchAPISession.EnsureAuthenticated();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException and not PipelineStoppedException)
+        {
+            cmdlet.WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), errorId, ErrorCategory.AuthenticationError, drive));
+            signedIn = false;
+            return null;
+        }
+        signedIn = true;
         return drive.OrchAPISession.ApiVersion;
     }
 
@@ -67,9 +78,9 @@ internal static class LicenseRobotTypeSupport
     // options." (the robotType parameter is an enum the older server cannot parse).
     internal static bool IsUnknownTypeResponse(Exception ex)
     {
+        if (OrchException.FindHttpStatus(ex) == HttpStatusCode.NotFound) return true;
         for (var e = ex; e is not null; e = e.InnerException)
         {
-            if (e is HttpResponseException { StatusCode: HttpStatusCode.NotFound }) return true;
             if (e.Message.Contains("Invalid OData query options", StringComparison.OrdinalIgnoreCase)) return true;
         }
         return false;

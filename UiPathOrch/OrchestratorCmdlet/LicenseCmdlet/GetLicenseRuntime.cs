@@ -36,7 +36,11 @@ public class GetLicenseRuntimeCmdlet : OrchestratorPSCmdlet
         // Compute the Cartesian product of all drives and robotTypes, leaving out the types the
         // user did not name that this server is known not to have (LicenseRobotTypeSupport).
         var drivesRobottypes = drives
-            .SelectMany(drive => { var api = LicenseRobotTypeSupport.ApiVersionOf(drive); return specifiedRobotType.Select(rt => (drive, robotType: rt, api)); })
+            .SelectMany(drive =>
+            {
+                var api = LicenseRobotTypeSupport.ApiVersionOf(this, drive, "GetLicenseRuntimeError", out bool signedIn);
+                return specifiedRobotType.Where(_ => signedIn).Select(rt => (drive, robotType: rt, api));
+            })
             .Where(dr => named.Contains(dr.robotType)
                 || !LicenseRobotTypeSupport.KnownAbsent(dr.robotType, dr.api, runtime: true))
             .Select(dr => (dr.drive, dr.robotType))
