@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.21.0'
+ModuleVersion = '1.21.1'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -516,6 +516,17 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.21.1
+
+Removed: Import-OrchQueueItem -IncludeProcessedItems (added in 1.21.0). It created the rows as New,
+which its name did not say. To queue finished items again, remove the @Status column from the
+exported file (or set a row's @Status to New) and import it.
+
+Fixed: Import-OrchQueueItem reads the web's Deadline and Postpone columns (the item's due and
+postpone dates) as the web does; they were stored as SpecificContent. Get-OrchQueueItem -ExportCsv
+writes them in place of @DueDate/@DeferDate, so moved items keep their dates, and writes nothing
+for a queue whose read failed part-way instead of a file that looks complete.
+
 1.21.0
 
 Added: Get-OrchQueueItem -ExportCsv writes queue items in any status to CSV, one file per queue: the
@@ -644,45 +655,6 @@ Fixed: the Pm* license cmdlets work on Automation Suite, which their help denied
 
 Fixed: drive-scoped warnings quote their target, so a drive name's own colon no longer runs into
 the one the sentence needs ("local:\:").
-
-1.17.0
-
-With the August 3, 2026 Automation Cloud release, UiPath made OpenAPI 3.0 the Orchestrator API
-description: /orchestrator_/openapi/public.json is now the default, and the Swagger 2.0 document
-(/swagger/v20.0/swagger.json) is deprecated from that release and removed in September 2026
-(Automation Suite: 2.2610). The OpenAPI document still describes Web API 20.0, yet it differs from
-the October 2025 snapshot of the v20 swagger, and this release follows it where the change is
-visible to the module. Every change leaves a drive on Web API 11-19 doing exactly what it did:
-new fields are stripped before a write to such a server, new parameters are refused there with a
-message naming the version, and the notices stay silent.
-
-Added: Set-OrchAsset -ValueType Json creates and updates the Json asset type the v20 document
-introduced. -Value is the JSON text, checked for well-formedness before anything is sent; the
-server echoes it in Value, so Get-OrchAsset, its CSV export and the CSV round-trip need nothing
-new. A drive below v20 refuses the type with a message naming the drive and its version.
-
-Added: Stop-OrchJob -BatchExecutionKey stops every job of one Start-OrchJob batch in a single
-request, and Get-OrchTaskAcrossFolder -JobKey narrows the cross-folder task list to the tasks one
-job raised (the value is the job's Key, as Get-OrchLog -JobKey already takes it, with the same tab
-completion). Both need v20.
-
-Added: the entities carry the fields the v20 document added (Machine.FunctionSlots and
-MachineSettings, Release.RuntimeProfile, Job.FolderKey / TargetRuntime / CreatorUser, the
-trigger's BindingKey, Asset.ValueJsonSchema and a few read-only ones); writes below v20 strip them.
-
-Changed: Invoke-OrchApi -Uri completion follows the OpenAPI document. The 14 endpoints it adds
-(GetByKey on Jobs, Releases, Buckets and Users, GetProcessVersion, /api/Assets/name/{name}/value,
-the VideoRecording API) are offered on v20 tenants; the 13 it dropped (the classic-robot
-/odata/Robots({key}) family, ToggleEnabledStatus, /odata/OrganizationUnits, ...) are no longer
-offered there and stay offered on v11-v19 drives, where they still exist.
-
-Changed: user and test-set reads no longer $expand the classic-folder navigations
-OrganizationUnits and Environment on v20, where the document dropped them -- the way
-ReleaseDto.Environment went before, which a 26.3 server already refuses. v20 has no classic
-folders, so nothing is lost.
-
-Changed: the Test* cmdlets say once per drive that Orchestrator has deprecated its Test
-Automation API in favour of Test Manager. They keep working; Clear-OrchCache resets the notice.
 '@
 
         # Prerelease string of this module

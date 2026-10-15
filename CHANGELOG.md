@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.21.1] - 2026-10-15
+
 ### Removed
 
 - **`Import-OrchQueueItem -IncludeProcessedItems`**, added in 1.21.0. The name read as if the
