@@ -394,11 +394,11 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
         {
             WriteWarning($"\"{queuePath}\": SpecificContent key(s) {string.Join(", ", unrepresentable.Select(k => $"'{k}'"))} cannot have a column of their own and are not exported.");
         }
-        using (var writer = WriteCsvHeader(physical, CsvEncoding, headers.Select(h => EscapeCsvValue(h)).ToArray()))
+        using (var writer = WriteCsvHeader(physical, CsvEncoding, headers.Select(QueueItemCsvFormat.CsvCell).ToArray()))
         {
             foreach (var row in rows)
             {
-                writer.WriteCsvLine(row.Select(v => EscapeCsvValue(v)));
+                writer.WriteCsvLine(row.Select(QueueItemCsvFormat.CsvCell));
             }
         }
         _exportedAny = true;

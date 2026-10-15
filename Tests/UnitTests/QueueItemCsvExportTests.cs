@@ -82,6 +82,32 @@ public class QueueItemCsvExportTests
         Assert.Equal("bad", cell["@ProcessingExceptionReason"]);
     }
 
+    // The server returns a date-time string in SpecificContent converted to UTC but keeps it as
+    // written in SpecificData (seen on 25.10.2 and 20.10.16); the export takes SpecificData.
+    [Fact]
+    public void Build_PrefersSpecificDataOverTheParsedDictionary()
+    {
+        var item = Item(1, "New", "R", ("Value", "2026-10-15T01:00:00Z"));
+        item.SpecificData = "{\"DynamicProperties\":{\"Value\":\"2026-10-15T10:00:00+09:00\"}}";
+        var (headers, rows) = QueueItemCsvFormat.Build([item], out _);
+        Assert.Equal("2026-10-15T10:00:00+09:00", rows[0][headers.IndexOf("Value")]);
+    }
+
+    [Theory]
+    [InlineData("plain", "plain")]
+    [InlineData("", "")]
+    [InlineData("   ", "\"   \"")]          // Import-Csv drops unquoted whitespace
+    [InlineData(" lead", "\" lead\"")]
+    [InlineData("trail ", "\"trail \"")]
+    [InlineData("in side", "in side")]
+    [InlineData("a,b", "\"a,b\"")]
+    [InlineData("say \"hi\"", "\"say \"\"hi\"\"\"")]
+    [InlineData("x\r\ny", "\"x\r\ny\"")]
+    public void CsvCell_QuotesWhenNeeded(string value, string expected)
+    {
+        Assert.Equal(expected, QueueItemCsvFormat.CsvCell(value));
+    }
+
     [Fact]
     public void Build_KeysThatCannotHaveAColumn_AreReported()
     {
@@ -156,9 +182,9 @@ public class QueueItemCsvExportTests
         var path = Path.Combine(Path.GetTempPath(), $"qi-export-{System.Guid.NewGuid():N}.csv");
         try
         {
-            using (var writer = OrchestratorPSCmdlet.WriteCsvHeader(path, null, headers.Select(h => OrchestratorPSCmdlet.EscapeCsvValue(h)).ToArray())!)
+            using (var writer = OrchestratorPSCmdlet.WriteCsvHeader(path, null, headers.Select(QueueItemCsvFormat.CsvCell).ToArray())!)
             {
-                foreach (var row in rows) writer.WriteCsvLine(row.Select(v => OrchestratorPSCmdlet.EscapeCsvValue(v)));
+                foreach (var row in rows) writer.WriteCsvLine(row.Select(QueueItemCsvFormat.CsvCell));
             }
 
             Assert.Equal(',', UiPath.PowerShell.Commands.CsvHelper.MultilineCsv.DetectDelimiter(path, Encoding.UTF8));

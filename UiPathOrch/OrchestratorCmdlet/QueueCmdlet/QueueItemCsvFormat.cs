@@ -51,36 +51,54 @@ internal static class QueueItemCsvFormat
         Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
     };
 
-    // The SpecificContent (or Output / Analytics) keys and values of an item: the dictionary
-    // when the listing filled it, else the DynamicProperties of the *Data JSON string.
+    // The SpecificContent (or Output / Analytics) keys and values of an item: the
+    // DynamicProperties of the *Data JSON string, which holds the values as they were added,
+    // else the dictionary. The server re-parses the dictionary, and on the way a date-time
+    // string becomes UTC: "2026-10-15T10:00:00+09:00" comes back as "2026-10-15T01:00:00Z" in
+    // SpecificContent but as written in SpecificData (25.10.2 and 20.10.16).
     internal static List<KeyValuePair<string, JsonElement>> DynamicProperties(Dictionary<string, object>? content, string? data)
     {
         var result = new List<KeyValuePair<string, JsonElement>>();
+        if (!string.IsNullOrEmpty(data))
+        {
+            try
+            {
+                using var doc = JsonDocument.Parse(data);
+                var root = doc.RootElement;
+                if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("DynamicProperties", out var dp)) root = dp;
+                if (root.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (var p in root.EnumerateObject())
+                    {
+                        result.Add(new(p.Name, p.Value.Clone()));
+                    }
+                    return result;
+                }
+            }
+            catch (JsonException)
+            {
+                // Not JSON: use the dictionary.
+            }
+        }
         if (content is not null)
         {
             foreach (var (key, value) in content)
             {
                 result.Add(new(key, value is JsonElement e ? e : JsonSerializer.SerializeToElement(value)));
             }
-            return result;
-        }
-        if (string.IsNullOrEmpty(data)) return result;
-        try
-        {
-            using var doc = JsonDocument.Parse(data);
-            var root = doc.RootElement;
-            if (root.ValueKind == JsonValueKind.Object && root.TryGetProperty("DynamicProperties", out var dp)) root = dp;
-            if (root.ValueKind != JsonValueKind.Object) return result;
-            foreach (var p in root.EnumerateObject())
-            {
-                result.Add(new(p.Name, p.Value.Clone()));
-            }
-        }
-        catch (JsonException)
-        {
-            // Not JSON: nothing to split into columns.
         }
         return result;
+    }
+
+    // A cell as written to the file: quoted when it holds a comma, a quote or a line break, and
+    // also when it starts or ends with whitespace, which some readers drop from an unquoted
+    // field (PowerShell's Import-Csv turns an unquoted "   " into "").
+    internal static string CsvCell(string value)
+    {
+        if (value.Length == 0) return value;
+        bool quote = value.IndexOfAny([',', '"', '\n', '\r']) >= 0
+            || char.IsWhiteSpace(value[0]) || char.IsWhiteSpace(value[^1]);
+        return quote ? "\"" + value.Replace("\"", "\"\"") + "\"" : value;
     }
 
     // A SpecificContent value as a cell: a string as it is, a number as written, true/false in
