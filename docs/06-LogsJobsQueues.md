@@ -231,7 +231,8 @@ Tips:
   `Get-OrchQueueItem -Status * -ExportCsv <dir>`: one CSV per queue, with
   the SpecificContent keys as columns and the status, output and processing
   times in `@` columns. `Import-OrchQueueItem` reads the file back but
-  creates only the `New` rows unless `-IncludeProcessedItems` is given.
+  creates only the `New` rows unless the `@Status` column is removed from the
+  file first.
 
 ## Per-tenant vs per-folder scope
 

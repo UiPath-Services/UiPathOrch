@@ -180,11 +180,6 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public SwitchParameter DynamicTyping { get; set; }
 
-    // Also imports the rows of a Get-OrchQueueItem -ExportCsv file whose @Status is not New,
-    // as new items: their transactions run again.
-    [Parameter(ValueFromPipelineByPropertyName = true)]
-    public SwitchParameter IncludeProcessedItems { get; set; }
-
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
@@ -243,8 +238,11 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
     // The data rows to import, each with its row number (the first data row is 1). In a file
     // from Get-OrchQueueItem -ExportCsv (it has an @Status column), a row whose @Status is
     // set and is not New is a transaction that already ran; importing it would queue it
-    // again, so it is left out, and listed in 'skippedRows', unless includeProcessed.
-    internal static List<(int row, List<string> values)> SelectRows(IReadOnlyList<string> headers, IReadOnlyList<List<string>> contents, bool includeProcessed, out List<int> skippedRows)
+    // again, so it is left out and listed in 'skippedRows'. To queue such rows again, the user
+    // edits the file: removes the @Status column, or sets a row's @Status to New. (1.21.0 had
+    // an -IncludeProcessedItems switch for this; it read as if the status were carried over,
+    // and re-queuing finished transactions should be a deliberate edit, so it was removed.)
+    internal static List<(int row, List<string> values)> SelectRows(IReadOnlyList<string> headers, IReadOnlyList<List<string>> contents, out List<int> skippedRows)
     {
         skippedRows = [];
         int statusIndex = -1;
@@ -257,7 +255,7 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
         for (int i = 0; i < contents.Count; i++)
         {
             int row = i + 1;
-            if (!includeProcessed && statusIndex >= 0 && statusIndex < contents[i].Count)
+            if (statusIndex >= 0 && statusIndex < contents[i].Count)
             {
                 var status = contents[i][statusIndex].Trim();
                 if (status.Length > 0 && !status.Equals("New", StringComparison.OrdinalIgnoreCase))
@@ -288,7 +286,7 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
             return (totalDataRows, [], []);
         }
 
-        var selected = SelectRows(headers, contents, IncludeProcessedItems.IsPresent, out skippedRows);
+        var selected = SelectRows(headers, contents, out skippedRows);
         var items = new List<string>(selected.Count);
         var rows = new List<int>(selected.Count);
         foreach (var (row, values) in selected)
@@ -528,7 +526,7 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
                 if (skippedRows.Count > 0)
                 {
                     string list = string.Join(", ", skippedRows.Take(10)) + (skippedRows.Count > 10 ? ", ..." : "");
-                    WriteWarning($"{p.FullPath}: {skippedRows.Count} row(s) not imported because their @Status is not New (data rows {list}). Their transactions have already run; use -IncludeProcessedItems to queue them again as new items.");
+                    WriteWarning($"{p.FullPath}: {skippedRows.Count} row(s) not imported because their @Status is not New (data rows {list}). Their transactions have already run. To queue them again as new items, remove the @Status column from the file (or set those rows' @Status to New) and import it again.");
                     if (data.items.Count == 0) continue;
                 }
                 // Match the web "Upload Items" 15,000-row cap (reject, don't chunk).

@@ -11,7 +11,8 @@ namespace UiPath.PowerShell.Commands;
 // history, in columns whose names start with '@' (@Status, @Output, ...). The web stores
 // those as SpecificContent too; Import-OrchQueueItem recognizes them by name, leaves them out
 // of SpecificContent, and imports only the rows whose @Status is New unless
-// -IncludeProcessedItems is given, so that a finished transaction is not queued again by
+// the file is edited (the @Status column removed, or a row's @Status set to New), so that a
+// finished transaction is not queued again by
 // accident.
 internal static class QueueItemCsvFormat
 {

@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Removed
+
+- **`Import-OrchQueueItem -IncludeProcessedItems`**, added in 1.21.0. The name read as if the
+  original status were carried over, but the rows are created as `New` (the API cannot create an
+  item in another status), and re-queuing finished transactions is rare enough to be a deliberate
+  edit: remove the `@Status` column from the exported file, or set a row's `@Status` to `New`,
+  and import it. To keep the original status as data, rename the column (for example `@Status`
+  to `OriginalStatus`) and it becomes an ordinary SpecificContent key.
+
 ### Fixed
 
 - **`Get-OrchQueueItem -ExportCsv` no longer writes a CSV for a queue whose read failed part-way.**
