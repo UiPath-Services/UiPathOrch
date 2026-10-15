@@ -32,6 +32,19 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
     [Parameter]
     public uint Depth { get; set; }
 
+    // The item's SpecificContent as it was added: from SpecificData, which the server keeps as
+    // written, rather than the SpecificContent dictionary, which it re-parses on the way out (a
+    // date-time string "2026-10-15T10:00:00+09:00" comes back as "2026-10-15T01:00:00Z" there;
+    // seen on 20.10.16, 25.10.2 and Automation Suite 24.10.8). Values keep their JSON types.
+    internal static Dictionary<string, object>? ContentAsAdded(QueueItem item)
+    {
+        var properties = QueueItemCsvFormat.DynamicProperties(item.SpecificContent, item.SpecificData);
+        if (properties.Count == 0) return item.SpecificContent;
+        var content = new Dictionary<string, object>(properties.Count);
+        foreach (var (key, value) in properties) content[key] = value;
+        return content;
+    }
+
     protected override void ProcessRecord()
     {
         var (srcDrive, srcRootFolder) = SessionState.ResolveToSingleFolder(EffectivePath(Path, LiteralPath));
@@ -89,9 +102,12 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
 
                     if (ShouldProcess(target, "Copy New Items"))
                     {
-                        string query = $"&$filter=((QueueDefinitionId eq {srcQueue.Id}) and (Status eq '0'))";
-
-                        ulong first = 0;
+                        // Pages are read by Id ("Id gt <last>", Id ascending), not by $skip: the
+                        // list's default order is EndProcessing, which is empty on every New item,
+                        // so $skip pages had no fixed order and could repeat or miss items; and an
+                        // item leaving New during the copy (a robot picking it up) shifted $skip.
+                        long lastId = 0;
+                        ulong itemsRead = 0;
 
                         // In this loop, retrieve srcQueue items 100 at a time and add them to dstQueue 100 at a time.
                         while (true)
@@ -104,9 +120,11 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
                             List<QueueItem> srcItems;
                             try // Bulk-retrieve items with Status "New" from srcQueue (up to 100)
                             {
-                                srcItems = srcDrive.GetQueueItems(srcFolder, srcQueue, query, 100 * first, 100);
+                                string query = $"&$filter=((QueueDefinitionId eq {srcQueue.Id}) and (Status eq '0') and (Id gt {lastId}))";
+                                srcItems = srcDrive.GetQueueItems(srcFolder, srcQueue, query, 0, 100, "Id", orderAscending: true);
                                 if (srcItems.Count == 0) break;
-                                ulong itemsRead = (first++ * 100) + (ulong)srcItems.Count;
+                                lastId = srcItems.Max(i => i.Id ?? 0);
+                                itemsRead += (ulong)srcItems.Count;
                                 reporterQueue.WriteProgress(idxQueue, $"{srcQueue.Name}: {itemsRead} items");
                             }
                             catch (Exception ex)
@@ -125,7 +143,7 @@ public class CopyQueueItemCmdlet : OrchestratorPSCmdlet
                                 {
                                     Name = dstQueue.Name,
                                     Priority = srcItem.Priority,
-                                    SpecificContent = srcItem.SpecificContent,
+                                    SpecificContent = ContentAsAdded(srcItem),
                                     DeferDate = srcItem.DeferDate,
                                     DueDate = srcItem.DueDate,
                                     RiskSlaDate = srcItem.RiskSlaDate,

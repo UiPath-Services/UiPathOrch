@@ -32,6 +32,8 @@ Copies queue items with a Status of "New" from one UiPath Orchestrator queue to 
 
 Only items with Status "New" are eligible for copy. Items with any other status (e.g., InProgress, Failed, Successful) are silently skipped.
 
+Each item keeps its Priority, Reference, Progress, due, postpone and risk SLA dates, and its SpecificContent as it was added, with the values' types (numbers stay numbers, and a date-time string is copied as written). Items are read in order of their Id, so an item that leaves New during the copy (picked up by a robot) does not cause others to be skipped.
+
 The cmdlet enforces a rate limit of 601 milliseconds between API calls to avoid overloading the Orchestrator server.
 
 The cmdlet **outputs the source queue items it successfully copied**. Because each queue item is a transaction, copying it to another queue or tenant means it must be removed from the source so it is not processed twice — pipe the output into Remove-OrchQueueItem for a copy-then-delete "move": `Copy-OrchQueueItem TestQueue2 Dept#2 | Remove-OrchQueueItem`. Items the server rejects are NOT included in the output (so the move never deletes an uncopied item); each rejection is reported as a warning carrying the server's reason. The most common rejection is a duplicate Reference when the destination enforces unique references — re-copying will not fix it, so inspect the reason and handle it.
@@ -307,6 +309,8 @@ Only queue items with Status "New" are copied. Items with any other status are e
 Items are copied in batches of 100 per API call. A rate limit of 601 milliseconds is enforced between API calls to avoid overloading the Orchestrator server.
 
 This is a partial-failure-tolerant operation: items the server rejects are reported as warnings (with the server's reason) and excluded from the output, and the cmdlet continues with the remaining items. The output is the successfully-copied items, ready to pipe into Remove-OrchQueueItem for a transaction-safe move.
+
+If a whole batch fails (for example, the request times out), it is reported as an error and none of its items are output, but the destination may already hold some of them; check the destination before copying again, or the copy creates them twice.
 
 Queue items are folder-scoped entities. You must navigate to a folder on the Orch: drive or use -Path to specify the source folder.
 

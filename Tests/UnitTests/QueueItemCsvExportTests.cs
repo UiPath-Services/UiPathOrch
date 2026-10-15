@@ -168,6 +168,21 @@ public class QueueItemCsvExportTests
         Assert.Equal("2026-10-15T10:00:00+09:00", rows[0][headers.IndexOf("Value")]);
     }
 
+    // Copy-OrchQueueItem sends the data as added, with its JSON types, not the re-parsed dictionary.
+    [Fact]
+    public void CopyContentAsAdded_PrefersSpecificData()
+    {
+        var item = Item(1, "New", "R", ("When", "2026-10-15T01:00:00Z"), ("N", 7));
+        item.SpecificData = "{\"DynamicProperties\":{\"When\":\"2026-10-15T10:00:00+09:00\",\"N\":7}}";
+        var content = CopyQueueItemCmdlet.ContentAsAdded(item)!;
+        Assert.Equal("2026-10-15T10:00:00+09:00", ((JsonElement)content["When"]).GetString());
+        Assert.Equal(JsonValueKind.Number, ((JsonElement)content["N"]).ValueKind);
+
+        var noData = Item(2, "New", "R", ("A", "a"));
+        Assert.Equal("a", ((JsonElement)CopyQueueItemCmdlet.ContentAsAdded(noData)!["A"]).GetString());
+        Assert.Null(CopyQueueItemCmdlet.ContentAsAdded(new QueueItem { Id = 3 }));
+    }
+
     [Theory]
     [InlineData("plain", "plain")]
     [InlineData("", "")]

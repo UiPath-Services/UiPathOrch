@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **`Copy-OrchQueueItem` reads the source queue in order of Id.** It read the New items 100 at a
+  time with `$skip` in the list's default order, EndProcessing, which is empty on every New
+  item, so the pages had no fixed order and a queue of more than 100 items could have items
+  copied twice or not at all. An item leaving New during the copy also shifted the pages. Pages
+  now follow `Id gt <last>`.
+- **`Copy-OrchQueueItem` copies SpecificContent as it was added.** It copied the server's
+  re-parsed dictionary, in which a date-time string comes back in UTC (`2026-10-15T10:00:00+09:00`
+  became `2026-10-15T01:00:00Z`; seen on 20.10.16, 25.10.2 and Automation Suite 24.10.8). It now
+  copies SpecificData, as `Get-OrchQueueItem -ExportCsv` does since 1.21.0.
+
 ## [1.21.1] - 2026-10-15
 
 ### Removed
