@@ -110,6 +110,48 @@ public partial class OrchAPISession : IDisposable
         }
     }
 
+    // A request the server may legitimately take minutes to answer goes through this client
+    // instead: HttpClient.Timeout is fixed once a client has sent, so it cannot be raised per
+    // request on _httpClient. BulkAddQueueItems is the case: the web sends a 15,000-row
+    // upload as one request and the server took 5.5 minutes to answer it
+    // (TestData/QueueItemUploadMatrix 51). At the default 100 s the client gave up while the
+    // server went on to create part of the items. The bearer token is set on each request
+    // from _httpClient's, so a re-authenticated retry carries the new one.
+    internal static readonly TimeSpan LongRequestTimeout = TimeSpan.FromMinutes(30);
+    private volatile HttpClient? _httpClientLong;
+    private readonly object _httpClientLongLock = new();
+    private static readonly AsyncLocal<bool> s_useLongRequestClient = new();
+
+    private HttpClient LongRequestClient
+    {
+        get
+        {
+            if (_httpClientLong is null)
+            {
+                lock (_httpClientLongLock)
+                {
+                    if (_httpClientLong is null)
+                    {
+                        var client = InitializeHttpClient(_drive);
+                        client.Timeout = LongRequestTimeout;
+                        _httpClientLong = client;
+                    }
+                }
+            }
+            return _httpClientLong;
+        }
+    }
+
+    // Sends the requests made inside the scope through LongRequestClient.
+    private static LongRequestScope UseLongRequestTimeout() => new();
+
+    private readonly struct LongRequestScope : IDisposable
+    {
+        private readonly bool _previous;
+        public LongRequestScope() { _previous = s_useLongRequestClient.Value; s_useLongRequestClient.Value = true; }
+        public void Dispose() => s_useLongRequestClient.Value = _previous;
+    }
+
     // Limit the number of requests that can be sent per second to 15.
     //
     // This constant, not OrchThreadPool's cap of four, is what bounds every parallel read in
@@ -303,6 +345,11 @@ public partial class OrchAPISession : IDisposable
         {
             reqTime = DateTime.Now;
             HttpClient hc = httpClient ?? HttpClient;
+            if (httpClient is null && s_useLongRequestClient.Value)
+            {
+                message.Headers.Authorization = hc.DefaultRequestHeaders.Authorization;
+                hc = LongRequestClient;
+            }
             ret = hc.Send(message, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
             resTime = DateTime.Now;
 
@@ -825,6 +872,7 @@ public partial class OrchAPISession : IDisposable
                 // Dispose managed resources
                 _httpClient?.Dispose();
                 _httpClientForBucketItem?.Dispose();
+                _httpClientLong?.Dispose();
                 limiter?.Dispose();
 
                 // Dispose the async log writer
@@ -1463,9 +1511,18 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<SimpleUser> GetReviewers(Int64 folderId) => GetEnumerable<SimpleUser>("/odata/QueueItems/UiPath.Server.Configuration.OData.GetReviewers()", folderId, "&$filter=(Type eq 'DirectoryUser')");
 
-    public BulkOperationResponseDtoOfFailedQueueItem? BulkAddQueueItem(Int64 folderId, BulkAddQueueItemsRequest payload) => HttpRequest<BulkOperationResponseDtoOfFailedQueueItem>(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.BulkAddQueueItems", folderId, payload);
+    // Up to 15,000 items in one request can take the server minutes: see LongRequestClient.
+    public BulkOperationResponseDtoOfFailedQueueItem? BulkAddQueueItem(Int64 folderId, BulkAddQueueItemsRequest payload)
+    {
+        using var _ = UseLongRequestTimeout();
+        return HttpRequest<BulkOperationResponseDtoOfFailedQueueItem>(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.BulkAddQueueItems", folderId, payload);
+    }
 
-    public BulkOperationResponseDtoOfFailedQueueItem? BulkAddQueueItem(Int64 folderId, string payload) => HttpRequest<BulkOperationResponseDtoOfFailedQueueItem>(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.BulkAddQueueItems", folderId, payload);
+    public BulkOperationResponseDtoOfFailedQueueItem? BulkAddQueueItem(Int64 folderId, string payload)
+    {
+        using var _ = UseLongRequestTimeout();
+        return HttpRequest<BulkOperationResponseDtoOfFailedQueueItem>(HttpMethod.Post, "/odata/Queues/UiPathODataSvc.BulkAddQueueItems", folderId, payload);
+    }
 
     // This API can only be called from Robot...
     //public QueueItem? StartTransaction(Int64 folderId, TransactionData payload)

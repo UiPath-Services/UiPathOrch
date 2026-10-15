@@ -94,7 +94,131 @@ internal static class CsvLine
 // error was recorded.
 internal static class MultilineCsv
 {
-    internal static bool Parse(string csvFilePath, Encoding? csvEncoding, int rowCap, out List<string> headers, out List<List<string>> contents, out List<CSVParseError> errorInfo, out int totalDataRows)
+    // Physical lines with the terminator each one ended with ("\r\n", "\n", "\r", or "" at
+    // EOF). File.ReadLines drops the terminator, so a newline inside a quoted field came
+    // back as "\n" whatever it was; the web keeps CRLF and bare CR as written.
+    internal static IEnumerable<(string line, string eol)> ReadLinesWithEol(TextReader reader)
+    {
+        var sb = new StringBuilder();
+        int ch;
+        while ((ch = reader.Read()) != -1)
+        {
+            if (ch == '\n')
+            {
+                yield return (sb.ToString(), "\n");
+                sb.Clear();
+            }
+            else if (ch == '\r')
+            {
+                if (reader.Peek() == '\n')
+                {
+                    reader.Read();
+                    yield return (sb.ToString(), "\r\n");
+                }
+                else
+                {
+                    yield return (sb.ToString(), "\r");
+                }
+                sb.Clear();
+            }
+            else
+            {
+                sb.Append((char)ch);
+            }
+        }
+        if (sb.Length > 0) yield return (sb.ToString(), "");
+    }
+
+    // Delimiter detection as the web's CSV reader (Papa Parse) does it: each candidate
+    // splits the first 10 non-blank records; the winner has the smallest change in field
+    // count from record to record, then the larger average field count, which must exceed
+    // 1.99; earlier candidates win ties, so ',' wins over ';' at equal counts. Returns
+    // null when no candidate qualifies; the web then rejects the file with
+    // "Undetectable Delimiter" (a single-column CSV), and callers use ',' instead.
+    // Pinned by TestData/QueueItemUploadMatrix 3a-3g.
+    internal static readonly char[] DelimiterCandidates = [',', '\t', '|', ';', '\u001E', '\u001F'];
+
+    internal static char? GuessDelimiter(string text)
+    {
+        char? best = null;
+        int? bestDelta = null;
+        double? maxFieldCount = null;
+        foreach (var delimiter in DelimiterCandidates)
+        {
+            var counts = PreviewFieldCounts(text, delimiter, 10);
+            int delta = 0;
+            int? previous = null;
+            foreach (var count in counts)
+            {
+                if (previous is null) { previous = count; continue; }
+                delta += Math.Abs(count - previous.Value);
+                previous = count;
+            }
+            double average = counts.Count > 0 ? (double)counts.Sum() / counts.Count : 0;
+            if ((bestDelta is null || delta <= bestDelta) && (maxFieldCount is null || average > maxFieldCount) && average > 1.99)
+            {
+                best = delimiter;
+                bestDelta = delta;
+                maxFieldCount = average;
+            }
+        }
+        return best;
+    }
+
+    // Field count of each of the first 'max' non-blank records split by 'delimiter'
+    // (quotes and embedded newlines honored; malformed quotes are tolerated here).
+    private static List<int> PreviewFieldCounts(string text, char delimiter, int max)
+    {
+        var counts = new List<int>();
+        int fields = 1;
+        bool inQuotes = false, fieldStart = true, recordEmpty = true;
+        for (int i = 0; i < text.Length && counts.Count < max; i++)
+        {
+            char c = text[i];
+            if (inQuotes)
+            {
+                if (c == '"')
+                {
+                    if (i + 1 < text.Length && text[i + 1] == '"') i++;
+                    else inQuotes = false;
+                }
+                continue;
+            }
+            if (c == '"' && fieldStart) { inQuotes = true; fieldStart = false; recordEmpty = false; continue; }
+            if (c == delimiter) { fields++; fieldStart = true; recordEmpty = false; continue; }
+            if (c == '\r' || c == '\n')
+            {
+                if (c == '\r' && i + 1 < text.Length && text[i + 1] == '\n') i++;
+                if (!recordEmpty) counts.Add(fields);
+                fields = 1; fieldStart = true; recordEmpty = true;
+                continue;
+            }
+            fieldStart = false;
+            recordEmpty = false;
+        }
+        if (!recordEmpty && counts.Count < max) counts.Add(fields);
+        return counts;
+    }
+
+    // The delimiter for a file: the guessed one, or ',' when none qualifies.
+    // Reads only as far as the first 10 records go for every candidate (an 11th record has
+    // started), so a file over the row limit is not held in memory in full; Parse streams it.
+    internal static char DetectDelimiter(string csvFilePath, Encoding? csvEncoding)
+    {
+        using var reader = new StreamReader(csvFilePath, csvEncoding ?? Encoding.UTF8);
+        var text = new StringBuilder();
+        var buffer = new char[64 * 1024];
+        int read;
+        while ((read = reader.Read(buffer, 0, buffer.Length)) > 0)
+        {
+            text.Append(buffer, 0, read);
+            var s = text.ToString();
+            if (DelimiterCandidates.All(d => PreviewFieldCounts(s, d, 11).Count == 11)) break;
+        }
+        return GuessDelimiter(text.ToString()) ?? ',';
+    }
+
+    internal static bool Parse(string csvFilePath, Encoding? csvEncoding, int rowCap, out List<string> headers, out List<List<string>> contents, out List<CSVParseError> errorInfo, out int totalDataRows, char delimiter = ',')
     {
         headers = [];
         contents = [];
@@ -104,13 +228,18 @@ internal static class MultilineCsv
         StringBuilder currentField = new();
         List<string> currentRow = [];
         int currentRowNumber = 0;
+        // Row number reported in errors, numbered as the web does: the header is row 1,
+        // and a rejected row still takes its number (TestData/QueueItemUploadMatrix
+        // 39_text_after_closing_quote.csv: the web reports row 2).
+        int csvRow = 0;
 
         csvEncoding ??= Encoding.UTF8;
 
-        foreach (var fullLine in File.ReadLines(csvFilePath, csvEncoding))
+        // Same reader File.ReadLines uses: a BOM, when present, overrides csvEncoding.
+        using var reader = new StreamReader(csvFilePath, csvEncoding);
+        foreach (var (line, eol) in ReadLinesWithEol(reader))
         {
             bool lineHasError = false; // Flag to track whether this line has an error
-            string line = fullLine.TrimEnd('\r');
 
             for (int i = 0; i < line.Length; i++)
             {
@@ -132,16 +261,16 @@ internal static class MultilineCsv
                     {
                         inQuotes = !inQuotes; // Toggle quoting status
                                               // Check if the closing quote is not properly followed by a comma or end of line
-                        if (!inQuotes && i < line.Length - 1 && line[i + 1] != ',' && line[i + 1] != '\n')
+                        if (!inQuotes && i < line.Length - 1 && line[i + 1] != delimiter && line[i + 1] != '\n')
                         {
-                            errorInfo.Add(new CSVParseError(currentRowNumber, "Quotes", "N/A", "Invalid Quotes"));
+                            errorInfo.Add(new CSVParseError(++csvRow, "Quotes", "N/A", "Invalid Quotes"));
                             lineHasError = true;
                             // Break out of the loop to skip the rest of the line
                             break;
                         }
                     }
                 }
-                else if (c == ',' && !inQuotes)
+                else if (c == delimiter && !inQuotes)
                 {
                     // End of a field
                     currentRow.Add(currentField.ToString());
@@ -171,10 +300,10 @@ internal static class MultilineCsv
             }
 
             // Still inside a quoted field at the physical line end: the field
-            // carries an embedded newline. Keep it and accumulate the next line.
+            // carries an embedded newline. Keep it as written and accumulate the next line.
             if (inQuotes)
             {
-                currentField.Append('\n');
+                currentField.Append(eol);
                 continue;
             }
 
@@ -191,10 +320,20 @@ internal static class MultilineCsv
 
             currentRow.Add(currentField.ToString());
             currentField.Clear();
+            ++csvRow;
             if (currentRowNumber != 0 && headers.Count < currentRow.Count)
             {
                 currentRow.Clear();
-                errorInfo.Add(new CSVParseError(currentRowNumber, "Fields Mismatch", "N/A", "Too Many Fields"));
+                errorInfo.Add(new CSVParseError(csvRow, "Fields Mismatch", "N/A", "Too Many Fields"));
+                continue;
+            }
+            // The web rejects a row with fewer fields than the header as well
+            // (TestData/QueueItemUploadMatrix 31_ragged_short_row.csv); it used to be
+            // accepted here with the missing columns silently dropped.
+            if (currentRowNumber != 0 && headers.Count > currentRow.Count)
+            {
+                currentRow.Clear();
+                errorInfo.Add(new CSVParseError(csvRow, "Fields Mismatch", "N/A", "Too Few Fields"));
                 continue;
             }
 
@@ -222,7 +361,7 @@ internal static class MultilineCsv
         // Final check for unmatched quotes
         if (inQuotes)
         {
-            errorInfo.Add(new CSVParseError(currentRowNumber, "Unmatched Quotes", "", "A field contains unmatched quotes"));
+            errorInfo.Add(new CSVParseError(csvRow + 1, "Unmatched Quotes", "", "A field contains unmatched quotes"));
         }
 
         return !errorInfo.Any();

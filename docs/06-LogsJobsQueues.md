@@ -223,6 +223,10 @@ Tips:
   cache with a filtered query first; for `Get-OrchJob` `-Id` looks up each id,
   fetching from the server when needed. `-Id` supports tab completion and
   wildcards against cached ids.
+- To **move** queue items to another folder, tenant or instance, use
+  `Copy-OrchQueueItem` instead. Only `New` items can be copied, because the API
+  cannot recreate processed transactions. See
+  [Copying queue items](50-MigrationGuide.md#copying-queue-items).
 
 ## Per-tenant vs per-folder scope
 
@@ -307,4 +311,5 @@ Run a filtered query afterward to repopulate. As a general rule
 
 See also: [Essential Guide for AI](02-Essentials.md) ·
 [Cmdlet Reference](04-CmdletReference.md) ·
+[Migration Guide](50-MigrationGuide.md) ·
 [Troubleshooting](90-Troubleshooting.md)

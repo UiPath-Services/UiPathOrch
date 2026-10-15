@@ -1,0 +1,62 @@
+﻿CaseId,Reference,Priority,Value,顧客名,"Col,Comma","Col ""Q""", Spaced 
+P01,R-P01,High,v,山田,c,q,s
+P02,R-P02,Normal,v,山田,c,q,s
+P03,R-P03,Low,v,山田,c,q,s
+P04,R-P04,high,v,山田,c,q,s
+P05,R-P05,HIGH,v,山田,c,q,s
+P06,R-P06,nOrMaL,v,山田,c,q,s
+P07,R-P07,1,v,山田,c,q,s
+P08,R-P08,2,v,山田,c,q,s
+P09,R-P09,3,v,山田,c,q,s
+P10,R-P10,,v,山田,c,q,s
+P11,R-P11,"",v,山田,c,q,s
+R01,,Normal,v,山田,c,q,s
+R02,"",Normal,v,山田,c,q,s
+R03,R-P01,Normal,v,山田,c,q,s
+R04,参照-日本語,Normal,v,山田,c,q,s
+R05," R 05 ",Normal,v,山田,c,q,s
+R06, R 06 ,Normal,v,山田,c,q,s
+R07,"R,07",Normal,v,山田,c,q,s
+R08,"R""08",Normal,v,山田,c,q,s
+V01,R-V01,Normal,,山田,c,q,s
+V02,R-V02,Normal,"",山田,c,q,s
+V03,R-V03,Normal,   ,山田,c,q,s
+V04,R-V04,Normal,"   ",山田,c,q,s
+V05,R-V05,Normal,  lead and trail  ,山田,c,q,s
+V06,R-V06,Normal,"a,b",山田,c,q,s
+V07,R-V07,Normal,"say ""hi""",山田,c,q,s
+V08,R-V08,Normal,"line1
+line2",山田,c,q,s
+V09,R-V09,Normal,"line1
+line2",山田,c,q,s
+V10,R-V10,Normal,"line1line2",山田,c,q,s
+V11,R-V11,Normal,a	b,山田,c,q,s
+V12,R-V12,Normal,007,山田,c,q,s
+V13,R-V13,Normal,1.50,山田,c,q,s
+V14,R-V14,Normal,1e3,山田,c,q,s
+V15,R-V15,Normal,-0,山田,c,q,s
+V16,R-V16,Normal,12345678901234567890,山田,c,q,s
+V17,R-V17,Normal,true,山田,c,q,s
+V18,R-V18,Normal,FALSE,山田,c,q,s
+V19,R-V19,Normal,null,山田,c,q,s
+V20,R-V20,Normal,"{""a"":1,""b"":[1,2]}",山田,c,q,s
+V21,R-V21,Normal,"[1,2,3]",山田,c,q,s
+V22,R-V22,Normal,2026-10-15,山田,c,q,s
+V23,R-V23,Normal,2026-10-15T10:00:00+09:00,山田,c,q,s
+V24,R-V24,Normal,10/15/2026,山田,c,q,s
+V25,R-V25,Normal,😀,山田,c,q,s
+V26,R-V26,Normal,👨‍👩‍👧,山田,c,q,s
+V27,R-V27,Normal,é,山田,c,q,s
+V28,R-V28,Normal,é,山田,c,q,s
+V29,R-V29,Normal,C:\temp\a.txt,山田,c,q,s
+V30,R-V30,Normal,=SUM(A1:A2),山田,c,q,s
+V31,R-V31,Normal,'leading apostrophe,山田,c,q,s
+V32,R-V32,Normal,<b>&amp;</b>,山田,c,q,s
+V33,R-V33,Normal,nbsp here,山田,c,q,s
+V34,R-V34,Normal,full　width　space,山田,c,q,s
+V35,R-V35,Normal,全角ＡＢＣ１２３,山田,c,q,s
+V36,R-V36,Normal,xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,山田,c,q,s
+V37,R-V37,Normal,\u0041,山田,c,q,s
+V38,R-V38,Normal,%20%27,山田,c,q,s
+V39,R-V39,Normal,{{curly}},山田,c,q,s
+V40,R-V40,Normal,ends with backslash\,山田,c,q,s

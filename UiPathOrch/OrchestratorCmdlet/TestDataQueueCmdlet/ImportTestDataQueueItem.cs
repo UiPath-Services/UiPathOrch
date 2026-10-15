@@ -131,12 +131,17 @@ public class ImportTestDataQueueItemCmdlet : OrchestratorPSCmdlet
     // materializes more than rowCap rows in memory. totalRows is the true count
     // so the caller can report the web's "{totalRows} records" rejection.
     internal static (List<string> headers, List<List<string>> rows, int totalRows) ReadCsvCapped(string path, Encoding encoding, int rowCap)
+        => ReadCsvCapped(path, encoding, rowCap, out _);
+
+    // Share the multi-line, quote-aware CSV reader (CsvHelper.MultilineCsv)
+    // so a quoted field with an embedded newline is read as one field,
+    // exactly like the web "Upload Items" dialog (web-golden-verified). The
+    // capped overload retains at most rowCap rows but counts the true total.
+    // A rejected row (malformed quotes, more or fewer fields than the header) is
+    // left out of 'rows' and reported in 'errors'.
+    internal static (List<string> headers, List<List<string>> rows, int totalRows) ReadCsvCapped(string path, Encoding encoding, int rowCap, out List<CSVParseError> errors)
     {
-        // Share the multi-line, quote-aware CSV reader (CsvHelper.MultilineCsv)
-        // so a quoted field with an embedded newline is read as one field,
-        // exactly like the web "Upload Items" dialog (web-golden-verified). The
-        // capped overload retains at most rowCap rows but counts the true total.
-        CsvHelper.MultilineCsv.Parse(path, encoding, rowCap, out var headers, out var rows, out _, out var totalRows);
+        CsvHelper.MultilineCsv.Parse(path, encoding, rowCap, out var headers, out var rows, out errors, out var totalRows);
         return (headers, rows, totalRows);
     }
 
@@ -165,7 +170,14 @@ public class ImportTestDataQueueItemCmdlet : OrchestratorPSCmdlet
                 // is what keeps the cmdlet equivalent to the web. ReadCsvCapped
                 // retains at most MaxRows rows, so an oversized file is rejected
                 // here without being fully materialized.
-                var (headers, rows, totalRows) = ReadCsvCapped(p.FullPath, encoding, CsvUploadLimit.MaxRows);
+                var (headers, rows, totalRows) = ReadCsvCapped(p.FullPath, encoding, CsvUploadLimit.MaxRows, out var parseErrors);
+                // A rejected row is missing from 'rows', so importing the rest would drop it
+                // without a word: reject the file, as Import-OrchQueueItem does.
+                if (parseErrors.Count != 0)
+                {
+                    WriteObject(parseErrors, true);
+                    continue;
+                }
                 var limitError = CsvUploadLimit.RowLimitError(totalRows);
                 if (limitError is not null)
                 {
