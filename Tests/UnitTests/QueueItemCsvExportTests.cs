@@ -111,8 +111,8 @@ public class QueueItemCsvExportTests
             new() { "a", "New" }, new() { "b", "Successful" }, new() { "c", "" }, new() { "d", "Failed" }, new() { "e", "new" },
         };
         var selected = ImportQueueItemCmdlet.SelectRows(headers, contents, includeProcessed: false, out var skipped);
-        Assert.Equal(new[] { 2, 4, 6 }, selected.Select(s => s.row));
-        Assert.Equal(new[] { 3, 5 }, skipped);
+        Assert.Equal(new[] { 1, 3, 5 }, selected.Select(s => s.row));
+        Assert.Equal(new[] { 2, 4 }, skipped);
 
         var all = ImportQueueItemCmdlet.SelectRows(headers, contents, includeProcessed: true, out skipped);
         Assert.Equal(5, all.Count);
@@ -168,7 +168,7 @@ public class QueueItemCsvExportTests
             Assert.Equal(rows.Select(r => r.ToList()), contents);
 
             var selected = ImportQueueItemCmdlet.SelectRows(readHeaders, contents, false, out var skipped);
-            Assert.Equal(new[] { 3 }, skipped);
+            Assert.Equal(new[] { 2 }, skipped);
             var json = ImportQueueItemCmdlet.BuildQueueItemJson(readHeaders, selected.Single().values, 2, new List<CSVParseError>());
             using var doc = JsonDocument.Parse(json);
             Assert.Equal("R,1", doc.RootElement.GetProperty("Reference").GetString());

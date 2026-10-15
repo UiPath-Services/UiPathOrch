@@ -228,10 +228,12 @@ internal static class MultilineCsv
         StringBuilder currentField = new();
         List<string> currentRow = [];
         int currentRowNumber = 0;
-        // Row number reported in errors, numbered as the web does: the header is row 1,
-        // and a rejected row still takes its number (TestData/QueueItemUploadMatrix
-        // 39_text_after_closing_quote.csv: the web reports row 2).
-        int csvRow = 0;
+        // Row number reported in errors: the first data row is row 1 (the header is row 0),
+        // and a rejected row still takes its number. The web numbers field-count and
+        // Priority errors this way (TestData/QueueItemUploadMatrix 11, 12, 31, 32: CSV Row 1
+        // for the first data row) but counts the header for its quote errors (37, 39: CSV
+        // Row 2); one numbering is used here for every error.
+        int csvRow = -1;
 
         csvEncoding ??= Encoding.UTF8;
 
@@ -361,7 +363,8 @@ internal static class MultilineCsv
         // Final check for unmatched quotes
         if (inQuotes)
         {
-            errorInfo.Add(new CSVParseError(csvRow + 1, "Unmatched Quotes", "", "A field contains unmatched quotes"));
+            // Named as the web names it (TestData/QueueItemUploadMatrix 37).
+            errorInfo.Add(new CSVParseError(csvRow + 1, "Quotes", "N/A", "Missing Quotes"));
         }
 
         return !errorInfo.Any();

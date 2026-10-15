@@ -70,6 +70,13 @@ is dropped into the dialog uploads it untyped, although the box shows as checked
 (`05_dt_probe_*.csv`: drop-then-check 3/3 untyped, check-then-drop 3/3 typed). Use
 `Show-DtProbe.ps1` to see which trials were typed.
 
+**Error messages.** The dialog always shows the list of valid date formats (and, with a
+Priority column, the valid Priority values); that list is not an error. A rejected file gets
+its own lines, `CSV Row / Error Type / CSV Field / Error Code`. "CSV Row" counts the first
+data row as 1 for `Fields Mismatch` (31, 32) and `Field Error` on Priority (11, 12), but as 2
+for `Quotes` (`Invalid Quotes` in 39, `Missing Quotes` in 37). `Import-OrchQueueItem` numbers
+every error from the first data row.
+
 **Large files.** The web sends a whole file as one `BulkAddQueueItems` request. For
 `51_rows_15000.csv` it took 5.5 minutes. The same single request from the cmdlet first hit
 the HttpClient 100 s timeout (5,508 items created), then with a longer timeout got a 500

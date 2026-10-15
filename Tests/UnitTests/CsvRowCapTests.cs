@@ -311,20 +311,21 @@ public class CsvRowCapTests
                 out _, out _, out var errors, out _);
             Assert.Single(errors);
             Assert.Equal(expected, errors[0].ErrorCode);
-            Assert.Equal(2, errors[0].CSVRow); // the header is row 1, as the web numbers it
+            Assert.Equal(1, errors[0].CSVRow); // the first data row, as the web numbers it (31, 32)
         });
     }
 
-    // ---- (7) error row numbers as the web reports them ---------------------------
-    // The header is row 1 and a rejected row keeps its number
-    // (TestData/QueueItemUploadMatrix 39_text_after_closing_quote.csv: web says row 2).
+    // ---- (7) error row numbers ---------------------------------------------------
+    // The first data row is row 1 and a rejected row keeps its number. The web numbers
+    // its field-count and Priority errors this way but its quote errors one higher
+    // (TestData/QueueItemUploadMatrix 37, 39: CSV Row 2 for the first data row).
 
     [Theory]
-    [InlineData("h1,h2\n1,\"x\"y\n", 2, "Invalid Quotes")]
-    [InlineData("h1,h2\n1,a\n2,\"x\"y\n", 3, "Invalid Quotes")]
-    [InlineData("h1,h2\n1,2,3\n2,\"x\"y\n", 3, "Invalid Quotes")]   // after a rejected row
-    [InlineData("h1,h2\n1,a\n2,\"open\n", 3, "A field contains unmatched quotes")]
-    public void ParseCsvContent_ErrorRow_CountsTheHeaderAsRowOne(string csv, int row, string code)
+    [InlineData("h1,h2\n1,\"x\"y\n", 1, "Invalid Quotes")]
+    [InlineData("h1,h2\n1,a\n2,\"x\"y\n", 2, "Invalid Quotes")]
+    [InlineData("h1,h2\n1,2,3\n2,\"x\"y\n", 2, "Invalid Quotes")]   // after a rejected row
+    [InlineData("h1,h2\n1,a\n2,\"open\n", 2, "Missing Quotes")]
+    public void ParseCsvContent_ErrorRow_CountsFromTheFirstDataRow(string csv, int row, string code)
     {
         WithCsv(csv, path =>
         {
@@ -396,7 +397,7 @@ public class CsvRowCapTests
             Assert.Single(rows);
             var e = Assert.Single(errors);
             Assert.Equal("Too Few Fields", e.ErrorCode);
-            Assert.Equal(3, e.CSVRow);
+            Assert.Equal(2, e.CSVRow);
         });
     }
 }

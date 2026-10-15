@@ -44,7 +44,7 @@ For example, a queue whose schema declares the properties `番号` (integer), `�
 
 Each cell is coerced to the JSON type the queue's schema declares — `integer`/`number`/`boolean` become JSON literals, everything else stays a string — and all rows for a queue are sent in a single bulk request. A queue created with the default schema (`{}`, any shape) treats every column as a string. Empty cells are omitted from the item.
 
-A file with a malformed quote, or with a row that has more or fewer fields than the header, is not imported; a CSVParseError naming each such row is output instead (the header is row 1).
+A file with a malformed quote, or with a row that has more or fewer fields than the header, is not imported; a CSVParseError naming each such row is output instead (the first data row is row 1).
 
 Multiple CSV files and wildcard `-ImportCsv` paths are supported; every matched file is uploaded to every queue matched by `-Name`.
 

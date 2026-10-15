@@ -51,8 +51,11 @@ the items they created were compared. The changes below make the two agree, exce
   out of the item silently. `Import-OrchTestDataQueueItem` now also outputs the `CSVParseError`
   rows for malformed quotes and too many fields, and skips the file; it used to import the file
   without the rejected rows.
-- **Every CSV error counts the header as row 1**, so the number is the row in the file. Errors
-  used to be numbered from the first data row (the header was row 0). (The web counts the header for quote errors but not for an invalid Priority.)
+- **CSV error row numbers no longer shift after a rejected row.** Rows are numbered from the
+  first data row, as the web numbers its field-count and Priority errors (its quote errors are
+  one higher). A row rejected for its field count or its quotes used to take no number, so the
+  errors after it named the row before the one at fault. An unterminated quote is now reported
+  as `Quotes` / `Missing Quotes`, as on the web.
 - **A repeated column name is renamed as on the web**: a second and third `Value` column become
   `Value_1` and `Value_2`, skipping names already used, and a second Reference or Priority column
   becomes an ordinary SpecificContent field such as `Reference_1`. The later column used to

@@ -74,18 +74,17 @@ public class QueueItemCsvPriorityTests
         Assert.Equal("Low", item.GetProperty("SpecificContent").GetProperty("Priority_1").GetString());
     }
 
-    // An invalid Priority is numbered like every other error: the header is row 1. (The web
-    // says "CSV Row: 2" for this file row 3 in 12_priority_zero.csv, inconsistently with its
-    // own quote errors; not reproduced.)
+    // An invalid Priority is numbered from the first data row, as the web does
+    // ("CSV Row: 2" for line 3 in 11_priority_medium.csv and 12_priority_zero.csv).
     [Fact]
-    public void InvalidPriority_CountsTheHeaderAsRowOne()
+    public void InvalidPriority_CountsFromTheFirstDataRow()
     {
         var errors = new List<CSVParseError>();
         ImportQueueItemCmdlet.BuildQueueItemsArrayJson(
             new[] { "CaseId", "Priority" },
             new IReadOnlyList<string>[] { new[] { "A1", "Normal" }, new[] { "A2", "0" }, new[] { "A3", "Low" } }, errors);
         var e = Assert.Single(errors);
-        Assert.Equal(3, e.CSVRow);
+        Assert.Equal(2, e.CSVRow);
     }
 
     // 15,000 rows in one request failed on the server after 6 minutes, leaving part of
