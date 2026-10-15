@@ -21,7 +21,8 @@ Imports queue items from a CSV file into a queue.
 
 ```
 Import-OrchQueueItem [-Path <string[]>] [-LiteralPath <string[]>] [-Name] <string[]> [-ImportCsv] <string[]>
- [[-CsvEncoding] <Encoding>] [[-CommitType] <string>] [-DynamicTyping] [-Confirm] [-WhatIf]
+ [[-CsvEncoding] <Encoding>] [[-CommitType] <string>] [-DynamicTyping] [-IncludeProcessedItems]
+ [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 
@@ -41,6 +42,8 @@ All other columns are treated as SpecificContent (custom data) fields and are ad
 As on the web, the whole file is rejected, with the row number of each problem, when a row has more or fewer fields than the header, a quote is malformed, a Priority value is invalid, or the file has more than 15,000 rows. Row numbers count the header as row 1; blank lines are not counted, and a row whose values contain line breaks counts as one row (the web numbers an invalid Priority from the first data row instead). One difference: a CSV with a single column (no comma anywhere) is imported, while the web rejects it with "Undetectable Delimiter".
 
 By default, every SpecificContent value is a string. -DynamicTyping does what the web's **Dynamic typing** check box does: an empty cell becomes null; `true`, `false`, `TRUE` and `FALSE` become booleans; a decimal number (optional `-`, optional fraction and exponent, such as `007`, `1.50`, `.5`, `1e3`) becomes a number unless it is an integer beyond 2^53-1; and a date-time of the form `YYYY-MM-DDTHH:mm:ss[.fff]` followed by `Z` or `+HH:MM` becomes the UTC string `YYYY-MM-DDTHH:mm:ssZ`. A number or boolean in Reference is written the way the web writes it (`007` becomes `7`). Two web behaviors are not reproduced: the web turns an out-of-range date-time (month 13, day 32, hour 25) into `undefinedZ`, and a date-time in Reference into the browser's local date string; this cmdlet keeps both as written.
+
+A file written by `Get-OrchQueueItem -ExportCsv` has the item history after the upload columns, in columns whose names start with `@` (`@Status`, `@Output`, ...). These columns are never stored as SpecificContent. When the file has an `@Status` column, only the rows whose `@Status` is New (or empty) are imported: the other rows are transactions that have already run, and importing them would queue them again. A warning names the rows left out. -IncludeProcessedItems imports them as well, as new items. (The web Upload Items has no such guard: it stores the `@` columns as SpecificContent and queues every row.)
 
 By default, the commit type is "ProcessAllIndependently", which imports each item independently so that individual failures do not affect other items. Use the -CommitType parameter to change this behavior to "AllOrNothing" if all items must succeed or fail together.
 
@@ -171,6 +174,27 @@ HelpMessage: ''
 ### -DynamicTyping
 
 Converts SpecificContent values the way the web upload's Dynamic typing check box does: empty cells to null, `true` / `false` / `TRUE` / `FALSE` to booleans, decimal numbers to numbers, and ISO 8601 date-times with `Z` or `+HH:MM` to UTC strings. Without it, every value is a string. See the description for the exact rules.
+
+```yaml
+Type: System.Management.Automation.SwitchParameter
+DefaultValue: False
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: true
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -IncludeProcessedItems
+
+Also imports the rows of a `Get-OrchQueueItem -ExportCsv` file whose `@Status` is not New (Successful, Failed, Abandoned, ...), as new items. Their transactions then run again. Without it, those rows are left out with a warning.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter

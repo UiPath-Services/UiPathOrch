@@ -27,7 +27,7 @@ Get-OrchQueueItem [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Dept
  [-OrderAscending] [-OrderBy <string>] [-Priority <string[]>] [-Reviewer <string[]>]
  [-Revision <string[]>] [-Robot <string[]>] [-Skip <int>]
  [-StartProcessingAfter <datetime>] [-StartProcessingBefore <datetime>]
- [-Status <string[]>] [<CommonParameters>]
+ [-Status <string[]>] [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -48,6 +48,12 @@ Queue-specific payload lives in the SpecificContent dictionary (and its JSON-str
 
 - Each QueueItem has an Expanded ScriptProperty (attached by the module via Update-TypeData). It returns a PSCustomObject whose leading columns are Id, Reference, Status, Priority, DeferDate, DueDate, StartProcessing, EndProcessing, followed by SpecificContent keys in sorted order. Pipe `| ForEach-Object Expanded | Format-Table` to view a single queue's items as a flat table.
 - Format-OrchQueueItem handles mixed-queue output. It groups piped items by QueueDefinitionId and emits one Format-Table per queue, so each block uses that queue's specific columns without leaking schemas across queues. Format-Table by itself locks columns on the first object seen and would silently hide keys unique to later queues.
+
+-ExportCsv writes the items to CSV instead of the pipeline, one file per queue, in any status. The first columns are those of the Orchestrator web **Upload Items**: Reference, Priority, and one column per SpecificContent key. They are followed by the item's history in columns whose names start with `@`: `@Id`, `@Status`, `@ReviewStatus`, `@ProcessingExceptionType`, `@ProcessingExceptionReason`, `@ProcessingExceptionDetails`, `@Output` and `@Analytics` (JSON), `@Robot`, `@RetryNumber`, `@Progress`, `@CreationTime`, `@StartProcessing`, `@EndProcessing`, `@DeferDate`, `@DueDate`, `@RiskSlaDate` and `@Key`. SpecificContent values are written as text: a number as written, true/false in lower case, null as an empty cell, an object or array as JSON. A SpecificContent key named Reference, Priority or like a history column has no column of its own; a warning names it.
+
+The file can be imported again with Import-OrchQueueItem, which creates new items from it. Import-OrchQueueItem leaves the `@` columns out of SpecificContent and, by default, imports only the rows whose `@Status` is New, because the other rows are transactions that have already run; -IncludeProcessedItems imports them too. **The web Upload Items has no such guard**: uploading the file there queues every row again as a new item and stores the `@` columns as SpecificContent. Types are not kept: every value is uploaded as a string, or typed by -DynamicTyping (where `007` becomes the number 7). The columns are the keys of all the queue's items, so an item gets an empty cell for a key it did not have, and the new item has that key with an empty string (null with -DynamicTyping). DeferDate and DueDate are not set on the new items.
+
+When -ExportCsv names an existing directory, each queue's items go to `<drive>_<folders>_<queue>.csv` in it (for example `Orch1_Shared_Invoices.csv`), and queues without matching items get no file. Otherwise it names one file, which takes the items of one queue only: items of a second queue are reported as an error and not written.
 
 Primary Endpoint: GET /odata/QueueItems?$filter=(QueueDefinitionId eq {queueId})&$expand=Robot,ReviewerUser&orderby=Id
 
@@ -137,6 +143,31 @@ PS Orch1:\Shared> Get-OrchQueueItem -Name 'Order*' -Status New | Format-OrchQueu
 
 Groups items by QueueDefinitionId and emits one Format-Table block per queue. Needed when the matched queues have different SpecificContent schemas — a plain `| Format-Table` would column-lock on the first queue and hide later queues' keys.
 
+### Example 11: Export a queue's items to CSV
+
+```powershell
+PS Orch1:\Shared> Get-OrchQueueItem Invoices -Status * -ExportCsv C:\Work\Invoices.csv
+```
+
+Writes every item of the Invoices queue, in any status, to Invoices.csv with its SpecificContent keys as columns and its status, output and processing times in the `@` columns.
+
+### Example 12: Export the queues of a tenant, one file per queue
+
+```powershell
+PS Orch1:\> Get-OrchQueueItem -Recurse -Status * -ExportCsv C:\Work\QueueItems\
+```
+
+Writes one CSV per queue that has items, such as `Orch1_Shared_Invoices.csv`, into the existing directory C:\Work\QueueItems.
+
+### Example 13: Queue the unprocessed items again in another tenant
+
+```powershell
+PS Orch1:\Shared> Get-OrchQueueItem Invoices -Status * -ExportCsv C:\Work\Invoices.csv
+PS Orch2:\Shared> Import-OrchQueueItem Invoices C:\Work\Invoices.csv
+```
+
+Import-OrchQueueItem creates new items from the rows whose `@Status` is New and warns about the rows it leaves out.
+
 ## PARAMETERS
 
 ### -Path
@@ -209,6 +240,48 @@ Specifies the depth for recursion into the target folders. A depth of 0 targets 
 
 ```yaml
 Type: System.UInt32
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -CsvEncoding
+
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -ExportCsv
+
+Writes the items to CSV instead of the pipeline: an existing directory gets one file per queue, a file name takes the items of one queue. See the description for the columns and how Import-OrchQueueItem reads the file back.
+
+```yaml
+Type: System.String
 DefaultValue: None
 SupportsWildcards: false
 Aliases: []
@@ -662,6 +735,10 @@ You can pipe queue names to this cmdlet via the Name property.
 ### UiPath.PowerShell.Entities.QueueItem
 
 Returns QueueItem objects representing individual transactions in a queue. Properties include Id, QueueDefinitionId, Status, Priority, DeferDate, DueDate, StartProcessing, EndProcessing, Robot, ReviewerUser, SpecificContent, Output, and exception information.
+
+### System.String
+
+With -ExportCsv, a message naming each CSV file written.
 
 ## NOTES
 

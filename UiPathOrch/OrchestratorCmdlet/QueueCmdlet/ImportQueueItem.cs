@@ -180,6 +180,11 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public SwitchParameter DynamicTyping { get; set; }
 
+    // Also imports the rows of a Get-OrchQueueItem -ExportCsv file whose @Status is not New,
+    // as new items: their transactions run again.
+    [Parameter(ValueFromPipelineByPropertyName = true)]
+    public SwitchParameter IncludeProcessedItems { get; set; }
+
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Path { get; set; }
@@ -221,7 +226,7 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
     // ItemsPerRequest each. Returns (start index, items) per request.
     internal static List<(int start, List<string> items)> SplitIntoRequests(IReadOnlyList<string> items, string commitType)
     {
-        int size = NormalizeCommitType(commitType) == "AllOrNothing" ?Math.Max(items.Count, 1) : ItemsPerRequest;
+        int size = NormalizeCommitType(commitType) == "AllOrNothing" ? Math.Max(items.Count, 1) : ItemsPerRequest;
         var requests = new List<(int, List<string>)>();
         for (int i = 0; i < items.Count; i += size)
         {
@@ -235,8 +240,40 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
             + "\"commitType\":" + JsonSerializer.Serialize(commitType) + ",\n"
             + "\"queueName\":" + JsonSerializer.Serialize(queueName) + "\n}";
 
-    private (int rowNum, List<string> items) CreateItemData(string csvFilePath, out List<CSVParseError> errorInfo)
+    // The data rows to import, each with its CSV row number (the header is row 1). In a file
+    // from Get-OrchQueueItem -ExportCsv (it has an @Status column), a row whose @Status is
+    // set and is not New is a transaction that already ran; importing it would queue it
+    // again, so it is left out, and listed in 'skippedRows', unless includeProcessed.
+    internal static List<(int row, List<string> values)> SelectRows(IReadOnlyList<string> headers, IReadOnlyList<List<string>> contents, bool includeProcessed, out List<int> skippedRows)
     {
+        skippedRows = [];
+        int statusIndex = -1;
+        for (int i = 0; i < headers.Count; i++)
+        {
+            if (headers[i] == QueueItemCsvFormat.StatusColumn) { statusIndex = i; break; }
+        }
+
+        var selected = new List<(int, List<string>)>(contents.Count);
+        for (int i = 0; i < contents.Count; i++)
+        {
+            int row = i + 2;
+            if (!includeProcessed && statusIndex >= 0 && statusIndex < contents[i].Count)
+            {
+                var status = contents[i][statusIndex].Trim();
+                if (status.Length > 0 && !status.Equals("New", StringComparison.OrdinalIgnoreCase))
+                {
+                    skippedRows.Add(row);
+                    continue;
+                }
+            }
+            selected.Add((row, contents[i]));
+        }
+        return selected;
+    }
+
+    private (int rowNum, List<string> items, List<int> rows) CreateItemData(string csvFilePath, out List<CSVParseError> errorInfo, out List<int> skippedRows)
+    {
+        skippedRows = [];
         // The web detects the delimiter (';', tab, '|', ...), so a file it accepts reads the same here.
         var delimiter = CsvHelper.MultilineCsv.DetectDelimiter(csvFilePath, CsvEncoding);
         CsvHelper.MultilineCsv.Parse(csvFilePath, CsvEncoding, CsvUploadLimit.MaxRows, out var rawHeaders, out var contents, out errorInfo, out var totalDataRows, delimiter);
@@ -248,23 +285,24 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
         // rows, so an oversized file is never materialized in full.
         if (CsvUploadLimit.RowLimitError(totalDataRows) is not null)
         {
-            return (totalDataRows, []);
+            return (totalDataRows, [], []);
         }
 
-        var items = new List<string>(contents.Count);
-        int currentRowNumber = 0;
-        foreach (var values in contents)
+        var selected = SelectRows(headers, contents, IncludeProcessedItems.IsPresent, out skippedRows);
+        var items = new List<string>(selected.Count);
+        var rows = new List<int>(selected.Count);
+        foreach (var (row, values) in selected)
         {
-            ++currentRowNumber;
-            items.Add(BuildQueueItemJson(headers, values, currentRowNumber + 1, errorInfo, DynamicTyping.IsPresent));
+            items.Add(BuildQueueItemJson(headers, values, row, errorInfo, DynamicTyping.IsPresent));
+            rows.Add(row);
         }
 
         if (errorInfo.Any())
         {
-            return (0, []);
+            return (0, [], []);
         }
 
-        return (totalDataRows, items);
+        return (totalDataRows, items, rows);
     }
 
     // A repeated header is renamed the way the web's CSV reader (Papa Parse) does:
@@ -343,7 +381,10 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
                     queueItem.Reference = dynamicTyping ? QueueItemDynamicTyping.ToReference(value) : value;
                     break;
                 default: // SpecificContent
-                    if (!string.IsNullOrEmpty(header))
+                    // The history columns of a Get-OrchQueueItem -ExportCsv file (@Status,
+                    // @Output, ...) describe the old item; they are not its data. (The web
+                    // stores them as SpecificContent.)
+                    if (!string.IsNullOrEmpty(header) && !QueueItemCsvFormat.IsHistoryColumn(header))
                     {
                         queueItem.SpecificContent ??= new Dictionary<string, object>();
                         queueItem.SpecificContent[header] = dynamicTyping ? QueueItemDynamicTyping.ToValue(value)! : value;
@@ -371,10 +412,11 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
     // Sends one file's items to one queue in requests of ItemsPerRequest (one request for
     // AllOrNothing) and emits a single response for the file, as before: Success only when
     // every request succeeded, FailedItems from all of them with Ordinal counted from the
-    // start of the file. StopOnFirstFailure stops after the request that had a failure.
+    // first item sent. StopOnFirstFailure stops after the request that had a failure.
     // A request that throws stops the file; the error names the CSV rows already imported,
     // the rows whose outcome is unknown, and the rows not sent, so the file can be resumed.
-    private void ImportItems(OrchDriveInfo drive, Folder folder, QueueDefinition queue, string target, string csvPath, List<string> items, CancellationToken token)
+    // rows[i] is the CSV row of items[i] (rows skipped for their @Status are absent).
+    private void ImportItems(OrchDriveInfo drive, Folder folder, QueueDefinition queue, string target, string csvPath, List<string> items, List<int> rows, CancellationToken token)
     {
         string commitType = CommitType!;
         if (commitType == "AllOrNothing" && items.Count > AllOrNothingWarningRows)
@@ -387,11 +429,11 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
         string? message = null;
         var failed = new List<FailedQueueItem>();
 
-        // Row numbers in the messages below: item i is CSV row i + 2 (the header is row 1;
-        // blank lines are not counted and a value with line breaks is one row).
-        int lastFileRow = items.Count + 1;
+        // Row numbers in the messages below are CSV rows (the header is row 1; blank lines
+        // are not counted and a value with line breaks is one row).
+        int lastFileRow = rows.Count > 0 ? rows[^1] : 1;
         string SentSoFar(int start) => start == 0 ? ""
-            : $"rows 2-{start + 1} were sent" + (failed.Count > 0 ? $" ({failed.Count} of them failed and are output above)" : "") + "; ";
+            : $"the rows up to row {rows[start - 1]} were sent" + (failed.Count > 0 ? $" ({failed.Count} of them failed and are output above)" : "") + "; ";
 
         using ProgressReporter? reporter = requests.Count > 1 ? new ProgressReporter(this, items.Count, "Items") : null;
         foreach (var (start, chunk) in requests)
@@ -400,7 +442,7 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
             {
                 // Stopped between requests: say what was sent so the file can be resumed.
                 WriteFailedItems(failed, queue, csvPath);
-                throw new OperationCanceledException($"Import cancelled: {SentSoFar(start)}rows {start + 2}-{lastFileRow} were not sent.", token);
+                throw new OperationCanceledException($"Import cancelled: {SentSoFar(start)}rows {rows[start]}-{lastFileRow} were not sent.", token);
             }
             token.ThrowIfCancellationRequested();
             reporter?.WriteProgress(start, target);
@@ -415,8 +457,9 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
                 // Includes the HttpClient timeout, a TaskCanceledException: the request does not
                 // take 'token', so an OperationCanceledException here is never Ctrl+C.
                 WriteFailedItems(failed, queue, csvPath);
-                int firstRow = start + 2, lastRow = start + chunk.Count + 1;
-                string rest = lastRow < lastFileRow ? $"; rows {lastRow + 1}-{lastFileRow} were not sent" : "";
+                int end = start + chunk.Count; // index of the first item not sent
+                int firstRow = rows[start], lastRow = rows[end - 1];
+                string rest = end < rows.Count ? $"; rows {rows[end]}-{lastFileRow} were not sent" : "";
                 throw new InvalidOperationException($"{SentSoFar(start)}rows {firstRow}-{lastRow} may be partly imported{rest}. {ex.Message}", ex);
             }
             if (response is null) continue;
@@ -472,16 +515,22 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
 
         var csvPathExpanded = SessionState.ExpandLocalPath(ImportCsv, "*.csv");
 
-        var queueItemData = new List<(string csvPath, (int rowNum, List<string> items))>();
+        var queueItemData = new List<(string csvPath, (int rowNum, List<string> items, List<int> rows))>();
         foreach (var p in csvPathExpanded)
         {
             try
             {
-                var data = CreateItemData(p.FullPath, out var errorInfo);
+                var data = CreateItemData(p.FullPath, out var errorInfo, out var skippedRows);
                 if (errorInfo is not null && errorInfo.Count != 0)
                 {
                     WriteObject(errorInfo, true);
                     return;
+                }
+                if (skippedRows.Count > 0)
+                {
+                    string list = string.Join(", ", skippedRows.Take(10)) + (skippedRows.Count > 10 ? ", ..." : "");
+                    WriteWarning($"{p.FullPath}: {skippedRows.Count} row(s) not imported because their @Status is not New (rows {list}). Their transactions have already run; use -IncludeProcessedItems to queue them again as new items.");
+                    if (data.items.Count == 0) continue;
                 }
                 // Match the web "Upload Items" 15,000-row cap (reject, don't chunk).
                 var limitError = CsvUploadLimit.RowLimitError(data.rowNum);
@@ -521,9 +570,9 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
                         string target = System.IO.Path.Combine(targetFolder, queue.Name ?? "");
                         try
                         {
-                            if (ShouldProcess(target, $"Import Queue Item {queueItem.csvPath} ({queueItem.Item2.rowNum} rows)"))
+                            if (ShouldProcess(target, $"Import Queue Item {queueItem.csvPath} ({queueItem.Item2.items.Count} rows)"))
                             {
-                                ImportItems(drive, folder, queue, target, queueItem.csvPath, queueItem.Item2.items, cancelHandler.Token);
+                                ImportItems(drive, folder, queue, target, queueItem.csvPath, queueItem.Item2.items, queueItem.Item2.rows, cancelHandler.Token);
                             }
                         }
                         catch (Exception ex)

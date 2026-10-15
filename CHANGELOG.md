@@ -6,6 +6,70 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+`Import-OrchQueueItem` was checked against the Orchestrator web **Queues > Upload Items**: about 60
+CSV files covering each case (`TestData/QueueItemUploadMatrix`) were uploaded through both, and
+the items they created were compared. The changes below make the two agree, except where noted.
+
+### Added
+
+- **`Get-OrchQueueItem -ExportCsv` writes queue items to CSV, in any status**, one file per
+  queue: a directory gets `<drive>_<folders>_<queue>.csv` per queue, a file name takes one
+  queue. The first columns are the web Upload Items format (Reference, Priority, one column per
+  SpecificContent key), so the file can be imported again; the item's history follows in
+  columns whose names start with `@`: `@Id`, `@Status`, `@ProcessingExceptionReason`, `@Output`
+  (JSON), `@Robot`, `@StartProcessing`, `@EndProcessing` and more. `-CsvEncoding` as on the other
+  `-ExportCsv` cmdlets.
+- **`Import-OrchQueueItem` reads such a file without queuing finished transactions again.** The
+  `@` columns are not stored as SpecificContent, and only the rows whose `@Status` is New (or
+  empty) are imported; a warning names the rows left out. `-IncludeProcessedItems` imports them
+  too, as new items. The web Upload Items has no such guard: it queues every row and stores the
+  `@` columns as SpecificContent.
+- **`Import-OrchQueueItem -DynamicTyping`** does what the web's Dynamic typing check box does: an
+  empty cell becomes null, `true`/`false`/`TRUE`/`FALSE` booleans, a decimal number a number
+  (`007` → 7, `1.50` → 1.5; an integer beyond 2^53-1 stays a string), and a date-time such as
+  `2026-10-15T10:00:00+09:00` the UTC string `2026-10-15T01:00:00Z`. A number or boolean in
+  Reference is rewritten as on the web (`007` → `7`). Two web defects are not reproduced: the web
+  stores an out-of-range date-time (month 13, day 32, hour 25) as `undefinedZ` and a date-time in
+  Reference as the browser's local date string; the cmdlet keeps both as written.
+- **`Import-OrchQueueItem` detects the delimiter** as the web does: comma, tab, `|` or `;`,
+  whichever splits the first 10 rows into the most fields consistently, comma on a tie. A file
+  separated by semicolons was read as one column before.
+
+### Changed
+
+- **`Import-OrchQueueItem` sends 1,000 rows per request.** The web sends a whole file as one
+  request. For 15,000 rows (the maximum) that took 5.5 minutes on Automation Cloud, and the same
+  request from the cmdlet once failed with a 500 after 6 minutes, with 10,903 of the items already
+  created. Split, 15,000 rows took 5 minutes and all were created. `AllOrNothing` is still one
+  request, so that it stays all-or-nothing, with a warning above 5,000 rows; `StopOnFirstFailure`
+  stops after the request in which an item failed. The output is still one result per file, with
+  `FailedQueueItem.Ordinal` counted from the first item sent. If a request fails, or Ctrl+C is
+  pressed between requests, the error names the CSV rows already sent, the rows that may be
+  partly imported and the rows not sent, after the failed items of the requests already sent.
+- **A row with fewer fields than the header rejects the file**, as on the web, in
+  `Import-OrchQueueItem` and `Import-OrchTestDataQueueItem`. The missing columns used to be left
+  out of the item silently. `Import-OrchTestDataQueueItem` now also outputs the `CSVParseError`
+  rows for malformed quotes and too many fields, and skips the file; it used to import the file
+  without the rejected rows.
+- **Every CSV error counts the header as row 1**, so the number is the row in the file. Errors
+  used to be numbered from the first data row (the header was row 0). (The web counts the header for quote errors but not for an invalid Priority.)
+- **A repeated column name is renamed as on the web**: a second and third `Value` column become
+  `Value_1` and `Value_2`, skipping names already used, and a second Reference or Priority column
+  becomes an ordinary SpecificContent field such as `Reference_1`. The later column used to
+  overwrite the earlier one.
+- **`Import-OrchQueueItem` accepts a CSV with a single column.** The web rejects it with
+  "Undetectable Delimiter"; this difference is kept on purpose and noted in the help.
+
+### Fixed
+
+- **A line break inside a quoted value is kept as written** in `Import-OrchQueueItem` and
+  `Import-OrchTestDataQueueItem`. CRLF and a bare CR used to become LF.
+- **`Import-OrchQueueItem` ignores spaces around a Priority value** (`" High "`), as the web does.
+  It used to reject the file.
+- **A large `Import-OrchQueueItem` request no longer times out after 100 seconds.**
+  `BulkAddQueueItems` can take the server minutes; the client gave up at 100 seconds while the
+  server went on to create part of the items. It now waits up to 30 minutes.
+
 ## [1.20.0] - 2026-10-09
 
 ### Added

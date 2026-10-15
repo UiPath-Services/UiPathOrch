@@ -2,6 +2,7 @@ using System.Collections;
 using UiPath.PowerShell.Positional;
 using System.Management.Automation;
 using System.Management.Automation.Language;
+using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -112,6 +113,18 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
 
     [Parameter]
     public uint Depth { get; set; }
+
+    // Writes the items to CSV instead of the pipeline, one file per queue: the web "Upload
+    // Items" columns followed by the item's history in '@' columns (QueueItemCsvFormat).
+    // A directory gets "<drive>_<folders>_<queue>.csv" per queue; a file name takes the
+    // items of one queue only.
+    [Parameter]
+    public string? ExportCsv { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(EncodingCompleter))]
+    [EncodingArgumentTransformation]
+    public Encoding? CsvEncoding { get; set; }
 
     private class RobotCompleter : OrchArgumentCompleter
     {
@@ -319,6 +332,88 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
             _ => ascending ? items.OrderBy(i => i.Id) : items.OrderByDescending(i => i.Id),
         };
 
+    // -ExportCsv state. _pending collects one queue's items (the columns are the union of
+    // their SpecificContent keys, known only once all are read); FlushQueue writes them.
+    private List<Entities.QueueItem>? _pending;
+    private string? _exportDir, _exportDirPS;    // -ExportCsv names a directory
+    private string? _exportFile, _exportFilePS;  // -ExportCsv names a file
+    private string? _exportedQueue;              // the queue written to _exportFile
+    private bool _exportedAny;
+
+    protected override void BeginProcessing()
+    {
+        base.BeginProcessing();
+        if (string.IsNullOrEmpty(ExportCsv)) return;
+
+        var (physical, ps) = GenerateCsvFilePath(ExportCsv, SessionState, "");
+        if (Directory.Exists(physical))
+        {
+            (_exportDir, _exportDirPS) = (physical, ps);
+        }
+        else
+        {
+            (_exportFile, _exportFilePS) = (physical, ps);
+        }
+        _pending = [];
+    }
+
+    private void Emit(IEnumerable<object> items)
+    {
+        if (_pending is null) WriteObject(items, true);
+        else _pending.AddRange(items.Cast<Entities.QueueItem>());
+    }
+
+    private void FlushQueue(string folderPSPath, string queueName)
+    {
+        if (_pending is null || _pending.Count == 0) return;
+        var items = _pending.ToList();
+        _pending.Clear();
+
+        string physical, ps;
+        string queuePath = System.IO.Path.Combine(folderPSPath, queueName);
+        if (_exportDir is not null)
+        {
+            var fileName = QueueItemCsvFormat.FileNameFor(folderPSPath, queueName);
+            (physical, ps) = (System.IO.Path.Combine(_exportDir, fileName), System.IO.Path.Combine(_exportDirPS!, fileName));
+        }
+        else
+        {
+            if (_exportedQueue is not null)
+            {
+                WriteError(new ErrorRecord(new OrchException(queuePath,
+                    $"-ExportCsv names one file, which already holds the items of '{_exportedQueue}'. Name a directory to write one file per queue."),
+                    "ExportCsvOneQueuePerFile", ErrorCategory.InvalidArgument, queuePath));
+                return;
+            }
+            _exportedQueue = queuePath;
+            (physical, ps) = (_exportFile!, _exportFilePS!);
+        }
+
+        var (headers, rows) = QueueItemCsvFormat.Build(items, out var unrepresentable);
+        if (unrepresentable.Count > 0)
+        {
+            WriteWarning($"\"{queuePath}\": SpecificContent key(s) {string.Join(", ", unrepresentable.Select(k => $"'{k}'"))} cannot have a column of their own and are not exported.");
+        }
+        using (var writer = WriteCsvHeader(physical, CsvEncoding, headers.Select(h => EscapeCsvValue(h)).ToArray()))
+        {
+            foreach (var row in rows)
+            {
+                writer.WriteCsvLine(row.Select(v => EscapeCsvValue(v)));
+            }
+        }
+        _exportedAny = true;
+        WriteCSVExportedMessage(this, ps);
+    }
+
+    protected override void EndProcessing()
+    {
+        if (_pending is not null && !_exportedAny)
+        {
+            WriteWarning("No queue items were found, so no CSV was written.");
+        }
+        base.EndProcessing();
+    }
+
     protected override void ProcessRecord()
     {
         var drivesFolders = SessionState.EnumFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent, Depth);
@@ -361,7 +456,8 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
                     var queueName = queueGroup.Key;
                     if (wpName is not null && !wpName.Any(wp => wp.IsMatch(queueName))) continue;
 
-                    WriteObject(OrderQueueItemsForOutput(queueGroup, OrderBy, OrderAscending.IsPresent), true);
+                    Emit(OrderQueueItemsForOutput(queueGroup, OrderBy, OrderAscending.IsPresent));
+                    FlushQueue(folder.GetPSPath(), queueName);
                 }
             }
             return;
@@ -459,7 +555,7 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
                                 if (allItems is not null)
                                     foreach (var item in items) allItems.Add(item);
                                 else
-                                    WriteObject(items, true);
+                                    Emit(items);
 
                                 // Final-page short-circuit: no more API calls, so skip the rate-limit wait.
                                 if (items.Count < 100) break;
@@ -489,8 +585,10 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
                     IEnumerable<object> result = OrderQueueItemsForOutput(allItems.Cast<Entities.QueueItem>(), OrderBy, OrderAscending.IsPresent);
                     if (skip > 0) result = result.Skip(skip);
                     if (first < int.MaxValue) result = result.Take(first);
-                    WriteObject(result, true);
+                    Emit(result);
                 }
+
+                FlushQueue(folder.GetPSPath(), queue.Name ?? "");
             }
         }
     }

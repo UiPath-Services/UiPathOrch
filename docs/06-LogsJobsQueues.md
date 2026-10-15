@@ -227,6 +227,11 @@ Tips:
   `Copy-OrchQueueItem` instead. Only `New` items can be copied, because the API
   cannot recreate processed transactions. See
   [Copying queue items](50-MigrationGuide.md#copying-queue-items).
+- To **keep a record** of queue items in any status, use
+  `Get-OrchQueueItem -Status * -ExportCsv <dir>`: one CSV per queue, with
+  the SpecificContent keys as columns and the status, output and processing
+  times in `@` columns. `Import-OrchQueueItem` reads the file back but
+  creates only the `New` rows unless `-IncludeProcessedItems` is given.
 
 ## Per-tenant vs per-folder scope
 
