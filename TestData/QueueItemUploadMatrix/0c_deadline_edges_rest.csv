@@ -1,0 +1,10 @@
+CaseId,Reference,Priority,Deadline,Postpone
+E7,R-E7,Normal,2026-12-31 24:00,
+E8,R-E8,Normal,2026-12-31 10:30:45.123,
+E9,R-E9,Normal,2026-12-31  10:30,
+EA,R-EA,Normal,2026.12.31,
+EB,R-EB,Normal,20261231,
+EC,R-EC,Normal,2026-12-31 9:05,
+ED,R-ED,Normal,1900-01-01,
+EE,R-EE,Normal,2026-12-31 23:59:60,
+EF,R-EF,Normal,,2026-02-30

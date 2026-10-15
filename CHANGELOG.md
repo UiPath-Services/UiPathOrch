@@ -17,6 +17,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **`Import-OrchQueueItem` reads the `Deadline` and `Postpone` columns as the web does**, setting
+  the item's due date and postpone date. They were stored as SpecificContent: the 1.21.0
+  comparison with the web tried the names `DueDate` and `DeferDate`, which the web also stores as
+  SpecificContent, and missed these two. Checked against the web: `YYYY-MM-DD`, `YYYY/MM/DD` or
+  `YYYY MM DD`, optionally with ` HH:mm` or ` HH:mm:ss`, zero-padded, taken as UTC; `24:00` is the
+  next day; a date that does not exist, an ISO 8601 value with `T`, single digits and surrounding
+  spaces are a `Field Error`; an empty cell sets nothing; the header is case-sensitive.
+- **`Get-OrchQueueItem -ExportCsv` writes the due and postpone dates as `Deadline` and
+  `Postpone`** (UTC, `YYYY-MM-DD HH:mm:ss`) instead of the history columns `@DueDate` and
+  `@DeferDate`, so items moved with `Import-OrchQueueItem` keep them. A moved item that was
+  postponed used to become due at once.
 - **`Get-OrchQueueItem -ExportCsv` no longer writes a CSV for a queue whose read failed part-way.**
   The error was reported, but the items read until then were still written, so the file looked
   complete while missing items. Now nothing is written for that queue, and a warning says to run

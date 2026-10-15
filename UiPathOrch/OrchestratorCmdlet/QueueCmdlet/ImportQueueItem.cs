@@ -376,6 +376,24 @@ public class ImportQueueItemCmdlet : OrchestratorPSCmdlet
                     // Must be set even when the value is ""
                     queueItem.Reference = dynamicTyping ? QueueItemDynamicTyping.ToReference(value) : value;
                     break;
+                case QueueItemCsvFormat.DeadlineColumn:
+                case QueueItemCsvFormat.PostponeColumn:
+                    // The web's date columns: Deadline -> DueDate, Postpone -> DeferDate, in the
+                    // formats QueueItemCsvFormat.TryParseUploadDate accepts, taken as UTC. An
+                    // empty cell sets nothing (TestData/QueueItemUploadMatrix 08-0e).
+                    if (value.Length != 0)
+                    {
+                        if (QueueItemCsvFormat.TryParseUploadDate(value, out var utc))
+                        {
+                            var text = utc.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture);
+                            if (header == QueueItemCsvFormat.DeadlineColumn) queueItem.DueDate = text; else queueItem.DeferDate = text;
+                        }
+                        else
+                        {
+                            errorInfo.Add(new CSVParseError(rowNumber, "Field Error", header, "Invalid Data found"));
+                        }
+                    }
+                    break;
                 default: // SpecificContent
                     // The history columns of a Get-OrchQueueItem -ExportCsv file (@Status,
                     // @Output, ...) describe the old item; they are not its data. (The web

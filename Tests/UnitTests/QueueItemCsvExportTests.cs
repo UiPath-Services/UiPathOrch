@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -33,13 +34,87 @@ public class QueueItemCsvExportTests
         ], out var unrepresentable);
 
         Assert.Empty(unrepresentable);
-        Assert.Equal(new[] { "Reference", "Priority", "A", "B", "C" }, headers.Take(5));
-        Assert.Equal(QueueItemCsvFormat.HistoryColumns, headers.Skip(5));
-        Assert.Equal(new[] { "R-1", "Normal", "a1", "b1", "" }, rows[0].Take(5));
-        Assert.Equal(new[] { "", "Normal", "a2", "", "c2" }, rows[1].Take(5));
+        Assert.Equal(new[] { "Reference", "Priority", "Deadline", "Postpone", "A", "B", "C" }, headers.Take(7));
+        Assert.Equal(QueueItemCsvFormat.HistoryColumns, headers.Skip(7));
+        Assert.Equal(new[] { "R-1", "Normal", "", "", "a1", "b1", "" }, rows[0].Take(7));
+        Assert.Equal(new[] { "", "Normal", "", "", "a2", "", "c2" }, rows[1].Take(7));
         int status = headers.IndexOf("@Status"), id = headers.IndexOf("@Id");
         Assert.Equal("Successful", rows[0][status]);
         Assert.Equal("2", rows[1][id]);
+    }
+
+    // DueDate / DeferDate go to the web's Deadline / Postpone columns, in UTC, in a format the
+    // web accepts, so an item moved with Import-OrchQueueItem keeps them.
+    [Fact]
+    public void Build_DueAndDeferDates_AreDeadlineAndPostpone()
+    {
+        var item = Item(1, "New", "R");
+        item.DueDate = new DateTime(2026, 12, 31, 10, 30, 45, DateTimeKind.Utc);
+        item.DeferDate = new DateTime(2026, 11, 1, 19, 0, 0, DateTimeKind.Utc).ToLocalTime(); // as LocalDateTimeConverter reads it
+        var (headers, rows) = QueueItemCsvFormat.Build([item], out _);
+        Assert.Equal("2026-12-31 10:30:45", rows[0][headers.IndexOf("Deadline")]);
+        Assert.Equal("2026-11-01 19:00:00", rows[0][headers.IndexOf("Postpone")]);
+        Assert.DoesNotContain("@DueDate", headers);
+        Assert.DoesNotContain("@DeferDate", headers);
+        Assert.True(QueueItemCsvFormat.TryParseUploadDate(rows[0][headers.IndexOf("Deadline")], out var back));
+        Assert.Equal(item.DueDate, back);
+    }
+
+    // What the web accepted and rejected in TestData/QueueItemUploadMatrix 08, 09, 0a, 0c-0e.
+    [Theory]
+    [InlineData("2026-12-31", "2026-12-31T00:00:00Z")]
+    [InlineData("2026/12/31", "2026-12-31T00:00:00Z")]
+    [InlineData("2026 12 31", "2026-12-31T00:00:00Z")]
+    [InlineData("2026-12-31 10:30", "2026-12-31T10:30:00Z")]
+    [InlineData("2026 12 31 10:30:45", "2026-12-31T10:30:45Z")]
+    [InlineData("2026-12-31 24:00", "2027-01-01T00:00:00Z")]
+    [InlineData("1900-01-01", "1900-01-01T00:00:00Z")]
+    [InlineData("2028-02-29", "2028-02-29T00:00:00Z")]
+    public void TryParseUploadDate_Accepted(string value, string expectedUtc)
+    {
+        Assert.True(QueueItemCsvFormat.TryParseUploadDate(value, out var utc));
+        Assert.Equal(expectedUtc, utc.ToString("yyyy-MM-dd'T'HH:mm:ss'Z'", System.Globalization.CultureInfo.InvariantCulture));
+    }
+
+    [Theory]
+    [InlineData("2026-13-01")]
+    [InlineData("2026-02-30")]
+    [InlineData("2026-02-29")]            // not a leap year
+    [InlineData("2026-1-5")]
+    [InlineData(" 2026-12-31")]
+    [InlineData("2026-12-31 ")]
+    [InlineData("2026-12-31 10:30:45.123")]
+    [InlineData("2026-12-31  10:30")]
+    [InlineData("2026.12.31")]
+    [InlineData("20261231")]
+    [InlineData("2026-12-31 9:05")]
+    [InlineData("2026-12-31 23:59:60")]
+    [InlineData("2026-12-31T10:30:00Z")]
+    [InlineData("2026-12-31T10:30:00+09:00")]
+    [InlineData("abc")]
+    [InlineData("2026-12/31")]            // mixed separators: untested on the web, rejected
+    [InlineData("2026-12-31 24:30")]
+    public void TryParseUploadDate_Rejected(string value)
+    {
+        Assert.False(QueueItemCsvFormat.TryParseUploadDate(value, out _));
+    }
+
+    [Fact]
+    public void ImportJson_DeadlineAndPostpone()
+    {
+        var errors = new List<CSVParseError>();
+        var json = ImportQueueItemCmdlet.BuildQueueItemJson(
+            new[] { "Reference", "Deadline", "Postpone", "deadline" },
+            new[] { "R", "2026-12-31 10:30", "", "2026-01-01" }, 1, errors);
+        Assert.Empty(errors);
+        using var doc = JsonDocument.Parse(json);
+        Assert.Equal("2026-12-31T10:30:00Z", doc.RootElement.GetProperty("DueDate").GetString());
+        Assert.False(doc.RootElement.TryGetProperty("DeferDate", out _));   // empty cell: not set
+        Assert.Equal("2026-01-01", doc.RootElement.GetProperty("SpecificContent").GetProperty("deadline").GetString()); // case-sensitive
+
+        ImportQueueItemCmdlet.BuildQueueItemJson(new[] { "Postpone" }, new[] { "2026-02-30" }, 3, errors);
+        var e = Assert.Single(errors);
+        Assert.Equal((3, "Postpone", "Invalid Data found"), (e.CSVRow, e.CSVField, e.ErrorCode));
     }
 
     [Fact]

@@ -35,6 +35,7 @@ The CSV file must contain a header row. The following column headers have specia
 
 - **Priority** - Sets the queue item priority. Accepts text values (Low, Normal, High, in any case) or numeric values (1 = Low, 2 = Normal, 3 = High); surrounding spaces are ignored. An empty cell leaves the priority to the server.
 - **Reference** - Sets the queue item reference string.
+- **Deadline** / **Postpone** - Set the item's due date and postpone (defer) date. Accepted as on the web: `YYYY-MM-DD`, `YYYY/MM/DD` or `YYYY MM DD`, optionally followed by one space and `HH:mm` or `HH:mm:ss`, every part zero-padded and the date one that exists (`24:00` is the next day's 00:00). The value is taken as UTC, as the web takes it. An empty cell sets nothing; any other value, including an ISO 8601 date with `T`, is a Field Error for the row.
 
 All other columns are treated as SpecificContent (custom data) fields and are added to each queue item as key-value pairs. Values are kept as written, including surrounding spaces and line breaks inside quoted fields. A repeated header is renamed as on the web: a second and third `Value` column become `Value_1` and `Value_2` (skipping names already used), and a repeated Reference or Priority becomes an ordinary field such as `Reference_1`.
 

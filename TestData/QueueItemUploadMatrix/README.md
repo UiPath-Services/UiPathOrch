@@ -77,6 +77,17 @@ data row as 1 for `Fields Mismatch` (31, 32) and `Field Error` on Priority (11, 
 for `Quotes` (`Invalid Quotes` in 39, `Missing Quotes` in 37). `Import-OrchQueueItem` numbers
 every error from the first data row.
 
+**Deadline and Postpone (08-0e).** These two headers (case-sensitive; `deadline` and `POSTPONE`
+went to SpecificContent in 0b) set the item's DueDate and DeferDate. Accepted: `YYYY-MM-DD`,
+`YYYY/MM/DD`, `YYYY MM DD`, each optionally followed by one space and `HH:mm` or `HH:mm:ss`
+(08), and `24:00` as the next day's 00:00, `1900-01-01` (0d). The value is stored as written,
+as UTC: `2026-12-31 10:30` from a JST browser became `2026-12-31T10:30:00Z`. Empty sets
+nothing. Rejected with `Field Error / Deadline` (or `Postpone`) `/ Invalid Data found`: ISO
+8601 with `T` (09), month 13, Feb 30, Feb 29 in 2026, single digits, leading or trailing space
+(0a), milliseconds, two spaces, `2026.12.31`, `20261231`, `9:05`, `23:59:60` (0c), and the same
+for Postpone (0e). The dialog lists at most 6 error rows: 0a showed rows 1-6 only, though
+row 8 was also invalid. Mixed separators (`2026-12/31`) and `24:00:00` were not tried.
+
 **Large files.** The web sends a whole file as one `BulkAddQueueItems` request. For
 `51_rows_15000.csv` it took 5.5 minutes. The same single request from the cmdlet first hit
 the HttpClient 100 s timeout (5,508 items created), then with a longer timeout got a 500
@@ -99,7 +110,9 @@ after 373 s (10,903 created). `Import-OrchQueueItem` therefore sends 1,000 rows 
 | `24`, `25` | Empty header name, trailing comma in the header |
 | `2j` | Two empty header names |
 | `26` | Headers that are queue item fields (`Name`, `Source`, `Progress`, `DeferDate`, `DueDate`, `RiskSlaDate`, `SpecificContent`, `Status`): special or SpecificContent? |
-| `2b` | `DeferDate` / `DueDate` in each of the nine formats the web lists as valid, plus empty |
+| `2b` | `DeferDate` / `DueDate` in each of the nine formats the web lists as valid, plus empty (these names are ordinary SpecificContent; the web's date columns are `Deadline` / `Postpone`, see `08`) |
+| `06`, `07` | The re-tests for the web bug report (Dynamic typing; Priority on the first data row) |
+| `08`–`0e` | `Deadline` / `Postpone`: the nine formats, ISO, invalid and edge values, header case |
 | `2c`, `2d` | A date the web does not list (`2030-01-02T13:45:30`, `01/02/2030`) |
 | `2e` | `RiskSlaDate`: a date column too? |
 | `2f` | `deferdate` / `DUEDATE` header case |

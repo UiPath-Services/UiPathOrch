@@ -6,17 +6,57 @@ namespace UiPath.PowerShell.Commands;
 
 // The CSV that Get-OrchQueueItem -ExportCsv writes and Import-OrchQueueItem reads back.
 //
-// The leading columns are the web "Upload Items" format: Reference, Priority, and one column
-// per SpecificContent key, so the file can be uploaded as it is. After them come the item's
-// history, in columns whose names start with '@' (@Status, @Output, ...). The web stores
-// those as SpecificContent too; Import-OrchQueueItem recognizes them by name, leaves them out
-// of SpecificContent, and imports only the rows whose @Status is New unless
-// the file is edited (the @Status column removed, or a row's @Status set to New), so that a
-// finished transaction is not queued again by
-// accident.
+// The leading columns are the web "Upload Items" format: Reference, Priority, Deadline,
+// Postpone, and one column per SpecificContent key, so the file can be uploaded as it is and
+// a moved item keeps its due and postpone dates. After them come the item's history, in
+// columns whose names start with '@' (@Status, @Output, ...). The web stores those as
+// SpecificContent too; Import-OrchQueueItem recognizes them by name, leaves them out of
+// SpecificContent, and imports only the rows whose @Status is New unless the file is edited
+// (the @Status column removed, or a row's @Status set to New), so that a finished
+// transaction is not queued again by accident.
 internal static class QueueItemCsvFormat
 {
     internal const string StatusColumn = "@Status";
+
+    // The web's date columns: Deadline sets the item's DueDate and Postpone its DeferDate
+    // (header case-sensitive, like Reference and Priority).
+    internal const string DeadlineColumn = "Deadline";
+    internal const string PostponeColumn = "Postpone";
+
+    // A Deadline / Postpone value as the web accepts it (TestData/QueueItemUploadMatrix 08-0e):
+    // YYYY-MM-DD, YYYY/MM/DD or YYYY MM DD (one separator throughout), optionally followed by
+    // one space and HH:mm or HH:mm:ss, every part zero-padded, no surrounding spaces. The date
+    // must exist (no month 13, Feb 30, Feb 29 in a non-leap year, second 60); 24:00 is the
+    // next day's 00:00. The value is taken as UTC (the web does not apply the browser's time
+    // zone: "2026-12-31 10:30" is stored as 2026-12-31T10:30:00Z).
+    private static readonly System.Text.RegularExpressions.Regex UploadDatePattern = new(
+        @"^([0-9]{4})([-/ ])([0-9]{2})\2([0-9]{2})(?: ([0-9]{2}):([0-9]{2})(?::([0-9]{2}))?)?$",
+        System.Text.RegularExpressions.RegexOptions.CultureInvariant);
+
+    internal static bool TryParseUploadDate(string value, out DateTime utc)
+    {
+        utc = default;
+        var m = UploadDatePattern.Match(value);
+        if (!m.Success) return false;
+        int Int(int g) => m.Groups[g].Success ? int.Parse(m.Groups[g].Value, System.Globalization.CultureInfo.InvariantCulture) : 0;
+        int year = Int(1), month = Int(3), day = Int(4), hour = Int(5), minute = Int(6), second = Int(7);
+        if (year < 1 || month is < 1 or > 12 || day < 1 || day > DateTime.DaysInMonth(year, month)) return false;
+        if (minute > 59 || second > 59) return false;
+        if (hour > 24 || (hour == 24 && (minute != 0 || second != 0))) return false;
+        var date = new DateTime(year, month, day, 0, 0, 0, DateTimeKind.Utc);
+        if (hour == 24 && date.Date == DateTime.MaxValue.Date) return false;
+        utc = date.AddHours(hour).AddMinutes(minute).AddSeconds(second);
+        return true;
+    }
+
+    // DueDate / DeferDate as the Deadline / Postpone cell: UTC, in a format the web accepts.
+    // The entity holds them in local time (LocalDateTimeConverter).
+    internal static string UploadDateText(DateTime? value)
+    {
+        if (value is null) return "";
+        var utc = value.Value.Kind == DateTimeKind.Utc ? value.Value : value.Value.ToUniversalTime();
+        return utc.ToString("yyyy-MM-dd HH:mm:ss", System.Globalization.CultureInfo.InvariantCulture);
+    }
 
     // The history columns, in file order. Import-OrchQueueItem never stores these names as
     // SpecificContent.
@@ -36,8 +76,6 @@ internal static class QueueItemCsvFormat
         "@CreationTime",
         "@StartProcessing",
         "@EndProcessing",
-        "@DeferDate",
-        "@DueDate",
         "@RiskSlaDate",
         "@Key",
     ];
@@ -139,7 +177,7 @@ internal static class QueueItemCsvFormat
             foreach (var (key, _) in content)
             {
                 if (keyIndex.ContainsKey(key)) continue;
-                if (key is "Reference" or "Priority" || IsHistoryColumn(key))
+                if (key is "Reference" or "Priority" or DeadlineColumn or PostponeColumn || IsHistoryColumn(key))
                 {
                     if (!unrepresentable.Contains(key)) unrepresentable.Add(key);
                     continue;
@@ -150,7 +188,8 @@ internal static class QueueItemCsvFormat
             itemContents.Add((item, content));
         }
 
-        var headers = new List<string>(2 + keys.Count + HistoryColumns.Length) { "Reference", "Priority" };
+        const int Lead = 4; // Reference, Priority, Deadline, Postpone
+        var headers = new List<string>(Lead + keys.Count + HistoryColumns.Length) { "Reference", "Priority", DeadlineColumn, PostponeColumn };
         headers.AddRange(keys);
         headers.AddRange(HistoryColumns);
 
@@ -160,13 +199,15 @@ internal static class QueueItemCsvFormat
             var row = new string[headers.Count];
             row[0] = item.Reference ?? "";
             row[1] = item.Priority ?? "";
-            for (int i = 0; i < keys.Count; i++) row[2 + i] = "";
+            row[2] = UploadDateText(item.DueDate);
+            row[3] = UploadDateText(item.DeferDate);
+            for (int i = 0; i < keys.Count; i++) row[Lead + i] = "";
             foreach (var (key, value) in content)
             {
-                if (keyIndex.TryGetValue(key, out var i)) row[2 + i] = CellText(value);
+                if (keyIndex.TryGetValue(key, out var i)) row[Lead + i] = CellText(value);
             }
 
-            int h = 2 + keys.Count;
+            int h = Lead + keys.Count;
             row[h++] = item.Id?.ToString(System.Globalization.CultureInfo.InvariantCulture) ?? "";
             row[h++] = item.Status ?? "";
             row[h++] = item.ReviewStatus ?? "";
@@ -181,8 +222,6 @@ internal static class QueueItemCsvFormat
             row[h++] = OrchestratorPSCmdlet.FormatDateTimeWithKind(item.CreationTime) ?? "";
             row[h++] = OrchestratorPSCmdlet.FormatDateTimeWithKind(item.StartProcessing) ?? "";
             row[h++] = OrchestratorPSCmdlet.FormatDateTimeWithKind(item.EndProcessing) ?? "";
-            row[h++] = OrchestratorPSCmdlet.FormatDateTimeWithKind(item.DeferDate) ?? "";
-            row[h++] = OrchestratorPSCmdlet.FormatDateTimeWithKind(item.DueDate) ?? "";
             row[h++] = OrchestratorPSCmdlet.FormatDateTimeWithKind(item.RiskSlaDate) ?? "";
             row[h++] = item.Key ?? "";
             rows.Add(row);
