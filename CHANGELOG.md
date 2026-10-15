@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **`Get-OrchQueueItem -ExportCsv` no longer writes a CSV for a queue whose read failed part-way.**
+  The error was reported, but the items read until then were still written, so the file looked
+  complete while missing items. Now nothing is written for that queue, and a warning says to run
+  the export for it again.
+
 ## [1.21.0] - 2026-10-15
 
 `Import-OrchQueueItem` was checked against the Orchestrator web **Queues > Upload Items**: about 60

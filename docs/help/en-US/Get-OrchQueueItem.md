@@ -56,7 +56,7 @@ The file can be imported again with Import-OrchQueueItem, which creates new item
 
 This is a different file from the one the web's Transactions > Export produces. That file names its columns and statuses in the user's UI language and puts the input data in one JSON column; it is for viewing, and Upload Items does not read it as queue items (its Reference and Priority columns are not recognized). Use -ExportCsv when the file may be imported again.
 
-When -ExportCsv names an existing directory, each queue's items go to `<drive>_<folders>_<queue>.csv` in it (for example `Orch1_Shared_Invoices.csv`), and queues without matching items get no file. Otherwise it names one file, which takes the items of one queue only: items of a second queue are reported as an error and not written.
+When -ExportCsv names an existing directory, each queue's items go to `<drive>_<folders>_<queue>.csv` in it (for example `Orch1_Shared_Invoices.csv`), and queues without matching items get no file. Otherwise it names one file, which takes the items of one queue only: items of a second queue are reported as an error and not written. If reading a queue's items fails part-way, no file is written for that queue (an incomplete file would look complete); run the export for it again. For a large queue, export in date ranges (for example one month per run with -EndProcessingAfter and -EndProcessingBefore, each into its own directory) so that a failure only means repeating that range.
 
 Primary Endpoint: GET /odata/QueueItems?$filter=(QueueDefinitionId eq {queueId})&$expand=Robot,ReviewerUser&orderby=Id
 

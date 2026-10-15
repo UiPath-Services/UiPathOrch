@@ -576,6 +576,14 @@ public class GetQueueItemCmdlet : OrchestratorPSCmdlet
                 catch (Exception ex)
                 {
                     WriteError(new ErrorRecord(new OrchException(queue.GetPSPath(), ex), "GetQueueItemError", ErrorCategory.InvalidOperation, queue));
+                    if (_pending is not null)
+                    {
+                        // A read that failed part-way would leave a CSV that looks complete but
+                        // is missing items, so -ExportCsv writes nothing for this queue.
+                        _pending.Clear();
+                        WriteWarning($"\"{queue.GetPSPath()}\": no CSV was written, because reading its items failed part-way. Run the export for this queue again.");
+                        continue;
+                    }
                 }
 
                 if (allItems is not null)
