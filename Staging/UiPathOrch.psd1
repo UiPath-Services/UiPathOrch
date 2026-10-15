@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.20.0'
+ModuleVersion = '1.21.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -516,6 +516,27 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.21.0
+
+Added: Get-OrchQueueItem -ExportCsv writes queue items in any status to CSV, one file per queue: the
+web Upload Items columns (Reference, Priority, one column per SpecificContent key) followed by the
+item's history in '@' columns (@Status, @Output, @Robot, processing times, ...). Import-OrchQueueItem
+reads such a file back, keeps the '@' columns out of SpecificContent and imports only the New rows
+unless -IncludeProcessedItems is given.
+
+Added: Import-OrchQueueItem -DynamicTyping, as the web's Dynamic typing check box (two web defects
+not reproduced), and delimiter detection (comma, tab, |, ;).
+
+Changed: Import-OrchQueueItem was checked file by file against the web Upload Items. It sends 1,000
+rows per request (AllOrNothing stays one request) and reports the rows sent and not sent if a request
+fails; rejects rows with fewer fields than the header, as Import-OrchTestDataQueueItem now does too;
+renames repeated column names as the web does; accepts a single-column CSV.
+
+Fixed: line breaks inside quoted values are kept as written; spaces around a Priority value are
+ignored; CSV error row numbers no longer shift after a rejected row; a large BulkAddQueueItems request
+waits up to 30 minutes instead of 100 seconds; Remove-OrchQueueItem -Id with many ids looks them up
+100 per request instead of one by one.
+
 1.20.0
 
 Added: Wait-OrchJob waits until jobs end, and Start-OrchJob -Wait starts and waits. Jobs come from

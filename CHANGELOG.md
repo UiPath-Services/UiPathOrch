@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.21.0] - 2026-10-15
+
 `Import-OrchQueueItem` was checked against the Orchestrator web **Queues > Upload Items**: about 60
 CSV files covering each case (`TestData/QueueItemUploadMatrix`) were uploaded through both, and
 the items they created were compared. The changes below make the two agree, except where noted.

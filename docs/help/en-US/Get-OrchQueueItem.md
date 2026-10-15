@@ -20,14 +20,15 @@ Gets queue items (transactions) from UiPath Orchestrator queues.
 ### __AllParameterSets
 
 ```
-Get-OrchQueueItem [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <uint>] [[-Name] <string[]>]
- [-DeferDateAfter <datetime>] [-DeferDateBefore <datetime>] [-DueDateAfter <datetime>]
- [-DueDateBefore <datetime>] [-EndProcessingAfter <datetime>]
- [-EndProcessingBefore <datetime>] [-Exception <string[]>] [-First <int>] [-Id <long[]>]
+Get-OrchQueueItem [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <uint>]
+ [[-Name] <string[]>] [-CsvEncoding <Encoding>] [-DeferDateAfter <datetime>]
+ [-DeferDateBefore <datetime>] [-DueDateAfter <datetime>] [-DueDateBefore <datetime>]
+ [-EndProcessingAfter <datetime>] [-EndProcessingBefore <datetime>]
+ [-Exception <string[]>] [-ExportCsv <string>] [-First <int>] [-Id <long[]>]
  [-OrderAscending] [-OrderBy <string>] [-Priority <string[]>] [-Reviewer <string[]>]
  [-Revision <string[]>] [-Robot <string[]>] [-Skip <int>]
  [-StartProcessingAfter <datetime>] [-StartProcessingBefore <datetime>]
- [-Status <string[]>] [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+ [-Status <string[]>] [<CommonParameters>]
 ```
 
 ## ALIASES
