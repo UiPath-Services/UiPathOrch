@@ -1,0 +1,6 @@
+CaseId,Reference,Priority,Value
+R1,007,Normal,v
+R2,1.50,Normal,v
+R3,2026-10-15T10:00:00Z,Normal,v
+D1,R-D1,Normal,2026-02-29T00:00:00Z
+D2,R-D2,Normal,2026-13-01T00:00:00Z

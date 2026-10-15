@@ -69,6 +69,10 @@ the items they created were compared. The changes below make the two agree, exce
   `Import-OrchTestDataQueueItem`. CRLF and a bare CR used to become LF.
 - **`Import-OrchQueueItem` ignores spaces around a Priority value** (`" High "`), as the web does.
   It used to reject the file.
+- **`Remove-OrchQueueItem -Id` with many ids no longer takes hours.** Each id not in the cache
+  was looked up with a request of its own to get its RowVersion, so removing 15,000 items by id
+  ran at about 1.5 items a second. The lookups now go 100 ids per request; an id that is not
+  found is still reported.
 - **A large `Import-OrchQueueItem` request no longer times out after 100 seconds.**
   `BulkAddQueueItems` can take the server minutes; the client gave up at 100 seconds while the
   server went on to create part of the items. It now waits up to 30 minutes.

@@ -36,6 +36,10 @@ public class RemoveQueueItemCmdlet : OrchestratorPSCmdlet
     //[Parameter]
     private int ChunkSize { get; set; } = 1000; // ChunkSize is fixed at 1000
 
+    // Ids per "Id in (...)" request when looking up RowVersions the cache does not have; the
+    // list endpoint returns at most 100 items per request.
+    private const int RowVersionBatchSize = 100;
+
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string? Path { get; set; }
@@ -160,44 +164,49 @@ public class RemoveQueueItemCmdlet : OrchestratorPSCmdlet
         {
             #region Verify RowVersion for all _csvLines
             {
-                using ProgressReporter reporterRowVersion = new(this, csvLines.Count, "Confirming RowVersions");
-                int idxRowVersion = 0;
+                // Cache first (flat, id-keyed).
+                var cached = drive.QueueItems.GetCache(folder);
+                var missing = new List<CsvLine>();
                 foreach (var line in csvLines)
                 {
-                    reporterRowVersion.WriteProgress(++idxRowVersion, queue.GetPSPath());
-
-                    // If rowVersion is not specified
-                    if (string.IsNullOrEmpty(line.RowVersion))
+                    if (!string.IsNullOrEmpty(line.RowVersion)) continue;
+                    if (cached is not null && cached.TryGetValue(line.Id, out var hit))
                     {
-                        // Cache first (flat, id-keyed); on a miss fetch just this item via the
-                        // list endpoint filtered to "Id in (<id>)" (richer than the old by-id
-                        // endpoint — it carries the same $expand — and re-uses the one Fetch path).
-                        var cached = line.Drive.QueueItems.GetCache(line.Folder);
-                        if (cached is not null && cached.TryGetValue(line.Id, out var hit))
-                        {
-                            line.RowVersion = hit.RowVersion;
-                        }
+                        line.RowVersion = hit.RowVersion;
+                    }
+                    if (string.IsNullOrEmpty(line.RowVersion)) missing.Add(line);
+                }
 
+                // The rest via the list endpoint filtered to "Id in (...)", RowVersionBatchSize
+                // ids per request (it pages at 100). One request per id took hours for 15,000
+                // ids (each request waits on the rate limiter); batched it is ~150 requests.
+                using ProgressReporter reporterRowVersion = new(this, missing.Count, "Confirming RowVersions");
+                int idxRowVersion = 0;
+                foreach (var batch in missing.Chunk(RowVersionBatchSize))
+                {
+                    cancelHandler.Token.ThrowIfCancellationRequested();
+                    idxRowVersion += batch.Length;
+                    reporterRowVersion.WriteProgress(idxRowVersion, queue.GetPSPath());
+
+                    List<QueueItem> found;
+                    try
+                    {
+                        found = drive.QueueItems
+                            .Fetch(folder, $"&$filter=Id in ({string.Join(",", batch.Select(l => l.Id))})", 0, (ulong)batch.Length, null, false, queue.Name, queue.GetPSPath())
+                            .ToList();
+                    }
+                    catch (Exception ex)
+                    {
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "GetQueueItemError", ErrorCategory.InvalidOperation, queue));
+                        continue;
+                    }
+                    var rowVersions = found.Where(i => i.Id is not null).ToDictionary(i => i.Id!.Value, i => i.RowVersion);
+                    foreach (var line in batch)
+                    {
+                        line.RowVersion = rowVersions.GetValueOrDefault(line.Id);
                         if (string.IsNullOrEmpty(line.RowVersion))
                         {
-                            QueueItem item = null;
-                            try
-                            {
-                                item = line.Drive.QueueItems
-                                    .Fetch(line.Folder, $"&$filter=Id in ({line.Id})", 0, 1, null, false, queue.Name, queue.GetPSPath())
-                                    .FirstOrDefault();
-                            }
-                            catch (Exception ex)
-                            {
-                                WriteError(new ErrorRecord(new OrchException(System.IO.Path.Combine(target, line.Id.ToString()), ex), "GetQueueItemError", ErrorCategory.InvalidOperation, queue));
-                                continue;
-                            }
-                            line.RowVersion = item?.RowVersion;
-                            if (string.IsNullOrEmpty(line.RowVersion))
-                            {
-                                WriteWarning($"\"{queue.GetPSPath()}\": No item found with Id {line.Id}.");
-                                continue;
-                            }
+                            WriteWarning($"\"{queue.GetPSPath()}\": No item found with Id {line.Id}.");
                         }
                     }
                 }
