@@ -54,6 +54,8 @@ Queue-specific payload lives in the SpecificContent dictionary (and its JSON-str
 
 The file can be imported again with Import-OrchQueueItem, which creates new items from it. Import-OrchQueueItem leaves the `@` columns out of SpecificContent and, by default, imports only the rows whose `@Status` is New, because the other rows are transactions that have already run; -IncludeProcessedItems imports them too. **The web Upload Items has no such guard**: uploading the file there queues every row again as a new item and stores the `@` columns as SpecificContent. Types are not kept: every value is uploaded as a string, or typed by -DynamicTyping (where `007` becomes the number 7). The columns are the keys of all the queue's items, so an item gets an empty cell for a key it did not have, and the new item has that key with an empty string (null with -DynamicTyping). DeferDate and DueDate are not set on the new items.
 
+This is a different file from the one the web's Transactions > Export produces. That file names its columns and statuses in the user's UI language and puts the input data in one JSON column; it is for viewing, and Upload Items does not read it as queue items (its Reference and Priority columns are not recognized). Use -ExportCsv when the file may be imported again.
+
 When -ExportCsv names an existing directory, each queue's items go to `<drive>_<folders>_<queue>.csv` in it (for example `Orch1_Shared_Invoices.csv`), and queues without matching items get no file. Otherwise it names one file, which takes the items of one queue only: items of a second queue are reported as an error and not written.
 
 Primary Endpoint: GET /odata/QueueItems?$filter=(QueueDefinitionId eq {queueId})&$expand=Robot,ReviewerUser&orderby=Id
