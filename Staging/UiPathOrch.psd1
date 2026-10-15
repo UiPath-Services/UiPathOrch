@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.21.1'
+ModuleVersion = '1.21.2'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -516,6 +516,13 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.21.2
+
+Fixed: Copy-OrchQueueItem reads the source queue in order of Id. It paged through the New items
+in an order that was not fixed (EndProcessing, empty on every New item), so a queue of more than
+100 items could have items copied twice or not at all. It also copies SpecificContent as it was
+added: a date-time string is no longer converted to UTC, and value types are kept.
+
 1.21.1
 
 Removed: Import-OrchQueueItem -IncludeProcessedItems (added in 1.21.0). It created the rows as New,

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.21.2] - 2026-10-15
+
 ### Fixed
 
 - **`Copy-OrchQueueItem` reads the source queue in order of Id.** It read the New items 100 at a
