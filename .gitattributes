@@ -61,3 +61,13 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+###############################################################################
+# Test CSVs are byte-exact: their line endings (LF, CRLF, bare CR, and line
+# breaks inside quoted values) are what the tests check, so git must not
+# convert them on checkout. A Windows checkout turned the LF break inside
+# TestData/WebEquivalence/tdq_multiline_sample.csv into CRLF, and the parser,
+# which keeps a break as written, then no longer matched the web golden.
+###############################################################################
+TestData/**/*.csv -text
+
