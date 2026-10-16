@@ -1,4 +1,4 @@
-﻿namespace UiPath.PowerShell.Positional;
+namespace UiPath.PowerShell.Positional;
 
 // These classes are used as type parameters.
 
@@ -206,24 +206,40 @@ internal class UserSessionOrderableItems : IDictionaryItems<string>
     };
 }
 
+// Code -> human-readable name for user license bundles. A DISPLAY dictionary: the live list
+// of what an organisation actually holds comes from the API (LicenseInventory
+// .userLicensingBundles / the per-group availableUserBundles), and that is what -License is
+// resolved against. This exists only because those responses carry an EMPTY `name` -- measured
+// 2026-10-16 on an org holding IDU, APPTESTNU and APPTESTDEVNU, all three with name="" -- so
+// something has to put words to a code. Callers read it with GetValueOrDefault(code, code),
+// which is what makes a code missing from here harmless: it shows as the bare code.
+//
+// Do not resolve an argument against this table. It was the gatekeeper for Add-PmUserLicense
+// once, and because the App Testing bundles are not in it, a valid request matched nothing and
+// was dropped without a word.
 internal class AvailableUserBundlesItems : IDictionaryItems<string>
 {
     public static Dictionary<string, string> Items { get; } = new()
     {
-        { "ACCU",        "Action Center - Multiuser" },
-        { "ACNU",        "Action Center - Named User" },
-        { "AKIT",        "Automation Express" },
-        { "ATTUCU",      "Attended - Multiuser" },
-        { "ATTUNU",      "Attended - Named User" },
-        { "CTZDEVCU",    "Citizen Developer - Multiuser" },
-        { "CTZDEVNU",    "Citizen Developer - Named User" },
-        { "IDU",         "Insights Designer Users" },
-        { "PMBU",        "Process Mining Business User" },
-        { "PMD",         "Process Mining Developer" },
-        { "RPADEVCU",    "RPA Developer - Multiuser" },
-        { "RPADEVNU",    "RPA Developer - Named User" },
-        { "RPADEVPROCU", "Automation Developer - Multiuser" },
-        { "RPADEVPRONU", "Automation Developer - Named User" },
-        { "TSTNU",       "Tester - Named User" }
+        { "ACCU",         "Action Center - Multiuser" },
+        { "ACNU",         "Action Center - Named User" },
+        { "AKIT",         "Automation Express" },
+        // App Testing (Unified / Test Cloud). APPTESTNU is the tester seat -- it carries
+        // Studio WEB, Test Manager and Test Cloud; APPTESTDEVNU is the authoring seat and the
+        // one that carries desktop Studio.
+        { "APPTESTDEVNU", "App Test Developer - Named User" },
+        { "APPTESTNU",    "App Tester - Named User" },
+        { "ATTUCU",       "Attended - Multiuser" },
+        { "ATTUNU",       "Attended - Named User" },
+        { "CTZDEVCU",     "Citizen Developer - Multiuser" },
+        { "CTZDEVNU",     "Citizen Developer - Named User" },
+        { "IDU",          "Insights Designer Users" },
+        { "PMBU",         "Process Mining Business User" },
+        { "PMD",          "Process Mining Developer" },
+        { "RPADEVCU",     "RPA Developer - Multiuser" },
+        { "RPADEVNU",     "RPA Developer - Named User" },
+        { "RPADEVPROCU",  "Automation Developer - Multiuser" },
+        { "RPADEVPRONU",  "Automation Developer - Named User" },
+        { "TSTNU",        "Tester - Named User" }
     };
 }

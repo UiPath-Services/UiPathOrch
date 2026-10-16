@@ -126,20 +126,33 @@ public class AddPmUserLicenseCmdlet : OrchestratorPSCmdlet
         }
     }
 
-    // Resolves -License wildcards against the static bundle catalog. A pattern
-    // matches a bundle if it matches the friendly name OR the raw code, so
-    // users can pass either form. Pure / static for unit testing.
-    internal static HashSet<string> ResolveLicenseCodes(IEnumerable<WildcardPattern>? wpLicense)
+    // Resolves -License against the bundles the ORGANISATION actually holds, matching either
+    // the raw code or the catalog's friendly name so users can pass either form.
+    //
+    // The catalog is a display dictionary, NOT the gatekeeper. It used to be both, and it
+    // lists fifteen bundles while a live contract can hold codes it has never heard of --
+    // APPTESTNU, APPTESTDEVNU and the rest of the App Testing SKUs among them. Resolving
+    // against it meant `Add-PmUserLicense me APPTESTDEVNU` matched nothing, returned nothing,
+    // raised nothing, and assigned nothing. Mirrors ResolveLicenseCodesForGroup in
+    // AddPmGroupLicenseCmdlet, which resolves against the live list and got this right.
+    //
+    // Pure / static for unit testing.
+    internal static HashSet<string> ResolveLicenseCodes(
+        IEnumerable<WildcardPattern>? wpLicense, IEnumerable<string?>? availableCodes)
     {
         var codes = new HashSet<string>();
-        if (wpLicense is null) return codes;
-        foreach (var kv in AvailableUserBundlesItems.Items)
+        if (wpLicense is null || availableCodes is null) return codes;
+
+        foreach (var code in availableCodes)
         {
+            if (string.IsNullOrEmpty(code)) continue;
+
+            string friendly = AvailableUserBundlesItems.Items.TryGetValue(code, out var n) ? n : code;
             foreach (var wp in wpLicense)
             {
-                if (wp.IsMatch(kv.Value) || wp.IsMatch(kv.Key))
+                if (wp.IsMatch(friendly) || wp.IsMatch(code))
                 {
-                    codes.Add(kv.Key);
+                    codes.Add(code);
                     break;
                 }
             }
@@ -152,20 +165,42 @@ public class AddPmUserLicenseCmdlet : OrchestratorPSCmdlet
         _parameterSets ??= [];
 
         var wpLicense = License.ConvertToWildcardPatternList();
-        var targetCodes = ResolveLicenseCodes(wpLicense);
-        if (targetCodes.Count == 0)
-        {
-            // No catalog bundle matched the License pattern; nothing to allocate
-            // on this row. Matches Add-PmGroupLicense's silent-skip
-            // behavior when its wildcard matches no available bundle.
-            return;
-        }
+
+        // Names given in full, with no wildcard in them. A wildcard that matches nothing is a
+        // filter that selected nothing and says so by staying quiet; a spelled-out name that
+        // matches nothing is the caller being wrong about this organisation, and that has to
+        // be said out loud. Saying nothing is how the silent no-op above went unnoticed.
+        var literals = (License ?? [])
+            .Where(s => !string.IsNullOrEmpty(s) && !WildcardPattern.ContainsWildcardCharacters(s))
+            .ToList();
 
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
         {
+            // Per drive, because the answer is per organisation.
+            var availableCodes = drive.PmLicenseInventory.Get()?.userLicensingBundles
+                ?.Select(b => b?.code)
+                .Where(c => !string.IsNullOrEmpty(c))
+                .ToList();
+
+            var targetCodes = ResolveLicenseCodes(wpLicense, availableCodes);
+            if (targetCodes.Count == 0)
+            {
+                if (literals.Count > 0)
+                {
+                    string have = availableCodes is null || availableCodes.Count == 0
+                        ? "(none)"
+                        : string.Join(", ", availableCodes.OrderBy(c => c));
+                    WriteError(new ErrorRecord(
+                        new OrchException(drive.NameColonSeparator,
+                            new Exception($"No user license bundle matching \"{string.Join("\", \"", literals)}\" is available on {drive.NameColonSeparator}. Available: {have}.")),
+                        "LicenseBundleNotAvailableError", ErrorCategory.InvalidArgument, drive.NameColonSeparator));
+                }
+                continue;
+            }
+
             var existingLicensedUsers = drive.PmLicensedUsers.Get();
 
             foreach (var email in (Email ?? []).WithCancellation(cancelHandler.Token))
