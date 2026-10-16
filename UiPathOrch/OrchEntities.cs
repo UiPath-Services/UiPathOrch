@@ -3989,6 +3989,11 @@ public class NuLicensedGroup // The proper class name is unknown.
     public string[]? userBundleLicenseNames { get; set; } // added by UiPathOrch
     public bool? useExternalLicense { get; set; }
     public bool? orphan { get; set; }
+
+    // added by UiPathOrch -- the union of what the group's bundles permit. Same field, same
+    // reason and same per-emit stamping as NuLicensedUser.entitlements.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string[]? entitlements { get; set; }
 }
 
 // added by UiPathOrch
@@ -4012,6 +4017,18 @@ public class NuLicensedUser // The proper class name is unknown.
 
     [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
     public string[]? userBundleLicenseNames { get; set; } // added by UiPathOrch
+
+    // added by UiPathOrch -- what the user's bundles actually PERMIT, as the union of their
+    // licensed units. The bundle codes alone do not say: APPTESTNU and APPTESTDEVNU look
+    // alike and differ in exactly the thing that matters, STD (desktop Studio), which only
+    // the second carries. Answering "may I open desktop Studio with this" used to mean
+    // pulling the contract and base64-decoding its ubl entitlements by hand.
+    //
+    // Not on the cached entity: it is derived from the ORG CONTRACT, a separate request, and
+    // the per-entity cache initializers are restricted to state derivable from the entity
+    // itself. Stamped per emit, beside Path, by whoever hands the row out.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string[]? entitlements { get; set; }
 }
 
 // added by UiPathOrch
@@ -4044,6 +4061,12 @@ public class AvailableUserBundle // The proper class name is unknown.
     public int? allocated { get; set; }
     public int? total { get; set; }
     public int? inUse { get; set; }
+
+    // added by UiPathOrch -- what this bundle PERMITS, e.g. APPTESTDEVNU -> APPS, ATTR, STD,
+    // STDPRO, STDW, EE, TMU, TC. From the org contract, so it is stamped on the per-emit copy
+    // like Path: see OrchDriveInfo.GetUserBundleEntitlements for where it is dug out of.
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string[]? entitlements { get; set; }
 }
 
 // added by UiPathOrch

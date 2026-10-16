@@ -72,6 +72,25 @@ public class GetPmUserLicenseCmdlet : OrchestratorPSCmdlet
             .OrderBy(license => license)
             .ToList();
 
+    // The union of what every bundle in <paramref name="bundleCodes"/> permits, de-duplicated
+    // and sorted. This is the column that answers "may this principal open desktop Studio" --
+    // STD present or not -- without pulling the contract and base64-decoding its ubl
+    // entitlements, which is what answering it used to take.
+    //
+    // A code the contract says nothing about contributes nothing. That is not the same as
+    // permitting nothing, and it is why the bundle codes stay in their own column: an
+    // entitlement list is what the contract HAS BEEN SEEN to grant, never the whole truth.
+    //
+    // Pure / static, and shared by the user, group and inventory readers so the three cannot
+    // disagree about what a bundle allows.
+    internal static string[] BuildEntitlements(
+        IEnumerable<string>? bundleCodes, IReadOnlyDictionary<string, string[]> bundleEntitlements)
+        => (bundleCodes ?? [])
+            .SelectMany(code => bundleEntitlements.TryGetValue(code, out var units) ? units : [])
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(unit => unit, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
     // Builds one CSV row (Path, UserName, License) with every field escaped, in
     // CsvHeaders order. Pure / static so the round trip — write here, read back
     // via the project's RFC-4180 splitter, bind to Add-PmUserLicense
@@ -197,7 +216,18 @@ public class GetPmUserLicenseCmdlet : OrchestratorPSCmdlet
 
                 if (writer is null)
                 {
-                    WriteObject(targetEntities.Select(e => { var c = e.ShallowClone(); c.Path = result.Source.NameColonSeparator; return c; }), true);
+                    // Looked up once per drive, not per user: it is one cached read of the
+                    // org contract. Stamped here on the per-emit copy rather than in the
+                    // cache initializer, which runs inside the cache fill's lock (OrchCache)
+                    // and so is no place to set off another cache's fetch.
+                    var bundleEntitlements = result.Source.GetUserBundleEntitlements();
+                    WriteObject(targetEntities.Select(e =>
+                    {
+                        var c = e.ShallowClone();
+                        c.Path = result.Source.NameColonSeparator;
+                        c.entitlements = BuildEntitlements(e.userBundleLicenses, bundleEntitlements);
+                        return c;
+                    }), true);
                 }
                 else
                 {

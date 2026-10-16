@@ -4647,6 +4647,11 @@
           <TableColumnHeader>
             <Label>orphan</Label>
           </TableColumnHeader>
+          <!-- What the group's bundles actually PERMIT. The bundle names say what was bought,
+               which is not the same question. -->
+          <TableColumnHeader>
+            <Label>Entitlements</Label>
+          </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
           <TableRowEntry>
@@ -4662,6 +4667,15 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>orphan</PropertyName>
+              </TableColumnItem>
+              <!-- Joined by a ScriptBlock rather than bound as a PropertyName: a table
+                   column holding an array prints at most four elements and then an ellipsis,
+                   which would hide STDPRO and everything after it in exactly the list this
+                   column exists to show. A ScriptBlock costs format-time work per row, and
+                   these views are the place that can afford it: an org has a handful of
+                   bundles and a handful of licensed users and groups, not thousands. -->
+              <TableColumnItem>
+                <ScriptBlock>$_.entitlements -join ', '</ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -4743,6 +4757,13 @@
           <TableColumnHeader>
             <Label>userBundleLicenseNames</Label>
           </TableColumnHeader>
+          <!-- What the user's bundles actually PERMIT. This is the column that answers
+               whether desktop Studio will open (STD present), which the bundle names do not:
+               APPTESTNU and APPTESTDEVNU differ in exactly that. A seventh column makes the
+               row long, and surname / displayName are usually where the slack is. -->
+          <TableColumnHeader>
+            <Label>Entitlements</Label>
+          </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
           <TableRowEntry>
@@ -4764,6 +4785,15 @@
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>userBundleLicenseNames</PropertyName>
+              </TableColumnItem>
+              <!-- Joined by a ScriptBlock rather than bound as a PropertyName: a table
+                   column holding an array prints at most four elements and then an ellipsis,
+                   which would hide STDPRO and everything after it in exactly the list this
+                   column exists to show. A ScriptBlock costs format-time work per row, and
+                   these views are the place that can afford it: an org has a handful of
+                   bundles and a handful of licensed users and groups, not thousands. -->
+              <TableColumnItem>
+                <ScriptBlock>$_.entitlements -join ', '</ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>
@@ -4807,6 +4837,12 @@
           <TableColumnHeader>
             <Label>Usage</Label>
           </TableColumnHeader>
+          <!-- What the bundle PERMITS. The rows here are short, so this is the one place a
+               full entitlement list fits in a table without crowding anything out, and it is
+               the view that answers "what does this bundle give me". -->
+          <TableColumnHeader>
+            <Label>Entitlements</Label>
+          </TableColumnHeader>
         </TableHeaders>
         <TableRowEntries>
           <TableRowEntry>
@@ -4840,6 +4876,15 @@
                     "[$bar] $pct%"
                   } else { '' }
                 </ScriptBlock>
+              </TableColumnItem>
+              <!-- Joined by a ScriptBlock rather than bound as a PropertyName: a table
+                   column holding an array prints at most four elements and then an ellipsis,
+                   which would hide STDPRO and everything after it in exactly the list this
+                   column exists to show. A ScriptBlock costs format-time work per row, and
+                   these views are the place that can afford it: an org has a handful of
+                   bundles and a handful of licensed users and groups, not thousands. -->
+              <TableColumnItem>
+                <ScriptBlock>$_.entitlements -join ', '</ScriptBlock>
               </TableColumnItem>
             </TableColumnItems>
           </TableRowEntry>

@@ -246,8 +246,17 @@ public class GetPmGroupLicenseCmdlet : OrchestratorPSCmdlet
 
                     if (writer is null)
                     {
-                        WriteObject(targetGroups
-                            .Select(g => { var c = g.ShallowClone(); c.Path = drive.NameColonSeparator; return c; }), true);
+                        // One cached read of the org contract per drive; see
+                        // GetPmUserLicenseCmdlet.BuildEntitlements for what the column is for.
+                        var bundleEntitlements = drive.GetUserBundleEntitlements();
+                        WriteObject(targetGroups.Select(g =>
+                        {
+                            var c = g.ShallowClone();
+                            c.Path = drive.NameColonSeparator;
+                            c.entitlements = GetPmUserLicenseCmdlet.BuildEntitlements(
+                                g.userBundleLicenses, bundleEntitlements);
+                            return c;
+                        }), true);
                     }
                     else
                     {

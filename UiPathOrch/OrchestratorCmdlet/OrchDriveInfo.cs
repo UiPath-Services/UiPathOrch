@@ -798,6 +798,54 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         return PmAvailableUserBundles.Get(groupId);
     }
 
+    /// <summary>
+    /// Bundle code -> the licensed units that bundle permits, e.g.
+    /// APPTESTDEVNU -> APPS, ATTR, STD, STDPRO, STDW, EE, TMU, TC.
+    ///
+    /// This is the only place the org states what a bundle actually ALLOWS, and it states it
+    /// awkwardly: each entry of AccountLicense.entitlements with type "ubl" carries a
+    /// base64-encoded JSON object whose own `name` is the bundle code and whose `lu` array is
+    /// the permission list. Nothing else in the API says that APPTESTNU grants Studio WEB
+    /// while APPTESTDEVNU also grants desktop Studio (STD / STDPRO) -- the difference that
+    /// decides whether Studio will let you edit a workflow.
+    ///
+    /// Served off the cached contract, so repeat calls cost nothing. A malformed or
+    /// unexpected entry is skipped rather than thrown: this feeds a display column, and
+    /// losing one row of it must not take a listing down.
+    /// </summary>
+    public Dictionary<string, string[]> GetUserBundleEntitlements()
+    {
+        var map = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase);
+
+        foreach (var e in PmLicenseContract.Get()?.entitlements ?? [])
+        {
+            if (!string.Equals(e?.type, "ubl", StringComparison.OrdinalIgnoreCase)) continue;
+            if (string.IsNullOrEmpty(e!.value)) continue;
+
+            try
+            {
+                using var doc = System.Text.Json.JsonDocument.Parse(Convert.FromBase64String(e.value!));
+                var root = doc.RootElement;
+                if (!root.TryGetProperty("name", out var codeProp)) continue;
+
+                string? code = codeProp.GetString();
+                if (string.IsNullOrEmpty(code)) continue;
+
+                var units = root.TryGetProperty("lu", out var lu) && lu.ValueKind == System.Text.Json.JsonValueKind.Array
+                    ? lu.EnumerateArray().Select(u => u.GetString()).Where(u => !string.IsNullOrEmpty(u)).Select(u => u!).ToArray()
+                    : [];
+
+                map[code!] = units;
+            }
+            catch (Exception ex) when (ex is FormatException or System.Text.Json.JsonException)
+            {
+                // Not the shape we expect; this bundle simply has no entitlement list to show.
+            }
+        }
+
+        return map;
+    }
+
     #region GetPmUserLicenseGroupAllocations Cache
     // Backwards-compat shim: delegates to PmUserLicenseGroupAllocations
     // (KeyedListCachePerOrganization, keyed by group.id). Drive-local Path,
