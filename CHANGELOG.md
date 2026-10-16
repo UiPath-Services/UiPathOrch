@@ -6,6 +6,57 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+The licensing cmdlets were checked against a tenant holding App Testing licenses
+(`APPTESTNU`, `APPTESTDEVNU`, `IDU`), none of which the static bundle catalog lists. Two
+cmdlets could not name those bundles at all, and both failed silently when asked to.
+
+### Added
+
+- **`Get-PmUserLicense`, `Get-PmGroupLicense` and `Get-PmLicenseInventory` show what a bundle
+  permits**, as an `Entitlements` column: the licensed units, for a user and a group the union
+  over the bundles held, for the inventory per bundle. A bundle code does not say what it
+  allows, and the two that matter most look alike — `APPTESTNU` grants `STDW` (Studio Web) while
+  `APPTESTDEVNU` also grants `STD` and `STDPRO` (desktop Studio), which is the difference
+  between Studio opening a workflow for editing and refusing to. Reading it used to mean
+  fetching the contract, picking its `entitlements` entries of type `ubl`, base64-decoding each
+  and reading the `lu` array out of the JSON inside. One request per organisation, off the
+  cached contract, however many rows are printed. An empty list means the contract grants
+  nothing for those bundles, not that the principal may do nothing — the bundle codes stay in
+  their own column.
+- **`Get-PmLicenseInventory` fills in each bundle's `name`.** The API returns it empty (measured
+  again on 2026-10-16: `IDU`, `APPTESTNU` and `APPTESTDEVNU`, all three blank), which is why the
+  code-to-name catalog exists; the bundle rows were the one place still showing it blank.
+- **`Remove-PmLicensedGroup -Id`**, with a completer that shows which group each id belongs to.
+  Deleting a group left its licensing record behind, and the record comes back with an empty
+  name, so `-GroupName` could not reach it: `''` matched nothing and `*` matched every live
+  group as well. The portal cannot remove one either — it lists the row as `N.A` with the delete
+  button disabled. The `DELETE` itself works: the API accepts the id, and it was the portal's own
+  UI holding the row. The completer says `(orphan: the group is gone)` for such a row, that one
+  being the whole reason to reach for `-Id`.
+
+### Fixed
+
+- **`Add-PmUserLicense` resolves `-License` against the licenses the organisation actually
+  holds.** It resolved against the static bundle catalog, which lists fifteen; the App Testing
+  bundles are not among them, so `Add-PmUserLicense <user> APPTESTDEVNU` matched nothing,
+  returned nothing, raised nothing and assigned nothing. Resolution now goes against
+  `LicenseInventory.userLicensingBundles`, as `Add-PmGroupLicense` has always done. A name given
+  in full that matches nothing is now an error naming what the organisation does have; a
+  wildcard that matches nothing is still a filter that selected nothing, and still silent.
+- **`Remove-PmGroupLicense` takes a raw bundle code.** It matched the catalog's friendly *name*
+  only, making it the one cmdlet in the family that would not accept a code — `-License
+  APPTESTDEVNU` removed nothing, silently — and no bundle outside the catalog could be removed
+  at all. It now resolves against what the group holds, through the same helper
+  `Remove-PmUserLicense` uses, so the two cannot drift apart. Removing something already absent
+  stays a silent no-op.
+- **`Remove-PmGroup` removes the group's licensing record with it.** The record was left behind
+  with the group's bundles still attached, and until `-Id` above nothing could delete it, so
+  every `Remove-PmGroup` added a permanent row to `Get-PmGroupLicense`. It costs no licence (an
+  orphan's bundle stays out of `allocated`, measured) but it accumulated. Removed after the
+  group, not before: the reverse order would strip the licences off a group that still exists if
+  the group delete then failed. A record that cannot be removed is a warning naming what is left
+  and the command that finishes the job, not an error — by then the group is already gone.
+
 ## [1.21.2] - 2026-10-15
 
 ### Fixed
