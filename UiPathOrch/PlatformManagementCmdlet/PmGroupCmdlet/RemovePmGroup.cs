@@ -1,6 +1,7 @@
 using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
+using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
@@ -50,6 +51,8 @@ public class RemovePmGroupCmdlet : OrchestratorPSCmdlet
                             drive.PmGroups.ClearCache(group?.id);
                             drive.SearchPmDirectoryCache.ClearCache();
                             drive.SearchDirectoryCache.ClearCache();
+
+                            RemoveLicensingRecord(drive, group!);
                         }
                         catch (Exception ex)
                         {
@@ -66,6 +69,48 @@ public class RemovePmGroupCmdlet : OrchestratorPSCmdlet
             {
                 WriteError(new ErrorRecord(new OrchException(drive.NameColonSeparator, ex), "GetPmGroupError", ErrorCategory.InvalidOperation, drive));
             }
+        }
+    }
+
+    /// <summary>
+    /// Deletes the group's LICENSING record, which deleting the group does not.
+    ///
+    /// Left alone it comes back from the API with an empty name and orphan=true, still holding
+    /// whatever bundles the group had, and the portal will not remove it -- the row shows as
+    /// "N.A" with its delete button disabled. So every Remove-PmGroup used to leave a row
+    /// behind that only the API could clear. It costs no licence (measured: a bundle held by
+    /// an orphan stays out of `allocated`), but it accumulates in Get-PmGroupLicense forever.
+    ///
+    /// Run AFTER the group, not before. If the group delete failed we would otherwise have
+    /// stripped the licences off a group that still exists, which is worse than a leftover
+    /// row -- and the row is now removable. The record carries the group's own id, which is
+    /// how it is found here and how Remove-PmLicensedGroup -Id reaches one that slips through.
+    /// </summary>
+    private void RemoveLicensingRecord(OrchDriveInfo drive, PmGroup group)
+    {
+        if (string.IsNullOrEmpty(group.id)) return;
+
+        try
+        {
+            var licensed = drive.PmLicensedGroups.Get()
+                .FirstOrDefault(lg => string.Equals(lg?.id, group.id, StringComparison.OrdinalIgnoreCase));
+            if (licensed is null) return;
+
+            drive.OrchAPISession.RemovePmLicensedGroup(licensed.id);
+            drive.PmLicensedGroups.ClearCache();
+        }
+        catch (OperationCanceledException)
+        {
+            throw;
+        }
+        catch (Exception ex)
+        {
+            // The group itself is already gone, so the operation asked for did succeed. Say
+            // what was left behind and how to finish it rather than reporting a failure.
+            WriteWarning($"\"{group.name}\" was removed, but its licensing record ({group.id}) was not: "
+                + $"{OrchException.ExtractMessage(ex) ?? ex.Message} "
+                + $"It will appear in Get-PmGroupLicense as an orphan row; remove it with "
+                + $"Remove-PmLicensedGroup -Id {group.id}.");
         }
     }
 }
