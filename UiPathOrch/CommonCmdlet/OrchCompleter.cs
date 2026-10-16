@@ -2287,6 +2287,28 @@ internal class PmLicensedGroupNameCompleter : DriveScopedCompleter<NuLicensedGro
     protected override CompletionResultType ResultType => CompletionResultType.Text;
 }
 
+/// <summary>
+/// Licensed-group ids, for Remove-PmLicensedGroup -Id.
+///
+/// Completing a GUID is only worth doing because the id is the ONLY handle on an orphan row:
+/// a licensing record whose group has been deleted comes back with an empty name, so -GroupName
+/// cannot name it and the portal will not delete it either. The tooltip carries the group path,
+/// which is what makes a list of GUIDs navigable, and says plainly when there is no group left
+/// behind the row -- that one being the whole reason to reach for -Id.
+/// </summary>
+internal class PmLicensedGroupIdCompleter : DriveScopedCompleter<NuLicensedGroup>
+{
+    protected override List<OrchDriveInfo> ResolveDrives(IDictionary fbp) => ResolvePmDrives(fbp);
+    protected override IEnumerable<NuLicensedGroup> GetEntities(OrchDriveInfo drive)
+        => drive.PmLicensedGroups.Get().Where(g => g is not null && !string.IsNullOrEmpty(g.id))!;
+    protected override string GetName(NuLicensedGroup e) => e.id!;
+    protected override string GetTipHelp(OrchDriveInfo drive, NuLicensedGroup e)
+        => string.IsNullOrEmpty(e.name)
+            ? $"(orphan: the group is gone) {drive.NameColonSeparator}"
+            : e.GetPSPath(drive.NameColonSeparator);
+    protected override CompletionResultType ResultType => CompletionResultType.Text;
+}
+
 #endregion
 
 #region Completers for Test Manager cmdlets
