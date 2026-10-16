@@ -91,8 +91,6 @@ public class RemovePmGroupLicenseCmdlet : OrchestratorPSCmdlet
         var wpGroupName = GroupName.ConvertToWildcardPatternList();
         var wpLicense = License.ConvertToWildcardPatternList();
 
-        var specifiedLicenses = AvailableUserBundlesItems.Items.SelectByWildcards(i => i.Value, wpLicense).ToList();
-
         foreach (var drive in drives)
         {
             var licenseGroups = drive.PmLicensedGroups.Get();
@@ -100,12 +98,21 @@ public class RemovePmGroupLicenseCmdlet : OrchestratorPSCmdlet
 
             foreach (var group in targetGroups.OrderBy(g => g.name))
             {
+                // Resolved against what THIS GROUP holds, like Remove-PmUserLicense resolves
+                // against what the user holds -- the same helper, so the two Remove cmdlets
+                // cannot drift apart. It used to resolve against the static catalog, and only
+                // by the catalog's friendly NAME, which made this the one cmdlet in the family
+                // that would not take a raw bundle code: `-License APPTESTDEVNU` matched
+                // nothing and removed nothing, without a word. The catalog was never the right
+                // source either -- it lists fifteen bundles and a live org can hold codes it
+                // has never heard of.
                 if (!_parameterSets.TryGetValue((drive, group), out var codes))
                 {
                     codes = [];
                     _parameterSets[(drive, group)] = codes;
                 }
-                codes.UnionWith(specifiedLicenses.Select(l => l.Key));
+                codes.UnionWith(RemovePmUserLicenseCmdlet.ResolveLicenseCodesToRemove(
+                    wpLicense, group.userBundleLicenses));
             }
         }
     }
