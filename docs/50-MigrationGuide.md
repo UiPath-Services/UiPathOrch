@@ -345,6 +345,12 @@ Find the source drive's PSDrive entry and change the `Scope` value:
 
 After editing, run `Import-OrchConfig` to reload the configuration.
 
+> **Username/password drives cannot be made read-only this way.** An on-premises drive
+> configured with `Username` / `Password` signs in through `/api/Account/Authenticate`,
+> which takes no scope: the token carries every permission of the account, whatever the
+> drive's `Scope` says. Keep such a source safe by only ever naming it as the copy
+> source (`-Path`).
+
 > **Note**: Adding Platform Management API scopes (those starting with `PM.`,
 > e.g., `PM.User.Read`, `PM.Group.Read`, `PM.RobotAccount.Read`) enables
 > migration of organization-level entities, broadening the migration scope.
@@ -427,16 +433,23 @@ First, list all users in the source tenant and classify them:
 
 ```powershell
 Get-OrchUser -Path OldOrch: | Select-Object UserName, Type | Format-Table
+Get-PmUser -Path OldOrch: | Select-Object UserName, Email | Format-Table
 ```
 
 User types:
 | Type | Description | Action |
 |---|---|---|
-| `DirectoryUser` | AD / Entra ID user | Create in destination directory, or map with UserMappingCsv |
+| `DirectoryUser` | AD / Entra ID user — or a local user (see below) | Create in destination directory, or map with UserMappingCsv; local users are copied with `Copy-PmUser` |
 | `DirectoryGroup` | AD / Entra ID group | Create in destination directory |
 | `DirectoryRobot` | Robot account | Copy with `Copy-PmRobotAccount`; map with UserMappingCsv if names differ |
 | `DirectoryExternalApplication` | External app | Recreate manually |
-| `User` | Local user (on-premises / Automation Suite) | Copy with `Copy-PmUser` |
+| `User` | Local user, on versions that report it this way | Copy with `Copy-PmUser` |
+
+> **`Type` alone does not tell local from directory users.** On standalone on-premises
+> 22.4 through 25.10.2 and on Automation Suite 24.10.8, local users are reported as
+> `DirectoryUser`. To find the local users,
+> read the organization's user list with `Get-PmUser` — the list `Copy-PmUser` copies
+> from.
 
 Ask the user:
 - Which directory users exist in the destination organization?
@@ -546,7 +559,21 @@ share.
 
 Since the Web API cannot retrieve passwords, entities containing passwords
 (users, credential stores, credential assets, etc.) will not have their
-passwords migrated during copy. Address this with the following steps:
+passwords migrated during copy. For the entities below, the destination holds a
+placeholder or nothing instead, and the copy warns about each one:
+
+| Entity | Value at the destination after the copy | Warning |
+|---|---|---|
+| Credential asset password (global and per-user values) | `!!!PLEASE UPDATE!!!` | `Please update credential asset passwords with Set-OrchCredentialAsset cmdlet.` |
+| Secret asset value (global and per-user values) | `!!!PLEASE UPDATE!!!` | `Please update Secret asset values with Set-OrchSecretAsset cmdlet.` |
+| Storage bucket password | `!!!PLEASE UPDATE!!!` | `Please update the storage bucket Password with Update-OrchBucket cmdlet.` |
+| Unattended robot password of a user / robot account | empty | `The unattended robot's password of '<user>' is not copied. Set it with Update-OrchUser -UR_Password.` |
+
+An asset value that refers to an external credential store (`ExternalName` is set)
+keeps that reference and gets no placeholder. Every `!!!PLEASE UPDATE!!!` is a live
+value that a job would read, so replace them all before enabling the triggers.
+
+Address this with the following steps:
 
 1. Export the relevant entities from the destination tenant to CSV
 2. Have the user edit the CSV to set the password column

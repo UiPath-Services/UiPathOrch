@@ -51,7 +51,7 @@ The -UserName, -Roles, and -Path parameters support tab completion. Press [Ctrl+
 
 Primary Endpoint: GET /odata/Users, GET /odata/Users({userId}), PUT /odata/Users({userId})
 
-OAuth required scopes: OR.Users or OR.Users.Read
+OAuth required scopes: OR.Users or OR.Users.Read, plus OR.Settings or OR.Settings.Read when -UR_CredentialStore is given (a CSV exported by Get-OrchUser always carries it)
 
 Required permissions: Users.View, Users.Edit or Robots.Create or Robots.Edit or Robots.Delete.
 

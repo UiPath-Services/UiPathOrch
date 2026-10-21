@@ -188,13 +188,14 @@ entries for all authentication patterns. The structure is:
       "Scope": "OR.Folders.Read",
       "Enabled": true
     },
-    // Legacy username/password (pre-21.4 on-premises only)
+    // Username/password (standalone on-premises Orchestrator; confirmed on 22.4, 23.4, 24.10.8
+    // and 25.10.2). Automation Suite does not accept it. No Scope: the token carries every
+    // permission of the account.
     {
       "Name": "OldOnPrem",
       "Root": "https://orchestrator.example.com/TENANT",
       "Username": "USERNAME",
       "Password": "PASSWORD",
-      "Scope": "OR.Folders.Read",
       "Enabled": false
     }
   ]

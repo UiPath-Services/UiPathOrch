@@ -13,7 +13,7 @@ title: Copy-PmUser
 
 ## SYNOPSIS
 
-Copies platform management users from one UiPath Automation Cloud organization to another.
+Copies platform management users from one UiPath organization to another.
 
 ## SYNTAX
 

@@ -44,7 +44,7 @@ GETTING STARTED
 
         Register an external application (non-confidential or confidential)
         in the Orchestrator admin page, or prepare a Personal Access Token
-        or username/password for older on-premises instances.
+        or username/password for on-premises instances.
         See AUTHENTICATION TYPES below for details.
 
     Step 3: Configure
@@ -110,7 +110,7 @@ AUTHENTICATION TYPES
                            not available.
     Personal Access Token  Token-based authentication without OAuth
                            app registration.
-    On-Premises            Supports Identity Server and legacy
+    On-Premises            Supports Identity Server and
                            username/password authentication.
 
 NAVIGATING PSDRIVE

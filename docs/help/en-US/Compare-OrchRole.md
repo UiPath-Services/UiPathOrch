@@ -37,7 +37,7 @@ Each result is an OrchComparison record with a SideIndicator: "<=" reference onl
 
 Primary Endpoint: GET /odata/Roles
 
-OAuth required scopes: OR.Roles or OR.Roles.Read (both sides)
+OAuth required scopes: OR.Users or OR.Users.Read (both sides)
 
 Required permissions: Roles.View (both sides)
 

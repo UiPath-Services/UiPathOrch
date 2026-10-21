@@ -328,7 +328,7 @@ An asset that already exists at the destination is never overwritten: the cmdlet
 
 For cross-instance migration of per-robot assets, a user mapping CSV is required because user IDs differ between instances. Without -UserMappingCsv, per-robot values may not be copied correctly if usernames do not match.
 
-Credential asset passwords cannot be read from the source; only the credential username and structure are copied. Passwords must be re-entered at the destination.
+Credential asset passwords and Secret asset values cannot be read from the source; only the credential username and structure are copied. At the destination, the password or secret value (global and per-user) is set to the placeholder `!!!PLEASE UPDATE!!!`, and a warning is displayed advising to update it with Set-OrchCredentialAsset / Set-OrchSecretAsset. A value that refers to an external credential store (ExternalName is set) keeps that reference and gets no placeholder.
 
 A shared (linked) asset is handled differently depending on where it is going. Within one tenant the copy always creates an independent asset — to share the existing one with another folder instead, use `Add-OrchAssetLink`. The cmdlet warns when it copies a linked asset this way, including under -WhatIf. Across tenants the sharing is reproduced when the destination has a counterpart folder already holding an asset of the same name, so copying both folders of a shared asset yields one linked asset rather than two; when no counterpart is found the asset is copied independently and a warning is emitted at the end of the run.
 
