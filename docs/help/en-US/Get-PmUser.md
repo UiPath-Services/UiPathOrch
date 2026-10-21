@@ -20,7 +20,7 @@ Gets platform management users from UiPath Automation Cloud organizations.
 ### __AllParameterSets
 
 ```
-Get-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [[-Email] <string[]>] [-CsvEncoding <Encoding>]
+Get-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [[-UserName] <string[]>] [-CsvEncoding <Encoding>]
  [-ExportCsv <string>] [<CommonParameters>]
 ```
 
@@ -32,7 +32,7 @@ Gets user information from UiPath Automation Cloud at the organization (platform
 
 This cmdlet retrieves users from the identity service API and returns PmUser objects containing properties such as email, userName, name, surname, displayName, bypassBasicAuthRestriction, invitationAccepted, and groupIDs.
 
-The -Email parameter supports wildcards and tab completion. Press [Ctrl+Space] or [Tab] to see available user email addresses. Multiple values can be specified, and wildcard patterns are supported for flexible filtering.
+The -UserName parameter (alias -Email) supports wildcards and tab completion. Press [Ctrl+Space] or [Tab] to see available user email addresses. Multiple values can be specified, and wildcard patterns are supported for flexible filtering.
 
 When -ExportCsv is specified, the output is written to a CSV file instead of the pipeline. The CSV includes columns: Path, Email, UserName, Name, SurName, DisplayName, Type, BypassBasicAuthRestriction, InvitationAccepted, GroupName. Group IDs are resolved to human-readable group names in the export. The UserName column preserves a login name that differs from the email (as on Automation Suite / on-premises), so the file round-trips through New-PmUser.
 
@@ -60,7 +60,7 @@ Gets all platform management users from the current organization.
 PS Orch1:\> Get-PmUser ytsuda@gmail.com
 ```
 
-Gets the user with the specified email address. Because -Email is a positional parameter (position 0), the parameter name can be omitted.
+Gets the user with the specified email address. Because -UserName is a positional parameter (position 0), the parameter name can be omitted.
 
 ### Example 3: Get users matching a wildcard pattern
 
@@ -169,16 +169,16 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Email
+### -UserName
 
-Specifies the email addresses of users to retrieve. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests user email addresses from the target organizations. This parameter has the alias "UserName", and a pattern matches a user by either its userName or its email -- so a userName that differs from the email (or a userName-only account with no email) still resolves.
+Specifies the user names or email addresses of users to retrieve. Supports wildcards and multiple comma-separated values. Tab completion dynamically suggests user email addresses from the target organizations. This parameter has the alias "Email". A pattern matches a user by either its userName or its email -- so a userName that differs from the email (or a userName-only account with no email) still resolves.
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: true
 Aliases:
-- UserName
+- Email
 ParameterSets:
 - Name: (All)
   Position: 0
@@ -223,7 +223,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 
-You can pipe email addresses to this cmdlet via the Email property.
+You can pipe users to this cmdlet, for example from Get-PmUser or a CSV it exported. Their UserName property binds to -UserName; an object without one binds its Email property through the -Email alias. A user with an empty email therefore pipes correctly.
 
 ## OUTPUTS
 

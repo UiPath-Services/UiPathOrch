@@ -8,11 +8,13 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsCommon.Remove, "PmUser", SupportsShouldProcess = true)]
 public class RemovePmUserCmdlet : OrchestratorPSCmdlet
 {
+    // UserName is primary and Email its alias so that a piped user or CSV row binds its
+    // userName, which is never empty (an email can be). See Copy-PmUser.
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmUserEmailCompleter))]
     [SupportsWildcards]
-    [Alias("UserName")]
-    public string[]? Email { get; set; }
+    [Alias("Email")]
+    public string[]? UserName { get; set; }
 
     [Parameter]
     public SwitchParameter NoMatchWarning { get; set; }
@@ -28,7 +30,7 @@ public class RemovePmUserCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
-        var wpEmail = Email.ConvertToWildcardPatternList();
+        var wpEmail = UserName.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
@@ -52,7 +54,7 @@ public class RemovePmUserCmdlet : OrchestratorPSCmdlet
 
                 var partitionGlobalId = drive!.GetPartitionGlobalId();
 
-                // -UserName is an alias of -Email; match a pattern against EITHER the
+                // -Email is an alias of -UserName; match a pattern against EITHER the
                 // userName or the email — mirroring Get/Update/Copy-PmUser — so a
                 // userName that differs from the email, or a userName-only account
                 // (no email at all), can be removed. Filtering on the email alone made
@@ -64,7 +66,7 @@ public class RemovePmUserCmdlet : OrchestratorPSCmdlet
                 {
                     // This implementation is a bit rough, but it works properly during CSV import, so it should be sufficient.
                     // A proper implementation would need to process the UserName array one element at a time from the beginning.
-                    WriteWarning($"No match found for UserName '{Email![0]}'.");
+                    WriteWarning($"No match found for UserName '{UserName![0]}'.");
                     continue;
                 }
 

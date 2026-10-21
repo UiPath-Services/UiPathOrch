@@ -56,6 +56,24 @@ cmdlets could not name those bundles at all, and both failed silently when asked
   group, not before: the reverse order would strip the licences off a group that still exists if
   the group delete then failed. A record that cannot be removed is a warning naming what is left
   and the command that finishes the job, not an error — by then the group is already gone.
+- **Piping users into `Copy-PmUser`, `Update-PmUser`, `Remove-PmUser` and `Get-PmUser` works
+  for users without an email.** The user-selecting parameter was `-Email` with the alias
+  `-UserName`, and PowerShell binds a piped property to a parameter's own name before its
+  aliases. A local user on Automation Suite / on-premises can have an empty email, so piping
+  `Get-PmUser` into `Copy-PmUser` (or `Import-Csv` of a `Get-PmUser -ExportCsv` file) bound that
+  empty email and failed with `Cannot bind argument to parameter 'Email' because it is an empty
+  string` — measured on on-premises 23.4. The parameter is now `-UserName` with the alias
+  `-Email`: a piped user binds its userName, which is never empty, and an object with only an
+  `Email` property still binds through the alias. `-Email`, `-UserName` and the positional form
+  all keep working, and the value is still matched against both the userName and the email.
+- **Help: what migration does to passwords, and which scopes cmdlets need.** The Migration Guide
+  and `Copy-OrchAsset` now say that a copied credential or secret asset, and a bucket password,
+  hold the placeholder `!!!PLEASE UPDATE!!!` (an unattended robot password is left empty);
+  before, they said only that passwords are not migrated. `Compare-OrchRole` listed `OR.Roles`,
+  which does not exist (it needs `OR.Users`); `Set-OrchCredentialAsset`, `Set-OrchSecretAsset`
+  and `Update-OrchUser -UR_CredentialStore` also need `OR.Settings.Read` to look up the
+  credential store. Username/password drives were described as pre-21.4 only; they work on 22.4
+  through 25.10.2.
 
 ## [1.21.2] - 2026-10-15
 

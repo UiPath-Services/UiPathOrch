@@ -20,7 +20,7 @@ Copies platform management users from one UiPath organization to another.
 ### __AllParameterSets
 
 ```
-Copy-PmUser [-Path <string>] [-LiteralPath <string>] [-Email] <string[]> [-Destination] <string[]> [-Confirm]
+Copy-PmUser [-Path <string>] [-LiteralPath <string>] [-UserName] <string[]> [-Destination] <string[]> [-Confirm]
  [-UserMappingCsv <string>] [-WhatIf] [<CommonParameters>]
 ```
 
@@ -38,7 +38,7 @@ If a user with the same userName or email already exists in the destination orga
 
 The -UserMappingCsv parameter allows remapping usernames during the copy. When specified, the destination userName is taken from the mapping CSV: a source user is looked up by its userName (the SourceUserName column) and, for backward compatibility, by its email, and the DestinationUserName replaces the userName in the destination. This is useful when migrating users between organizations with different identity providers.
 
-The -Email parameter supports wildcards and tab completion. The -Destination and -Path parameters support tab completion for available drives.
+The -UserName parameter (alias -Email) supports wildcards and tab completion. The -Destination and -Path parameters support tab completion for available drives.
 
 Primary Endpoint: POST /api/User/BulkCreate (Identity Server)
 
@@ -154,16 +154,16 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Email
+### -UserName
 
-Specifies the email address(es) of the user(s) to copy. Supports wildcards for pattern matching. Tab completion dynamically suggests user email addresses from the source organization. This parameter has the alias "UserName", and a pattern matches a source user by either its userName or its email -- so a userName that differs from the email still selects it.
+Specifies the user name(s) or email address(es) of the user(s) to copy. Supports wildcards for pattern matching. Tab completion dynamically suggests user email addresses from the source organization. This parameter has the alias "Email". A pattern matches a source user by either its userName or its email -- so a userName that differs from the email still selects it.
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: true
 Aliases:
-- UserName
+- Email
 ParameterSets:
 - Name: (All)
   Position: 0
@@ -252,7 +252,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 
-You can pipe email addresses to this cmdlet via the Email property.
+You can pipe users to this cmdlet, for example from Get-PmUser or a CSV it exported. Their UserName property binds to -UserName; an object without one binds its Email property through the -Email alias. A user with an empty email therefore pipes correctly.
 
 ## OUTPUTS
 

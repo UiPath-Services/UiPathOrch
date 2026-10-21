@@ -11,11 +11,17 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
     // Key: (drive, groupIds) Value: Dictionary<email, csvLine>
     Dictionary<(OrchDriveInfo drive, string[] groupIds), Dictionary<string, CsvLine>> _params = new(new DriveGroupIdsComparer());
 
+    // UserName is the primary name and Email its alias, not the other way round:
+    // ByPropertyName binding tries the parameter's own name first, and a local user on
+    // Automation Suite / on-premises can have an empty email but never an empty userName.
+    // With Email primary, piping such a user (or its Get-PmUser CSV row) failed with
+    // "Cannot bind argument to parameter 'Email' because it is an empty string". The
+    // value is matched against both userName and email either way.
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmUserEmailCompleter))]
     [SupportsWildcards]
-    [Alias("UserName")]
-    public string[]? Email { get; set; }
+    [Alias("Email")]
+    public string[]? UserName { get; set; }
 
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DestinationDriveCompleter))]
@@ -36,7 +42,7 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
     {
         var srcDrive = SessionState.GetPmDrive(EffectivePath(Path, LiteralPath));
         var dstDrives = SessionState.EnumPmDrives(Destination);
-        var wpEmail = Email.ConvertToWildcardPatternList();
+        var wpEmail = UserName.ConvertToWildcardPatternList();
 
         var userMapping = dstDrives.Count == 1
             ? SessionState?.LoadUserMappingCsv(this, srcDrive, dstDrives[0], UserMappingCsv)
@@ -49,7 +55,7 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
             var srcAllUsers = srcDrive.PmUsers.Get();
 
             var srcUsers = srcDrive.PmUsers.Get()
-                // -UserName is an alias of -Email; match a pattern against EITHER the
+                // -Email is an alias of -UserName; match a pattern against EITHER the
                 // userName or the email so a userName that differs from the email still
                 // selects the source user (mirrors Get-OrchUser's UserName/EmailAddress).
                 .FilterByWildcardsAny([u => u?.userName, u => u?.email], wpEmail)

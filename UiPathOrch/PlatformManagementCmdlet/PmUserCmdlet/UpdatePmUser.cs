@@ -7,11 +7,13 @@ namespace UiPath.PowerShell.Commands;
 [Cmdlet(VerbsData.Update, "PmUser", SupportsShouldProcess = true)]
 public class UpdatePmUserCmdlet : OrchestratorPSCmdlet
 {
+    // UserName is primary and Email its alias so that a piped user or CSV row binds its
+    // userName, which is never empty (an email can be). See Copy-PmUser.
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmUserEmailCompleter))]
     [SupportsWildcards]
-    [Alias("UserName")]
-    public string[]? Email { get; set; }
+    [Alias("Email")]
+    public string[]? UserName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     public string? Name { get; set; }
@@ -63,7 +65,7 @@ public class UpdatePmUserCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
-        var wpEmail = Email.ConvertToWildcardPatternList();
+        var wpEmail = UserName.ConvertToWildcardPatternList();
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var drive in drives.WithCancellation(cancelHandler.Token))
@@ -71,9 +73,9 @@ public class UpdatePmUserCmdlet : OrchestratorPSCmdlet
             try
             {
                 var users = drive.PmUsers.Get();
-                // -UserName is an alias of -Email; match a pattern against EITHER the
+                // -Email is an alias of -UserName; match a pattern against EITHER the
                 // userName or the email so a userName that differs from the email still
-                // resolves. SelectByWildcardsAny keeps the empty -> empty (no -Email given
+                // resolves. SelectByWildcardsAny keeps the empty -> empty (no -UserName given
                 // => no-op) semantics of the former SelectByWildcards, unlike the Any
                 // filter used by the read cmdlets.
                 var targetUsers = users

@@ -10,11 +10,13 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(Entities.PmUser))]
 public class GetPmUserCmdlet : OrchestratorPSCmdlet
 {
+    // UserName is primary and Email its alias so that a piped user or CSV row binds its
+    // userName, which is never empty (an email can be). See Copy-PmUser.
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(PmUserEmailCompleter))]
     [SupportsWildcards]
-    [Alias("UserName")]
-    public string[]? Email { get; set; }
+    [Alias("Email")]
+    public string[]? UserName { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(DriveCompleter))]
@@ -99,7 +101,7 @@ public class GetPmUserCmdlet : OrchestratorPSCmdlet
         using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
         var drives = SessionState.EnumPmDrives(EffectivePath(Path, LiteralPath));
-        var wpEmail = Email.ConvertToWildcardPatternList();
+        var wpEmail = UserName.ConvertToWildcardPatternList();
 
         // Fetch the user list in parallel; per-org caches serialize
         // same-partition fetches internally. Filtering, the secondary
@@ -120,7 +122,7 @@ public class GetPmUserCmdlet : OrchestratorPSCmdlet
                 if (entities is null) continue;
 
                 var drive = result.Source;
-                // -UserName is an alias of -Email; match a pattern against EITHER the
+                // -Email is an alias of -UserName; match a pattern against EITHER the
                 // userName or the email so a userName that differs from the email (or a
                 // userName-only account with no email) still resolves. Mirrors how
                 // Get-OrchUser matches UserName/EmailAddress.

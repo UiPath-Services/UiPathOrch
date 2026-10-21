@@ -20,7 +20,7 @@ Removes a platform management user from a UiPath Automation Cloud organization.
 ### __AllParameterSets
 
 ```
-Remove-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [-Email] <string[]> [-Confirm] [-NoMatchWarning]
+Remove-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [-UserName] <string[]> [-Confirm] [-NoMatchWarning]
  [-WhatIf] [<CommonParameters>]
 ```
 
@@ -30,13 +30,13 @@ Remove-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [-Email] <string[]> [
 
 Removes one or more users at the organization (platform management) level from a UiPath Automation Cloud organization. The cmdlet calls the identity service delete API to permanently remove the user.
 
-The -Email parameter supports wildcards, allowing batch deletion of users matching a pattern. The currently logged-in user is automatically excluded from deletion for safety.
+The -UserName parameter (alias -Email) supports wildcards, allowing batch deletion of users matching a pattern. The currently logged-in user is automatically excluded from deletion for safety.
 
 The cmdlet supports cancellation via Ctrl+C during batch operations.
 
 The API endpoint used depends on the server version. The cmdlet automatically detects whether the newer partition-based API or the deprecated user-based API should be used, and falls back gracefully between them.
 
-The -Email and -Path parameters support tab completion.
+The -UserName and -Path parameters support tab completion.
 
 Primary Endpoint: DELETE /api/User/{userId} (Identity Server)
 
@@ -52,7 +52,7 @@ Required permissions: (managed by Identity Server)
 PS Orch1:\> Remove-PmUser ytsuda+c@gmail.com
 ```
 
-Removes the specified user from the organization. Because -Email is a positional parameter (position 0), the parameter name can be omitted.
+Removes the specified user from the organization. Because -UserName is a positional parameter (position 0), the parameter name can be omitted.
 
 ### Example 2: Remove multiple users with a wildcard
 
@@ -131,16 +131,16 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Email
+### -UserName
 
-Specifies the email address(es) of the user(s) to remove. Supports wildcards for pattern matching. Tab completion dynamically suggests user email addresses. This parameter has the alias "UserName", and a pattern matches a user by either its userName or its email -- so a userName that differs from the email, or a userName-only account without an email, still resolves (mirrors Get-PmUser / Update-PmUser / Copy-PmUser).
+Specifies the user name(s) or email address(es) of the user(s) to remove. Supports wildcards for pattern matching. Tab completion dynamically suggests user email addresses. This parameter has the alias "Email". A pattern matches a user by either its userName or its email -- so a userName that differs from the email, or a userName-only account without an email, still resolves (mirrors Get-PmUser / Update-PmUser / Copy-PmUser).
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: true
 Aliases:
-- UserName
+- Email
 ParameterSets:
 - Name: (All)
   Position: 0
@@ -155,7 +155,7 @@ HelpMessage: ''
 
 ### -NoMatchWarning
 
-When specified, displays a warning message if no users match the specified -Email pattern. Without this switch, the cmdlet completes silently when no match is found.
+When specified, displays a warning message if no users match the specified -UserName pattern. Without this switch, the cmdlet completes silently when no match is found.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -229,7 +229,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 
-You can pipe email addresses to this cmdlet via the Email property.
+You can pipe users to this cmdlet, for example from Get-PmUser or a CSV it exported. Their UserName property binds to -UserName; an object without one binds its Email property through the -Email alias. A user with an empty email therefore pipes correctly.
 
 ## OUTPUTS
 

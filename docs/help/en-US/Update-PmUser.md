@@ -20,7 +20,7 @@ Updates properties of a platform management user in a UiPath Automation Cloud or
 ### __AllParameterSets
 
 ```
-Update-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [[-Email] <string[]>]
+Update-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [[-UserName] <string[]>]
  [-BypassBasicAuthRestriction <string>] [-Confirm] [-DisplayName <string>]
  [-Name <string>] [-NewEmail <string>] [-Password <string>] [-Surname <string>] [-WhatIf]
  [<CommonParameters>]
@@ -32,11 +32,11 @@ Update-PmUser [-Path <string[]>] [-LiteralPath <string[]>] [[-Email] <string[]>]
 
 Updates the properties of an existing user at the organization (platform management) level. The cmdlet retrieves the current user properties, applies the specified changes, and calls the update API only if at least one property has actually changed.
 
-The -Email parameter (alias -UserName) identifies the user(s) to update and supports wildcards, allowing batch updates. Use -NewEmail to change or add the selected user's email address; because -NewEmail sets a single address, the selection must resolve to exactly one user when it is given.
+The -UserName parameter (alias -Email) identifies the user(s) to update and supports wildcards, allowing batch updates. Use -NewEmail to change or add the selected user's email address; because -NewEmail sets a single address, the selection must resolve to exactly one user when it is given.
 
 Updatable properties include Email (via -NewEmail), Name, DisplayName, Surname, Password, and BypassBasicAuthRestriction. Group membership is not modified by this cmdlet; use Add-PmGroupMember or Remove-PmGroupMember for group changes.
 
-The -Email, -BypassBasicAuthRestriction, and -Path parameters support tab completion.
+The -UserName, -BypassBasicAuthRestriction, and -Path parameters support tab completion.
 
 Primary Endpoint: PUT /api/User/{userId} (Identity Server)
 
@@ -52,7 +52,7 @@ Required permissions: (managed by Identity Server)
 PS Orch1:\> Update-PmUser ytsuda@gmail.com -DisplayName "Yoshifumi Tsuda"
 ```
 
-Updates the display name for the specified user. Because -Email is a positional parameter (position 0), the parameter name can be omitted.
+Updates the display name for the specified user. Because -UserName is a positional parameter (position 0), the parameter name can be omitted.
 
 ### Example 2: Update multiple users with a wildcard
 
@@ -165,16 +165,16 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
-### -Email
+### -UserName
 
-Specifies the email address(es) of the user(s) to update. Supports wildcards for batch updates. Tab completion dynamically suggests user email addresses. This parameter has the alias "UserName", and a pattern matches a user by either its userName or its email -- so a userName that differs from the email (or a userName-only account) still resolves. As with the former behavior, no -Email/-UserName means no user is matched (a no-op), not all users.
+Specifies the user name(s) or email address(es) of the user(s) to update. Supports wildcards for batch updates. Tab completion dynamically suggests user email addresses. This parameter has the alias "Email". A pattern matches a user by either its userName or its email -- so a userName that differs from the email (or a userName-only account) still resolves. As with the former behavior, no -UserName/-Email means no user is matched (a no-op), not all users.
 
 ```yaml
 Type: System.String[]
 DefaultValue: ''
 SupportsWildcards: true
 Aliases:
-- UserName
+- Email
 ParameterSets:
 - Name: (All)
   Position: 0
@@ -189,7 +189,7 @@ HelpMessage: ''
 
 ### -NewEmail
 
-Changes or adds the email address of the selected user. -Email/-UserName selects the user; -NewEmail sets its email. An existing user's email can be changed, and an email can be added to a userName-only account (verified on Automation Suite / on-premises v13-v17). Because a single address is set, the selection must resolve to exactly one user when -NewEmail is given.
+Changes or adds the email address of the selected user. -UserName/-Email selects the user; -NewEmail sets its email. An existing user's email can be changed, and an email can be added to a userName-only account (verified on Automation Suite / on-premises v13-v17). Because a single address is set, the selection must resolve to exactly one user when -NewEmail is given.
 
 ```yaml
 Type: System.String
@@ -326,7 +326,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 
 ### System.String[]
 
-You can pipe email addresses to this cmdlet via the Email property.
+You can pipe users to this cmdlet, for example from Get-PmUser or a CSV it exported. Their UserName property binds to -UserName; an object without one binds its Email property through the -Email alias. A user with an empty email therefore pipes correctly.
 
 ## OUTPUTS
 
@@ -338,7 +338,7 @@ This cmdlet does not produce output. The update is performed as a side effect.
 
 The update API is only called when at least one property value differs from the current value. If all specified values match the existing values, no API call is made.
 
-The user's email address can be changed (or added) via -NewEmail; -Email/-UserName selects the user and -NewEmail supplies the new address. Only one user may be selected when -NewEmail is given.
+The user's email address can be changed (or added) via -NewEmail; -UserName/-Email selects the user and -NewEmail supplies the new address. Only one user may be selected when -NewEmail is given.
 
 Group membership changes are not supported by this cmdlet. Use Add-PmGroupMember and Remove-PmGroupMember instead.
 
