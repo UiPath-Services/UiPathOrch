@@ -49,7 +49,8 @@ cmdlets could not name those bundles at all, and both failed silently when asked
   at all. It now resolves against what the group holds, through the same helper
   `Remove-PmUserLicense` uses, so the two cannot drift apart. Removing something already absent
   stays a silent no-op.
-- **`Remove-PmGroup` removes the group's licensing record with it.** The record was left behind
+- **`Remove-PmGroup` removes the group's licensing record with it** (on Automation Cloud and
+  Automation Suite; a standalone Orchestrator keeps no licensing records). The record was left behind
   with the group's bundles still attached, and until `-Id` above nothing could delete it, so
   every `Remove-PmGroup` added a permanent row to `Get-PmGroupLicense`. It costs no licence (an
   orphan's bundle stays out of `allocated`, measured) but it accumulated. Removed after the

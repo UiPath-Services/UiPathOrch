@@ -90,6 +90,12 @@ public class RemovePmGroupCmdlet : OrchestratorPSCmdlet
     {
         if (string.IsNullOrEmpty(group.id)) return;
 
+        // A standalone Orchestrator has no licensing records to leave behind: its licensing
+        // endpoints do not exist (the server answers with its HTML page), so looking would only
+        // turn every Remove-PmGroup there into a warning about an orphan row that cannot exist.
+        // IsCloud covers Automation Cloud and Automation Suite, which both keep the records.
+        if (!drive._psDrive.IsCloud) return;
+
         try
         {
             var licensed = drive.PmLicensedGroups.Get()
