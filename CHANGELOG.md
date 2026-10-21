@@ -6,9 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-The licensing cmdlets were checked against a tenant holding App Testing licenses
-(`APPTESTNU`, `APPTESTDEVNU`, `IDU`), none of which the static bundle catalog lists. Two
-cmdlets could not name those bundles at all, and both failed silently when asked to.
+## [1.22.0] - 2026-10-21
+
+Two sets of fixes, from checking the licensing cmdlets against a tenant holding App Testing
+licenses (`APPTESTNU`, `APPTESTDEVNU`, `IDU`, none of which the static bundle catalog lists: two
+cmdlets could not name those bundles at all, and both failed silently when asked to), and from
+rehearsing a user migration from a standalone Orchestrator to Automation Suite. 1.21.2 was
+prepared but never published; its two `Copy-OrchQueueItem` fixes are included here.
 
 ### Added
 
@@ -50,9 +54,9 @@ cmdlets could not name those bundles at all, and both failed silently when asked
   `Remove-PmUserLicense` uses, so the two cannot drift apart. Removing something already absent
   stays a silent no-op.
 - **`Remove-PmGroup` removes the group's licensing record with it** (on Automation Cloud and
-  Automation Suite; a standalone Orchestrator keeps no licensing records). The record was left behind
-  with the group's bundles still attached, and until `-Id` above nothing could delete it, so
-  every `Remove-PmGroup` added a permanent row to `Get-PmGroupLicense`. It costs no licence (an
+  Automation Suite; a standalone Orchestrator keeps no licensing records). The record was left
+  behind with the group's bundles still attached, and until `-Id` above nothing could delete it,
+  so every `Remove-PmGroup` added a permanent row to `Get-PmGroupLicense`. It costs no licence (an
   orphan's bundle stays out of `allocated`, measured) but it accumulated. Removed after the
   group, not before: the reverse order would strip the licences off a group that still exists if
   the group delete then failed. A record that cannot be removed is a warning naming what is left
@@ -75,11 +79,6 @@ cmdlets could not name those bundles at all, and both failed silently when asked
   and `Update-OrchUser -UR_CredentialStore` also need `OR.Settings.Read` to look up the
   credential store. Username/password drives were described as pre-21.4 only; they work on 22.4
   through 25.10.2.
-
-## [1.21.2] - 2026-10-15
-
-### Fixed
-
 - **`Copy-OrchQueueItem` reads the source queue in order of Id.** It read the New items 100 at a
   time with `$skip` in the list's default order, EndProcessing, which is empty on every New
   item, so the pages had no fixed order and a queue of more than 100 items could have items

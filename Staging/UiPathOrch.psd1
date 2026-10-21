@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.21.2'
+ModuleVersion = '1.22.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -516,12 +516,28 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
-1.21.2
+1.22.0
 
 Fixed: Copy-OrchQueueItem reads the source queue in order of Id. It paged through the New items
 in an order that was not fixed (EndProcessing, empty on every New item), so a queue of more than
 100 items could have items copied twice or not at all. It also copies SpecificContent as it was
 added: a date-time string is no longer converted to UTC, and value types are kept.
+
+Fixed: Add-PmUserLicense resolves -License against the licenses the organisation holds, so App
+Testing bundles such as APPTESTDEVNU can be assigned; a name given in full that matches nothing
+is now an error. Remove-PmGroupLicense accepts a raw bundle code. Remove-PmGroup removes the
+group's licensing record too (Automation Cloud and Automation Suite).
+
+Fixed: piping users from Get-PmUser (or its CSV) into Copy-, Update-, Remove- or Get-PmUser works
+for users without an email. The parameter is now -UserName with the alias -Email; both names and
+the positional form keep working.
+
+Added: an Entitlements column on Get-PmUserLicense, Get-PmGroupLicense and Get-PmLicenseInventory;
+bundle names filled in on Get-PmLicenseInventory; Remove-PmLicensedGroup -Id for orphan rows.
+
+Help: the Migration Guide says what a copy leaves in place of passwords (!!!PLEASE UPDATE!!!), and
+the scope lists are corrected (OR.Roles does not exist; OR.Settings.Read where the credential
+store is looked up).
 
 1.21.1
 
