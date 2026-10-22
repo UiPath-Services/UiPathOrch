@@ -400,6 +400,3 @@ scratch/
 
 # Local hotfix .nupkg artifacts for hand-delivery
 /dist/
-
-# Roadmap: a working document, kept locally only (deliberately untracked)
-/design/roadmap.md
