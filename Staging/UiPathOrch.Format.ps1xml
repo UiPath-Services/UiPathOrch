@@ -6154,6 +6154,52 @@
     </View>
 
     <View>
+      <Name>TmTestStep</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.TmTestStep</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>TestCase</Label>
+        <ScriptBlock>Join-Path $_.Path $_.TestCase</ScriptBlock>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>orderNo</Label>
+            <Alignment>Right</Alignment>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>description</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>expectedResult</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>clipboardData</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>orderNo</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>description</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>expectedResult</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>clipboardData</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>TmTestExecution</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.TmTestExecution</TypeName>
