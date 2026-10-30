@@ -297,6 +297,8 @@ public class OrchException : Exception
                         if (e.ValueKind != JsonValueKind.Object) continue;
                         string desc = GetPropertyValue(e, "description").ToString();
                         if (string.IsNullOrEmpty(desc)) desc = GetPropertyValue(e, "message").ToString();
+                        // Test Manager validation: { propertyName, errorMessage }.
+                        if (string.IsNullOrEmpty(desc)) desc = GetPropertyValue(e, "errorMessage").ToString();
                         if (!string.IsNullOrEmpty(desc)) sink.Add(desc);
                     }
                 }

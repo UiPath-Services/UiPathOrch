@@ -39,3 +39,4 @@ Username 'akari.tsuda@uipath.com' is already taken.	{"result":{"succeeded":false
 # NOTE: ErrorsCollection.txt also has a Japanese 'errorMessage' that arrived
 # mojibake'd. That is a response-body charset bug in OrchAPISession (not
 # ExtractMessage), so it is intentionally not a case here.
+The project prefix has to contain only uppercase alphanumerics A-Z, 0-9.	{"errors":[{"propertyName":"ProjectPrefix","errorMessage":"The project prefix has to contain only uppercase alphanumerics A-Z, 0-9."}],"errorMessage":"The request validation failed.","errorCode":"invalidRequest","details":"[{\"propertyName\":\"ProjectPrefix\",\"errorMessage\":\"The project prefix has to contain only uppercase alphanumerics A-Z, 0-9.\"}]","data":null}
