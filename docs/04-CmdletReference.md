@@ -710,6 +710,8 @@ Test Manager project management (TM API, separate from Orchestrator testing).
 | Update-TmTestCase | Rename a test case, change its version, description, pre/post-condition, replace its labels |
 | Remove-TmTestCase | Remove a Test Manager test case |
 | Get-TmTestSet | List Test Manager test sets |
+| New-TmTestSet | Create a Test Manager test set, optionally with activity coverage and labels |
+| Update-TmTestSet | Rename a test set, change its description or activity coverage, replace its labels |
 | Remove-TmTestSet | Remove a Test Manager test set |
 | Get-TmTestExecution | Get test execution results |
 

@@ -5168,6 +5168,18 @@ public class TmTestCase
     public string? updatedBy { get; set; }
 }
 
+// UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.CreateTestSetRequest
+public class TmCreateTestSetRequest
+{
+    public string? name { get; set; }
+    public string? description { get; set; }
+    public string? projectId { get; set; }
+    public string? containerId { get; set; }
+    public string? source { get; set; }
+    public string? sourceDetails { get; set; }
+    public bool? enableCoverage { get; set; }
+}
+
 // UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.TestSetDto
 public class TmTestSet
 {
@@ -5181,7 +5193,23 @@ public class TmTestSet
     public string? sourceDetails { get; set; }
     public string? externalTestSetId { get; set; }
     public bool? enableCoverage { get; set; }
+    public string? remoteControlAccess { get; set; }
+    // Settings objects whose shape has not been seen populated yet; kept raw.
+    public object? autopilotForRobotsSettings { get; set; }
+    public object? videoRecordingSettings { get; set; }
     public bool? enforceExecutionOrder { get; set; }
+    public object? orderedExecutionSettings { get; set; }
+    public bool? enableEnvironmentVariables { get; set; }
+    public object? environmentVariables { get; set; }
+    public string? executionNameFormatOverride { get; set; }
+    public string? folderKey { get; set; }
+    public string? robotName { get; set; }
+    public string? robotUserKey { get; set; }
+    public string? runtimeType { get; set; }
+    public string? machineKey { get; set; }
+    public string? hostMachineName { get; set; }
+    public string? serviceUsername { get; set; }
+    public bool? isHidden { get; set; }
     public string? id { get; set; }
     public string? name { get; set; }
     public string? description { get; set; }

@@ -467,6 +467,8 @@ CmdletsToExport = @(
 'Remove-TmTestCase',
 
 'Get-TmTestSet',
+'New-TmTestSet',
+'Update-TmTestSet',
 'Remove-TmTestSet',
 
 'Get-TmTestExecution',

@@ -4859,6 +4859,13 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<TmTestSet> GetTmTestSets(string projectId) => GetEnumerableTm<TmTestSet>($"/testmanager_/api/v2/{projectId}/testsets");
 
+    // Returns the created test set.
+    public TmTestSet? PostTmTestSet(string projectId, TmCreateTestSetRequest request) => HttpRequest<TmTestSet>(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/testsets", null, request);
+
+    // JSON Patch: only the fields named in the operations change. Unlike the PUT body
+    // (UpdateTestSetRequest: name, description), it also takes /enableCoverage.
+    public string PatchTmTestSet(string projectId, string testSetId, IEnumerable<TmPatchOperation> operations) => HttpRequest(HttpMethod.Patch, $"/testmanager_/api/v2/{projectId}/testsets/{testSetId}", null, operations);
+
     public string RemoveTmTestSet(string projectId, string testSetId) => HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/testsets/{testSetId}");
 
     // This endpoint appears to return the same results as /testexecutions/filtered.
