@@ -85,7 +85,7 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
     // Per-call clone stamped with this drive's drive-qualified path, so the emitted object's
     // Path/FullName (hence GetPSPath()) are this drive's and never leak another drive's value.
     // Emitting the bare shared cache entity would leave FullName empty or carry a stale value.
-    private (TProject clone, string fullName) CloneStamped(TDrive drive, TProject project)
+    protected (TProject clone, string fullName) CloneStamped(TDrive drive, TProject project)
     {
         string sep = drive.NameColonSeparator;
         string fullName = sep + GetName(project);
@@ -328,8 +328,9 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
     // ----- NavigationCmdletProvider overrides ---------------------------------
 
     // Delete a project through the per-provider API call (RemoveDuProject / RemoveTmProject).
-    // Rename diverges per provider (TM renames in place; DU has no rename endpoint) and is left to
-    // the concrete classes; New is DU-only.
+    // Rename diverges per provider (TM renames in place; DU has no rename endpoint) and so does New
+    // (different payloads, and only TM's create returns the project); both are left to the
+    // concrete classes.
     protected override void RemoveItem(string path, bool recurse)
     {
         var drives = EnumShadowDrives(path);

@@ -4813,6 +4813,9 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<TmProject> GetTmProjects() => GetEnumerableTm<TmProject>("/testmanager_/api/v2/projects");
 
+    // Returns the created project.
+    public TmProject? PostTmProject(TmCreateProjectRequest request) => HttpRequest<TmProject>(HttpMethod.Post, "/testmanager_/api/v2/projects", null, request);
+
     public string PutTmProject(TmProject project) => HttpRequest(HttpMethod.Put, $"/testmanager_/api/v2/projects/{project.id}", null, project);
 
     // Returns nothing

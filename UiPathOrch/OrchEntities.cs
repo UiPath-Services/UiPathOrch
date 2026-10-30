@@ -5052,6 +5052,15 @@ public class TmProject : IShadowProject
     public string? updatedBy { get; set; }
 }
 
+// UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.CreateProjectRequest
+public class TmCreateProjectRequest
+{
+    public string? name { get; set; }
+    public string? description { get; set; }
+    public string? projectPrefix { get; set; }
+    public bool? isActive { get; set; }
+}
+
 // UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.RequirementDto
 public class TmRequirement
 {

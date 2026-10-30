@@ -3,6 +3,8 @@
 using System.Management.Automation;
 using System.Management.Automation.Provider;
 using UiPath.PowerShell.Commands;
+using UiPath.PowerShell.Completer;
+using UiPath.PowerShell.Positional;
 using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core;
@@ -36,6 +38,66 @@ public class OrchTmProvider : OrchShadowProviderBase<OrchTmDriveInfo, TmProject>
 
     protected override void RemoveProjectApi(OrchTmDriveInfo drive, TmProject project)
         => drive.OrchAPISession.RemoveTmProject(project.id!);
+
+    // ----- create: New-Item Tm:\PREFIX ----------------------------------------
+
+    // The leaf of the path is the project prefix (the drive's item name, see GetName); the
+    // display name is a separate field and defaults to the prefix when omitted.
+    public class NewItem_DynamicParameters
+    {
+        [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
+        public string? ProjectName { get; set; }
+
+        [Parameter(ValueFromPipelineByPropertyName = true)]
+        [ArgumentCompleter(typeof(StaticTextsCompleter<DescriptionHere>))]
+        public string? Description { get; set; }
+    }
+
+    protected override object NewItemDynamicParameters(string path, string itemTypeName, object newItemValue)
+        => new NewItem_DynamicParameters();
+
+    protected override void NewItem(string path, string itemTypeName, object newItemValue)
+    {
+        var drive = ResolveShadowDrive(path);
+        if (drive is null) return;
+
+        // A flat drive: the project is the single segment under the root (as in GetProject).
+        string prefix = OrchDriveInfo.PSPathToOrchPath(path);
+        if (prefix.Length == 0 || prefix.Contains('/'))
+        {
+            WriteError(new ErrorRecord(new OrchException(path, $"'{path}' is not a valid project path. Supply the project prefix directly under the drive root. Example: New-Item {drive.NameColonSeparator}MYPROJ -ProjectName 'My Project'."), "NewTmProjectError", ErrorCategory.InvalidArgument, path));
+            return;
+        }
+
+        if (!ShouldProcess(path, "New Project"))
+        {
+            return;
+        }
+
+        var dynamicParameters = DynamicParameters as NewItem_DynamicParameters ?? new();
+        try
+        {
+            var created = drive.OrchAPISession.PostTmProject(new TmCreateProjectRequest
+            {
+                name = dynamicParameters.ProjectName ?? prefix,
+                description = dynamicParameters.Description ?? "",
+                projectPrefix = prefix,
+                isActive = true,
+            });
+            drive.TmProjects.ClearCache();
+
+            if (created is not null)
+            {
+                var (clone, fullName) = CloneStamped(drive, created);
+                WriteItemObject(clone, fullName, true);
+            }
+        }
+        catch (Exception ex)
+        {
+            WriteError(new ErrorRecord(new OrchException(path, ex), "NewTmProjectError", ErrorCategory.InvalidOperation, path));
+            drive.TmProjects.ClearCache();
+        }
+    }
 
     // ----- TM-only operation: rename in place ---------------------------------
 
