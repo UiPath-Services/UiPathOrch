@@ -20,7 +20,7 @@ Gets the permissions of projects in Test Manager.
 ### __AllParameterSets
 
 ```
-Get-TmProjectPermission [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [<CommonParameters>]
+Get-TmProjectPermission [[-Path] <string[]>] [-LiteralPath <string[]>] [-Recurse] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -78,7 +78,7 @@ SupportsWildcards: true
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: Named
+  Position: 0
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true
