@@ -82,14 +82,7 @@ public class UpdateTmRequirementCmdlet : OrchestratorPSCmdlet
                         }
                         if (hasLabels)
                         {
-                            drive.OrchAPISession.AddTmObjectLabels(project.id!, new TmBulkAddLabelsRequest
-                            {
-                                objectType = "requirement",
-                                objectIds = [requirement.id!],
-                                labels = labels,
-                                projectId = project.id,
-                                removeOtherLabels = true,
-                            });
+                            drive.OrchAPISession.AddTmObjectLabels(project.id!, "requirement", requirement.id!, labels!, replace: true);
                         }
                     }
                     catch (Exception ex)
@@ -111,14 +104,8 @@ public class UpdateTmRequirementCmdlet : OrchestratorPSCmdlet
     internal static List<TmPatchOperation> ComputeRequirementPatch(TmRequirement current, string? newName, string? description)
     {
         var operations = new List<TmPatchOperation>();
-        if (newName is not null && newName != current.name)
-        {
-            operations.Add(new TmPatchOperation { op = "replace", path = "/name", value = newName });
-        }
-        if (description is not null && description != (current.description ?? ""))
-        {
-            operations.Add(new TmPatchOperation { op = "replace", path = "/description", value = description });
-        }
+        TmPatch.ReplaceIfChanged(operations, "/name", newName, current.name);
+        TmPatch.ReplaceIfChanged(operations, "/description", description, current.description);
         return operations;
     }
 }

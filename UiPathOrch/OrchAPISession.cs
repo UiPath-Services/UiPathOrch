@@ -4834,10 +4834,25 @@ public partial class OrchAPISession : IDisposable
     // The distinct label names used in the project, e.g. ["login","regression","smoke"].
     public string[]? GetTmObjectLabelNames(string projectId) => HttpRequest<string[]>(HttpMethod.Get, $"/testmanager_/api/v2/{projectId}/objectlabels/all");
 
-    // Adds labels (by name) to objects of one type; removeOtherLabels makes the list authoritative.
-    public string AddTmObjectLabels(string projectId, TmBulkAddLabelsRequest request) => HttpRequest(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/objectlabels/{request.objectType}/addlabels", null, request);
+    // Adds labels (by name) to one object. objectType: "requirement" / "testCase" / "testSet" / ...
+    // replace (removeOtherLabels) makes the list authoritative: labels not in it are removed.
+    public string AddTmObjectLabels(string projectId, string objectType, string objectId, string[] labels, bool replace = false)
+        => HttpRequest(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/objectlabels/{objectType}/addlabels", null, new TmBulkAddLabelsRequest
+        {
+            objectType = objectType,
+            objectIds = [objectId],
+            labels = labels,
+            projectId = projectId,
+            removeOtherLabels = replace ? true : null,
+        });
 
     public IEnumerable<TmTestCase> GetTmTestCases(string projectId) => GetEnumerableTm<TmTestCase>($"/testmanager_/api/v2/{projectId}/testcases");
+
+    // Returns the created test case.
+    public TmTestCase? PostTmTestCase(string projectId, TmCreateTestCaseRequest request) => HttpRequest<TmTestCase>(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/testcases", null, request);
+
+    // JSON Patch: only the fields named in the operations change. (This endpoint has no PUT.)
+    public string PatchTmTestCase(string projectId, string testCaseId, IEnumerable<TmPatchOperation> operations) => HttpRequest(HttpMethod.Patch, $"/testmanager_/api/v2/{projectId}/testcases/{testCaseId}", null, operations);
 
     // Returns empty
     public string RemoveTmTestCase(string projectId, string testCaseId) => HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/testcases/{testCaseId}");

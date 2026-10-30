@@ -5112,6 +5112,20 @@ public class TmRequirement
     public string? updatedBy { get; set; }
 }
 
+// UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.CreateTestCaseRequest
+public class TmCreateTestCaseRequest
+{
+    public string? name { get; set; }
+    public string? description { get; set; }
+    public string? projectId { get; set; }
+    public string? version { get; set; }
+    public string? inputParams { get; set; }
+    public string? automationId { get; set; }
+    public string? containerId { get; set; }
+    public string? foreignReference { get; set; }
+    public string? connectorTestCaseId { get; set; }
+}
+
 // UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.TestCaseDto
 public class TmTestCase
 {
@@ -5121,6 +5135,7 @@ public class TmTestCase
     public string? objKey { get; set; }
     public string? version { get; set; }
     public string? preCondition { get; set; }
+    public string? postCondition { get; set; }
     public string? inputParams { get; set; }
     public string? automationId { get; set; }
     public string? containerId { get; set; }
@@ -5128,6 +5143,20 @@ public class TmTestCase
     public string? automationProjectName { get; set; }
     public string? foreignReference { get; set; }
     public string? connectorTestCaseId { get; set; }
+    public bool? hasLinkedAutomation { get; set; }
+    public string? packageVersion { get; set; }
+    public string? autonomousTestUrl { get; set; }
+    public string? packageEntryPointUniqueId { get; set; }
+    public string? packageIdentifier { get; set; }
+    public string? packageEntryPointName { get; set; }
+    public string? feedId { get; set; }
+    public string? packageSourceName { get; set; }
+    public string? studioWebProjectId { get; set; }
+    public string? studioWebFileId { get; set; }
+    public bool? isHidden { get; set; }
+    public bool? isGoverned { get; set; }
+    public string? approvalStatus { get; set; }
+    public int? totalApproversRequired { get; set; }
     public string? id { get; set; }
     public string? name { get; set; }
     public string? description { get; set; }

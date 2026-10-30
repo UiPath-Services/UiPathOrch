@@ -94,13 +94,7 @@ public class NewTmRequirementCmdlet : OrchestratorPSCmdlet
                 {
                     try
                     {
-                        drive.OrchAPISession.AddTmObjectLabels(project.id!, new TmBulkAddLabelsRequest
-                        {
-                            objectType = "requirement",
-                            objectIds = [created.id!],
-                            labels = labels,
-                            projectId = project.id,
-                        });
+                        drive.OrchAPISession.AddTmObjectLabels(project.id!, "requirement", created.id!, labels);
                         drive.TmLabels.ClearCache(project.id);
                     }
                     catch (Exception ex)
