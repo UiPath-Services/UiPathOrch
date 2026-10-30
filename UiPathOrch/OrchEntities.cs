@@ -5061,6 +5061,36 @@ public class TmCreateProjectRequest
     public bool? isActive { get; set; }
 }
 
+// UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.CreateRequirementRequest
+public class TmCreateRequirementRequest
+{
+    public string? name { get; set; }
+    public string? description { get; set; }
+    public string? projectId { get; set; }
+    public string? containerId { get; set; }
+    public string? foreignReference { get; set; }
+    public string? connectorRequirementId { get; set; }
+}
+
+// Microsoft.AspNetCore.JsonPatch.Operations.Operation -- one JSON Patch op (RFC 6902), the body
+// of the Test Manager PATCH endpoints is an array of these.
+public class TmPatchOperation
+{
+    public string? op { get; set; }
+    public string? path { get; set; }
+    public object? value { get; set; }
+}
+
+// UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.BulkAddLabelsRequestDto
+public class TmBulkAddLabelsRequest
+{
+    public bool? removeOtherLabels { get; set; }
+    public string[]? objectIds { get; set; }
+    public string[]? labels { get; set; }
+    public string? projectId { get; set; }
+    public string? objectType { get; set; } // "requirement" / "testCase" / "testSet" / ...
+}
+
 // UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.RequirementDto
 public class TmRequirement
 {

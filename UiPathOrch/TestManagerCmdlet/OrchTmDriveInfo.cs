@@ -20,6 +20,7 @@ public class OrchTmDriveInfo : OrchDriveInfoBase
     public TmListCachePerTenant1<TmTestSet> TmTestSets = null!;
     public TmListCachePerTenant1<TmTestExecution> TmTestExecutions = null!;
     public TmListCachePerTenant1<TmRequirement> TmRequirements = null!;
+    public TmListCachePerTenant1<string> TmLabels = null!; // label names used in the project
     public TmListCachePerTenant1<TmProjectPermission> TmProjectPermissions = null!;
     // Incremental cache
     public IncrementalCachePerProject<string, TmTestExecutionResult> TmTestExecutionResults = null!;
@@ -88,6 +89,7 @@ public class OrchTmDriveInfo : OrchDriveInfoBase
         TmTestSets = new(this, project => OrchAPISession.GetTmTestSets(project.id!), (e, project) => e.Path = project.GetPSPath());
         TmTestExecutions = new(this, project => OrchAPISession.GetTmTestExecutions(project.id!), (e, project) => e.Path = project.GetPSPath());
         TmRequirements = new(this, project => OrchAPISession.GetTmRequirements(project.id!), (e, project) => e.Path = project.GetPSPath());
+        TmLabels = new(this, project => OrchAPISession.GetTmObjectLabelNames(project.id!) ?? []);
 
         TmProjectPermissions = new(this, project => OrchAPISession.GetTmProjectPermission(project.id!),
             (e, project) =>

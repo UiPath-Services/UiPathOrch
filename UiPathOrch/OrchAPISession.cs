@@ -4823,7 +4823,19 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<TmRequirement> GetTmRequirements(string projectId) => GetEnumerableTm2<TmRequirement>($"/testmanager_/api/v2/{projectId}/requirements");
 
+    // Returns the created requirement.
+    public TmRequirement? PostTmRequirement(string projectId, TmCreateRequirementRequest request) => HttpRequest<TmRequirement>(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/requirements", null, request);
+
+    // JSON Patch: only the fields named in the operations change.
+    public string PatchTmRequirement(string projectId, string requirementId, IEnumerable<TmPatchOperation> operations) => HttpRequest(HttpMethod.Patch, $"/testmanager_/api/v2/{projectId}/requirements/{requirementId}", null, operations);
+
     public string RemoveTmRequirements(string projectId, string requirementId) => HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/requirements/{requirementId}");
+
+    // The distinct label names used in the project, e.g. ["login","regression","smoke"].
+    public string[]? GetTmObjectLabelNames(string projectId) => HttpRequest<string[]>(HttpMethod.Get, $"/testmanager_/api/v2/{projectId}/objectlabels/all");
+
+    // Adds labels (by name) to objects of one type; removeOtherLabels makes the list authoritative.
+    public string AddTmObjectLabels(string projectId, TmBulkAddLabelsRequest request) => HttpRequest(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/objectlabels/{request.objectType}/addlabels", null, request);
 
     public IEnumerable<TmTestCase> GetTmTestCases(string projectId) => GetEnumerableTm<TmTestCase>($"/testmanager_/api/v2/{projectId}/testcases");
 

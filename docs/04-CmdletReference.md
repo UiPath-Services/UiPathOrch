@@ -702,6 +702,8 @@ Test Manager project management (TM API, separate from Orchestrator testing).
 | Get-TmProjectSetting | Get project settings |
 | Get-TmProjectPermission | Get project permissions |
 | Get-TmRequirement | List requirements |
+| New-TmRequirement | Create a requirement, optionally with labels |
+| Update-TmRequirement | Rename a requirement, change its description, replace its labels |
 | Remove-TmRequirement | Remove a requirement |
 | Get-TmTestCase | List Test Manager test cases |
 | Remove-TmTestCase | Remove a Test Manager test case |

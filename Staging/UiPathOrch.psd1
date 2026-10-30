@@ -457,6 +457,8 @@ CmdletsToExport = @(
 'Get-TmServerInfo',
 
 'Get-TmRequirement',
+'New-TmRequirement',
+'Update-TmRequirement',
 'Remove-TmRequirement',
 
 'Get-TmTestCase',

@@ -2359,6 +2359,14 @@ internal class TmRequirementNameCompleter : TmProjectScopedCompleter<TmRequireme
     protected override string GetTipHelp(TmRequirement e) => e.GetPSPath();
 }
 
+// Label names already used in the project (objectlabels/all), for -Labels.
+internal class TmLabelNameCompleter : TmProjectScopedCompleter<string>
+{
+    protected override IEnumerable<string> GetEntities(OrchTmDriveInfo drive, TmProject project)
+        => drive.TmLabels.Get(project);
+    protected override string GetName(string e) => e;
+}
+
 internal class TmTestSetNameCompleter : TmProjectScopedCompleter<TmTestSet>
 {
     protected override IEnumerable<TmTestSet> GetEntities(OrchTmDriveInfo drive, TmProject project)
