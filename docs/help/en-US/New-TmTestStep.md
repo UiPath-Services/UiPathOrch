@@ -20,8 +20,9 @@ Adds a manual step to test cases in Test Manager.
 ### __AllParameterSets
 
 ```
-New-TmTestStep [-TestCase] <string[]> [-Description] <string> [-ExpectedResult <string>] [-ClipboardData <string>]
- [-OrderNo <int>] [-Path <string[]>] [-LiteralPath <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
+New-TmTestStep [-TestCase] <string[]> [-Description] <string> [[-ExpectedResult] <string>]
+ [[-ClipboardData] <string>] [-OrderNo <int>] [-Path <string[]>] [-LiteralPath <string[]>] [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -46,8 +47,10 @@ OAuth Required scopes: TM.TestCases
 ### Example 1: Add a step at the end
 
 ```powershell
-PS Orch1Tm:\MTP> New-TmTestStep Login "Enter the user name and password" -ExpectedResult "The dashboard is shown"
+PS Orch1Tm:\MTP> New-TmTestStep Login "Enter the user name and password" "The dashboard is shown"
 ```
+
+The positional arguments follow the web form: Description, Expected behaviour, Clipboard data.
 
 ### Example 2: Insert a step at the top
 
@@ -128,7 +131,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: Named
+  Position: 2
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true
@@ -149,7 +152,7 @@ SupportsWildcards: false
 Aliases: []
 ParameterSets:
 - Name: (All)
-  Position: Named
+  Position: 3
   IsRequired: false
   ValueFromPipeline: false
   ValueFromPipelineByPropertyName: true

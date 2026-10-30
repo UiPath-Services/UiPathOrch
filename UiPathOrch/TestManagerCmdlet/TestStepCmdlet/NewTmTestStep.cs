@@ -5,8 +5,9 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-// One step per call; pipe objects with Description / ExpectedResult / ClipboardData properties
-// (e.g. Import-Csv, or Get-TmTestStep of another test case) to add several in order.
+// One step per call: New-TmTestStep <test case> <description> <expected result> <clipboard data>.
+// Pipe objects with Description / ExpectedResult / ClipboardData properties (e.g. Import-Csv, or
+// Get-TmTestStep of another test case) to add several in order.
 [Cmdlet(VerbsCommon.New, "TmTestStep", SupportsShouldProcess = true)]
 [OutputType(typeof(TmTestStep))]
 public class NewTmTestStepCmdlet : OrchestratorPSCmdlet
@@ -21,11 +22,11 @@ public class NewTmTestStepCmdlet : OrchestratorPSCmdlet
     [AllowEmptyString]
     public string? Description { get; set; }
 
-    // "Expected behaviour" in the web form.
-    [Parameter(ValueFromPipelineByPropertyName = true)]
+    // "Expected behaviour" in the web form. The positions follow the form's order.
+    [Parameter(Position = 2, ValueFromPipelineByPropertyName = true)]
     public string? ExpectedResult { get; set; }
 
-    [Parameter(ValueFromPipelineByPropertyName = true)]
+    [Parameter(Position = 3, ValueFromPipelineByPropertyName = true)]
     public string? ClipboardData { get; set; }
 
     // Where the new step goes (0-based); the steps from there on move down by one. Negative values
