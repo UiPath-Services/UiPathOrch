@@ -955,12 +955,12 @@ public class ProgressReporter : IDisposable
 
     // PowerShell #21293: the console host miscounts East Asian Wide characters when sizing the
     // progress bar, so any wide text (in the status OR the activity line) pushes the bar's
-    // closing ']' onto the next line. Unless the host is known-fixed (PR #26185), collapse each
-    // run of wide characters to "[N]" (N = hidden wide-char count) -- leaving the narrow
-    // segments intact and the whole string one-cell-per-char. "請求書" -> "[3]",
-    // "Invoice請求Folder" -> "Invoice[2]Folder". A null/empty stays as-is (no name -> no marker).
+    // closing ']' onto the next line. Collapse each unsafe run to "[N]" (N = hidden char
+    // count) -- leaving the safe segments intact. "請求書" -> "[3]", "Invoice請求Folder" ->
+    // "Invoice[2]Folder". On a host with the fix (PR #26185) only the characters it still
+    // miscounts (Ambiguous symbols, newer emoji) are collapsed. A null/empty stays as-is.
     private string? SafeText(string? text)
-        => provider?.RendersWideProgress == true ? text : EastAsianWidth.CollapseWide(text);
+        => EastAsianWidth.CollapseWide(text, hostCountsWide: provider?.RendersWideProgress == true);
 
     private void WriteProgress()
     {

@@ -6,72 +6,137 @@ namespace UiPath.PowerShell.Core;
 // OrchProgressText.cs -- Width-safety helpers for Write-Progress StatusDescription
 // =============================================================================
 //
-// PowerShell issue #21293: the console host sizes the progress bar by COUNTING
-// CHARACTERS, not display cells. A character that occupies two cells (East Asian
-// Wide / Fullwidth, and -- in CJK terminals -- many "Ambiguous" symbols) makes the
-// rendered line longer than PowerShell computed, pushing the bar's trailing ']'
-// onto the next line, where it then sticks. Fix tracked by PR #26185.
+// PowerShell issue #21293: the console host sizes the progress bar by its string.Length
+// (UTF-16 code units), not by display cells. A character that is one code unit but two
+// cells (a BMP East Asian Wide / Fullwidth character) makes the rendered line longer than
+// PowerShell computed, pushing the bar's trailing ']' onto the next line, where it then
+// sticks. Fix tracked by PR #26185.
 //
-// Until that fix ships we must keep such characters OUT of StatusDescription. The
-// rest of the record (the ASCII "index/total" prefix) is always safe. ProgressReporter
-// consults these helpers and drops the name when the host can't render it safely.
+// Only those characters are mis-sized by the count. A supplementary-plane character (emoji,
+// CJK Ext B such as U+20BB7) is two code units AND two cells, so the old count is right.
+//
+// The fixed host (7.7+) counts cells with ConsoleControl.LengthInBufferCells, a fixed
+// wcwidth table, which is still wrong for two groups: EAW Ambiguous symbols (° × ※ → ■ ...),
+// which conhost renders two cells with a CJK font while the table says one, and the W
+// emoji/symbols newer than that table (⌚ ⭐ ...). Those are unsafe on EVERY host version.
+// ProgressReporter consults these helpers and collapses the unsafe runs.
 
 // True/false: does a string contain any code point that the buggy renderer mis-sizes?
 public static class EastAsianWidth
 {
-    // Inclusive code-point ranges treated as "not safe to show on a buggy host":
-    //   * East Asian Wide (W) and Fullwidth (F) blocks  -- always two cells everywhere.
-    //   * A curated set of symbols that are EAW Ambiguous but render two cells in CJK
-    //     terminals AND commonly appear in CJK-authored names (e.g. U+203B '*'-mark,
-    //     U+2026 ellipsis, fullwidth arrows). Letters are deliberately EXCLUDED so that
-    //     accented Latin names (Ambiguous but one cell on western terminals) still show.
-    // Sorted ascending, non-overlapping -> binary search. Over-inclusion only hides a
-    // name (safe); under-inclusion would let ']' wrap (the bug we are avoiding), so the
-    // table errs wide.
+    // Inclusive code-point ranges that are one UTF-16 code unit but two cells: the BMP
+    // ranges of East Asian Width W and F, from Unicode 16.0 EastAsianWidth.txt (adjacent
+    // ranges merged). Supplementary planes are deliberately absent (see the file header).
+    // Sorted ascending, non-overlapping -> binary search.
     private static readonly (int Lo, int Hi)[] WideRanges =
     [
-        (0x000B0, 0x000B0), // ° degree
-        (0x000B1, 0x000B1), // ± plus-minus
-        (0x000D7, 0x000D7), // × multiply
-        (0x000F7, 0x000F7), // ÷ divide
-        (0x02014, 0x02014), // — em dash
-        (0x02018, 0x02019), // ' ' curly single quotes
-        (0x0201C, 0x0201D), // " " curly double quotes
-        (0x02025, 0x02026), // ‥ … ellipses
-        (0x02103, 0x02103), // ℃
-        (0x02109, 0x02109), // ℉
-        (0x02116, 0x02116), // № numero
-        (0x02190, 0x02199), // ← ↑ → ↓ ↔ ↕ ↖ ↗ ↘ ↙ arrows
-        (0x0203B, 0x0203B), // ※ reference mark
-        (0x02329, 0x0232A), // 〈 〉 angle brackets (Wide)
-        (0x025A0, 0x025FF), // geometric shapes ■ □ ● ○ ▲ △ ...
-        (0x02600, 0x027BF), // misc symbols + dingbats (conservative block)
-        (0x02E80, 0x0303E), // CJK Radicals .. CJK Symbols & Punctuation (incl. U+3000)
-        (0x03041, 0x033FF), // Hiragana, Katakana, Hangul Compat Jamo, Enclosed CJK, ...
-        (0x03400, 0x04DBF), // CJK Unified Ideographs Extension A
-        (0x04E00, 0x09FFF), // CJK Unified Ideographs
-        (0x0A000, 0x0A4CF), // Yi Syllables / Radicals
-        (0x0A960, 0x0A97F), // Hangul Jamo Extended-A
-        (0x0AC00, 0x0D7A3), // Hangul Syllables
-        (0x0F900, 0x0FAFF), // CJK Compatibility Ideographs
-        (0x0FE10, 0x0FE19), // Vertical Forms
-        (0x0FE30, 0x0FE4F), // CJK Compatibility Forms
-        (0x0FF01, 0x0FF60), // Fullwidth Forms (excludes halfwidth katakana FF61-FFDC)
-        (0x0FFE0, 0x0FFE6), // Fullwidth signs
-        (0x16FE0, 0x18AFF), // Ideographic symbols / Tangut
-        (0x1B000, 0x1B2FF), // Kana Supplement / Extended
-        (0x1F200, 0x1FAFF), // Enclosed Ideographic Supplement + emoji + symbols
-        (0x20000, 0x3FFFD), // CJK Unified Ideographs Extensions B-G (supplementary)
+        (0x1100, 0x115F), // Hangul Jamo leading consonants
+        (0x231A, 0x231B), // ⌚ ⌛
+        (0x2329, 0x232A), // 〈 〉 angle brackets
+        (0x23E9, 0x23EC), // ⏩ .. ⏬
+        (0x23F0, 0x23F0), // ⏰
+        (0x23F3, 0x23F3), // ⏳
+        (0x25FD, 0x25FE), // ◽ ◾
+        (0x2614, 0x2615), // ☔ ☕
+        (0x2630, 0x2637), // ☰ .. ☷ trigrams
+        (0x2648, 0x2653), // ♈ .. ♓ zodiac
+        (0x267F, 0x267F), // ♿
+        (0x268A, 0x268F), // ⚊ .. ⚏ monograms / digrams
+        (0x2693, 0x2693), // ⚓
+        (0x26A1, 0x26A1), // ⚡
+        (0x26AA, 0x26AB), // ⚪ ⚫
+        (0x26BD, 0x26BE), // ⚽ ⚾
+        (0x26C4, 0x26C5), // ⛄ ⛅
+        (0x26CE, 0x26CE), // ⛎
+        (0x26D4, 0x26D4), // ⛔
+        (0x26EA, 0x26EA), // ⛪
+        (0x26F2, 0x26F3), // ⛲ ⛳
+        (0x26F5, 0x26F5), // ⛵
+        (0x26FA, 0x26FA), // ⛺
+        (0x26FD, 0x26FD), // ⛽
+        (0x2705, 0x2705), // ✅
+        (0x270A, 0x270B), // ✊ ✋
+        (0x2728, 0x2728), // ✨
+        (0x274C, 0x274C), // ❌
+        (0x274E, 0x274E), // ❎
+        (0x2753, 0x2755), // ❓ ❔ ❕
+        (0x2757, 0x2757), // ❗
+        (0x2795, 0x2797), // ➕ ➖ ➗
+        (0x27B0, 0x27B0), // ➰
+        (0x27BF, 0x27BF), // ➿
+        (0x2B1B, 0x2B1C), // ⬛ ⬜
+        (0x2B50, 0x2B50), // ⭐
+        (0x2B55, 0x2B55), // ⭕
+        (0x2E80, 0x2E99), // CJK Radicals Supplement
+        (0x2E9B, 0x2EF3), // CJK Radicals Supplement (cont.)
+        (0x2F00, 0x2FD5), // Kangxi Radicals
+        (0x2FF0, 0x303E), // Ideographic Description .. CJK Symbols & Punctuation (incl. U+3000)
+        (0x3041, 0x3096), // Hiragana
+        (0x3099, 0x30FF), // kana voicing marks, Katakana
+        (0x3105, 0x312F), // Bopomofo
+        (0x3131, 0x318E), // Hangul Compatibility Jamo
+        (0x3190, 0x31E5), // Kanbun, Bopomofo Ext, CJK Strokes
+        (0x31EF, 0x321E), // Katakana Phonetic Ext, Enclosed CJK
+        (0x3220, 0x3247), // Enclosed CJK (cont.)
+        (0x3250, 0xA48C), // Enclosed CJK .. CJK Ext A .. CJK Unified .. Yi Syllables
+        (0xA490, 0xA4C6), // Yi Radicals
+        (0xA960, 0xA97C), // Hangul Jamo Extended-A
+        (0xAC00, 0xD7A3), // Hangul Syllables
+        (0xF900, 0xFAFF), // CJK Compatibility Ideographs
+        (0xFE10, 0xFE19), // Vertical Forms
+        (0xFE30, 0xFE52), // CJK Compatibility Forms, Small Form Variants
+        (0xFE54, 0xFE66), // Small Form Variants (cont.)
+        (0xFE68, 0xFE6B), // Small Form Variants (cont.)
+        (0xFF01, 0xFF60), // Fullwidth Forms (excludes halfwidth katakana FF61-FFDC)
+        (0xFFE0, 0xFFE6), // Fullwidth signs
+    ];
+    // Inclusive code-point ranges that even the fixed host mis-sizes, so they are unsafe on
+    // every host version:
+    //   * A curated set of EAW Ambiguous symbols that commonly appear in CJK-authored names.
+    //     conhost with a CJK font renders them two cells (measured: ° × " … ← ※ ■ ○), while
+    //     LengthInBufferCells counts one. Windows Terminal renders them one cell, so there
+    //     this only over-hides. Letters are deliberately EXCLUDED so that accented Latin
+    //     names (Ambiguous, but one cell on western terminals) still show.
+    //   * BMP W code points that LengthInBufferCells' table (Unicode 5 era) lacks: the
+    //     emoji / symbols in U+231A..U+2B55 and Hangul Jamo Extended-A.
+    // Sorted ascending, non-overlapping -> binary search. Over-inclusion only hides a
+    // name (safe); under-inclusion would let ']' wrap, so the table errs wide.
+    private static readonly (int Lo, int Hi)[] HostMiscountedRanges =
+    [
+        (0x00B0, 0x00B1), // ° ±
+        (0x00D7, 0x00D7), // × multiply
+        (0x00F7, 0x00F7), // ÷ divide
+        (0x2014, 0x2014), // — em dash
+        (0x2018, 0x2019), // ' ' curly single quotes
+        (0x201C, 0x201D), // " " curly double quotes
+        (0x2025, 0x2026), // ‥ … ellipses
+        (0x203B, 0x203B), // ※ reference mark
+        (0x2103, 0x2103), // ℃
+        (0x2109, 0x2109), // ℉
+        (0x2116, 0x2116), // № numero
+        (0x2190, 0x2199), // ← ↑ → ↓ ↔ ↕ ↖ ↗ ↘ ↙ arrows
+        (0x231A, 0x231B), // ⌚ ⌛ (W, not in the host table)
+        (0x23E9, 0x23EC), // ⏩ .. ⏬ (W, not in the host table)
+        (0x23F0, 0x23F0), // ⏰ (W, not in the host table)
+        (0x23F3, 0x23F3), // ⏳ (W, not in the host table)
+        (0x25A0, 0x27BF), // geometric shapes, misc symbols, dingbats (conservative block)
+        (0x2B1B, 0x2B1C), // ⬛ ⬜ (W, not in the host table)
+        (0x2B50, 0x2B50), // ⭐ (W, not in the host table)
+        (0x2B55, 0x2B55), // ⭕ (W, not in the host table)
+        (0xA960, 0xA97C), // Hangul Jamo Extended-A (W, not in the host table)
     ];
 
-    // Returns true if any code point in s would be mis-sized by the #21293 renderer.
+
+
+    // Returns true if any code point in s is unsafe on a host that has not got the #21293 fix.
     public static bool ContainsWideChar(string? s) => FirstWideCharIndex(s) >= 0;
 
-    // UTF-16 (char) offset of the first code point that the buggy renderer mis-sizes, or
-    // -1 if the string is entirely narrow. Enumerates by Rune so surrogate-paired
-    // characters (emoji, CJK Ext B+) are weighed once; the returned offset always lands on
-    // a rune boundary, so s[..offset] is a valid substring of the narrow prefix.
-    public static int FirstWideCharIndex(string? s)
+    // UTF-16 (char) offset of the first unsafe code point, or -1 if there is none. With
+    // hostCountsWide (the host has the #21293 fix) only HostMiscountedRanges are unsafe;
+    // otherwise WideRanges are too. Enumerates by Rune so surrogate-paired characters are
+    // weighed once; the returned offset always lands on a rune boundary, so s[..offset] is
+    // a valid substring of the safe prefix.
+    public static int FirstWideCharIndex(string? s, bool hostCountsWide = false)
     {
         if (string.IsNullOrEmpty(s))
         {
@@ -81,7 +146,7 @@ public static class EastAsianWidth
         int offset = 0;
         foreach (Rune rune in s.EnumerateRunes())
         {
-            if (IsWide(rune.Value))
+            if (IsUnsafe(rune.Value, hostCountsWide))
             {
                 return offset;
             }
@@ -91,26 +156,26 @@ public static class EastAsianWidth
         return -1;
     }
 
-    // Returns s with every maximal run of wide code points replaced by "[N]" where N is the
-    // number of wide characters in that run, leaving the narrow (one-cell) segments intact.
-    // The result is therefore ENTIRELY narrow -- safe for the #21293 renderer -- while
-    // preserving the readable ASCII parts and signalling how much was hidden where:
+    // Returns s with every maximal run of unsafe code points (see FirstWideCharIndex)
+    // replaced by "[N]" where N is the number of characters in that run, leaving the safe
+    // segments intact. The result is therefore safe for the host while preserving the
+    // readable parts and signalling how much was hidden where:
     // "請求書" -> "[3]", "Invoice請求Folder" -> "Invoice[2]Folder", "A請B求C" -> "A[1]B[1]C".
-    // Returns the input unchanged when it is null/empty or already all-narrow.
-    public static string? CollapseWide(string? s)
+    // Returns the input unchanged when it is null/empty or already all-safe.
+    public static string? CollapseWide(string? s, bool hostCountsWide = false)
     {
-        if (string.IsNullOrEmpty(s) || FirstWideCharIndex(s) < 0)
+        if (string.IsNullOrEmpty(s) || FirstWideCharIndex(s, hostCountsWide) < 0)
         {
             return s;
         }
 
         var sb = new StringBuilder(s.Length);
-        int runWidth = 0; // wide characters seen in the current run
+        int runWidth = 0; // unsafe characters seen in the current run
         int offset = 0;
         foreach (Rune rune in s.EnumerateRunes())
         {
             int len = rune.Utf16SequenceLength;
-            if (IsWide(rune.Value))
+            if (IsUnsafe(rune.Value, hostCountsWide))
             {
                 runWidth++;
             }
@@ -133,13 +198,16 @@ public static class EastAsianWidth
         return sb.ToString();
     }
 
-    private static bool IsWide(int cp)
+    private static bool IsUnsafe(int cp, bool hostCountsWide)
+        => InRanges(HostMiscountedRanges, cp) || (!hostCountsWide && InRanges(WideRanges, cp));
+
+    private static bool InRanges((int Lo, int Hi)[] ranges, int cp)
     {
-        int lo = 0, hi = WideRanges.Length - 1;
+        int lo = 0, hi = ranges.Length - 1;
         while (lo <= hi)
         {
             int mid = (lo + hi) >> 1;
-            (int rLo, int rHi) = WideRanges[mid];
+            (int rLo, int rHi) = ranges[mid];
             if (cp < rLo)
             {
                 hi = mid - 1;
@@ -161,16 +229,15 @@ public static class EastAsianWidth
 // Decides whether the current host renders wide Write-Progress text correctly.
 public static class ProgressRendering
 {
-    // The PowerShell version that first carries the #21293 fix (PR #26185). The PR is
-    // still open, so no released build is known-good yet -> null means "treat every host
-    // as buggy" and ProgressReporter suppresses wide names everywhere. Once the fix ships
-    // and the version is known, set this (e.g. new Version(7, 6, 0)) and hosts at or above
-    // it will show full names again.
+    // The PowerShell version that first carries the #21293 fix (PR #26185, a ConsoleHost
+    // change). It merged to master on 2026-06-26 and first shipped in v7.7.0-preview.3; it
+    // was not backported to the 7.4 / 7.5 / 7.6 servicing lines, so a single >= threshold
+    // is correct. Hosts at or above it show full wide names; older hosts get CollapseWide.
     //
-    // CAVEAT: if the fix is backported to multiple release lines (7.4.x AND 7.6.0) at
-    // different version numbers, a single >= threshold is wrong across lines. Revisit this
-    // and make it branch-aware when the PR actually merges.
-    public static readonly Version? Pwsh26185FixedVersion = null;
+    // Host.Version drops the prerelease label, so 7.7.0-preview.1/.2 (which lack the fix)
+    // also read as 7.7.0 and are treated as fixed -- accepted, those previews are obsolete.
+    // If the fix is ever backported to an older line, make this branch-aware.
+    public static readonly Version? Pwsh26185FixedVersion = new(7, 7, 0);
 
     public static bool HostRendersWideProgress(Version? hostVersion)
         => Pwsh26185FixedVersion is { } fixedVersion
