@@ -4857,6 +4857,21 @@ public partial class OrchAPISession : IDisposable
     // Returns empty
     public string RemoveTmTestCase(string projectId, string testCaseId) => HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/testcases/{testCaseId}");
 
+    // A test case's steps, in no particular order (sort by orderNo). Not paged.
+    public TmTestStep[]? GetTmTestSteps(string projectId, string testCaseId) => HttpRequest<TmTestStep[]>(HttpMethod.Get, $"/testmanager_/api/v2/{projectId}/teststeps/testcase/{testCaseId}");
+
+    // Returns the created step.
+    public TmTestStep? PostTmTestStep(string projectId, TmCreateTestStepRequest request) => HttpRequest<TmTestStep>(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/teststeps", null, request);
+
+    // JSON Patch: only the fields named in the operations change.
+    public string PatchTmTestStep(string projectId, string testStepId, IEnumerable<TmPatchOperation> operations) => HttpRequest(HttpMethod.Patch, $"/testmanager_/api/v2/{projectId}/teststeps/{testStepId}", null, operations);
+
+    // Returns empty. The other steps of the test case shift to make room.
+    public string MoveTmTestStep(string projectId, string testStepId, int targetPosition) => HttpRequest(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/teststeps/{testStepId}/setposition", null, new TmMoveTestStepRequest { targetPosition = targetPosition });
+
+    // Returns empty. The steps after it move up by one.
+    public string RemoveTmTestStep(string projectId, string testStepId) => HttpRequest(HttpMethod.Delete, $"/testmanager_/api/v2/{projectId}/teststeps/{testStepId}");
+
     public IEnumerable<TmTestSet> GetTmTestSets(string projectId) => GetEnumerableTm<TmTestSet>($"/testmanager_/api/v2/{projectId}/testsets");
 
     // Returns the created test set.

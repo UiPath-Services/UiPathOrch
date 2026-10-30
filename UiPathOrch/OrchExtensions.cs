@@ -128,6 +128,8 @@ internal static class FolderExtensions
     public static string GetPSPath(this TmTestCase entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
     public static string GetPSPath(this TmTestSet entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
     public static string GetPSPath(this TmTestExecution entity) => Path.Combine(entity?.Path ?? "", entity?.name ?? "");
+    // A step has no name: it is shown as its test case plus its position, e.g. "Tm:\PRJ\Login (step 2)".
+    public static string GetPSPath(this TmTestStep entity) => $"{Path.Combine(entity?.Path ?? "", entity?.TestCase ?? "")} (step {entity?.orderNo})";
 
     public static string TipHelp(this PmGroupMember? entity) => $"{entity?.name}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";
     public static string TipHelp(this PmDirectoryEntityInfo? entity, string drivePath) => $"{entity?.GetPSPath(drivePath)}{(string.IsNullOrEmpty(entity?.displayName) ? "" : $" ({entity.displayName})")}";

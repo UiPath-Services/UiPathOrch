@@ -2383,6 +2383,43 @@ internal class TmTestCaseNameCompleter : TmProjectScopedCompleter<TmTestCase>
     protected override string GetTipHelp(TmTestCase e) => e.GetPSPath();
 }
 
+// The positions (orderNo) of the steps of the test cases named by -TestCase, for -OrderNo and
+// -TargetPosition. Offers nothing until -TestCase is given: a position means nothing without it.
+internal class TmTestStepOrderNoCompleter : OrchArgumentCompleter
+{
+    public override IEnumerable<CompletionResult> CompleteArgumentCore(
+        string commandName, string parameterName, string wordToComplete,
+        CommandAst commandAst, IDictionary fakeBoundParameters)
+    {
+        var wpTestCase = GetFakeBoundParameters(fakeBoundParameters, "TestCase").ConvertToWildcardPatternList();
+        if (wpTestCase is null) yield break;
+
+        var recurse = ResolveSwitchParameter(fakeBoundParameters, "Recurse");
+        var paramPath = GetFakeBoundParameters(fakeBoundParameters, "Path");
+        var drivesProjects = SessionState.EnumTmFolders(paramPath, recurse);
+        var wp = CreateWPFromWordToComplete(wordToComplete);
+
+        var results = ParallelResults.GroupBy(drivesProjects, dp => dp.drive.TmTestCases.Get(dp.project)
+            .SelectByWildcards(e => e?.name, wpTestCase)
+            .SelectMany(tc => Commands.TmTestSteps.Get(dp.drive, dp.project, tc)));
+
+        foreach (var group in results
+            .SelectMany(r => r)
+            .Select(e => (TmTestStep)e)
+            .Where(s => wp.IsMatch(s.orderNo.ToString()))
+            .GroupBy(s => s.orderNo)
+            .OrderBy(g => g.Key))
+        {
+            var first = group.First();
+            yield return new CompletionResult(
+                group.Key.ToString(),
+                $"{group.Key}: {first.description}",
+                CompletionResultType.ParameterValue,
+                string.Join("\n", group.Select(s => $"{s.GetPSPath()}: {s.description}")));
+        }
+    }
+}
+
 internal class TmTestExecutionNameCompleter : TmProjectScopedCompleter<TmTestExecution>
 {
     protected override IEnumerable<TmTestExecution> GetEntities(OrchTmDriveInfo drive, TmProject project)

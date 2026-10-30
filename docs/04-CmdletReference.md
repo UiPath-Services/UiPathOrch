@@ -709,6 +709,11 @@ Test Manager project management (TM API, separate from Orchestrator testing).
 | New-TmTestCase | Create a Test Manager test case, optionally with labels |
 | Update-TmTestCase | Rename a test case, change its version, description, pre/post-condition, replace its labels |
 | Remove-TmTestCase | Remove a Test Manager test case |
+| Get-TmTestStep | List the manual steps of Test Manager test cases, by position |
+| New-TmTestStep | Add a manual step to a test case, at the end or at a given position |
+| Update-TmTestStep | Change a test step's description, expected result or clipboard data |
+| Move-TmTestStep | Move a test step to another position in its test case |
+| Remove-TmTestStep | Remove test steps from a test case |
 | Get-TmTestSet | List Test Manager test sets |
 | New-TmTestSet | Create a Test Manager test set, optionally with activity coverage and labels |
 | Update-TmTestSet | Rename a test set, change its description or activity coverage, replace its labels |

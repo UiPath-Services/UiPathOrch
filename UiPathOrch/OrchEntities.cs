@@ -5168,6 +5168,39 @@ public class TmTestCase
     public string? updatedBy { get; set; }
 }
 
+// UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.TestStepDto
+public class TmTestStep
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? TestCase { get; set; } // added by UiPathOrch: the test case's name
+    public string? id { get; set; }
+    public string? testCaseId { get; set; }
+    public int? orderNo { get; set; } // 0-based; the server renumbers on insert, move and delete
+    public string? actionType { get; set; }
+    public string? description { get; set; }
+    public string? expectedResult { get; set; }
+    public string? clipboardData { get; set; }
+}
+
+// UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.CreateTestStepRequest
+public class TmCreateTestStepRequest
+{
+    public string? testCaseId { get; set; }
+    public int? orderNo { get; set; } // inserts at this position; a negative value or one past the end appends
+    public string? actionType { get; set; }
+    public string? expectedResult { get; set; }
+    public string? clipboardData { get; set; }
+    public string? description { get; set; } // required; "" is accepted
+}
+
+// UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.MoveTestStepToPositionRequest
+public class TmMoveTestStepRequest
+{
+    public int? targetPosition { get; set; } // 0-based; must be within the existing steps
+}
+
 // UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.CreateTestSetRequest
 public class TmCreateTestSetRequest
 {
