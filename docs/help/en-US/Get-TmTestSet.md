@@ -20,7 +20,8 @@ Gets the test sets from projects in Test Manager.
 ### __AllParameterSets
 
 ```
-Get-TmTestSet [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [[-Name] <string[]>] [<CommonParameters>]
+Get-TmTestSet [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [[-Name] <string[]>]
+ [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -65,6 +66,22 @@ PS C:\> Get-TmTestSet -Path Orch1Tm:\SKK -Recurse
 ```
 
 Gets all test sets from the specified project and all its subfolders.
+
+### Example 4: Export the test sets to CSV
+
+```powershell
+PS C:\> Get-TmTestSet -Path Orch1Tm:\MTP -ExportCsv testsets.csv
+```
+
+The CSV has the columns Path, Name, Description, EnableCoverage and Labels: the parameters of New-TmTestSet. Labels holds the label names joined by commas; a comma in a label name is written as `` `, ``.
+
+### Example 5: Recreate the exported test sets in another project
+
+```powershell
+PS C:\> Import-Csv testsets.csv | New-TmTestSet -Path Orch2Tm:\MTP
+```
+
+`-Path` on the command line takes precedence over the Path column; without it, the test sets are created in the project named in the CSV.
 
 ## PARAMETERS
 
@@ -154,6 +171,48 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -ExportCsv
+
+Specifies the path of a CSV file to export the test sets to, instead of writing them to the pipeline. If a folder is given, the file is named ExportedTmTestSets.csv. The columns are Path, Name, Description, EnableCoverage and Labels, so `Import-Csv | New-TmTestSet` recreates the test sets. Path and Name are wildcard-escaped. The labels are read with one request per test set (GET /testmanager_/api/v2/{projectId}/objectlabels/testSet/{objectId}/all).
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -CsvEncoding
+
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### CommonParameters
 
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
@@ -175,7 +234,7 @@ This cmdlet returns TmTestSet objects representing Test Manager test sets.
 
 ## NOTES
 
-This cmdlet operates on the UiPathOrchTm provider PSDrive. Results are sorted by object key.
+This cmdlet operates on the UiPathOrchTm provider PSDrive. Results are sorted by object key. With -ExportCsv, the labels are read with one request per test set. The test cases assigned to the test sets are not exported.
 
 
 ## RELATED LINKS

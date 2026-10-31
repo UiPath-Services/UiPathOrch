@@ -20,7 +20,8 @@ Gets the requirements from projects in Test Manager.
 ### __AllParameterSets
 
 ```
-Get-TmRequirement [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [[-Name] <string[]>] [<CommonParameters>]
+Get-TmRequirement [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [[-Name] <string[]>]
+ [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -65,6 +66,22 @@ PS C:\> Get-TmRequirement -Path Orch1Tm:\MTP -Recurse
 ```
 
 Gets all requirements from the specified project and all its subfolders.
+
+### Example 4: Export the requirements to CSV
+
+```powershell
+PS C:\> Get-TmRequirement -Path Orch1Tm:\MTP -ExportCsv requirements.csv
+```
+
+The CSV has the columns Path, Name, Description and Labels: the parameters of New-TmRequirement. Labels holds the label names joined by commas; a comma in a label name is written as `` `, ``.
+
+### Example 5: Recreate the exported requirements in another project
+
+```powershell
+PS C:\> Import-Csv requirements.csv | New-TmRequirement -Path Orch2Tm:\MTP
+```
+
+`-Path` on the command line takes precedence over the Path column; without it, the requirements are created in the project named in the CSV.
 
 ## PARAMETERS
 
@@ -154,6 +171,48 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -ExportCsv
+
+Specifies the path of a CSV file to export the requirements to, instead of writing them to the pipeline. If a folder is given, the file is named ExportedTmRequirements.csv. The columns are Path, Name, Description and Labels, so `Import-Csv | New-TmRequirement` recreates the requirements. Path and Name are wildcard-escaped. The labels are read with one request per requirement (GET /testmanager_/api/v2/{projectId}/objectlabels/requirement/{objectId}/all).
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -CsvEncoding
+
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### CommonParameters
 
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
@@ -175,7 +234,7 @@ This cmdlet returns TmRequirement objects representing Test Manager requirements
 
 ## NOTES
 
-This cmdlet operates on the UiPathOrchTm provider PSDrive. Results are sorted by object key.
+This cmdlet operates on the UiPathOrchTm provider PSDrive. Results are sorted by object key. With -ExportCsv, the labels are read with one request per requirement. The test cases assigned to the requirements are not exported.
 
 
 ## RELATED LINKS

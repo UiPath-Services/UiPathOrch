@@ -1,4 +1,5 @@
 using System.Management.Automation;
+using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 
@@ -24,23 +25,32 @@ public class GetTmRequirementCmdlet : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
+    [Parameter]
+    public string? ExportCsv { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(EncodingCompleter))]
+    [EncodingArgumentTransformation]
+    public Encoding? CsvEncoding { get; set; }
+
+    // The columns are New-TmRequirement's parameters, so `Import-Csv | New-TmRequirement`
+    // recreates the requirements. Path and Name are wildcard-escaped (New-TmRequirement unescapes
+    // the name); Labels is read per requirement (see TmLabelCsv).
+    private static readonly string DefaultCsvName = "ExportedTmRequirements.csv";
+    private static readonly string[] CsvHeaders = [
+        "Path",
+        "Name",
+        "Description",
+        "Labels"
+    ];
+
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent);
         var wpName = Name.ConvertToWildcardPatternList();
 
-        //foreach (var driveProject in drivesProjects)
-        //{
-        //    var (drive, project) = driveProject;
-        //    try
-        //    {
-        //        WriteObject(drive.GetTmRequirements(project), true);
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw new OrchException(project.GetPSPath(), ex);
-        //    }
-        //}
+        var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+        using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
         using var results = OrchThreadPool.RunForEach(drivesProjects,
             dp => dp.project.GetPSPath(),
@@ -56,15 +66,31 @@ public class GetTmRequirementCmdlet : OrchestratorPSCmdlet
                 var entity = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (entity is null) continue;
 
-                WriteObject(entity
+                var requirements = entity
                     .FilterByWildcards(e => e?.name, wpName)
-                    .OrderBy(e => e.objKey!, ObjKeyComparer.Instance),
-                    true);
+                    .OrderBy(e => e.objKey!, ObjKeyComparer.Instance);
+                if (writer is null)
+                {
+                    WriteObject(requirements, true);
+                    continue;
+                }
+
+                var (drive, project) = result.Source;
+                TmLabelCsv.ForEachWithLabels(this, drive, project, "requirement", requirements.ToList(), e => e.id, e => e.GetPSPath(),
+                    (e, labels) => writer.WriteCsvLine([
+                        EscapeCsvValue(e.Path, true),
+                        EscapeCsvValue(e.name, true),
+                        EscapeCsvValue(e.description),
+                        EscapeCsvValue(labels)
+                    ]),
+                    reporter, cancelHandler.Token);
             }
             catch (OrchException ex)
             {
                 WriteError(new ErrorRecord(ex, "GetTmRequirementError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
+
+        WriteCSVExportedMessage(this, providerCsvPath);
     }
 }
