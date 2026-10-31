@@ -1,4 +1,5 @@
 using System.Management.Automation;
+using System.Text;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
 using UiPath.PowerShell.Entities;
@@ -19,6 +20,7 @@ public class GetTmTestStepCmdlet : OrchestratorPSCmdlet
     // when omitted.
     [Parameter(Position = 1, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TmTestStepOrderNoCompleter))]
+    [EmptyStringToNullArgumentTransformation] // an empty CSV cell means every step, not step 0
     public int[]? OrderNo { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
@@ -32,11 +34,54 @@ public class GetTmTestStepCmdlet : OrchestratorPSCmdlet
     [Parameter]
     public SwitchParameter Recurse { get; set; }
 
+    [Parameter]
+    public string? ExportCsv { get; set; }
+
+    [Parameter]
+    [ArgumentCompleter(typeof(EncodingCompleter))]
+    [EncodingArgumentTransformation]
+    public Encoding? CsvEncoding { get; set; }
+
+    // The columns are New-TmTestStep's parameters, so `Import-Csv | New-TmTestStep` recreates the
+    // steps. Path and TestCase are wildcard-escaped because those parameters take wildcards.
+    private static readonly string DefaultCsvName = "ExportedTmTestSteps.csv";
+    private static readonly string[] CsvHeaders = [
+        "Path",
+        "TestCase",
+        "OrderNo",
+        "Description",
+        "ExpectedResult",
+        "ClipboardData"
+    ];
+
+    private void Output(StreamWriter? writer, List<TmTestStep> steps)
+    {
+        if (writer is null)
+        {
+            WriteObject(steps, true);
+            return;
+        }
+        foreach (var step in steps)
+        {
+            writer.WriteCsvLine([
+                EscapeCsvValue(step.Path, true),
+                EscapeCsvValue(step.TestCase, true),
+                EscapeCsvValue(step.orderNo),
+                EscapeCsvValue(step.description),
+                EscapeCsvValue(step.expectedResult),
+                EscapeCsvValue(step.clipboardData)
+            ]);
+        }
+    }
+
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent);
         var wpTestCase = TestCase.ConvertToWildcardPatternList();
         var testCases = TmTestSteps.SelectTestCases(this, drivesProjects, wpTestCase, all: true).ToList();
+
+        var (physicalCsvPath, providerCsvPath) = GenerateCsvFilePath(ExportCsv, SessionState, DefaultCsvName);
+        using var writer = WriteCsvHeader(physicalCsvPath, CsvEncoding, CsvHeaders);
 
         using var results = OrchThreadPool.RunForEach(testCases,
             t => t.testCase.GetPSPath(),
@@ -52,12 +97,12 @@ public class GetTmTestStepCmdlet : OrchestratorPSCmdlet
                 var (testCase, steps) = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (OrderNo is null)
                 {
-                    WriteObject(steps, true);
+                    Output(writer, steps);
                     continue;
                 }
 
                 var outOfRange = new List<int>();
-                WriteObject(TmTestSteps.SelectByPosition(steps, OrderNo, outOfRange), true);
+                Output(writer, TmTestSteps.SelectByPosition(steps, OrderNo, outOfRange));
                 foreach (var position in outOfRange)
                 {
                     WriteError(TmTestSteps.OutOfRangeError(testCase, position, steps.Count));
@@ -68,5 +113,7 @@ public class GetTmTestStepCmdlet : OrchestratorPSCmdlet
                 WriteError(new ErrorRecord(ex, "GetTmTestStepError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
+
+        WriteCSVExportedMessage(this, providerCsvPath);
     }
 }

@@ -30,10 +30,12 @@ public class NewTmTestStepCmdlet : OrchestratorPSCmdlet
     public string? ClipboardData { get; set; }
 
     // Where the new step goes (0-based); the steps from there on move down by one. Negative values
-    // count from the end: -1 (the default) appends, -2 inserts before the last step.
+    // count from the end: -1 inserts after the last step, -2 before it. Omitted (or an empty CSV
+    // cell) appends.
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TmTestStepOrderNoCompleter))]
-    public int OrderNo { get; set; } = -1;
+    [EmptyStringToNullArgumentTransformation]
+    public int? OrderNo { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -62,12 +64,12 @@ public class NewTmTestStepCmdlet : OrchestratorPSCmdlet
             {
                 // A position other than "append" needs the current step count to resolve.
                 int orderNo = -1;
-                if (OrderNo != -1)
+                if (OrderNo is int position && position != -1)
                 {
                     int count = TmTestSteps.Get(drive, project, testCase, refresh: true).Count;
-                    if (TmTestSteps.ResolveInsertPosition(OrderNo, count) is not int index)
+                    if (TmTestSteps.ResolveInsertPosition(position, count) is not int index)
                     {
-                        WriteError(TmTestSteps.OutOfRangeError(testCase, OrderNo, count));
+                        WriteError(TmTestSteps.OutOfRangeError(testCase, position, count));
                         continue;
                     }
                     orderNo = index;
@@ -78,8 +80,10 @@ public class NewTmTestStepCmdlet : OrchestratorPSCmdlet
                     testCaseId = testCase.id,
                     orderNo = orderNo,
                     description = Description ?? "",
-                    expectedResult = ExpectedResult,
-                    clipboardData = ClipboardData,
+                    // An empty CSV cell sends null: a step exported with no expected result
+                    // (null) then comes back identical, not with "".
+                    expectedResult = string.IsNullOrEmpty(ExpectedResult) ? null : ExpectedResult,
+                    clipboardData = string.IsNullOrEmpty(ClipboardData) ? null : ClipboardData,
                 });
                 if (created is null) continue;
                 created.Path = project.GetPSPath();

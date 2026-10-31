@@ -21,7 +21,7 @@ Adds a manual step to test cases in Test Manager.
 
 ```
 New-TmTestStep [-TestCase] <string[]> [-Description] <string> [[-ExpectedResult] <string>]
- [[-ClipboardData] <string>] [-OrderNo <int>] [-Path <string[]>] [-LiteralPath <string[]>] [-Confirm] [-WhatIf]
+ [[-ClipboardData] <string>] [-OrderNo <int?>] [-Path <string[]>] [-LiteralPath <string[]>] [-Confirm] [-WhatIf]
  [<CommonParameters>]
 ```
 
@@ -164,11 +164,11 @@ HelpMessage: ''
 
 ### -OrderNo
 
-Specifies where the step goes, counting from 0. Negative positions count from the end: -1 (the default) adds the step after the last one, -2 inserts it before the last one. A position out of range is reported as an error.
+Specifies where the step goes, counting from 0. Negative positions count from the end: -1 adds the step after the last one, -2 inserts it before the last one. If omitted, or bound from an empty CSV cell, the step is added after the last one. A position out of range is reported as an error.
 
 ```yaml
-Type: System.Int32
-DefaultValue: -1
+Type: System.Nullable`1[System.Int32]
+DefaultValue: None
 SupportsWildcards: false
 Aliases: []
 ParameterSets:

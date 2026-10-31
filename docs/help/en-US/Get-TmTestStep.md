@@ -21,7 +21,7 @@ Gets the manual steps of test cases in Test Manager.
 
 ```
 Get-TmTestStep [[-TestCase] <string[]>] [[-OrderNo] <int[]>] [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
- [<CommonParameters>]
+ [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
 ```
 
 ## ALIASES
@@ -56,11 +56,21 @@ Lists the steps of the test case "Login" in the current project.
 PS Orch1Tm:\MTP> Get-TmTestStep Login 0,-1
 ```
 
-### Example 3: Export the steps of several test cases
+### Example 3: Export the steps of several test cases to CSV
 
 ```powershell
-PS C:\> Get-TmTestStep -Path Orch1Tm:\MTP Checkout* | Export-Csv steps.csv
+PS C:\> Get-TmTestStep -Path Orch1Tm:\MTP Checkout* -ExportCsv steps.csv
 ```
+
+The CSV has the columns Path, TestCase, OrderNo, Description, ExpectedResult and ClipboardData: the parameters of New-TmTestStep.
+
+### Example 4: Recreate the exported steps in another project
+
+```powershell
+PS C:\> Import-Csv steps.csv | New-TmTestStep -Path Orch2Tm:\MTP
+```
+
+`-Path` on the command line takes precedence over the Path column; without it, the steps are added to the project named in the CSV. The test cases must already exist in the target project and should have no steps: each row is inserted at its OrderNo. Leave an OrderNo cell empty, or remove the column, to append the row instead.
 
 ## PARAMETERS
 
@@ -89,7 +99,7 @@ HelpMessage: ''
 
 ### -OrderNo
 
-Specifies the positions of the steps to get. Positions count from 0; negative positions count from the end (-1 is the last step). If omitted, every step is returned. A position out of range is reported as an error.
+Specifies the positions of the steps to get. Positions count from 0; negative positions count from the end (-1 is the last step). If omitted, or bound from an empty CSV cell, every step is returned. A position out of range is reported as an error.
 
 ```yaml
 Type: System.Int32[]
@@ -172,6 +182,48 @@ AcceptedValues: []
 HelpMessage: ''
 ```
 
+### -ExportCsv
+
+Specifies the path of a CSV file to export the steps to, instead of writing them to the pipeline. If a folder is given, the file is named ExportedTmTestSteps.csv. The columns are Path, TestCase, OrderNo, Description, ExpectedResult and ClipboardData, so `Import-Csv | New-TmTestStep` recreates the steps. Path and TestCase are wildcard-escaped, because New-TmTestStep treats them as wildcard patterns.
+
+```yaml
+Type: System.String
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
+### -CsvEncoding
+
+Specifies the encoding for CSV export. Default is UTF-8 with BOM for Excel compatibility. Tab completion suggests all available system encodings (e.g., utf-8, shift_jis, us-ascii).
+
+```yaml
+Type: System.Text.Encoding
+DefaultValue: None
+SupportsWildcards: false
+Aliases: []
+ParameterSets:
+- Name: (All)
+  Position: Named
+  IsRequired: false
+  ValueFromPipeline: false
+  ValueFromPipelineByPropertyName: false
+  ValueFromRemainingArguments: false
+DontShow: false
+AcceptedValues: []
+HelpMessage: ''
+```
+
 ### CommonParameters
 
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable,
@@ -193,7 +245,7 @@ The test steps, with `orderNo`, `description`, `expectedResult` and `clipboardDa
 
 ## NOTES
 
-This cmdlet operates on the UiPathOrchTm provider PSDrive. Test steps are not cached: positions change whenever a step is inserted, moved or removed.
+This cmdlet operates on the UiPathOrchTm provider PSDrive. The steps are cached per test case; the test step cmdlets clear a test case's cached steps when they change any of them. Changes made in the web app show after Clear-OrchCache.
 
 ## RELATED LINKS
 
