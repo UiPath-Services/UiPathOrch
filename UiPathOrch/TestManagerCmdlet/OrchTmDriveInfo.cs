@@ -22,6 +22,7 @@ public class OrchTmDriveInfo : OrchDriveInfoBase
     public TmListCachePerTenant1<TmRequirement> TmRequirements = null!;
     public TmListCachePerTenant1<string> TmLabels = null!; // label names used in the project
     public TmListCachePerTenant1<TmProjectPermission> TmProjectPermissions = null!;
+    public TmTestStepCachePerTestCase TmTestSteps = null!;
     // Incremental cache
     public IncrementalCachePerProject<string, TmTestExecutionResult> TmTestExecutionResults = null!;
 
@@ -98,6 +99,10 @@ public class OrchTmDriveInfo : OrchDriveInfoBase
                 e.Project = project.name;
                 e.PathProject = e.Path + '\\' + e.Project;
             });
+
+        // The API returns the steps unsorted.
+        TmTestSteps = new(this, (project, testCase) =>
+            (OrchAPISession.GetTmTestSteps(project.id!, testCase.id!) ?? []).OrderBy(s => s.orderNo));
 
         // Incremental cache
         TmTestExecutionResults = new(this,

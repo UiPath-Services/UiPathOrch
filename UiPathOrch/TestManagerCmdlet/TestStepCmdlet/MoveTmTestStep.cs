@@ -47,7 +47,7 @@ public class MoveTmTestStepCmdlet : OrchestratorPSCmdlet
         {
             try
             {
-                var steps = TmTestSteps.Get(drive, project, testCase);
+                var steps = TmTestSteps.Get(drive, project, testCase, refresh: true);
                 if (TmTestSteps.ResolvePosition(OrderNo, steps.Count) is not int from)
                 {
                     WriteError(TmTestSteps.OutOfRangeError(testCase, OrderNo, steps.Count));
@@ -63,7 +63,14 @@ public class MoveTmTestStepCmdlet : OrchestratorPSCmdlet
                 var step = steps[from];
                 if (ShouldProcess(step.GetPSPath(), $"Move TmTestStep to position {to}"))
                 {
-                    drive.OrchAPISession.MoveTmTestStep(project.id!, step.id!, to);
+                    try
+                    {
+                        drive.OrchAPISession.MoveTmTestStep(project.id!, step.id!, to);
+                    }
+                    finally
+                    {
+                        drive.TmTestSteps.ClearCache(project.id, testCase.id);
+                    }
                 }
             }
             catch (Exception ex)

@@ -64,7 +64,7 @@ public class NewTmTestStepCmdlet : OrchestratorPSCmdlet
                 int orderNo = -1;
                 if (OrderNo != -1)
                 {
-                    int count = TmTestSteps.Get(drive, project, testCase).Count;
+                    int count = TmTestSteps.Get(drive, project, testCase, refresh: true).Count;
                     if (TmTestSteps.ResolveInsertPosition(OrderNo, count) is not int index)
                     {
                         WriteError(TmTestSteps.OutOfRangeError(testCase, OrderNo, count));
@@ -90,6 +90,7 @@ public class NewTmTestStepCmdlet : OrchestratorPSCmdlet
             {
                 WriteError(new ErrorRecord(new OrchException(target, ex), "NewTmTestStepError", ErrorCategory.InvalidOperation, testCase));
             }
+            drive.TmTestSteps.ClearCache(project.id, testCase.id);
         }
     }
 }

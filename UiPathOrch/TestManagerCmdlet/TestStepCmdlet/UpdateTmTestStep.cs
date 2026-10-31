@@ -52,7 +52,7 @@ public class UpdateTmTestStepCmdlet : OrchestratorPSCmdlet
             List<TmTestStep> steps;
             try
             {
-                steps = TmTestSteps.Get(drive, project, testCase);
+                steps = TmTestSteps.Get(drive, project, testCase, refresh: true);
             }
             catch (Exception ex)
             {
@@ -81,6 +81,7 @@ public class UpdateTmTestStepCmdlet : OrchestratorPSCmdlet
                     {
                         WriteError(new ErrorRecord(new OrchException(target, ex), "UpdateTmTestStepError", ErrorCategory.InvalidOperation, step));
                     }
+                    drive.TmTestSteps.ClearCache(project.id, testCase.id);
                 }
             }
             foreach (var position in outOfRange)

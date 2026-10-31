@@ -23,6 +23,9 @@ namespace UiPath.PowerShell.Core;
 //   TmSingleCachePerTenant1<T>   (name kept; 1 = "1-arity getter")
 //       Per-project single-value cache for TmProjectSettings.
 //
+//   TmTestStepCachePerTestCase
+//       Per-test-case list cache for TmTestStep (keyed by project id and test case id).
+//
 // Phase 5 of the refactor will consider folding these into a generalized
 // PerFolder<TFolderId,...> shape (with TFolderId = string for Tm/Du projects),
 // at which point the family-specific subclasses disappear entirely.
@@ -377,5 +380,54 @@ public class TmSingleCachePerTenant1<T> : ITenantCacheClearable
     {
         _cache = null;
         _exceptions.ClearCache();
+    }
+}
+
+/// <summary>
+/// The steps of each test case, keyed by project id and test case id. The API lists steps only per
+/// test case, so a test case's steps are always fetched and dropped as a whole: a change to any of
+/// them must clear the whole test case (an insert, move or delete renumbers the others).
+/// Failures are not cached.
+/// </summary>
+public class TmTestStepCachePerTestCase : ITenantCacheClearable
+{
+    private readonly ConcurrentDictionary<(string projectId, string testCaseId), List<TmTestStep>> _cache = new();
+    private readonly Func<TmProject, TmTestCase, IEnumerable<TmTestStep>> _fetchFunc;
+
+    public TmTestStepCachePerTestCase(OrchTmDriveInfo drive, Func<TmProject, TmTestCase, IEnumerable<TmTestStep>> fetchFunc)
+    {
+        drive._allTenantCache.Add(this);
+        _fetchFunc = fetchFunc;
+    }
+
+    public List<TmTestStep> Get(TmProject project, TmTestCase testCase)
+        => _cache.TryGetValue((project.id!, testCase.id!), out var steps) ? steps : Refresh(project, testCase);
+
+    // Reads the steps from the server even when they are cached, and caches them.
+    public List<TmTestStep> Refresh(TmProject project, TmTestCase testCase)
+    {
+        var steps = _fetchFunc(project, testCase).ToList();
+        _cache[(project.id!, testCase.id!)] = steps;
+        return steps;
+    }
+
+    public void ClearCache(string? projectId, string? testCaseId)
+    {
+        if (projectId is null || testCaseId is null) return;
+        _cache.TryRemove((projectId, testCaseId), out _);
+    }
+
+    public void ClearCache(string? projectId)
+    {
+        if (projectId is null) return;
+        foreach (var key in _cache.Keys.Where(k => k.projectId == projectId))
+        {
+            _cache.TryRemove(key, out _);
+        }
+    }
+
+    public void ClearCache()
+    {
+        _cache.Clear();
     }
 }

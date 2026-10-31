@@ -51,7 +51,7 @@ public class RemoveTmTestStepCmdlet : OrchestratorPSCmdlet
             {
                 try
                 {
-                    steps = TmTestSteps.Get(drive, project, testCase);
+                    steps = TmTestSteps.Get(drive, project, testCase, refresh: true);
                 }
                 catch (Exception ex)
                 {
@@ -94,6 +94,7 @@ public class RemoveTmTestStepCmdlet : OrchestratorPSCmdlet
                 {
                     WriteError(new ErrorRecord(new OrchException(target, ex), "RemoveTmTestStepError", ErrorCategory.InvalidOperation, step));
                 }
+                drive.TmTestSteps.ClearCache(project.id, step.testCaseId);
             }
         }
     }

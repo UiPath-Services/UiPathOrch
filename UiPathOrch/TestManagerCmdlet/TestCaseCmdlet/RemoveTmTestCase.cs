@@ -50,6 +50,7 @@ public class RemoveTmTestCaseCmdlet : OrchestratorPSCmdlet
                         {
                             drive.OrchAPISession.RemoveTmTestCase(project.id!, testCase.id!);
                             drive.TmTestCases.ClearCache();
+                            drive.TmTestSteps.ClearCache(project.id, testCase.id);
                         }
                         catch (Exception ex)
                         {

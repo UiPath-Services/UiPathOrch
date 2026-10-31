@@ -6,21 +6,23 @@ namespace UiPath.PowerShell.Commands;
 
 // Test steps have no name: a step is addressed by its test case and its 0-based position
 // (orderNo). Positions are not stable -- the server renumbers the steps on every insert, move
-// and delete -- so the cmdlets read the steps fresh (no cache) and turn positions into step ids
-// before changing anything.
+// and delete -- so the write cmdlets read the steps from the server (refresh) before turning
+// positions into step ids, and clear the test case's cached steps after changing any of them.
 internal static class TmTestSteps
 {
     // The steps of one test case, sorted by orderNo and stamped with the project path and the
-    // test case's name.
-    internal static List<TmTestStep> Get(OrchTmDriveInfo drive, TmProject project, TmTestCase testCase)
+    // test case's name. Cached per test case (drive.TmTestSteps); refresh reads them from the
+    // server even when cached.
+    internal static List<TmTestStep> Get(OrchTmDriveInfo drive, TmProject project, TmTestCase testCase, bool refresh = false)
     {
-        var steps = drive.OrchAPISession.GetTmTestSteps(project.id!, testCase.id!) ?? [];
+        var steps = refresh ? drive.TmTestSteps.Refresh(project, testCase) : drive.TmTestSteps.Get(project, testCase);
+        // Stamped on every read: the test case may have been renamed since the steps were cached.
         foreach (var step in steps)
         {
             step.Path = project.GetPSPath();
             step.TestCase = testCase.name;
         }
-        return steps.OrderBy(s => s.orderNo).ToList();
+        return steps;
     }
 
     // The test cases named by the patterns, in each project. Get-* passes all = true so that no
