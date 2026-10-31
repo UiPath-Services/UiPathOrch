@@ -167,9 +167,10 @@ AcceptedValues:
 - 'False'
 HelpMessage: ''
 ```
+
 ### -Labels
 
-Specifies the names of the labels that replace the test sets' current labels.
+Specifies the names of the labels that replace the test sets' current labels. Each value is split on commas, so one CSV cell can hold several labels; write a comma that is part of a label name as `` `, ``.
 
 ```yaml
 Type: System.String[]

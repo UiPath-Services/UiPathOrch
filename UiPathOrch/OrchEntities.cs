@@ -5091,6 +5091,18 @@ public class TmBulkAddLabelsRequest
     public string? objectType { get; set; } // "requirement" / "testCase" / "testSet" / ...
 }
 
+// One label on one object (GET objectlabels/{objectType}/{objectId}/all).
+public class TmObjectLabel
+{
+    public string? id { get; set; }
+    public string? objectId { get; set; }
+    public string? objectType { get; set; }
+    public string? projectId { get; set; }
+    public string? name { get; set; }
+    public string? description { get; set; }
+    public string? labelType { get; set; } // "userLabel"
+}
+
 // UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.RequirementDto
 public class TmRequirement
 {

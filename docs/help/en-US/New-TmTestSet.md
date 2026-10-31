@@ -137,9 +137,10 @@ AcceptedValues:
 - 'False'
 HelpMessage: ''
 ```
+
 ### -Labels
 
-Specifies the names of the labels to add to the test sets.
+Specifies the names of the labels to add to the test sets. Each value is split on commas, so one CSV cell can hold several labels; write a comma that is part of a label name as `` `, ``.
 
 ```yaml
 Type: System.String[]

@@ -4834,6 +4834,10 @@ public partial class OrchAPISession : IDisposable
     // The distinct label names used in the project, e.g. ["login","regression","smoke"].
     public string[]? GetTmObjectLabelNames(string projectId) => HttpRequest<string[]>(HttpMethod.Get, $"/testmanager_/api/v2/{projectId}/objectlabels/all");
 
+    // The labels on one object. objectType: "requirement" / "testCase" / "testSet" / ...
+    public TmObjectLabel[]? GetTmObjectLabels(string projectId, string objectType, string objectId)
+        => HttpRequest<TmObjectLabel[]>(HttpMethod.Get, $"/testmanager_/api/v2/{projectId}/objectlabels/{objectType}/{objectId}/all");
+
     // Adds labels (by name) to one object. objectType: "requirement" / "testCase" / "testSet" / ...
     // replace (removeOtherLabels) makes the list authoritative: labels not in it are removed.
     public string AddTmObjectLabels(string projectId, string objectType, string objectId, string[] labels, bool replace = false)

@@ -56,7 +56,7 @@ public class NewTmRequirementCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath));
-        var labels = Labels?.Where(l => !string.IsNullOrEmpty(l)).ToArray();
+        var labels = TmLabelCsv.Parse(Labels);
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, project) in drivesProjects)
@@ -75,7 +75,7 @@ public class NewTmRequirementCmdlet : OrchestratorPSCmdlet
                     created = drive.OrchAPISession.PostTmRequirement(project.id!, new TmCreateRequirementRequest
                     {
                         name = WildcardPattern.Unescape(name),
-                        description = Description,
+                        description = string.IsNullOrEmpty(Description) ? null : Description, // an empty CSV cell sends null, as an export of null reads back
                         projectId = project.id,
                     });
                     drive.TmRequirements.ClearCache(project.id);

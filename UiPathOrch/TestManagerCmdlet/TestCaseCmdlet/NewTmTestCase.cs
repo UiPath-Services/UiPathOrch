@@ -60,7 +60,7 @@ public class NewTmTestCaseCmdlet : OrchestratorPSCmdlet
     protected override void ProcessRecord()
     {
         var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath));
-        var labels = Labels?.Where(l => !string.IsNullOrEmpty(l)).ToArray();
+        var labels = TmLabelCsv.Parse(Labels);
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, project) in drivesProjects)
@@ -79,8 +79,8 @@ public class NewTmTestCaseCmdlet : OrchestratorPSCmdlet
                     created = drive.OrchAPISession.PostTmTestCase(project.id!, new TmCreateTestCaseRequest
                     {
                         name = WildcardPattern.Unescape(name),
-                        version = Version,
-                        description = Description,
+                        version = string.IsNullOrEmpty(Version) ? null : Version,
+                        description = string.IsNullOrEmpty(Description) ? null : Description, // an empty CSV cell sends null, as an export of null reads back
                         projectId = project.id,
                     });
                     drive.TmTestCases.ClearCache(project.id);

@@ -41,7 +41,7 @@ public class UpdateTmRequirementCmdlet : OrchestratorPSCmdlet
     {
         var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath), Recurse.IsPresent);
         var wpName = Name.ConvertToWildcardPatternList();
-        var labels = Labels?.Where(l => !string.IsNullOrEmpty(l)).ToArray();
+        var labels = TmLabelCsv.Parse(Labels);
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, project) in drivesProjects.WithCancellation(cancelHandler.Token))

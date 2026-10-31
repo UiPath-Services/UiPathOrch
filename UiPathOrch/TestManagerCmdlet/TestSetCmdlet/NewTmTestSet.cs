@@ -72,7 +72,7 @@ public class NewTmTestSetCmdlet : OrchestratorPSCmdlet
         }
 
         var drivesProjects = SessionState.EnumTmFolders(EffectivePath(Path, LiteralPath));
-        var labels = Labels?.Where(l => !string.IsNullOrEmpty(l)).ToArray();
+        var labels = TmLabelCsv.Parse(Labels);
 
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (drive, project) in drivesProjects)
@@ -91,7 +91,7 @@ public class NewTmTestSetCmdlet : OrchestratorPSCmdlet
                     created = drive.OrchAPISession.PostTmTestSet(project.id!, new TmCreateTestSetRequest
                     {
                         name = WildcardPattern.Unescape(name),
-                        description = Description,
+                        description = string.IsNullOrEmpty(Description) ? null : Description, // an empty CSV cell sends null, as an export of null reads back
                         enableCoverage = enableCoverage,
                         projectId = project.id,
                     });
