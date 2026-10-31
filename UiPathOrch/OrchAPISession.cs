@@ -4863,7 +4863,8 @@ public partial class OrchAPISession : IDisposable
     // Returns the created step.
     public TmTestStep? PostTmTestStep(string projectId, TmCreateTestStepRequest request) => HttpRequest<TmTestStep>(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/teststeps", null, request);
 
-    // JSON Patch: only the fields named in the operations change.
+    // JSON Patch: only the fields named in the operations change. Returns 204 with no body, and the
+    // server trims the values ("  a  " is stored as "a"), so the sent values are not what it stores.
     public string PatchTmTestStep(string projectId, string testStepId, IEnumerable<TmPatchOperation> operations) => HttpRequest(HttpMethod.Patch, $"/testmanager_/api/v2/{projectId}/teststeps/{testStepId}", null, operations);
 
     // Returns empty. The other steps of the test case shift to make room.
