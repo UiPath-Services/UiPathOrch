@@ -18,7 +18,8 @@ public class MoveTmTestStepCmdlet : OrchestratorPSCmdlet
     // The step to move: 0-based; negative values count from the end (-1 = the last step).
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TmTestStepOrderNoCompleter))]
-    public int OrderNo { get; set; }
+    [EmptyStringToNullArgumentTransformation] // an empty CSV cell must not mean step 0
+    public int? OrderNo { get; set; }
 
     // Where it ends up, counted the same way; the steps in between shift by one.
     [Parameter(Position = 2, Mandatory = true)]
@@ -48,9 +49,9 @@ public class MoveTmTestStepCmdlet : OrchestratorPSCmdlet
             try
             {
                 var steps = TmTestSteps.Get(drive, project, testCase, refresh: true);
-                if (TmTestSteps.ResolvePosition(OrderNo, steps.Count) is not int from)
+                if (TmTestSteps.ResolvePosition(OrderNo!.Value, steps.Count) is not int from)
                 {
-                    WriteError(TmTestSteps.OutOfRangeError(testCase, OrderNo, steps.Count));
+                    WriteError(TmTestSteps.OutOfRangeError(testCase, OrderNo.Value, steps.Count));
                     continue;
                 }
                 if (TmTestSteps.ResolvePosition(TargetPosition, steps.Count) is not int to)

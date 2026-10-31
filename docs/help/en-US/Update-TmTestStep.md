@@ -83,7 +83,7 @@ HelpMessage: ''
 ### -OrderNo
 
 Specifies the positions of the steps to update. Positions count from 0; negative positions count from the end (-1 is the last step). A position out of range is reported as an error.
-This parameter is mandatory.
+This parameter is mandatory; an empty CSV cell is rejected rather than read as 0.
 
 ```yaml
 Type: System.Int32[]

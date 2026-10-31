@@ -68,4 +68,23 @@ public class TmTestStepTests
         var ops = UpdateTmTestStepCmdlet.ComputeTestStepPatch(Steps(1)[0], "a", "b", "c");
         Assert.Equal(["/description", "/expectedResult", "/clipboardData"], ops.Select(o => o.path));
     }
+
+    // An empty OrderNo cell in a CSV must reach the cmdlets as "not given", not as step 0.
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public void EmptyString_BecomesNull(string input)
+    {
+        var attribute = new EmptyStringToNullArgumentTransformationAttribute();
+        Assert.Null(attribute.Transform(null!, input));
+        Assert.Null(attribute.Transform(null!, new System.Management.Automation.PSObject(input)));
+    }
+
+    [Fact]
+    public void OtherValues_PassThrough()
+    {
+        var attribute = new EmptyStringToNullArgumentTransformationAttribute();
+        Assert.Equal("0", attribute.Transform(null!, "0"));
+        Assert.Equal(-1, attribute.Transform(null!, -1));
+    }
 }

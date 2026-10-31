@@ -34,6 +34,18 @@ public class EncodingArgumentTransformationAttribute : ArgumentTransformationAtt
 }
 
 /// <summary>
+/// Turns an empty or blank string into null, so an empty CSV cell means "not given". Without it
+/// PowerShell binds "" to an int (or int?) parameter as 0: an empty OrderNo cell in a CSV piped to
+/// New-TmTestStep inserted the step at the top instead of appending it. Put it on a nullable or
+/// array parameter: null cannot reach a plain int, and a mandatory one then fails to bind.
+/// </summary>
+public class EmptyStringToNullArgumentTransformationAttribute : ArgumentTransformationAttribute
+{
+    public override object? Transform(EngineIntrinsics engineIntrinsics, object? inputData)
+        => (inputData is PSObject pso ? pso.BaseObject : inputData) is string s && string.IsNullOrWhiteSpace(s) ? null : inputData;
+}
+
+/// <summary>
 /// Shared plumbing for the entity-to-string binding attributes below.
 ///
 /// Each exists to stop a producer's typed property (Tag[], WebhookEvent[], RobotUser[],

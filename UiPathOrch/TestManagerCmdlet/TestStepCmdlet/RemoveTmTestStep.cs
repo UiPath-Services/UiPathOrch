@@ -20,6 +20,7 @@ public class RemoveTmTestStepCmdlet : OrchestratorPSCmdlet
     // 0-based positions; negative values count from the end (-1 = the last step).
     [Parameter(Position = 1, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     [ArgumentCompleter(typeof(TmTestStepOrderNoCompleter))]
+    [EmptyStringToNullArgumentTransformation] // an empty CSV cell must not mean step 0
     public int[]? OrderNo { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]

@@ -20,7 +20,7 @@ Moves a test step to another position in its test case in Test Manager.
 ### __AllParameterSets
 
 ```
-Move-TmTestStep [-TestCase] <string[]> [-OrderNo] <int> [-TargetPosition] <int> [-Path <string[]>]
+Move-TmTestStep [-TestCase] <string[]> [-OrderNo] <int?> [-TargetPosition] <int> [-Path <string[]>]
  [-LiteralPath <string[]>] [-Recurse] [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
@@ -82,10 +82,10 @@ HelpMessage: ''
 ### -OrderNo
 
 Specifies the position of the step to move. Positions count from 0; negative positions count from the end (-1 is the last step).
-This parameter is mandatory.
+This parameter is mandatory; an empty CSV cell is rejected rather than read as 0.
 
 ```yaml
-Type: System.Int32
+Type: System.Nullable`1[System.Int32]
 DefaultValue: None
 SupportsWildcards: false
 Aliases: []
