@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.22.0'
+ModuleVersion = '1.23.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -534,6 +534,28 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.23.0
+
+Added: Test Manager can be written to, not only read and removed. New-Item Tm:\PREFIX creates a
+project. New- and Update-TmRequirement, -TmTestCase and -TmTestSet create and change requirements,
+test cases and test sets. Get-, New-, Update-, Move- and Remove-TmTestStep work on manual test
+steps. Get-, Add- and Remove-TmTestSetTestCase and -TmRequirementTestCase assign test cases to
+test sets and requirements.
+
+Added: -ExportCsv on Get-TmRequirement, Get-TmTestCase, Get-TmTestSet, Get-TmTestStep,
+Get-TmTestSetTestCase and Get-TmRequirementTestCase. The file pipes back through Import-Csv into
+the matching New- or Add- cmdlet in another project or tenant, labels included.
+
+Fixed: Copy-Item -Recurse into a destination folder that already exists no longer skips
+triggers, and what it copies shows up in Get-Orch* at once, without Clear-OrchCache.
+
+Fixed: Copy-Item -Recurse and Copy-OrchActionCatalog wait for a folder just created before
+copying action catalogs into it, instead of failing.
+
+Fixed: Clear-OrchCache Orch1:\ -Recurse (or -Depth) clears the folders' caches too.
+
+Fixed: progress text hides only the characters the console would mis-size.
+
 1.22.0
 
 Fixed: Copy-OrchQueueItem reads the source queue in order of Id. It paged through the New items
@@ -670,32 +692,6 @@ bars are shown under the bar they belong to. Copy-Item's folder bar counts folde
 Fixed: one Ctrl+C stops Copy-Item, where it used to begin the next folder.
 
 Fixed: tables grouped by Path no longer clip later rows to the width of a folder's first row.
-
-1.18.0
-
-Added: Set-PmLicenseAllocation allocates robot runtimes and consumable units to one tenant
-(-AppTestRobot, -PlatformUnits, -ScreenPlayRuns, ..., or -Products @{ CODE = qty }). The API
-replaces a service's whole allocation, so the cmdlet re-sends the tenant's current codes with the
-requested ones overlaid; a code it cannot place in a service is reported, never guessed.
-
-Added: Get-PmLicenseProductAllocation reports one tenant's allocation per product code, including
-the codes at 0, and Get-PmLicenseServiceAllocation groups it by the service that grants each code
--- the codes one write re-sends together.
-
-Added: New-OrchMachine and Update-OrchMachine can set every runtime slot the API models:
--AppTestSlots (the App Testing runtime Test Cloud application testing runs on), -HostingSlots,
--HeadlessSlots, -PerformanceTestSlots, -AgentSlots, -FunctionSlots, -AutomationCloudSlots and
--AutomationCloudTestAutomationSlots. The four newest are refused on an older server with a message
-naming the version. Nothing else is pre-empted: probing a 21.10.4 server (Web API 13.0) showed the
-inherited "introduced in" notes wrong in both directions.
-
-Changed: when the machine PATCH endpoint answers "machineDto must not be null", naming nothing, a
-warning beside the untouched error lists the properties the request set and the server's version.
-
-Fixed: the Pm* license cmdlets work on Automation Suite, which their help denied.
-
-Fixed: drive-scoped warnings quote their target, so a drive name's own colon no longer runs into
-the one the sentence needs ("local:\:").
 '@
 
         # Prerelease string of this module
