@@ -814,6 +814,11 @@ public partial class OrchProvider
                     }
 
                     created = dstDrive.OrchAPISession.PostRelease(newFolder.Id ?? 0, postingRelease);
+                    // A created process makes newFolder's cached process list stale just as a
+                    // removed one does (the personal-workspace removal above). Without this the list
+                    // was only refreshed after a removal, so a caller that read it before the
+                    // copy kept seeing the folder without the processes just created.
+                    isNewFolderProcessCacheDirty = true;
 
                     // This output clutters the screen, so maybe we don't need it..
                     //if (!shouldProcess && created is not null)

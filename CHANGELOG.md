@@ -6,6 +6,85 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+Test Manager becomes writable: projects, requirements, test cases, test sets, manual test steps,
+and the assignment of test cases to test sets and requirements can now be created and changed,
+not only read and removed. Every `Get-Tm*` that has a matching `New-Tm*` or `Add-Tm*` takes
+`-ExportCsv`, and the file it writes pipes back through `Import-Csv` into that cmdlet in another
+project or tenant. That is enough to carry a project's contents by hand. It is the first step
+towards copying Test Manager projects between tenants with a single command.
+
+### Added
+
+- **`New-Item Tm:\PREFIX` creates a Test Manager project**, with `-ProjectName` (defaults to the
+  prefix) and `-Description`. Projects live directly under the drive root; a nested path is
+  refused before any request. The prefix cannot be changed afterwards, since the API has no field
+  for it, and `Rename-Item` changes only the display name.
+- **`New-TmRequirement` / `Update-TmRequirement`, `New-TmTestCase` / `Update-TmTestCase` and
+  `New-TmTestSet` / `Update-TmTestSet`.** The parameters are the web form's fields (`Name`,
+  `Description`, `Labels`, plus `Version` for a test case and `EnableCoverage` for a test set).
+  `Update-TmTestCase` also takes `-PreCondition` and `-PostCondition`, which the create request
+  cannot carry. `Update-Tm*` sends only the fields that are given and differ from the current
+  value, so an unchanged request sends nothing. `-Labels` replaces the object's labels and
+  completes from the labels in use in the project. A comma in a label name is written as
+  `` `, ``, as with `-Tags` on the Orchestrator cmdlets.
+- **`Get-`, `New-`, `Update-`, `Move-` and `Remove-TmTestStep`** for manual test steps. A step
+  has no name, so it is addressed by its test case and its position, `-OrderNo`, counted from 0;
+  a negative value counts from the end (`-1` is the last step). `New-TmTestStep` appends unless
+  `-OrderNo` is given. `Move-TmTestStep -TargetPosition 0`, `n-1`, `n+1` and `-1` are the web
+  app's Move First, Up, Down and Last. `Remove-TmTestStep` resolves all its input against the
+  steps as they were before the first delete, so piped positions do not shift onto the wrong
+  steps. Steps are cached per test case and dropped as a whole when any of them changes. The
+  write cmdlets always read the steps from the server before turning positions into steps, so a
+  change made in the web app cannot make them act on the wrong one.
+- **`Get-`, `Add-` and `Remove-TmTestSetTestCase` and `-TmRequirementTestCase`** assign test
+  cases to a test set or a requirement, list them, and remove them. Test Manager allows
+  duplicate names, so a name without wildcards must match exactly one item; no match or several
+  matches is an error, rather than a guess. A wildcard selects every match. `Add` skips test
+  cases that are already assigned, and `Remove` looks only among them. The table view groups by
+  test set or requirement and shows each test case's `objKey`, the number the web app shows.
+- **`-ExportCsv` on `Get-TmRequirement`, `Get-TmTestCase`, `Get-TmTestSet`, `Get-TmTestStep`,
+  `Get-TmTestSetTestCase` and `Get-TmRequirementTestCase`.** The columns are the matching
+  `New-Tm*` or `Add-Tm*` cmdlet's parameters, and `Path` and the names are wildcard-escaped. An
+  object exported and imported again comes back identical, labels included; an empty description
+  or version stays empty rather than becoming `""`. Labels are read with one request per object,
+  only when exporting. An object whose labels cannot be read is reported and left out of the file.
+  The export does not carry the linked automation, pre- and postconditions, or custom fields.
+  - Import the test cases, test sets and requirements before the assignments, so that the names
+    the assignments refer to exist in the target.
+  - An assignment export warns when a test set, requirement or test case name is duplicated,
+    because importing it would then fail.
+- **`Get-TmProjectPermission` and `Get-TmProjectSetting` take `-Path` by position**, as
+  `Get-TmConfiguration` and `Get-TmServerInfo` already did.
+- `TmTestCase` and `TmTestSet` carry the fields of the API response they were missing (for a test
+  case, `postCondition`, `hasLinkedAutomation`, `packageIdentifier` and twelve more).
+
+### Fixed
+
+- **Progress text hides only what the console would actually mis-size.** PowerShell before 7.7
+  wraps the progress bar's closing `]` when the text holds a character that is one UTF-16 unit
+  but two cells wide (PowerShell/PowerShell#21293, fixed in 7.7.0-preview.3). Characters outside
+  the BMP, such as most emoji, were never affected and are no longer hidden. Wide BMP characters
+  such as CJK are hidden only before 7.7. A few symbols that some hosts count wrong on every
+  version (`°`, `×`, `…`, `※`, `⭐` and the like) are still hidden everywhere. The old list was
+  also out of order for its binary search, so `※` could slip through.
+- **`Copy-Item -Recurse` no longer skips triggers when it is run again into an existing folder.**
+  The destination folder's process list could stay cached from an earlier run, for example one in
+  which the processes could not be created because their packages were missing. The trigger stage
+  looks up each trigger's process in that list, so every trigger was skipped with a warning even
+  though the processes now existed. Copying a process now refreshes the destination's process
+  list, and the cache cleared before a folder's entities are copied is the destination folder's
+  own rather than its parent's.
+- **Entities created by `Copy-Item -Recurse` show up at once in `Get-Orch*`.** Processes,
+  triggers, API triggers, test sets, test set schedules and test data queues did not refresh the
+  destination folder's cache after they were created, so `Get-OrchProcess` or `Get-OrchTrigger`
+  on the destination returned the list from before the copy until the cache was cleared. The
+  standalone `Copy-Orch*` cmdlets already refreshed it; `Copy-Item -Recurse` now does the same.
+- **`Clear-OrchCache -Path Orch1:\ -Recurse` clears the folders too.** The drive-root form clears
+  the tenant cache, and `-Recurse` and `-Depth` were silently ignored there, so the folders'
+  caches survived. With either of them it now also clears the folders below. Without them,
+  `Orch1:\` still clears the tenant cache only, and `Clear-OrchCache` with no path still clears
+  the whole current drive.
+
 ## [1.22.0] - 2026-10-21
 
 Two sets of fixes, from checking the licensing cmdlets against a tenant holding App Testing

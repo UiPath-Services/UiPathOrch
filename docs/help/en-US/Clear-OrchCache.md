@@ -42,11 +42,11 @@ The cache exists at three scopes — per-organization, per-tenant (drive), and p
 | (no `-Path`, off Orch drives) | every drive (full) |
 | `-AllDrives` | every drive (full); same as the off-drive default, explicit for scripts |
 | `orch1:` | the entire drive (full) — backward-compat carve-out; the usual PowerShell "current folder of the drive" semantics are intentionally overridden so existing scripts that name only the drive continue to clear everything |
-| `orch1:\` | tenant cache only (per-tenant + per-organization). Mirrors the root presentation surface: `Get-ChildItem orch1:\` shows tenant-scoped entities, so "clear what's visible at root" is exactly the tenant cache set |
+| `orch1:\` | tenant cache only (per-tenant + per-organization). Mirrors the root presentation surface: `Get-ChildItem orch1:\` shows tenant-scoped entities, so "clear what's visible at root" is exactly the tenant cache set. With `-Recurse` or `-Depth`, also the per-folder caches of the folders below (Orch main drives only) |
 | `orch1:\Shared` | per-folder cache for that folder only. Tenant and organization scopes are untouched |
 | `.` | resolves to the current location, then classified as above |
 
-`-Recurse` and `-Depth` extend the per-folder scope to subfolders, mirroring the other folder-aware cmdlets. They are no-ops on the drive-only, drive-root, and `-AllDrives` forms.
+`-Recurse` and `-Depth` extend the per-folder scope to subfolders, mirroring the other folder-aware cmdlets. On the drive-root form of an Orch main drive they clear the tenant cache and the per-folder caches below it. They are no-ops on the drive-only and `-AllDrives` forms, which already clear every folder, and on the drive-root form of a DU or Tm drive.
 
 `-Path` supports tab completion for drive names (Orchestrator, Document Understanding, and Test Manager). Folder paths must be typed manually.
 
@@ -116,7 +116,15 @@ PS C:\> Clear-OrchCache -Path Orch1:\Depts -Recurse
 
 Per-folder clear for `Depts` and every descendant. Use `-Depth N` to cap the recursion depth.
 
-### Example 7: Mix scopes in one call
+### Example 7: Clear the tenant cache and every folder's cache
+
+```powershell
+PS C:\> Clear-OrchCache -Path Orch1:\ -Recurse
+```
+
+The drive-root form with `-Recurse`. Drops the tenant and organization caches and the per-folder cache of every folder on the drive.
+
+### Example 8: Mix scopes in one call
 
 ```powershell
 PS Orch1:\Shared> Clear-OrchCache ., Orch2:
@@ -171,7 +179,7 @@ HelpMessage: ''
 
 ### -Recurse
 
-Extends a folder-path clear to all subfolders. No effect on drive-only, drive-root, or -AllDrives forms.
+Extends a folder-path clear to all subfolders. On the drive-root form of an Orch main drive, also clears every folder's cache along with the tenant cache. No effect on drive-only or -AllDrives forms, or on the drive-root form of a DU or Tm drive.
 
 ```yaml
 Type: System.Management.Automation.SwitchParameter
@@ -192,7 +200,7 @@ HelpMessage: ''
 
 ### -Depth
 
-Limits how deep -Recurse walks. 0 means only the named folder (same as no -Recurse). Has no effect without -Recurse.
+How many levels of subfolders to clear below the named folder. Given without -Recurse, it walks that many levels on its own; with -Recurse, it caps the walk. 0 means only the named folder (with -Recurse, no limit).
 
 ```yaml
 Type: System.UInt32

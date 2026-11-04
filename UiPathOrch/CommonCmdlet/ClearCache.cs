@@ -19,7 +19,9 @@ namespace UiPath.PowerShell.Commands;
 //                          spell the drive name continue to clear everything)
 //   -Path orch1:\       -> tenant cache only (per-tenant + per-organization);
 //                          mirrors the root-folder presentation surface, where
-//                          Get-ChildItem orch1:\ shows tenant-scoped entities
+//                          Get-ChildItem orch1:\ shows tenant-scoped entities.
+//                          With -Recurse / -Depth, also the per-folder caches of
+//                          the folders below (main drive only)
 //   -Path orch1:\Shared -> per-folder cache for that folder only; tenant and
 //                          organization scopes are untouched. -Recurse / -Depth
 //                          extend to subfolders.
@@ -170,7 +172,13 @@ public class ClearCacheCmdlet : PSCmdlet
             return;
         }
 
-        if (IsDriveRootForm(pathSpec))
+        // Drive-root form clears the tenant cache. With -Recurse / -Depth on an Orch main
+        // drive it also clears the folders below: fall through to the folder enumeration,
+        // which returns the root first (-> tenant clear via IsRootFolder) and then the
+        // subfolders. Returning here unconditionally made -Recurse a silent no-op on
+        // "Orch1:\", so folder caches the caller meant to discard survived.
+        bool wantsFolders = Recurse.IsPresent || Depth > 0;
+        if (IsDriveRootForm(pathSpec) && (!wantsFolders || drive is OrchDuDriveInfo || drive is OrchTmDriveInfo))
         {
             ClearDriveTenant(drive);
             return;

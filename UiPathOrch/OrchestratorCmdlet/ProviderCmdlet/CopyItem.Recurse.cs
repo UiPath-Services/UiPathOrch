@@ -253,8 +253,15 @@ public partial class OrchProvider
                     reporter.Context = $"{srcFolder.GetPSPath()} -> {newFolder.GetPSPath()}";
 
                     srcDrive.Releases.ClearCache(srcFolder);
-                    dstDrive.Releases.ClearCache(dstFolder);
-                    dstDrive.FolderMachinesAssigned.ClearCache(dstFolder);
+                    // Pre-clear the folder the entities are copied INTO (newFolder), not its
+                    // parent (dstFolder). When the destination folder already exists -- a
+                    // re-run, or a retry after a failed stage -- its process / machine lists
+                    // may have been cached by the earlier run (empty, if processes could not
+                    // be created then), and the trigger and queue stages resolve their
+                    // process through that cache (FindDstRelease), silently skipping what
+                    // they cannot see.
+                    dstDrive.Releases.ClearCache(newFolder);
+                    dstDrive.FolderMachinesAssigned.ClearCache(newFolder);
 
                     if (!ExcludeEntities)
                     {
@@ -270,12 +277,17 @@ public partial class OrchProvider
                         // as their parent by reference, so no two can be made to collide by
                         // editing one of them.
                         //
-                        // Buckets / assets / queues also clear newFolder's dst-side list
-                        // AFTER copying, exactly as the standalone Copy-OrchBucket / -OrchAsset
-                        // / -OrchQueue cmdlets do (this loop was the one create path that
-                        // didn't). These three are the only entities read back on the
-                        // destination side during a copy — FindDstBucket from the process and
-                        // queue stages, FindDstQueue from the trigger stage — and a list
+                        // Every stage that creates entities clears newFolder's dst-side list
+                        // AFTER copying, exactly as the standalone Copy-Orch* cmdlets do (this
+                        // loop was the one create path that didn't). Processes and triggers were
+                        // the last to be added: without it, a Copy-Item re-run left the processes
+                        // it had just created invisible to the trigger stage (FindDstRelease read
+                        // the stale list and skipped every trigger), and Get-OrchProcess /
+                        // Get-OrchTrigger on the destination returned nothing until the drive's
+                        // cache was cleared. Buckets, queues and processes are the only entities
+                        // read back on the destination side during a copy — FindDstBucket from
+                        // the process and queue stages, FindDstQueue and FindDstRelease from the
+                        // trigger stage — and a list
                         // cached for newFolder before those creates (an earlier folder's link
                         // lookup does exactly that) otherwise leaves the entity invisible for
                         // the rest of the session, so the queue trigger that needs it is
@@ -312,7 +324,7 @@ public partial class OrchProvider
                             ("Packages        ", null,
                                 r => CopyPackages(this, srcDrive, srcFolder, dstDrive, newFolder, r, cancelToken)),
                             ("Processes       ", null,
-                                r => CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                                r => { CopyProcesses(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken); dstDrive.Releases.ClearCache(newFolder); dstDrive.ReleasesDetailed.ClearCache(newFolder); }),
                             ("Assets          ",
                                 () => srcDrive.Assets.ClearCache(srcFolder),
                                 r => { CopyAssets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, userMapping, _linkReport); dstDrive.Assets.ClearCache(newFolder); }),
@@ -320,16 +332,16 @@ public partial class OrchProvider
                                 r => { CopyQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken, _linkReport); dstDrive.Queues.ClearCache(newFolder); }),
                             ("Triggers        ",
                                 () => srcDrive.Triggers.ClearCache(srcFolder),
-                                r => CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                                r => { CopyTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken); dstDrive.Triggers.ClearCache(newFolder); dstDrive.TriggersDetailed.ClearCache(newFolder); }),
                             ("API triggers    ",
                                 () => srcDrive.ApiTriggers.ClearCache(srcFolder),
-                                r => CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                                r => { CopyApiTriggers(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken); dstDrive.ApiTriggers.ClearCache(newFolder); }),
                             ("Test sets       ", null,
-                                r => CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                                r => { CopyTestSets(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken); dstDrive.TestSets.ClearCache(newFolder); }),
                             ("Test schedules  ", null,
-                                r => CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                                r => { CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken); dstDrive.TestSetSchedules.ClearCache(newFolder); }),
                             ("Test data queues", null,
-                                r => CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                                r => { CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken); dstDrive.TestDataQueues.ClearCache(newFolder); }),
                             ("Action catalogs ", null,
                                 r => CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
                         };
