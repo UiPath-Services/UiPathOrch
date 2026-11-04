@@ -2206,6 +2206,24 @@ public partial class OrchProvider
         }
     }
 
+    // Action catalogs are served by the Actions service, which learns of a folder some seconds
+    // after Orchestrator creates it. Until then both reading and creating catalogs in the folder
+    // are refused with 403 and errorCode 1100 ("Folder does not exist or the user does not have
+    // access to the folder"). Measured on Automation Cloud (2026-11-04): 2 to 11 seconds after
+    // New-Item, over six fresh folders. Copy-Item -Recurse creates the destination folder and
+    // reaches the action catalog stage well within that, so a create there is retried on that
+    // code, and only there: the same code also means a real lack of access, and the source
+    // folder of a copy is normally an old one.
+    internal const int FolderNotFoundOrNoAccessErrorCode = 1100;
+
+    // About 30 seconds in all, nearly three times the slowest folder measured.
+    internal static readonly TimeSpan[] NewFolderRetryDelays =
+        [.. new[] { 0.5, 1, 2, 4, 4, 4, 4, 4, 4, 4 }.Select(TimeSpan.FromSeconds)];
+
+    // The wait before retry number attempt + 1, or null once the schedule is spent.
+    internal static TimeSpan? NewFolderRetryDelay(int attempt)
+        => attempt >= 0 && attempt < NewFolderRetryDelays.Length ? NewFolderRetryDelays[attempt] : null;
+
     internal static void CopyActionCatalogs(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
@@ -2230,6 +2248,10 @@ public partial class OrchProvider
         }
 
         reporter.TotalNum = srcTaskCatalogs.Count;
+
+        // Spent once one create in this folder has waited out the whole schedule, so a folder
+        // that is genuinely inaccessible costs that wait once, not once per catalog.
+        bool newFolderWaitSpent = false;
 
         int index = 0;
         foreach (var srcTaskCatalog in srcTaskCatalogs.OrderBy(t => t.Name))
@@ -2260,7 +2282,27 @@ public partial class OrchProvider
 
                 try
                 {
-                    dstDrive.OrchAPISession.CreateTaskCatalog(newFolder.Id ?? 0, postingTaskCatalog);
+                    for (int attempt = 0; ; attempt++)
+                    {
+                        try
+                        {
+                            dstDrive.OrchAPISession.CreateTaskCatalog(newFolder.Id ?? 0, postingTaskCatalog);
+                            break;
+                        }
+                        catch (Exception ex) when (!newFolderWaitSpent && OrchException.ExtractErrorCode(ex) == FolderNotFoundOrNoAccessErrorCode)
+                        {
+                            if (NewFolderRetryDelay(attempt) is not TimeSpan delay)
+                            {
+                                newFolderWaitSpent = true;
+                                throw;
+                            }
+                            if (attempt == 0)
+                            {
+                                _this.WriteVerbose($"{msg}: {newFolder.GetPSPath()} is not yet known to the action catalog service; waiting for it.");
+                            }
+                            if (cancelToken.WaitHandle.WaitOne(delay)) cancelToken.ThrowIfCancellationRequested();
+                        }
+                    }
                     dstDrive.ActionCatalogs.ClearCache(newFolder);
                 }
                 catch (Exception ex)

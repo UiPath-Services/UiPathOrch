@@ -79,6 +79,15 @@ towards copying Test Manager projects between tenants with a single command.
   destination folder's cache after they were created, so `Get-OrchProcess` or `Get-OrchTrigger`
   on the destination returned the list from before the copy until the cache was cleared. The
   standalone `Copy-Orch*` cmdlets already refreshed it; `Copy-Item -Recurse` now does the same.
+- **Copying action catalogs into a folder just created waits for it instead of failing.** The
+  action catalog service learns of a new folder some seconds after Orchestrator creates it (2 to
+  11 seconds, measured on Automation Cloud), and until then refuses it with `Folder does not exist
+  or the user does not have access to the folder.` `Copy-Item -Recurse` creates the destination
+  folder and reaches the action catalog stage within that window, so that stage could fail for a
+  folder whose every other entity had been copied. Creating a catalog in the destination is now
+  retried on that error for up to about 30 seconds (`-Verbose` says it is waiting), once per
+  folder, so a folder that is truly inaccessible costs the wait only once. `Copy-OrchActionCatalog`
+  into a new folder gets the same retry.
 - **`Clear-OrchCache -Path Orch1:\ -Recurse` clears the folders too.** The drive-root form clears
   the tenant cache, and `-Recurse` and `-Depth` were silently ignored there, so the folders'
   caches survived. With either of them it now also clears the folders below. Without them,
