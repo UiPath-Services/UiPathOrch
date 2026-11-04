@@ -23,7 +23,7 @@ This page is about **wiring an AI to UiPathOrch**. For the rules the AI should f
 - [How the AI drives UiPathOrch](#how-the-ai-drives-uipathorch)
 - [Authentication in a shared session](#authentication-in-a-shared-session)
 - [Transparency, auditing, and safety](#transparency-auditing-and-safety)
-- [Sharing UiPathOrch docs back to the user](#sharing-uipathorch-docs-back-to-the-user)
+- [Showing help and guides to the user](#showing-help-and-guides-to-the-user)
 - [Limitations and gotchas](#limitations-and-gotchas)
 
 ## Why PowerShell.MCP
@@ -150,23 +150,22 @@ reversible-by-confirmation. The shared-console model gives you that:
   [Essentials](02-Essentials.md)) all work unchanged.
 - Commands **you** type in the console are private — they are not shown to the AI.
 
-## Sharing UiPathOrch docs back to the user
+## Showing help and guides to the user
 
-When the AI needs to *show* you a page from this `Docs/` folder (rather than paraphrase it), it can
-render the Markdown with **[MarkdownPointer](https://www.powershellgallery.com/packages/MarkdownPointer)**:
-
-```powershell
-Install-Module MarkdownPointer        # once
-mdp <path to a .md file>              # open a doc
-```
-
-MarkdownPointer can itself be registered as an MCP server, after which the AI calls the
-`show_markdown` tool instead of `mdp`:
+When the AI needs to *show* you a cmdlet's help (rather than paraphrase it), it can open the page
+in your browser with `Get-Help -Online`:
 
 ```powershell
-Register-MdpToClaudeCode       # Claude Code
-Register-MdpToClaudeDesktop    # Claude Desktop
+Get-Help Copy-OrchAsset -Online
 ```
+
+This opens the cmdlet's page on GitHub, rendered, with links to the related cmdlets. The AI runs
+it in the PowerShell.MCP console, and the page appears in your default browser. Nothing else needs
+to be installed.
+
+The guides in this docs folder have no `Get-Help` page. To show one, the AI gives you its link on
+GitHub, for example https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/02-Essentials.md.
+All of them are listed at https://github.com/UiPath-Services/UiPathOrch/tree/master/docs.
 
 ## Limitations and gotchas
 

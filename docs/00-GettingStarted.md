@@ -42,24 +42,22 @@ Get-Help UiPathOrch             # List all UiPathOrch cmdlets
 Get-OrchHelp                    # Module documentation summary
 ```
 
-### Sharing Documentation with Users
+### Reading Help in the Browser
 
-To display documentation from this Docs folder to the user, use the
-[MarkdownPointer](https://www.powershellgallery.com/packages/MarkdownPointer)
-module. Install once:
-
-```powershell
-Install-Module MarkdownPointer
-```
-
-Then open any Markdown file:
+`-Online` opens a cmdlet's help page on GitHub in your default browser, with the formatting
+rendered and links to the related cmdlets:
 
 ```powershell
-mdp <path to .md file>
+Get-Help Get-OrchAsset -Online
 ```
 
-To drive UiPathOrch from an AI assistant — and to register MarkdownPointer as an MCP
-`show_markdown` tool so the AI can render these docs for you — see
+The page is the same content as `Get-Help -Full`, and it is easier to read, especially for long
+examples and tables.
+
+The guides in this docs folder, such as this page and [Essentials](02-Essentials.md), are on GitHub
+too: https://github.com/UiPath-Services/UiPathOrch/tree/master/docs
+
+To drive UiPathOrch from an AI assistant, see
 [AI Integration (PowerShell.MCP)](01-AIIntegration.md).
 
 ## Installation
