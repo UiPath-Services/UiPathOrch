@@ -69,6 +69,9 @@ BeforeAll {
         New-Item -ItemType Directory -Path $script:DstRoot -Force -ErrorAction Stop | Out-Null
         New-Item -ItemType Directory -Path $script:DstCopy -Force -ErrorAction Stop | Out-Null
 
+        # The copy reads the new source folder's action catalogs; wait until that service knows it.
+        & "$PSScriptRoot\Wait-ActionCatalogFolder.ps1" -Path $script:SrcRoot
+
         Clear-OrchCache
 
         # THE POSITIVE CONTROL. Reading the empty destination folder caches empty lists; unless
