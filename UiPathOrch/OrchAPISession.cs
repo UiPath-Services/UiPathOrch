@@ -4834,6 +4834,28 @@ public partial class OrchAPISession : IDisposable
     // The distinct label names used in the project, e.g. ["login","regression","smoke"].
     public string[]? GetTmObjectLabelNames(string projectId) => HttpRequest<string[]>(HttpMethod.Get, $"/testmanager_/api/v2/{projectId}/objectlabels/all");
 
+    // Test cases assigned to a test set or a requirement. The ids come back in the order the test
+    // cases were created, not the order they were assigned. Assigning one that is already assigned,
+    // or unassigning one that is not, is a no-op (204); an unknown id fails with 404 itemNotFound.
+    // The bodies differ: a test set takes a bare id array, a requirement {"testCaseIds": [...]}.
+    public string[]? GetTmTestSetAssignedTestCaseIds(string projectId, string testSetId)
+        => HttpRequest<string[]>(HttpMethod.Get, $"/testmanager_/api/v2/{projectId}/testsets/{testSetId}/assignedtestcaseids");
+
+    public string AssignTmTestSetTestCases(string projectId, string testSetId, string[] testCaseIds)
+        => HttpRequest(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/testsets/{testSetId}/assigntestcases", null, testCaseIds);
+
+    public string UnassignTmTestSetTestCases(string projectId, string testSetId, string[] testCaseIds)
+        => HttpRequest(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/testsets/{testSetId}/unassigntestcases", null, testCaseIds);
+
+    public string[]? GetTmRequirementAssignedTestCaseIds(string projectId, string requirementId)
+        => HttpRequest<string[]>(HttpMethod.Get, $"/testmanager_/api/v2/{projectId}/requirements/{requirementId}/assignedtestcaseids");
+
+    public string AssignTmRequirementTestCases(string projectId, string requirementId, string[] testCaseIds)
+        => HttpRequest(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/requirements/{requirementId}/assigntestcases", null, new TmAssignTestCasesRequest { testCaseIds = testCaseIds });
+
+    public string UnassignTmRequirementTestCases(string projectId, string requirementId, string[] testCaseIds)
+        => HttpRequest(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/requirements/{requirementId}/unassigntestcases", null, new TmAssignTestCasesRequest { testCaseIds = testCaseIds });
+
     // The labels on one object. objectType: "requirement" / "testCase" / "testSet" / ...
     public TmObjectLabel[]? GetTmObjectLabels(string projectId, string objectType, string objectId)
         => HttpRequest<TmObjectLabel[]>(HttpMethod.Get, $"/testmanager_/api/v2/{projectId}/objectlabels/{objectType}/{objectId}/all");

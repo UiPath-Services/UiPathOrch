@@ -5091,6 +5091,52 @@ public class TmBulkAddLabelsRequest
     public string? objectType { get; set; } // "requirement" / "testCase" / "testSet" / ...
 }
 
+// UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.AssignTestCasesToRequirementRequest
+// (the test set's assign/unassign take a bare id array instead).
+public class TmAssignTestCasesRequest
+{
+    public string[]? testCaseIds { get; set; }
+}
+
+// A test case assigned to a test set or a requirement. Not an API entity: one row per assignment,
+// with names so it can be piped or exported to Add-/Remove-Tm*TestCase. The lower-case fields are
+// the TEST CASE's, copied for display (the same columns as the TmTestCase view).
+public abstract class TmAssignedTestCase
+{
+    public string? Path { get; set; }
+    public string? TestCase { get; set; }
+    public string? testCaseId { get; set; }
+    public string? objKey { get; set; }
+    public string? version { get; set; }
+    public string? automationTestCaseName { get; set; }
+    public DateTime? updated { get; set; }
+    public string? description { get; set; }
+
+    internal void CopyFrom(TmTestCase? testCase)
+    {
+        TestCase = testCase?.name;
+        objKey = testCase?.objKey;
+        version = testCase?.version;
+        automationTestCaseName = testCase?.automationTestCaseName;
+        updated = testCase?.updated;
+        description = testCase?.description;
+    }
+}
+
+// Get-TmTestSetTestCase.
+public class TmTestSetTestCase : TmAssignedTestCase
+{
+    public string? TestSet { get; set; }
+    public string? testSetId { get; set; }
+}
+
+// Get-TmRequirementTestCase.
+public class TmRequirementTestCase : TmAssignedTestCase
+{
+    public string? Requirement { get; set; }
+    public string? requirementId { get; set; }
+}
+
 // One label on one object (GET objectlabels/{objectType}/{objectId}/all).
 public class TmObjectLabel
 {

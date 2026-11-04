@@ -705,6 +705,9 @@ Test Manager project management (TM API, separate from Orchestrator testing).
 | New-TmRequirement | Create a requirement, optionally with labels |
 | Update-TmRequirement | Rename a requirement, change its description, replace its labels |
 | Remove-TmRequirement | Remove a requirement |
+| Get-TmRequirementTestCase | List the test cases assigned to requirements |
+| Add-TmRequirementTestCase | Assign test cases to requirements, by name |
+| Remove-TmRequirementTestCase | Unassign test cases from requirements |
 | Get-TmTestCase | List Test Manager test cases |
 | New-TmTestCase | Create a Test Manager test case, optionally with labels |
 | Update-TmTestCase | Rename a test case, change its version, description, pre/post-condition, replace its labels |
@@ -718,6 +721,9 @@ Test Manager project management (TM API, separate from Orchestrator testing).
 | New-TmTestSet | Create a Test Manager test set, optionally with activity coverage and labels |
 | Update-TmTestSet | Rename a test set, change its description or activity coverage, replace its labels |
 | Remove-TmTestSet | Remove a Test Manager test set |
+| Get-TmTestSetTestCase | List the test cases assigned to test sets |
+| Add-TmTestSetTestCase | Assign test cases to test sets, by name |
+| Remove-TmTestSetTestCase | Unassign test cases from test sets |
 | Get-TmTestExecution | Get test execution results |
 
 ## Bulk Copy Shortcut

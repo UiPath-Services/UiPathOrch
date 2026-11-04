@@ -460,6 +460,9 @@ CmdletsToExport = @(
 'New-TmRequirement',
 'Update-TmRequirement',
 'Remove-TmRequirement',
+'Get-TmRequirementTestCase',
+'Add-TmRequirementTestCase',
+'Remove-TmRequirementTestCase',
 
 'Get-TmTestCase',
 'New-TmTestCase',
@@ -476,6 +479,9 @@ CmdletsToExport = @(
 'New-TmTestSet',
 'Update-TmTestSet',
 'Remove-TmTestSet',
+'Get-TmTestSetTestCase',
+'Add-TmTestSetTestCase',
+'Remove-TmTestSetTestCase',
 
 'Get-TmTestExecution',
 
