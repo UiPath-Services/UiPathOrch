@@ -20,9 +20,9 @@ Updates the description, expected behaviour or clipboard data of test steps in T
 ### __AllParameterSets
 
 ```
-Update-TmTestStep [-TestCase] <string[]> [-OrderNo] <int[]> [-Description <string>] [-ExpectedResult <string>]
- [-ClipboardData <string>] [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+Update-TmTestStep [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+ [-TestCase] <string[]> [-OrderNo] <int[]> [-ClipboardData <string>] [-Confirm]
+ [-Description <string>] [-ExpectedResult <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

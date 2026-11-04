@@ -20,8 +20,9 @@ Assigns test cases to requirements in Test Manager.
 ### __AllParameterSets
 
 ```
-Add-TmRequirementTestCase [-Requirement] <string[]> [-TestCase] <string[]> [-Path <string[]>] [-LiteralPath <string[]>]
- [-Confirm] [-WhatIf] [<CommonParameters>]
+Add-TmRequirementTestCase [-Path <string[]>] [-LiteralPath <string[]>]
+ [-Requirement] <string[]> [-TestCase] <string[]> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

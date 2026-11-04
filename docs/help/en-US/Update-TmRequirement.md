@@ -20,8 +20,9 @@ Updates the name, description or labels of requirements in Test Manager.
 ### __AllParameterSets
 
 ```
-Update-TmRequirement [-Name] <string[]> [-NewName <string>] [-Description <string>] [-Labels <string[]>]
- [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Confirm] [-WhatIf] [<CommonParameters>]
+Update-TmRequirement [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+ [-Name] <string[]> [-Confirm] [-Description <string>] [-Labels <string[]>]
+ [-NewName <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

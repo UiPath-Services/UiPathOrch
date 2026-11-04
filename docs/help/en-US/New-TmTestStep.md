@@ -20,9 +20,9 @@ Adds a manual step to test cases in Test Manager.
 ### __AllParameterSets
 
 ```
-New-TmTestStep [-TestCase] <string[]> [-Description] <string> [[-ExpectedResult] <string>]
- [[-ClipboardData] <string>] [-OrderNo <int?>] [-Path <string[]>] [-LiteralPath <string[]>] [-Confirm] [-WhatIf]
- [<CommonParameters>]
+New-TmTestStep [-Path <string[]>] [-LiteralPath <string[]>] [-TestCase] <string[]>
+ [-Description] <string> [[-ExpectedResult] <string>] [[-ClipboardData] <string>]
+ [-Confirm] [-OrderNo <int?>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

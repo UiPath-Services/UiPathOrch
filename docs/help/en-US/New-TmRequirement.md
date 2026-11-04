@@ -20,8 +20,8 @@ Creates requirements in a Test Manager project.
 ### __AllParameterSets
 
 ```
-New-TmRequirement [-Name] <string[]> [-Description <string>] [-Labels <string[]>] [-Path <string[]>]
- [-LiteralPath <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
+New-TmRequirement [-Path <string[]>] [-LiteralPath <string[]>] [-Name] <string[]>
+ [-Confirm] [-Description <string>] [-Labels <string[]>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

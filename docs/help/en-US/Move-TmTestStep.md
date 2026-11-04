@@ -20,8 +20,9 @@ Moves a test step to another position in its test case in Test Manager.
 ### __AllParameterSets
 
 ```
-Move-TmTestStep [-TestCase] <string[]> [-OrderNo] <int?> [-TargetPosition] <int> [-Path <string[]>]
- [-LiteralPath <string[]>] [-Recurse] [-Confirm] [-WhatIf] [<CommonParameters>]
+Move-TmTestStep [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+ [-TestCase] <string[]> [-OrderNo] <int?> [-TargetPosition] <int> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

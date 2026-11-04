@@ -20,8 +20,9 @@ Creates test cases in a Test Manager project.
 ### __AllParameterSets
 
 ```
-New-TmTestCase [-Name] <string[]> [-Version <string>] [-Description <string>] [-Labels <string[]>] [-Path <string[]>]
- [-LiteralPath <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
+New-TmTestCase [-Path <string[]>] [-LiteralPath <string[]>] [-Name] <string[]> [-Confirm]
+ [-Description <string>] [-Labels <string[]>] [-Version <string>] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

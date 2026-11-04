@@ -20,8 +20,8 @@ Unassigns test cases from test sets in Test Manager.
 ### __AllParameterSets
 
 ```
-Remove-TmTestSetTestCase [-TestSet] <string[]> [-TestCase] <string[]> [-Path <string[]>] [-LiteralPath <string[]>]
- [-Confirm] [-WhatIf] [<CommonParameters>]
+Remove-TmTestSetTestCase [-Path <string[]>] [-LiteralPath <string[]>]
+ [-TestSet] <string[]> [-TestCase] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

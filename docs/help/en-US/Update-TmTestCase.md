@@ -20,9 +20,10 @@ Updates the name, version, description, pre-condition, post-condition or labels 
 ### __AllParameterSets
 
 ```
-Update-TmTestCase [-Name] <string[]> [-NewName <string>] [-Version <string>] [-Description <string>]
- [-PreCondition <string>] [-PostCondition <string>] [-Labels <string[]>]
- [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Confirm] [-WhatIf] [<CommonParameters>]
+Update-TmTestCase [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+ [-Name] <string[]> [-Confirm] [-Description <string>] [-Labels <string[]>]
+ [-NewName <string>] [-PostCondition <string>] [-PreCondition <string>]
+ [-Version <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

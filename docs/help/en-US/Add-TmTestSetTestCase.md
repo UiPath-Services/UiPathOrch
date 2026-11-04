@@ -20,8 +20,8 @@ Assigns test cases to test sets in Test Manager.
 ### __AllParameterSets
 
 ```
-Add-TmTestSetTestCase [-TestSet] <string[]> [-TestCase] <string[]> [-Path <string[]>] [-LiteralPath <string[]>]
- [-Confirm] [-WhatIf] [<CommonParameters>]
+Add-TmTestSetTestCase [-Path <string[]>] [-LiteralPath <string[]>] [-TestSet] <string[]>
+ [-TestCase] <string[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

@@ -20,8 +20,8 @@ Gets the requirements from projects in Test Manager.
 ### __AllParameterSets
 
 ```
-Get-TmRequirement [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [[-Name] <string[]>]
- [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-TmRequirement [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+ [[-Name] <string[]>] [-CsvEncoding <Encoding>] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

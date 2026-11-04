@@ -20,8 +20,9 @@ Unassigns test cases from requirements in Test Manager.
 ### __AllParameterSets
 
 ```
-Remove-TmRequirementTestCase [-Requirement] <string[]> [-TestCase] <string[]> [-Path <string[]>] [-LiteralPath <string[]>]
- [-Confirm] [-WhatIf] [<CommonParameters>]
+Remove-TmRequirementTestCase [-Path <string[]>] [-LiteralPath <string[]>]
+ [-Requirement] <string[]> [-TestCase] <string[]> [-Confirm] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

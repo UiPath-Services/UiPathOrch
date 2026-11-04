@@ -20,9 +20,9 @@ Updates the name, description, activity coverage or labels of test sets in Test 
 ### __AllParameterSets
 
 ```
-Update-TmTestSet [-Name] <string[]> [-NewName <string>] [-Description <string>] [-EnableCoverage <string>]
- [-Labels <string[]>]
- [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Confirm] [-WhatIf] [<CommonParameters>]
+Update-TmTestSet [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+ [-Name] <string[]> [-Confirm] [-Description <string>] [-EnableCoverage <string>]
+ [-Labels <string[]>] [-NewName <string>] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

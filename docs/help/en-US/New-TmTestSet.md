@@ -20,9 +20,9 @@ Creates test sets in a Test Manager project.
 ### __AllParameterSets
 
 ```
-New-TmTestSet [-Name] <string[]> [-Description <string>] [-EnableCoverage <string>]
- [-Labels <string[]>] [-Path <string[]>]
- [-LiteralPath <string[]>] [-Confirm] [-WhatIf] [<CommonParameters>]
+New-TmTestSet [-Path <string[]>] [-LiteralPath <string[]>] [-Name] <string[]> [-Confirm]
+ [-Description <string>] [-EnableCoverage <string>] [-Labels <string[]>] [-WhatIf]
+ [<CommonParameters>]
 ```
 
 ## ALIASES

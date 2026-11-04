@@ -20,8 +20,9 @@ Gets the manual steps of test cases in Test Manager.
 ### __AllParameterSets
 
 ```
-Get-TmTestStep [[-TestCase] <string[]>] [[-OrderNo] <int[]>] [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
- [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-TmTestStep [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+ [[-TestCase] <string[]>] [[-OrderNo] <int[]>] [-CsvEncoding <Encoding>]
+ [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

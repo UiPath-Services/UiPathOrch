@@ -20,8 +20,8 @@ Removes test steps from test cases in Test Manager.
 ### __AllParameterSets
 
 ```
-Remove-TmTestStep [-TestCase] <string[]> [-OrderNo] <int[]> [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
- [-Confirm] [-WhatIf] [<CommonParameters>]
+Remove-TmTestStep [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+ [-TestCase] <string[]> [-OrderNo] <int[]> [-Confirm] [-WhatIf] [<CommonParameters>]
 ```
 
 ## ALIASES

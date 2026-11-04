@@ -20,8 +20,9 @@ Gets the test cases assigned to test sets in Test Manager.
 ### __AllParameterSets
 
 ```
-Get-TmTestSetTestCase [[-TestSet] <string[]>] [[-TestCase] <string[]>] [-Path <string[]>] [-LiteralPath <string[]>]
- [-Recurse] [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-TmTestSetTestCase [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+ [[-TestSet] <string[]>] [[-TestCase] <string[]>] [-CsvEncoding <Encoding>]
+ [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

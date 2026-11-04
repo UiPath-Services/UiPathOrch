@@ -20,8 +20,9 @@ Gets the test cases assigned to requirements in Test Manager.
 ### __AllParameterSets
 
 ```
-Get-TmRequirementTestCase [[-Requirement] <string[]>] [[-TestCase] <string[]>] [-Path <string[]>] [-LiteralPath <string[]>]
- [-Recurse] [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+Get-TmRequirementTestCase [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+ [[-Requirement] <string[]>] [[-TestCase] <string[]>] [-CsvEncoding <Encoding>]
+ [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES

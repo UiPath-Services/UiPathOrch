@@ -21,7 +21,7 @@ Gets the test sets from projects in Test Manager.
 
 ```
 Get-TmTestSet [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [[-Name] <string[]>]
- [-ExportCsv <string>] [-CsvEncoding <Encoding>] [<CommonParameters>]
+ [-CsvEncoding <Encoding>] [-ExportCsv <string>] [<CommonParameters>]
 ```
 
 ## ALIASES
