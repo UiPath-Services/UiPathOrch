@@ -6511,6 +6511,12 @@
               <ListItem>
                 <PropertyName>projectTimeZone</PropertyName>
               </ListItem>
+              <ListItem>
+                <PropertyName>executionNameFormat</PropertyName>
+              </ListItem>
+              <ListItem>
+                <PropertyName>folderKey</PropertyName>
+              </ListItem>
             </ListItems>
           </ListEntry>
         </ListEntries>

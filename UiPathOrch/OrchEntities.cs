@@ -5491,8 +5491,18 @@ public class TmProjectSettings
     public string? projectPrefix { get; set; }
     public int? maxNumberOfTestSteps { get; set; }
     public string? projectTimeZone { get; set; }
+    public string? executionNameFormat { get; set; }
+    public string? folderKey { get; set; }
     public string? id { get; set; }
     public string? projectId { get; set; }
+}
+
+// UiPath.TestManagementHub.TestManagement.Abstractions.DTOs.UpdateProjectSettingsRequest
+// (PUT projectsettings): the time zone is the only field. The execution name format is set by
+// PATCH instead, and the other settings by neither.
+public class TmUpdateProjectSettingsRequest
+{
+    public string? projectTimeZone { get; set; }
 }
 
 // UiPath.TestManagementHub.Configuration.Abstractions.DTOs.EndpointsDto

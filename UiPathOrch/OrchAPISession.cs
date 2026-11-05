@@ -4863,10 +4863,14 @@ public partial class OrchAPISession : IDisposable
     // Adds labels (by name) to one object. objectType: "requirement" / "testCase" / "testSet" / ...
     // replace (removeOtherLabels) makes the list authoritative: labels not in it are removed.
     public string AddTmObjectLabels(string projectId, string objectType, string objectId, string[] labels, bool replace = false)
+        => AddTmObjectLabels(projectId, objectType, [objectId], labels, replace);
+
+    // The same labels to several objects of one type in one call (Copy-Item / Copy-Tm*).
+    public string AddTmObjectLabels(string projectId, string objectType, string[] objectIds, string[] labels, bool replace = false)
         => HttpRequest(HttpMethod.Post, $"/testmanager_/api/v2/{projectId}/objectlabels/{objectType}/addlabels", null, new TmBulkAddLabelsRequest
         {
             objectType = objectType,
-            objectIds = [objectId],
+            objectIds = objectIds,
             labels = labels,
             projectId = projectId,
             removeOtherLabels = replace ? true : null,
@@ -4925,6 +4929,13 @@ public partial class OrchAPISession : IDisposable
     public TmConfig? GetTmConfiguration() => HttpRequest<TmConfig>(HttpMethod.Get, "/testmanager_/api/configuration");
 
     public TmProjectSettings? GetTmProjectSettings(string projectId) => HttpRequest<TmProjectSettings>(HttpMethod.Get, $"/testmanager_/api/v2/{projectId}/projectsettings");
+
+    // The time zone is set by PUT (an IANA name such as "Asia/Tokyo"); PATCH refuses its path.
+    public string PutTmProjectSettings(string projectId, TmUpdateProjectSettingsRequest request) => HttpRequest(HttpMethod.Put, $"/testmanager_/api/v2/{projectId}/projectsettings", null, request);
+
+    // PATCH accepts /executionNameFormat only (measured 2026-11-05: /maxNumberOfTestSteps,
+    // /projectTimeZone and /GovernanceEnabled are "not allowed").
+    public string PatchTmProjectSettings(string projectId, IEnumerable<TmPatchOperation> operations) => HttpRequest(HttpMethod.Patch, $"/testmanager_/api/v2/{projectId}/projectsettings", null, operations);
 
     public IEnumerable<TmProjectPermission> GetTmProjectPermission(string projectId) => GetEnumerableTm<TmProjectPermission>($"/testmanager_/api/v2/{projectId}/permissions/project");
 

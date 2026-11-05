@@ -25,7 +25,8 @@ internal abstract class TmTestCaseAssignmentKind
     internal abstract object CreateOutput(TmProject project, TmAssignmentContainer container, TmTestCase? testCase, string testCaseId);
 }
 
-internal sealed record TmAssignmentContainer(string Id, string? Name, string? ObjKey, string Path)
+// ForeignReference: a requirement's (part of the key TmCopy matches by); a test set has none.
+internal sealed record TmAssignmentContainer(string Id, string? Name, string? ObjKey, string Path, string? ForeignReference = null)
 {
     public string PSPath => System.IO.Path.Combine(Path, Name ?? Id);
 }
@@ -57,7 +58,7 @@ internal sealed class TmRequirementAssignmentKind : TmTestCaseAssignmentKind
     internal override string ContainerLabel => "requirement";
     internal override string ContainerColumn => "Requirement";
     internal override IEnumerable<TmAssignmentContainer> GetContainers(OrchTmDriveInfo drive, TmProject project)
-        => drive.TmRequirements.Get(project).Select(e => new TmAssignmentContainer(e.id!, e.name, e.objKey, project.GetPSPath()));
+        => drive.TmRequirements.Get(project).Select(e => new TmAssignmentContainer(e.id!, e.name, e.objKey, project.GetPSPath(), e.foreignReference));
     internal override string[]? GetAssigned(OrchAPISession api, string projectId, string containerId)
         => api.GetTmRequirementAssignedTestCaseIds(projectId, containerId);
     internal override void Assign(OrchAPISession api, string projectId, string containerId, string[] testCaseIds)

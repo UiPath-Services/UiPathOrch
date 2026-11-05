@@ -705,6 +705,7 @@ Test Manager project management (TM API, separate from Orchestrator testing).
 | New-TmRequirement | Create a requirement, optionally with labels |
 | Update-TmRequirement | Rename a requirement, change its description, replace its labels |
 | Remove-TmRequirement | Remove a requirement |
+| Copy-TmRequirement | Copy requirements, with labels and test case assignments, to another project |
 | Get-TmRequirementTestCase | List the test cases assigned to requirements |
 | Add-TmRequirementTestCase | Assign test cases to requirements, by name |
 | Remove-TmRequirementTestCase | Unassign test cases from requirements |
@@ -712,6 +713,7 @@ Test Manager project management (TM API, separate from Orchestrator testing).
 | New-TmTestCase | Create a Test Manager test case, optionally with labels |
 | Update-TmTestCase | Rename a test case, change its version, description, pre/post-condition, replace its labels |
 | Remove-TmTestCase | Remove a Test Manager test case |
+| Copy-TmTestCase | Copy test cases, with steps, pre/post-conditions and labels, to another project; join same-named test sets and requirements there |
 | Get-TmTestStep | List the manual steps of Test Manager test cases, by position |
 | New-TmTestStep | Add a manual step to a test case, at the end or at a given position |
 | Update-TmTestStep | Change a test step's description, expected result or clipboard data |
@@ -721,10 +723,25 @@ Test Manager project management (TM API, separate from Orchestrator testing).
 | New-TmTestSet | Create a Test Manager test set, optionally with activity coverage and labels |
 | Update-TmTestSet | Rename a test set, change its description or activity coverage, replace its labels |
 | Remove-TmTestSet | Remove a Test Manager test set |
+| Copy-TmTestSet | Copy test sets, with activity coverage, labels and test case assignments, to another project |
 | Get-TmTestSetTestCase | List the test cases assigned to test sets |
 | Add-TmTestSetTestCase | Assign test cases to test sets, by name |
 | Remove-TmTestSetTestCase | Unassign test cases from test sets |
 | Get-TmTestExecution | Get test execution results |
+
+A whole project copies with Copy-Item, also to another tenant, in the order of Test Manager's
+menu: requirements, test cases (with their steps), test sets -- each with its labels and test
+case assignments -- then the project settings (time zone and execution name format). The
+destination prefix defaults to the source's:
+
+  copy Orch1Tm:\PRJ Orch2Tm:\
+  copy Orch1Tm:\PRJ Orch1Tm:\PRJ2
+
+Copying into an existing project adds to it. Items are matched by name and (for test cases and
+requirements) foreign reference: a one-to-one match is reused, and items that cannot be matched
+one-to-one are skipped with a warning (-Force creates them), so running the copy again adds nothing.
+A project setting is copied only while the destination still has its default, so one set there by
+hand is kept. The default Orchestrator folder is not copied (it points into the source's tenant).
 
 ## Bulk Copy Shortcut
 
