@@ -401,16 +401,19 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
         return ret;
     }
 
+    // newName: the name the operator gave the copy (`copy .\A B`, B not existing), which is then
+    // used as is. Without it, the copy takes the source's name, or "<name> - Copy" in the same
+    // parent.
     private Folder? CopyFolder(
         OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder dstFolder, string feedType,
-        CancellationToken cancelToken)
+        CancellationToken cancelToken, string? newName = null)
     {
-        string newFolderDisplayName = srcFolder.DisplayName;
+        string newFolderDisplayName = newName ?? srcFolder.DisplayName!;
 
         // When copying within the same parent folder, append " - Copy" to the destination folder name
         Folder srcParentFolder = srcDrive.GetParentFolder(srcFolder);
-        if (srcParentFolder == dstFolder)
+        if (newName is null && srcParentFolder == dstFolder)
         {
             int index = 1;
             List<Folder> siblingFolders = dstDrive.GetFolders().Where(f => f.ParentId == dstFolder.Id).ToList();
@@ -449,7 +452,7 @@ public partial class OrchProvider : NavigationCmdletProvider, IWritableHost
 
         if (srcFolder.ProvisionType == "Manual")
         {
-            WriteWarning($"The classic folder {srcFolder.GetPSPath()} is converted to modern folder {System.IO.Path.Combine(dstFolder.GetPSPath(), srcFolder.DisplayName!)}.");
+            WriteWarning($"The classic folder {srcFolder.GetPSPath()} is converted to modern folder {System.IO.Path.Combine(dstFolder.GetPSPath(), newFolderDisplayName)}.");
         }
 
         var newFolder = dstDrive.OrchAPISession.CreateFolder(newFolderDisplayName!, srcFolder.Description, feedType, dstFolder.Id);

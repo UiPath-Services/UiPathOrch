@@ -72,7 +72,11 @@ public partial class OrchProvider
         // The per-entity bars underneath it are NOT shared: each folder gets its own set and
         // closes them when it is done, which is what shows the operator what that folder
         // carried.
-        ProgressReporter? folderReporter = null)
+        ProgressReporter? folderReporter = null,
+        // The name the copy of srcFolder (only the outermost one) is given under dstFolder,
+        // when the destination named a folder that did not exist (see CopyItem). Null: the
+        // source's own name.
+        string? newName = null)
     {
         if (srcFolder == dstFolder)
         {
@@ -148,7 +152,11 @@ public partial class OrchProvider
             WriteWarning($"Destination is a personal workspace. Contents of \"{srcFolder.GetPSPath()}\" will be copied directly into \"{dstFolder.GetPSPath()}\" without creating a subfolder.");
         }
 
-        string target = $"Item: '{srcFolder.GetPSPath()}' Destination: '{dstFolder.GetPSPath()}'";
+        // A named copy says where it lands, name included: its parent alone would read as a
+        // copy under the source's own name.
+        string target = newName is null
+            ? $"Item: '{srcFolder.GetPSPath()}' Destination: '{dstFolder.GetPSPath()}'"
+            : $"Item: '{srcFolder.GetPSPath()}' Destination: '{System.IO.Path.Combine(dstFolder.GetPSPath(), newName)}'";
 
         // Use the reason-returning overload so that under -WhatIf we can still descend
         // into subfolders below (each emits its own "Copy Folder" line) while a declined
@@ -247,7 +255,7 @@ public partial class OrchProvider
                     }
                     else
                     {
-                        newFolder = CopyFolder(srcDrive, srcFolder, dstDrive, dstFolder, feedType!, cancelToken);
+                        newFolder = CopyFolder(srcDrive, srcFolder, dstDrive, dstFolder, feedType!, cancelToken, newName);
                         if (newFolder is null) return false;
                     }
                     reporter.Context = $"{srcFolder.GetPSPath()} -> {newFolder.GetPSPath()}";
@@ -438,8 +446,8 @@ public partial class OrchProvider
         {
             Folder wouldBeNewFolder = destinationWorkspace ?? new Folder
             {
-                FullName = System.IO.Path.Combine(dstFolder.GetPSPath(), srcFolder.DisplayName ?? ""),
-                DisplayName = srcFolder.DisplayName,
+                FullName = System.IO.Path.Combine(dstFolder.GetPSPath(), newName ?? srcFolder.DisplayName ?? ""),
+                DisplayName = newName ?? srcFolder.DisplayName,
                 FolderType = srcFolder.FolderType,
                 ParentId = dstFolder.Id,
             };
@@ -475,6 +483,25 @@ public partial class OrchProvider
             }
         }
         catch { } // An advisory is never worth failing a copy over.
+    }
+
+    // Whether dst is src or below it. Compared by folder key, which is unique across tenants,
+    // so two drives on one tenant count as one; by id as well on the same drive. Everything on
+    // a drive is below its root, which has no key: across drives the root is not recognised.
+    internal static bool IsSameOrBelow(OrchDriveInfo dstDrive, Folder? dst, OrchDriveInfo srcDrive, Folder src)
+    {
+        bool sameDrive = ReferenceEquals(dstDrive, srcDrive);
+        if (src == srcDrive.RootFolder) return sameDrive;
+        var seen = new HashSet<long>();
+        for (var f = dst; f is not null && f != dstDrive.RootFolder;)
+        {
+            if (!string.IsNullOrEmpty(f.Key) && string.Equals(f.Key, src.Key, StringComparison.OrdinalIgnoreCase)) return true;
+            if (sameDrive && f.Id is not null && f.Id == src.Id) return true;
+            if (f.ParentId is null or 0 || !seen.Add(f.ParentId.Value)) break;
+            long parentId = f.ParentId.Value;
+            f = dstDrive.GetFolders().FirstOrDefault(x => x.Id == parentId);
+        }
+        return false;
     }
 
     protected override object CopyItemDynamicParameters(string path, string destination, bool recurse)
@@ -559,10 +586,52 @@ public partial class OrchProvider
             return;
         }
 
-        var dstFolder = dstDrive.GetFolder(OrchDriveInfo.PSPathToOrchPath(copyPath));
-        if (dstFolder is null) // The destination specified was a non-existent folder name
+        // A destination that exists is the folder to copy INTO: the copy is created under it with
+        // the source's name. One that does not exist, under a parent that does, names the copy
+        // itself (`copy .\A B` creates B as the copy of A), as Copy-Item does on the file system.
+        // Several sources into one such name behave as there too, because the engine decides
+        // it, not this method: an array gives the first the name and puts the rest under it (it
+        // exists by then); a wildcard is refused from the second match on ("Container cannot be
+        // copied onto existing leaf item"), since the engine looked at the destination once,
+        // before the first copy.
+        string dstOrchPath = OrchDriveInfo.PSPathToOrchPath(copyPath);
+        var dstFolder = dstDrive.GetFolder(dstOrchPath);
+        string? newName = null;
+        if (dstFolder is null)
         {
-            WriteError(new ErrorRecord(new OrchException(path, $"{dstDrive.NameColon} does not have folder '{copyPath}'."), "CopyFolderError", ErrorCategory.InvalidOperation, path));
+            int slash = dstOrchPath.LastIndexOf('/');
+            string leaf = dstOrchPath[(slash + 1)..];
+            var parent = slash < 0 ? dstDrive.RootFolder : dstDrive.GetFolder(dstOrchPath[..slash]);
+            if (parent is null || leaf.Length == 0)
+            {
+                WriteError(new ErrorRecord(new OrchException(path, $"{dstDrive.NameColon} does not have folder '{copyPath}'."), "CopyFolderError", ErrorCategory.InvalidOperation, path));
+                return;
+            }
+            // What a new name cannot apply to: the tenant (its tenant-level entities have no
+            // folder to go into), a personal workspace (copied into a folder that exists), and
+            // a folder under a personal workspace (which has no subfolders).
+            string? refusal = srcFolder == srcDrive.RootFolder
+                ? $"The drive root cannot be copied into a new folder '{copyPath}'. Copy it to a drive root, or copy its folders into a folder that exists."
+                : srcFolder.FolderType == "Personal"
+                    ? $"A personal workspace is copied into a folder that exists, and '{copyPath}' does not. Create it first (New-Item), then copy into it."
+                    : parent.FolderType == "Personal"
+                        ? $"A personal workspace has no subfolders, so '{copyPath}' cannot be created."
+                        : null;
+            if (refusal is not null)
+            {
+                WriteError(new ErrorRecord(new OrchException(path, refusal), "CopyFolderError", ErrorCategory.InvalidOperation, path));
+                return;
+            }
+            dstFolder = parent;
+            newName = leaf;
+        }
+
+        // A folder copied into itself or one of its subfolders would walk into the copies it is
+        // making. Folder keys are unique across tenants, so this also catches two drives on one
+        // tenant; the root has no key, so only the same drive is caught for it.
+        if (IsSameOrBelow(dstDrive, dstFolder, srcDrive, srcFolder) && !(srcFolder == dstFolder && srcFolder == srcDrive.RootFolder))
+        {
+            WriteError(new ErrorRecord(new OrchException(path, $"Cannot copy '{path}' into itself or one of its subfolders ('{copyPath}')."), "CopyFolderError", ErrorCategory.InvalidOperation, path));
             return;
         }
 
@@ -684,7 +753,7 @@ public partial class OrchProvider
         bool bDirty = false;
         try
         {
-            bDirty = CopyItemRecurse(srcDrive, srcFolder, dstDrive, dstFolder ?? dstDrive.RootFolder!, recurse, cancelHandler.Token, userMapping);
+            bDirty = CopyItemRecurse(srcDrive, srcFolder, dstDrive, dstFolder ?? dstDrive.RootFolder!, recurse, cancelHandler.Token, userMapping, null, newName);
         }
         catch (Exception)
         {

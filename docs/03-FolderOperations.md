@@ -140,7 +140,13 @@ with `-Recurse` — all of its subfolders. This is the building block of cross-t
 Copy-Item Orch1:\Finance Orch2:\ -Recurse          # Finance subtree -> Orch2, with contents
 Copy-Item Orch1:\Finance Orch2:\ -Recurse -ExcludeEntities   # folders only, no contents
 Copy-Item Orch1:\ Orch2:\ -Recurse                 # whole tenant: tenant-level entities + every folder
+Copy-Item Orch1:\Finance Orch1:\Finance2 -Recurse  # Finance2 does not exist: it becomes the copy
 ```
+
+- **The destination**, as on the file system: a folder that exists is the one to copy into
+  (`Orch2:\Shared` gets `Orch2:\Shared\Finance`); a name that does not exist, under a parent
+  that does, becomes the copy itself. Copying into the source's own parent names the copy
+  `Finance - Copy`.
 
 - **`-Recurse`** includes subfolders. Without it, a folder is copied with its own entities but
   not its subfolders; a root-to-root copy without `-Recurse` copies only tenant-level entities
@@ -229,6 +235,7 @@ Clear-OrchCache
 | Rename a folder | `Rename-Item Orch1:\A\B NewName` |
 | Move a folder | `Move-Item Orch1:\A\B Orch1:\C` |
 | Copy a folder subtree | `Copy-Item Orch1:\A Orch2:\ -Recurse` |
+| Copy a folder under a new name | `Copy-Item Orch1:\A Orch1:\B -Recurse` (`B` not existing) |
 | Delete a folder | `Remove-Item Orch1:\A\B` (`-Recurse` / `-Force` to skip prompt) |
 | Set a folder's description | `Set-ItemProperty Orch1:\A -Name Description -Value '…'` |
 | Read a folder's description | `Get-ItemProperty Orch1:\A -Name Description` |

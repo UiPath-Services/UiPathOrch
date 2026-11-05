@@ -213,11 +213,13 @@ public partial class OrchProvider : NavigationCmdletProvider, IPropertyCmdletPro
 
     #region NavigationCmdletProvider overrides
 
-    protected override bool IsItemContainer(string path)
-    {
-        // This provider only returns folders (no file-equivalent items)
-        return true;
-    }
+    // Every item of this provider is a folder, so an item is a container exactly when it
+    // exists. A path that does not exist is not one, as on the file system: answering true for
+    // it made `Test-Path -PathType Container` true for a missing folder, and made the engine
+    // treat a missing Copy-Item destination as a folder to copy INTO, so a wildcard source
+    // into a new name put the second match under the first instead of being refused there as
+    // the file system and the registry do.
+    protected override bool IsItemContainer(string path) => ItemExists(path);
 
     protected override string NormalizeRelativePath(string path, string basePath)
     {

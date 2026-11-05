@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+- **`Copy-Item` copies a folder under a new name**, as it does on the file system:
+  `copy -Recurse .\Finance Finance2` creates `Finance2` as the copy of `Finance` when
+  `Finance2` does not exist. A destination that exists is still the folder to copy into.
+  Only the copied folder takes the new name; its subfolders keep theirs. The parent must
+  exist, and the drive root and a personal workspace cannot be copied to a new name. Several
+  sources into a new name behave as on the file system: an array copies the first as the new
+  name and puts the rest under it, a wildcard refuses the matches after the first.
+
+### Fixed
+
+- **`Copy-Item` refuses to copy a folder into one of its own subfolders**, which was not
+  checked; only a copy onto the folder itself was refused. Two drives on one tenant are
+  recognised as one.
+- **`Test-Path -PathType Container` is `False` for a folder that does not exist**; it was
+  `True` for any path on an Orchestrator drive.
+
 ## [1.24.0] - 2026-11-05
 
 Test Manager projects can be copied between tenants with one command, and the organization's

@@ -1027,15 +1027,25 @@ things: the path you give it, whether that path carries a wildcard, and whether 
 | `copy -Recurse Orch1:\* Orch2:\ -Exclude tmp*,scratch` | Everything except the named top-level folders |
 | `copy -Recurse Orch1:\Dept2\Billing Orch2:\` | Lift a subtree out and land it at the destination root |
 | `copy -Recurse Orch1:\Template Orch1:\Shared` | Clone within one tenant — source and destination may be the same drive |
+| `copy -Recurse Orch1:\Template Orch1:\Project2` | Clone under a new name — `Project2` does not exist yet, so it becomes the copy |
 
 Rules that hold for every form above:
 
 - **`-Recurse` governs subfolders and nothing else.** A folder's own entities always
   travel with it (unless you pass `-ExcludeEntities`); `-Recurse` only decides whether its
   subfolders come along.
-- **The destination folder must already exist.** `copy Orch1:\Shared Orch2:\SolRoot` fails
-  with `Orch2: does not have folder 'Orch2:\SolRoot'` when `SolRoot` is not there yet.
-  Create it first (`New-Item Orch2:\SolRoot`) or copy into `Orch2:\`.
+- **A destination that exists is the folder to copy into; one that does not names the copy**,
+  as `Copy-Item` does on the file system. `copy -Recurse Orch1:\Shared Orch2:\SolRoot`
+  creates `Orch2:\SolRoot\Shared` when `SolRoot` exists, and creates `SolRoot` itself as the
+  copy of `Shared` when it does not. Only the copied folder takes the new name; its
+  subfolders keep theirs. The parent must exist (`Orch2:\x\y` with no `x` is an error), the
+  drive root and a personal workspace cannot be copied to a new name, and a folder cannot be
+  copied into itself or one of its subfolders.
+- **Several sources into a new name behave as on the file system.** An array
+  (`copy -Recurse Orch1:\A,Orch1:\B Orch2:\New`) copies `A` as `New` and puts `B` under it; a
+  wildcard (`Orch1:\Dept*`) copies the first match as `New` and refuses the rest with
+  `Container cannot be copied onto existing leaf item`. To put several folders under one new
+  folder, create it first (`New-Item Orch2:\New`) and copy into it.
 - **A path wildcard matches one level.** `Orch1:\Dept*` selects top-level folders only, never
   `Orch1:\Sales\Dept1`. Reach deeper with `-Recurse`, or select at depth by piping
   `Get-ChildItem -Recurse` into `Copy-Item`.
