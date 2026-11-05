@@ -1904,6 +1904,23 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     // Fetches and orders the folder catalog (both sort projections). Invoked lazily by
     // FolderCache on first access; FolderCache owns the locking, publish and caching. The
     // body is unchanged from the former inline GetFolders() implementation.
+    // The personal workspace left the folder list because the Scope cannot read the signed-in
+    // user: say so once per session, queued (BuildFolderCache also runs during tab completion).
+    // Only for 401/403 on a Scope without OR.Users, so an outage is not blamed on the Scope.
+    private bool _personalWorkspaceScopeWarned;
+
+    private void WarnPersonalWorkspaceUnreadable(Exception? userError)
+    {
+        if (userError is null || _personalWorkspaceScopeWarned) return;
+        if (!OrchProvider.LacksUsersScope(_psDrive)) return;
+        if (OrchException.FindHttpStatus(userError) is not (System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)) return;
+
+        _personalWorkspaceScopeWarned = true;
+        OrchAPISession.AppendPendingWarning(
+            $"\"{NameColonSeparator}\": Your personal workspace is not listed: the Scope has neither OR.Users.Read nor OR.Users, "
+            + "so the signed-in user cannot be read. Run Edit-OrchConfig, add OR.Users.Read to its Scope, then run Import-OrchConfig.");
+    }
+
     private (List<Folder> main, List<Folder> enumView) BuildFolderCache()
     {
         OrchAPISession.EnsureAuthenticated();
@@ -1912,6 +1929,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
 
         // get current user to get my own personal workspace
         ExtendedUser user = null;
+        Exception? userError = null;
         List<PersonalWorkspace> personalWorkspaces = null;
         List<Folder> foldersForCurrentUser = null;
         if (!OrchAPISession.AuthManager.IsConfidentialApp)
@@ -1922,7 +1940,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
                 // current user's personal workspace. Failures here (typically missing optional
                 // scopes) are non-fatal; folders are fetched independently below.
                 try { user = CurrentUser.Get() as ExtendedUser; }
-                catch (Exception ex) { System.Diagnostics.Debug.WriteLine($"GetCurrentUser failed: {ex.Message}"); }
+                catch (Exception ex) { userError = ex; System.Diagnostics.Debug.WriteLine($"GetCurrentUser failed: {ex.Message}"); }
             }));
 
             // get personal workspaces that being explored
@@ -1952,6 +1970,8 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         }));
 
         Task.WaitAll([.. tasks]);
+
+        WarnPersonalWorkspaceUnreadable(userError);
 
         // Build into local lists; publish atomically below so concurrent readers
         // never see a partially populated cache.

@@ -345,6 +345,17 @@ public partial class OrchProvider
            && scope.Contains("or.", StringComparison.OrdinalIgnoreCase)
            && !CanRead(scope, "OR.Folders");
 
+    // Whether the drive signs in a user whose Scope cannot read users, so the signed-in user and
+    // with it the personal workspace cannot be read (measured on Cloud 2026-11-05: a token with
+    // OR.Folders.Read only is refused GetCurrentUser, 403). A confidential app has no personal
+    // workspace; PAT and user/password drives are exempt as in LacksFolderScope.
+    internal static bool LacksUsersScope(PSDrive drive)
+        => string.IsNullOrEmpty(drive.Password) && string.IsNullOrEmpty(drive.AccessToken)
+           && string.IsNullOrEmpty(drive.AppSecret)
+           && drive.Scope is string scope
+           && scope.Contains("or.", StringComparison.OrdinalIgnoreCase)
+           && !CanRead(scope, "OR.Users");
+
     // Whether the Scope grants reading the resource: the resource scope itself or its .Read, as
     // whole names. .Write alone does not -- measured on 21.10.4 (2026-10-08): a token with
     // OR.Folders.Write but not .Read is refused the folder listing ("You are not authorized!").
@@ -383,10 +394,9 @@ public partial class OrchProvider
                     // the settings endpoint -- except on 20.10, where the first response's
                     // header still supplies it.
 
-                    if (string.IsNullOrEmpty(drive.AppSecret) && !CanRead(drive.Scope!, "OR.Users"))
-                    {
-                        WriteWarning($"\"{drive.Name}:{System.IO.Path.DirectorySeparatorChar}\": Ensure the \"OR.Users.Read\" scope is included to access your personal workspace folder.");
-                    }
+                    // No OR.Users warning here either: it is given when the folders are first
+                    // read and the personal workspace is actually missing (see
+                    // LacksUsersScope), not at every mount of a drive that may never list one.
                 }
             }
         }

@@ -33,6 +33,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   sources into a new name behave as on the file system: an array copies the first as the new
   name and puts the rest under it, a wildcard refuses the matches after the first.
 
+### Changed
+
+- **The `OR.Users.Read` warning is given when it matters, once**: `Import-OrchConfig` no longer
+  warns about it for every drive whose Scope lacks it. The first time such a drive's folders are
+  read and its personal workspace is missing for that reason, one warning says so and how to fix
+  the Scope.
+
 ### Fixed
 
 - **`Copy-Item` refuses to copy a folder into one of its own subfolders**, which was not

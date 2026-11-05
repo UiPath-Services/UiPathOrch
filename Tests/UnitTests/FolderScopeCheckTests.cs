@@ -24,6 +24,24 @@ public class FolderScopeCheckTests
         Assert.Equal(expected, OrchProvider.LacksFolderScope(drive));
     }
 
+    // The drive whose Scope cannot read the signed-in user, so its personal workspace is missing from
+    // the folder list. Warned when the folders are first read, not at mount.
+    [Theory]
+    [InlineData("OR.Folders.Read", null, null, null, true)]
+    [InlineData("OR.Folders.Read OR.Users.Read", null, null, null, false)]
+    [InlineData("OR.Folders.Read OR.Users", null, null, null, false)]
+    [InlineData("OR.Folders.Read OR.Users.Write", null, null, null, true)]
+    [InlineData("OR.Folders.Read", "app-secret", null, null, false)]   // confidential app: no personal workspace
+    [InlineData("OR.Folders.Read", null, "secret-pat", null, false)]   // PAT
+    [InlineData("OR.Folders.Read", null, null, "password", false)]     // user/password
+    [InlineData("PM.User.Read", null, null, null, false)]
+    [InlineData(null, null, null, null, false)]
+    public void Lacks_users_scope(string? scope, string? appSecret, string? accessToken, string? password, bool expected)
+    {
+        var drive = new PSDrive { Scope = scope, AppSecret = appSecret, AccessToken = accessToken, Password = password };
+        Assert.Equal(expected, OrchProvider.LacksUsersScope(drive));
+    }
+
     [Theory]
     [InlineData("OR.Users", true)]
     [InlineData("OR.Users.Read", true)]
