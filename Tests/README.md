@@ -24,6 +24,8 @@ modify, and delete entities**. They use two drives:
 |---|---|---|
 | **Tenant** (`$env:UIPATHORCH_TEST_DRIVE`) | **DISPOSABLE** tenant. Wiped + repopulated from the fixture. **Never point this at a tenant you care about.** | — (must be set) |
 | **RefDrive** (`$env:UIPATHORCH_TEST_REF_DRIVE`) | Read-only reference tenant for the two-drive (cross-tenant) tests. Never written. | `Orch1` |
+| **Test Manager** (`$env:UIPATHORCH_TEST_TM_DRIVE`) | Test Manager drive for `TmCopy.Tests.ps1`. It creates projects named `PT<nnnn>*` and removes them; nothing else is touched. Skipped when the drive has no Test Manager. | `yotsudatestTm` |
+| **Standalone** (`$env:UIPATHORCH_TEST_ONPREM_DRIVE`) | A standalone Orchestrator drive, for the "not available here" check in `PmOrganization.Tests.ps1`. Read-only. Skipped when unset. | — |
 
 The reference fixture lives in `TestData/Fixture/` (exported from
 `Orch1:\TestFixture_Base`). `Import-Fixture.ps1` remaps it onto the target drive.
