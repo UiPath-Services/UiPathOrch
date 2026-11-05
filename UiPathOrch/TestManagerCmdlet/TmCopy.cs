@@ -79,7 +79,7 @@ internal sealed class TmCopyContext(IWritableHost host,
 
     // The objects this run copied or paired WITH the operator's consent; the label stage reads
     // their labels. A test case only key-mapped for a test set's assignments is not here.
-    public List<(string objectType, string srcId, string dstId, string srcPath)> LabelTargets { get; } = [];
+    public List<(string objectType, string srcId, string dstId, string srcPath, string? name)> LabelTargets { get; } = [];
 
     // Which destination lists this run changed, so the caller can drop exactly those caches.
     public bool DstTestCasesChanged, DstRequirementsChanged, DstTestSetsChanged, DstLabelsChanged;
@@ -264,7 +264,7 @@ internal static class TmCopy
             if (paired is not null)
             {
                 ctx.TestCases[src.id!] = paired.id!;
-                ctx.LabelTargets.Add((TestCaseType, src.id!, paired.id!, srcPath));
+                ctx.LabelTargets.Add((TestCaseType, src.id!, paired.id!, srcPath, src.name));
                 try
                 {
                     // Steps only into a paired test case that has none: one that has steps is
@@ -304,7 +304,7 @@ internal static class TmCopy
             if (created?.id is null) continue;
 
             ctx.TestCases[src.id!] = created.id;
-            ctx.LabelTargets.Add((TestCaseType, src.id!, created.id, srcPath));
+            ctx.LabelTargets.Add((TestCaseType, src.id!, created.id, srcPath, src.name));
             ctx.StepTargets.Add((src, created.id));
 
             // The create request has no pre-/post-condition; they are set by the same PATCH
@@ -342,8 +342,10 @@ internal static class TmCopy
         var api = ctx.DstDrive.OrchAPISession;
         string dstProjectId = ctx.DstProject.id!;
 
+        // The bar shows the entity's name, as every other stage's does (the project bar above
+        // names the paths); the error target stays the full path.
         using var results = OrchThreadPool.RunForEach(ctx.StepTargets,
-            t => t.src.GetPSPath(),
+            t => t.src.name ?? t.src.GetPSPath(),
             t => t.src.GetPSPath(),
             t =>
             {
@@ -437,7 +439,7 @@ internal static class TmCopy
             }
 
             ctx.Requirements[src.id!] = dstId;
-            ctx.LabelTargets.Add((RequirementType, src.id!, dstId, srcPath));
+            ctx.LabelTargets.Add((RequirementType, src.id!, dstId, srcPath, src.name));
         }
     }
 
@@ -502,7 +504,7 @@ internal static class TmCopy
             }
 
             ctx.TestSets[src.id!] = dstId;
-            ctx.LabelTargets.Add((TestSetType, src.id!, dstId, srcPath));
+            ctx.LabelTargets.Add((TestSetType, src.id!, dstId, srcPath, src.name));
         }
     }
 
@@ -550,8 +552,9 @@ internal static class TmCopy
 
         // Both sides read in parallel; the destination side is empty for a container just created,
         // but reading it is what keeps a re-run from sending what is already there.
+        // Bar: the container's name, as in the other stages; error target: its full path.
         using var results = OrchThreadPool.RunForEach(containers.ToList(),
-            p => srcNames.GetValueOrDefault(p.Key) ?? p.Key,
+            p => srcContainers.TryGetValue(p.Key, out var c) && c.Name is not null ? c.Name : p.Key,
             p => srcNames.GetValueOrDefault(p.Key) ?? p.Key,
             p => (src: kind.GetAssigned(srcApi, srcProjectId, p.Key) ?? [], dst: kind.GetAssigned(dstApi, dstProjectId, p.Value) ?? []));
 
@@ -692,8 +695,9 @@ internal static class TmCopy
         var srcApi = ctx.SrcDrive.OrchAPISession;
         string srcProjectId = ctx.SrcProject.id!;
 
+        // Bar: the object's name, as in the other stages; error target: its full path.
         using var results = OrchThreadPool.RunForEach(targets,
-            t => t.srcPath,
+            t => t.name ?? t.srcPath,
             t => t.srcPath,
             t => srcApi.GetTmObjectLabels(srcProjectId, t.objectType, t.srcId) ?? []);
 
@@ -707,7 +711,7 @@ internal static class TmCopy
                     .Select(l => l.name).Where(n => !string.IsNullOrEmpty(n)).Select(n => n!)
                     .Distinct(StringComparer.Ordinal).Order(StringComparer.Ordinal).ToArray();
                 if (labels.Length == 0) continue;
-                var (objectType, _, dstId, _) = result.Source;
+                var (objectType, _, dstId, _, _) = result.Source;
                 var key = (objectType, string.Join('\n', labels));
                 if (!groups.TryGetValue(key, out var group))
                 {

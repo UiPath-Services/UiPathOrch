@@ -40,6 +40,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   recognised as one.
 - **`Test-Path -PathType Container` is `False` for a folder that does not exist**; it was
   `True` for any path on an Orchestrator drive.
+- **The progress bars of a Test Manager `Copy-Item` name the item, not its path**, in every
+  stage: the steps, assignments and labels stages showed the full path
+  (`Tm:\PRJ\nightly`), unlike the others. The project bar above still names both projects.
 
 ## [1.24.0] - 2026-11-05
 
