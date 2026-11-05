@@ -11,6 +11,7 @@ permalink: /other-providers/
 - [Navigation Model](#navigation-model)
 - [Document Understanding (`…Du:`)](#document-understanding-du)
 - [Test Manager (`…Tm:`)](#test-manager-tm)
+  - [Copying a project to another tenant](#copying-a-project-to-another-tenant)
 - [What's Shared with the Orchestrator Provider](#whats-shared-with-the-orchestrator-provider)
 
 ## Overview
@@ -146,9 +147,70 @@ PS C:\> Get-TmProjectSetting -Path Orch1Tm:\ACME |
 PS C:\> Get-TmProjectPermission -Path Orch1Tm:\ACME
 ```
 
-Test Manager artifacts can be removed with `Remove-TmRequirement`, `Remove-TmTestCase`,
-and `Remove-TmTestSet` (all support `-WhatIf`). The Test Manager surface is read-mostly
-today; see [Cmdlet Reference §25](04-CmdletReference.md).
+Test Manager can be written to as well: `New-Item Orch1Tm:\PREFIX` creates a project;
+`New-`, `Update-` and `Remove-` cmdlets exist for requirements, test cases, test sets and
+manual test steps; and `Add-` / `Remove-TmTestSetTestCase` and `-TmRequirementTestCase`
+assign test cases. All support `-WhatIf`. See
+[Cmdlet Reference §25](04-CmdletReference.md) for the full list.
+
+### Copying a project to another tenant
+
+`Copy-Item` copies a whole project, also to another tenant or organization. The
+destination keeps the source's prefix, or takes the one you name:
+
+```powershell
+# To another tenant, keeping the prefix ACME
+PS C:\> Copy-Item Orch1Tm:\ACME Orch2Tm:\
+
+# Within the same tenant, under a new prefix
+PS C:\> Copy-Item Orch1Tm:\ACME Orch1Tm:\ACME2
+
+# Only create (or find) the destination project, without its contents
+PS C:\> Copy-Item Orch1Tm:\ACME Orch2Tm:\ -ExcludeEntities
+```
+
+It copies in the order of Test Manager's menu:
+
+1. Requirements.
+2. Test cases, with their steps, pre-/post-conditions and foreign reference.
+3. Test sets, with their coverage setting.
+4. The project settings that can be set: time zone and execution name format.
+
+Each item comes with its labels and its test case assignments, which are re-created by id,
+not by name.
+
+Copying into a project that already exists adds to it, so a copy that stopped partway can
+simply be run again:
+
+- Items are matched with the destination's by name and, for test cases and requirements,
+  foreign reference, both exactly. Test sets are matched by name only.
+- A one-to-one match is reused rather than created again; a reused test case with no steps
+  gets the source's steps.
+- Names that are not unique on either side cannot be matched one-to-one. Those items are
+  skipped with a warning, which lists their objKeys. `-Force` creates them as new items
+  instead.
+- A project setting is copied only while the destination still has its default.
+
+Not copied, because they point into the source's Orchestrator:
+
+- Linked automation.
+- A test set's folder, robot, machine and environment variables.
+- The project's default folder.
+
+Each of these is reported with a warning. Custom fields, attachments, executions and defects
+are not copied either, without a warning.
+
+To copy only some items, use `Copy-TmRequirement`, `Copy-TmTestCase` or `Copy-TmTestSet`
+with a name pattern. Each asks for confirmation item by item, so `-WhatIf` lists exactly
+what would be copied:
+
+```powershell
+PS C:\> Copy-TmTestCase -Path Orch1Tm:\ACME Login* Orch2Tm:\ACME -WhatIf
+```
+
+Copied test cases join the destination's counterparts of the test sets and requirements
+they belong to. `Copy-TmTestSet` and `Copy-TmRequirement` assign the test cases that
+already exist at the destination. So the result is the same whichever cmdlet runs first.
 
 ## What's Shared with the Orchestrator Provider
 

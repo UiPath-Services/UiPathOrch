@@ -87,12 +87,17 @@ internal sealed class TmCopyContext(IWritableHost host,
     public string DstPath => DstProject.GetPSPath();
 
     public bool ShouldProcess(string srcItemPath, string action)
-        => ShouldProcess(srcItemPath, action, out _);
+        => ShouldProcess(srcItemPath, null, action, out _);
 
-    public bool ShouldProcess(string srcItemPath, string action, out ShouldProcessReason reason)
+    public bool ShouldProcess(string srcItemPath, string? srcObjKey, string action)
+        => ShouldProcess(srcItemPath, srcObjKey, action, out _);
+
+    // srcObjKey ("PRJ:5") follows the path, because Test Manager allows several items with the
+    // same name: without it, the -WhatIf / -Confirm lines of duplicates read the same.
+    public bool ShouldProcess(string srcItemPath, string? srcObjKey, string action, out ShouldProcessReason reason)
     {
         reason = ShouldProcessReason.None;
-        return Confirmed || Host.ShouldProcess($"Item: '{srcItemPath}' Destination: '{DstPath}'", action, out reason);
+        return Confirmed || Host.ShouldProcess($"Item: '{srcItemPath}'{TmCopy.KeySuffix(srcObjKey)} Destination: '{DstPath}'", action, out reason);
     }
 
     // Under -WhatIf a test case is not created, so it has no destination id; this stands in for
@@ -128,6 +133,9 @@ internal static class TmCopy
     internal const string RequirementType = "requirement";
     internal const string TestSetType = "testSet";
 
+    // " (PRJ:5)" after an item's path in messages, so duplicates of one name can be told apart.
+    internal static string KeySuffix(string? objKey) => string.IsNullOrEmpty(objKey) ? "" : $" ({objKey})";
+
     // ----- pairing -------------------------------------------------------------
 
     internal static TmCopyKey KeyOf(TmTestCase e) => TmCopyKey.Of(e.name, e.foreignReference);
@@ -160,24 +168,40 @@ internal static class TmCopy
         : force ? Pairing.Create
         : Pairing.Skip;
 
-    // Decides one source item. The skip warning is per key, once per run (warned).
+    // Decides one source item. The skip warning is per key, once per run (warned), and names the
+    // items on both sides by objKey, since they share a name.
     private static Pairing Pair<T>(TmCopyContext ctx, string label, TmCopyKey key, string srcPath,
-        ILookup<TmCopyKey, T> srcByKey, ILookup<TmCopyKey, T> dstByKey, HashSet<TmCopyKey> warned, out T? paired)
+        ILookup<TmCopyKey, T> srcByKey, ILookup<TmCopyKey, T> dstByKey, HashSet<TmCopyKey> warned,
+        Func<T, string?> objKeyOf, out T? paired)
         where T : class
     {
         paired = null;
-        int srcCount = Math.Max(1, srcByKey[key].Count());
+        var srcMatches = srcByKey[key].ToList();
+        int srcCount = Math.Max(1, srcMatches.Count);
         var dstMatches = dstByKey[key].ToList();
         var pairing = Decide(srcCount, dstMatches.Count, ctx.Force);
         if (pairing == Pairing.Paired) paired = dstMatches[0];
         if (pairing == Pairing.Skip && warned.Add(key))
         {
             string same = key.Reference.Length == 0 ? $"the name '{key.Name}'" : $"the name '{key.Name}' and the foreign reference '{key.Reference}'";
+            string dstKeys = ObjKeyList(dstMatches, objKeyOf);
             ctx.Host.WriteWarning(srcCount == 1
-                ? $"\"{srcPath}\": {dstMatches.Count} {label}s at {ctx.DstPath} have {same}, so it is not known which one this is; it is not copied. To copy it as a new {label}, use -Force."
-                : $"\"{ctx.SrcProject.GetPSPath()}\": {srcCount} {label}s here and {dstMatches.Count} at {ctx.DstPath} have {same}, so it is not known which is which; they are not copied. To copy them as new {label}s, use -Force.");
+                ? $"\"{srcPath}\"{KeySuffix(srcMatches.Select(objKeyOf).FirstOrDefault())}: {dstMatches.Count} {label}s at {ctx.DstPath}{dstKeys} have {same}, so it is not known which one this is; it is not copied. To copy it as a new {label}, use -Force."
+                : $"\"{ctx.SrcProject.GetPSPath()}\": {srcCount} {label}s here{ObjKeyList(srcMatches, objKeyOf)} and {dstMatches.Count} at {ctx.DstPath}{dstKeys} have {same}, so it is not known which is which; they are not copied. To copy them as new {label}s, use -Force.");
         }
         return pairing;
+    }
+
+    // At most the first 10 names, then how many more: a test set run before its test cases were
+    // copied can be missing hundreds.
+    private static string NameList(List<string> names)
+        => names.Count <= 10 ? string.Join(", ", names) : $"{string.Join(", ", names.Take(10))} and {names.Count - 10} more";
+
+    // " (PRJ:5, PRJ:9)", in objKey order.
+    private static string ObjKeyList<T>(IEnumerable<T> items, Func<T, string?> objKeyOf)
+    {
+        var keys = items.Select(objKeyOf).Where(k => !string.IsNullOrEmpty(k)).Select(k => k!).Order(ObjKeyComparer.Instance).ToList();
+        return keys.Count == 0 ? "" : $" ({string.Join(", ", keys)})";
     }
 
     // Key-maps the test cases (key unique on both sides) into ctx.TestCases, for Copy-TmRequirement
@@ -219,13 +243,13 @@ internal static class TmCopy
         foreach (var src in srcTestCases.WithCancellation(ctx.Token))
         {
             string srcPath = src.GetPSPath();
-            var pairing = Pair(ctx, "test case", KeyOf(src), srcPath, srcByKey, dstByKey, warned, out var paired);
+            var pairing = Pair(ctx, "test case", KeyOf(src), srcPath, srcByKey, dstByKey, warned, e => e.objKey, out var paired);
             if (pairing == Pairing.Skip)
             {
                 ctx.SkippedTestCases.Add(src.id!);
                 continue;
             }
-            if (!ctx.ShouldProcess(srcPath, "Copy TmTestCase", out var reason))
+            if (!ctx.ShouldProcess(srcPath, src.objKey, "Copy TmTestCase", out var reason))
             {
                 if (reason == ShouldProcessReason.WhatIf)
                 {
@@ -383,9 +407,9 @@ internal static class TmCopy
         foreach (var src in srcItems.WithCancellation(ctx.Token))
         {
             string srcPath = src.GetPSPath();
-            var pairing = Pair(ctx, "requirement", KeyOf(src), srcPath, srcByKey, dstByKey, warned, out var paired);
+            var pairing = Pair(ctx, "requirement", KeyOf(src), srcPath, srcByKey, dstByKey, warned, e => e.objKey, out var paired);
             if (pairing == Pairing.Skip) continue;
-            if (!ctx.ShouldProcess(srcPath, "Copy TmRequirement")) continue;
+            if (!ctx.ShouldProcess(srcPath, src.objKey, "Copy TmRequirement")) continue;
 
             reporter.WriteProgress(++index, src.name);
             string? dstId = paired?.id;
@@ -444,9 +468,9 @@ internal static class TmCopy
         foreach (var src in srcItems.WithCancellation(ctx.Token))
         {
             string srcPath = src.GetPSPath();
-            var pairing = Pair(ctx, "test set", KeyOf(src), srcPath, srcByKey, dstByKey, warned, out var paired);
+            var pairing = Pair(ctx, "test set", KeyOf(src), srcPath, srcByKey, dstByKey, warned, e => e.objKey, out var paired);
             if (pairing == Pairing.Skip) continue;
-            if (!ctx.ShouldProcess(srcPath, "Copy TmTestSet")) continue;
+            if (!ctx.ShouldProcess(srcPath, src.objKey, "Copy TmTestSet")) continue;
 
             reporter.WriteProgress(++index, src.name);
             string? dstId = paired?.id;
@@ -518,9 +542,11 @@ internal static class TmCopy
         var srcApi = ctx.SrcDrive.OrchAPISession;
         var dstApi = ctx.DstDrive.OrchAPISession;
         string srcProjectId = ctx.SrcProject.id!, dstProjectId = ctx.DstProject.id!;
-        var srcNames = kind.GetContainers(ctx.SrcDrive, ctx.SrcProject).ToDictionary(c => c.Id, c => c.PSPath);
-        var dstNames = copiedTestCasesOnly ? kind.GetContainers(ctx.DstDrive, ctx.DstProject).ToDictionary(c => c.Id, c => c.PSPath) : [];
-        var srcTestCaseNames = copiedTestCasesOnly ? ctx.SrcDrive.TmTestCases.Get(ctx.SrcProject).Where(e => e.id is not null).ToDictionary(e => e.id!, e => e.name) : [];
+        // Each with its objKey: containers and test cases may share names.
+        var srcContainers = kind.GetContainers(ctx.SrcDrive, ctx.SrcProject).ToDictionary(c => c.Id);
+        var srcNames = srcContainers.ToDictionary(p => p.Key, p => p.Value.PSPath + KeySuffix(p.Value.ObjKey));
+        var dstNames = copiedTestCasesOnly ? kind.GetContainers(ctx.DstDrive, ctx.DstProject).ToDictionary(c => c.Id, c => c.PSPath + KeySuffix(c.ObjKey)) : [];
+        var srcTestCaseNames = ctx.SrcDrive.TmTestCases.Get(ctx.SrcProject).Where(e => e.id is not null).ToDictionary(e => e.id!, e => e.name + KeySuffix(e.objKey));
 
         // Both sides read in parallel; the destination side is empty for a container just created,
         // but reading it is what keeps a re-run from sending what is already there.
@@ -552,26 +578,27 @@ internal static class TmCopy
 
                 var already = dstAssigned.ToHashSet();
                 var toAssign = new List<(string srcId, string dstId)>();
-                int missing = 0;
+                var missing = new List<string>();
                 foreach (var srcTestCaseId in srcAssigned)
                 {
                     if (!ctx.TestCases.TryGetValue(srcTestCaseId, out var dstTestCaseId))
                     {
-                        if (!ctx.SkippedTestCases.Contains(srcTestCaseId)) ++missing;
+                        if (!ctx.SkippedTestCases.Contains(srcTestCaseId)) missing.Add(srcTestCaseNames.GetValueOrDefault(srcTestCaseId) ?? srcTestCaseId);
                         continue;
                     }
                     if (!already.Contains(dstTestCaseId) && !toAssign.Any(t => t.dstId == dstTestCaseId)) toAssign.Add((srcTestCaseId, dstTestCaseId));
                 }
-                if (missing > 0 && !copiedTestCasesOnly)
+                if (missing.Count > 0 && !copiedTestCasesOnly)
                 {
-                    ctx.Host.WriteWarning($"\"{path}\": {missing} assigned test case(s) have no counterpart at {ctx.DstPath} (not copied, or not unique there by name and foreign reference); they are not assigned.");
+                    string container = srcContainers.TryGetValue(srcContainerId, out var c) ? $"\"{c.PSPath}\"{KeySuffix(c.ObjKey)}" : $"\"{path}\"";
+                    ctx.Host.WriteWarning($"{container}: {missing.Count} assigned test case(s) have no counterpart at {ctx.DstPath} (not copied, or not unique there by name and foreign reference), so they are not assigned: {NameList(missing)}.");
                 }
                 if (toAssign.Count == 0) continue;
 
                 if (copiedTestCasesOnly)
                 {
                     string dstPath = dstNames.GetValueOrDefault(dstContainerId) ?? dstContainerId;
-                    string names = string.Join(", ", toAssign.Select(t => srcTestCaseNames.GetValueOrDefault(t.srcId) ?? t.srcId));
+                    string names = NameList([.. toAssign.Select(t => srcTestCaseNames.GetValueOrDefault(t.srcId) ?? t.srcId)]);
                     if (!ctx.Host.ShouldProcess(dstPath, $"Add test cases: {names}")) continue;
                 }
                 // Belt and braces: a -WhatIf stand-in id must never reach the server.

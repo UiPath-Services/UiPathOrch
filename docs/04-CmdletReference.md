@@ -742,6 +742,7 @@ requirements) foreign reference: a one-to-one match is reused, and items that ca
 one-to-one are skipped with a warning (-Force creates them), so running the copy again adds nothing.
 A project setting is copied only while the destination still has its default, so one set there by
 hand is kept. The default Orchestrator folder is not copied (it points into the source's tenant).
+See [Other Providers: Copying a project](60-OtherProvidersGuide.md#copying-a-project-to-another-tenant).
 
 ## Bulk Copy Shortcut
 

@@ -244,7 +244,7 @@ You can pipe test set names, test case names and project paths to this cmdlet.
 
 ### UiPath.PowerShell.Entities.TmTestSetTestCase
 
-One object per assigned test case, with Path, TestSet, TestCase, testSetId and testCaseId, and the test case's objKey, version, automationTestCaseName, updated and description for display.
+One object per assigned test case, with Path, TestSet, TestCase, testSetId and testCaseId, and the test case's objKey, foreignReference, version, automationTestCaseName, updated and description for display. Test Manager allows several test cases with the same name; objKey and foreignReference (not in the default view) tell them apart.
 
 ## NOTES
 

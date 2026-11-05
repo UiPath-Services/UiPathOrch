@@ -5107,6 +5107,8 @@ public abstract class TmAssignedTestCase
     public string? TestCase { get; set; }
     public string? testCaseId { get; set; }
     public string? objKey { get; set; }
+    // With the name, what tells test cases of one name apart (and what Copy-Tm* matches by).
+    public string? foreignReference { get; set; }
     public string? version { get; set; }
     public string? automationTestCaseName { get; set; }
     public DateTime? updated { get; set; }
@@ -5116,6 +5118,7 @@ public abstract class TmAssignedTestCase
     {
         TestCase = testCase?.name;
         objKey = testCase?.objKey;
+        foreignReference = testCase?.foreignReference;
         version = testCase?.version;
         automationTestCaseName = testCase?.automationTestCaseName;
         updated = testCase?.updated;
