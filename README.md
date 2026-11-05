@@ -31,12 +31,23 @@ Perform advanced operations like downloading only active packages or detecting l
 ### Tenant Migration
 Facilitate tenant migrations by copying various entities between tenants efficiently.
 
-### Entity Management
-- **Tenant entities:** Manage libraries, packages, assets, queues, triggers, webhooks, and more
-- **Folder entities:** Handle processes, jobs, machines, robots, schedules, and other folder-specific items
-- **Platform Management:** User, group, license, and authentication management
-- **Document Understanding:** Project and queue management
-- **Test Manager:** Test set operations
+### What each service covers
+
+| Service | Read | Write | Copy to another tenant | Notes |
+|---|---|---|---|---|
+| Orchestrator, tenant entities (libraries, packages, credential stores, roles, users, machines, calendars, webhooks) | Yes | Yes | Yes: `copy OldOrch:\ NewOrch:\` | The API never returns secrets (passwords, client secrets), so they are re-entered after a copy. |
+| Orchestrator, folders and folder entities (processes, assets, queues, buckets, triggers, test sets, …) | Yes | Yes | Yes: `copy -Recurse OldOrch:\ NewOrch:\` | Queue items and bucket files are copied by their own cmdlets; event triggers are not copied. |
+| Jobs, logs, audit logs | Yes | Jobs: start, stop, restart | No | |
+| Organization: local users, groups, robot accounts, external applications | Yes | Yes | Yes, to another organization: `Copy-PmUser`, `Copy-PmGroup`, `Copy-PmRobotAccount`, `Copy-PmExternalApplication` | Directory (AD / Entra ID) users are not created; they come from the identity provider. |
+| Organization: tenants and their services | Yes | Yes: create, update, enable, disable, remove, restore; add, remove, enable, disable services | No | Automation Cloud and Automation Suite only. |
+| Licenses (organization and tenant) | Yes | Allocation to users, groups and tenants; runtimes per machine | No | |
+| Document Understanding | Yes: projects, extractors, document types, classifiers, roles, users | Role assignments of users only | No | |
+| Test Manager | Yes: projects, requirements, test cases and steps, test sets, executions, settings, permissions | Yes: projects, requirements, test cases and steps, test sets, assignments | Yes: `copy Orch1Tm:\PRJ Orch2Tm:\`, `Copy-TmTestCase` and its kin | Custom fields, attachments, executions, defects and linked automation are not copied. |
+
+Anything without a cmdlet can still be called with `Invoke-OrchApi`.
+
+See the [Cmdlet Reference](docs/04-CmdletReference.md) for every cmdlet and the
+[Migration & Copy Guide](docs/50-MigrationGuide.md) for what a copy carries.
 
 ## Installation
 
