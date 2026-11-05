@@ -345,7 +345,7 @@ This cmdlet does not emit objects on success; the underlying API returns 200 wit
 
 ## NOTES
 
-The /odata/Tasks endpoint behaves with caller-scoped visibility, so the cache populated by Get-OrchTask might not contain Unassigned tasks visible only to admins. The -Id parameter still works directly against the API even when Tab completion shows nothing — pass the Id manually (e.g., from Get-OrchTaskAcrossFolder).
+Tab completion of -Id offers the tasks Get-OrchTask returns for the folder. -Id also takes an Id it does not offer (e.g., from Get-OrchTaskAcrossFolder).
 
 ## RELATED LINKS
 

@@ -460,6 +460,7 @@ Long-running, human-in-the-loop workflows. Action catalogs define the form templ
 |--------|-------------|
 | Get-OrchTask | Get tasks from a folder |
 | Get-OrchTaskAcrossFolder | Get tasks tenant-wide via the cross-folder endpoint |
+| Get-OrchTaskData | Get a task's data (the form values, attachments among them) and the action taken |
 | Set-OrchTask | Update task title, priority, note, or catalog association |
 | Remove-OrchTask | Delete tasks by Id |
 

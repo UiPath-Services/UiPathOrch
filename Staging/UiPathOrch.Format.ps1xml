@@ -770,6 +770,35 @@
     </View>
 
     <View>
+      <Name>OrchTaskData</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.OrchTaskData</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <ListControl>
+        <ListEntries>
+          <ListEntry>
+            <ListItems>
+              <ListItem><PropertyName>Id</PropertyName></ListItem>
+              <ListItem><PropertyName>Title</PropertyName></ListItem>
+              <ListItem><PropertyName>Type</PropertyName></ListItem>
+              <ListItem><PropertyName>Status</PropertyName></ListItem>
+              <ListItem><PropertyName>Action</PropertyName></ListItem>
+              <ListItem>
+                <Label>Data</Label>
+                <ScriptBlock>if ($_.Data) { $_.Data | ConvertTo-Json -Compress -Depth 10 }</ScriptBlock>
+              </ListItem>
+              <ListItem><PropertyName>CompletionTime</PropertyName></ListItem>
+            </ListItems>
+          </ListEntry>
+        </ListEntries>
+      </ListControl>
+    </View>
+
+    <View>
       <Name>Log</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.Log</TypeName>
@@ -3504,7 +3533,7 @@
                 <Alignment>right</Alignment>
               </TableColumnItem>
               <TableColumnItem>
-                <ScriptBlock>$esc = [char]27; $d = [char]0x25CF; if ($_.IsLicensed) { "$($esc)[38;5;40m$d$($esc)[0m" } else { "$($esc)[38;5;208m$d$($esc)[0m" }</ScriptBlock>
+                <ScriptBlock>$esc = [char]27; if ($_.IsLicensed) { "$($esc)[38;5;40mTrue$($esc)[0m" } else { "$($esc)[38;5;208mFalse$($esc)[0m" }</ScriptBlock>
               </TableColumnItem>
               <TableColumnItem>
                 <PropertyName>Enabled</PropertyName>

@@ -3579,7 +3579,11 @@ public partial class OrchAPISession : IDisposable
     // Get classic folder robots
     #region Tasks
 
-    public IEnumerable<OrchTask> GetTasks(Int64 folderId) => GetEnumerable<OrchTask>("/odata/Tasks", folderId);
+    // Not /odata/Tasks: it answers for classic folders only ("Gets Task objects from classic folders"),
+    // so a modern folder read as empty. The cross-folder endpoint covers both kinds; the folder header
+    // does not narrow it (measured on Cloud 2026-11-05), the filter does. It also lists deleted tasks
+    // (a delete is soft), so they are filtered out here and in GetTasksAcrossFolders.
+    public IEnumerable<OrchTask> GetTasks(Int64 folderId) => GetEnumerable<OrchTask>("/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders", folderId, $"&$filter=OrganizationUnitId eq {folderId} and IsDeleted eq false");
 
     // jobKey: the job's Key (GUID) for the endpoint's `jobId` query -- v20 OpenAPI document (Cloud,
     // 2026-09), declared a plain string. Tasks reference their job by Key only (TaskDto.CreatorJobKey /
@@ -3591,15 +3595,24 @@ public partial class OrchAPISession : IDisposable
     {
         if (string.IsNullOrEmpty(jobKey))
         {
-            return GetEnumerable<OrchTask>("/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders");
+            return GetEnumerable<OrchTask>("/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders", null, "&$filter=IsDeleted eq false");
         }
         EnsureVersionSupport(20);
-        return GetEnumerable<OrchTask>("/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders", null, $"&jobId={Uri.EscapeDataString(jobKey)}");
+        return GetEnumerable<OrchTask>("/odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders", null, $"&$filter=IsDeleted eq false&jobId={Uri.EscapeDataString(jobKey)}");
     }
 
     public OrchTask? GetTask(Int64 folderId, Int64 taskId) => HttpRequest<OrchTask>(HttpMethod.Get, $"/odata/Tasks({taskId})", folderId);
 
-    public void RemoveTask(Int64 folderId, Int64 taskId) => HttpRequest(HttpMethod.Delete, $"/odata/Tasks({taskId})", folderId);
+    // The folder header is required: without it, 400 errorCode 1101 "A folder is required for this action."
+    public OrchTaskData? GetTaskData(Int64 folderId, Int64 taskId) => HttpRequest<OrchTaskData>(HttpMethod.Get, $"/tasks/GenericTasks/GetTaskDataById?taskId={taskId}", folderId);
+
+    // There is no DELETE /odata/Tasks({key}) (it answered 404 Not Found); DeleteTasks is the route.
+    // The delete is soft: the task stays readable with IsDeleted true.
+    public void RemoveTask(Int64 folderId, Int64 taskId)
+    {
+        EnsureVersionSupport(15);
+        HttpRequest(HttpMethod.Post, "/odata/Tasks/UiPath.Server.Configuration.OData.DeleteTasks", folderId, new { taskIds = new[] { taskId } });
+    }
 
     public void EditTaskMetadata(Int64 folderId, EditTaskMetadataRequest request) => HttpRequest(HttpMethod.Post, "/odata/Tasks/UiPath.Server.Configuration.OData.EditTaskMetadata", folderId, request);
 

@@ -43,7 +43,7 @@ Get-OrchTask -Status Completed | Remove-OrchTask
 
 The -Id parameter supports tab completion (Press [Ctrl+Space] or [Tab] to see Task Ids in the current folder, with Status/Priority/Title shown as a tooltip).
 
-Primary Endpoint: DELETE /odata/Tasks({key})
+Primary Endpoint: POST /odata/Tasks/UiPath.Server.Configuration.OData.DeleteTasks (Orchestrator Web API v15 or newer)
 
 OAuth required scopes: OR.Tasks or OR.Tasks.Write
 
@@ -232,7 +232,7 @@ This cmdlet does not emit objects on success. Errors surface as ErrorRecord via 
 
 ## NOTES
 
-Deleted tasks are typically marked IsDeleted=true on the server side rather than physically removed; check the tenant's retention policy if you need permanent deletion.
+A deleted task is marked IsDeleted=true on the server rather than physically removed. Get-OrchTask and Get-OrchTaskAcrossFolder leave such tasks out.
 
 ## RELATED LINKS
 

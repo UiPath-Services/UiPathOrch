@@ -494,6 +494,53 @@ public class OrchTask
     public Int64? DeleterUserId { get; set; }
 }
 
+// TaskDataDto (GET /tasks/GenericTasks/GetTaskDataById): the task with what the OData task leaves
+// out, its data (the form values, attachments among them) and the action taken. The same endpoint
+// answers for FormTask and ExternalTask alike (measured on Cloud 2026-11-05). Status is a number
+// here (0 Unassigned, 1 Pending, 2 Completed), not the name OData gives.
+// The response is camelCase, unlike OData's PascalCase, hence the names.
+public class OrchTaskData
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+    [JsonPropertyName("id")] public Int64? Id { get; set; }
+    [JsonPropertyName("key")] public string? Key { get; set; }
+    [JsonPropertyName("title")] public string? Title { get; set; }
+    [JsonPropertyName("type")] public string? Type { get; set; }
+    [JsonPropertyName("priority")] public string? Priority { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Status => StatusValue switch
+    {
+        0 => "Unassigned",
+        1 => "Pending",
+        2 => "Completed",
+        null => null,
+        var n => n.ToString(),
+    };
+    [JsonPropertyName("action")] public string? Action { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public PSObject? Data { get; set; } // from DataJson, as native values
+    [JsonPropertyName("taskAssignmentCriteria")] public string? TaskAssignmentCriteria { get; set; }
+    [JsonPropertyName("assignedToUserId")] public Int64? AssignedToUserId { get; set; }
+    [JsonPropertyName("claimedByUserId")] public Int64? ClaimedByUserId { get; set; }
+    [JsonPropertyName("organizationUnitId")] public Int64? OrganizationUnitId { get; set; }
+    [JsonPropertyName("organizationUnitFullyQualifiedName")] public string? OrganizationUnitFullyQualifiedName { get; set; }
+    [JsonPropertyName("externalTag")] public string? ExternalTag { get; set; }
+    [JsonPropertyName("creatorJobKey")] public string? CreatorJobKey { get; set; }
+    [JsonPropertyName("waitJobKey")] public string? WaitJobKey { get; set; }
+    [JsonPropertyName("creationTime"), JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? CreationTime { get; set; }
+    [JsonPropertyName("lastModificationTime"), JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? LastModificationTime { get; set; }
+    [JsonPropertyName("completionTime"), JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? CompletionTime { get; set; }
+
+    [JsonInclude, JsonPropertyName("status")]
+    internal int? StatusValue { get; set; }
+    [JsonInclude, JsonPropertyName("data")]
+    internal System.Text.Json.JsonElement? DataJson { get; set; }
+}
+
 // EditTaskMetadataRequest body for POST /odata/Tasks/.../EditTaskMetadata
 public class EditTaskMetadataRequest
 {

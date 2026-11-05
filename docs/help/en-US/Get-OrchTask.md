@@ -30,9 +30,9 @@ Get-OrchTask [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <ui
 
 Returns action-center tasks (FormTask, ExternalTask, DocumentValidationTask, DocumentClassificationTask, DataLabelingTask, AppTask) from the specified folder. Supports wildcard filtering on Title, plus exact-match filters on Status and Priority.
 
-The folder-scoped /odata/Tasks endpoint returns tasks visible to the caller within the folder context (typically tasks assigned to the current user, or all tasks if the caller has admin permission). For a tenant-wide admin view that includes Unassigned tasks regardless of folder permissions, use Get-OrchTaskAcrossFolder instead.
+The tasks are read through the cross-folder endpoint, filtered to the folder: the plain /odata/Tasks endpoint answers for classic folders only. Deleted tasks (a delete is soft) are left out. Get-OrchTaskData returns a task's data (the form values) and the action taken.
 
-Primary Endpoint: GET /odata/Tasks
+Primary Endpoint: GET /odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders?$filter=OrganizationUnitId eq {folderId}
 
 OAuth required scopes: OR.Tasks or OR.Tasks.Read
 
@@ -244,11 +244,13 @@ Returns OrchTask objects with properties including Id, Key, Title, Type, Priorit
 
 The C# entity class is named OrchTask (not Task) to avoid clash with System.Threading.Tasks.Task; the cmdlet noun is still "OrchTask".
 
-The /odata/Tasks endpoint returns only tasks the caller can see within the folder. For an admin's tenant-wide view, use Get-OrchTaskAcrossFolder.
+Only the tasks the caller can see in the folder are returned. For a tenant-wide view in one call, use Get-OrchTaskAcrossFolder.
 
 ## RELATED LINKS
 
 [Get-OrchTaskAcrossFolder](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTaskAcrossFolder.md)
+
+[Get-OrchTaskData](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTaskData.md)
 
 [Set-OrchTask](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Set-OrchTask.md)
 

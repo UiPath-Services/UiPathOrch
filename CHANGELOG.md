@@ -33,14 +33,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   sources into a new name behave as on the file system: an array copies the first as the new
   name and puts the rest under it, a wildcard refuses the matches after the first.
 
+- **`Get-OrchTaskData` reads a task's data**: the values of its form (attachments among them)
+  and the action it was completed with, which `Get-OrchTask` does not carry. `.Data.<Field>`
+  reads a value. Pipe tasks from `Get-OrchTask` or `Get-OrchTaskAcrossFolder`; each is read in
+  its own folder, which the endpoint requires.
+
 ### Changed
 
 - **The `OR.Users.Read` warning is given when it matters, once**: `Import-OrchConfig` no longer
   warns about it for every drive whose Scope lacks it. The first time such a drive's folders are
   read and its personal workspace is missing for that reason, one warning says so and how to fix
   the Scope.
+- **`Get-OrchLicenseRuntime` shows `IsLicensed` as True / False**, in green and orange as
+  before. It was a colored dot, which told nothing where colors do not show (a redirect, a file,
+  some terminals).
 
 ### Fixed
+
+- **`Get-OrchTask` finds the tasks of a modern folder.** It used the endpoint for classic folders
+  only, so it returned nothing in a modern folder; the tasks were visible only through
+  `Get-OrchTaskAcrossFolder`. Tab completion of a task's Id or title used the same list.
+- **`Remove-OrchTask` removes a task.** It sent a request the API does not have and failed with
+  "Not Found". A removed task stays on the server as deleted; `Get-OrchTask` and
+  `Get-OrchTaskAcrossFolder` now leave deleted tasks out (the cross-folder list showed them).
 
 - **`Copy-Item` refuses to copy a folder into one of its own subfolders**, which was not
   checked; only a copy onto the folder itself was refused. Two drives on one tenant are
