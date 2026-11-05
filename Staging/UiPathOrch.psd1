@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.23.0'
+ModuleVersion = '1.24.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -541,6 +541,22 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.24.0
+
+Added: Copy-Item Tm1:\PRJ Tm2:\[NEWPREFIX] copies a whole Test Manager project, also to another
+tenant: requirements, test cases with their steps, test sets, their labels and assignments, and
+the time zone and execution name format. Copy-TmTestCase, Copy-TmRequirement and Copy-TmTestSet
+copy the items whose names match. Items are matched with the destination's by name and foreign
+reference, so running a copy again adds nothing; items that cannot be matched one-to-one are
+skipped with a warning, and -Force creates them.
+
+Added: Get-PmOrganization, Get-PmTenant and Get-PmTenantService read the organization, its
+tenants and each tenant's services (orchestrator, testmanager, ...) with their status and URL.
+Automation Cloud and Automation Suite.
+
+Added: Get-TmTestSetTestCase and Get-TmRequirementTestCase output the test case's
+foreignReference.
+
 1.23.0
 
 Added: Test Manager can be written to, not only read and removed. New-Item Tm:\PREFIX creates a

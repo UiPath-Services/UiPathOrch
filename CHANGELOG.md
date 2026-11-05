@@ -6,6 +6,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.24.0] - 2026-11-05
+
+Test Manager projects can be copied between tenants with one command, and the organization's
+tenants and services can be read.
+
+### Added
+
+- **`Copy-Item Tm1:\PRJ Tm2:\[NEWPREFIX]` copies a whole Test Manager project**, also to another
+  tenant or organization. It copies in the order of Test Manager's menu: requirements, test cases
+  (with their steps, pre-/post-conditions and foreign reference), test sets (with their coverage
+  setting), then the project settings that can be set (time zone and execution name format). Each
+  item comes with its labels and test case assignments, which are re-created by id, not by name.
+  `-ExcludeEntities` creates or finds the destination project only.
+  - Copying into a project that already exists adds to it, so a copy that stopped partway can be
+    run again. Items are matched with the destination's by name and, for test cases and
+    requirements, foreign reference, both exactly (case included, leading and trailing spaces
+    ignored). A one-to-one match is reused, and a reused test case with no steps gets the
+    source's steps. Names that are not unique on either side cannot be matched one-to-one: those
+    items are skipped with a warning that lists their objKeys, and `-Force` creates them as new
+    items instead. A project setting is copied only while the destination still has its default.
+  - Not copied, with a warning: linked automation, a test set's Orchestrator execution settings
+    (folder, robot, machine, environment variables) and the project's default folder, since they
+    point into the source's Orchestrator. Not copied: custom fields, attachments, executions and
+    defects.
+- **`Copy-TmTestCase`, `Copy-TmRequirement` and `Copy-TmTestSet`** copy the items whose names
+  match a pattern, with the same matching and `-Force`, confirming item by item so that `-WhatIf`
+  lists exactly what would be copied. Copied test cases join the destination's counterparts of the
+  test sets and requirements they belong to, and `Copy-TmTestSet` / `Copy-TmRequirement` assign
+  the test cases that already exist there, so the result is the same whichever runs first.
+- **`Get-PmOrganization`, `Get-PmTenant` and `Get-PmTenantService`** read the organization, its
+  tenants and each tenant's services from the Organization Management Service, the API behind
+  `uip admin organizations` and `uip admin tenants`. `Get-PmOrganization` returns the
+  organization's name, id, region, status and organization-level services (portal, identity,
+  docs, ...). `Get-PmTenant` returns every tenant with its status, region and environment, also
+  those no drive is mounted on. `Get-PmTenantService` returns one row per tenant and service
+  (orchestrator, testmanager, dataservice, ...) with its status and URL, filtered by `-Tenant` and
+  `-ServiceType`. Automation Cloud and Automation Suite only; a standalone Orchestrator has no
+  such service and gets an error saying so.
+- `Get-TmTestSetTestCase` and `Get-TmRequirementTestCase` output the test case's
+  `foreignReference`, which tells test cases of one name apart (not in the default view; the CSV
+  columns are unchanged). `Get-TmProjectSetting` outputs `executionNameFormat` and `folderKey`.
+- The Other Providers guide has a section on copying a Test Manager project.
+
 ## [1.23.0] - 2026-11-04
 
 Test Manager becomes writable: projects, requirements, test cases, test sets, manual test steps,
