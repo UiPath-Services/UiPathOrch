@@ -906,6 +906,8 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     // Organization Management Service: the tenants, and each tenant's services keyed by its GUID.
     public readonly ListCachePerOrganization<PmTenant> PmTenants;
     public readonly KeyedListCachePerOrganization<string, PmService> PmTenantServices;
+    // The service catalog for tenants, keyed by region ("" for the organization's default).
+    public readonly KeyedListCachePerOrganization<string, PmAvailableService> PmAvailableServices;
 
     // Non-indexed organization entities.
     // Multi-threaded fetch is safe: SingleCachePerOrganization serializes
@@ -1167,6 +1169,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
 
         PmTenants = new(this, OrchAPISession.GetPmTenants);
         PmTenantServices = new(this, OrchAPISession.GetPmTenantServices);
+        PmAvailableServices = new(this, (partitionGlobalId, region) => OrchAPISession.GetPmAvailableServices(partitionGlobalId, region));
         PmOrganization = new(this, OrchAPISession.GetPmOrganization);
 
         // Non-indexed organization entities

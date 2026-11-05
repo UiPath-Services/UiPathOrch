@@ -4269,6 +4269,9 @@ public partial class OrchAPISession : IDisposable
     // Organization Management Service (see _base_url_organization). The routes are those of
     // `uip admin organizations` / `uip admin tenants` (admin-tool 1.204.0).
     private T? HttpRequestOrganization<T>(string endPoint)
+        => DeserializeApiJson<T>(HttpRequestOrganization(HttpMethod.Get, endPoint, null));
+
+    private string HttpRequestOrganization(HttpMethod method, string endPoint, object? payload)
     {
         if (_base_url_organization is null)
         {
@@ -4276,8 +4279,71 @@ public partial class OrchAPISession : IDisposable
             // connection, so the cache keeps the failure. No drive prefix: the cache adds it.
             throw new DeterministicApiException("The organization's tenants and services are available on Automation Cloud and Automation Suite only, not on a standalone Orchestrator.");
         }
-        return DeserializeApiJson<T>(HttpRequestImpl(HttpMethod.Get, _base_url_organization, endPoint, null, null));
+        return HttpRequestImpl(method, _base_url_organization, endPoint, null, payload);
     }
+
+    // ---- writes (measured 2026-11-05 on Automation Cloud and Automation Suite) ----------------
+    // A tenant write is asynchronous: it answers at once, the tenant's status reads "Updating"
+    // until it is done (seconds for most; a few minutes for a new tenant), and another write to
+    // the same tenant meanwhile is refused ("Another operation is in-progress"). The operation
+    // record (GET .../operations/{id}) does not say when it is done (its operationStatus stays
+    // "Created"), so the cmdlets watch the tenant's status instead. A service write is
+    // synchronous.
+
+    public PmTenant? GetPmTenant(string partitionGlobalId, string tenantGlobalId)
+        => HttpRequestOrganization<PmTenant>($"/api/organization/{partitionGlobalId}/tenants/{tenantGlobalId}");
+
+    // The name must start with a letter: letters and digits only (no '-', '_' at the end, spaces),
+    // 2 to 32 characters. Automation Suite requires services; Automation Cloud accepts them.
+    public PmTenant? PostPmTenant(string partitionGlobalId, PmCreateTenantRequest request)
+        => DeserializeApiJson<PmTenant>(HttpRequestOrganization(HttpMethod.Post, $"/api/organization/{partitionGlobalId}/tenants", request));
+
+    // The tenant writes below answer with the id of the operation they started (a JSON string),
+    // which GetPmOperation follows; null when the answer has none (restore on Automation Suite).
+    public string? PatchPmTenant(string partitionGlobalId, string tenantGlobalId, PmUpdateTenantRequest request)
+        => OperationId(HttpRequestOrganization(HttpMethod.Patch, $"/api/organization/{partitionGlobalId}/tenants/{tenantGlobalId}", request));
+
+    public string? SetPmTenantActive(string partitionGlobalId, string tenantGlobalId, bool active, string? reason)
+        => OperationId(HttpRequestOrganization(HttpMethod.Post, $"/api/organization/{partitionGlobalId}/tenants/{tenantGlobalId}/{(active ? "true" : "false")}",
+            reason is null ? null : new PmChangeTenantStatusRequest { reason = reason }));
+
+    // A soft delete. The tenant then leaves the list and cannot be read back.
+    public string? DeletePmTenant(string partitionGlobalId, string tenantGlobalId)
+        => OperationId(HttpRequestOrganization(HttpMethod.Delete, $"/api/organization/{partitionGlobalId}/tenants/{tenantGlobalId}", null));
+
+    // Undoes DeletePmTenant. Automation Suite allows it; Automation Cloud answers 403.
+    public string? RestorePmTenant(string partitionGlobalId, string tenantGlobalId)
+        => OperationId(HttpRequestOrganization(HttpMethod.Patch, $"/api/organization/{partitionGlobalId}/tenants/{tenantGlobalId}/restore", null));
+
+    // An asynchronous operation: operationStatus is "Queued" (or another pending state) while
+    // it runs, then names what it did ("Created", "Edited", ...); errorMessage says why it failed.
+    public PmOperation? GetPmOperation(string partitionGlobalId, string operationId)
+        => HttpRequestOrganization<PmOperation>($"/api/organization/{partitionGlobalId}/operations/{operationId}");
+
+    private static string? OperationId(string? body)
+    {
+        if (string.IsNullOrWhiteSpace(body)) return null;
+        try { return JsonSerializer.Deserialize<string>(body); }
+        catch (JsonException) { return null; }
+    }
+
+    // { "services": { "testmanager": true } } provisions, false removes (soft). A service the
+    // catalog marks isAlwaysProvision is answered with success and left as it is.
+    public void AddRemovePmTenantServices(string partitionGlobalId, string tenantGlobalId, Dictionary<string, bool> services)
+        => HttpRequestOrganization(HttpMethod.Post, $"/api/organization/{partitionGlobalId}/tenants/{tenantGlobalId}/services",
+            new PmAddRemoveTenantServicesRequest { services = services });
+
+    // { "serviceTypeServiceStatusMap": { "testmanager": "Disabled" } }. As above, an
+    // always-provisioned service is answered with success and left as it is.
+    public void SetPmTenantServiceStatus(string partitionGlobalId, string tenantGlobalId, Dictionary<string, string> statuses)
+        => HttpRequestOrganization(HttpMethod.Patch, $"/api/organization/{partitionGlobalId}/tenants/{tenantGlobalId}/services",
+            new PmChangeTenantServiceStatusRequest { serviceTypeServiceStatusMap = statuses });
+
+    // The services a tenant can have, in a region (omitted: the organization's). Automation Cloud
+    // and Automation Suite (where supportedregions, unlike this, answers 404).
+    public IEnumerable<PmAvailableService> GetPmAvailableServices(string partitionGlobalId, string? region)
+        => HttpRequestOrganization<PmAvailableService[]>($"/api/organization/{partitionGlobalId}/availableservices?scope=Tenant"
+            + (string.IsNullOrEmpty(region) ? "" : "&region=" + Uri.EscapeDataString(region))) ?? [];
 
     public PmOrganization? GetPmOrganization(string partitionGlobalId)
         => HttpRequestOrganization<PmOrganization>($"/api/organization/{partitionGlobalId}");

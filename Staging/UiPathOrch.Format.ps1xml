@@ -5042,6 +5042,57 @@
     </View>
 
     <View>
+      <Name>PmAvailableService</Name>
+      <ViewSelectedBy>
+        <TypeName>UiPath.PowerShell.Entities.PmAvailableService</TypeName>
+      </ViewSelectedBy>
+      <GroupBy>
+        <Label>Directory</Label>
+        <PropertyName>Path</PropertyName>
+      </GroupBy>
+      <TableControl>
+        <TableHeaders>
+          <TableColumnHeader>
+            <Label>id</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>name</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>isAlwaysProvision</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>provisioningMode</Label>
+          </TableColumnHeader>
+          <TableColumnHeader>
+            <Label>entitlement</Label>
+          </TableColumnHeader>
+        </TableHeaders>
+        <TableRowEntries>
+          <TableRowEntry>
+            <TableColumnItems>
+              <TableColumnItem>
+                <PropertyName>id</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>name</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>isAlwaysProvision</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>provisioningMode</PropertyName>
+              </TableColumnItem>
+              <TableColumnItem>
+                <PropertyName>entitlement</PropertyName>
+              </TableColumnItem>
+            </TableColumnItems>
+          </TableRowEntry>
+        </TableRowEntries>
+      </TableControl>
+    </View>
+
+    <View>
       <Name>TenantAllocation</Name>
       <ViewSelectedBy>
         <TypeName>UiPath.PowerShell.Entities.TenantAllocation</TypeName>

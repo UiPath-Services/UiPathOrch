@@ -162,7 +162,18 @@ CmdletsToExport = @(
 
 'Get-PmOrganization',
 'Get-PmTenant',
+'New-PmTenant',
+'Update-PmTenant',
+'Enable-PmTenant',
+'Disable-PmTenant',
+'Remove-PmTenant',
+'Restore-PmTenant',
 'Get-PmTenantService',
+'Add-PmTenantService',
+'Remove-PmTenantService',
+'Enable-PmTenantService',
+'Disable-PmTenantService',
+'Get-PmAvailableService',
 
 'Get-PmLicense',
 'Get-PmLicenseAllocation',

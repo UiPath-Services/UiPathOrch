@@ -660,7 +660,18 @@ The Organization Management Service (Automation Cloud and Automation Suite only)
 |--------|-------------|
 | Get-PmOrganization | Get the organization: name, id, region, status, organization-level services |
 | Get-PmTenant | List the tenants of the organization, with status, region and environment |
+| New-PmTenant | Create a tenant, waiting until it is provisioned |
+| Update-PmTenant | Rename a tenant, or change its environment tag or color |
+| Enable-PmTenant / Disable-PmTenant | Enable or disable tenants (with a reason) |
+| Remove-PmTenant | Remove (soft-delete) tenants |
+| Restore-PmTenant | Restore removed tenants by id (Automation Suite; Automation Cloud refuses it) |
 | Get-PmTenantService | List each tenant's services (orchestrator, testmanager, ...), with status and URL |
+| Add-PmTenantService / Remove-PmTenantService | Provision or remove services on tenants |
+| Enable-PmTenantService / Disable-PmTenantService | Enable or disable services on tenants |
+| Get-PmAvailableService | List the services a tenant can have, and which ones it always keeps |
+
+Tenant writes are asynchronous and one at a time per tenant; the cmdlets wait until a write has
+finished (and retry while another one is still running), unless `-NoWait`.
 
 ### External Applications
 

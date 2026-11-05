@@ -8,6 +8,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+- **Tenants and their services can be managed**, with the API of `uip admin tenants`:
+  `New-PmTenant` creates a tenant (`-Service`, `-Region`, `-Environment`, `-Color`),
+  `Update-PmTenant` renames it or changes its environment tag or color, `Enable-` and
+  `Disable-PmTenant` (with `-Reason`) switch it on and off, `Remove-PmTenant` soft-deletes it,
+  and `Restore-PmTenant -Id` brings it back where the organization allows it (Automation Suite;
+  Automation Cloud refuses it, and the cmdlet says so). `Add-`, `Remove-`, `Enable-` and
+  `Disable-PmTenantService` provision and switch services such as Test Manager, and
+  `Get-PmAvailableService` lists the services a tenant can have.
+  - A tenant write is asynchronous and one at a time per tenant. The cmdlets wait until it has
+    finished, and while another operation is still running on the tenant (as it is for minutes
+    after a new tenant reads Enabled), they wait and retry instead of failing; `-NoWait` returns
+    at once.
+  - A service every tenant always keeps (Orchestrator, and others the catalog marks
+    `isAlwaysProvision`) is refused by `Remove-` and `Disable-PmTenantService` before anything
+    is sent: the API answers success and keeps it.
+  - Removing, disabling a tenant and removing, disabling a service ask for confirmation.
+
 - **`Copy-Item` copies a folder under a new name**, as it does on the file system:
   `copy -Recurse .\Finance Finance2` creates `Finance2` as the copy of `Finance` when
   `Finance2` does not exist. A destination that exists is still the folder to copy into.

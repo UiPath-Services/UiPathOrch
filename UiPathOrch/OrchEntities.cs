@@ -4238,6 +4238,72 @@ public class PmService
     public string? operationId { get; set; }
 }
 
+// POST /api/organization/{org}/tenants (CreateTenantRequestDto). services: service types.
+public class PmCreateTenantRequest
+{
+    public string? name { get; set; }
+    public string? region { get; set; }
+    public string? environment { get; set; } // Production / NonProduction / Development
+    public string? color { get; set; }
+    public string[]? services { get; set; }
+}
+
+// PATCH /api/organization/{org}/tenants/{tenant} (TenantUpdateDto). Null fields are not sent.
+public class PmUpdateTenantRequest
+{
+    public string? name { get; set; }
+    public string? color { get; set; }
+    public string? environment { get; set; }
+}
+
+// POST /api/organization/{org}/tenants/{tenant}/{true|false} (ChangeTenantStatusDto).
+public class PmChangeTenantStatusRequest
+{
+    public string? reason { get; set; }
+}
+
+// POST /api/organization/{org}/tenants/{tenant}/services (AddRemoveTenantServiceRequestDto).
+public class PmAddRemoveTenantServicesRequest
+{
+    public Dictionary<string, bool>? services { get; set; }
+}
+
+// PATCH /api/organization/{org}/tenants/{tenant}/services (ChangeTenantServiceStatusRequestDto).
+public class PmChangeTenantServiceStatusRequest
+{
+    public Dictionary<string, string>? serviceTypeServiceStatusMap { get; set; }
+}
+
+// GET /api/organization/{org}/operations/{id}: an asynchronous tenant write.
+public class PmOperation
+{
+    public string? id { get; set; }
+    public string? entityType { get; set; } // Tenant
+    public string? entityId { get; set; }
+    public string? operationStatus { get; set; } // Queued while it runs; then Created, Edited, ...
+    public string? errorMessage { get; set; }
+    public string? errorTrace { get; set; }
+}
+
+// GET /api/organization/{org}/availableservices?scope=Tenant&region= (Get-PmAvailableService).
+public class PmAvailableService
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Region { get; set; } // added by UiPathOrch: the region asked about
+
+    public PmAvailableService ShallowClone() => (PmAvailableService)MemberwiseClone();
+    public string? id { get; set; } // the service type: orchestrator, testmanager, ...
+    public string? name { get; set; }
+    public string? provisioningMode { get; set; } // Implicit / Explicit
+    public bool? isAlwaysProvision { get; set; } // true: cannot be removed or disabled
+    public string? entitlement { get; set; }
+    public string[]? supportedRegions { get; set; }
+    public string? defaultRegion { get; set; }
+    public bool? isVisible { get; set; }
+}
+
 // added by UiPathOrch — product allocation row (per-SKU Total / Allocated).
 // One entry of /api/license/management/account/available → productAllocations[].
 public class ProductAllocation
