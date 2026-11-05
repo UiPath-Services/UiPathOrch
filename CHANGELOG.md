@@ -62,7 +62,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **`Remove-OrchTask` removes a task.** It sent a request the API does not have and failed with
   "Not Found". A removed task stays on the server as deleted; `Get-OrchTask` and
   `Get-OrchTaskAcrossFolder` now leave deleted tasks out (the cross-folder list showed them).
-
 - **`Copy-Item` refuses to copy a folder into one of its own subfolders**, which was not
   checked; only a copy onto the folder itself was refused. Two drives on one tenant are
   recognised as one.
@@ -71,6 +70,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **The progress bars of a Test Manager `Copy-Item` name the item, not its path**, in every
   stage: the steps, assignments and labels stages showed the full path
   (`Tm:\PRJ\nightly`), unlike the others. The project bar above still names both projects.
+
+### Documentation
+
+- **The README lists what each service covers**: for Orchestrator, the organization, licenses,
+  Document Understanding and Test Manager, what can be read, written and copied to another
+  tenant. It replaces the list of entity areas, which had gone stale (it gave Document
+  Understanding "project and queue management" and Test Manager "test set operations").
+- **The Action Center section of the cmdlet reference says what the screens call tasks**:
+  "actions", while the API, the workflow activities and the cmdlets say tasks.
 
 ## [1.24.0] - 2026-11-05
 
