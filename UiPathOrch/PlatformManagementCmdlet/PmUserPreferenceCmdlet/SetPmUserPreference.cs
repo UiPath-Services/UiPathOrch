@@ -56,10 +56,8 @@ public class SetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
         if (_pending is null) return;
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, settings) in _pending)
+        foreach (var (drive, settings) in _pending.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             string? userId = PmUserPreferenceCurrentUser.Resolve(this, drive);
             if (userId is null) continue;
 

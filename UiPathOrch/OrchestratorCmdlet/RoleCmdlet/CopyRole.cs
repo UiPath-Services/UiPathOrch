@@ -50,9 +50,8 @@ public class CopyRoleCmdlet : OrchestratorPSCmdlet
 
             foreach (var role in srcRoles
                 //.Where(r => !r.IsStatic.GetValueOrDefault())
-                .OrderBy(r => r.Name))
+                .OrderBy(r => r.Name).WithCancellation(cancelToken))
             {
-                cancelToken.ThrowIfCancellationRequested();
                 reporter.Context = dstDrive.NameColonSeparator;
                 reporter.WriteProgress(++index, role.Name);
 

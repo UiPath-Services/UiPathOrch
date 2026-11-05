@@ -95,10 +95,8 @@ public partial class OrchProvider
 
         reporter.TotalNum = srcFolderUsers.Count;
         int index = 0;
-        foreach (var userRole in srcFolderUsers.OrderBy(u => u.UserEntity?.UserName))
+        foreach (var userRole in srcFolderUsers.OrderBy(u => u.UserEntity?.UserName).WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             reporter.WriteProgress(++index, userRole.UserEntity!.UserName);
 
             string userName = userRole.UserEntity?.UserName ?? "";
@@ -561,10 +559,8 @@ public partial class OrchProvider
             msg = $"Copying the package {System.IO.Path.Combine(srcFeedFolder, $"{package.Id!}.{package.Version}.nupkg")}";
 
             var versions = srcDrive.GetPackageVersions(srcFolder, package.Id!);
-            foreach (var version in versions)
+            foreach (var version in versions.WithCancellation(cancelToken))
             {
-                cancelToken.ThrowIfCancellationRequested();
-
                 reporter.WriteProgress(++index, $"{version.Id} {version.Version}");
 
                 string fileName;
@@ -634,10 +630,8 @@ public partial class OrchProvider
 
         int index = 0;
         bool isNewFolderProcessCacheDirty = false;
-        foreach (var process in processes.OrderBy(p => p.Name))
+        foreach (var process in processes.OrderBy(p => p.Name).WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             string target = $"Item: '{process.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'";
             if (shouldProcess || _this.ShouldProcess(target, "Copy Process"))
             {
@@ -909,10 +903,8 @@ public partial class OrchProvider
         var dropBudget = new DropWarningBudget(_this, dstDrive, srcFolder.GetPSPath(), newFolder.GetPSPath(), DropWarningThreshold);
 
         int index = 0;
-        foreach (var asset in srcAssets.OrderBy(a => a.Name))
+        foreach (var asset in srcAssets.OrderBy(a => a.Name).WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             // shouldProcess == true means an ancestor (e.g. a folder copy) already confirmed.
             // Otherwise ask: a declined -Confirm just skips, while -WhatIf still previews which
             // per-user values would be dropped (read-only) before returning without copying.
@@ -1221,10 +1213,8 @@ public partial class OrchProvider
         reporter.TotalNum = srcQueues.Count;
 
         int index = 0;
-        foreach (var queue in srcQueues.OrderBy(q => q.Name))
+        foreach (var queue in srcQueues.OrderBy(q => q.Name).WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             // Reason-returning overload so that -WhatIf can still preview the folder-link
             // decision (read-only) while a declined -Confirm just skips, mirroring CopyAssets.
             ShouldProcessReason spReason = ShouldProcessReason.None;
@@ -1477,10 +1467,8 @@ public partial class OrchProvider
         reporter.TotalNum = srcTriggers.Count;
 
         int index = 0;
-        foreach (var srcTrigger in srcTriggers.OrderBy(t => t.Name))
+        foreach (var srcTrigger in srcTriggers.OrderBy(t => t.Name).WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             if (shouldProcess || _this.ShouldProcess($"Item: '{srcTrigger.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy Trigger"))
             {
                 target = newFolder.GetPSPath();
@@ -1638,10 +1626,8 @@ public partial class OrchProvider
         target = newFolder.GetPSPath();
 
         int index = 0;
-        foreach (var trigger in srcTriggers.OrderBy(t => t.Name))
+        foreach (var trigger in srcTriggers.OrderBy(t => t.Name).WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             if (shouldProcess || _this.ShouldProcess($"Item: '{trigger.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'", "Copy ApiTrigger"))
             {
                 msg = $"Copying API trigger {trigger.GetPSPath()}";
@@ -1726,10 +1712,8 @@ public partial class OrchProvider
         target = newFolder.GetPSPath();
 
         int index = 0;
-        foreach (var bucket in srcBuckets.OrderBy(b => b.Name))
+        foreach (var bucket in srcBuckets.OrderBy(b => b.Name).WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             // Reason-returning overload so that -WhatIf can still preview the folder-link
             // decision (read-only) while a declined -Confirm just skips, mirroring CopyAssets.
             ShouldProcessReason spReason = ShouldProcessReason.None;
@@ -1871,10 +1855,8 @@ public partial class OrchProvider
             reporter.TotalNum = srcTestSets.Count;
 
             int index = 0;
-            foreach (var ts in srcTestSets.OrderBy(t => t.Name))
+            foreach (var ts in srcTestSets.OrderBy(t => t.Name).WithCancellation(cancelToken))
             {
-                cancelToken.ThrowIfCancellationRequested();
-
                 string target = $"Item: '{ts.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'";
                 if (shouldProcess || _this.ShouldProcess(target, "Copy TestSet"))
                 {
@@ -2085,10 +2067,8 @@ public partial class OrchProvider
         reporter.TotalNum = srcTestSetSchedules.Count;
 
         int index = 0;
-        foreach (var testSetSchedule in srcTestSetSchedules.OrderBy(t => t.Name))
+        foreach (var testSetSchedule in srcTestSetSchedules.OrderBy(t => t.Name).WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             string target = $"Item: '{testSetSchedule.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'";
             if (shouldProcess || _this.ShouldProcess(target, "Copy TestSetSchedule"))
             {
@@ -2149,10 +2129,8 @@ public partial class OrchProvider
         int index = 0;
         foreach (var testDataQueue in srcTestDataQueues
             .Where(e => !e.IsDeleted.GetValueOrDefault())
-            .OrderBy(q => q.Name))
+            .OrderBy(q => q.Name).WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             string target = $"Item: '{testDataQueue.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'";
             if (shouldProcess || _this.ShouldProcess(target, "Copy TestDataQueue"))
             {
@@ -2254,10 +2232,8 @@ public partial class OrchProvider
         bool newFolderWaitSpent = false;
 
         int index = 0;
-        foreach (var srcTaskCatalog in srcTaskCatalogs.OrderBy(t => t.Name))
+        foreach (var srcTaskCatalog in srcTaskCatalogs.OrderBy(t => t.Name).WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             string target = $"Item: '{srcTaskCatalog.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'";
             if (shouldProcess || _this.ShouldProcess(target, "Copy ActionCatalog"))
             {

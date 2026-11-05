@@ -182,9 +182,8 @@ public class RemoveQueueItemCmdlet : OrchestratorPSCmdlet
                 // ids (each request waits on the rate limiter); batched it is ~150 requests.
                 using ProgressReporter reporterRowVersion = new(this, missing.Count, "Confirming RowVersions");
                 int idxRowVersion = 0;
-                foreach (var batch in missing.Chunk(RowVersionBatchSize))
+                foreach (var batch in missing.Chunk(RowVersionBatchSize).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
                     idxRowVersion += batch.Length;
                     reporterRowVersion.WriteProgress(idxRowVersion, queue.GetPSPath());
 

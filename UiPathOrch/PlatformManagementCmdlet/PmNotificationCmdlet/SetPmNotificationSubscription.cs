@@ -70,10 +70,8 @@ public class SetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
         if (_pending is null) return;
 
         using var cancelHandler = new ConsoleCancelHandler();
-        foreach (var (drive, rows) in _pending)
+        foreach (var (drive, rows) in _pending.WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
-
             string? partitionGlobalId;
             try
             {

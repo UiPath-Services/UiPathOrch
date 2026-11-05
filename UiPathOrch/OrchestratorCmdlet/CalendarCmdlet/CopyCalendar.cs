@@ -67,12 +67,10 @@ public class CopyCalendarCmdlet : OrchestratorPSCmdlet
 
         foreach (var dstDrive in dstDrives)
         {
-            foreach (var srcCalendar in targetCalendars)
+            foreach (var srcCalendar in targetCalendars.WithCancellation(cancelToken))
             {
                 string item = srcCalendar.GetPSPath();
                 string destination = dstDrive.NameColonSeparator;
-
-                cancelToken.ThrowIfCancellationRequested();
 
                 reporter.Context = dstDrive.NameColonSeparator;
                 reporter.WriteProgress(++index, srcCalendar.Name);

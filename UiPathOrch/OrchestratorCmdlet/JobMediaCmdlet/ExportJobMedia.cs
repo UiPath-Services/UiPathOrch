@@ -147,15 +147,13 @@ public class SaveJobMediaCmdlet : OrchestratorPSCmdlet
         using var reporter = new ProgressReporter(this, totalFileNum, "Media");
 
         int index = 0;
-        foreach (var (drive, folder) in drivesFolders)
+        // Throw rather than swallow the cancel — OperationCanceledException
+        // propagates to PowerShell which surfaces the standard "Operation
+        // was canceled" message. In-flight DownloadMediaByJobId completes
+        // (no token plumbed through OrchAPISession), but no further
+        // downloads start.
+        foreach (var (drive, folder) in drivesFolders.WithCancellation(token))
         {
-            // Throw rather than swallow the cancel — OperationCanceledException
-            // propagates to PowerShell which surfaces the standard "Operation
-            // was canceled" message. In-flight DownloadMediaByJobId completes
-            // (no token plumbed through OrchAPISession), but no further
-            // downloads start.
-            token.ThrowIfCancellationRequested();
-
             string path = folder.GetPSPath();
 
             var allMediasInFolder = drive.JobsHavingExecutionMedia.GetCache(folder)?.Values;
@@ -176,10 +174,8 @@ public class SaveJobMediaCmdlet : OrchestratorPSCmdlet
                     .ToList();
             }
 
-            foreach (var media in mediasToBeSaved!)
+            foreach (var media in mediasToBeSaved!.WithCancellation(token))
             {
-                token.ThrowIfCancellationRequested();
-
                 string target = path + System.IO.Path.DirectorySeparatorChar + media.JobId;
 
                 if (ShouldProcess(target, "Export JobMedia"))

@@ -88,9 +88,8 @@ public class GetPmNotificationSubscriptionCmdlet : OrchestratorPSCmdlet
             foreach (var pub in resp.publishers
                 .Where(p => p is not null)
                 .FilterByWildcards(p => p!.displayName ?? p.name ?? "", wpPublisher)
-                .OrderBy(p => p!.displayName ?? p.name))
+                .OrderBy(p => p!.displayName ?? p.name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 if (pub!.topics is null) continue;
 
                 foreach (var topic in pub.topics.Where(t => t is not null && (IncludeHidden || t.isVisible != false)))

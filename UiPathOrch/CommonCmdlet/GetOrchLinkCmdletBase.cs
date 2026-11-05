@@ -166,9 +166,8 @@ public abstract class GetOrchLinkCmdletBase<TEntity> : OrchestratorPSCmdlet
                 if (pendingPath is not null && pendingPath != sourcePath) FlushPending();
                 pendingPath = sourcePath;
 
-                foreach (var linkFolder in accessible.AccessibleFolders.OrderBy(f => f.FullyQualifiedName))
+                foreach (var linkFolder in accessible.AccessibleFolders.OrderBy(f => f.FullyQualifiedName).WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
                     long linkId = linkFolder.Id ?? 0;
                     if (linkId == srcId) continue;
                     if (!emitted.Add((srcId, entityId, linkId))) continue;

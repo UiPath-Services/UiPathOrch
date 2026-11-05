@@ -54,10 +54,8 @@ public class CopyWebhookCmdlet : OrchestratorPSCmdlet
         {
             foreach (var srcWebhook in srcWebhooks
                 .FilterByWildcards(e => e?.Name, wpName)
-                .OrderBy(e => e.Name))
+                .OrderBy(e => e.Name).WithCancellation(cancelToken))
             {
-                cancelToken.ThrowIfCancellationRequested();
-
                 string item = srcWebhook.GetPSPath();
                 string destination = dstDrive.NameColonSeparator;
                 if (shouldProcess || _this.ShouldProcess($"Item: {item} Destination: {destination}", "Copy Webhook"))

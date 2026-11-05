@@ -58,9 +58,8 @@ public class GetPmUserPreferenceCmdlet : OrchestratorPSCmdlet
             List<PmUserSettingDto> settings = [];
             try
             {
-                foreach (var key in keys)
+                foreach (var key in keys.WithCancellation(cancelHandler.Token))
                 {
-                    cancelHandler.Token.ThrowIfCancellationRequested();
                     var s = drive.PmUserPreferences.Get(key);
                     if (s is not null && !string.IsNullOrEmpty(s.key)) settings.Add(s);
                 }

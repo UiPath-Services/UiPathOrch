@@ -233,9 +233,8 @@ public class RemovePackageCmdlet : OrchestratorPSCmdlet
         using (var reporter = new ProgressReporter(this, folders.Count, "Referrers"))
         {
             int index = 0;
-            foreach (var folder in folders)
+            foreach (var folder in folders.WithCancellation(token))
             {
-                token.ThrowIfCancellationRequested();
                 reporter.WriteProgress(++index, folder.GetPSPath());
 
                 try
@@ -329,9 +328,8 @@ public class RemovePackageCmdlet : OrchestratorPSCmdlet
                         int versionIndex = 0;
                         using var versionReporter = new ProgressReporter(this, versions.Count, "Versions", packageReporter);
 
-                        foreach (var version in versions)
+                        foreach (var version in versions.WithCancellation(cancelHandler.Token))
                         {
-                            cancelHandler.Token.ThrowIfCancellationRequested();
                             versionReporter.WriteProgress(++versionIndex, version.Version);
 
                             string target = $"{version.GetPSPath()}:{version.Version}";

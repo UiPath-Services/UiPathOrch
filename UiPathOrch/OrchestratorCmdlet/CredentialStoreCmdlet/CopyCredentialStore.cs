@@ -79,9 +79,8 @@ public class CopyCredentialStoreCmdlet : OrchestratorPSCmdlet
 
         foreach (var dstDrive in dstDrives)
         {
-            foreach (var store in stores)
+            foreach (var store in stores.WithCancellation(cancelToken))
             {
-                cancelToken.ThrowIfCancellationRequested();
                 reporter.Context = dstDrive.NameColonSeparator;
                 reporter.WriteProgress(++index, store.Name);
 

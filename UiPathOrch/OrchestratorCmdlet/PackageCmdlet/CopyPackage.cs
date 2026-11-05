@@ -246,10 +246,8 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
             ? new ProgressReporter(_this, srcDrivesFolders.Count, "Folders")
             : null;
 
-        foreach (var (srcDrive, srcFolder) in srcDrivesFolders)
+        foreach (var (srcDrive, srcFolder) in srcDrivesFolders.WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             reporterMain?.WriteProgress(++index1, $"{srcFolder.GetPSPath()} -> {dstLabel}");
             try
             {
@@ -267,10 +265,8 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
                 {
                     reporter2.Context = $"{srcFolder.GetPSPath()} -> {dstLabel}";
                 }
-                foreach (var srcPackage in srcPackages)
+                foreach (var srcPackage in srcPackages.WithCancellation(cancelToken))
                 {
-                    cancelToken.ThrowIfCancellationRequested();
-
                     // Reported even for a single package, as the bar above it now is. The
                     // old "only when there is more than one" rule saved a line and cost the
                     // name of the package whose versions the bar below is counting -- and it
@@ -289,10 +285,8 @@ public class CopyPackageCmdlet : OrchestratorPSCmdlet
                         string fileName = null;
                         byte[] fileContent = null;
 
-                        foreach (var (dstDrive, dstRootFolder) in dstDrivesFolders)
+                        foreach (var (dstDrive, dstRootFolder) in dstDrivesFolders.WithCancellation(cancelToken))
                         {
-                            cancelToken.ThrowIfCancellationRequested();
-
                             Folder? dstFolder = _this.GetRelativeDstFolder(srcRootFolder, srcFolder, dstDrive, dstRootFolder, true);
                             // Skip the copy if no folder with the same name exists
                             if (dstFolder is null) throw new NoCorrespondDestinationFolderException();

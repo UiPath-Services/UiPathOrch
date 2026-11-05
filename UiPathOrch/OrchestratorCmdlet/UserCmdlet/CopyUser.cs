@@ -76,10 +76,8 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
             bool inPlace = srcDrive == dstDrive && userMapping is not null;
             if (srcDrive == dstDrive && !inPlace) continue;
 
-            foreach (var srcUser in srcUsers)
+            foreach (var srcUser in srcUsers.WithCancellation(cancelToken))
             {
-                cancelToken.ThrowIfCancellationRequested();
-
                 string? inPlaceName = null;
                 if (inPlace)
                 {

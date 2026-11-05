@@ -93,9 +93,8 @@ public class RemoveTestCaseCmdlet : OrchestratorPSCmdlet
             var folder = _folders[key];
 
             bool anyDeleted = false;
-            foreach (var chunk in approved.Keys.Chunk(ChunkSize))
+            foreach (var chunk in approved.Keys.Chunk(ChunkSize).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 try
                 {
                     drive.OrchAPISession.RemoveTestCases(folder.Id ?? 0, chunk);

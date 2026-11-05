@@ -42,9 +42,8 @@ internal static class JobWaiter
 
         while (true)
         {
-            foreach (var ((drive, folder), jobs) in pending.ToList())
+            foreach (var ((drive, folder), jobs) in pending.ToList().WithCancellation(token))
             {
-                token.ThrowIfCancellationRequested();
                 string path = folder.GetPSPath();
                 List<Job> read;
                 try
@@ -293,9 +292,8 @@ public class WaitJobCmdlet : OrchestratorPSCmdlet
 
         for (int attempt = 1; ; attempt++)
         {
-            foreach (var (drive, folder, ids) in idSearches)
+            foreach (var (drive, folder, ids) in idSearches.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 var missing = ids.Where(id => !foundIds.Contains((drive, id))).ToList();
                 if (missing.Count == 0) continue;
                 try
@@ -312,9 +310,8 @@ public class WaitJobCmdlet : OrchestratorPSCmdlet
                 }
             }
 
-            foreach (var (drive, folder, key) in batchSearches)
+            foreach (var (drive, folder, key) in batchSearches.WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 if (foundKeys.Contains((drive, key))) continue;
                 try
                 {

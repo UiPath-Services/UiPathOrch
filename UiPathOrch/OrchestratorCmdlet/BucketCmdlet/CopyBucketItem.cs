@@ -139,10 +139,8 @@ public class CopyBucketItemCmdlet : OrchestratorPSCmdlet
                 continue;
             }
 
-            foreach (var srcBucket in srcBuckets.OrderBy(b => b.Name))
+            foreach (var srcBucket in srcBuckets.OrderBy(b => b.Name).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
-
                 string dstBucketName = string.IsNullOrEmpty(DestinationBucket) ? srcBucket.Name! : DestinationBucket!;
                 var dstBucket = dstBuckets.FirstOrDefault(b => string.Equals(b.Name, dstBucketName, StringComparison.OrdinalIgnoreCase));
                 if (dstBucket is null)

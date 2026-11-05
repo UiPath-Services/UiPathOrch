@@ -146,10 +146,8 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
             // one above.
             int index1 = 0;
             using var reporter1 = new ProgressReporter(_this, srcLibraries.Count(), "Libraries");
-            foreach (var library in srcLibraries)
+            foreach (var library in srcLibraries.WithCancellation(cancelToken))
             {
-                cancelToken.ThrowIfCancellationRequested();
-
                 reporter1.WriteProgress(++index1, $"{library.GetPSPath()} -> {dstLabel}");
                 try
                 {
@@ -165,10 +163,8 @@ public class CopyLibraryCmdlet : OrchestratorPSCmdlet
                     {
                         string? fileName = null;
                         byte[]? fileContent = null;
-                        foreach (var dstDrive in dstDrives)
+                        foreach (var dstDrive in dstDrives.WithCancellation(cancelToken))
                         {
-                            cancelToken.ThrowIfCancellationRequested();
-
                             string key = $"{version.GetPSPath()}:{version.Version}";
                             string target = $"Item: {key} Destination: {dstDrive.NameColonSeparator}";
 

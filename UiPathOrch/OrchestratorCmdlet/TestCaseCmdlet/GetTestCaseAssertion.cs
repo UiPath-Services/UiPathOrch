@@ -131,10 +131,8 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                 Directory.CreateDirectory(screenshotDir);
             }
 
-            foreach (var assertion in assertions)
+            foreach (var assertion in assertions.WithCancellation(_cancelHandler!.Token))
             {
-                _cancelHandler!.Token.ThrowIfCancellationRequested();
-
                 assertion.Path = folderPath;
                 assertion.TestSetExecutionName = testSetExecutionName;
                 assertion.PathTestSetExecutionName = string.IsNullOrEmpty(testSetExecutionName)
@@ -253,10 +251,8 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
             return;
         }
 
-        foreach (var (drive, folder) in drivesFolders)
+        foreach (var (drive, folder) in drivesFolders.WithCancellation(_cancelHandler!.Token))
         {
-            _cancelHandler!.Token.ThrowIfCancellationRequested();
-
             try
             {
                 var testSetExecutionId = drive.ResolveTestSetExecutionId(folder, TestSetExecutionName);
@@ -267,9 +263,8 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                 }
 
                 var testCaseExecutionIds = GetTestCaseExecutionIds(drive, folder, testSetExecutionId.Value);
-                foreach (var testCaseExecutionId in testCaseExecutionIds)
+                foreach (var testCaseExecutionId in testCaseExecutionIds.WithCancellation(_cancelHandler.Token))
                 {
-                    _cancelHandler.Token.ThrowIfCancellationRequested();
                     ProcessAssertions(drive, folder, testCaseExecutionId);
                 }
             }
@@ -291,9 +286,8 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
 
         foreach (var (drive, folder) in drivesFolders)
         {
-            foreach (var testCaseExecutionId in Id)
+            foreach (var testCaseExecutionId in Id.WithCancellation(_cancelHandler!.Token))
             {
-                _cancelHandler!.Token.ThrowIfCancellationRequested();
                 ProcessAssertions(drive, folder, testCaseExecutionId);
             }
         }
@@ -339,9 +333,8 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                 _cancelHandler!.Token.ThrowIfCancellationRequested();
 
                 var testCaseExecutionIds = GetTestCaseExecutionIds(drive, folder, tse.Id.Value);
-                foreach (var testCaseExecutionId in testCaseExecutionIds)
+                foreach (var testCaseExecutionId in testCaseExecutionIds.WithCancellation(_cancelHandler.Token))
                 {
-                    _cancelHandler.Token.ThrowIfCancellationRequested();
                     ProcessAssertions(drive, folder, testCaseExecutionId);
                 }
             }
@@ -389,9 +382,8 @@ public class GetTestCaseAssertionCmdlet : OrchestratorPSCmdlet
                     }
 
                     var testCaseExecutionIds = GetTestCaseExecutionIds(drive, folder, testSetExecutionId.Value);
-                    foreach (var testCaseExecutionId in testCaseExecutionIds)
+                    foreach (var testCaseExecutionId in testCaseExecutionIds.WithCancellation(_cancelHandler!.Token))
                     {
-                        _cancelHandler!.Token.ThrowIfCancellationRequested();
                         ProcessAssertions(drive, folder, testCaseExecutionId);
                     }
                 }

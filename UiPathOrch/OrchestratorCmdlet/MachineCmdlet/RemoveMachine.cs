@@ -78,9 +78,8 @@ public class RemoveMachineCmdlet : OrchestratorPSCmdlet
             if (approved.Count == 0) continue;
 
             bool anyDeleted = false;
-            foreach (var chunk in approved.Keys.Chunk(ChunkSize))
+            foreach (var chunk in approved.Keys.Chunk(ChunkSize).WithCancellation(cancelHandler.Token))
             {
-                cancelHandler.Token.ThrowIfCancellationRequested();
                 try
                 {
                     drive.OrchAPISession.RemoveMachines(chunk);

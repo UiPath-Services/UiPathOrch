@@ -104,10 +104,8 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
         if (srcGroups is null) return;
 
         int index = 0;
-        foreach (var group in srcGroups)
+        foreach (var group in srcGroups.WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             try
             {
                 reporter.WriteProgress(++index, group.displayName);
@@ -115,10 +113,8 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
                 if (detailedSrcGroup is null || detailedSrcGroup.members is null) continue;
 
-                foreach (var member in detailedSrcGroup.members.Where(m => m.objectType == "DirectoryUser"))
+                foreach (var member in detailedSrcGroup.members.Where(m => m.objectType == "DirectoryUser").WithCancellation(cancelToken))
                 {
-                    cancelToken.ThrowIfCancellationRequested();
-
                     if (!userMappings.ContainsKey(member.name!))
                     {
                         MappingCsvLine l = new()
@@ -163,10 +159,8 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
         if (users is null) return;
 
         int index = 0;
-        foreach (var user in users)
+        foreach (var user in users.WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             // Written per user although nothing here calls the server: it is the only write this
             // bar gets, and a bar never written never appears -- the stage used to run with no
             // bar on screen at all.
@@ -199,10 +193,8 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
         reporter.TotalNum = folders.Count;
 
         int index = 0;
-        foreach (var folder in folders)
+        foreach (var folder in folders.WithCancellation(cancelToken))
         {
-            cancelToken.ThrowIfCancellationRequested();
-
             try
             {
                 reporter.WriteProgress(++index, folder.GetPSPath());
@@ -210,10 +202,8 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
                 if (folderUsers is null) continue;
 
-                foreach (var folderUser in folderUsers.Where(u => u.UserEntity?.Type == "DirectoryUser" || u.UserEntity?.Type == "DirectoryRobot"))
+                foreach (var folderUser in folderUsers.Where(u => u.UserEntity?.Type == "DirectoryUser" || u.UserEntity?.Type == "DirectoryRobot").WithCancellation(cancelToken))
                 {
-                    cancelToken.ThrowIfCancellationRequested();
-
                     if (folderUser.UserEntity is null || string.IsNullOrEmpty(folderUser.UserEntity.UserName)) continue;
 
                     if (!userMappings.ContainsKey(folderUser.UserEntity.UserName))
@@ -334,9 +324,8 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
             WriteWarning($"'{drive.NameColonSeparator}': Failed to get Tenant Users. Skipping. {ex.Message}");
         }
 
-        foreach (var folder in drive.GetFolders().WithProgressBar(this, "Folder users", f => f.GetPSPath()))
+        foreach (var folder in drive.GetFolders().WithProgressBar(this, "Folder users", f => f.GetPSPath()).WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             try
             {
                 foreach (var fu in drive.FolderUsersWithNoInherited.Get(folder)) Add(fu.UserEntity?.UserName, fu.UserEntity?.Type, null);
@@ -349,9 +338,8 @@ public class NewUserMappingCsvCmdlet : OrchestratorPSCmdlet
 
         var rows = new Dictionary<string, MappingCsvLine>(StringComparer.OrdinalIgnoreCase);
         foreach (var (name, (type, email)) in candidates.OrderBy(c => c.Key, StringComparer.OrdinalIgnoreCase)
-            .WithProgressBar(this, "Destination directory", c => c.Key, candidates.Count))
+            .WithProgressBar(this, "Destination directory", c => c.Key, candidates.Count).WithCancellation(cancelHandler.Token))
         {
-            cancelHandler.Token.ThrowIfCancellationRequested();
             string rewritten = RewriteDomain(name, SourceDomain!, DestinationDomain!)!;
             string? found = null;
             try

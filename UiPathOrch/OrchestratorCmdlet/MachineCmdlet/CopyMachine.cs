@@ -65,10 +65,8 @@ public class CopyMachineCmdlet : OrchestratorPSCmdlet
             try
             {
                 var dstRobots = dstDrive.Robots.Get();
-                foreach (var machine in srcMachines)
+                foreach (var machine in srcMachines.WithCancellation(cancelToken))
                 {
-                    cancelToken.ThrowIfCancellationRequested();
-
                     reporter.Context = dstDrive.NameColonSeparator;
                     reporter.WriteProgress(++index, machine.Name);
 
