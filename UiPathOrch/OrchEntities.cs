@@ -4164,6 +4164,80 @@ public class TenantAllocationTenant
     public string? operationId { get; set; }
 }
 
+// Organization Management Service ({host}/{org}/organization_), the API `uip admin
+// organizations` / `uip admin tenants` call. Automation Cloud and Automation Suite only.
+
+// GET /api/organization/{organizationGuid} (Get-PmOrganization).
+public class PmOrganization
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public PmOrganization ShallowClone() => (PmOrganization)MemberwiseClone();
+    public string? name { get; set; }
+    public string? logicalName { get; set; } // the name in the URL
+    public string? id { get; set; } // Guid: the partitionGlobalId
+    public string? country { get; set; }
+    public string? region { get; set; }
+    public string? status { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? createdOn { get; set; }
+    public string? language { get; set; }
+    // The organization-level services (docs, portal, llmops, ...), not those of a tenant.
+    public PmService[]? organizationServiceInstances { get; set; }
+    public string? operationId { get; set; }
+}
+
+// GET /api/organization/{organizationGuid}/tenants (Get-PmTenant). The list leaves
+// tenantServiceInstances empty; GET .../tenants/{tenantGuid} fills it (Get-PmTenantService).
+public class PmTenant
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+
+    public PmTenant ShallowClone() => (PmTenant)MemberwiseClone();
+    public string? name { get; set; }
+    public string? id { get; set; } // Guid
+    public string? color { get; set; }
+    public string? region { get; set; }
+    public string? status { get; set; } // Enabled / Disabled / ...
+    public string? environment { get; set; } // Production / ...
+    public bool? isCanaryTenant { get; set; }
+    public string? createdBy { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? createdOn { get; set; }
+    public string? updatedBy { get; set; }
+    [JsonConverter(typeof(LocalDateTimeConverter))]
+    public DateTime? updatedOn { get; set; }
+    public string? operationId { get; set; }
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public PmService[]? tenantServiceInstances { get; set; }
+}
+
+// One service of an organization or a tenant (an element of organizationServiceInstances /
+// tenantServiceInstances). Get-PmTenantService emits these, with Path and Tenant set.
+public class PmService
+{
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Path { get; set; } // added by UiPathOrch
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? Tenant { get; set; } // added by UiPathOrch: the tenant's name
+    [JsonIgnore(Condition = JsonIgnoreCondition.Always)]
+    public string? tenantId { get; set; } // added by UiPathOrch
+
+    public PmService ShallowClone() => (PmService)MemberwiseClone();
+    public string? serviceType { get; set; } // orchestrator, testmanager, ...
+    public string? status { get; set; } // Enabled / Disabled / ...
+    public string? region { get; set; }
+    public bool? isCrossRegionService { get; set; }
+    public string? friendlyUrl { get; set; } // by names: https://cloud.uipath.com/org/tenant/orchestrator_
+    public string? url { get; set; } // by GUIDs
+    public string? uri { get; set; }
+    public string? id { get; set; } // Guid
+    public bool? isVisible { get; set; }
+    public string? operationId { get; set; }
+}
+
 // added by UiPathOrch — product allocation row (per-SKU Total / Allocated).
 // One entry of /api/license/management/account/available → productAllocations[].
 public class ProductAllocation

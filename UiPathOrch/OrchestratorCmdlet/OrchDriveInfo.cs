@@ -903,6 +903,9 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly ListCachePerOrganization<NuLicensedGroup> PmLicensedGroups;
     public readonly ListCachePerOrganization<NuLicensedUser> PmLicensedUsers;
     public readonly ListCachePerOrganization<AccessAllowedMember> PmAccessAllowedMember;
+    // Organization Management Service: the tenants, and each tenant's services keyed by its GUID.
+    public readonly ListCachePerOrganization<PmTenant> PmTenants;
+    public readonly KeyedListCachePerOrganization<string, PmService> PmTenantServices;
 
     // Non-indexed organization entities.
     // Multi-threaded fetch is safe: SingleCachePerOrganization serializes
@@ -914,6 +917,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly SingleCachePerOrganization<PmAuthenticationRoot> PmAuthenticationSetting;
     public readonly SingleCachePerOrganization<LicenseInventory> PmLicenseInventory;
     public readonly SingleCachePerOrganization<AccountLicense> PmLicenseContract;
+    public readonly SingleCachePerOrganization<PmOrganization> PmOrganization;
     // Org-global: /api/Status/Version is identical across tenants in an org.
     public readonly SingleCachePerOrganization<OrchProductVersion> ProductVersion;
 
@@ -1160,6 +1164,10 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         );
 
         PmAccessAllowedMember = new(this, OrchAPISession.GetPmPartitionAccessPolicy);
+
+        PmTenants = new(this, OrchAPISession.GetPmTenants);
+        PmTenantServices = new(this, OrchAPISession.GetPmTenantServices);
+        PmOrganization = new(this, OrchAPISession.GetPmOrganization);
 
         // Non-indexed organization entities
         PmAuthenticationSetting = new(this,

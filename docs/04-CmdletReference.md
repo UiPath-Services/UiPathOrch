@@ -652,6 +652,16 @@ Organization-level license group management.
 
 External applications, directory search, audit, and settings.
 
+### Organization & Tenants
+
+The Organization Management Service (Automation Cloud and Automation Suite only).
+
+| Cmdlet | Description |
+|--------|-------------|
+| Get-PmOrganization | Get the organization: name, id, region, status, organization-level services |
+| Get-PmTenant | List the tenants of the organization, with status, region and environment |
+| Get-PmTenantService | List each tenant's services (orchestrator, testmanager, ...), with status and URL |
+
 ### External Applications
 
 | Cmdlet | Description |

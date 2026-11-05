@@ -160,6 +160,10 @@ CmdletsToExport = @(
 'Get-PmAuditLog',
 'Get-PmAuthenticationSetting',
 
+'Get-PmOrganization',
+'Get-PmTenant',
+'Get-PmTenantService',
+
 'Get-PmLicense',
 'Get-PmLicenseAllocation',
 'Set-PmLicenseAllocation',

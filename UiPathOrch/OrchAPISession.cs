@@ -453,6 +453,10 @@ public partial class OrchAPISession : IDisposable
     internal readonly string _base_url_orchestrator;
     internal readonly string _base_url_identity;
     internal readonly string _base_url_portal;
+    // The Organization Management Service, {host}/{org}/organization_: the organization, its
+    // tenants and their services. Automation Cloud and Automation Suite only; null for a
+    // standalone Orchestrator, which has no such service.
+    internal readonly string? _base_url_organization;
 
     // "https://op2510.local" -- which server this session talks to; half of an organization's
     // key (OrchDriveInfoBase.OrgKeyFor), since on-premises partition ids repeat across servers.
@@ -564,6 +568,7 @@ public partial class OrchAPISession : IDisposable
             int slashIndex = _base_url.LastIndexOf('/');
             _base_url_identity = string.Concat(_base_url.AsSpan(0, slashIndex), "/identity_");
             _base_url_portal = string.Concat(_base_url.AsSpan(0, slashIndex), "/portal_");
+            _base_url_organization = string.Concat(_base_url.AsSpan(0, slashIndex), "/organization_");
         }
         else
         {
@@ -4261,6 +4266,30 @@ public partial class OrchAPISession : IDisposable
 
     // This is an undocumented API.
     // Returns per-tenant license allocations for an organization (Robots & Services tab).
+    // Organization Management Service (see _base_url_organization). The routes are those of
+    // `uip admin organizations` / `uip admin tenants` (admin-tool 1.204.0).
+    private T? HttpRequestOrganization<T>(string endPoint)
+    {
+        if (_base_url_organization is null)
+        {
+            // Deterministic, as EnsureNotHtmlFallback: the service will not appear for this
+            // connection, so the cache keeps the failure. No drive prefix: the cache adds it.
+            throw new DeterministicApiException("The organization's tenants and services are available on Automation Cloud and Automation Suite only, not on a standalone Orchestrator.");
+        }
+        return DeserializeApiJson<T>(HttpRequestImpl(HttpMethod.Get, _base_url_organization, endPoint, null, null));
+    }
+
+    public PmOrganization? GetPmOrganization(string partitionGlobalId)
+        => HttpRequestOrganization<PmOrganization>($"/api/organization/{partitionGlobalId}");
+
+    public IEnumerable<PmTenant> GetPmTenants(string partitionGlobalId)
+        => HttpRequestOrganization<PmTenant[]>($"/api/organization/{partitionGlobalId}/tenants") ?? [];
+
+    // The tenant's own record carries its services with their URLs; .../tenants/{id}/services
+    // returns the same rows without the URLs.
+    public IEnumerable<PmService> GetPmTenantServices(string partitionGlobalId, string tenantGlobalId)
+        => HttpRequestOrganization<PmTenant>($"/api/organization/{partitionGlobalId}/tenants/{tenantGlobalId}")?.tenantServiceInstances ?? [];
+
     public IEnumerable<TenantAllocation> GetPmLicenseAllocations(string? partitionGlobalId)
     {
         if (string.IsNullOrEmpty(partitionGlobalId)) return [];
