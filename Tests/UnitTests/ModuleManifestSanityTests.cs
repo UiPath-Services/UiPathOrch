@@ -41,6 +41,28 @@ public class ModuleManifestSanityTests
         throw new System.IO.FileNotFoundException($"{fileName} not found above " + System.AppContext.BaseDirectory);
     }
 
+    // A renamed cmdlet's former name is resolved by the psm1's CommandNotFoundAction map, not by an
+    // alias: an alias (and an AliasesToExport entry) would be offered by tab completion beside the
+    // current name. The map must point at a cmdlet the manifest exports.
+    [Theory]
+    [InlineData("Get-OrchActionCatalog", "Get-OrchTaskCatalog")]
+    [InlineData("Compare-OrchActionCatalog", "Compare-OrchTaskCatalog")]
+    [InlineData("New-OrchActionCatalog", "New-OrchTaskCatalog")]
+    [InlineData("Copy-OrchActionCatalog", "Copy-OrchTaskCatalog")]
+    [InlineData("Remove-OrchActionCatalog", "Remove-OrchTaskCatalog")]
+    public void FormerName_IsResolvedButNotOffered(string former, string cmdlet)
+    {
+        var psd1 = System.IO.File.ReadAllText(LocateModuleManifest());
+        var psm1 = System.IO.File.ReadAllText(System.IO.Path.ChangeExtension(LocateModuleManifest(), ".psm1"));
+
+        Assert.Matches(new Regex($@"^\s*'{Regex.Escape(former)}'\s*=\s*'{Regex.Escape(cmdlet)}'\s*$", RegexOptions.Multiline), psm1);
+        Assert.Contains("$ExecutionContext.InvokeCommand.CommandNotFoundAction = {", psm1, System.StringComparison.Ordinal);
+        Assert.Contains($"'{cmdlet}'", psd1, System.StringComparison.Ordinal);
+
+        Assert.DoesNotContain($"'{former}'", psd1, System.StringComparison.Ordinal);
+        Assert.DoesNotMatch(new Regex($@"Set-Alias\s.*{Regex.Escape(former)}"), psm1);
+    }
+
     // Guard against the "bumped ModuleVersion but forgot the release notes"
     // drift that shipped stale PSData.ReleaseNotes through 1.5.1 / 1.5.2 (the
     // PSGallery page showed the previous version's notes). The manifest
@@ -128,7 +150,7 @@ public class ModuleManifestSanityTests
     [InlineData("New-OrchTestSetSchedule")]
     [InlineData("Update-OrchTestSetSchedule")]
     [InlineData("New-OrchTestDataQueue")]
-    [InlineData("New-OrchActionCatalog")]
+    [InlineData("New-OrchTaskCatalog")]
     [InlineData("New-OrchWebhook")]
     public void V15Cmdlet_IsExported(string name)
     {

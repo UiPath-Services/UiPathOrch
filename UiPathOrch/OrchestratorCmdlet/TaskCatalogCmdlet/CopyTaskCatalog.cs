@@ -5,11 +5,11 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Copy, "OrchActionCatalog", SupportsShouldProcess = true)]
-public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
+[Cmdlet(VerbsCommon.Copy, "OrchTaskCatalog", SupportsShouldProcess = true)]
+public class CopyTaskCatalogCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]
+    [ArgumentCompleter(typeof(TaskCatalogNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -44,7 +44,7 @@ public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
 
         var wpName = Name.ConvertToWildcardPatternList();
 
-        using var reporterActionCatalogs = new ProgressReporter(this, null, "Action catalogs");
+        using var reporterTaskCatalogs = new ProgressReporter(this, null, "Task catalogs");
         using var cancelHandler = new ConsoleCancelHandler();
         foreach (var (_, srcFolder) in srcDrivesFolders.WithCancellation(cancelHandler.Token))
         {
@@ -52,12 +52,12 @@ public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
             {
                 // If there are no entities to copy, there is no need to look up the dstFolder
                 //srcDrive._dicTaskCatalog?.TryRemove(srcFolder.Id ?? 0, out _);
-                var srcEntities = srcDrive.ActionCatalogs.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName);
+                var srcEntities = srcDrive.TaskCatalogs.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName);
                 if (!srcEntities.Any()) continue;
             }
             catch (Exception ex)
             {
-                WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), "GetActionCatalogError", ErrorCategory.InvalidOperation, srcFolder));
+                WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), ex), "GetTaskCatalogError", ErrorCategory.InvalidOperation, srcFolder));
                 continue;
             }
 
@@ -66,12 +66,12 @@ public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
 
             try
             {
-                reporterActionCatalogs.Context = dstFolder.GetPSPath();
-                Core.OrchProvider.CopyActionCatalogs(this,
+                reporterTaskCatalogs.Context = dstFolder.GetPSPath();
+                Core.OrchProvider.CopyTaskCatalogs(this,
                     srcDrive, srcFolder, wpName,
-                    dstDrive, dstFolder, reporterActionCatalogs,
+                    dstDrive, dstFolder, reporterTaskCatalogs,
                     false, cancelHandler.Token);
-                dstDrive.ActionCatalogs.ClearCache(dstFolder);
+                dstDrive.TaskCatalogs.ClearCache(dstFolder);
             }
             catch (OperationCanceledException)
             {
@@ -80,7 +80,7 @@ public class CopyActionCatalogCmdlet : OrchestratorPSCmdlet
             catch (Exception ex)
             {
                 string target = dstFolder.GetPSPath();
-                WriteError(new ErrorRecord(new OrchException(target, ex), "CopyActionCatalogError", ErrorCategory.InvalidOperation, dstFolder));
+                WriteError(new ErrorRecord(new OrchException(target, ex), "CopyTaskCatalogError", ErrorCategory.InvalidOperation, dstFolder));
             }
         }
     }

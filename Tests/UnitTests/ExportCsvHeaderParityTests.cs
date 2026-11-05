@@ -32,9 +32,9 @@ public class ExportCsvHeaderParityTests
         yield return new object[] { typeof(GetTestSetScheduleCmdlet), typeof(NewTestSetScheduleCmdlet), typeof(UpdateTestSetScheduleCmdlet) };
         // Get-OrchWebhook has New- (v1.5.3) and Update- (pre-existing).
         yield return new object[] { typeof(GetWebhookCmdlet), typeof(NewWebhookCmdlet), typeof(UpdateWebhookCmdlet) };
-        // Get-OrchTestDataQueue + Get-OrchActionCatalog have New- but no Update- yet.
+        // Get-OrchTestDataQueue + Get-OrchTaskCatalog have New- but no Update- yet.
         yield return new object[] { typeof(GetTestDataQueueCmdlet), typeof(NewTestDataQueueCmdlet), null! };
-        yield return new object[] { typeof(GetActionCatalogCmdlet), typeof(NewActionCatalogCmdlet), null! };
+        yield return new object[] { typeof(GetTaskCatalogCmdlet), typeof(NewTaskCatalogCmdlet), null! };
         // Get-PmGroupLicense -ExportCsv emits group×license rows that bind
         // back into Add-PmGroupLicense (the "new"-equivalent
         // import target; no Update- form). Same param shape as the Remove- form.

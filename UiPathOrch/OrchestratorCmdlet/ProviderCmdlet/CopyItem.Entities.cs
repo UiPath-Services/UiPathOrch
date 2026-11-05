@@ -11,7 +11,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Core;
 
 // Per-entity copy logic for Copy-Item / Copy-Orch*: users, machines, packages,
-// processes, assets, queues, triggers, buckets, test entities, action catalogs.
+// processes, assets, queues, triggers, buckets, test entities, task catalogs.
 public partial class OrchProvider
 {
     // Per-name outcome from ResolveDstDirectoryUserPure.
@@ -2184,12 +2184,12 @@ public partial class OrchProvider
         }
     }
 
-    // Action catalogs are served by the Actions service, which learns of a folder some seconds
+    // Task catalogs are served by the Actions service, which learns of a folder some seconds
     // after Orchestrator creates it. Until then both reading and creating catalogs in the folder
     // are refused with 403 and errorCode 1100 ("Folder does not exist or the user does not have
     // access to the folder"). Measured on Automation Cloud (2026-11-04): 2 to 11 seconds after
     // New-Item, over six fresh folders. Copy-Item -Recurse creates the destination folder and
-    // reaches the action catalog stage well within that, so a create there is retried on that
+    // reaches the task catalog stage well within that, so a create there is retried on that
     // code, and only there: the same code also means a real lack of access, and the source
     // folder of a copy is normally an old one.
     internal const int FolderNotFoundOrNoAccessErrorCode = 1100;
@@ -2202,26 +2202,26 @@ public partial class OrchProvider
     internal static TimeSpan? NewFolderRetryDelay(int attempt)
         => attempt >= 0 && attempt < NewFolderRetryDelays.Length ? NewFolderRetryDelays[attempt] : null;
 
-    internal static void CopyActionCatalogs(IWritableHost _this,
+    internal static void CopyTaskCatalogs(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, List<WildcardPattern>? wpName,
         OrchDriveInfo dstDrive, Folder newFolder, ProgressReporter reporter,
         bool shouldProcess, CancellationToken cancelToken)
     {
-        // No version gate needed here: the ActionCatalogs cache floor (16) yields [] below 16.
+        // No version gate needed here: the TaskCatalogs cache floor (16) yields [] below 16.
         // Measured: GET /odata/TaskCatalogs already returns 200 on 15.0 (22.4.4), so that floor
         // is conservative; lowering it to 15 would need a POST probe on 22.4 to confirm the
         // whole copy path.
 
-        string msg = $"Copying action catalogs";
+        string msg = $"Copying task catalogs";
 
         List<TaskCatalog> srcTaskCatalogs;
         try
         {
-            srcTaskCatalogs = srcDrive.ActionCatalogs.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
+            srcTaskCatalogs = srcDrive.TaskCatalogs.Get(srcFolder).FilterByWildcards(b => b?.Name, wpName).ToList();
         }
         catch (Exception ex)
         {
-            _this.WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), msg, ex), "GetActionCatalogError", ErrorCategory.InvalidOperation, srcFolder));
+            _this.WriteError(new ErrorRecord(new OrchException(srcFolder.GetPSPath(), msg, ex), "GetTaskCatalogError", ErrorCategory.InvalidOperation, srcFolder));
             return;
         }
 
@@ -2235,9 +2235,9 @@ public partial class OrchProvider
         foreach (var srcTaskCatalog in srcTaskCatalogs.OrderBy(t => t.Name).WithCancellation(cancelToken))
         {
             string target = $"Item: '{srcTaskCatalog.GetPSPath()}' Destination: '{newFolder.GetPSPath()}'";
-            if (shouldProcess || _this.ShouldProcess(target, "Copy ActionCatalog"))
+            if (shouldProcess || _this.ShouldProcess(target, "Copy TaskCatalog"))
             {
-                msg = $"Copying action catalog {System.IO.Path.Combine(srcFolder.GetPSPath(), srcTaskCatalog.Name!)}";
+                msg = $"Copying task catalog {System.IO.Path.Combine(srcFolder.GetPSPath(), srcTaskCatalog.Name!)}";
                 reporter.WriteProgress(++index, srcTaskCatalog.Name);
 
                 var postingTaskCatalog = OrchCollectionExtensions.DeepCopy(srcTaskCatalog);
@@ -2251,7 +2251,7 @@ public partial class OrchProvider
                 {
                     var destinationBucket = FindDstBucket(_this,
                         srcDrive, srcFolder, postingTaskCatalog.RetentionBucketId,
-                        dstDrive, newFolder, "Copy ActionCatalog", msg);
+                        dstDrive, newFolder, "Copy TaskCatalog", msg);
                     postingTaskCatalog.RetentionBucketId = destinationBucket?.Id;
                     postingTaskCatalog.RetentionBucketName = destinationBucket?.Name;
                 }
@@ -2274,12 +2274,12 @@ public partial class OrchProvider
                             }
                             if (attempt == 0)
                             {
-                                _this.WriteVerbose($"{msg}: {newFolder.GetPSPath()} is not yet known to the action catalog service; waiting for it.");
+                                _this.WriteVerbose($"{msg}: {newFolder.GetPSPath()} is not yet known to the task catalog service; waiting for it.");
                             }
                             if (cancelToken.WaitHandle.WaitOne(delay)) cancelToken.ThrowIfCancellationRequested();
                         }
                     }
-                    dstDrive.ActionCatalogs.ClearCache(newFolder);
+                    dstDrive.TaskCatalogs.ClearCache(newFolder);
                 }
                 catch (Exception ex)
                 {

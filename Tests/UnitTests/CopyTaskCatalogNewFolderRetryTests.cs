@@ -4,9 +4,9 @@ using Xunit;
 
 namespace UnitTests;
 
-// Copy-Item retries creating an action catalog in a destination folder the Actions service does
+// Copy-Item retries creating a task catalog in a destination folder the Actions service does
 // not know yet (403, errorCode 1100), for about 30 seconds; the slowest folder measured took 11.
-public class CopyActionCatalogNewFolderRetryTests
+public class CopyTaskCatalogNewFolderRetryTests
 {
     [Fact]
     public void Schedule_CoversAboutThirtySeconds()
@@ -30,7 +30,7 @@ public class CopyActionCatalogNewFolderRetryTests
     {
         // The body the server sent for a folder created a moment earlier (measured 2026-11-04).
         var body = """{"message":"Folder does not exist or the user does not have access to the folder.","errorCode":1100,"traceId":"00-x-y-00"}""";
-        var ex = new OrchException("Orch4:\\New", "Copying action catalog", new Exception(body));
+        var ex = new OrchException("Orch4:\\New", "Copying task catalog", new Exception(body));
         Assert.Equal(OrchProvider.FolderNotFoundOrNoAccessErrorCode, OrchException.ExtractErrorCode(ex));
     }
 }

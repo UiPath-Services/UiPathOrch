@@ -6,12 +6,12 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Get, "OrchActionCatalog")]
+[Cmdlet(VerbsCommon.Get, "OrchTaskCatalog")]
 [OutputType(typeof(TaskCatalog))]
-public class GetActionCatalogCmdlet : OrchestratorPSCmdlet
+public class GetTaskCatalogCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]
+    [ArgumentCompleter(typeof(TaskCatalogNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -37,10 +37,10 @@ public class GetActionCatalogCmdlet : OrchestratorPSCmdlet
     [EncodingArgumentTransformation]
     public Encoding? CsvEncoding { get; set; }
 
-    private static readonly string DefaultCsvName = "ExportedActionCatalogs.csv";
+    private static readonly string DefaultCsvName = "ExportedTaskCatalogs.csv";
 
-    // Column names align with New-OrchActionCatalog parameter names so
-    // Get | Export-Csv | Import-Csv | New-OrchActionCatalog round-trips.
+    // Column names align with New-OrchTaskCatalog parameter names so
+    // Get | Export-Csv | Import-Csv | New-OrchTaskCatalog round-trips.
     private static readonly string[] CsvHeaders = [
         "Path",
         "Name",
@@ -73,10 +73,10 @@ public class GetActionCatalogCmdlet : OrchestratorPSCmdlet
         using var results = OrchThreadPool.RunForEach(drivesFolders,
             df => df.folder.GetPSPath(),
             df => df.folder,
-            df => df.drive.ActionCatalogs.Get(df.folder));
+            df => df.drive.TaskCatalogs.Get(df.folder));
 
         using var cancelHandler = new ConsoleCancelHandler();
-        using var reporter = new ProgressReporter(this, results.Count, "Getting action catalogs");
+        using var reporter = new ProgressReporter(this, results.Count, "Getting task catalogs");
         foreach (var result in results)
         {
             try
@@ -93,7 +93,7 @@ public class GetActionCatalogCmdlet : OrchestratorPSCmdlet
             }
             catch (OrchException ex)
             {
-                WriteError(new ErrorRecord(ex, "GetActionCatalogError", ErrorCategory.InvalidOperation, ex.Target));
+                WriteError(new ErrorRecord(ex, "GetTaskCatalogError", ErrorCategory.InvalidOperation, ex.Target));
             }
         }
 

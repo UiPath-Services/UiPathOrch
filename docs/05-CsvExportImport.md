@@ -61,7 +61,7 @@ Use `-CsvEncoding` to specify the encoding.
 | `Get-OrchBucket -ExportCsv` | `Import-Csv` → `New-OrchBucket` |
 | `Get-OrchTestDataQueue -ExportCsv` | `Import-Csv` → `New-OrchTestDataQueue` |
 | `Get-OrchTestSetSchedule -ExportCsv` | `Import-Csv` → `New-OrchTestSetSchedule` or `Update-OrchTestSetSchedule` |
-| `Get-OrchActionCatalog -ExportCsv` | `Import-Csv` → `New-OrchActionCatalog` |
+| `Get-OrchTaskCatalog -ExportCsv` | `Import-Csv` → `New-OrchTaskCatalog` |
 | `Get-OrchWebhook -ExportCsv` | `Import-Csv` → `New-OrchWebhook` or `Update-OrchWebhook` |
 | `Get-OrchAssetLink -ExportCsv` | `Import-Csv` → `Add-OrchAssetLink` |
 | `Get-OrchBucketLink -ExportCsv` | `Import-Csv` → `Add-OrchBucketLink` |

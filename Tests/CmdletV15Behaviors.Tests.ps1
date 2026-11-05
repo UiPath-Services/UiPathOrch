@@ -26,7 +26,7 @@
        preserves Description / Enabled.
     5. New-OrchTestDataQueue without -ContentJsonSchema succeeds (cmdlet
        defaults "{}", the server requires the field).
-    6. New-OrchActionCatalog barebones succeeds.
+    6. New-OrchTaskCatalog barebones succeeds.
 
     Excluded (would require fixture expansion):
     - MachineRobots Modern-robot (Robot.User.UserName) serialize
@@ -177,22 +177,22 @@ Describe 'v1.5.2: New-OrchTestDataQueue ContentJsonSchema default' {
     }
 }
 
-Describe 'v1.5.1: New-OrchActionCatalog barebones' {
+Describe 'v1.5.1: New-OrchTaskCatalog barebones' {
     It 'barebones (Name only) succeeds' {
         $name = "${script:Prefix}ac"
         try {
-            $created = New-OrchActionCatalog -Path $script:Folder -Name $name
+            $created = New-OrchTaskCatalog -Path $script:Folder -Name $name
             $created | Should -Not -BeNullOrEmpty
             $created.Name | Should -Be $name
         }
         finally {
-            Get-OrchActionCatalog -Path $script:Folder -Name $name -ErrorAction SilentlyContinue |
-                Remove-OrchActionCatalog -Confirm:$false -ErrorAction SilentlyContinue
+            Get-OrchTaskCatalog -Path $script:Folder -Name $name -ErrorAction SilentlyContinue |
+                Remove-OrchTaskCatalog -Confirm:$false -ErrorAction SilentlyContinue
         }
     }
 }
 
-Describe 'v1.5.3: TestDataQueue / ActionCatalog full CSV round-trip' {
+Describe 'v1.5.3: TestDataQueue / TaskCatalog full CSV round-trip' {
     # The contiguous round-trip the manual procedure documented, now
     # automated: create a source entity, Get -ExportCsv, Import-Csv,
     # New-Orch* under a fresh name, and assert the copy matches the
@@ -226,27 +226,27 @@ Describe 'v1.5.3: TestDataQueue / ActionCatalog full CSV round-trip' {
         }
     }
 
-    It 'New-OrchActionCatalog: Get -ExportCsv | Import-Csv | New- preserves Description + Encrypted' {
+    It 'New-OrchTaskCatalog: Get -ExportCsv | Import-Csv | New- preserves Description + Encrypted' {
         $src = "${script:Prefix}ac-rt-src"
         $dst = "${script:Prefix}ac-rt-dst"
         $csv = Join-Path $env:TEMP "${script:Prefix}ac-rt.csv"
         try {
-            New-OrchActionCatalog -Path $script:Folder -Name $src -Description 'rt source' -Encrypted true -ErrorAction Stop | Out-Null
-            Get-OrchActionCatalog -Path $script:Folder -Name $src -ExportCsv $csv | Out-Null
+            New-OrchTaskCatalog -Path $script:Folder -Name $src -Description 'rt source' -Encrypted true -ErrorAction Stop | Out-Null
+            Get-OrchTaskCatalog -Path $script:Folder -Name $src -ExportCsv $csv | Out-Null
             $row = Import-Csv $csv | Where-Object Name -eq $src
             $row | Should -Not -BeNullOrEmpty
             $row.Name = $dst
-            $row | New-OrchActionCatalog -ErrorAction Stop | Out-Null
+            $row | New-OrchTaskCatalog -ErrorAction Stop | Out-Null
 
-            $srcE = Get-OrchActionCatalog -Path $script:Folder -Name $src
-            $dstE = Get-OrchActionCatalog -Path $script:Folder -Name $dst
+            $srcE = Get-OrchTaskCatalog -Path $script:Folder -Name $src
+            $dstE = Get-OrchTaskCatalog -Path $script:Folder -Name $dst
             $dstE.Description | Should -Be $srcE.Description
             $dstE.Encrypted   | Should -Be $srcE.Encrypted
         }
         finally {
             foreach ($n in $src, $dst) {
-                Get-OrchActionCatalog -Path $script:Folder -Name $n -ErrorAction SilentlyContinue |
-                    Remove-OrchActionCatalog -Confirm:$false -ErrorAction SilentlyContinue
+                Get-OrchTaskCatalog -Path $script:Folder -Name $n -ErrorAction SilentlyContinue |
+                    Remove-OrchTaskCatalog -Confirm:$false -ErrorAction SilentlyContinue
             }
             Remove-Item $csv -ErrorAction SilentlyContinue
         }
@@ -455,10 +455,10 @@ Describe 'v1.5.3: -ExportCsv value-population on fixture-seeded entities' {
         finally { Remove-Item $csv -ErrorAction SilentlyContinue }
     }
 
-    It 'Get-OrchActionCatalog -ExportCsv populates Description and Encrypted' {
+    It 'Get-OrchTaskCatalog -ExportCsv populates Description and Encrypted' {
         $csv = Join-Path $env:TEMP "${script:Prefix}acs.csv"
         try {
-            Get-OrchActionCatalog -Path "${script:TargetDrive}:\TestFixture_Base" -Recurse -ExportCsv $csv | Out-Null
+            Get-OrchTaskCatalog -Path "${script:TargetDrive}:\TestFixture_Base" -Recurse -ExportCsv $csv | Out-Null
             $rows = @(Import-Csv $csv | Where-Object Name -in 'ac-dev', 'ac-prod', 'ac-secure')
             $rows.Count | Should -Be 3 -Because 'fixture seeds three task_catalogs.csv rows'
             foreach ($r in $rows) {

@@ -442,17 +442,17 @@ Machine templates, sessions, and client secrets.
 
 ## 14. Action Center
 
-Long-running, human-in-the-loop workflows. Action catalogs define the form templates; tasks are the runtime instances awaiting human action.
+Long-running, human-in-the-loop workflows. Task catalogs define the form templates; tasks are the runtime instances awaiting human action. The Action Center screens call tasks "actions"; the API and the workflow activities (Create Form Task, ...) call them tasks, and so do these cmdlets. The `*-OrchTaskCatalog` cmdlets were `*-OrchActionCatalog`; the former names still work once the module is loaded, but tab completion does not offer them.
 
-### Action Catalogs
+### Task Catalogs
 
 | Cmdlet | Description |
 |--------|-------------|
-| Get-OrchActionCatalog | List action catalogs |
-| New-OrchActionCatalog | Create an action catalog |
-| Copy-OrchActionCatalog | Copy action catalogs |
-| Compare-OrchActionCatalog | Diff action catalogs between two folders/tenants |
-| Remove-OrchActionCatalog | Remove an action catalog |
+| Get-OrchTaskCatalog | List task catalogs |
+| New-OrchTaskCatalog | Create a task catalog |
+| Copy-OrchTaskCatalog | Copy task catalogs |
+| Compare-OrchTaskCatalog | Diff task catalogs between two folders/tenants |
+| Remove-OrchTaskCatalog | Remove a task catalog |
 
 ### Tasks
 

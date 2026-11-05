@@ -4,7 +4,7 @@ using Xunit;
 namespace UnitTests;
 
 // Unit tests for the fourth wave of Compare-Orch* cmdlets (TestSet, TestDataQueue,
-// TestSetSchedule, ActionCatalog): each cmdlet's comparable-property set. These are
+// TestSetSchedule, TaskCatalog): each cmdlet's comparable-property set. These are
 // folder-scoped FolderCompare drop-ins with no new normalizers (tags reuse the shared
 // EntityComparison.NormalizeTags, covered elsewhere); mode dispatch is the shared engine.
 
@@ -32,10 +32,10 @@ public class CompareFamily4MetadataTests
     }
 
     [Fact]
-    public void ActionCatalogValidPropertyNames()
+    public void TaskCatalogValidPropertyNames()
     {
         foreach (var name in new[] { "Description", "Encrypted", "RetentionAction", "RetentionPeriod", "RetentionBucketName", "Tags" })
-            Assert.Contains(name, CompareActionCatalogCmdlet.ValidPropertyNames);
+            Assert.Contains(name, CompareTaskCatalogCmdlet.ValidPropertyNames);
     }
 
     [Fact]

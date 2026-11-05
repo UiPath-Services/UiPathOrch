@@ -551,7 +551,7 @@ share.
 > `copy OldOrch:\ NewOrch:\` **without** `-Recurse` copies only the tenant-level
 > entities listed above (libraries, packages, credential stores, roles, users, machines,
 > calendars, webhooks). The folders themselves and their folder-level entities (assets,
-> queues, processes, triggers, buckets, test sets, test data queues, action catalogs,
+> queues, processes, triggers, buckets, test sets, test data queues, task catalogs,
 > etc.) are **not** copied. Add `-Recurse` — as the command above does — to also copy
 > every folder and its contents.
 
@@ -812,7 +812,7 @@ A full sweep, exported as migration evidence:
 
 ```powershell
 $folderTypes = 'Asset','Queue','Process','Trigger','ApiTrigger','Bucket',
-               'FolderUser','FolderMachine','ActionCatalog'
+               'FolderUser','FolderMachine','TaskCatalog'
 foreach ($t in $folderTypes) {
     & "Compare-Orch$t" * NewOrch:\ -Path OldOrch:\ -Recurse -IncludeEqual `
         -ExportCsv "C:\Migration\verify-$t.csv"
@@ -1313,7 +1313,7 @@ webhooks
 **Folder-Level Entities:**
 Folders, folder users, folder machines, storage buckets, packages in folder
 feeds, processes, assets, queues, queue items, triggers, API triggers, event
-triggers, test sets, test schedules, test data queues, action catalogs
+triggers, test sets, test schedules, test data queues, task catalogs
 
 Of these, **queue items**, **storage bucket files** and **event triggers** are not
 carried by a folder copy — see [Important Notes](#important-notes).

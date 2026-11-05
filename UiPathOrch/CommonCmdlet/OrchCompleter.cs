@@ -873,10 +873,10 @@ public abstract class DriveScopedCompleter<TEntity> : OrchArgumentCompleter
     }
 }
 
-internal class ActionCatalogNameCompleter : FolderScopedCompleter<TaskCatalog>
+internal class TaskCatalogNameCompleter : FolderScopedCompleter<TaskCatalog>
 {
     protected override IEnumerable<TaskCatalog> GetEntities(OrchDriveInfo drive, Folder folder)
-        => drive.ActionCatalogs.Get(folder);
+        => drive.TaskCatalogs.Get(folder);
     protected override string GetName(TaskCatalog e) => e.Name!;
     protected override string GetTipHelp(TaskCatalog e) => e.GetPSPath();
     protected override CompletionResultType ResultType => CompletionResultType.Text;

@@ -18,7 +18,7 @@ namespace UiPath.PowerShell.Core;
 // folders. The implementation walks the folder tree and, for each folder,
 // copies every kind of entity it can find: folder users / machines, buckets,
 // packages, processes, assets, queues, triggers, API triggers, test sets,
-// test schedules, test data queues, action catalogs. Within a folder the
+// test schedules, test data queues, task catalogs. Within a folder the
 // stages are sequential because they have dependencies (buckets before
 // processes, packages before triggers, etc.); subfolders are recursed when
 // -Recurse is passed.
@@ -109,7 +109,7 @@ namespace UiPath.PowerShell.Core;
 //   CopyTestDataQueues
 //
 // Actions
-//   CopyActionCatalogs         action catalog definitions
+//   CopyTaskCatalogs         task catalog definitions
 //
 // Link-path FQN math (LinkAsset / Queue / Bucket support)
 //   ComputeDstFqn              map src link target FQN to dst, anchored on

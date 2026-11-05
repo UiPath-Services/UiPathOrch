@@ -12,7 +12,7 @@ namespace UiPath.PowerShell.Commands;
 //   Get-OrchTask -Status Pending | Set-OrchTask -Priority High
 //
 // Catalog handling: -TaskCatalog accepts a catalog name and resolves it to TaskCatalogId
-// via ActionCatalogs cache. Pass -UnsetTaskCatalog to disassociate any existing catalog.
+// via TaskCatalogs cache. Pass -UnsetTaskCatalog to disassociate any existing catalog.
 [Cmdlet(VerbsCommon.Set, "OrchTask", SupportsShouldProcess = true)]
 public class SetTaskCmdlet : OrchestratorPSCmdlet
 {
@@ -34,7 +34,7 @@ public class SetTaskCmdlet : OrchestratorPSCmdlet
     public string? NoteText { get; set; }
 
     [Parameter(ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]
+    [ArgumentCompleter(typeof(TaskCatalogNameCompleter))]
     public string? TaskCatalog { get; set; }
 
     [Parameter]
@@ -81,12 +81,12 @@ public class SetTaskCmdlet : OrchestratorPSCmdlet
         Int64? catalogId = null;
         if (!string.IsNullOrEmpty(TaskCatalog) && !UnsetTaskCatalog.IsPresent)
         {
-            var catalogs = drive.ActionCatalogs.Get(folder);
+            var catalogs = drive.TaskCatalogs.Get(folder);
             var match = catalogs.FirstOrDefault(c => string.Equals(c.Name, TaskCatalog, StringComparison.OrdinalIgnoreCase));
             if (match is null)
             {
                 WriteError(new ErrorRecord(
-                    new ItemNotFoundException($"Action catalog '{TaskCatalog}' not found in folder '{folder.GetPSPath()}'."),
+                    new ItemNotFoundException($"Task catalog '{TaskCatalog}' not found in folder '{folder.GetPSPath()}'."),
                     "SetTaskCatalogNotFound", ErrorCategory.ObjectNotFound, TaskCatalog));
                 return;
             }

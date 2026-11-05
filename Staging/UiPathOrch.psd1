@@ -410,11 +410,11 @@ CmdletsToExport = @(
 'Get-OrchLicense',
 'Get-OrchUpdateSetting',
 
-'Get-OrchActionCatalog',
-'Compare-OrchActionCatalog',
-'New-OrchActionCatalog',
-'Copy-OrchActionCatalog',
-'Remove-OrchActionCatalog',
+'Get-OrchTaskCatalog',
+'Compare-OrchTaskCatalog',
+'New-OrchTaskCatalog',
+'Copy-OrchTaskCatalog',
+'Remove-OrchTaskCatalog',
 
 'Search-OrchDirectory',
 'Search-PmDirectory',

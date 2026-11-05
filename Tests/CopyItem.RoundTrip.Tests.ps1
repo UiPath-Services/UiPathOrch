@@ -364,11 +364,11 @@ Describe 'Copy-Item -Recurse round-trip preserves per-folder entities' {
         }
     }
 
-    It 'action catalogs round-trip' {
+    It 'task catalogs round-trip' {
         # Activated alongside v1.5.3's task_catalogs.csv fixture. Verifies
-        # Copy-OrchActionCatalog preserves Description and Encrypted.
+        # Copy-OrchTaskCatalog preserves Description and Encrypted.
         Export-AndDiff `
-            -Getter { param($path, $csv) Get-OrchActionCatalog -Path $path -Recurse -ExportCsv $csv | Out-Null } `
+            -Getter { param($path, $csv) Get-OrchTaskCatalog -Path $path -Recurse -ExportCsv $csv | Out-Null } `
             -Name 'task_catalogs' `
             -ColumnsToCheck @('Description')
     }

@@ -40,6 +40,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
+- **`*-OrchActionCatalog` are renamed `*-OrchTaskCatalog`** (`Get-`, `New-`, `Copy-`,
+  `Compare-`, `Remove-`), after the API (`/odata/TaskCatalogs`) and the Action Center screens,
+  which call them task catalogs; tasks were already `*-OrchTask`. The former names still work once
+  the module is loaded, but are not aliases, so tab completion does not offer them; unlike the
+  current names, they do not load the module by themselves. `-ExportCsv` without a file name now
+  writes `ExportedTaskCatalogs.csv`.
 - **The `OR.Users.Read` warning is given when it matters, once**: `Import-OrchConfig` no longer
   warns about it for every drive whose Scope lacks it. The first time such a drive's folders are
   read and its personal workspace is missing for that reason, one warning says so and how to fix

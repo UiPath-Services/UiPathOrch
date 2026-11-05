@@ -193,7 +193,7 @@ HelpMessage: ''
 
 ### -TaskCatalog
 
-Name of the action catalog to associate with the task. Tab completion suggests catalog names from the current folder.
+Name of the task catalog to associate with the task. Tab completion suggests catalog names from the current folder.
 
 ```yaml
 Type: System.String

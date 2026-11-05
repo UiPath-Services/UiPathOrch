@@ -18,7 +18,7 @@ public class ExportCsvOptionalityTests
     {
         yield return new object[] { typeof(GetApiTriggerCmdlet) };
         yield return new object[] { typeof(GetTestDataQueueCmdlet) };
-        yield return new object[] { typeof(GetActionCatalogCmdlet) };
+        yield return new object[] { typeof(GetTaskCatalogCmdlet) };
         yield return new object[] { typeof(GetTestSetScheduleCmdlet) };
         yield return new object[] { typeof(GetWebhookCmdlet) };
         yield return new object[] { typeof(GetAssetLinkCmdlet) };

@@ -1010,7 +1010,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
     public readonly SingleCachePerFolder<EntitiesSummary> EntitiesSummary;
     public readonly SingleCachePerFolder<string> FolderFeedId;
 
-    public readonly ListCachePerFolder<TaskCatalog> ActionCatalogs;
+    public readonly ListCachePerFolder<TaskCatalog> TaskCatalogs;
     public readonly ListCachePerFolder<HttpTrigger> ApiTriggers;
     public readonly ListCachePerFolder<BusinessRule> BusinessRules;
     public readonly ListCachePerFolder<Connection> Connections;
@@ -1653,7 +1653,7 @@ public partial class OrchDriveInfo : OrchDriveInfoBase
         // null path in GetFolderFeedId.
         EntitiesSummary = new(this, fid => OrchAPISession.GetEntitiesSummary(fid!.Value), (e, folderPath) => e.Path = folderPath);
         FolderFeedId = new(this, OrchAPISession.GetFolderFeedId, null, 12);
-        ActionCatalogs = new(this, OrchAPISession.GetTaskCatalogs, (e, folderPath) => e.Path = folderPath, 16); // Confirmed no error is returned in v16
+        TaskCatalogs = new(this, OrchAPISession.GetTaskCatalogs, (e, folderPath) => e.Path = folderPath, 16); // Confirmed no error is returned in v16
         _folderCache = new FolderCache(this, BuildFolderCache);
 
         // 18 is NOT "the version that has API triggers" -- Automation Suite 24.10.11 reports

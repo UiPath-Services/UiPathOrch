@@ -1,26 +1,26 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchActionCatalog.md
+HelpUri: https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchTaskCatalog.md
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 06/07/2026
 PlatyPS schema version: 2024-05-01
-title: Compare-OrchActionCatalog
+title: Compare-OrchTaskCatalog
 ---
 
-# Compare-OrchActionCatalog
+# Compare-OrchTaskCatalog
 
 ## SYNOPSIS
 
-Compares action catalogs between two folders or Orchestrator instances and reports the differences.
+Compares task catalogs between two folders or Orchestrator instances and reports the differences.
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Compare-OrchActionCatalog [-Path <string>] [-LiteralPath <string>] [-Recurse]
+Compare-OrchTaskCatalog [-Path <string>] [-LiteralPath <string>] [-Recurse]
  [-Depth <uint>] [-Name] <string[]> [-DifferencePath] <string>
  [[-DifferenceName] <string>] [-CsvEncoding <Encoding>] [-ExportCsv <string>]
  [-IncludeEqual] [-Property <string[]>] [<CommonParameters>]
@@ -30,32 +30,34 @@ Compare-OrchActionCatalog [-Path <string>] [-LiteralPath <string>] [-Recurse]
 
 ## DESCRIPTION
 
-Compares action catalogs between a reference location (-Path, or the current folder) and a difference location (-DifferencePath), resolved over Orchestrator drives and folders. The primary use is migration verification.
+Compares task catalogs between a reference location (-Path, or the current folder) and a difference location (-DifferencePath), resolved over Orchestrator drives and folders. The primary use is migration verification.
 
-Action catalogs are matched by Name (not the tenant-local Id) and these properties are compared: Description, Encrypted, RetentionAction, RetentionPeriod, RetentionBucketName, and Tags.
+Formerly Compare-OrchActionCatalog. The former name still works once the module is loaded, but tab completion does not offer it.
+
+Task catalogs are matched by Name (not the tenant-local Id) and these properties are compared: Description, Encrypted, RetentionAction, RetentionPeriod, RetentionBucketName, and Tags.
 
 Each result is an OrchComparison record with a SideIndicator: "<=" reference only, "=>" difference only, "<>" present on both sides but differing (with a per-property Differences breakdown), and "==" equal (only with -IncludeEqual). Without -DifferenceName each reference catalog is compared to the same-named catalog in the corresponding difference folder (mirrored relative path with -Recurse). With -DifferenceName, every reference catalog is compared to that single named catalog.
 
-Primary Endpoint: GET /odata/ActionCatalogs
+Primary Endpoint: GET /odata/TaskCatalogs
 
-OAuth required scopes: OR.ActionCatalogs or OR.ActionCatalogs.Read (both sides)
+OAuth required scopes: OR.TaskCatalogs or OR.TaskCatalogs.Read (both sides)
 
-Required permissions: ActionCatalogs.View (both sides)
+Required permissions: TaskCatalogs.View (both sides)
 
 ## EXAMPLES
 
-### Example 1: Verify action catalogs migrated to another tenant
+### Example 1: Verify task catalogs migrated to another tenant
 
 ```powershell
-PS C:\> Compare-OrchActionCatalog * Orch2:\Finance -Path Orch1:\Finance
+PS C:\> Compare-OrchTaskCatalog * Orch2:\Finance -Path Orch1:\Finance
 ```
 
-Compares every action catalog in Finance on Orch1 against the same-named catalog in Finance on Orch2, showing only the differences.
+Compares every task catalog in Finance on Orch1 against the same-named catalog in Finance on Orch2, showing only the differences.
 
 ### Example 2: Compare a whole tree, including matches
 
 ```powershell
-PS C:\> Compare-OrchActionCatalog * Orch2:\Shared -Path Orch1:\Shared -Recurse -IncludeEqual
+PS C:\> Compare-OrchTaskCatalog * Orch2:\Shared -Path Orch1:\Shared -Recurse -IncludeEqual
 ```
 
 Walks Shared and all subfolders and reports every catalog, including identical ones.
@@ -63,7 +65,7 @@ Walks Shared and all subfolders and reports every catalog, including identical o
 ### Example 3: Keep the comparison as a migration report
 
 ```powershell
-PS C:\> Compare-OrchActionCatalog * Orch2:\Shared -Path Orch1:\Shared -Recurse -IncludeEqual -ExportCsv report.csv
+PS C:\> Compare-OrchTaskCatalog * Orch2:\Shared -Path Orch1:\Shared -Recurse -IncludeEqual -ExportCsv report.csv
 ```
 
 Writes every row -- differing and equal alike -- to report.csv instead of the pipeline, with the per-property differences in the Differences column.
@@ -156,7 +158,7 @@ HelpMessage: ''
 
 ### -ExportCsv
 
-Writes the comparison to the specified CSV file path instead of to the pipeline. The columns are SideIndicator, Name, DifferenceName, Path, DifferencePath, and Differences — the same six the console shows, with Differences carrying the per-property "Prop: 'ref' => 'diff'" text. ReferenceObject and DifferenceObject are not exported: they are whole entities kept for downstream piping, and a CSV can hold nothing of them but their type name. A directory path writes ComparedActionCatalogs.csv inside it. Requires a filesystem path (not an Orch: drive path).
+Writes the comparison to the specified CSV file path instead of to the pipeline. The columns are SideIndicator, Name, DifferenceName, Path, DifferencePath, and Differences — the same six the console shows, with Differences carrying the per-property "Prop: 'ref' => 'diff'" text. ReferenceObject and DifferenceObject are not exported: they are whole entities kept for downstream piping, and a CSV can hold nothing of them but their type name. A directory path writes ComparedTaskCatalogs.csv inside it. Requires a filesystem path (not an Orch: drive path).
 
 ```yaml
 Type: System.String
@@ -220,7 +222,7 @@ HelpMessage: ''
 
 ### -Name
 
-Filters the reference action catalogs by name; supports wildcards. In name-match mode the same filter is applied to the difference side.
+Filters the reference task catalogs by name; supports wildcards. In name-match mode the same filter is applied to the difference side.
 
 ```yaml
 Type: System.String[]
@@ -323,13 +325,13 @@ You can pipe entity names to this cmdlet (the Name property).
 
 ### UiPath.PowerShell.Entities.OrchComparison
 
-Returns one comparison record per action catalog, with SideIndicator, Name, the single-sided Path and DifferencePath, the per-property Differences (on "<>" rows), and the underlying ReferenceObject / DifferenceObject.
+Returns one comparison record per task catalog, with SideIndicator, Name, the single-sided Path and DifferencePath, the per-property Differences (on "<>" rows), and the underlying ReferenceObject / DifferenceObject.
 
 ## NOTES
 
-Action catalogs are matched by Name, case-insensitively. This cmdlet is read-only and does not support -WhatIf / -Confirm.
+Task catalogs are matched by Name, case-insensitively. This cmdlet is read-only and does not support -WhatIf / -Confirm.
 
 ## RELATED LINKS
 
-- [Get-OrchActionCatalog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchActionCatalog.md)
+- [Get-OrchTaskCatalog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTaskCatalog.md)
 - [Compare-OrchAsset](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Compare-OrchAsset.md)

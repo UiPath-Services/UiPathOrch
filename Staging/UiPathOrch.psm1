@@ -12,6 +12,34 @@
 
 Set-Alias -Name !Show-OrchGuide -Value Get-OrchHelp
 
+# Former cmdlet names, resolved to the current cmdlet when PowerShell finds no command by that
+# name. Not aliases, so tab completion does not offer them beside the current names; the price is
+# that a former name does not auto-load the module (the module must already be loaded).
+$script:FormerCmdletNames = @{
+    # *-OrchActionCatalog, renamed after the API's and the UI's "task catalogs"
+    'Get-OrchActionCatalog'     = 'Get-OrchTaskCatalog'
+    'Compare-OrchActionCatalog' = 'Compare-OrchTaskCatalog'
+    'New-OrchActionCatalog'     = 'New-OrchTaskCatalog'
+    'Copy-OrchActionCatalog'    = 'Copy-OrchTaskCatalog'
+    'Remove-OrchActionCatalog'  = 'Remove-OrchTaskCatalog'
+}
+# Chained, so a handler set before this module keeps working; restored when the module is removed.
+$script:PreviousCommandNotFoundAction = $ExecutionContext.InvokeCommand.CommandNotFoundAction
+$ExecutionContext.InvokeCommand.CommandNotFoundAction = {
+    param($commandName, $eventArgs)
+    $current = $script:FormerCmdletNames[$commandName]
+    if ($current) {
+        $eventArgs.Command = Get-Command $current -Module UiPathOrch -CommandType Cmdlet
+        $eventArgs.StopSearch = $true
+    }
+    elseif ($script:PreviousCommandNotFoundAction) {
+        & $script:PreviousCommandNotFoundAction $commandName $eventArgs
+    }
+}
+$MyInvocation.MyCommand.ScriptBlock.Module.OnRemove = {
+    $ExecutionContext.InvokeCommand.CommandNotFoundAction = $script:PreviousCommandNotFoundAction
+}
+
 . $PSScriptRoot\Functions\Enable-OrchUserAttended.ps1
 . $PSScriptRoot\Functions\Disable-OrchUserAttended.ps1
 

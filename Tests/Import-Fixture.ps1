@@ -278,9 +278,9 @@ else {
     Write-Host "  (skipped: no DirectoryUser other than the current user)" -ForegroundColor DarkGray
 }
 
-# 12c. Action catalogs (TaskCatalog wire entity).
-Write-Host "[11c/17] Action catalogs"
-Import-Csv "$FixturePath\task_catalogs.csv" | Remap-Path | New-OrchActionCatalog | Out-Null
+# 12c. Task catalogs (TaskCatalog wire entity).
+Write-Host "[11c/17] Task catalogs"
+Import-Csv "$FixturePath\task_catalogs.csv" | Remap-Path | New-OrchTaskCatalog | Out-Null
 
 # 13. Asset links (depend on assets; share existing assets into additional folders).
 # The CSV's Link column is also a path that needs the source-prefix remap.

@@ -111,16 +111,16 @@ public partial class OrchProvider
         int assets = SafeCount(() => drive.Assets.Get(folder).Count);
         int buckets = SafeCount(() => drive.Buckets.Get(folder).Count);
         int queues = SafeCount(() => drive.Queues.Get(folder).Count);
-        int actionCatalogs = SafeCount(() => drive.ActionCatalogs.Get(folder).Count);
+        int taskCatalogs = SafeCount(() => drive.TaskCatalogs.Get(folder).Count);
 
-        if (processes + triggers + assets + buckets + queues + actionCatalogs == 0)
+        if (processes + triggers + assets + buckets + queues + taskCatalogs == 0)
             return null;
 
         // Fixed inventory in the requested order: processes, triggers, assets, buckets, queues,
-        // action catalogs. Every count is shown, including zeros.
+        // task catalogs. Every count is shown, including zeros.
         string counts =
             $"Processes: {processes}, Triggers: {triggers}, Assets: {assets}, " +
-            $"Buckets: {buckets}, Queues: {queues}, Action Catalogs: {actionCatalogs}";
+            $"Buckets: {buckets}, Queues: {queues}, Task Catalogs: {taskCatalogs}";
         // Deliberately not "removes ... all of its contents": measured on Cloud, an asset, queue or
         // bucket that is also linked into another folder survives there — deleting the folder only
         // drops this folder's share of it. Saying so costs nothing; counting how many are shared

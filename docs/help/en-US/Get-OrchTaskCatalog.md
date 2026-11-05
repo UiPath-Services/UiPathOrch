@@ -1,26 +1,26 @@
 ---
 document type: cmdlet
 external help file: UiPathOrch.dll-Help.xml
-HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchActionCatalog.md'
+HelpUri: 'https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Get-OrchTaskCatalog.md'
 Locale: en-US
 Module Name: UiPathOrch
 ms.date: 03/06/2026
 PlatyPS schema version: 2024-05-01
-title: Get-OrchActionCatalog
+title: Get-OrchTaskCatalog
 ---
 
-# Get-OrchActionCatalog
+# Get-OrchTaskCatalog
 
 ## SYNOPSIS
 
-Gets action catalogs from Orchestrator folders.
+Gets task catalogs from Orchestrator folders.
 
 ## SYNTAX
 
 ### __AllParameterSets
 
 ```
-Get-OrchActionCatalog [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
+Get-OrchTaskCatalog [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
  [-Depth <uint>] [[-Name] <string[]>] [-CsvEncoding <Encoding>] [-ExportCsv <string>]
  [<CommonParameters>]
 ```
@@ -29,9 +29,11 @@ Get-OrchActionCatalog [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse]
 
 ## DESCRIPTION
 
-Gets action catalog information from UiPath Orchestrator. Action catalogs define the available actions (tasks) that can be assigned to users for human-in-the-loop automation scenarios.
+Gets task catalog information from UiPath Orchestrator. Task catalogs define the available actions (tasks) that can be assigned to users for human-in-the-loop automation scenarios.
 
-The -Name parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see available action catalog names. Multiple values can be specified using comma-separated text that includes wildcards.
+Formerly Get-OrchActionCatalog. The former name still works once the module is loaded, but tab completion does not offer it.
+
+The -Name parameter supports tab completion. Press [Ctrl+Space] or [Tab] to see available task catalog names. Multiple values can be specified using comma-separated text that includes wildcards.
 
 The cmdlet supports multi-threaded folder processing for improved performance when querying across multiple folders.
 
@@ -45,37 +47,37 @@ Required permissions: TaskCatalogs.View
 
 ## EXAMPLES
 
-### Example 1: Get all action catalogs in the current folder
+### Example 1: Get all task catalogs in the current folder
 
 ```powershell
-PS Orch1:\Shared> Get-OrchActionCatalog
+PS Orch1:\Shared> Get-OrchTaskCatalog
 ```
 
-Gets all action catalogs from the current folder.
+Gets all task catalogs from the current folder.
 
-### Example 2: Get action catalogs by name
+### Example 2: Get task catalogs by name
 
 ```powershell
-PS Orch1:\Shared> Get-OrchActionCatalog xxx*
+PS Orch1:\Shared> Get-OrchTaskCatalog xxx*
 ```
 
-Gets action catalogs whose names match `xxx*` from the current folder.
+Gets task catalogs whose names match `xxx*` from the current folder.
 
-### Example 3: Get action catalogs recursively
+### Example 3: Get task catalogs recursively
 
 ```powershell
-PS Orch1:\> Get-OrchActionCatalog -Recurse
+PS Orch1:\> Get-OrchTaskCatalog -Recurse
 ```
 
-Gets all action catalogs from the current folder and all its subfolders.
+Gets all task catalogs from the current folder and all its subfolders.
 
-### Example 4: Get action catalogs from a specific folder
+### Example 4: Get task catalogs from a specific folder
 
 ```powershell
-PS C:\> Get-OrchActionCatalog -Path Orch1:\Production
+PS C:\> Get-OrchTaskCatalog -Path Orch1:\Production
 ```
 
-Gets all action catalogs from the Production folder on Orch1.
+Gets all task catalogs from the Production folder on Orch1.
 
 ## PARAMETERS
 
@@ -166,7 +168,7 @@ HelpMessage: ''
 
 ### -Name
 
-Specifies the names of the action catalogs to retrieve. Supports wildcards. Tab completion dynamically suggests action catalog names from the target folders.
+Specifies the names of the task catalogs to retrieve. Supports wildcards. Tab completion dynamically suggests task catalog names from the target folders.
 
 ```yaml
 Type: System.String[]
@@ -215,7 +217,7 @@ HelpMessage: ''
 
 ### -ExportCsv
 
-Exports action catalogs to the specified CSV file path. Columns: Path, Name, Description, Encrypted — matching New-OrchActionCatalog parameter names so `Import-Csv | New-OrchActionCatalog` round-trips. Requires a filesystem path (not an Orch: drive path).
+Exports task catalogs to the specified CSV file path. Columns: Path, Name, Description, Encrypted — matching New-OrchTaskCatalog parameter names so `Import-Csv | New-OrchTaskCatalog` round-trips. Requires a filesystem path (not an Orch: drive path).
 
 ```yaml
 Type: System.String
@@ -238,13 +240,13 @@ HelpMessage: ''
 
 ### System.String[]
 
-You can pipe action catalog names to this cmdlet via the Name property.
+You can pipe task catalog names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
 ### UiPath.PowerShell.Entities.Bucket
 
-Returns Bucket objects representing action catalogs with properties including Name and Id.
+Returns Bucket objects representing task catalogs with properties including Name and Id.
 
 ## NOTES
 
@@ -252,6 +254,6 @@ The cmdlet uses multi-threaded folder processing for improved performance when q
 
 ## RELATED LINKS
 
-[Remove-OrchActionCatalog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchActionCatalog.md)
+[Remove-OrchTaskCatalog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Remove-OrchTaskCatalog.md)
 
-[Copy-OrchActionCatalog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchActionCatalog.md)
+[Copy-OrchTaskCatalog](https://github.com/UiPath-Services/UiPathOrch/blob/master/docs/help/en-US/Copy-OrchTaskCatalog.md)

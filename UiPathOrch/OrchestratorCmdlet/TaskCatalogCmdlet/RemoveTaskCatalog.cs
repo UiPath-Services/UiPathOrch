@@ -5,24 +5,24 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-[Cmdlet(VerbsCommon.Remove, "OrchActionCatalog", SupportsShouldProcess = true)]
-public class RemoveActionCatalogCmdlet : RemoveFolderEntityCmdletBase<TaskCatalog>
+[Cmdlet(VerbsCommon.Remove, "OrchTaskCatalog", SupportsShouldProcess = true)]
+public class RemoveTaskCatalogCmdlet : RemoveFolderEntityCmdletBase<TaskCatalog>
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]
+    [ArgumentCompleter(typeof(TaskCatalogNameCompleter))]
     [SupportsWildcards]
     public override string[]? Name { get; set; }
 
-    protected override string EntityNoun => "ActionCatalog";
+    protected override string EntityNoun => "TaskCatalog";
     protected override Func<TaskCatalog?, string?> GetName => c => c?.Name;
     protected override Func<TaskCatalog, string> GetPSPath => c => c.GetPSPath();
 
     protected override IEnumerable<TaskCatalog> GetEntities(OrchDriveInfo drive, Folder folder)
-        => drive.ActionCatalogs.Get(folder);
+        => drive.TaskCatalogs.Get(folder);
 
     protected override void Remove(OrchDriveInfo drive, Folder folder, TaskCatalog catalog)
     {
         drive.OrchAPISession.RemoveTaskCatalog(folder.Id ?? 0, catalog.Id ?? 0);
-        drive.ActionCatalogs.ClearCache(folder);
+        drive.TaskCatalogs.ClearCache(folder);
     }
 }

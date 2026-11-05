@@ -10,7 +10,7 @@ namespace UnitTests;
 // Locks the surface of the five "had Copy/Get, was missing New" cmdlets
 // shipped 2026-05-21:
 //   New-OrchTestSet / New-OrchTestSetSchedule / New-OrchTestDataQueue /
-//   New-OrchActionCatalog
+//   New-OrchTaskCatalog
 // (plus New-OrchApiTrigger which has its own dedicated test class).
 //
 // Same playbook as AssetLinkCmdletShapeTests:
@@ -26,7 +26,7 @@ public class NewOrchCreateCmdletShapeTests
     [InlineData(typeof(NewTestSetCmdlet), "OrchTestSet", typeof(TestSet))]
     [InlineData(typeof(NewTestSetScheduleCmdlet), "OrchTestSetSchedule", typeof(TestSetSchedule))]
     [InlineData(typeof(NewTestDataQueueCmdlet), "OrchTestDataQueue", typeof(TestDataQueue))]
-    [InlineData(typeof(NewActionCatalogCmdlet), "OrchActionCatalog", typeof(TaskCatalog))]
+    [InlineData(typeof(NewTaskCatalogCmdlet), "OrchTaskCatalog", typeof(TaskCatalog))]
     public void Cmdlet_DeclaresExpectedAttributes(System.Type cmdletType, string expectedNoun, System.Type expectedOutput)
     {
         var cmdletAttr = cmdletType.GetCustomAttribute<CmdletAttribute>();
@@ -45,7 +45,7 @@ public class NewOrchCreateCmdletShapeTests
     [InlineData(typeof(NewTestSetCmdlet))]
     [InlineData(typeof(NewTestSetScheduleCmdlet))]
     [InlineData(typeof(NewTestDataQueueCmdlet))]
-    [InlineData(typeof(NewActionCatalogCmdlet))]
+    [InlineData(typeof(NewTaskCatalogCmdlet))]
     public void Cmdlet_HasMandatoryNameAcceptingPipeline(System.Type cmdletType)
     {
         var prop = cmdletType.GetProperty("Name");
@@ -75,7 +75,7 @@ public class NewOrchCreateCmdletShapeTests
     [InlineData("'New-OrchTestSet'")]
     [InlineData("'New-OrchTestSetSchedule'")]
     [InlineData("'New-OrchTestDataQueue'")]
-    [InlineData("'New-OrchActionCatalog'")]
+    [InlineData("'New-OrchTaskCatalog'")]
     public void Cmdlet_IsListedInModuleManifest(string expectedEntry)
     {
         // Without this, Install-Module wouldn't surface the cmdlet — the same

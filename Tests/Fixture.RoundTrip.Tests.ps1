@@ -218,7 +218,7 @@ Describe 'Fixture CSV round-trip (Orch1: → OrchTest: → CSV) preserves source
 
     It 'task_catalogs.csv round-trips Path / Name / Description / Encrypted' {
         $exportPath = Join-Path $script:ExportDir 'task_catalogs.csv'
-        Get-OrchActionCatalog -Path $script:FixtureRoot -Recurse -ExportCsv $exportPath | Out-Null
+        Get-OrchTaskCatalog -Path $script:FixtureRoot -Recurse -ExportCsv $exportPath | Out-Null
         $expected = Normalize-Rows (Read-FixtureCsv 'task_catalogs.csv')
         $actual   = Normalize-Rows (Import-Csv $exportPath)
         Compare-CsvSubset $expected $actual @('Path', 'Name', 'Description', 'Encrypted') 'task_catalogs'

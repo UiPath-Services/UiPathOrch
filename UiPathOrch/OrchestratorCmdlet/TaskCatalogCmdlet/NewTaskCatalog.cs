@@ -5,16 +5,16 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-// New-OrchActionCatalog -- wraps POST
+// New-OrchTaskCatalog -- wraps POST
 // /odata/TaskCatalogs/UiPath.Server.Configuration.OData.CreateTaskCatalog.
 //
-// External noun is "ActionCatalog" to align with the in-product UI label,
+// External noun is "TaskCatalog" to align with the in-product UI label,
 // while the wire entity type is TaskCatalog (legacy). Minimum-viable
 // surface: Name + Description + Encrypted + Path. The wrapped server
 // endpoint is POST-only; there is no Set-/Update- yet.
-[Cmdlet(VerbsCommon.New, "OrchActionCatalog", SupportsShouldProcess = true)]
+[Cmdlet(VerbsCommon.New, "OrchTaskCatalog", SupportsShouldProcess = true)]
 [OutputType(typeof(TaskCatalog))]
-public class NewActionCatalogCmdlet : OrchestratorPSCmdlet
+public class NewTaskCatalogCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
     public string[]? Name { get; set; }
@@ -53,12 +53,12 @@ public class NewActionCatalogCmdlet : OrchestratorPSCmdlet
                 newCatalog.AssignStringIfNotNullOrEmpty(Description, (c, v) => c.Description = v);
                 newCatalog.AssignBoolIfNotNull(Encrypted, (c, v) => c.Encrypted = v);
 
-                if (ShouldProcess(target, "New ActionCatalog"))
+                if (ShouldProcess(target, "New TaskCatalog"))
                 {
                     try
                     {
                         var created = drive.OrchAPISession.CreateTaskCatalog(folder.Id!.Value, newCatalog);
-                        drive.ActionCatalogs.ClearCache(folder);
+                        drive.TaskCatalogs.ClearCache(folder);
                         if (created is not null)
                         {
                             created.Path = folder.GetPSPath();
@@ -67,7 +67,7 @@ public class NewActionCatalogCmdlet : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(target, ex), "NewActionCatalogError", ErrorCategory.InvalidOperation, folder));
+                        WriteError(new ErrorRecord(new OrchException(target, ex), "NewTaskCatalogError", ErrorCategory.InvalidOperation, folder));
                     }
                 }
             }

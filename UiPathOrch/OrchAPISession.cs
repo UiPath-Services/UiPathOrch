@@ -3888,7 +3888,7 @@ public partial class OrchAPISession : IDisposable
 
     #endregion
 
-    #region Action Catalog
+    #region Task Catalog
 
     public TaskCatalog? CreateTaskCatalog(Int64 folderId, TaskCatalog taskCatalog) => HttpRequest<TaskCatalog>(HttpMethod.Post, "/odata/TaskCatalogs/UiPath.Server.Configuration.OData.CreateTaskCatalog", folderId, taskCatalog);
 

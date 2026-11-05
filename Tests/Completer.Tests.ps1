@@ -13,7 +13,7 @@
     DriveScoped completers). Assertions use `-Contain` rather than exact count
     so the test does not fail when the target tenant has unrelated residue.
 
-    For entity types not present in the fixture (Calendar, Webhook, ActionCatalog,
+    For entity types not present in the fixture (Calendar, Webhook, TaskCatalog,
     EventTrigger, ApiTrigger, CredentialStore, TestCase, TestDataQueue, TestSet,
     TestSetSchedule), smoke tests verify the completer returns an array without
     throwing.
@@ -108,8 +108,8 @@ Describe 'FolderScoped completers return fixture entities' {
         Assert-CandidateContains 'Start-OrchJob -Name ' @('proc-dev-1', 'proc-dev-2')
     }
 
-    It 'ActionCatalogNameCompleter: Get-OrchActionCatalog -Name does not throw' {
-        Assert-CompleterReturnsArray 'Get-OrchActionCatalog -Name ' 'Get-OrchActionCatalog -Name'
+    It 'TaskCatalogNameCompleter: Get-OrchTaskCatalog -Name does not throw' {
+        Assert-CompleterReturnsArray 'Get-OrchTaskCatalog -Name ' 'Get-OrchTaskCatalog -Name'
     }
 
     It 'EventTriggerNameCompleter: Get-OrchEventTrigger -Name does not throw' {

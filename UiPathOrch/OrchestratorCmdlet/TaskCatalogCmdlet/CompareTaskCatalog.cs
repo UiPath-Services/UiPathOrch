@@ -5,12 +5,12 @@ using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Commands;
 
-// Compare action catalogs between two folders or Orchestrator instances. Matches by Name and
+// Compare task catalogs between two folders or Orchestrator instances. Matches by Name and
 // compares the catalog configuration (encryption, retention, tags). See Compare-OrchAsset for
 // the shared model.
-[Cmdlet(VerbsData.Compare, "OrchActionCatalog")]
+[Cmdlet(VerbsData.Compare, "OrchTaskCatalog")]
 [OutputType(typeof(OrchComparison))]
-public class CompareActionCatalogCmdlet : CompareOrchCmdlet
+public class CompareTaskCatalogCmdlet : CompareOrchCmdlet
 {
     [Parameter(ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
@@ -21,7 +21,7 @@ public class CompareActionCatalogCmdlet : CompareOrchCmdlet
     public string? LiteralPath { get; set; }
 
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
-    [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]
+    [ArgumentCompleter(typeof(TaskCatalogNameCompleter))]
     [SupportsWildcards]
     public string[]? Name { get; set; }
 
@@ -30,7 +30,7 @@ public class CompareActionCatalogCmdlet : CompareOrchCmdlet
     public string? DifferencePath { get; set; }
 
     [Parameter(Position = 2)]
-    [ArgumentCompleter(typeof(ActionCatalogNameCompleter))]
+    [ArgumentCompleter(typeof(TaskCatalogNameCompleter))]
     [SupportsWildcards]
     public string? DifferenceName { get; set; }
 
@@ -69,7 +69,7 @@ public class CompareActionCatalogCmdlet : CompareOrchCmdlet
             foreach (var n in ExtractDriveNamesFromBoundPath(lp)) yield return n;
     }
 
-    protected override string DefaultCsvName => "ComparedActionCatalogs.csv";
+    protected override string DefaultCsvName => "ComparedTaskCatalogs.csv";
 
     protected override void ProcessRecord()
     {
@@ -83,11 +83,11 @@ public class CompareActionCatalogCmdlet : CompareOrchCmdlet
             Name.ConvertToWildcardPatternList(),
             Recurse.IsPresent, Depth, IncludeEqual.IsPresent,
             only,
-            (drive, folder) => drive.ActionCatalogs.Get(folder),
+            (drive, folder) => drive.TaskCatalogs.Get(folder),
             c => c?.Name,
             c => c!.GetPSPath(),
             Comparators,
-            "GetActionCatalogError",
+            "GetTaskCatalogError",
             CsvOrPipeline(),
             WriteError);
     }

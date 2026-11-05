@@ -175,7 +175,7 @@ confirmation mirrors the Orchestrator web delete dialog:
 PS Orch1:\> Remove-Item .\Finance
 Confirm folder deletion
 The folder 'Orch1:\Finance' is not empty (Processes: 2, Triggers: 0, Assets: 5, Buckets: 0,
-Queues: 1, Action Catalogs: 0). Deleting it removes the folder and its contents; assets,
+Queues: 1, Task Catalogs: 0). Deleting it removes the folder and its contents; assets,
 queues and buckets that are also linked into other folders are only unlinked from here and
 remain in those folders. Are you sure you want to continue?
 ```

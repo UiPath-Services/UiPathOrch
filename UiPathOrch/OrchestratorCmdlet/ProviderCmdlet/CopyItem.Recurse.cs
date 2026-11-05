@@ -350,8 +350,8 @@ public partial class OrchProvider
                                 r => { CopyTestSetSchedules(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken); dstDrive.TestSetSchedules.ClearCache(newFolder); }),
                             ("Test data queues", null,
                                 r => { CopyTestDataQueues(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken); dstDrive.TestDataQueues.ClearCache(newFolder); }),
-                            ("Action catalogs ", null,
-                                r => CopyActionCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
+                            ("Task catalogs   ", null,
+                                r => CopyTaskCatalogs(this, srcDrive, srcFolder, null, dstDrive, newFolder, r, true, cancelToken)),
                         };
 
                         // One bar per entity type, each left standing once its stage is done so

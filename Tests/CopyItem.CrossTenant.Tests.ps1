@@ -229,8 +229,8 @@ BeforeAll {
             }
         }
         Clear-OrchCache -Path $script:SrcRoot
-        # The copy reads the new folders' action catalogs; wait until that service knows them.
-        & "$PSScriptRoot\Wait-ActionCatalogFolder.ps1" -Path $script:SrcRoot, "$($script:SrcRoot)\Child"
+        # The copy reads the new folders' task catalogs; wait until that service knows them.
+        & "$PSScriptRoot\Wait-TaskCatalogFolder.ps1" -Path $script:SrcRoot, "$($script:SrcRoot)\Child"
 
         # ---- cross-tenant copy ----
         Write-Host "Copy-Item -Recurse (cross-tenant) to '$($script:DstRoot)' ..." -ForegroundColor Cyan
@@ -406,7 +406,7 @@ Describe 'Copy-Item -Recurse cross-tenant leaves no stale destination queue cach
                 return
             }
 
-            & "$PSScriptRoot\Wait-ActionCatalogFolder.ps1" -Path $script:StaleSrcRoot, $script:StaleSrcA, $script:StaleSrcB
+            & "$PSScriptRoot\Wait-TaskCatalogFolder.ps1" -Path $script:StaleSrcRoot, $script:StaleSrcA, $script:StaleSrcB
 
             # Pre-create the destination tree so both folders exist before the copy.
             New-Item -ItemType Directory -Path $script:StaleDstRoot -Force -ErrorAction Stop | Out-Null
