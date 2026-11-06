@@ -13,6 +13,8 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(OrchTask))]
 public class GetTaskAcrossFolderCmdlet : OrchestratorPSCmdlet
 {
+    internal const string AcrossFolderTypeName = "UiPath.PowerShell.Entities.OrchTask#AcrossFolder";
+
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Title { get; set; }
@@ -92,12 +94,18 @@ public class GetTaskAcrossFolderCmdlet : OrchestratorPSCmdlet
                 var tasks = result.GetResult(cancelHandler.Token);
                 if (tasks is null) continue;
 
-                WriteObject(tasks
+                // One list across the folders, in Action Center's order. The added type name selects
+                // the view that shows the folder as a column instead of grouping by it; the object is
+                // still an OrchTask.
+                foreach (var task in OrchTask.InActionCenterOrder(tasks
                     .FilterByWildcards(t => t?.Title, wpTitle)
                     .FilterByWildcards(t => t?.Status, wpStatus)
-                    .FilterByWildcards(t => t?.Priority, wpPriority)
-                    .OrderByDescending(t => t.CreationTime),
-                    true);
+                    .FilterByWildcards(t => t?.Priority, wpPriority)))
+                {
+                    var pso = PSObject.AsPSObject(task);
+                    pso.TypeNames.Insert(0, AcrossFolderTypeName);
+                    WriteObject(pso);
+                }
             }
             catch (OrchException ex)
             {

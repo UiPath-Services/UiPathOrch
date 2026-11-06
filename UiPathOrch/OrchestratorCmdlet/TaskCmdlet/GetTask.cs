@@ -57,11 +57,11 @@ public class GetTaskCmdlet : OrchestratorPSCmdlet
                 var tasks = results.GetResultWithProgress(result, reporter, cancelHandler.Token);
                 if (tasks is null) continue;
 
-                WriteObject(tasks
+                // Grouped by folder (one result per folder), and within it in Action Center's order.
+                WriteObject(OrchTask.InActionCenterOrder(tasks
                     .FilterByWildcards(t => t?.Title, wpTitle)
                     .FilterByWildcards(t => t?.Status, wpStatus)
-                    .FilterByWildcards(t => t?.Priority, wpPriority)
-                    .OrderByDescending(t => t.CreationTime),
+                    .FilterByWildcards(t => t?.Priority, wpPriority)),
                     true);
             }
             catch (OrchException ex)

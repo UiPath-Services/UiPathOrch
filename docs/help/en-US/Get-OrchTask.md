@@ -30,7 +30,7 @@ Get-OrchTask [-Path <string[]>] [-LiteralPath <string[]>] [-Recurse] [-Depth <ui
 
 Returns action-center tasks (FormTask, ExternalTask, DocumentValidationTask, DocumentClassificationTask, DataLabelingTask, AppTask) from the specified folder. Supports wildcard filtering on Title, plus exact-match filters on Status and Priority.
 
-The tasks are read through the cross-folder endpoint, filtered to the folder: the plain /odata/Tasks endpoint answers for classic folders only. Deleted tasks (a delete is soft) are left out. Get-OrchTaskData returns a task's data (the form values) and the action taken.
+The tasks are read through the cross-folder endpoint, filtered to the folder: the plain /odata/Tasks endpoint answers for classic folders only. Deleted tasks (a delete is soft) are left out. They are listed folder by folder, and within a folder in Action Center's order: the most urgent first (Critical, High, Medium, Low), and within a priority the one waiting longest. Get-OrchTaskData returns a task's data (the form values) and the action taken.
 
 Primary Endpoint: GET /odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders?$filter=OrganizationUnitId eq {folderId}
 

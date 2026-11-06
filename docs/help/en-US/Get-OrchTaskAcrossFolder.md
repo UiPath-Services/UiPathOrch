@@ -30,7 +30,9 @@ Get-OrchTaskAcrossFolder [-Path <string[]>] [-LiteralPath <string[]>] [[-Title] 
 
 Returns tasks from every folder the caller has Tasks.View on, in a single API call. Distinct from `Get-OrchTask -Recurse` which iterates per folder; this cmdlet hits the dedicated server-side aggregation endpoint and is much faster for tenant-wide queries.
 
-Useful for cross-folder dashboards, reports, or audits where you need the full picture of pending action work in the tenant. Each output object's Path is set to the drive's root (e.g., `Orch1:\`) since the result is not folder-scoped.
+Useful for cross-folder dashboards, reports, or audits where you need the full picture of pending action work in the tenant. Each output object's Path is the folder the task lives in (the drive's root for a folder the caller cannot see).
+
+The tasks come in Action Center's order: the most urgent first (Critical, High, Medium, Low), and within a priority the one waiting longest. The default view is one table across the folders, with the folder as the Path column, as Action Center lists them; Get-OrchTask groups by folder instead. Deleted tasks are left out.
 
 Primary Endpoint: GET /odata/Tasks/UiPath.Server.Configuration.OData.GetTasksAcrossFolders
 
@@ -48,10 +50,10 @@ PS C:\> Get-OrchTaskAcrossFolder -Path Orch1:\
 
 Returns every task across the Orch1 tenant in one API call.
 
-### Example 2: Group by folder
+### Example 2: Count the tasks of each folder
 
 ```powershell
-PS Orch1:\> Get-OrchTaskAcrossFolder | Group-Object OrganizationUnitId
+PS Orch1:\> Get-OrchTaskAcrossFolder | Group-Object Path
 ```
 
 Tabulates how many tasks each folder owns.
@@ -225,7 +227,7 @@ You can pipe Title, Status, or Priority values to this cmdlet via property name 
 
 ### UiPath.PowerShell.Entities.OrchTask
 
-Returns OrchTask objects with the same shape as Get-OrchTask. The Path property is set to the drive root because results are aggregated cross-folder.
+Returns OrchTask objects with the same shape as Get-OrchTask, with Path set to each task's folder. They carry the added type name `UiPath.PowerShell.Entities.OrchTask#AcrossFolder`, which selects the one-table view; the objects are OrchTask and pipe to Set-OrchTask, Remove-OrchTask and Get-OrchTaskData as before.
 
 ## NOTES
 

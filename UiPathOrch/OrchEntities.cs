@@ -492,6 +492,21 @@ public class OrchTask
     public Int64? CreatorUserId { get; set; }
     public Int64? LastModifierUserId { get; set; }
     public Int64? DeleterUserId { get; set; }
+
+    // The order of Action Center's task lists ($orderby=Priority desc,CreationTime asc): the most
+    // urgent first, and within a priority the one waiting longest. Priority is ranked by meaning;
+    // an unknown value sorts last.
+    internal static int PriorityRank(string? priority) => priority switch
+    {
+        "Critical" => 0,
+        "High" => 1,
+        "Medium" => 2,
+        "Low" => 3,
+        _ => 4,
+    };
+
+    internal static IEnumerable<OrchTask> InActionCenterOrder(IEnumerable<OrchTask> tasks)
+        => tasks.OrderBy(t => PriorityRank(t.Priority)).ThenBy(t => t.CreationTime ?? DateTime.MaxValue);
 }
 
 // TaskDataDto (GET /tasks/GenericTasks/GetTaskDataById): the task with what the OData task leaves

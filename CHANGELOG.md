@@ -50,6 +50,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   warns about it for every drive whose Scope lacks it. The first time such a drive's folders are
   read and its personal workspace is missing for that reason, one warning says so and how to fix
   the Scope.
+- **Tasks come in Action Center's order**: the most urgent first (Critical, High, Medium, Low),
+  and within a priority the one waiting longest. They came newest first. `Get-OrchTask` still
+  lists them folder by folder; `Get-OrchTaskAcrossFolder` shows one table across the folders,
+  with the folder as a column, as Action Center does.
 - **`Get-OrchLicenseRuntime` shows `IsLicensed` as True / False**, in green and orange as
   before. It was a colored dot, which told nothing where colors do not show (a redirect, a file,
   some terminals).
