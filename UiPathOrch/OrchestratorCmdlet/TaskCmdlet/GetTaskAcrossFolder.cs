@@ -13,8 +13,6 @@ namespace UiPath.PowerShell.Commands;
 [OutputType(typeof(OrchTask))]
 public class GetTaskAcrossFolderCmdlet : OrchestratorPSCmdlet
 {
-    internal const string AcrossFolderTypeName = "UiPath.PowerShell.Entities.OrchTask#AcrossFolder";
-
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
     [SupportsWildcards]
     public string[]? Title { get; set; }
@@ -102,9 +100,7 @@ public class GetTaskAcrossFolderCmdlet : OrchestratorPSCmdlet
                     .FilterByWildcards(t => t?.Status, wpStatus)
                     .FilterByWildcards(t => t?.Priority, wpPriority)))
                 {
-                    var pso = PSObject.AsPSObject(task);
-                    pso.TypeNames.Insert(0, AcrossFolderTypeName);
-                    WriteObject(pso);
+                    WriteObject(ViewTypeNames.WithViewTypeName(task, ViewTypeNames.TaskAcrossFolder));
                 }
             }
             catch (OrchException ex)

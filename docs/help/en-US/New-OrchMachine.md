@@ -620,9 +620,9 @@ You can pipe machine names via the Name property, robot user names via the Robot
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.CreatedMachine
+### UiPath.PowerShell.Entities.ExtendedMachine
 
-Returns a CreatedMachine object for each newly created machine, including the machine's Id, Name, LicenseKey (ClientId), and other properties assigned by the server.
+Returns an ExtendedMachine object for each newly created machine, including the machine's Id, Name, LicenseKey (ClientId), and other properties assigned by the server. It carries the added type name `UiPath.PowerShell.Entities.ExtendedMachine#Created`, which selects the view for a machine just created.
 
 ## NOTES
 

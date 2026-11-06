@@ -54,6 +54,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   and within a priority the one waiting longest. They came newest first. `Get-OrchTask` still
   lists them folder by folder; `Get-OrchTaskAcrossFolder` shows one table across the folders,
   with the folder as a column, as Action Center does.
+- **`New-OrchMachine` returns an `ExtendedMachine`, and `New-` / `Copy-PmExternalApplication` an
+  `ExternalClient`**, the same types the `Get-` cmdlets return. They were `CreatedMachine` and
+  `ExternalClientCreated`, empty subclasses that existed only to show a different view; the view
+  is now chosen by an added type name (`ExtendedMachine#Created`, `ExternalClient#Created`), so
+  what is displayed does not change. Only a script that checks for the former type names
+  (`-is [UiPath.PowerShell.Entities.CreatedMachine]`) notices.
 - **`Get-OrchLicenseRuntime` shows `IsLicensed` as True / False**, in green and orange as
   before. It was a colored dot, which told nothing where colors do not show (a redirect, a file,
   some terminals).

@@ -798,12 +798,6 @@ public class ExtendedMachine : Machine
     public UpdateInfo? UpdateInfo { get; set; }
 }
 
-// CreatedMachine // added by UiPathOrch
-// Needed to switch view definitions
-public class CreatedMachine : ExtendedMachine
-{
-}
-
 // Receives the result from the API when creating a SecretKey
 public class MachineClientSecretResponse // added by UiPathOrch
 {
@@ -4796,12 +4790,6 @@ public class ExternalClient
     public string? redirectUri { get; set; }
     public ExternalResource[]? resources { get; set; }
     public Secret[]? secrets { get; set; }
-}
-
-// Used as the return value of Copy-PmExternalApplication.
-// Needed to change the default view.
-public class ExternalClientCreated : ExternalClient
-{
 }
 
 // ExternalIdentityProviderDto

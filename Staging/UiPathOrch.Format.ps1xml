@@ -770,7 +770,8 @@
     </View>
 
     <!-- Get-OrchTaskAcrossFolder: one list across the folders, as Action Center shows it, with the
-         folder as a column rather than a group. Selected by the type name the cmdlet adds. -->
+         folder as a column rather than a group. Selected by the type name the cmdlet adds
+         (ViewTypeNames.TaskAcrossFolder). -->
     <View>
       <Name>OrchTaskAcrossFolder</Name>
       <ViewSelectedBy>
@@ -2033,7 +2034,8 @@
     <View>
       <Name>CreatedMachine</Name>
       <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.CreatedMachine</TypeName>
+        <!-- New-OrchMachine adds this type name (ViewTypeNames.CreatedMachine) -->
+        <TypeName>UiPath.PowerShell.Entities.ExtendedMachine#Created</TypeName>
       </ViewSelectedBy>
       <GroupBy>
         <Label>Directory</Label>
@@ -4617,7 +4619,7 @@
     <View>
       <Name>PMGroup</Name>
       <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.PMGroup</TypeName>
+        <TypeName>UiPath.PowerShell.Entities.PmGroup</TypeName>
       </ViewSelectedBy>
       <GroupBy>
         <Label>Directory</Label>
@@ -5841,7 +5843,8 @@
     <View>
       <Name>ExternalClientCreated</Name>
       <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.ExternalClientCreated</TypeName>
+        <!-- New- / Copy-PmExternalApplication add this type name (ViewTypeNames.CreatedExternalClient) -->
+        <TypeName>UiPath.PowerShell.Entities.ExternalClient#Created</TypeName>
       </ViewSelectedBy>
       <GroupBy>
         <Label>Directory</Label>
@@ -6821,32 +6824,6 @@
       </ListControl>
     </View>
 
-    <View>
-      <Name>TestBase</Name>
-      <ViewSelectedBy>
-        <TypeName>UiPath.PowerShell.Entities.TestBase</TypeName>
-      </ViewSelectedBy>
-      <GroupBy>
-        <Label>Directory</Label>
-        <PropertyName>Path</PropertyName>
-      </GroupBy>
-      <TableControl>
-        <TableHeaders>
-          <TableColumnHeader>
-            <Label>Text</Label>
-          </TableColumnHeader>
-        </TableHeaders>
-        <TableRowEntries>
-          <TableRowEntry>
-            <TableColumnItems>
-              <TableColumnItem>
-                <PropertyName>Text</PropertyName>
-              </TableColumnItem>
-            </TableColumnItems>
-          </TableRowEntry>
-        </TableRowEntries>
-      </TableControl>
-    </View>
 
     <View>
       <Name>TmProjectPermission</Name>

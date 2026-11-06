@@ -9,7 +9,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.New, "OrchMachine", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.CreatedMachine))]
+[OutputType(typeof(Entities.ExtendedMachine))]
 public class NewMachineCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -226,7 +226,7 @@ public class NewMachineCmdlet : OrchestratorPSCmdlet
                         if (newMachine is not null)
                         {
                             newMachine.Path = drive.NameColonSeparator;
-                            WriteObject(newMachine);
+                            WriteObject(ViewTypeNames.WithViewTypeName(newMachine, ViewTypeNames.CreatedMachine));
                         }
                     }
                     catch (Exception ex)

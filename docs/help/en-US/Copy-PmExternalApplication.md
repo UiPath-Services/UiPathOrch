@@ -222,9 +222,9 @@ You can pipe external application names to this cmdlet via the Name property.
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ExternalClientCreated
+### UiPath.PowerShell.Entities.ExternalClient
 
-Returns ExternalClientCreated objects for each successfully created external application in the destination organization. The object includes the generated client ID and, for confidential applications, the client secret.
+Returns an ExternalClient object for each successfully created external application in the destination organization. The object includes the generated client ID and, for confidential applications, the client secret. It carries the added type name `UiPath.PowerShell.Entities.ExternalClient#Created`, which selects the view for an application just created.
 
 ## NOTES
 

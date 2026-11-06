@@ -6,7 +6,7 @@ using UiPath.PowerShell.Entities;
 namespace UiPath.PowerShell.Commands;
 
 [Cmdlet(VerbsCommon.Copy, "PmExternalApplication", SupportsShouldProcess = true)]
-[OutputType(typeof(Entities.ExternalClientCreated))]
+[OutputType(typeof(Entities.ExternalClient))]
 public class CopyPmExternalApplicationCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, ValueFromPipelineByPropertyName = true)]
@@ -86,7 +86,7 @@ public class CopyPmExternalApplicationCmdlet : OrchestratorPSCmdlet
                             continue;
                         }
 
-                        { var c = newApp.ShallowClone(); c.Path = dstDrive.NameColonSeparator; WriteObject(c); }
+                        { var c = newApp.ShallowClone(); c.Path = dstDrive.NameColonSeparator; WriteObject(ViewTypeNames.WithViewTypeName(c, ViewTypeNames.CreatedExternalClient)); }
                         dstDrive.PmExternalClients.ClearCache();
 
                         // Non-confidential apps cannot belong to groups, so no further processing is needed

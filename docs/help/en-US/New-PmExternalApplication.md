@@ -283,9 +283,9 @@ You can pipe objects with **Name**, **IsConfidential**, **ApplicationScope**, **
 
 ## OUTPUTS
 
-### UiPath.PowerShell.Entities.ExternalClientCreated
+### UiPath.PowerShell.Entities.ExternalClient
 
-The new application: its name, App ID (**id**) and, for a confidential application, App Secret (**secret**).
+The new application: its name, App ID (**id**) and, for a confidential application, App Secret (**secret**). It carries the added type name `UiPath.PowerShell.Entities.ExternalClient#Created`, which selects the view for an application just created.
 
 ## NOTES
 

@@ -2035,7 +2035,7 @@ public partial class OrchAPISession : IDisposable
 
     public IEnumerable<ExtendedMachine> GetMachines(string? query = null) => GetEnumerable<ExtendedMachine>("/odata/Machines", null, query);
 
-    public CreatedMachine? AddMachine(ExtendedMachine machine) //, IEnumerable<RobotUser> robotUsers)
+    public ExtendedMachine? AddMachine(ExtendedMachine machine) //, IEnumerable<RobotUser> robotUsers)
     {
         // Strip properties not supported by older API versions.
         // FunctionSlots, MachineSettings: v20 OpenAPI document (Cloud, 2026-09) only, absent from
@@ -2075,7 +2075,7 @@ public partial class OrchAPISession : IDisposable
             machine.UpdatePolicy = null;
             machine.MaintenanceWindow = null;
         }
-        return HttpRequest<CreatedMachine>(HttpMethod.Post, "/odata/Machines", null, machine);
+        return HttpRequest<ExtendedMachine>(HttpMethod.Post, "/odata/Machines", null, machine);
     }
 
     public MachineClientSecretResponse[]? GetMachineClientSecret(string licenseKey) => HttpRequest<MachineClientSecretResponse[]>(HttpMethod.Get, $"/api/clientsecrets/{licenseKey}");
@@ -4557,7 +4557,7 @@ public partial class OrchAPISession : IDisposable
     public ExternalClient? GetPmExternalClient(string? partitionGlobalId, string id) => HttpRequestIdentity<ExternalClient>(HttpMethod.Get, $"/api/ExternalClient/{partitionGlobalId}/{id}");
 
     // This probably does not need a wrapper method in OrchDriveInfo.
-    public ExternalClientCreated? PostPmExternalClient(CreateExternalClientCommand app) => HttpRequestIdentity<ExternalClientCreated>(HttpMethod.Post, "/api/ExternalClient", null, app);
+    public ExternalClient? PostPmExternalClient(CreateExternalClientCommand app) => HttpRequestIdentity<ExternalClient>(HttpMethod.Post, "/api/ExternalClient", null, app);
 
     // Returns nothing
     public void DeletePmExternalClient(string partitionGlobalId, string id) => HttpRequestIdentity(HttpMethod.Delete, $"/api/ExternalClient/{partitionGlobalId}/{id}");

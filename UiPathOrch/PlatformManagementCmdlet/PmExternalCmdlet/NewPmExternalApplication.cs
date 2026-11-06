@@ -10,7 +10,7 @@ namespace UiPath.PowerShell.Commands;
 // URL. Returns the new application with its id and, for a confidential one, its secret, which is
 // shown only now, as Copy-PmExternalApplication does.
 [Cmdlet(VerbsCommon.New, "PmExternalApplication", SupportsShouldProcess = true)]
-[OutputType(typeof(ExternalClientCreated))]
+[OutputType(typeof(ExternalClient))]
 public class NewPmExternalApplicationCmdlet : OrchestratorPSCmdlet
 {
     [Parameter(Position = 0, Mandatory = true, ValueFromPipelineByPropertyName = true)]
@@ -141,7 +141,7 @@ public class NewPmExternalApplicationCmdlet : OrchestratorPSCmdlet
                 }
                 var c = created.ShallowClone();
                 c.Path = drive.NameColonSeparator;
-                WriteObject(c);
+                WriteObject(ViewTypeNames.WithViewTypeName(c, ViewTypeNames.CreatedExternalClient));
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
             {
