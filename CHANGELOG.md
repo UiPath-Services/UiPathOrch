@@ -60,9 +60,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   is now chosen by an added type name (`ExtendedMachine#Created`, `ExternalClient#Created`), so
   what is displayed does not change. Only a script that checks for the former type names
   (`-is [UiPath.PowerShell.Entities.CreatedMachine]`) notices.
-- **`Get-OrchLicenseRuntime` shows `IsLicensed` as True / False**, in green and orange as
-  before. It was a colored dot, which told nothing where colors do not show (a redirect, a file,
-  some terminals).
+- **`Get-OrchLicenseRuntime` shows `IsLicensed` as True / False**, like every other true/false
+  column. It was a green or orange dot, which told nothing wherever the output loses its colors
+  (redirected to a file, or captured as plain text, as some AI agents capture it), and the only
+  colored value in the module's views.
 
 ### Fixed
 
