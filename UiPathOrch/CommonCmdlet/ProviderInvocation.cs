@@ -37,26 +37,38 @@ internal static class ProviderInvocation
     private static readonly PropertyInfo? s_context =
         typeof(CmdletProvider).GetProperty("Context", BindingFlags.Instance | BindingFlags.NonPublic);
 
-    private static PropertyInfo? s_myInvocation;
+    private static readonly PropertyInfo? s_myInvocation =
+        s_context?.PropertyType.GetProperty("MyInvocation",
+            BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+    // Whether this PowerShell still has the internals Token reads. A unit test asserts it, so a
+    // PowerShell that moves them fails CI on that OS instead of silently degrading.
+    internal static bool CanReadInvocation =>
+        s_context is not null && s_myInvocation?.PropertyType == typeof(InvocationInfo);
 
     public static object? Token(CmdletProvider provider, object? dynamicParameters)
     {
         try
         {
-            var context = s_context?.GetValue(provider);
-            if (context is not null)
+            if (s_context?.GetValue(provider) is { } context
+                && s_myInvocation?.GetValue(context) is InvocationInfo invocation)
             {
-                s_myInvocation ??= context.GetType().GetProperty("MyInvocation",
-                    BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
-                if (s_myInvocation?.GetValue(context) is InvocationInfo invocation)
-                {
-                    return invocation;
-                }
+                return invocation;
             }
         }
         catch
         {
             // fall through to the dynamic-parameters identity
+        }
+
+        // Not silent: an array -Path is then seen as one command per element again.
+        try
+        {
+            provider.WriteVerbose("UiPathOrch could not read the command's invocation from this PowerShell, so the paths of an array -Path are handled as separate copies (a link warning may stand after a later path re-creates the link).");
+        }
+        catch
+        {
+            // WriteVerbose outside a provider call: nothing to report to
         }
         return dynamicParameters;
     }
