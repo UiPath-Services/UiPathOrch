@@ -395,15 +395,16 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
                 #region Retention (uses separate PutReleaseRetention API)
                 // The bucket name -> id resolution stays here (it needs the folder's bucket list);
                 // the write/no-write decision + PUT fill-defaults are the pure, unit-tested
-                // OrchStringExtensions.ComputeRetentionUpdate. AssignIdFromName's return value is
-                // intentionally ignored (retention never aborts the record) but it still WriteErrors
-                // on a 0/multi-match bucket name exactly as before.
+                // OrchStringExtensions.ComputeRetentionUpdate. A bucket name that does not resolve
+                // (not found, ambiguous, or the lookup failed; AssignIdFromName has written the
+                // error) leaves the process unchanged: applying the rest -- e.g. -RetentionAction
+                // Archive -- without the bucket the caller named would archive to a different one.
                 ReleaseRetentionSetting? retentionUpdate = null;
                 {
                     long? resolvedBucketId = null;
-                    _ = newRelease.AssignIdFromName(
+                    if (!newRelease.AssignIdFromName(
                         RetentionBucket, () => drive.Buckets.Get(folder), e => e.Name!, e => e.Id!,
-                        (_, v) => resolvedBucketId = v, this, target, "RetentionBucket");
+                        (_, v) => resolvedBucketId = v, this, target, "RetentionBucket")) continue;
 
                     if (OrchStringExtensions.ComputeRetentionUpdate(
                             new OrchStringExtensions.RetentionUpdateInput
@@ -423,9 +424,9 @@ public class UpdateProcessCmdlet : OrchestratorPSCmdlet
                 ReleaseRetentionSetting? staleRetentionUpdate = null;
                 {
                     long? resolvedBucketId = null;
-                    _ = newRelease.AssignIdFromName(
+                    if (!newRelease.AssignIdFromName(
                         StaleRetentionBucket, () => drive.Buckets.Get(folder), e => e.Name!, e => e.Id!,
-                        (_, v) => resolvedBucketId = v, this, target, "StaleRetentionBucket");
+                        (_, v) => resolvedBucketId = v, this, target, "StaleRetentionBucket")) continue;
 
                     if (OrchStringExtensions.ComputeRetentionUpdate(
                             new OrchStringExtensions.RetentionUpdateInput

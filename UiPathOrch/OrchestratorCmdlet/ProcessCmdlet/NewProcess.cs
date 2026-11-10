@@ -406,25 +406,27 @@ public class NewProcessCmdlet : OrchestratorPSCmdlet
                     release.RetentionAction = (string.IsNullOrEmpty(RetentionAction)) ? "Delete" : RetentionAction;
                     release.RetentionPeriod = (RetentionPeriod is null || RetentionPeriod == 0) ? 30 : RetentionPeriod;
                     #region Convert RetentionBucket to RetentionBucketId
-                    release.AssignIdFromName(
+                    // Not resolved (not found, ambiguous, or the lookup failed; error written):
+                    // skip this process rather than create it with no retention bucket.
+                    if (!release.AssignIdFromName(
                         RetentionBucket,
                         () => drive.Buckets.Get(folder),
                         e => e.Name!,
                         e => e.Id!,
                         (s, v) => s.RetentionBucketId = v,
-                        this, target, "RetentionBucket");
+                        this, target, "RetentionBucket")) continue;
                     #endregion
 
                     release.StaleRetentionAction = (string.IsNullOrEmpty(StaleRetentionAction)) ? "Delete" : StaleRetentionAction;
                     release.StaleRetentionPeriod = (StaleRetentionPeriod is null || StaleRetentionPeriod == 0) ? 30 : StaleRetentionPeriod;
                     #region Convert StaleRetentionBucket to StaleRetentionBucketId
-                    release.AssignIdFromName(
+                    if (!release.AssignIdFromName(
                         StaleRetentionBucket,
                         () => drive.Buckets.Get(folder),
                         e => e.Name!,
                         e => e.Id!,
                         (s, v) => s.StaleRetentionBucketId = v,
-                        this, target, "StaleRetentionBucket");
+                        this, target, "StaleRetentionBucket")) continue;
                     #endregion
 
                     release.VideoRecordingSettings = new();

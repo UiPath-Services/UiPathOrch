@@ -104,17 +104,18 @@ public class UpdateTestSetScheduleCmdlet : OrchestratorPSCmdlet
 
                 // TestSet/Calendar names resolve to ids here (they need the live lists); the
                 // write/no-write decision is the pure, unit-tested ComputeTestSetScheduleUpdate.
-                // AssignIdFromName's return is intentionally ignored (a bad name never aborts the
-                // record) but it still WriteErrors on a 0/multi-match name as before.
+                // A name that does not resolve (not found, ambiguous, or the lookup failed;
+                // AssignIdFromName has written the error) leaves the schedule unchanged, rather
+                // than applying the other changes (e.g. -Enabled) without it.
                 long? resolvedTestSetId = null;
-                _ = postSchedule.AssignIdFromName(
+                if (!postSchedule.AssignIdFromName(
                     TestSetName, () => drive.TestSets.Get(folder), e => e.Name!, e => e.Id!,
-                    (_, v) => resolvedTestSetId = v, this, target, "TestSet");
+                    (_, v) => resolvedTestSetId = v, this, target, "TestSet")) continue;
 
                 long? resolvedCalendarId = null;
-                _ = postSchedule.AssignIdFromName(
+                if (!postSchedule.AssignIdFromName(
                     CalendarName, () => drive.Calendars.Get(), e => e.Name!, e => e.Id!,
-                    (_, v) => resolvedCalendarId = v, this, target, "Calendar");
+                    (_, v) => resolvedCalendarId = v, this, target, "Calendar")) continue;
 
                 bool dirty = ComputeTestSetScheduleUpdate(postSchedule, schedule, new TestSetScheduleUpdateInputs
                 {

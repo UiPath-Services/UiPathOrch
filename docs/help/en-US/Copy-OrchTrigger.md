@@ -38,7 +38,7 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/ProcessSchedules
 
-OAuth required scopes: OR.Folders or OR.Folders.Read, OR.Jobs, and OR.Execution or OR.Execution.Read (both sides; OR.Jobs or OR.Jobs.Read is enough on the source). Depending on what the trigger references, also: OR.Queues or OR.Queues.Read for a queue trigger, OR.Settings or OR.Settings.Read for a non-working-days calendar, and OR.Robots or OR.Robots.Read plus OR.Machines or OR.Machines.Read for executor robots and machine–robot pairs. With -Recurse, OR.Folders or OR.Folders.Write on the destination if missing subfolders have to be created.
+OAuth required scopes: OR.Folders or OR.Folders.Read, OR.Jobs, and OR.Execution or OR.Execution.Read (both sides; OR.Jobs or OR.Jobs.Read is enough on the source). Depending on what the trigger references, also: OR.Queues or OR.Queues.Read for a queue trigger, OR.Settings or OR.Settings.Read for a non-working-days calendar, and OR.Robots or OR.Robots.Read for executor robots and machine–robot pairs, plus OR.Machines or OR.Machines.Read on the source for the machines (the destination's machines are read with OR.Folders). With -Recurse, OR.Folders or OR.Folders.Write on the destination if missing subfolders have to be created.
 
 Required permissions: Schedules.View and Processes.View (source); Schedules.Create and Processes.View (destination). Depending on the trigger, also Queues.View, Robots.View, and Machines.View; with -Recurse, Units.Create or SubFolders.Create to create missing destination subfolders. These permissions are checked for user sign-ins (non-confidential application, PAT) and for a confidential application whose token includes OR.Default. A confidential application that requests individual OR.* scopes without OR.Default is authorized by those scopes alone, so it needs no folder assignment on either side.
 
@@ -74,7 +74,7 @@ Copies the trigger named "high trigger" from the Shared folder on Orch1 to the S
 PS Orch1:\> Copy-OrchTrigger -Recurse * Orch2:\Shared
 ```
 
-Copies all triggers from all folders on Orch1 to the Shared folder on Orch2.
+Copies the triggers of every folder on Orch1 into the same folder tree under Orch2:\Shared: the triggers of Orch1:\Finance go to Orch2:\Shared\Finance, and so on. Destination subfolders that do not exist are created.
 
 ### Example 5: Preview copy with WhatIf
 

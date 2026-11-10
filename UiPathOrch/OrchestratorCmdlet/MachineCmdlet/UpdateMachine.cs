@@ -260,13 +260,15 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
                 if (!string.IsNullOrEmpty(maintenanceTimeZone))
                 {
                     var tzProbe = new MaintenanceWindow();
-                    tzProbe.AssignIdFromName(
+                    // Unmatched (error written): leave the machine unchanged rather than apply the
+                    // maintenance window in a time zone the caller did not ask for.
+                    if (!tzProbe.AssignIdFromName(
                         maintenanceTimeZone,
                         TimeZoneInfo.GetSystemTimeZones,
                         e => e.DisplayName,
                         e => e.Id!,
                         (m, v) => m.TimezoneId = v,
-                        this, machine.GetPSPath(), "TimeZone");
+                        this, machine.GetPSPath(), "TimeZone")) continue;
                     resolvedTimezoneIdFromName = tzProbe.TimezoneId;
                 }
 

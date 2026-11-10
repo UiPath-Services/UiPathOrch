@@ -170,7 +170,10 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
                 #region Convert Release to ReleaseId
                 long? resolvedReleaseId = null;
                 bool releaseResolved = false;
-                new QueueDefinition().AssignIdFromName(
+                // Anything below that does not resolve or cannot be read (error already written)
+                // leaves the queue unchanged, rather than applying the rest of the update without it.
+                bool allResolved = true;
+                allResolved &= new QueueDefinition().AssignIdFromName(
                     Release,
                     () => drive.Releases.Get(folder),
                     e => e.Name!,
@@ -211,7 +214,8 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(target, "Failed to get queue retention settings.", ex), "GetQueueRetentionError", ErrorCategory.InvalidOperation, target));
+                        allResolved = false;
+                        WriteError(new ErrorRecord(new OrchException(target, "Failed to get queue retention settings; the queue is left unchanged", ex), "GetQueueRetentionError", ErrorCategory.InvalidOperation, target));
                     }
                 }
 
@@ -222,7 +226,7 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
                 if (hasRetentionParam && currentRetention is not null)
                 {
                     long? resolvedBucketId = null;
-                    _ = new QueueRetentionSetting().AssignIdFromName(
+                    allResolved &= new QueueRetentionSetting().AssignIdFromName(
                         RetentionBucket, () => drive.Buckets.Get(folder), e => e.Name!, e => e.Id!,
                         (_, v) => resolvedBucketId = v, this, target, "RetentionBucket");
 
@@ -251,13 +255,14 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
                     }
                     catch (Exception ex)
                     {
-                        WriteError(new ErrorRecord(new OrchException(target, "Failed to get stale queue retention settings.", ex), "GetQueueRetentionError", ErrorCategory.InvalidOperation, target));
+                        allResolved = false;
+                        WriteError(new ErrorRecord(new OrchException(target, "Failed to get stale queue retention settings; the queue is left unchanged", ex), "GetQueueRetentionError", ErrorCategory.InvalidOperation, target));
                     }
 
                     if (currentStale is not null)
                     {
                         long? resolvedBucketId = null;
-                        _ = new QueueRetentionSetting().AssignIdFromName(
+                        allResolved &= new QueueRetentionSetting().AssignIdFromName(
                             StaleRetentionBucket, () => drive.Buckets.Get(folder), e => e.Name!, e => e.Id!,
                             (_, v) => resolvedBucketId = v, this, target, "StaleRetentionBucket");
 
@@ -277,6 +282,8 @@ public class UpdateQueueCmdlet : OrchestratorPSCmdlet
                     }
                 }
                 #endregion
+
+                if (!allResolved) continue;
 
                 // Strip retention fields from queue PUT payload (managed via separate API)
                 newQueue.RetentionAction = null;

@@ -148,8 +148,13 @@ public class NewQueueCmdlet : OrchestratorPSCmdlet
                 newQueue.AssignStringIfNotNullOrEmpty(OutputDataJsonSchema, (q, v) => q.OutputDataJsonSchema = v);
                 newQueue.AssignStringIfNotNullOrEmpty(AnalyticsDataJsonSchema, (q, v) => q.AnalyticsDataJsonSchema = v);
 
+                // A name that does not resolve (not found, ambiguous, or its lookup failed; the
+                // error is already written) skips this queue rather than creating it without the
+                // process or with the default retention bucket.
+                bool resolved = true;
+
                 #region Convert Release to ReleaseId
-                newQueue.AssignIdFromName(
+                resolved &= newQueue.AssignIdFromName(
                     Release,
                     () => drive.Releases.Get(folder),
                     e => e.Name!,
@@ -173,7 +178,7 @@ public class NewQueueCmdlet : OrchestratorPSCmdlet
                 if (drive.OrchAPISession.ApiVersion >= 16)
                 {
                     #region Convert RetentionBucket to RetentionBucketId
-                    newQueue.AssignIdFromName(
+                    resolved &= newQueue.AssignIdFromName(
                         RetentionBucket,
                         () => drive.Buckets.Get(folder),
                         e => e.Name!,
@@ -181,7 +186,7 @@ public class NewQueueCmdlet : OrchestratorPSCmdlet
                         (s, v) => s.RetentionBucketId = v,
                         this, target, "RetentionBucket");
 
-                    newQueue.AssignIdFromName(
+                    resolved &= newQueue.AssignIdFromName(
                         StaleRetentionBucket,
                         () => drive.Buckets.Get(folder),
                         e => e.Name!,
@@ -190,6 +195,8 @@ public class NewQueueCmdlet : OrchestratorPSCmdlet
                         this, target, "StaleRetentionBucket");
                     #endregion
                 }
+
+                if (!resolved) continue;
 
                 if (ShouldProcess(target, "New Queue"))
                 {

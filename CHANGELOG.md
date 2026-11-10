@@ -93,6 +93,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
   any robot in the folder. Now that trigger is skipped. A robot or machine name that matches
   nothing is still a warning, as in `Copy-OrchTrigger`. The error for a failed lookup now says what
   was being looked up.
+  - The same holds for the other cmdlets that take a name: `New-` and `Update-OrchQueue`
+    (`-Release`, the retention buckets), `New-` and `Update-OrchProcess` (the retention buckets),
+    `New-` and `Update-OrchTestSetSchedule` (`-TestSetName`, `-CalendarName`) and
+    `Update-OrchMachine` (`-MaintenanceTimeZone`). `Update-OrchQueue` also leaves the queue
+    unchanged when its current retention settings cannot be read.
+- **The `Copy-OrchTrigger` help describes `-Recurse` into a folder correctly**: the source folders
+  are recreated under the destination (`Orch1:\Finance` into `Orch2:\Shared\Finance`); the example
+  said all triggers went into the destination folder itself.
 - **`Copy-OrchTrigger` and `New-OrchTrigger` document the scopes they need**: besides `OR.Jobs`,
   they read the folders and the processes (`OR.Execution`), and depending on the trigger or the
   parameters the queues, the calendars, the robots and the machines. The help listed `OR.Jobs`

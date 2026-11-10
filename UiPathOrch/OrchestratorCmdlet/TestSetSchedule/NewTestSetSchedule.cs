@@ -80,22 +80,25 @@ public class NewTestSetScheduleCmdlet : OrchestratorPSCmdlet
 
                 // Resolve CalendarName -> CalendarId (matches the New-OrchTrigger
                 // calendar binding behaviour).
-                newSchedule.AssignIdFromName(
+                // Not resolved (not found, ambiguous, or the lookup failed; error written): skip
+                // this schedule rather than create it without the calendar, which would also run
+                // it on the calendar's non-working days.
+                if (!newSchedule.AssignIdFromName(
                     CalendarName,
                     () => drive.Calendars.Get(),
                     e => e.Name!,
                     e => e.Id!,
                     (s, v) => s.CalendarId = v,
-                    this, target, "Calendar");
+                    this, target, "Calendar")) continue;
 
                 // Resolve TestSetName -> TestSetId.
-                newSchedule.AssignIdFromName(
+                if (!newSchedule.AssignIdFromName(
                     TestSetName,
                     () => drive.TestSets.Get(folder),
                     e => e.Name!,
                     e => e.Id!,
                     (s, v) => s.TestSetId = v,
-                    this, target, "TestSet");
+                    this, target, "TestSet")) continue;
 
                 if (newSchedule.TestSetId is null)
                 {
