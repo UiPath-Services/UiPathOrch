@@ -49,9 +49,9 @@ This cmdlet supports ShouldProcess. Use -WhatIf to preview what would be created
 
 Primary Endpoint: POST /odata/ProcessSchedules
 
-OAuth required scopes: OR.Jobs or OR.Jobs.Write
+OAuth required scopes: OR.Folders or OR.Folders.Read, OR.Jobs or OR.Jobs.Write, and OR.Execution or OR.Execution.Read (to look up -ReleaseName). Depending on the parameters, also: OR.Queues or OR.Queues.Read for -QueueDefinitionName, OR.Settings or OR.Settings.Read for -CalendarName, and OR.Robots or OR.Robots.Read for -ExecutorRobots and for the user and session names in -MachineRobots (the machine names in -MachineRobots are looked up with OR.Folders).
 
-Required permissions: Schedules.Create
+Required permissions: Schedules.Create and Processes.View. Depending on the parameters, also Queues.View (-QueueDefinitionName), Robots.View and Users.View (robot and user names), Units.View or SubFolders.View (machine names), and Machines.View or Jobs.Create (session names). These permissions are checked for user sign-ins (non-confidential application, PAT) and for a confidential application whose token includes OR.Default. A confidential application that requests individual OR.* scopes without OR.Default is authorized by those scopes alone, so it needs no folder assignment.
 
 ## EXAMPLES
 
