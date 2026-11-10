@@ -38,9 +38,9 @@ When specifying the -Path, -Recurse, and -Depth parameters, place them immediate
 
 Primary Endpoint: POST /odata/ProcessSchedules
 
-OAuth required scopes: OR.Jobs or OR.Jobs.Write
+OAuth required scopes: OR.Folders or OR.Folders.Read, OR.Jobs, and OR.Execution or OR.Execution.Read (both sides; OR.Jobs or OR.Jobs.Read is enough on the source). Depending on what the trigger references, also: OR.Queues or OR.Queues.Read for a queue trigger, OR.Settings or OR.Settings.Read for a non-working-days calendar, and OR.Robots or OR.Robots.Read plus OR.Machines or OR.Machines.Read for executor robots and machine–robot pairs. With -Recurse, OR.Folders or OR.Folders.Write on the destination if missing subfolders have to be created.
 
-Required permissions: Schedules.Create (at destination)
+Required permissions: Schedules.View and Processes.View (source); Schedules.Create and Processes.View (destination). Depending on the trigger, also Queues.View, Robots.View, and Machines.View; with -Recurse, Units.Create or SubFolders.Create to create missing destination subfolders. These permissions are checked for user sign-ins (non-confidential application, PAT) and for a confidential application whose token includes OR.Default. A confidential application that requests individual OR.* scopes without OR.Default is authorized by those scopes alone, so it needs no folder assignment on either side.
 
 ## EXAMPLES
 
@@ -284,7 +284,9 @@ This cmdlet produces no pipeline output. Progress is reported through Write-Prog
 
 Triggers are folder-scoped entities. You must navigate to a folder on the Orch: drive or use -Path to specify the source folder.
 
-When performing cross-drive copy (e.g., Orch1: to Orch2:), the cmdlet copies trigger settings including executor robots and machine robots. The destination Orchestrator must have a matching process (Release) and any referenced queues or calendars available in the destination folder.
+When performing cross-drive copy (e.g., Orch1: to Orch2:), the cmdlet copies trigger settings including executor robots and machine robots. The destination folder must have a process (Release) with the same name, and a queue trigger needs a queue with the same name there; a referenced calendar must exist in the destination tenant (calendars are tenant-level).
+
+A reference that does not exist in the destination and a lookup that fails are handled differently. When a robot, machine, or calendar has no counterpart in the destination, a warning is written, the trigger is still created, and that reference is left out of the copy (a missing process, or a missing queue for a queue trigger, skips the trigger instead). When a lookup fails (for example, 403 because OR.Robots, OR.Machines, OR.Queues, OR.Settings, or OR.Execution is missing), an error naming the reference is written and that trigger is not created; the remaining triggers are still copied. This keeps a missing scope from producing a trigger that silently lost its executor robots, which would run on any robot in the folder once enabled. If source and destination resolve to the same folder, the cmdlet does nothing.
 
 ## RELATED LINKS
 

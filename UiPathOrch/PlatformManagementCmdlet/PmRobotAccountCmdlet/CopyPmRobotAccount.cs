@@ -105,9 +105,10 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
                                     partitionGlobalId = dstPartitionGlobalId,
                                     name = srcRobotAccount.name,
                                     displayName = srcRobotAccount.displayName,
+                                    // Strict (see OrchProvider.ReferenceLookupException).
                                     groupIDsToAdd = Core.OrchProvider.FindDstPmGroups(
                                         this, srcDrive, srcRobotAccount.groupIds,
-                                        dstDrive, "Copying PmRobotAccount")?.Select(group => group.id!).ToList()
+                                        dstDrive, "Copying PmRobotAccount", strict: true)?.Select(group => group.id!).ToList()
                                 };
 
                                 var newRobot = dstDrive.CreatePmRobot(cmd);
@@ -115,6 +116,11 @@ public class CopyPmRobotAccountCmdlet : OrchestratorPSCmdlet
                                 {
                                     { var c = newRobot.ShallowClone(); c.Path = dstDrive.NameColonSeparator; WriteObject(c); }
                                 }
+                            }
+                            catch (Core.OrchProvider.ReferenceLookupException ex)
+                            {
+                                Core.OrchProvider.WriteReferenceLookupError(this, target, "Copying PmRobotAccount", ex);
+                                continue;
                             }
                             catch (Exception ex)
                             {

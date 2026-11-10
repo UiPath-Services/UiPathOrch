@@ -118,7 +118,17 @@ public partial class OrchProvider
                     : $"Assigning the {userRole.UserEntity?.Type} \"{userName}\"";
 
                 // assert(userRoles.Roles.Any())
-                List<Int64> newRoleIds = FindDstRoles(_this, srcDrive, userRole.Roles!, dstDrive, msg);
+                // Strict: a failed role lookup must not assign the user with no roles.
+                List<Int64> newRoleIds;
+                try
+                {
+                    newRoleIds = FindDstRoles(_this, srcDrive, userRole.Roles!, dstDrive, msg, strict: true);
+                }
+                catch (ReferenceLookupException ex)
+                {
+                    WriteReferenceLookupError(_this, newFolder.GetPSPath(), msg, ex);
+                    continue;
+                }
 
                 // If there are no folder roles, the API call will fail, so output an error and skip this user
                 // ...or so I thought, but if mixed roles are already assigned, it may not error, so try the API call.
@@ -707,9 +717,28 @@ public partial class OrchProvider
                 catch (Exception ex)
                 {
                     // The error handling here is a bit rough.. Would like to rewrite this more carefully later. Move part of this to the region above.
-                    string msg2 = "Migrating entry point id {srcRelease.EntryPointId} failed.";
-                    _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: {msg2}", ex), "GetProcessError", ErrorCategory.InvalidOperation, target));
-                    // Better not to continue here.
+                    // The entry point could not be looked up: posting the source id into the
+                    // destination would point the process at the wrong (or no) entry point, so
+                    // this process is not created (see ReferenceLookupException).
+                    _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: not created, because the entry point {srcRelease.EntryPointId} could not be looked up", ex), "ResolveReferenceError", ErrorCategory.InvalidOperation, target));
+                    continue;
+                }
+                #endregion
+
+                #region Get the ReleaseRetention of the srcRelease
+                // Read before the personal-workspace delete below: a failed read skips this
+                // process, and it must not do so after the existing destination process is gone.
+                // A failed read is not the same as "no retention" -- the copy would fall back to
+                // the default policy (Delete after 30 days) and could delete what the source keeps.
+                ReleaseRetentionSetting srcRetention = null;
+                try
+                {
+                    srcRetention = srcDrive.OrchAPISession.GetReleaseRetention(srcFolder.Id ?? 0, srcRelease.Id ?? 0);
+                }
+                catch (Exception ex)
+                {
+                    _this.WriteError(new ErrorRecord(new OrchException(target, $"{msg}: not created, because the retention setting could not be read", ex), "ResolveReferenceError", ErrorCategory.InvalidOperation, target));
+                    continue;
                 }
                 #endregion
 
@@ -734,19 +763,6 @@ public partial class OrchProvider
                     {
                         _this.WriteWarning($"Remove existing process {existingRelease?.GetPSPath()} failed. Copying process {srcRelease.GetPSPath()} may fail. ${ex.Message}");
                     }
-                }
-                #endregion
-
-                #region Get the ReleaseRetention of the srcRelease
-                ReleaseRetentionSetting srcRetention = null;
-                try
-                {
-                    srcRetention = srcDrive.OrchAPISession.GetReleaseRetention(srcFolder.Id ?? 0, srcRelease.Id ?? 0);
-                }
-                catch (Exception ex)
-                {
-                    string msg2 = $"Get release retention failed.";
-                    _this.WriteError(new ErrorRecord(new OrchException(target, msg + ": " + msg2, ex), "GetReleaseRetentionError", ErrorCategory.InvalidOperation, target));
                 }
                 #endregion
 
@@ -957,9 +973,10 @@ public partial class OrchProvider
     private static bool TryMapUserValueOwner(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, OrchDriveInfo dstDrive, Folder newFolder,
         AssetUserValue userValue, string msg, Dictionary<string, string>? userMapping,
-        DropWarningBudget? budget, out long? dstUserId, out long? dstMachineId)
+        DropWarningBudget? budget, out long? dstUserId, out long? dstMachineId,
+        bool strict = false)
     {
-        dstUserId = FindDstUser(_this, srcDrive, srcFolder, dstDrive, newFolder, userValue.UserId, msg, budget, userMapping)?.Id;
+        dstUserId = FindDstUser(_this, srcDrive, srcFolder, dstDrive, newFolder, userValue.UserId, msg, budget, userMapping, strict)?.Id;
         dstMachineId = userValue.MachineId;
         if (dstUserId is null || dstUserId == 0)
         {
@@ -970,7 +987,7 @@ public partial class OrchProvider
         {
             // FindDstMachine emits the WriteWarning when the machine isn't assigned to the
             // destination folder; returning false here drops just this value (no extra warning).
-            dstMachineId = FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, userValue.MachineId, msg, budget)?.Id;
+            dstMachineId = FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, userValue.MachineId, msg, budget, strict)?.Id;
             if (dstMachineId is null || dstMachineId == 0)
             {
                 return false;
@@ -1033,7 +1050,7 @@ public partial class OrchProvider
             postingAsset.Key = null;
             postingAsset.Value = null;
             postingAsset.CredentialStoreId = FindDstCredentialStore(_this,
-                srcDrive, dstDrive, newFolder, postingAsset.CredentialStoreId, msg)?.Id;
+                srcDrive, dstDrive, newFolder, postingAsset.CredentialStoreId, msg, strict: true)?.Id;
             postingAsset.CreationTime = null;
             postingAsset.CreatorUserId = null;
             postingAsset.LastModificationTime = null;
@@ -1079,7 +1096,7 @@ public partial class OrchProvider
                 List<AssetUserValue>? migratedUserValues = null;
                 foreach (var userValue in postingAsset.UserValues)
                 {
-                    if (!TryMapUserValueOwner(_this, srcDrive, srcFolder, dstDrive, newFolder, userValue, msg, userMapping, budget, out long? dstUserId, out long? dstMachineId))
+                    if (!TryMapUserValueOwner(_this, srcDrive, srcFolder, dstDrive, newFolder, userValue, msg, userMapping, budget, out long? dstUserId, out long? dstMachineId, strict: true))
                     {
                         continue;
                     }
@@ -1092,7 +1109,7 @@ public partial class OrchProvider
                     // userValue.Name = null; // Not needed since it has the JsonIgnore attribute
                     // userValue.PathName = null; // Not needed since it has the JsonIgnore attribute
                     userValue.CredentialStoreId = FindDstCredentialStore(_this,
-                        srcDrive, dstDrive, newFolder, userValue.CredentialStoreId, msg)?.Id;
+                        srcDrive, dstDrive, newFolder, userValue.CredentialStoreId, msg, strict: true)?.Id;
 
                     if (userValue.ValueType == "Credential")
                     {
@@ -1166,6 +1183,12 @@ public partial class OrchProvider
             // Warn and skip THIS asset so a batch migration is never aborted (R16) — including
             // under $ErrorActionPreference='Stop', where a WriteError would terminate the run.
             _this.WriteWarning($"{msg}: skipped — the destination rejected the request ({hre.Message}). If it carries a per-user value for a user the destination does not accept, add the user first (e.g.: Copy-OrchFolderUser -Path {PsLiteral(srcFolder.GetPSPath())} * -Destination {PsLiteral(newFolder.GetPSPath())}), then re-copy.");
+        }
+        catch (ReferenceLookupException ex)
+        {
+            // A credential store, user or machine lookup failed: an asset created without that
+            // per-user value would hand the robot the global value instead.
+            WriteReferenceLookupError(_this, target, msg, ex);
         }
         catch (Exception ex)
         {
@@ -1257,13 +1280,30 @@ public partial class OrchProvider
                     continue;
                 }
 
+                // Strict lookups (see ReferenceLookupException): a failed lookup must not create
+                // the queue without its process association or with the default retention bucket.
                 Int64? releaseId = null;
-                if (srcQueue.ReleaseId is not null && srcQueue.ReleaseId != 0)
+                Int64? retentionBucketId, staleRetentionBucketId;
+                try
                 {
-                    releaseId = FindDstRelease(_this,
-                        srcDrive, srcFolder,
-                        dstDrive, newFolder,
-                        srcQueue.ReleaseId, msg)?.Id;
+                    if (srcQueue.ReleaseId is not null && srcQueue.ReleaseId != 0)
+                    {
+                        releaseId = FindDstRelease(_this,
+                            srcDrive, srcFolder,
+                            dstDrive, newFolder,
+                            srcQueue.ReleaseId, msg, strict: true)?.Id;
+                    }
+                    retentionBucketId = FindDstBucket(_this,
+                            srcDrive, srcFolder, srcQueue.RetentionBucketId,
+                            dstDrive, newFolder, "Copy Process", msg, strict: true)?.Id;
+                    staleRetentionBucketId = FindDstBucket(_this,
+                            srcDrive, srcFolder, srcQueue.StaleRetentionBucketId,
+                            dstDrive, newFolder, "Copy Process", msg, strict: true)?.Id;
+                }
+                catch (ReferenceLookupException ex)
+                {
+                    WriteReferenceLookupError(_this, target, msg, ex);
+                    continue;
                 }
 
                 // ProcessScheduleId is the queue's server-managed back-reference to its
@@ -1297,14 +1337,10 @@ public partial class OrchProvider
                     RiskSlaInMinutes = srcQueue.RiskSlaInMinutes,
                     RetentionAction = srcQueue.RetentionAction,
                     RetentionPeriod = srcQueue.RetentionPeriod,
-                    RetentionBucketId = FindDstBucket(_this,
-                            srcDrive, srcFolder, srcQueue.RetentionBucketId,
-                            dstDrive, newFolder, "Copy Process", msg)?.Id,
+                    RetentionBucketId = retentionBucketId,
                     StaleRetentionAction = srcQueue.StaleRetentionAction,
                     StaleRetentionPeriod = srcQueue.StaleRetentionPeriod,
-                    StaleRetentionBucketId = FindDstBucket(_this,
-                            srcDrive, srcFolder, srcQueue.StaleRetentionBucketId,
-                            dstDrive, newFolder, "Copy Process", msg)?.Id,
+                    StaleRetentionBucketId = staleRetentionBucketId,
                     Tags = srcQueue.Tags
                 };
 
@@ -1343,6 +1379,18 @@ public partial class OrchProvider
         }
     }
 
+    // One entity is skipped because a reference lookup failed (see ReferenceLookupException).
+    // Names the reference, since the server's own text ("Unauthorized") does not say which call
+    // was refused.
+    internal static void WriteReferenceLookupError(IWritableHost _this, string target, string msg, ReferenceLookupException ex)
+    {
+        _this.WriteError(new ErrorRecord(
+            new OrchException(target, $"{msg}: not created, because the {ex.What} could not be looked up", ex.InnerException ?? ex),
+            "ResolveReferenceError", ErrorCategory.InvalidOperation, target));
+    }
+
+    // Both Migrate*Robots run their lookups strict (see ReferenceLookupException) -- their only
+    // callers are the trigger copiers, which catch it per trigger.
     private static RobotExecutor[]? MigrateExecutorRobots(IWritableHost _this, string msg,
         OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder,
@@ -1353,7 +1401,7 @@ public partial class OrchProvider
         List<RobotsFromFolderModel?> dstRobots = [];
         foreach (var executorRobot in executorRobots.Where(er => er is not null))
         {
-            var dstExecutorRobot = FindDstRobotByUnattendedAccount(_this, srcDrive, srcFolder, dstDrive, newFolder, executorRobot.Id, msg);
+            var dstExecutorRobot = FindDstRobotByUnattendedAccount(_this, srcDrive, srcFolder, dstDrive, newFolder, executorRobot.Id, msg, strict: true);
             dstRobots.Add(dstExecutorRobot);
         }
 
@@ -1376,13 +1424,21 @@ public partial class OrchProvider
 
         if (srcFolder.ProvisionType == "Manual")
         {
-            var srcSessions = srcDrive.Sessions.Get(srcFolder);
+            IEnumerable<Session> srcSessions;
+            try
+            {
+                srcSessions = srcDrive.Sessions.Get(srcFolder);
+            }
+            catch (Exception ex)
+            {
+                throw new ReferenceLookupException("robot sessions", ex);
+            }
             foreach (var executorRobot in executorRobots ?? [])
             {
-                var dstRobotId = FindDstRobotByUnattendedAccount(_this, srcDrive, srcFolder, dstDrive, newFolder, executorRobot?.Id, msg)?.Id;
+                var dstRobotId = FindDstRobotByUnattendedAccount(_this, srcDrive, srcFolder, dstDrive, newFolder, executorRobot?.Id, msg, strict: true)?.Id;
 
                 var srcSession = srcSessions.FirstOrDefault(s => s.Robot?.Id == executorRobot?.Id);
-                var dstMachineId = FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, srcSession?.MachineId, msg)?.Id;
+                var dstMachineId = FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, srcSession?.MachineId, msg, strict: true)?.Id;
 
                 dstSessions.Add(new MachineRobotSession()
                 {
@@ -1395,8 +1451,8 @@ public partial class OrchProvider
         {
             foreach (var machineRobot in machineRobots.Where(mr => mr is not null))
             {
-                var robotId = FindDstRobotByUnattendedAccount(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.RobotId, msg)?.Id;
-                var machineId = FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.MachineId, msg)?.Id;
+                var robotId = FindDstRobotByUnattendedAccount(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.RobotId, msg, strict: true)?.Id;
+                var machineId = FindDstMachine(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.MachineId, msg, strict: true)?.Id;
 
                 if (robotId is not null || machineId is not null)
                 {
@@ -1405,7 +1461,7 @@ public partial class OrchProvider
                         // Migrate RobotId
                         RobotId = robotId,
                         MachineId = machineId,
-                        SessionId = (machineId is null) ? null : FindDstSession(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.SessionId, msg)?.SessionId
+                        SessionId = (machineId is null) ? null : FindDstSession(_this, srcDrive, srcFolder, dstDrive, newFolder, machineRobot.SessionId, msg, strict: true)?.SessionId
                     });
                 }
             }
@@ -1476,7 +1532,17 @@ public partial class OrchProvider
 
                 reporter.WriteProgress(++index, srcTrigger.Name);
 
-                var detailedSrcTrigger = srcDrive.GetTriggerDetailed(srcFolder, srcTrigger.Id!.Value);
+                // Per trigger, so one failed read does not stop the rest of the folder.
+                ProcessSchedule? detailedSrcTrigger;
+                try
+                {
+                    detailedSrcTrigger = srcDrive.GetTriggerDetailed(srcFolder, srcTrigger.Id!.Value);
+                }
+                catch (Exception ex) when (ex is not OperationCanceledException)
+                {
+                    _this.WriteError(new ErrorRecord(new OrchException(srcTrigger.GetPSPath(), msg, ex), "GetTriggerError", ErrorCategory.InvalidOperation, target));
+                    continue;
+                }
 
                 var postingTrigger = OrchCollectionExtensions.DeepCopy(detailedSrcTrigger);
                 if (postingTrigger is null) continue;
@@ -1524,22 +1590,35 @@ public partial class OrchProvider
                     continue;
                 }
 
-                // Migrate MachineRobots
-                postingTrigger.MachineRobots = MigrateMachineRobots(_this, msg,
-                    srcDrive, srcFolder,
-                    dstDrive, newFolder,
-                    postingTrigger.MachineRobots,
-                    postingTrigger.ExecutorRobots);
+                // Robots, machines, sessions and the calendar resolve strictly: a counterpart that
+                // is not in the destination is dropped with a warning, but a lookup that FAILED
+                // (403 for a missing scope, a network error) fails this trigger -- a copy that
+                // silently lost its executor robots would run on any robot in the folder once
+                // enabled. See ReferenceLookupException.
+                try
+                {
+                    // Migrate MachineRobots
+                    postingTrigger.MachineRobots = MigrateMachineRobots(_this, msg,
+                        srcDrive, srcFolder,
+                        dstDrive, newFolder,
+                        postingTrigger.MachineRobots,
+                        postingTrigger.ExecutorRobots);
 
-                // Migrate ExecutorRobots
-                postingTrigger.ExecutorRobots = MigrateExecutorRobots(_this, msg,
-                    srcDrive, srcFolder,
-                    dstDrive, newFolder,
-                    postingTrigger.ExecutorRobots);
+                    // Migrate ExecutorRobots
+                    postingTrigger.ExecutorRobots = MigrateExecutorRobots(_this, msg,
+                        srcDrive, srcFolder,
+                        dstDrive, newFolder,
+                        postingTrigger.ExecutorRobots);
 
-                // Migrate calendar Id
-                postingTrigger.CalendarId = FindDstCalendar(_this, srcDrive, dstDrive,
-                    postingTrigger.CalendarId, msg)?.Id;
+                    // Migrate calendar Id
+                    postingTrigger.CalendarId = FindDstCalendar(_this, srcDrive, dstDrive,
+                        postingTrigger.CalendarId, msg, strict: true)?.Id;
+                }
+                catch (ReferenceLookupException ex)
+                {
+                    WriteReferenceLookupError(_this, target, msg, ex);
+                    continue;
+                }
                 postingTrigger.CalendarKey = null;
 
                 if (newFolder.ProvisionType != "Manual")
@@ -1656,11 +1735,19 @@ public partial class OrchProvider
                 postingTrigger!.ReleaseKey = dstRelease?.Key;
                 if (postingTrigger!.ReleaseKey is null) continue;
 
-                // Migrate MachineRobots
-                postingTrigger.MachineRobots = MigrateMachineRobots(_this, msg,
-                    srcDrive, srcFolder,
-                    dstDrive, newFolder,
-                    postingTrigger.MachineRobots);
+                // Migrate MachineRobots (strict, as in CopyTriggers)
+                try
+                {
+                    postingTrigger.MachineRobots = MigrateMachineRobots(_this, msg,
+                        srcDrive, srcFolder,
+                        dstDrive, newFolder,
+                        postingTrigger.MachineRobots);
+                }
+                catch (ReferenceLookupException ex)
+                {
+                    WriteReferenceLookupError(_this, target, msg, ex);
+                    continue;
+                }
 
                 try
                 {
@@ -1748,8 +1835,17 @@ public partial class OrchProvider
                 {
                     postingBucket.Password = "!!!PLEASE UPDATE!!!";
                 }
-                postingBucket.CredentialStoreId = FindDstCredentialStore(_this,
-                    srcDrive, dstDrive, newFolder, bucket.CredentialStoreId, msg)?.Id;
+                // Strict (see ReferenceLookupException): not created in the default store instead.
+                try
+                {
+                    postingBucket.CredentialStoreId = FindDstCredentialStore(_this,
+                        srcDrive, dstDrive, newFolder, bucket.CredentialStoreId, msg, strict: true)?.Id;
+                }
+                catch (ReferenceLookupException ex)
+                {
+                    WriteReferenceLookupError(_this, newFolder.GetPSPath(), msg, ex);
+                    continue;
+                }
 
                 try
                 {
@@ -1912,18 +2008,24 @@ public partial class OrchProvider
                                 tc.CreationTime = null;
                                 tc.CreatorUserId = null;
 
-                                tc.DefinitionId = FindDstTestCase(_this, srcDrive, srcFolder, tc.DefinitionId, dstDrive, newFolder, msg)?.Id;
+                                // Strict (see ReferenceLookupException), caught per test set below.
+                                tc.DefinitionId = FindDstTestCase(_this, srcDrive, srcFolder, tc.DefinitionId, dstDrive, newFolder, msg, strict: true)?.Id;
 
                                 tc.ReleaseId = FindDstRelease(_this,
                                     srcDrive, srcFolder,
-                                    dstDrive, newFolder, tc.ReleaseId, msg)?.Id;
+                                    dstDrive, newFolder, tc.ReleaseId, msg, strict: true)?.Id;
                             }
 
                             postingTestSet.RobotId = FindDstRobot(_this,
-                                srcDrive, dstDrive, newFolder, postingTestSet.RobotId, "Migrating test set robot")?.Id;
+                                srcDrive, dstDrive, newFolder, postingTestSet.RobotId, "Migrating test set robot", strict: true)?.Id;
 
                             dstDrive.OrchAPISession.CreateTestSet(newFolder.Id ?? 0, postingTestSet);
                         }
+                    }
+                    catch (ReferenceLookupException ex)
+                    {
+                        // This test set only; the rest of the folder is still copied.
+                        WriteReferenceLookupError(_this, target, msg, ex);
                     }
                     catch (Exception ex)
                     {
@@ -2078,12 +2180,22 @@ public partial class OrchProvider
                 var postingTestSetSchedule = OrchCollectionExtensions.DeepCopy(testSetSchedule);
                 postingTestSetSchedule.Id = null;
                 // postingTestSetSchedule.Path = null; // Not needed since it has the JsonIgnore attribute
-                postingTestSetSchedule.TestSetId = FindDstTestSet(_this,
-                    srcDrive, srcFolder, postingTestSetSchedule.TestSetId,
-                    dstDrive, newFolder, msg)?.Id;
+                // Strict (see ReferenceLookupException): a schedule created without its calendar
+                // would also run on the calendar's non-working days.
+                try
+                {
+                    postingTestSetSchedule.TestSetId = FindDstTestSet(_this,
+                        srcDrive, srcFolder, postingTestSetSchedule.TestSetId,
+                        dstDrive, newFolder, msg, strict: true)?.Id;
 
-                postingTestSetSchedule.CalendarId = FindDstCalendar(_this,
-                    srcDrive, dstDrive, postingTestSetSchedule.CalendarId, msg)?.Id;
+                    postingTestSetSchedule.CalendarId = FindDstCalendar(_this,
+                        srcDrive, dstDrive, postingTestSetSchedule.CalendarId, msg, strict: true)?.Id;
+                }
+                catch (ReferenceLookupException ex)
+                {
+                    WriteReferenceLookupError(_this, newFolder.GetPSPath(), msg, ex);
+                    continue;
+                }
 
                 try
                 {
@@ -2249,9 +2361,19 @@ public partial class OrchProvider
 
                 if (postingTaskCatalog.RetentionBucketId is not null)
                 {
-                    var destinationBucket = FindDstBucket(_this,
-                        srcDrive, srcFolder, postingTaskCatalog.RetentionBucketId,
-                        dstDrive, newFolder, "Copy TaskCatalog", msg);
+                    // Strict (see ReferenceLookupException); this catalog only, not the folder.
+                    Bucket? destinationBucket;
+                    try
+                    {
+                        destinationBucket = FindDstBucket(_this,
+                            srcDrive, srcFolder, postingTaskCatalog.RetentionBucketId,
+                            dstDrive, newFolder, "Copy TaskCatalog", msg, strict: true);
+                    }
+                    catch (ReferenceLookupException ex)
+                    {
+                        WriteReferenceLookupError(_this, newFolder.GetPSPath(), msg, ex);
+                        continue;
+                    }
                     postingTaskCatalog.RetentionBucketId = destinationBucket?.Id;
                     postingTaskCatalog.RetentionBucketName = destinationBucket?.Name;
                 }

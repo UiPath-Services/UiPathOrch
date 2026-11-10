@@ -267,9 +267,11 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
                         {
                             //if (newUser.UnattendedRobot.CredentialType != "NoCredential")
                             {
+                                // Strict (see OrchProvider.ReferenceLookupException): a failed
+                                // lookup must not create the robot in the default store instead.
                                 newUser.UnattendedRobot.CredentialStoreId = Core.OrchProvider.FindDstCredentialStore(
                                     _this, srcDrive, dstDrive, dstDrive.RootFolder!,
-                                    newUser.UnattendedRobot.CredentialStoreId, srcUser.GetPSPath())?.Id;
+                                    newUser.UnattendedRobot.CredentialStoreId, srcUser.GetPSPath(), strict: true)?.Id;
                             }
 
                             // Setting UnattendedRobot.RobotId to null should be sufficient
@@ -344,6 +346,10 @@ public class CopyUserCmdlet : OrchestratorPSCmdlet
                             dstDrive.Users.ClearCache();
                             dstDrive.UsersDetailed.ClearCache();
                         }
+                    }
+                    catch (Core.OrchProvider.ReferenceLookupException ex)
+                    {
+                        Core.OrchProvider.WriteReferenceLookupError(_this, dstDrive.NameColonSeparator, $"Copying user {srcUser.GetPSPath()}", ex);
                     }
                     catch (Exception ex)
                     {

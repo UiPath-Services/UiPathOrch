@@ -19,6 +19,20 @@ public partial class OrchProvider
     // (TestCase / PmGroups), or link-FQN math (Folders).
     // =====================================================================
 
+    // Thrown by a FindDst* in strict mode when the lookup ITSELF failed (403 for a missing
+    // scope, a network error) -- as opposed to "looked, and the counterpart is not there",
+    // which stays a warning plus a null return in both modes. The trigger copiers run their
+    // reference lookups strict: an executor robot or machine dropped because of a 403 turns
+    // a "run on these robots" trigger into a "run on any robot in the folder" one, and the
+    // degraded copy then blocks a clean re-run. So a failed lookup fails that one trigger
+    // (nothing is created) and the copy moves on to the next. `What` names the reference
+    // for the error message, since the server's own text ("Unauthorized") does not.
+    internal sealed class ReferenceLookupException(string what, Exception inner)
+        : Exception(inner.Message, inner)
+    {
+        public string What { get; } = what;
+    }
+
     // Generic name-match resolver used by the simple FindDst* methods
     // (FindDstRobot / FindDstMachine / FindDstQueue / FindDstRelease /
     // FindDstCalendar / FindDstCredentialStore / FindDstBucket /
@@ -90,13 +104,24 @@ public partial class OrchProvider
     // action should be like "Copy Process"
     internal static Bucket? FindDstBucket(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, Int64? srcBucketId,
-        OrchDriveInfo dstDrive, Folder newFolder, string action, string msg)
+        OrchDriveInfo dstDrive, Folder newFolder, string action, string msg,
+        bool strict = false)
     {
         if (srcBucketId is null || srcBucketId == 0) return null; // skip the fetches when there's no id
 
+        IEnumerable<Bucket> srcBuckets, dstBuckets;
+        try
+        {
+            srcBuckets = srcDrive.Buckets.Get(srcFolder);
+            dstBuckets = dstDrive.Buckets.Get(newFolder);
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("storage buckets", ex);
+        }
         var (dstBucket, srcBucket, result) = ResolveDstByIdThenName(
-            srcDrive.Buckets.Get(srcFolder), srcBucketId, b => b.Id,
-            dstDrive.Buckets.Get(newFolder), b => b.Name, b => b.Name);
+            srcBuckets, srcBucketId, b => b.Id,
+            dstBuckets, b => b.Name, b => b.Name);
         switch (result)
         {
             case FindDstByNameResult.SrcNotFound:
@@ -112,7 +137,7 @@ public partial class OrchProvider
     internal static MachineFolder? FindDstMachine(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcMachineId, string msg,
-        DropWarningBudget? budget = null)
+        DropWarningBudget? budget = null, bool strict = false)
     {
         if (srcMachineId is null || srcMachineId == 0) return null; // skip the fetches when there's no id
 
@@ -131,6 +156,10 @@ public partial class OrchProvider
                     return null;
             }
             return dstMachineFolder;
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("machines", ex);
         }
         catch (Exception ex)
         {
@@ -193,7 +222,8 @@ public partial class OrchProvider
 
     internal static Release? FindDstRelease(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder,
-        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcReleaseId, string msg)
+        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcReleaseId, string msg,
+        bool strict = false)
     {
         if (srcReleaseId is null || srcReleaseId == 0) return null;
 
@@ -201,6 +231,10 @@ public partial class OrchProvider
         try
         {
             srcReleases = srcDrive.Releases.Get(srcFolder);
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("processes", ex);
         }
         catch (Exception ex)
         {
@@ -211,6 +245,10 @@ public partial class OrchProvider
         try
         {
             dstReleases = dstDrive.Releases.Get(dstFolder);
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("processes", ex);
         }
         catch (Exception ex)
         {
@@ -236,25 +274,39 @@ public partial class OrchProvider
     }
 
     internal static ExtendedCalendar? FindDstCalendar(IWritableHost _this,
-        OrchDriveInfo srcDrive, OrchDriveInfo dstDrive, Int64? srcCalendarId, string msg)
+        OrchDriveInfo srcDrive, OrchDriveInfo dstDrive, Int64? srcCalendarId, string msg,
+        bool strict = false)
     {
         if (srcCalendarId is null || srcCalendarId == 0) return null;
 
-        // Calendars are tenant-level. Only the dst fetch is wrapped (preserving the
-        // original asymmetry — a src-side failure propagates to the caller).
-        IEnumerable<ExtendedCalendar>? dstCalendars;
+        // Calendars are tenant-level. In lenient mode only the dst fetch is wrapped (the
+        // original asymmetry -- a src-side failure propagates to the caller); strict mode
+        // reports either side as a ReferenceLookupException.
+        IEnumerable<ExtendedCalendar>? srcCalendars, dstCalendars;
         try
         {
             dstCalendars = dstDrive.Calendars.Get();
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("calendars", ex);
         }
         catch (Exception ex)
         {
             _this.WriteError(new ErrorRecord(new OrchException(dstDrive.NameColonSeparator, msg, ex), "MigrateCalendarIdError", ErrorCategory.InvalidOperation, dstDrive));
             return null;
         }
+        try
+        {
+            srcCalendars = srcDrive.Calendars.Get();
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("calendars", ex);
+        }
 
         var (dstCalendar, srcCalendar, result) = ResolveDstByIdThenName(
-            srcDrive.Calendars.Get(), srcCalendarId, c => c.Id, dstCalendars, c => c.Name, c => c.Name);
+            srcCalendars, srcCalendarId, c => c.Id, dstCalendars, c => c.Name, c => c.Name);
         switch (result)
         {
             case FindDstByNameResult.SrcNotFound:
@@ -269,7 +321,8 @@ public partial class OrchProvider
 
     internal static CredentialStore? FindDstCredentialStore(IWritableHost _this,
         OrchDriveInfo srcDrive,
-        OrchDriveInfo dstDrive, Folder newFolder, Int64? srcCredentialStoreId, string msg)
+        OrchDriveInfo dstDrive, Folder newFolder, Int64? srcCredentialStoreId, string msg,
+        bool strict = false)
     {
         if (srcCredentialStoreId is null || srcCredentialStoreId.Value == 0) return null; // skip the fetches when there's no id
 
@@ -289,6 +342,10 @@ public partial class OrchProvider
             }
             return dstCredentialStore;
         }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("credential stores", ex);
+        }
         catch (Exception ex)
         {
             string target = newFolder.GetPSPath();
@@ -299,13 +356,24 @@ public partial class OrchProvider
 
     internal static TestSet? FindDstTestSet(IWritableHost _this,
             OrchDriveInfo srcDrive, Folder srcFolder, Int64? srcTestSetId,
-            OrchDriveInfo dstDrive, Folder newFolder, string msg)
+            OrchDriveInfo dstDrive, Folder newFolder, string msg,
+            bool strict = false)
     {
         if (srcTestSetId is null || srcTestSetId == 0) return null; // skip the fetches when there's no id
 
+        IEnumerable<TestSet> srcTestSets, dstTestSets;
+        try
+        {
+            srcTestSets = srcDrive.TestSets.Get(srcFolder);
+            dstTestSets = dstDrive.TestSets.Get(newFolder);
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("test sets", ex);
+        }
         var (dstTestSet, srcTestSet, result) = ResolveDstByIdThenName(
-            srcDrive.TestSets.Get(srcFolder), srcTestSetId, ts => ts.Id,
-            dstDrive.TestSets.Get(newFolder), ts => ts.Name, ts => ts.Name);
+            srcTestSets, srcTestSetId, ts => ts.Id,
+            dstTestSets, ts => ts.Name, ts => ts.Name);
         switch (result)
         {
             case FindDstByNameResult.SrcNotFound:
@@ -385,7 +453,7 @@ public partial class OrchProvider
 
     internal static List<Int64>? FindDstRoles(IWritableHost _this,
         OrchDriveInfo srcDrive, IEnumerable<SimpleRole> srcRoleIds,
-        OrchDriveInfo dstDrive, string msg)
+        OrchDriveInfo dstDrive, string msg, bool strict = false)
     {
         if (srcRoleIds is null || !srcRoleIds.Any()) return null;
 
@@ -393,6 +461,10 @@ public partial class OrchProvider
         try
         {
             dstTenantRoles = dstDrive.Roles.Get();
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("roles", ex);
         }
         catch (Exception ex)
         {
@@ -421,9 +493,17 @@ public partial class OrchProvider
 
     internal static TestCaseDefinition? FindDstTestCase(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder, Int64? srcDefinitionId,
-        OrchDriveInfo dstDrive, Folder newFolder, string msg)
+        OrchDriveInfo dstDrive, Folder newFolder, string msg, bool strict = false)
     {
-        var srcTestCases = srcDrive.TestCases.Get(srcFolder);
+        IEnumerable<TestCaseDefinition> srcTestCases, dstTestCases;
+        try
+        {
+            srcTestCases = srcDrive.TestCases.Get(srcFolder);
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("test cases", ex);
+        }
         var srcTestCase = srcTestCases.FirstOrDefault(ts => ts.Id == srcDefinitionId);
         if (srcTestCase is null)
         {
@@ -431,7 +511,14 @@ public partial class OrchProvider
             return null;
         }
 
-        var dstTestCases = dstDrive.TestCases.Get(newFolder);
+        try
+        {
+            dstTestCases = dstDrive.TestCases.Get(newFolder);
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("test cases", ex);
+        }
         // Case-insensitive compound match. Test entity names follow the
         // same Orchestrator name-uniqueness rule as Buckets (rejected on
         // create when a same-name entity differs only in case), so a
@@ -452,7 +539,7 @@ public partial class OrchProvider
     // If the group does not exist at the destination, create a group with the same name
     internal static List<PmGroup>? FindDstPmGroups(IWritableHost _this,
         OrchDriveInfo srcDrive, IEnumerable<string>? srcPmGroupIds,
-        OrchDriveInfo dstDrive, string msg)
+        OrchDriveInfo dstDrive, string msg, bool strict = false)
     {
         if (srcPmGroupIds is null) return null;
 
@@ -461,6 +548,10 @@ public partial class OrchProvider
         try
         {
             srcPmGroups = srcDrive.PmGroups.Get();
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("groups", ex);
         }
         catch (Exception ex)
         {
@@ -478,6 +569,10 @@ public partial class OrchProvider
         try
         {
             dstPmGroups = dstDrive.PmGroups.Get();
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("groups", ex);
         }
         catch (Exception ex)
         {
@@ -575,7 +670,8 @@ public partial class OrchProvider
         OrchDriveInfo srcDrive, Folder srcFolder,
         OrchDriveInfo dstDrive, Folder newFolder, Int64? srcUserId, string msg,
         DropWarningBudget? budget = null,
-        Dictionary<string, string>? userMapping = null)
+        Dictionary<string, string>? userMapping = null,
+        bool strict = false)
     {
         if (srcUserId is null || srcUserId == 0) return null;
         try
@@ -644,6 +740,10 @@ public partial class OrchProvider
                     return dstUser;
             }
         }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("users", ex);
+        }
         catch (Exception ex)
         {
             string target = newFolder.GetPSPath();
@@ -654,7 +754,8 @@ public partial class OrchProvider
 
     internal static RobotsFromFolderModel? FindDstRobot(IWritableHost _this,
         OrchDriveInfo srcDrive,
-        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcRobotId, string msg)
+        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcRobotId, string msg,
+        bool strict = false)
     {
         if (srcRobotId is null || srcRobotId == 0) return null;
         try
@@ -676,6 +777,10 @@ public partial class OrchProvider
             }
             return dstRobot;
         }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("robots", ex);
+        }
         catch (Exception ex)
         {
             string target = dstFolder.GetPSPath();
@@ -696,7 +801,8 @@ public partial class OrchProvider
 
     internal static RobotsFromFolderModel? FindDstRobotByUnattendedAccount(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder,
-        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcRobotId, string msg)
+        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcRobotId, string msg,
+        bool strict = false)
     {
         if (srcRobotId is null || srcRobotId == 0) return null;
         try
@@ -751,6 +857,10 @@ public partial class OrchProvider
                 return null;
             }
             return dstRobot;
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("robots", ex);
         }
         catch (Exception ex)
         {
@@ -819,7 +929,8 @@ public partial class OrchProvider
 
     internal static MachineSessionRuntime? FindDstSession(IWritableHost _this,
         OrchDriveInfo srcDrive, Folder srcFolder,
-        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcSessionId, string msg)
+        OrchDriveInfo dstDrive, Folder dstFolder, Int64? srcSessionId, string msg,
+        bool strict = false)
     {
         if (srcSessionId is null || srcSessionId.Value == 0) return null;
 
@@ -834,6 +945,10 @@ public partial class OrchProvider
                 _this.WriteWarning($"\"{srcFolder.GetPSPath()}\": {msg}: The session not found with SessionId {srcSessionId}.");
                 return null;
             }
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("machine sessions", ex);
         }
         catch (Exception ex)
         {
@@ -860,6 +975,10 @@ public partial class OrchProvider
                 _this.WriteWarning($"\"{dstFolder.GetPSPath()}\": {msg}: The session not found with MachineName ='{srcMachineName}', HostMachineName = '{srcHostMachineName}' and ServiceUserName = '{srcServiceUserName}'.");
             }
             return resolved;
+        }
+        catch (Exception ex) when (strict)
+        {
+            throw new ReferenceLookupException("machine sessions", ex);
         }
         catch (Exception ex)
         {

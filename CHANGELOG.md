@@ -67,6 +67,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Fixed
 
+- **A copy whose reference lookup fails is not created half-way.** When a copy cmdlet could not
+  look up something the copied entity refers to (a 403 for a missing OAuth scope, a network
+  error), it created the entity without that reference: `Copy-OrchTrigger` created a trigger
+  without its executor robots, which once enabled runs on any robot in the folder; an asset lost
+  its per-user values, so the robot used the global value; a bucket, asset or unattended robot
+  went to the default credential store; a test set schedule lost its calendar; users lost their
+  groups or folder roles. Now that entity is not created, an error names what could not be looked
+  up, and the copy goes on with the next one. A reference that the destination simply does not
+  have is handled as before (a warning, and the reference left out or the entity skipped).
+  - Some of these failures used to stop the rest of the folder (a source calendar or test case,
+    a retention bucket); they now fail only the one entity.
+  - `Copy-OrchProcess` created the process with the default retention policy (Delete after 30
+    days) when the source's could not be read, and with an unmapped entry point when the entry
+    points could not be read; now it does not create it. The retention setting is read before a
+    process in a personal workspace is replaced, so a skipped copy leaves the existing one.
+- **`Copy-OrchTrigger` documents the scopes it needs**: besides `OR.Jobs`, it reads the folders
+  and the processes (`OR.Execution`), and depending on the trigger the queues, the calendars, the
+  robots and the machines. The help listed `OR.Jobs` alone.
+
 - **`Get-OrchTask` finds the tasks of a modern folder.** It used the endpoint for classic folders
   only, so it returned nothing in a modern folder; the tasks were visible only through
   `Get-OrchTaskAcrossFolder`. Tab completion of a task's Id or title used the same list.

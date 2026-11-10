@@ -137,13 +137,27 @@ public class CopyPmUserCmdlet : OrchestratorPSCmdlet
 
 
                 #region Build the payload
+                // Strict (see OrchProvider.ReferenceLookupException): a failed group lookup must
+                // not create these users without their group memberships (and the roles and
+                // licenses those groups carry). Skips this batch -- the users sharing these groups.
+                string[]? dstGroupIds;
+                try
+                {
+                    dstGroupIds = Core.OrchProvider.FindDstPmGroups(
+                        this, srcDrive, srcGroupIds,
+                        dstDrive, "Copying PmUser", strict: true)?.Select(group => group.id!).ToArray();
+                }
+                catch (Core.OrchProvider.ReferenceLookupException ex)
+                {
+                    Core.OrchProvider.WriteReferenceLookupError(this, dstDrive.NameColonSeparator,
+                        $"Copying PmUser {string.Join(", ", srcUsers.Select(u => u.GetPSPath(srcDrive.NameColonSeparator)))}", ex);
+                    continue;
+                }
                 var payload = new CreateUsersCommand()
                 {
                     users = [],
                     partitionGlobalId = dstDrive.GetPartitionGlobalId(),
-                    groupIDs = Core.OrchProvider.FindDstPmGroups(
-                        this, srcDrive, srcGroupIds,
-                        dstDrive, "Copying PmUser")?.Select(group => group.id!).ToArray()
+                    groupIDs = dstGroupIds
                 };
                 #endregion
 
