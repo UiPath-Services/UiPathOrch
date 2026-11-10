@@ -168,10 +168,10 @@ public class OrchTmProvider : OrchShadowProviderBase<OrchTmDriveInfo, TmProject>
     protected override object CopyItemDynamicParameters(string path, string destination, bool recurse)
         => new CopyItem_DynamicParameters();
 
-    // The dynamic-parameters object of the Copy-Item in progress, used only for its identity:
-    // PowerShell makes one per invocation and hands it to every per-path call (a wildcard source
-    // calls CopyItem once per match). See OrchProvider._copyInvocationToken.
-    private object? _copyInvocationToken;
+    // Marks a Copy-Item as already seen, so its later paths (a wildcard or an array source
+    // calls CopyItem once per path, an array on a new provider instance) are known as such.
+    // See ProviderInvocation.
+    private sealed class CopyInvocationSeen { }
 
     // The stages, in the order of Test Manager's own menu. Each entity's stage does all of its own
     // work, which keeps them in dependency order: a requirement exists before the test cases are
@@ -208,8 +208,8 @@ public class OrchTmProvider : OrchShadowProviderBase<OrchTmDriveInfo, TmProject>
     protected override void CopyItem(string path, string copyPath, bool recurse)
     {
         bool excludeEntities = (DynamicParameters as CopyItem_DynamicParameters)?.ExcludeEntities.IsPresent ?? false;
-        bool firstPathOfInvocation = !ReferenceEquals(DynamicParameters, _copyInvocationToken);
-        if (firstPathOfInvocation) _copyInvocationToken = DynamicParameters;
+        _ = ProviderInvocation.StateFor<CopyInvocationSeen>(
+            ProviderInvocation.Token(this, DynamicParameters), out bool firstPathOfInvocation);
 
         var srcDrive = ResolveShadowDrive(path);
         var srcProject = GetProject(path);

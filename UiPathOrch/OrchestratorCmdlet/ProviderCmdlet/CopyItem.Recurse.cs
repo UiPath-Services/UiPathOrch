@@ -12,11 +12,15 @@ public partial class OrchProvider
     // token below.
     private int _copiedFolderIndex;
 
-    // The dynamic-parameters object of the Copy-Item in progress, used only for its identity.
-    // PowerShell makes one per invocation and hands it to every per-path CopyItem call, which
-    // is the only thing distinguishing "the next of this command's paths" from "a new
-    // command". Held, so the reference cannot be reused by a later allocation.
-    private object? _copyInvocationToken;
+    // What one Copy-Item carries from one of its source paths to the next. Kept per command in
+    // ProviderInvocation's table, not in fields: an array -Path gets a new provider instance
+    // per element. The fields above and _linkReport are loaded from it at the start of each
+    // path and the counter is stored back at the end.
+    private sealed class CopyInvocationState
+    {
+        public int CopiedFolderIndex;
+        public LinkCopyReport LinkReport = new();
+    }
 
     // Whether the walk's folder total is knowable. True while the invocation has produced a
     // single resolved path -- then the subtree count is the real total. False from the moment
@@ -530,28 +534,21 @@ public partial class OrchProvider
         // on a fresh provider instance per Copy-Item to clear it would silently leak the
         // flag into a later un-flagged copy if instances were ever pooled/reused.
         ExcludeEntities = dynamicParameters?.ExcludeEntities.IsPresent ?? false;
-        var linkReport = _linkReport = new LinkCopyReport();
-
         // A wildcard source is resolved by PowerShell BEFORE the provider is called, and this
         // method is then called once per matched path. Resetting the folder counter here made
         // the bar restart on every one of them -- "copy orch1:\s* orch2:\" over four folders
-        // read 1/1 four times. The dynamic-parameters object is created once per Copy-Item
-        // and handed to each of those calls, so its identity says which calls belong to one
-        // invocation; the counter is reset only when it changes.
-        if (!ReferenceEquals(DynamicParameters, _copyInvocationToken))
-        {
-            _copyInvocationToken = DynamicParameters;
-            _copiedFolderIndex = 0;
-            // The first path's subtree is a real total. See the field.
-            _copyFolderTotalKnown = true;
-        }
-        else
-        {
-            // A second path has arrived, so the total shown while walking the first one was
-            // only that path's. How many more are coming is not knowable from here: the
-            // pattern never reaches the provider and nothing says which call is the last.
-            _copyFolderTotalKnown = false;
-        }
+        // read 1/1 four times. An array -Path does the same with a new provider instance per
+        // element. So the counter, and the link report (a later path's pass can link what an
+        // earlier path reported as copied independently, see LinkCopyReport), are kept per
+        // COMMAND; see ProviderInvocation.
+        var invocation = ProviderInvocation.StateFor<CopyInvocationState>(
+            ProviderInvocation.Token(this, DynamicParameters), out bool firstPath);
+        _copiedFolderIndex = invocation.CopiedFolderIndex;
+        // The first path's subtree is a real total. Once a second path has arrived, the total
+        // shown while walking the first one was only that path's, and how many more are coming
+        // is not knowable from here: nothing says which call is the last. See the field.
+        _copyFolderTotalKnown = firstPath;
+        var linkReport = _linkReport = invocation.LinkReport;
 
         OrchDriveInfo srcDrive = ExtractOrchDriveInfo(path);
         OrchDriveInfo dstDrive = ExtractOrchDriveInfo(copyPath);
@@ -745,6 +742,7 @@ public partial class OrchProvider
                 {
                     dstDrive.ClearFolders();
                 }
+                invocation.CopiedFolderIndex = _copiedFolderIndex;
                 linkReport.Flush(this);
             }
             return;
@@ -768,6 +766,7 @@ public partial class OrchProvider
             {
                 dstDrive.ClearFolders();
             }
+            invocation.CopiedFolderIndex = _copiedFolderIndex;
             linkReport.Flush(this);
         }
     }

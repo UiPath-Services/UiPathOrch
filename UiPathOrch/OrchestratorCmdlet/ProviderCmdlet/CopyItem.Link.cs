@@ -309,13 +309,27 @@ public partial class OrchProvider
     //
     // Both kinds are throttled the same way as DropWarningBudget: the first few in full,
     // then one summary line, so a large migration doesn't flood the warning stream.
+    //
+    // One Copy-Item with several source paths (an array, or a wildcard PowerShell resolves
+    // before the provider sees it) calls CopyItem once per path, and nothing tells the
+    // provider which call is the last. So the report lives for the whole invocation and
+    // Flush runs after EACH path, emitting only what is new since the last Flush. A miss
+    // reported after path A can still be linked by path B's pass (B's folder now holds A's
+    // entity); the earlier warning has then been shown already, so B's Flush says it no
+    // longer applies instead of leaving a false "copied as independent" standing.
     internal sealed class LinkCopyReport
     {
         private const int Threshold = 5;
 
         private readonly Dictionary<(string kind, Int64 id, string? name), string> _unlinked = new();
         private readonly HashSet<(string kind, Int64 id, string? name)> _linked = new();
+        // Misses already flushed: shown in full, or only counted in a summary line.
+        private readonly HashSet<(string kind, Int64 id, string? name)> _shown = new();
+        private readonly HashSet<(string kind, Int64 id, string? name)> _suppressed = new();
+        private readonly List<string> _corrections = new();
         private int _sameTenantCount;
+        private int _sameTenantSummarized;
+        private int _suppressedSummarized;
 
         public void NoteSameTenantCopy(IWritableHost host, string message)
         {
@@ -329,33 +343,55 @@ public partial class OrchProvider
         public void NoteLinked(string kind, Int64 srcEntityId, string? name)
         {
             var key = (kind, srcEntityId, name);
-            _linked.Add(key);
+            if (!_linked.Add(key)) return;
             _unlinked.Remove(key);
+            if (_shown.Remove(key))
+            {
+                _corrections.Add($"The {kind} '{name}' is now shared at the destination as in the source (a later folder of this copy held its counterpart), so the earlier warning that it was copied as an independent {kind} no longer applies.");
+            }
+            _suppressed.Remove(key);
         }
 
         public void NoteUnlinked(string kind, Int64 srcEntityId, string? name, string message)
         {
             var key = (kind, srcEntityId, name);
             if (_linked.Contains(key)) return; // an earlier pass already linked it
+            if (_shown.Contains(key) || _suppressed.Contains(key)) return; // already reported
             _unlinked[key] = message;
         }
 
         public void Flush(IWritableHost host)
         {
-            if (_sameTenantCount > Threshold)
+            foreach (var correction in _corrections)
             {
+                host.WriteWarning(correction);
+            }
+            _corrections.Clear();
+
+            if (_sameTenantCount > Threshold && _sameTenantCount != _sameTenantSummarized)
+            {
+                _sameTenantSummarized = _sameTenantCount;
                 host.WriteWarning($"{_sameTenantCount} shared entities were copied without their folder links (same tenant); {_sameTenantCount - Threshold} further warning(s) were suppressed. Use Add-Orch{{Asset,Queue,Bucket}}Link to share an existing entity with another folder instead of copying it.");
             }
 
-            int shown = 0;
-            foreach (var message in _unlinked.Values)
+            foreach (var (key, message) in _unlinked)
             {
-                if (++shown > Threshold) break;
-                host.WriteWarning(message);
+                if (_shown.Count < Threshold)
+                {
+                    _shown.Add(key);
+                    host.WriteWarning(message);
+                }
+                else
+                {
+                    _suppressed.Add(key);
+                }
             }
-            if (_unlinked.Count > Threshold)
+            _unlinked.Clear();
+
+            if (_suppressed.Count > 0 && _suppressed.Count != _suppressedSummarized)
             {
-                host.WriteWarning($"{_unlinked.Count} shared entities were copied as independent entities because the destination had no matching entity in the corresponding folder(s); {_unlinked.Count - Threshold} further warning(s) were suppressed. Get-Orch{{Asset,Queue,Bucket}}Link -ExportCsv on the source and Add-Orch{{Asset,Queue,Bucket}}Link on the destination re-create the sharing.");
+                _suppressedSummarized = _suppressed.Count;
+                host.WriteWarning($"{_shown.Count + _suppressed.Count} shared entities were copied as independent entities because the destination had no matching entity in the corresponding folder(s); {_suppressed.Count} further warning(s) were suppressed. Get-Orch{{Asset,Queue,Bucket}}Link -ExportCsv on the source and Add-Orch{{Asset,Queue,Bucket}}Link on the destination re-create the sharing.");
             }
         }
     }

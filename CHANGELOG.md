@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Fixed
+
+- **`Copy-Item` with several source paths no longer leaves a false "copied as an independent
+  asset" warning.** Given an array or a wildcard, it copies one path after another, and a
+  shared asset, queue or bucket is linked when the folder holding its counterpart is copied.
+  When that folder came in a later path, the first path had already warned that the entity was
+  copied as an independent one, and the warning stayed although the sharing was then
+  reproduced. Now one report covers the whole command: a warning is given once, and when a
+  later path links the entity, a second line says the earlier warning no longer applies. The
+  copy itself was right before too.
+  - An array of paths (`Copy-Item A,B,C`) was not recognised as one command at all, unlike a
+    wildcard, so the folder progress bar also restarted its count on every element. In Test
+    Manager, `Copy-Item Tm:\A,Tm:\B Tm2:\NEW` copied both projects into `NEW`; the refusal of
+    several projects into one named project applied only to a wildcard. Both now hold for an
+    array too.
+
 ## [1.25.0] - 2026-11-10
 
 Tenants and their services can be managed, a copy no longer creates an entity without a reference it
