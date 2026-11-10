@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+## [1.25.0] - 2026-11-10
+
+Tenants and their services can be managed, a copy no longer creates an entity without a reference it
+could not look up, and the task cmdlets work in modern folders.
+
 ### Added
 
 - **Tenants and their services can be managed**, with the API of `uip admin tenants`:

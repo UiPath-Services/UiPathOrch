@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.24.0'
+ModuleVersion = '1.25.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -553,6 +553,34 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.25.0
+
+Added: tenants and their services can be managed: New-, Update-, Enable-, Disable-, Remove- and
+Restore-PmTenant, and Add-, Remove-, Enable- and Disable-PmTenantService, with
+Get-PmAvailableService. The cmdlets wait for the asynchronous operation to finish (-NoWait returns).
+
+Added: Copy-Item copies a folder under a new name, as on the file system. Get-OrchTaskData reads a
+task's form values and the action it was completed with.
+
+Changed: *-OrchActionCatalog are renamed *-OrchTaskCatalog; the former names still work once the
+module is loaded. Tasks come in Action Center's order. Get-OrchLicenseRuntime shows IsLicensed as
+True / False.
+
+Fixed: a copy whose reference lookup fails (403 for a missing scope, a network error) no longer
+creates the entity without it -- Copy-OrchTrigger created a trigger without its executor robots,
+which once enabled runs on any robot in the folder; an asset lost its per-user values. That entity
+is now skipped with an error naming the lookup; a reference the destination does not have is a
+warning, as before.
+
+Fixed: New-/Update- cmdlets (triggers, API triggers, queues, processes, test set schedules,
+machines) skip an entity when a name they were given does not resolve, instead of creating or
+changing it without that name: a failed -QueueDefinitionName made a time trigger, enabled and
+running every minute by default.
+
+Fixed: Get-OrchTask finds modern-folder tasks; Remove-OrchTask removes a task.
+
+Fixed: the help of Copy-OrchTrigger and New-OrchTrigger lists the OAuth scopes they need.
+
 1.24.0
 
 Added: Copy-Item Tm1:\PRJ Tm2:\[NEWPREFIX] copies a whole Test Manager project, also to another
@@ -702,31 +730,6 @@ local accounts.
 
 Changed: Get-OrchProcessDetail reads entry point paths from the listing, one request fewer per
 process; Get-OrchTestSetDetail prints each folder as it arrives.
-
-1.19.0
-
-Added: Get-OrchProcessDependency and Get-OrchProcessWorkflow read the dependencies and the .xaml
-files of the package a process runs -- the "Explore package" view, which Orchestrator has no
-endpoint for, so the package is downloaded once and only the two lists are kept.
--Dependency takes wildcards: -Recurse -Dependency 'UiPath.UIAutomation*' names every process using
-that activity package. Get-OrchPackageDependency, Get-OrchPackageWorkflow and
-Get-OrchLibraryDependency ask the same of a feed package or a library.
-
-Changed: Remove-OrchPackage names the processes that block a delete, after Orchestrator's own
-"referred in active processes" refusal.
-
-Changed: Get-OrchTriggerDetail reads a folder in one request (200 triggers: 401 requests and 25.6 s
-became 1 and 0.32 s), and ExecutorRobots carries the robots' names. Get-OrchProcessDetail skips the
-retention request when the release detail already has it (API 19+) and caches retention;
-Get-OrchTestSetDetail fetches in parallel and caches. Rows from parallel reads appear as they
-arrive instead of mostly at the end.
-
-Changed: progress bars have a fixed noun label, with the destination inside the bar, and nested
-bars are shown under the bar they belong to. Copy-Item's folder bar counts folders.
-
-Fixed: one Ctrl+C stops Copy-Item, where it used to begin the next folder.
-
-Fixed: tables grouped by Path no longer clip later rows to the width of a folder's first row.
 '@
 
         # Prerelease string of this module
