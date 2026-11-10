@@ -264,8 +264,14 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
 
                 schedule.AssignBoolIfNotNull(IsConnected, (s, v) => s.IsConnected = v);
 
+                // Every name below that does not resolve (not found, ambiguous, or the lookup
+                // itself failed -- AssignIdFromName has written the error) skips this trigger.
+                // Creating it anyway made a trigger the caller did not ask for: no calendar, or a
+                // time trigger in place of a queue trigger -- enabled and every minute by default.
+                bool resolved = true;
+
                 #region // Convert CalendarName to CalendarId
-                schedule.AssignIdFromName(
+                resolved &= schedule.AssignIdFromName(
                     CalendarName,
                     () => drive.Calendars.Get(),
                     e => e.Name!,
@@ -288,7 +294,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
                 schedule.StartProcessCronDetails ??= $"{{\"advancedCron\":{System.Text.Json.JsonSerializer.Serialize(schedule.StartProcessCron ?? "")}}}";
 
                 #region Convert ReleaseName to ReleaseId
-                schedule.AssignIdFromName(
+                resolved &= schedule.AssignIdFromName(
                     ReleaseName,
                     () => drive.Releases.Get(folder),
                     e => e.Name!,
@@ -298,7 +304,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
                 #endregion
 
                 #region Convert QueueDefinitionName to QueueDefinitionId
-                schedule.AssignIdFromName(
+                resolved &= schedule.AssignIdFromName(
                     QueueDefinitionName,
                     () => drive.Queues.Get(folder),
                     e => e.Name!,
@@ -310,7 +316,7 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
                 #region Convert TimeZone to TimeZoneId
                 schedule.AssignStringIfNotNullOrEmpty(TimeZoneId, (s, v) => s.TimeZoneId = v);
 
-                schedule.AssignIdFromName(
+                resolved &= schedule.AssignIdFromName(
                     TimeZone,
                     TimeZoneInfo.GetSystemTimeZones,
                     e => e.DisplayName,
@@ -324,11 +330,12 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
                 schedule.AssignDateTimeIfNotNull(StopProcessDate, (s, v) => s.StopProcessDate = v);
 
                 // Deserialize ExecutorRobots
-                schedule.ExecutorRobots = DeserializeExecutorRobots(this, drive, folder, schedule.GetPSPath(), ExecutorRobots);
+                schedule.ExecutorRobots = DeserializeExecutorRobots(this, drive, folder, schedule.GetPSPath(), ExecutorRobots, out bool erFailed);
+                if (!resolved || erFailed) continue; // errors already written
 
                 // Deserialize MachineRobots
                 var mr = DeserializeMachineRobotSessions(this, drive, folder, schedule.GetPSPath(), MachineRobots, out bool mrParseFailed);
-                if (mrParseFailed) continue; // malformed -MachineRobots: error already written, skip this trigger
+                if (mrParseFailed) continue; // malformed -MachineRobots, or its lookups failed: error already written, skip this trigger
                 schedule.MachineRobots = mr;
 
                 // Mirror the web POST: -MachineRobots alone must still write the robot

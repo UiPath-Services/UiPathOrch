@@ -159,13 +159,15 @@ public class UpdateApiTriggerCmdlet : OrchestratorPSCmdlet
                 // (clears, matching the previous behavior).
                 bool releaseResolved = false;
                 string? resolvedReleaseKey = null;
-                postTrigger.AssignIdFromName(
+                // Not resolved (error already written): leave the trigger unchanged rather than
+                // apply the other changes without the process the caller asked for.
+                if (!postTrigger.AssignIdFromName(
                     Release,
                     () => drive.Releases.Get(folder),
                     e => e.Name!,
                     e => e.Key!,
                     (t, v) => { resolvedReleaseKey = v; releaseResolved = true; },
-                    this, target, "Release");
+                    this, target, "Release")) continue;
 
                 bool dirty = ComputeApiTriggerUpdate(postTrigger, trigger, new ApiTriggerUpdateInputs
                 {

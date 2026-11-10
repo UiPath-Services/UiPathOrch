@@ -82,9 +82,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
     days) when the source's could not be read, and with an unmapped entry point when the entry
     points could not be read; now it does not create it. The retention setting is read before a
     process in a personal workspace is replaced, so a skipped copy leaves the existing one.
-- **`Copy-OrchTrigger` documents the scopes it needs**: besides `OR.Jobs`, it reads the folders
-  and the processes (`OR.Execution`), and depending on the trigger the queues, the calendars, the
-  robots and the machines. The help listed `OR.Jobs` alone.
+- **`New-` and `Update-OrchTrigger` / `-OrchApiTrigger` do not act on a name they could not
+  resolve.** A `-CalendarName`, `-QueueDefinitionName`, `-ReleaseName` or `-TimeZone` that was not
+  found, matched more than one, or could not be looked up (a 403 for a missing scope) was reported
+  as an error, and the trigger was still sent to the server, so it could be created or updated
+  without what was asked for: without the calendar, or as a time
+  trigger in place of a queue trigger -- and `New-OrchTrigger` creates a trigger enabled and
+  running every minute by default. Likewise when the robots of `-ExecutorRobots` or
+  `-MachineRobots` could not be read, the trigger was created with no robots, so it would run on
+  any robot in the folder. Now that trigger is skipped. A robot or machine name that matches
+  nothing is still a warning, as in `Copy-OrchTrigger`. The error for a failed lookup now says what
+  was being looked up.
+- **`Copy-OrchTrigger` and `New-OrchTrigger` document the scopes they need**: besides `OR.Jobs`,
+  they read the folders and the processes (`OR.Execution`), and depending on the trigger or the
+  parameters the queues, the calendars, the robots and the machines. The help listed `OR.Jobs`
+  alone.
 
 - **`Get-OrchTask` finds the tasks of a modern folder.** It used the endpoint for classic folders
   only, so it returned nothing in a modern folder; the tasks were visible only through

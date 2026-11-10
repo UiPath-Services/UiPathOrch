@@ -183,13 +183,14 @@ public class NewApiTriggerCmdlet : OrchestratorPSCmdlet
 
                 // Resolve Release name -> ReleaseKey (HttpTrigger uses
                 // ReleaseKey, not ReleaseId).
-                newTrigger.AssignIdFromName(
+                // Not resolved (not found, ambiguous, or the lookup failed): the error is written.
+                if (!newTrigger.AssignIdFromName(
                     Release,
                     () => drive.Releases.Get(folder),
                     e => e.Name!,
                     e => e.Key!,
                     (t, v) => t.ReleaseKey = v,
-                    this, target, "Release");
+                    this, target, "Release")) continue;
 
                 if (string.IsNullOrEmpty(newTrigger.ReleaseKey))
                 {

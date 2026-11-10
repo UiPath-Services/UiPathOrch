@@ -622,8 +622,13 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
 
     // executorRobots receives an enumeration of RobotName values.
     // Since we concatenate SelectMany() results, there is no need to build an internal List<RobotExecutor>. This is more efficient.
-    internal static RobotExecutor[]? DeserializeExecutorRobots(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string target, IEnumerable<string>? executorRobots)
+    // failed: the robots could not be READ (403 for a missing scope, a network error). The
+    // caller then skips the trigger: sending it on without the robots would leave a trigger that
+    // runs on any robot in the folder. A name that matches no robot stays a warning (failed is
+    // false), the same as Copy-OrchTrigger's "not in the destination".
+    internal static RobotExecutor[]? DeserializeExecutorRobots(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string target, IEnumerable<string>? executorRobots, out bool failed)
     {
+        failed = false;
         if (executorRobots is null || executorRobots.All(string.IsNullOrEmpty)) return null;
 
         try
@@ -651,7 +656,8 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
         catch (Exception ex)
         {
-            _this?.WriteError(new ErrorRecord(new OrchException(target, "Failed to deserialize ExecutorRobots.", ex), "DeserializeExecutorRobotsError", ErrorCategory.InvalidOperation, target));
+            failed = true;
+            _this?.WriteError(new ErrorRecord(new OrchException(target, "Failed to look up the robots of -ExecutorRobots; this trigger is skipped", ex), "DeserializeExecutorRobotsError", ErrorCategory.InvalidOperation, target));
             return null;
         }
     }
@@ -677,6 +683,9 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
             : null;
     }
 
+    // failed: the value is malformed JSON, or the robots, machines or sessions could not be READ
+    // (403 for a missing scope, a network error); either way the caller skips the trigger. A
+    // name that matches nothing stays a warning (failed is false).
     internal MachineRobotSession[]? DeserializeMachineRobotSessions(IWritableHost? _this, OrchDriveInfo drive, Folder folder, string target, string[]? machineRobots, out bool parseFailed)
     {
         parseFailed = false;
@@ -809,7 +818,8 @@ public abstract class OrchestratorPSCmdlet : PSCmdlet, IWritableHost
         }
         catch (Exception ex)
         {
-            _this?.WriteError(new ErrorRecord(new OrchException(target, "Failed to resolve MachineRobots.", ex), "ResolveMachineRobotsError", ErrorCategory.InvalidOperation, target));
+            parseFailed = true;
+            _this?.WriteError(new ErrorRecord(new OrchException(target, "Failed to look up the robots, machines or sessions of -MachineRobots; this trigger is skipped", ex), "ResolveMachineRobotsError", ErrorCategory.InvalidOperation, target));
             return null;
         }
     }

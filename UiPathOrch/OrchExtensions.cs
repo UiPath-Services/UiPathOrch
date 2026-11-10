@@ -775,7 +775,9 @@ internal static class OrchStringExtensions
         }
         catch (Exception ex)
         {
-            host.WriteError(new ErrorRecord(new OrchException(targetName, ex), $"Get{nameKind}Error", ErrorCategory.InvalidOperation, target));
+            // Name what was being looked up: the server's text for a missing scope
+            // ("Unauthorized") does not say which call it refused.
+            host.WriteError(new ErrorRecord(new OrchException(targetName ?? "", $"Could not look up the {nameKind} \"{name}\"", ex), $"Get{nameKind}Error", ErrorCategory.InvalidOperation, target));
         }
         return false;
     }

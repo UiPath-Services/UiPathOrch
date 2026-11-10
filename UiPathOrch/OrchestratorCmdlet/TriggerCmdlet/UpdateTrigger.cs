@@ -241,25 +241,33 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
                 // captures only the resolved id + a resolved flag (a null name leaves the setter
                 // uncalled -> skipped; an empty name resolves to the default id -> clears, matching
                 // the previous inline behavior).
+                // A name that does not resolve (not found, ambiguous, or the lookup itself failed;
+                // the error is already written) leaves the trigger unchanged. Applying the rest of
+                // the update without it is a change the caller did not ask for -- e.g. -Enabled
+                // taking effect while -QueueDefinitionName or -CalendarName was refused.
+                bool allResolved = true;
+
                 long? resolvedCalendarId = null; bool calendarResolved = false;
-                new ProcessSchedule().AssignIdFromName(
+                allResolved &= new ProcessSchedule().AssignIdFromName(
                     CalendarName, () => drive.Calendars.Get(), e => e.Name!, e => e.Id!,
                     (s, v) => { resolvedCalendarId = v; calendarResolved = true; }, this, target, "Calendar");
 
                 long? resolvedReleaseId = null; bool releaseResolved = false;
-                new ProcessSchedule().AssignIdFromName(
+                allResolved &= new ProcessSchedule().AssignIdFromName(
                     ReleaseName, () => drive.Releases.Get(folder), e => e.Name!, e => e.Id!,
                     (s, v) => { resolvedReleaseId = v; releaseResolved = true; }, this, target, "Release");
 
                 long? resolvedQueueDefinitionId = null; bool queueResolved = false;
-                new ProcessSchedule().AssignIdFromName(
+                allResolved &= new ProcessSchedule().AssignIdFromName(
                     QueueDefinitionName, () => drive.Queues.Get(folder), e => e.Name!, e => e.Id!,
                     (s, v) => { resolvedQueueDefinitionId = v; queueResolved = true; }, this, target, "Queue");
 
                 string? resolvedTimeZoneId = null; bool timeZoneResolved = false;
-                new ProcessSchedule().AssignIdFromName(
+                allResolved &= new ProcessSchedule().AssignIdFromName(
                     TimeZone, TimeZoneInfo.GetSystemTimeZones, e => e.DisplayName, e => e.Id!,
                     (s, v) => { resolvedTimeZoneId = v; timeZoneResolved = true; }, this, target, "TimeZone");
+
+                if (!allResolved) continue;
 
                 bool machineRobotsSpecified = MachineRobots is not null;
                 MachineRobotSession[]? resolvedMachineRobots = null;
@@ -273,7 +281,8 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
                 RobotExecutor[]? resolvedExecutorRobots = null;
                 if (executorRobotsSpecified)
                 {
-                    resolvedExecutorRobots = DeserializeExecutorRobots(this, drive, folder, postTrigger.GetPSPath(), ExecutorRobots);
+                    resolvedExecutorRobots = DeserializeExecutorRobots(this, drive, folder, postTrigger.GetPSPath(), ExecutorRobots, out bool erFailed);
+                    if (erFailed) continue; // the robots could not be read: error already written
 
                     // Modern Orchestrator (API v12+) assigns trigger execution as
                     // account+machine pairs; -ExecutorRobots alone writes the robot
