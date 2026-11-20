@@ -184,7 +184,7 @@ public class RemoveMachineClientSecretCmdlet : OrchestratorPSCmdlet
                     {
                         try
                         {
-                            drive.OrchAPISession.DeleteMachineClientSecret(secret.Item2!);
+                            drive.OrchAPISession.DeleteMachineClientSecret(m.LicenseKey, secret.Item2!);
                             drive.MachineClientSecrets.ClearCache();
                         }
                         catch (OperationCanceledException)
@@ -193,7 +193,7 @@ public class RemoveMachineClientSecretCmdlet : OrchestratorPSCmdlet
                         }
                         catch (Exception ex)
                         {
-                            WriteError(new ErrorRecord(new OrchException(m.GetPSPath(), ex), "AddMachineSecretKeyError", ErrorCategory.InvalidOperation, m));
+                            WriteError(new ErrorRecord(new OrchException(m.GetPSPath(), ex), "RemoveMachineClientSecretError", ErrorCategory.InvalidOperation, m));
                         }
                     }
                 }

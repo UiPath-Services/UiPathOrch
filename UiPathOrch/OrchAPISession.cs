@@ -2082,7 +2082,30 @@ public partial class OrchAPISession : IDisposable
 
     public MachineClientSecretResponse? AddMachineClientSecret(string licenseKey) => HttpRequest<MachineClientSecretResponse>(HttpMethod.Post, $"/api/clientsecrets/{licenseKey}");
 
-    public void DeleteMachineClientSecret(string secretId) => HttpRequest(HttpMethod.Delete, $"/api/clientsecrets/{secretId}");
+    // The internal route (absent from every public swagger, v11-v20) differs by deployment, verified 2026-11-20:
+    //   Cloud:                 /api/clientsecrets/{licenseKey}/{secretId} -> 204,  /{secretId} -> 405
+    //   24.10.8 (17), AS (18): /api/clientsecrets/{secretId}              -> 204,  /{licenseKey}/{secretId} -> 404
+    // The version number cannot tell them apart (AS reports 18 and still takes the old form), so try the
+    // Cloud form first and fall back on 404/405. If the fallback answers 405 too, the first error is the
+    // real one (e.g. Cloud 404 for a secret already gone), so that is what surfaces.
+    public void DeleteMachineClientSecret(string licenseKey, string secretId)
+    {
+        try
+        {
+            HttpRequest(HttpMethod.Delete, $"/api/clientsecrets/{licenseKey}/{secretId}");
+        }
+        catch (HttpResponseException first) when (first.StatusCode is HttpStatusCode.NotFound or HttpStatusCode.MethodNotAllowed)
+        {
+            try
+            {
+                HttpRequest(HttpMethod.Delete, $"/api/clientsecrets/{secretId}");
+            }
+            catch (HttpResponseException second) when (second.StatusCode == HttpStatusCode.MethodNotAllowed)
+            {
+                System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw(first);
+            }
+        }
+    }
 
     // Returns an empty string
     public void PatchMachine(ExtendedMachine machine) => HttpRequest(HttpMethod.Patch, $"/odata/Machines({machine.Id!.Value})", null, machine);
