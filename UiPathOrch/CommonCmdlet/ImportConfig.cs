@@ -160,11 +160,18 @@ public class ImportOrchConfigCmdlet : PSCmdlet
             WriteVerbose($"{Core.OrchProvider.ConfigPathEnvVar} set to '{configFilePath}' for this process. Child processes inherit it; nothing was written to the persistent environment.");
         }
 
-        // If the current location is on an Orch drive, switch to C: since we cannot remove a drive while it is current
+        // A drive cannot be removed while it is current, so step off an Orch drive first: to the
+        // user's home, which every OS has. It was "C:", which Linux and macOS do not have, so
+        // Import-OrchConfig run from inside an Orch drive failed there with "Cannot find drive.
+        // A drive with the name 'C' does not exist." and reloaded nothing (seen 2026-11-21 on
+        // RHEL 8.5); a Windows whose system drive is another letter failed the same way.
         var currentDrive = SessionState.Drive.Current;
         if (currentDrive is OrchDriveInfo or OrchDuDriveInfo or OrchTmDriveInfo)
         {
-            SessionState.Path.SetLocation(@"C:");
+            string home = SessionState.Provider.GetOne("FileSystem").Home;
+            if (string.IsNullOrEmpty(home))
+                home = System.Environment.GetFolderPath(System.Environment.SpecialFolder.UserProfile);
+            SessionState.Path.SetLocation(home);
         }
 
         // Remove all existing drives (caches are also cleared)
