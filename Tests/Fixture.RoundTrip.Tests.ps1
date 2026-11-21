@@ -33,7 +33,7 @@ BeforeAll {
     $script:TargetDrive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     $script:FixtureRoot = "${script:TargetDrive}:\TestFixture_Base"
     $script:FixturePath = Join-Path $PSScriptRoot '..\TestData\Fixture' | Resolve-Path
-    $script:ExportDir = Join-Path $env:TEMP "FixtureRoundTrip_$(Get-Random -Maximum 9999)"
+    $script:ExportDir = Join-Path ([System.IO.Path]::GetTempPath()) "FixtureRoundTrip_$(Get-Random -Maximum 9999)"
     New-Item -ItemType Directory -Path $script:ExportDir -Force | Out-Null
 
     Get-PSDrive $script:TargetDrive -ErrorAction Stop | Out-Null

@@ -41,7 +41,7 @@ BeforeAll {
     $script:RenameBucket = 'zzCBIrenamed'
 
     # Local files to seed the source bucket.
-    $script:Stage = Join-Path $env:TEMP "CBI_$suffix"
+    $script:Stage = Join-Path ([System.IO.Path]::GetTempPath()) "CBI_$suffix"
     New-Item -Path $script:Stage -ItemType Directory -Force | Out-Null
     Set-Content -Path (Join-Path $script:Stage 'meta.json')  -Value '{"k":"v","n":42}'        -Encoding UTF8 -NoNewline
     Set-Content -Path (Join-Path $script:Stage 'readme.txt') -Value 'hello copy-orchbucketitem' -Encoding UTF8 -NoNewline

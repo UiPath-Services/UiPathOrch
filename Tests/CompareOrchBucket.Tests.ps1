@@ -31,10 +31,10 @@ BeforeAll {
     $global:ConfirmPreference = 'None'
 
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
-    $null = mkdir $script:RootA
-    $null = mkdir $script:RootB
-    $null = mkdir $script:SubA
-    $null = mkdir $script:SubB
+    $null = New-Item -ItemType Directory -Path $script:RootA
+    $null = New-Item -ItemType Directory -Path $script:RootB
+    $null = New-Item -ItemType Directory -Path $script:SubA
+    $null = New-Item -ItemType Directory -Path $script:SubB
 
     New-OrchBucket -Path $script:RootA -Name $script:Same    -Description 'd1' | Out-Null
     New-OrchBucket -Path $script:RootA -Name $script:Changed -Description 'd1' | Out-Null

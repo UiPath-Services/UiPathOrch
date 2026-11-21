@@ -45,7 +45,7 @@ BeforeAll {
     # Capture host-only -WhatIf lines (they never reach a pipeline / stream).
     function script:Get-WhatIfLines {
         param([scriptblock]$Action)
-        $tf = Join-Path $env:TEMP "wi_$([guid]::NewGuid().ToString('N')).txt"
+        $tf = Join-Path ([System.IO.Path]::GetTempPath()) "wi_$([guid]::NewGuid().ToString('N')).txt"
         Start-Transcript -Path $tf -Force | Out-Null
         try { & $Action } finally { Stop-Transcript | Out-Null }
         $lines = @(Get-Content $tf | Where-Object { $_ -match 'What if:' })

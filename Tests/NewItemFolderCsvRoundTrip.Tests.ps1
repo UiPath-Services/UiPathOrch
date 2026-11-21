@@ -76,7 +76,7 @@ BeforeAll {
     $script:Before = script:Get-TreeSnapshot
 
     # --- Export with the real provider -ExportCsv --------------------------------
-    $script:Csv = Join-Path $env:TEMP "NewItemFolderRT_$(Get-Random -Maximum 99999).csv"
+    $script:Csv = Join-Path ([System.IO.Path]::GetTempPath()) "NewItemFolderRT_$(Get-Random -Maximum 99999).csv"
     Get-ChildItem $script:DrivePrefix -Recurse -ExportCsv $script:Csv | Out-Null
     # Keep only the rows that belong to our tree (top folders + their descendants).
     $script:Rows = @(Import-Csv $script:Csv | Where-Object {

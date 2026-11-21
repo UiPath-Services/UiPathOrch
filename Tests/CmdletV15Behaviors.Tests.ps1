@@ -127,7 +127,7 @@ Describe 'v1.5.1: Update-OrchApiTrigger CSV round-trip' {
     It 'Description and Enabled round-trip through Export-Csv | Update' {
         if ($script:ApiTriggerSkip) { Set-ItResult -Skipped -Because $script:ApiTriggerSkip; return }
         $name = "${script:Prefix}csvroundtrip"
-        $csv = Join-Path $env:TEMP "regression-v15-$PID-$([Guid]::NewGuid().Guid.Substring(0,8)).csv"
+        $csv = Join-Path ([System.IO.Path]::GetTempPath()) "regression-v15-$PID-$([Guid]::NewGuid().Guid.Substring(0,8)).csv"
         try {
             New-OrchApiTrigger -Path $script:Folder -Name $name -Release $script:Release `
                 -Description 'initial' -Enabled false | Out-Null
@@ -202,7 +202,7 @@ Describe 'v1.5.3: TestDataQueue / TaskCatalog full CSV round-trip' {
     It 'New-OrchTestDataQueue: Get -ExportCsv | Import-Csv | New- preserves Description + schema' {
         $src = "${script:Prefix}tdq-rt-src"
         $dst = "${script:Prefix}tdq-rt-dst"
-        $csv = Join-Path $env:TEMP "${script:Prefix}tdq-rt.csv"
+        $csv = Join-Path ([System.IO.Path]::GetTempPath()) "${script:Prefix}tdq-rt.csv"
         try {
             New-OrchTestDataQueue -Path $script:Folder -Name $src -Description 'rt source' `
                 -ContentJsonSchema '{"type":"object","properties":{"OrderId":{"type":"string"}}}' -ErrorAction Stop | Out-Null
@@ -229,7 +229,7 @@ Describe 'v1.5.3: TestDataQueue / TaskCatalog full CSV round-trip' {
     It 'New-OrchTaskCatalog: Get -ExportCsv | Import-Csv | New- preserves Description + Encrypted' {
         $src = "${script:Prefix}ac-rt-src"
         $dst = "${script:Prefix}ac-rt-dst"
-        $csv = Join-Path $env:TEMP "${script:Prefix}ac-rt.csv"
+        $csv = Join-Path ([System.IO.Path]::GetTempPath()) "${script:Prefix}ac-rt.csv"
         try {
             New-OrchTaskCatalog -Path $script:Folder -Name $src -Description 'rt source' -Encrypted true -ErrorAction Stop | Out-Null
             Get-OrchTaskCatalog -Path $script:Folder -Name $src -ExportCsv $csv | Out-Null
@@ -305,7 +305,7 @@ Describe 'v1.5.3: New-OrchWebhook + Get-OrchWebhook -ExportCsv' {
 
     It 'Get | Export-Csv | Import-Csv | Update- round-trips Description and Enabled' {
         $name = "${script:Prefix}webhook-rt"
-        $csv  = Join-Path $env:TEMP "${script:Prefix}webhook-rt.csv"
+        $csv  = Join-Path ([System.IO.Path]::GetTempPath()) "${script:Prefix}webhook-rt.csv"
         try {
             # -SubscribeToAllEvents false + -Events <one rare event>: the
             # round-trip flips Enabled to true below; an enabled subscribe-to-all
@@ -357,7 +357,7 @@ Describe 'v1.5.3: Asset / Bucket / Queue Link -ExportCsv' {
     # Beyond the header check, assert every row has a non-empty value
     # in every column so a partially-populated row doesn't slip through.
     It 'Get-OrchAssetLink -ExportCsv emits Path / Name / Link with values populated' {
-        $csv = Join-Path $env:TEMP "${script:Prefix}assetlinks.csv"
+        $csv = Join-Path ([System.IO.Path]::GetTempPath()) "${script:Prefix}assetlinks.csv"
         try {
             Get-OrchAssetLink -Path "${script:TargetDrive}:\TestFixture_Base" -Recurse -ExportCsv $csv | Out-Null
             Test-Path $csv | Should -BeTrue -Because 'ExportCsv must create the file even on empty output'
@@ -375,7 +375,7 @@ Describe 'v1.5.3: Asset / Bucket / Queue Link -ExportCsv' {
     }
 
     It 'Get-OrchBucketLink -ExportCsv emits Path / Name / Link with values populated' {
-        $csv = Join-Path $env:TEMP "${script:Prefix}bucketlinks.csv"
+        $csv = Join-Path ([System.IO.Path]::GetTempPath()) "${script:Prefix}bucketlinks.csv"
         try {
             Get-OrchBucketLink -Path "${script:TargetDrive}:\TestFixture_Base" -Recurse -ExportCsv $csv | Out-Null
             Test-Path $csv | Should -BeTrue
@@ -393,7 +393,7 @@ Describe 'v1.5.3: Asset / Bucket / Queue Link -ExportCsv' {
     }
 
     It 'Get-OrchQueueLink -ExportCsv emits Path / Name / Link with values populated' {
-        $csv = Join-Path $env:TEMP "${script:Prefix}queuelinks.csv"
+        $csv = Join-Path ([System.IO.Path]::GetTempPath()) "${script:Prefix}queuelinks.csv"
         try {
             Get-OrchQueueLink -Path "${script:TargetDrive}:\TestFixture_Base" -Recurse -ExportCsv $csv | Out-Null
             Test-Path $csv | Should -BeTrue
@@ -422,7 +422,7 @@ Describe 'v1.5.3: -ExportCsv value-population on fixture-seeded entities' {
     # non-empty values in known columns; CSV emission must preserve them.
     It 'Get-OrchApiTrigger -ExportCsv populates Method, Slug, CallingMode, Release' {
         if ($script:ApiTriggerSkip) { Set-ItResult -Skipped -Because $script:ApiTriggerSkip; return }
-        $csv = Join-Path $env:TEMP "${script:Prefix}api_triggers.csv"
+        $csv = Join-Path ([System.IO.Path]::GetTempPath()) "${script:Prefix}api_triggers.csv"
         try {
             Get-OrchApiTrigger -Path "${script:TargetDrive}:\TestFixture_Base" -Recurse -ExportCsv $csv | Out-Null
             $rows = @(Import-Csv $csv | Where-Object Name -in 'trig-api-1', 'trig-api-2', 'trig-api-prod')
@@ -440,7 +440,7 @@ Describe 'v1.5.3: -ExportCsv value-population on fixture-seeded entities' {
     }
 
     It 'Get-OrchTestDataQueue -ExportCsv populates Description and ContentJsonSchema' {
-        $csv = Join-Path $env:TEMP "${script:Prefix}tdqs.csv"
+        $csv = Join-Path ([System.IO.Path]::GetTempPath()) "${script:Prefix}tdqs.csv"
         try {
             Get-OrchTestDataQueue -Path "${script:TargetDrive}:\TestFixture_Base" -Recurse -ExportCsv $csv | Out-Null
             $rows = @(Import-Csv $csv | Where-Object Name -in 'tdq-any', 'tdq-orders', 'tdq-qa')
@@ -456,7 +456,7 @@ Describe 'v1.5.3: -ExportCsv value-population on fixture-seeded entities' {
     }
 
     It 'Get-OrchTaskCatalog -ExportCsv populates Description and Encrypted' {
-        $csv = Join-Path $env:TEMP "${script:Prefix}acs.csv"
+        $csv = Join-Path ([System.IO.Path]::GetTempPath()) "${script:Prefix}acs.csv"
         try {
             Get-OrchTaskCatalog -Path "${script:TargetDrive}:\TestFixture_Base" -Recurse -ExportCsv $csv | Out-Null
             $rows = @(Import-Csv $csv | Where-Object Name -in 'ac-dev', 'ac-prod', 'ac-secure')
@@ -489,7 +489,7 @@ Describe 'v1.5.3: Get-OrchTestSetSchedule -ExportCsv header columns' {
     BeforeEach { if ($script:TaSkip) { Set-ItResult -Skipped -Because $script:TaSkip } }
 
     It 'emits exactly the New-/Update- parameter names as columns' {
-        $csv = Join-Path $env:TEMP "${script:Prefix}schedules.csv"
+        $csv = Join-Path ([System.IO.Path]::GetTempPath()) "${script:Prefix}schedules.csv"
         try {
             Get-OrchTestSetSchedule -Path "${script:TargetDrive}:\TestFixture_Base" -Recurse -ExportCsv $csv | Out-Null
             Test-Path $csv | Should -BeTrue

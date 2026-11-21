@@ -31,10 +31,10 @@ BeforeAll {
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
     $script:PackageId = (Get-OrchPackage -Path "${script:Drive}:\" -ErrorAction SilentlyContinue | Select-Object -First 1).Id
 
-    $null = mkdir $script:RootA
-    $null = mkdir $script:RootB
-    $null = mkdir $script:SubA
-    $null = mkdir $script:SubB
+    $null = New-Item -ItemType Directory -Path $script:RootA
+    $null = New-Item -ItemType Directory -Path $script:RootB
+    $null = New-Item -ItemType Directory -Path $script:SubA
+    $null = New-Item -ItemType Directory -Path $script:SubB
 
     if ($script:PackageId) {
         # Top level: same name + same Description -> equal.

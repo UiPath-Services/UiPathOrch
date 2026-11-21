@@ -38,10 +38,10 @@ BeforeAll {
 
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
 
-    $null = mkdir $script:RootA
-    $null = mkdir $script:RootB
-    $null = mkdir $script:SubA
-    $null = mkdir $script:SubB
+    $null = New-Item -ItemType Directory -Path $script:RootA
+    $null = New-Item -ItemType Directory -Path $script:RootB
+    $null = New-Item -ItemType Directory -Path $script:SubA
+    $null = New-Item -ItemType Directory -Path $script:SubB
 
     # Reference side (A)
     Set-OrchAsset -Path $script:RootA -ValueType Text -Name $script:Same    -Value 'v1'

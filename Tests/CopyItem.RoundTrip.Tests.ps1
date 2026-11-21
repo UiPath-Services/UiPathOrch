@@ -58,7 +58,7 @@ BeforeAll {
     # Copy-Item creates a child folder under dst named after src. Effective
     # path of the copy is dst/<srcRootName>.
     $script:DstCopyRoot  = "$($script:DstRoot)\TestFixture_Base"
-    $script:ExportDir    = Join-Path $env:TEMP "CopyItemRoundTrip_$(Get-Random -Maximum 9999)"
+    $script:ExportDir    = Join-Path ([System.IO.Path]::GetTempPath()) "CopyItemRoundTrip_$(Get-Random -Maximum 9999)"
     New-Item -ItemType Directory -Path $script:ExportDir -Force | Out-Null
 
     Get-PSDrive $script:TargetDrive -ErrorAction Stop | Out-Null

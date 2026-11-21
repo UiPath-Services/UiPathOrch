@@ -78,7 +78,7 @@ BeforeAll {
     # Copy-Item creates a child folder under dst named after src; the effective
     # path of the copy is dst/<srcRootName>.
     $script:DstCopyRoot = "$($script:DstRoot)\_xt_src_$rnd"
-    $script:ExportDir   = Join-Path $env:TEMP "CopyItemXT_$rnd"
+    $script:ExportDir   = Join-Path ([System.IO.Path]::GetTempPath()) "CopyItemXT_$rnd"
     $script:SeededFolderUser = $null
 
     # Copy-Item with every error fatal except one: the source's signed-in user, which the server

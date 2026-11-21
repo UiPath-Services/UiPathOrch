@@ -31,8 +31,8 @@ BeforeAll {
     $global:ConfirmPreference = 'None'
 
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
-    $null = mkdir $script:RootA
-    $null = mkdir $script:RootB
+    $null = New-Item -ItemType Directory -Path $script:RootA
+    $null = New-Item -ItemType Directory -Path $script:RootB
 
     New-OrchQueue -Path $script:RootA -Name $script:Same    -Description 'd1' | Out-Null
     New-OrchQueue -Path $script:RootA -Name $script:Changed -Description 'd1' | Out-Null
@@ -43,8 +43,8 @@ BeforeAll {
     New-OrchQueue -Path $script:RootB -Name $script:OnlyB   -Description 'y'  | Out-Null
 
     # Mirrored subfolders for the -Recurse test: same-named queue, differing Description.
-    $null = mkdir $script:SubA
-    $null = mkdir $script:SubB
+    $null = New-Item -ItemType Directory -Path $script:SubA
+    $null = New-Item -ItemType Directory -Path $script:SubB
     New-OrchQueue -Path $script:SubA -Name $script:SubQ -Description 'd1' | Out-Null
     New-OrchQueue -Path $script:SubB -Name $script:SubQ -Description 'd2' | Out-Null
 }

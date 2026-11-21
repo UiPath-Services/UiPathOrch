@@ -37,16 +37,19 @@ BeforeAll {
     $script:NoSecretAssets = [bool]((Get-OrchPSDrive | Where-Object Name -eq $script:Drive).ApiVersion -lt 20 -and (Get-OrchPSDrive | Where-Object Name -eq $script:Drive).ApiVersion)  # see BeforeDiscovery
     $script:RefDrive = if ($env:UIPATHORCH_TEST_REF_DRIVE) { $env:UIPATHORCH_TEST_REF_DRIVE } else { 'Orch1' }
     $script:Prefix = "PesterTest_$(Get-Random -Maximum 9999)_"
-    $script:RootFolder = "${script:Drive}:\${script:Prefix}Root"
-    $script:SubFolder = "${script:RootFolder}\${script:Prefix}Sub"
-    $script:CopyFolder = "${script:RootFolder}\${script:Prefix}Copy"
+    # The OS path separator, as UiPathOrch emits paths with it (Orch2:/... on Linux):
+    # paths the tests compare output against are built with it, so they hold on any OS.
+    $script:Sep = [System.IO.Path]::DirectorySeparatorChar
+    $script:RootFolder = "${script:Drive}:$($script:Sep)${script:Prefix}Root"
+    $script:SubFolder = "${script:RootFolder}$($script:Sep)${script:Prefix}Sub"
+    $script:CopyFolder = "${script:RootFolder}$($script:Sep)${script:Prefix}Copy"
     # SmokeFolder hosts the "does not throw" smoke tests for Task / Trigger /
     # Job / Queue / Asset / Bucket / Process. Kept separate from RootFolder
     # because RootFolder has TestUserA bolted on with a restricted role,
     # which downgrades the current user's access — smoke tests want a
     # pristine folder.
-    $script:SmokeFolder = "${script:Drive}:\${script:Prefix}Smoke"
-    $script:TempDir = Join-Path $env:TEMP "PesterTest_$(Get-Random -Maximum 9999)"
+    $script:SmokeFolder = "${script:Drive}:$($script:Sep)${script:Prefix}Smoke"
+    $script:TempDir = Join-Path ([System.IO.Path]::GetTempPath()) "PesterTest_$(Get-Random -Maximum 9999)"
 
     # PerRobot / UserValue test fixtures — pick any existing DirectoryUser on
     # the tenant other than the current user. Creating users / assigning to
@@ -99,10 +102,10 @@ BeforeAll {
     New-Item -Path $script:TempDir -ItemType Directory -Force | Out-Null
 
     # Create test folder hierarchy
-    $null = mkdir $script:RootFolder
-    $null = mkdir $script:SubFolder
-    $null = mkdir $script:CopyFolder
-    $null = mkdir $script:SmokeFolder
+    $null = New-Item -ItemType Directory -Path $script:RootFolder
+    $null = New-Item -ItemType Directory -Path $script:SubFolder
+    $null = New-Item -ItemType Directory -Path $script:CopyFolder
+    $null = New-Item -ItemType Directory -Path $script:SmokeFolder
 
     # Assign test user/machine to test folder (best practice for PerRobot UserValues)
     Add-OrchFolderUser -Type $script:TestUserType -UserName $script:TestUserA `
@@ -167,9 +170,9 @@ Describe 'Folder' {
         Pop-Location
     }
 
-    It 'mkdir creates a nested folder and rmdir removes it' {
+    It 'New-Item creates a nested folder and Remove-Item removes it' {
         $nested = "${script:SubFolder}\${script:Prefix}Nested"
-        $null = mkdir $nested
+        $null = New-Item -ItemType Directory -Path $nested
         Test-Path $nested | Should -BeTrue
         Remove-Item $nested -Recurse -Force
         Test-Path $nested | Should -BeFalse
@@ -727,7 +730,7 @@ Describe 'Asset' {
 Describe 'AssetLink' {
     BeforeAll {
         $script:LinkAssetName = "${script:Prefix}LinkAsset"
-        $script:LinkSubFolder = "${script:RootFolder}\${script:Prefix}LinkSub"
+        $script:LinkSubFolder = "${script:RootFolder}$($script:Sep)${script:Prefix}LinkSub"
 
         # Dedicated folder hierarchy for the link tests so we don't entangle
         # with the broader Asset Describe's fixtures.
@@ -1535,7 +1538,7 @@ Describe 'Asset Performance' -Tag 'Performance' -Skip:$NoSecretAssets {
 Describe 'QueueLink' {
     BeforeAll {
         $script:LinkQueueName = "${script:Prefix}LinkQueue"
-        $script:QueueLinkSubFolder = "${script:RootFolder}\${script:Prefix}QueueLinkSub"
+        $script:QueueLinkSubFolder = "${script:RootFolder}$($script:Sep)${script:Prefix}QueueLinkSub"
 
         $null = New-Item -Path $script:QueueLinkSubFolder -ItemType Directory -ErrorAction SilentlyContinue
 
@@ -1619,7 +1622,7 @@ Describe 'QueueLink' {
 Describe 'BucketLink' {
     BeforeAll {
         $script:LinkBucketName = "${script:Prefix}LinkBucket"
-        $script:BucketLinkSubFolder = "${script:RootFolder}\${script:Prefix}BucketLinkSub"
+        $script:BucketLinkSubFolder = "${script:RootFolder}$($script:Sep)${script:Prefix}BucketLinkSub"
 
         $null = New-Item -Path $script:BucketLinkSubFolder -ItemType Directory -ErrorAction SilentlyContinue
 
@@ -2996,7 +2999,7 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         try {
             # Pre-clean in case a previous run left the sibling around.
             Remove-Item -LiteralPath $siblingFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
-            $null = mkdir $siblingFolder -ErrorAction Stop
+            $null = New-Item -ItemType Directory -Path $siblingFolder -ErrorAction Stop
             Clear-OrchCache
 
             # Confirm TestUserA is NOT inherited / assigned in the sibling folder.
@@ -3059,7 +3062,7 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         $siblingFolder = "${script:Drive}:\${script:Prefix}Reg_R16_Sibling"
         try {
             Remove-Item -LiteralPath $siblingFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
-            $null = mkdir $siblingFolder -ErrorAction Stop
+            $null = New-Item -ItemType Directory -Path $siblingFolder -ErrorAction Stop
             Clear-OrchCache
 
             # Confirm TestUserA is NOT inherited / assigned in the sibling folder
@@ -3130,7 +3133,7 @@ Describe 'Regression-2026-05' -Tag 'Regression' {
         $siblingFolder = "${script:Drive}:\${script:Prefix}Reg_WhatIfSibling"
         try {
             Remove-Item -LiteralPath $siblingFolder -Recurse -Force -Confirm:$false -ErrorAction SilentlyContinue
-            $null = mkdir $siblingFolder -ErrorAction Stop
+            $null = New-Item -ItemType Directory -Path $siblingFolder -ErrorAction Stop
             Clear-OrchCache
 
             # Source asset in RootFolder with Global value + per-User UserValue for TestUserA.
@@ -3244,8 +3247,8 @@ $user,DirectoryUser,,
         # round-trip compatible with Add-OrchCalendarDate. The legacy path
         # additionally emits a deprecation warning.
         $calName = "${script:Prefix}Reg_R14_Cal"
-        $csvLegacy = Join-Path $env:TEMP "ut-cal-legacy-$(Get-Random).csv"
-        $csvCanonical = Join-Path $env:TEMP "ut-cal-canonical-$(Get-Random).csv"
+        $csvLegacy = Join-Path ([System.IO.Path]::GetTempPath()) "ut-cal-legacy-$(Get-Random).csv"
+        $csvCanonical = Join-Path ([System.IO.Path]::GetTempPath()) "ut-cal-canonical-$(Get-Random).csv"
         try {
             $todayUtc = [DateTime]::UtcNow.Date
             Add-OrchCalendarDate -Name $calName -ExcludedDate $todayUtc -ErrorAction Stop | Out-Null
@@ -3293,11 +3296,11 @@ Describe 'B2B EmailAddress matching - FolderUser/User cmdlets' -Tag 'B2BRegressi
             Where-Object { $_.Type -ne 'Tenant' -and $_.Name -ne 'Automation User' } |
             Select-Object -First 1).Name
 
-        $script:B2BFolder = "${script:Drive}:\${script:Prefix}B2B"
-        $script:B2BDest = "${script:Drive}:\${script:Prefix}B2BDest"
+        $script:B2BFolder = "${script:Drive}:$($script:Sep)${script:Prefix}B2B"
+        $script:B2BDest = "${script:Drive}:$($script:Sep)${script:Prefix}B2BDest"
         if ($script:HasB2BMismatch) {
-            $null = mkdir $script:B2BFolder -ErrorAction SilentlyContinue
-            $null = mkdir $script:B2BDest -ErrorAction SilentlyContinue
+            $null = New-Item -ItemType Directory -Path $script:B2BFolder -ErrorAction SilentlyContinue
+            $null = New-Item -ItemType Directory -Path $script:B2BDest -ErrorAction SilentlyContinue
         }
     }
 
@@ -3512,7 +3515,7 @@ Describe 'H1 Phase 1: SingleCachePerOrganization per-drive Path via ShallowClone
             Set-ItResult -Skipped -Because 'PmLicenseInventory returned null on this drive.'
             return
         }
-        $inv.Path | Should -Be "${script:Drive}:\" `
+        $inv.Path | Should -Be "${script:Drive}:$($script:Sep)" `
             -Because 'the per-emit ShallowClone carries the drive-local Path (drive.NameColonSeparator)'
         $inv.PSObject.Properties['Path'].MemberType | Should -Be 'Property' `
             -Because 'Path is a plain DTO property again (per-emit ShallowClone), not a PSObject NoteProperty'
@@ -3535,7 +3538,7 @@ Describe 'H1 Phase 1: SingleCachePerOrganization per-drive Path via ShallowClone
             Set-ItResult -Skipped -Because 'Get-PmUser returned no users on this drive.'
             return
         }
-        $users.Path | Should -Be "${script:Drive}:\" `
+        $users.Path | Should -Be "${script:Drive}:$($script:Sep)" `
             -Because 'the per-emit ShallowClone carries the drive-local Path'
         $users.PSObject.Properties['Path'].MemberType | Should -Be 'Property' `
             -Because 'Path is a plain property on the cloned PmUser, not a PSObject NoteProperty'

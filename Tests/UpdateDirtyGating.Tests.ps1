@@ -44,7 +44,7 @@ BeforeAll {
     $global:ConfirmPreference = 'None'
 
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
-    $null = mkdir $script:RootFolder
+    $null = New-Item -ItemType Directory -Path $script:RootFolder
 
     # A package on the test drive itself, for Process / ProcessVersion / Trigger / ApiTrigger.
     $script:PackageId = (Get-OrchPackage -Path "${script:Drive}:\" | Select-Object -First 1).Id

@@ -34,10 +34,10 @@ BeforeAll {
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
     $script:PackageId = (Get-OrchPackage -Path "${script:Drive}:\" -ErrorAction SilentlyContinue | Select-Object -First 1).Id
 
-    $null = mkdir $script:RootA
-    $null = mkdir $script:RootB
-    $null = mkdir $script:SubA
-    $null = mkdir $script:SubB
+    $null = New-Item -ItemType Directory -Path $script:RootA
+    $null = New-Item -ItemType Directory -Path $script:RootB
+    $null = New-Item -ItemType Directory -Path $script:SubA
+    $null = New-Item -ItemType Directory -Path $script:SubB
 
     if ($script:PackageId) {
         foreach ($f in $script:RootA, $script:RootB, $script:SubA, $script:SubB) {
@@ -141,8 +141,8 @@ Describe 'Compare-OrchTrigger and a queue trigger cron' {
         $script:QTrig  = "${script:Prefix}QTrig"
         $script:TTrig  = "${script:Prefix}TTrig"
 
-        $null = mkdir $script:QRootA
-        $null = mkdir $script:QRootB
+        $null = New-Item -ItemType Directory -Path $script:QRootA
+        $null = New-Item -ItemType Directory -Path $script:QRootB
         foreach ($f in $script:QRootA, $script:QRootB) {
             New-OrchProcess -Id $script:PackageId -Name $script:Proc -Path $f | Out-Null
             New-OrchQueue -Path $f -Name $script:QName | Out-Null
@@ -166,7 +166,7 @@ Describe 'Compare-OrchTrigger and a queue trigger cron' {
         $script:QSubA = "$($script:QRootA)\Sub"
         $script:QSubB = "$($script:QRootB)\Sub"
         foreach ($f in $script:QSubA, $script:QSubB) {
-            $null = mkdir $f
+            $null = New-Item -ItemType Directory -Path $f
             New-OrchProcess -Id $script:PackageId -Name $script:Proc -Path $f | Out-Null
             New-OrchQueue -Path $f -Name $script:QName | Out-Null
             New-OrchTrigger -Path $f -Name $script:QTrig -ReleaseName $script:Proc `

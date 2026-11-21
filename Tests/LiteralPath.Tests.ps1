@@ -118,7 +118,7 @@ Describe 'PSPath resolution against a live drive' -Tag 'Integration' {
     }
 
     It 'dir | Select PSPath | Export-Csv | Import-Csv preserves PSPath and binds it to -LiteralPath' {
-        $csv = Join-Path $env:TEMP "lp_roundtrip_$(Get-Random).csv"
+        $csv = Join-Path ([System.IO.Path]::GetTempPath()) "lp_roundtrip_$(Get-Random).csv"
         try {
             $script:Folder | Select-Object PSPath | Export-Csv $csv -NoTypeInformation
             $row = Import-Csv $csv

@@ -39,7 +39,7 @@ BeforeAll {
     }
 
     function script:Get-WhatIfLines([scriptblock]$Action) {
-        $tf = Join-Path $env:TEMP "wi_$([guid]::NewGuid().ToString('N')).txt"
+        $tf = Join-Path ([System.IO.Path]::GetTempPath()) "wi_$([guid]::NewGuid().ToString('N')).txt"
         Start-Transcript -Path $tf -Force | Out-Null
         try { & $Action } finally { Stop-Transcript | Out-Null }
         $lines = @(Get-Content $tf | Where-Object { $_ -match 'What if:' })
@@ -119,7 +119,7 @@ Describe 'Several sources into one new name, as on the file system' {
     }
 
     It 'matches what the file system does with the same commands' {
-        $t = Join-Path $env:TEMP "zzNN_fs_$PID"
+        $t = Join-Path ([System.IO.Path]::GetTempPath()) "zzNN_fs_$PID"
         New-Item $t -ItemType Directory -Force | Out-Null
         try {
             foreach ($n in 'A1', 'A2', 'W1', 'W2') { New-Item "$t\$n" -ItemType Directory | Out-Null }

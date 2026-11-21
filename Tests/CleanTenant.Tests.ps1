@@ -379,7 +379,7 @@ Describe 'Buckets' {
     }
 
     It 'Export-OrchBucketItem -Recurse downloads everything (the Celine repro)' {
-        $dest = Join-Path $env:TEMP "PesterBucket_$(Get-Random -Maximum 99999)"
+        $dest = Join-Path ([System.IO.Path]::GetTempPath()) "PesterBucket_$(Get-Random -Maximum 99999)"
         try {
             New-Item -ItemType Directory -Path $dest | Out-Null
             Export-OrchBucketItem -Path $script:Root -Recurse -Destination $dest
@@ -436,7 +436,7 @@ Describe 'Tenant entities' {
 
 Describe 'CSV round-trip' {
     BeforeAll {
-        $script:TmpCsv = Join-Path $env:TEMP "PesterCsv_$(Get-Random -Maximum 99999).csv"
+        $script:TmpCsv = Join-Path ([System.IO.Path]::GetTempPath()) "PesterCsv_$(Get-Random -Maximum 99999).csv"
     }
 
     AfterAll {
