@@ -37,9 +37,9 @@ Facilitate tenant migrations by copying various entities between tenants efficie
 |---|---|---|---|---|
 | Orchestrator, tenant entities (libraries, packages, credential stores, roles, users, machines, calendars, webhooks) | Yes | Yes | Yes: `copy OldOrch:\ NewOrch:\` | The API never returns secrets (passwords, client secrets), so they are re-entered after a copy. |
 | Orchestrator, folders and folder entities (processes, assets, queues, buckets, triggers, test sets, …) | Yes | Yes | Yes: `copy -Recurse OldOrch:\ NewOrch:\` | Queue items and bucket files are copied by their own cmdlets; event triggers are not copied. |
-| Jobs, logs, audit logs | Yes | Jobs: start, stop, restart | No | |
+| Jobs, logs, audit logs | Yes | Jobs: start, stop, restart, resume | No | |
 | Organization: local users, groups, robot accounts, external applications | Yes | Yes | Yes, to another organization: `Copy-PmUser`, `Copy-PmGroup`, `Copy-PmRobotAccount`, `Copy-PmExternalApplication` | Directory (AD / Entra ID) users are not created; they come from the identity provider. |
-| Organization: tenants and their services | Yes | Yes: create, update, enable, disable, remove, restore; add, remove, enable, disable services | No | Automation Cloud and Automation Suite only. |
+| Organization: tenants and their services | Yes | Yes: create, update, enable, disable, remove, restore; add, remove, enable, disable services | No | Automation Cloud and Automation Suite only. Automation Cloud refuses a restore. |
 | Licenses (organization and tenant) | Yes | Allocation to users, groups and tenants; runtimes per machine | No | |
 | Document Understanding | Yes: projects, extractors, document types, classifiers, roles, users | Role assignments of users only | No | |
 | Test Manager | Yes: projects, requirements, test cases and steps, test sets, executions, settings, permissions | Yes: projects, requirements, test cases and steps, test sets, assignments | Yes: `copy Orch1Tm:\PRJ Orch2Tm:\`, `Copy-TmTestCase` and its kin | Custom fields, attachments, executions, defects and linked automation are not copied. |
@@ -52,7 +52,7 @@ See the [Cmdlet Reference](docs/04-CmdletReference.md) for every cmdlet and the
 ## Installation
 
 ### Prerequisites
-- PowerShell 7.4.2 or later (running the latest 7.4.x patch is recommended — older 7.4 patches carry known PowerShell-runtime security fixes)
+- PowerShell 7.4.2 or later, on Windows, Linux or macOS (run the latest patch of your PowerShell release: earlier patches lack PowerShell-runtime security fixes)
 - UiPath Orchestrator API access with appropriate OAuth scopes
 
 ### Install from PowerShell Gallery
@@ -134,7 +134,7 @@ UiPathOrch works with AI agents through [PowerShell.MCP](https://www.powershellg
 
 ## Headless / CI Use
 
-In non-interactive environments (GitHub Actions, other CI runners, containers, scheduled jobs), the default first-import behavior — creating a template config file and opening it in Notepad — is undesirable. Set the `UIPATHORCH_SUPPRESS_CONFIG_CREATION` environment variable to `1` to skip both, then mount drives directly with `New-OrchPSDrive` so no config file is needed.
+In non-interactive environments (GitHub Actions, other CI runners, containers, scheduled jobs), the default first-import behavior — creating a template config file and, on Windows, opening it in Notepad — is undesirable. Set the `UIPATHORCH_SUPPRESS_CONFIG_CREATION` environment variable to `1` to skip both, then mount drives directly with `New-OrchPSDrive` so no config file is needed.
 
 ```yaml
 # GitHub Actions example
@@ -155,7 +155,7 @@ In non-interactive environments (GitHub Actions, other CI runners, containers, s
 
 Notes:
 
-- A **confidential application** (`-AppId` + `-AppSecret`, OAuth `client_credentials` grant) is the recommended auth for CI. PKCE requires an interactive browser and cannot be used headlessly. Personal Access Tokens (`-AccessToken`) work but tie the pipeline to an individual user and inherit that user's full permission set, so prefer a confidential app per pipeline with the minimum OAuth scopes required.
+- A **confidential application** (`-AppId` + `-AppSecret`, OAuth `client_credentials` grant) is the recommended auth for CI. PKCE needs a person to sign in through a browser, so it cannot run unattended (on a server without a desktop, such as over SSH, it prints the sign-in URL to open in a browser elsewhere). Personal Access Tokens (`-AccessToken`) work but tie the pipeline to an individual user and inherit that user's full permission set, so prefer a confidential app per pipeline with the minimum OAuth scopes required.
 - Pass secrets via `env:` rather than inline command arguments so GitHub Actions log masking covers them and they don't appear in command echoes.
 - For on-premises Orchestrator or self-hosted Automation Suite that isn't reachable from GitHub-hosted runners, use a self-hosted runner inside the network where the deployment is accessible.
 - For ad-hoc API calls in CI (e.g., calling an endpoint with no dedicated cmdlet), use `Invoke-OrchApi` rather than extracting the bearer token. It reuses the drive's authenticated session, so the access token never leaves the module — no risk of leaking a live token into pipeline logs:
