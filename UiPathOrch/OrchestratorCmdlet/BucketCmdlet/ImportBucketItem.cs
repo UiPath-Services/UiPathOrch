@@ -53,7 +53,13 @@ public class ImportBucketItemCmdlet : OrchestratorPSCmdlet
             ReturnSpecialDirectories = false,
         };
 
-        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        // Duplicates are the same FILE named twice (-Source a.txt, -Source ./a.txt), so paths
+        // compare as the file system does. Case-insensitively on Linux, Case.TXT and case.txt --
+        // two files there -- were one, and the second was dropped without a word (seen
+        // 2026-11-21 on RHEL 8.5). Windows and macOS file systems ignore case by default.
+        var seen = new HashSet<string>(OperatingSystem.IsWindows() || OperatingSystem.IsMacOS()
+            ? StringComparer.OrdinalIgnoreCase
+            : StringComparer.Ordinal);
         var rows = new List<(string filePath, string destination, string bucketName)>();
 
         foreach (var input in Source ?? Array.Empty<string>())
