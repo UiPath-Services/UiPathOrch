@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
@@ -50,7 +49,7 @@ public class OpenJobCmdlet : OrchestratorPSCmdlet
                 }
 
                 string endPoint = $"{drive.OrchAPISession._base_url}/orchestrator_/jobs(sidepanel:sidepanel/jobs/{job!.Key}/details)?fid={folder!.Id ?? 0}";
-                Process.Start(new ProcessStartInfo(endPoint) { UseShellExecute = true });
+                BrowserLauncher.Open(endPoint, WriteWarning, msg => WriteInformation(msg, ["PSHOST"]));
             }
         }
     }

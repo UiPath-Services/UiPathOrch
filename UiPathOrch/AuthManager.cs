@@ -1054,7 +1054,7 @@ internal class OrchestratorAuthManager
 
     // X11 or Wayland is what xdg-open needs to show a browser on Linux and the BSDs.
     internal static bool HasGraphicalSession(string? display, string? waylandDisplay)
-        => !string.IsNullOrEmpty(display) || !string.IsNullOrEmpty(waylandDisplay);
+        => BrowserLauncher.HasGraphicalSession(display, waylandDisplay);
 
     // What to do when the browser has to be opened by hand. The redirect goes to the
     // loopback listener on THIS machine, so a browser on another machine only completes

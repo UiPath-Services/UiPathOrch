@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Management.Automation;
 using UiPath.PowerShell.Completer;
 using UiPath.PowerShell.Core;
@@ -44,7 +43,7 @@ public class EditProcessCmdlet : OrchestratorPSCmdlet
                 foreach (var release in releases)
                 {
                     string endpoint = $"{drive.OrchAPISession._base_url}/orchestrator_/processes/{release.Id}/edit?fid={folder.Id ?? 0}";
-                    Process.Start(new ProcessStartInfo(endpoint) { UseShellExecute = true });
+                    BrowserLauncher.Open(endpoint, WriteWarning, msg => WriteInformation(msg, ["PSHOST"]));
                 }
             }
             catch (OrchException ex)

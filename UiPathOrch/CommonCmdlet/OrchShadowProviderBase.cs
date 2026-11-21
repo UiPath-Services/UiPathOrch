@@ -1,5 +1,4 @@
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.Management.Automation;
 using System.Management.Automation.Provider;
 using System.Text.Json;
@@ -267,7 +266,7 @@ public abstract class OrchShadowProviderBase<TDrive, TProject> : NavigationCmdle
         {
             var project = GetProject(path);
             string endpoint = BuildBrowseUrl(drive, project);
-            Process.Start(new ProcessStartInfo(endpoint) { UseShellExecute = true });
+            BrowserLauncher.Open(endpoint, WriteWarning, msg => WriteInformation(msg, ["PSHOST"]));
         }
     }
 

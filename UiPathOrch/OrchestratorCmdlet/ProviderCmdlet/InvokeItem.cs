@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using UiPath.PowerShell.Entities;
 
 namespace UiPath.PowerShell.Core;
@@ -35,6 +34,6 @@ public partial class OrchProvider
             endpoint += $"fid={folder.Id}";
         }
 
-        Process.Start(new ProcessStartInfo(endpoint) { UseShellExecute = true });
+        BrowserLauncher.Open(endpoint, WriteWarning, msg => WriteInformation(msg, ["PSHOST"]));
     }
 }
