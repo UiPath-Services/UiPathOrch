@@ -23,7 +23,9 @@ perform through the web interface.
 ### Key Features
 
 - Mounts Orchestrator tenants as PSDrives, so you can navigate folders with
-  `dir`, `cd`, and `mkdir`.
+  `dir`, `cd`, and `mkdir`. On Linux and macOS, `mkdir`, `md` and `rmdir` are
+  the system's own commands, which create and remove local directories: use
+  `New-Item -ItemType Directory` (`ni`) and `Remove-Item` (`rd`) there.
 - Mount multiple tenants simultaneously, each as a separate drive with a
   different account.
 - Supports Automation Cloud, self-hosted Automation Suite, and on-premises Orchestrator.
@@ -317,7 +319,7 @@ UiPathOrch configuration file.
   - `OR.XXX.Write` — Write only
 
 **Avoid granting unnecessary permissions.** For example, with `OR.Folders.Write`
-granted, `rmdir *` can remove all folders without confirmation. Without write
+granted, `rmdir *` (`Remove-Item *` on Linux and macOS) can remove all folders without confirmation. Without write
 permissions, destructive commands are safely rejected.
 
 ### Folder Access

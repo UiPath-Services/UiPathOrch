@@ -26,6 +26,8 @@ LONG DESCRIPTION
 KEY FEATURES
     - Mount multiple tenants simultaneously, each as a separate drive.
     - Navigate Orchestrator folder hierarchy with cd, dir, mkdir, rmdir.
+      On Linux and macOS, mkdir, md and rmdir are the system's own
+      commands: use New-Item -ItemType Directory and Remove-Item there.
     - Supports Automation Cloud and on-premises Orchestrator.
     - Bulk operations with wildcards and comma-separated values.
     - Cross-folder operations with -Path, -Recurse, and -Depth.
