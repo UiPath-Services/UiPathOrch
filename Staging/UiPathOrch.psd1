@@ -12,7 +12,7 @@
 RootModule = 'UiPathOrch.dll'
 
 # Version number of this module.
-ModuleVersion = '1.25.0'
+ModuleVersion = '1.26.0'
 
 # Supported PSEditions
 CompatiblePSEditions = @('Core')
@@ -553,6 +553,28 @@ PrivateData = @{
         # body don't have to be doubled. The closing '@ MUST be at column 0 (no leading
         # whitespace) — that's the only termination rule.
         ReleaseNotes = @'
+1.26.0
+
+Fixed: an expired or revoked personal access token fails at once, saying so and what to do, instead
+of signing in again without end; Ctrl+C stops a sign-in in progress. All operating systems.
+
+Fixed: Remove-OrchMachineClientSecret works on Automation Cloud again (Cloud answered 405 to its
+route).
+
+Fixed on Linux and macOS: New-/Update-OrchTrigger, Update-OrchMachine and New-OrchTestSetSchedule
+send the Windows time-zone id Orchestrator takes (the local zone converted, UTC when it has none),
+and -TimeZone takes and completes the Windows names; the IANA ids sent before were rejected.
+
+Fixed on Linux: where no browser can be opened (SSH), the sign-in prints its URL with the ssh -L line
+for the redirect port, and Invoke-Item, Open-OrchJob, Edit-OrchProcess and the shadow providers'
+links warn with the page's URL instead of returning without a word. Import-OrchBucketItem uploads
+files that differ only in case. Open-OrchLogLocation says where it went; the first run no longer
+moves the prompt while the module loads. Import-OrchConfig inside an Orch drive no longer fails on
+stepping out to C:.
+
+Fixed: Copy-Item with several paths reports each shared entity once for the whole command, instead
+of a false "copied as an independent asset" warning from an earlier path.
+
 1.25.0
 
 Added: tenants and their services can be managed: New-, Update-, Enable-, Disable-, Remove- and
@@ -708,28 +730,6 @@ starts one job on 20.10 to 22.10. Two on-premises drives no longer share organiz
 Get-OrchFolderMachineAccountMapping works on 22.10 and later. Copy-Item copies test data queues on
 standalone 24.10 and 25.10. Platform Management list cmdlets carry on past a drive without the
 feature.
-
-1.19.1
-
-Fixed: triggers keep their robot assignment on on-premises servers and Automation Suite. 1.19.0
-read it from an expanded trigger listing that only Automation Cloud fills, so there
-Get-OrchTriggerDetail showed no robots, -ExportCsv wrote none and Copy-Item copied triggers without
-them. Get-OrchTriggerDetail is back to one request per trigger.
-
-Fixed: Update-OrchTrigger no longer clears a trigger's robot assignment, which any update did since
-1.0.0.
-
-Fixed: a 401 from a service other than Orchestrator (Identity, for the Pm cmdlets on 20.10) no
-longer makes the whole drive fail until Import-OrchConfig.
-
-Fixed: copying the same process twice in a session keeps its entry point.
-
-Fixed on 20.10: exported trigger rows name their robots; a trigger priority is sent as Low / Normal
-/ High; Copy-Item copies local-account folder users; Add-OrchFolderUser -Type User / Robot assigns
-local accounts.
-
-Changed: Get-OrchProcessDetail reads entry point paths from the listing, one request fewer per
-process; Get-OrchTestSetDetail prints each folder as it arrives.
 '@
 
         # Prerelease string of this module

@@ -4,10 +4,50 @@ All notable changes to UiPathOrch are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.26.0] - 2026-11-22
+
+UiPathOrch works on Linux and macOS as it does on Windows: sign-in and pages that cannot open a
+browser show their URL, and time zones are ones Orchestrator accepts. An expired personal access
+token fails at once instead of retrying without end.
 
 ### Fixed
 
+- **An expired or revoked personal access token fails at once, with the cause.** Every request
+  answered 401, and the drive signed in again and again (hundreds of 401s in 40 seconds) without
+  ever returning; Ctrl+C did not stop it. Now the first 401 ends it with a message saying the
+  token has most likely expired or been revoked, and to put a new one in `AccessToken`
+  (`Edit-OrchConfig`) and run `Import-OrchConfig`. A 401 during a sign-in no longer starts
+  another sign-in, and Ctrl+C stops a sign-in in progress. All operating systems.
+- **`Remove-OrchMachineClientSecret` works on Automation Cloud again.** Cloud now answers 405 to
+  the route the cmdlet used, so no secret could be deleted there. It tries Cloud's route first and
+  falls back to the former one, which Orchestrator 24.10 and Automation Suite still take.
+- **Linux and macOS: time zones Orchestrator accepts.** Orchestrator takes Windows time-zone ids
+  only, but `New-OrchTrigger`, `Update-OrchTrigger`, `Update-OrchMachine` and
+  `New-OrchTestSetSchedule` sent the OS's IANA id by default (`Etc/UTC`, `Asia/Tokyo`), which was
+  rejected; `-TimeZone` was resolved against, and completed from, the IANA list, so a zone picked
+  from the completion failed too. The local zone is now converted to its Windows id (`UTC` when it
+  has none), and `-TimeZone` takes and completes the Windows names, as on Windows.
+- **Linux: the sign-in URL is shown where no browser can be opened.** Over SSH (no `DISPLAY` or
+  `WAYLAND_DISPLAY`) the PKCE sign-in failed with "no DISPLAY environment variable specified". It
+  now prints the authorize URL to open in any browser, with the `ssh -L` line that forwards the
+  redirect port when that browser runs on another machine. Because `xdg-open` cannot report a
+  browser that fails after it returns, the URL is shown on Linux after every launch.
+- **Linux: pages that cannot be opened in a browser show their URL.** `Invoke-Item` on a folder,
+  `Open-OrchJob`, `Edit-OrchProcess` and the links of the shadow providers returned without a
+  word when no browser could start, or let the raw error through when no handler was installed.
+  They now warn with the URL, and on Linux show it after a launch too.
+- **Linux: `Import-OrchBucketItem` uploads files that differ only in case.** `Case.txt` and
+  `case.txt` are two files on Linux, and the bucket keeps both, but the second was skipped as a
+  duplicate without a word.
+- **Linux: the module says where the prompt went.** `Open-OrchLogLocation` moved to the log folder
+  without saying so; it now says where it went and that `popd` returns. On the first run with no
+  configuration, importing the module no longer moves the prompt to the configuration folder; it
+  names the file to edit instead.
+- **`Import-OrchConfig` run from inside an Orch drive works on Linux and macOS.** It stepped out of
+  the drive to `C:`, which does not exist there; it now goes to the home folder.
+- **The documentation says how to make folders on Linux and macOS.** There `mkdir`, `md` and
+  `rmdir` are the system's commands, not PowerShell's, and do not reach an Orch drive; use
+  `New-Item -ItemType Directory` and `Remove-Item`.
 - **`Copy-Item` with several source paths no longer leaves a false "copied as an independent
   asset" warning.** Given an array or a wildcard, it copies one path after another, and a
   shared asset, queue or bucket is linked when the folder holding its counterpart is copied.
