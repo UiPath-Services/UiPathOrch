@@ -86,6 +86,9 @@ public class OpenOrchLogLocationCmdlet : OrchestratorPSCmdlet
             {
                 SessionState.Path.PushCurrentLocation("default");
                 SessionState.Path.SetLocation(logFolderPath);
+                // Say so, as Edit-OrchConfig does: a command named Open-* that silently moves
+                // the prompt elsewhere leaves the user wondering where they are.
+                WriteWarning($"Moved to the log folder '{logFolderPath}'. Use `popd` to return to the previous location.");
             }
             catch (Exception ex)
             {

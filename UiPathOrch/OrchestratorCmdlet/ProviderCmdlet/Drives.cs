@@ -558,19 +558,11 @@ public partial class OrchProvider
             }
             else
             {
-                // Cannot reliably launch an editor in Linux environments..
-                // Move to the directory and output a message prompting the user to edit. Run popd to return to the original directory.
-                string folder = System.IO.Path.GetDirectoryName(configFilePath);
-                string fileName = System.IO.Path.GetFileName(configFilePath);
-
-                // Would like to push the current location to the default stack,
-                // but it doesn't seem to work properly at this point..
-                //SessionState.Path.PushCurrentLocation("default");
-
-                // Move to the path where the config file is located
-                SessionState.Path.SetLocation(folder);
-
-                WriteWarning($"Please edit './{fileName}'. After saving your changes, run Import-OrchConfig to reload the configuration.");
+                // No editor can be launched reliably here, so say where the file is. Not by moving
+                // there: this runs while the module loads, where the location cannot be pushed, so
+                // the move could not be undone with popd and left the user in the module folder
+                // without saying how to get back. Edit-OrchConfig moves there and can push.
+                WriteWarning($"Please edit '{configFilePath}' (Edit-OrchConfig takes you to its folder). After saving your changes, run Import-OrchConfig to reload the configuration.");
             }
             return null;
         }
