@@ -33,11 +33,16 @@ internal static class HttpRetryPolicy
     //                       retried regardless of method (it means the request was rejected unprocessed).
     //   reauthUsed       — whether the one-shot 401 re-auth has already been spent.
     //   transientAttempt — how many transient (429/5xx) retries have already happened.
-    internal static Action Decide(HttpStatusCode status, bool isIdempotent, bool reauthUsed, int transientAttempt)
+    //   canReauth        — whether signing in again could change anything. False for a
+    //                       personal access token (re-applying it sends the same rejected
+    //                       token) and for a request made while the session is signing in
+    //                       (its re-auth re-enters the sign-in, which makes the same request:
+    //                       an expired PAT looped there, 254 requests in 40 s, Ctrl+C ignored).
+    internal static Action Decide(HttpStatusCode status, bool isIdempotent, bool reauthUsed, int transientAttempt, bool canReauth = true)
     {
         if (status == HttpStatusCode.Unauthorized)
         {
-            return reauthUsed ? Action.Return : Action.Reauth;
+            return reauthUsed || !canReauth ? Action.Return : Action.Reauth;
         }
         if (IsTransient(status) && transientAttempt < MaxTransientRetries
             && (status == HttpStatusCode.TooManyRequests || isIdempotent))

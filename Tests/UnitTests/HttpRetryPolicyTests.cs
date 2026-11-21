@@ -22,6 +22,38 @@ public class HttpRetryPolicyTests
             HttpRetryPolicy.Decide(HttpStatusCode.Unauthorized, isIdempotent: true, reauthUsed: true, transientAttempt: 0));
     }
 
+    [Fact]
+    public void Unauthorized_is_returned_when_signing_in_again_cannot_help()
+    {
+        // A personal access token (re-applied unchanged) or a request made during the sign-in
+        // itself (whose re-auth re-entered the sign-in: an expired PAT looped there, 254
+        // requests in 40 s). The first 401 is final.
+        Assert.Equal(HttpRetryPolicy.Action.Return,
+            HttpRetryPolicy.Decide(HttpStatusCode.Unauthorized, isIdempotent: true, reauthUsed: false, transientAttempt: 0, canReauth: false));
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.TooManyRequests)]
+    [InlineData(HttpStatusCode.ServiceUnavailable)]
+    public void Transient_retries_do_not_depend_on_canReauth(HttpStatusCode status)
+    {
+        Assert.Equal(HttpRetryPolicy.Action.Backoff,
+            HttpRetryPolicy.Decide(status, isIdempotent: true, reauthUsed: false, transientAttempt: 0, canReauth: false));
+    }
+
+    [Theory]
+    [InlineData("Orch1:", "[Orch1:] Orchestrator rejected")]
+    [InlineData(null, "Orchestrator rejected")]
+    public void Pat_rejection_names_the_cause_and_the_way_out(string? drive, string expectedStart)
+    {
+        var msg = OrchAPISession.BuildPatRejectedMessage(drive);
+
+        Assert.StartsWith(expectedStart, msg);
+        Assert.Contains("expired or been revoked", msg);
+        Assert.Contains("Edit-OrchConfig", msg);
+        Assert.Contains("Import-OrchConfig", msg);
+    }
+
     [Theory]
     [InlineData(HttpStatusCode.TooManyRequests)]    // 429
     [InlineData(HttpStatusCode.ServiceUnavailable)] // 503

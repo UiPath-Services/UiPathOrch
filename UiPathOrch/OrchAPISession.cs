@@ -176,6 +176,41 @@ public partial class OrchAPISession : IDisposable
     // is still 401). Reset only by rebuilding the session (Import-OrchConfig).
     private readonly AuthCircuitBreaker _authBreaker = new();
 
+    // True on the flow that is inside EnsureAuthenticated's sign-in or refresh. A request
+    // made from there (the API-version probe) must not re-authenticate on 401: that re-enters
+    // the sign-in, which makes the same request again -- unbounded, each level with its own
+    // reauth budget (see HttpRetryPolicy.Decide). AsyncLocal rather than [ThreadStatic] so it
+    // follows the flow across an await, and per session so another drive's call is unaffected.
+    private readonly AsyncLocal<bool> _signingIn = new();
+
+    // Marks this flow as signing in until disposed, restoring what it was (a nested sign-in
+    // leaves the outer one marked).
+    private SigningInScope EnterSigningIn() => new(_signingIn);
+
+    private readonly struct SigningInScope : IDisposable
+    {
+        private readonly AsyncLocal<bool> _flag;
+        private readonly bool _previous;
+
+        internal SigningInScope(AsyncLocal<bool> flag)
+        {
+            _flag = flag;
+            _previous = flag.Value;
+            flag.Value = true;
+        }
+
+        public void Dispose() => _flag.Value = _previous;
+    }
+
+    // A personal access token is used as given: nothing can re-issue it.
+    private bool IsPersonalAccessToken => !string.IsNullOrEmpty(_drive?._psDrive.AccessToken);
+
+    // What a rejected personal access token most likely means, and what to do.
+    internal static string BuildPatRejectedMessage(string? driveNameColon) =>
+        (string.IsNullOrEmpty(driveNameColon) ? "" : $"[{driveNameColon}] ") +
+        "Orchestrator rejected the personal access token (401 Unauthorized): it has most likely expired or been revoked. " +
+        "Create a new token, put it in AccessToken in the configuration file (Edit-OrchConfig), then run Import-OrchConfig.";
+
     // The single send chokepoint. SendOnce does the actual send + per-attempt logging;
     // this wrapper layers the retry / recovery policy on top (HttpRetryPolicy):
     //   - 401: clear auth, re-authenticate and retry ONCE. A token that merely expired or
@@ -236,7 +271,9 @@ public partial class OrchAPISession : IDisposable
             // POST (create/add) must not be retried on them (429 stays retryable -- it means the
             // request was rejected unprocessed). PATCH/PUT/DELETE/GET re-apply safely.
             bool isIdempotent = message.Method != HttpMethod.Post;
-            HttpRetryPolicy.Action action = HttpRetryPolicy.Decide(response.StatusCode, isIdempotent, reauthUsed, transientAttempt);
+            bool isPat = IsPersonalAccessToken;
+            HttpRetryPolicy.Action action = HttpRetryPolicy.Decide(response.StatusCode, isIdempotent, reauthUsed, transientAttempt,
+                canReauth: !isPat && !_signingIn.Value);
 
             if (action == HttpRetryPolicy.Action.Reauth)
             {
@@ -275,6 +312,19 @@ public partial class OrchAPISession : IDisposable
                     "Authentication failed: a newly issued access token was still rejected with 401. " +
                     "Verify the application / PAT scopes and validity, then run Import-OrchConfig.",
                     new HttpResponseMessage(HttpStatusCode.Unauthorized)));
+            }
+            // A personal access token cannot be re-issued: Orchestrator rejecting it is final, so
+            // latch now, with the likely cause, instead of after a pointless re-auth. Not for a
+            // request made while signing in (the API-version probe): the request that follows
+            // reports it, and the breaker would otherwise fire inside the sign-in itself.
+            else if (response.StatusCode == HttpStatusCode.Unauthorized && isPat && !_signingIn.Value
+                && IsOrchestratorApiRequest(message.RequestUri, _base_url_orchestrator))
+            {
+                _authBreaker.Trip(new HttpResponseException(BuildPatRejectedMessage(_drive?.NameColon),
+                    new HttpResponseMessage(HttpStatusCode.Unauthorized)));
+                response.Dispose();
+                // This call gets the same explanation as every later one, not a bare 401.
+                _authBreaker.ThrowIfTripped();
             }
             return response;
         }
@@ -665,7 +715,7 @@ public partial class OrchAPISession : IDisposable
             string? token = _authManager.RenewAccessToken();
             return string.IsNullOrEmpty(token) ? null : token;
         }
-        catch (Exception ex)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             System.Diagnostics.Debug.WriteLine($"Refresh-token renewal failed, signing in again: {ex.Message}");
             return null;
@@ -682,6 +732,7 @@ public partial class OrchAPISession : IDisposable
         {
             lock (_authLock)
             {
+                using var signingIn = EnterSigningIn();
                 if (!_isAuthenticated)
                 {
                     // Set initial token -- or, when this session already signed in through the
@@ -734,7 +785,9 @@ public partial class OrchAPISession : IDisposable
                                 ApiVersion = version;
                             }
                         }
-                        catch (Exception ex)
+                        // Not a cancellation: swallowing Ctrl+C here let the sign-in carry on,
+                        // so it never reached the command (see _signingIn).
+                        catch (Exception ex) when (ex is not OperationCanceledException)
                         {
                             // ApiVersion stays null; the rest of the session falls back to a
                             // conservative default. Surface it to Debug so it can be diagnosed
@@ -752,6 +805,7 @@ public partial class OrchAPISession : IDisposable
         {
             lock (_authLock)
             {
+                using var signingIn = EnterSigningIn();
                 if (now > new DateTime(Volatile.Read(ref _expiryTimeTicks)).AddMinutes(-5))
                 {
                     if (SetToken(RenewAccessToken()))
