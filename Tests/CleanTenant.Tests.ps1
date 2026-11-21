@@ -19,7 +19,7 @@
 
 BeforeAll {
     $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
-    $script:Root  = "${script:Drive}:\TestFixture_Base"
+    $script:Root  = "${script:Drive}:$([System.IO.Path]::DirectorySeparatorChar)TestFixture_Base"
 
     Get-PSDrive -Name $script:Drive -ErrorAction Stop | Out-Null
     if (-not (Test-Path $script:Root)) {
@@ -58,7 +58,7 @@ Describe 'Folders' {
     It 'supports navigation via Set-Location' {
         Push-Location "${script:Root}\Production"
         try {
-            (Get-Location).Path | Should -Be "${script:Root}\Production"
+            (Get-Location).Path | Should -Be "${script:Root}$([System.IO.Path]::DirectorySeparatorChar)Production"
             (Get-ChildItem).Count | Should -Be 2  # SubA + SubB
         } finally { Pop-Location }
     }
@@ -181,8 +181,8 @@ Describe 'Asset Links' {
         $triples = $links | ForEach-Object {
             [PSCustomObject]@{
                 Name = $_.Name
-                Path = ($_.Path -split '\\')[-1]
-                Link = ($_.Link -split '\\')[-1]
+                Path = ($_.Path -split '[\\/]')[-1]
+                Link = ($_.Link -split '[\\/]')[-1]
             }
         }
 
@@ -253,8 +253,8 @@ Describe 'Queue Links' {
         $triples = $links | ForEach-Object {
             [PSCustomObject]@{
                 Name = $_.Name
-                Path = ($_.Path -split '\\')[-1]
-                Link = ($_.Link -split '\\')[-1]
+                Path = ($_.Path -split '[\\/]')[-1]
+                Link = ($_.Link -split '[\\/]')[-1]
             }
         }
 
@@ -311,8 +311,8 @@ Describe 'Bucket Links' {
         $triples = $links | ForEach-Object {
             [PSCustomObject]@{
                 Name = $_.Name
-                Path = ($_.Path -split '\\')[-1]
-                Link = ($_.Link -split '\\')[-1]
+                Path = ($_.Path -split '[\\/]')[-1]
+                Link = ($_.Link -split '[\\/]')[-1]
             }
         }
 
@@ -611,7 +611,7 @@ Describe 'Cross-drive Copy-Item link reproduction' {
     # Helper duplicated locally so this Describe is self-contained even when
     # the same-drive Describe's script-scoped Get-LinkLeaves is out of scope.
     function script:Get-LinkLeavesXD($links) {
-        $links.Link | ForEach-Object { ($_ -split '\\')[-1] } | Sort-Object
+        $links.Link | ForEach-Object { ($_ -split '[\\/]')[-1] } | Sort-Object
     }
 
     # 2-link case (asset-host: Production → Dev, QA)

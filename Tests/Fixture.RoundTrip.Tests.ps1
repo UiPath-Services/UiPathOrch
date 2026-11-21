@@ -73,6 +73,9 @@ BeforeAll {
                     if ($null -ne $v) {
                         $v = $v -replace "^Orch1:", "<DRIVE>:"
                         $v = $v -replace "^${script:TargetDrive}:", "<DRIVE>:"
+                        # The fixture CSVs were captured on Windows ("\"); an export on Linux
+                        # or macOS writes the OS separator ("/"). Compare on one.
+                        $v = $v.Replace('/', '\')
                         $row.$col = $v
                     }
                 }

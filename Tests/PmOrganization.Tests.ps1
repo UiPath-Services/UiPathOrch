@@ -55,7 +55,7 @@ Describe 'Get-PmOrganization' {
         $org[0].name | Should -Not -BeNullOrEmpty
         $org[0].logicalName | Should -Not -BeNullOrEmpty
         $org[0].status | Should -Not -BeNullOrEmpty
-        $org[0].Path | Should -Be "${script:Drive}:\"
+        $org[0].Path | Should -Be "${script:Drive}:$([System.IO.Path]::DirectorySeparatorChar)"
     }
 
     It 'lists the organization-level services, portal among them' {
@@ -79,7 +79,7 @@ Describe 'Get-PmTenant' {
         foreach ($t in $script:Tenants) {
             $t.id | Should -Match '^[0-9a-f-]{36}$'
             $t.status | Should -Not -BeNullOrEmpty
-            $t.Path | Should -Be "${script:Drive}:\"
+            $t.Path | Should -Be "${script:Drive}:$([System.IO.Path]::DirectorySeparatorChar)"
         }
     }
 
@@ -119,7 +119,7 @@ Describe 'Get-PmTenantService' {
         foreach ($s in $script:Services) {
             $s.Tenant | Should -Be $script:DriveTenant
             $s.tenantId | Should -Be ($script:Tenants | Where-Object name -eq $script:DriveTenant).id
-            $s.Path | Should -Be "${script:Drive}:\"
+            $s.Path | Should -Be "${script:Drive}:$([System.IO.Path]::DirectorySeparatorChar)"
             $s.status | Should -Not -BeNullOrEmpty
         }
     }

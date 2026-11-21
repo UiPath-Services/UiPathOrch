@@ -22,10 +22,10 @@
 
 BeforeAll {
     $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
-    $script:Root  = "$($script:Drive):\"
+    $script:Root  = "$($script:Drive):$([System.IO.Path]::DirectorySeparatorChar)"
     $script:Top   = "_cc_$PID"
-    $script:TopPath = "$($script:Drive):\$($script:Top)"
-    $script:SubPath = "$($script:TopPath)\Sub"
+    $script:TopPath = "$($script:Drive):$([System.IO.Path]::DirectorySeparatorChar)$($script:Top)"
+    $script:SubPath = "$($script:TopPath)$([System.IO.Path]::DirectorySeparatorChar)Sub"
 
     New-Item -ItemType Directory -Path $script:TopPath -Force -ErrorAction Stop | Out-Null
     New-Item -ItemType Directory -Path $script:SubPath -Force -ErrorAction Stop | Out-Null

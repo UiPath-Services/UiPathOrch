@@ -20,7 +20,7 @@
 BeforeAll {
     $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
-    $script:Folder = "$($script:Drive):\zzTK_$($PID)"
+    $script:Folder = "$($script:Drive):$([System.IO.Path]::DirectorySeparatorChar)zzTK_$($PID)"
     $script:Title = "zzTK_$($PID)_task"
     New-Item $script:Folder -ItemType Folder -ErrorAction Stop 3>$null | Out-Null
 

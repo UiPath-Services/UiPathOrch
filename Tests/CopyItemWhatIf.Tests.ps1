@@ -37,9 +37,9 @@ BeforeAll {
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
 
     $rnd = $PID
-    $script:Src = "$($script:Drive):\zzWI_src_$rnd"
-    $script:Sub = "$($script:Src)\Sub1"
-    $script:Dst = "$($script:Drive):\zzWI_dst_$rnd"
+    $script:Src = "$($script:Drive):$([System.IO.Path]::DirectorySeparatorChar)zzWI_src_$rnd"
+    $script:Sub = "$($script:Src)$([System.IO.Path]::DirectorySeparatorChar)Sub1"
+    $script:Dst = "$($script:Drive):$([System.IO.Path]::DirectorySeparatorChar)zzWI_dst_$rnd"
     $script:Bkt = "zzWIBucket_$rnd"
 
     # Capture host-only -WhatIf lines (they never reach a pipeline / stream).

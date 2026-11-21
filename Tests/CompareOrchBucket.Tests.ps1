@@ -106,7 +106,7 @@ Describe 'Compare-OrchBucket' {
 
     It 'descends into mirrored subfolders with -Recurse' {
         $r = Compare-OrchBucket -Name * -Path $script:RootA -DifferencePath $script:RootB -Recurse
-        $sub = $r | Where-Object { $_.Name -eq $script:SubBkt -and $_.Path -like '*\Sub\*' }
+        $sub = $r | Where-Object { $_.Name -eq $script:SubBkt -and $_.Path -like "*$([System.IO.Path]::DirectorySeparatorChar)Sub$([System.IO.Path]::DirectorySeparatorChar)*" }
         $sub.SideIndicator | Should -Be '<>'
     }
 }

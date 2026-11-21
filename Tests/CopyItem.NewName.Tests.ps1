@@ -24,7 +24,7 @@ BeforeAll {
     $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
     $script:P = "zzNN_$($PID)_"
-    function script:F([string]$rel) { "$($script:Drive):\$($script:P)$rel" }
+    function script:F([string]$rel) { "$($script:Drive):$([System.IO.Path]::DirectorySeparatorChar)$($script:P)$($rel.Replace('\', [string][System.IO.Path]::DirectorySeparatorChar))" }
 
     foreach ($rel in 'S', 'S\Sub', 'W1', 'W2', 'A1', 'A2', 'Existing') {
         New-Item (F $rel) -ItemType Folder -ErrorAction Stop 3>$null | Out-Null

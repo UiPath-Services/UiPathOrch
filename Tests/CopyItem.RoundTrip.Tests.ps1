@@ -52,12 +52,12 @@
 
 BeforeAll {
     $script:TargetDrive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
-    $script:SrcRoot      = "${script:TargetDrive}:\TestFixture_Base"
+    $script:SrcRoot      = "${script:TargetDrive}:$([System.IO.Path]::DirectorySeparatorChar)TestFixture_Base"
     $script:DstFolderName = "TestFixture_RoundTrip_$PID"
-    $script:DstRoot      = "${script:TargetDrive}:\$($script:DstFolderName)"
+    $script:DstRoot      = "${script:TargetDrive}:$([System.IO.Path]::DirectorySeparatorChar)$($script:DstFolderName)"
     # Copy-Item creates a child folder under dst named after src. Effective
     # path of the copy is dst/<srcRootName>.
-    $script:DstCopyRoot  = "$($script:DstRoot)\TestFixture_Base"
+    $script:DstCopyRoot  = "$($script:DstRoot)$([System.IO.Path]::DirectorySeparatorChar)TestFixture_Base"
     $script:ExportDir    = Join-Path ([System.IO.Path]::GetTempPath()) "CopyItemRoundTrip_$(Get-Random -Maximum 9999)"
     New-Item -ItemType Directory -Path $script:ExportDir -Force | Out-Null
 

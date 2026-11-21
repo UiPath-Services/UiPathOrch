@@ -99,7 +99,7 @@ Describe 'PSPath resolution against a live drive' -Tag 'Integration' {
     }
 
     It 'Get-Item and dir emit the same drive-qualified PSPath' {
-        $script:Folder.PSPath | Should -Match ([regex]::Escape("::$($script:OrchDrive.Name):\"))
+        $script:Folder.PSPath | Should -Match ([regex]::Escape("::$($script:OrchDrive.Name):$([System.IO.Path]::DirectorySeparatorChar)"))
         (Get-Item $script:Folder.FullName).PSPath | Should -Be $script:Folder.PSPath
     }
 

@@ -35,7 +35,7 @@ BeforeAll {
     $script:Drive = if ($env:UIPATHORCH_TEST_DRIVE) { $env:UIPATHORCH_TEST_DRIVE } else { 'Orch2' }
     Get-PSDrive $script:Drive -ErrorAction Stop | Out-Null
 
-    $script:DrivePrefix = "${script:Drive}:\"
+    $script:DrivePrefix = "${script:Drive}:$([System.IO.Path]::DirectorySeparatorChar)"
     $script:Prefix = "ZZPesterRT_$(Get-Random -Maximum 99999)"
     $script:Modern  = "${script:DrivePrefix}${script:Prefix}_Modern"
     $script:Classic = "${script:DrivePrefix}${script:Prefix}_Classic"
@@ -107,7 +107,7 @@ Describe 'dir -ExportCsv | Import-Csv | New-Item folder round-trip' {
         $script:AfterWipe.Keys.Count | Should -Be 0 -Because 'the export+wipe setup must clear the tree so the re-import is what recreates it'
         # And the original tree was actually built with the expected members.
         $script:Before.Keys | Should -Contain "$($script:Prefix)_Modern"
-        $script:Before.Keys | Should -Contain "$($script:Prefix)_Modern\Fin[ance]\Child"
+        $script:Before.Keys | Should -Contain "$($script:Prefix)_Modern$([System.IO.Path]::DirectorySeparatorChar)Fin[ance]$([System.IO.Path]::DirectorySeparatorChar)Child"
     }
 
     It 'reproduces every folder (structure, incl. wildcard names and nesting under a [..] parent)' {
@@ -123,7 +123,7 @@ Describe 'dir -ExportCsv | Import-Csv | New-Item folder round-trip' {
     }
 
     It 'preserves Description, including on a folder nested under a [..]-named parent' {
-        $script:After["$($script:Prefix)_Modern\Fin[ance]\Child"].Description | Should -Be 'nested under bracket'
+        $script:After["$($script:Prefix)_Modern$([System.IO.Path]::DirectorySeparatorChar)Fin[ance]$([System.IO.Path]::DirectorySeparatorChar)Child"].Description | Should -Be 'nested under bracket'
         foreach ($rel in $script:Before.Keys) {
             $script:After[$rel].Description | Should -Be $script:Before[$rel].Description -Because "Description of '$rel' should round-trip"
         }

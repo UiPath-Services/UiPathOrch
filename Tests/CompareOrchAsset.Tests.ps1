@@ -101,8 +101,8 @@ Describe 'Compare-OrchAsset name-match mode' {
 
     It 'exposes single-sided Path / DifferencePath' {
         $changed = $script:Result | Where-Object Name -eq $script:Changed
-        $changed.Path           | Should -BeLike "*${script:Prefix}A\*"
-        $changed.DifferencePath | Should -BeLike "*${script:Prefix}B\*"
+        $changed.Path           | Should -BeLike "*${script:Prefix}A$([System.IO.Path]::DirectorySeparatorChar)*"
+        $changed.DifferencePath | Should -BeLike "*${script:Prefix}B$([System.IO.Path]::DirectorySeparatorChar)*"
 
         ($script:Result | Where-Object Name -eq $script:OnlyA).DifferencePath | Should -BeNullOrEmpty
         ($script:Result | Where-Object Name -eq $script:OnlyB).Path           | Should -BeNullOrEmpty
@@ -125,7 +125,7 @@ Describe 'Compare-OrchAsset name-match mode' {
 
     It 'descends into mirrored subfolders with -Recurse' {
         $r = Compare-OrchAsset -Name * -Path $script:RootA -DifferencePath $script:RootB -Recurse
-        $sub = $r | Where-Object { $_.Name -eq $script:Sub -and $_.Path -like '*\Sub\*' }
+        $sub = $r | Where-Object { $_.Name -eq $script:Sub -and $_.Path -like "*$([System.IO.Path]::DirectorySeparatorChar)Sub$([System.IO.Path]::DirectorySeparatorChar)*" }
         $sub.SideIndicator | Should -Be '<>'
     }
 }
