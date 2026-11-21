@@ -1005,7 +1005,99 @@ internal class OrchestratorAuthManager
     // Edge InPrivate + a throwaway profile for full cookie isolation; on other
     // platforms (or when Edge is absent) falls back to the default browser so
     // sign-in still completes — the isolation just can't be honored there.
+    //
+    // Where no browser can be opened -- an SSH login to a Linux server, a container, WSL
+    // without WSLg -- the URL is written to the console instead, so the sign-in can be
+    // finished from a browser elsewhere. Before this, xdg-open failed with "no DISPLAY
+    // environment variable specified" and the cmdlet sat out the 3-minute timeout with
+    // the URL nowhere in sight (only in the log, and only when logging was enabled).
+    //
+    // On Linux and the BSDs the URL is written even when a browser was launched: xdg-open
+    // hands the URL on and returns before any browser has run, so a browser that fails
+    // afterwards -- ssh -X to a server that has none, where DISPLAY is set -- cannot be
+    // detected here. gh and az do the same. The URL carries no secret (see LogAuthorizeUrl);
+    // the code it leads to is useless without the code_verifier held in this process.
     private void LaunchSignInBrowser(string authUrl)
+    {
+        bool desktopOs = OperatingSystem.IsWindows() || OperatingSystem.IsMacOS();
+        if (!desktopOs
+            && !HasGraphicalSession(
+                System.Environment.GetEnvironmentVariable("DISPLAY"),
+                System.Environment.GetEnvironmentVariable("WAYLAND_DISPLAY")))
+        {
+            WriteManualSignInMessage(BuildManualSignInMessage(
+                authUrl, _drive._psDrive.RedirectUrl,
+                "No browser can be opened here: neither DISPLAY nor WAYLAND_DISPLAY is set."));
+            return;
+        }
+
+        try
+        {
+            StartSignInBrowser(authUrl);
+        }
+        catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or InvalidOperationException)
+        {
+            // No handler for http URLs (xdg-open missing, no default browser registered).
+            WriteManualSignInMessage(BuildManualSignInMessage(
+                authUrl, _drive._psDrive.RedirectUrl,
+                $"The browser could not be opened: {ex.Message}"));
+            return;
+        }
+
+        if (!desktopOs)
+        {
+            WriteManualSignInMessage(BuildManualSignInMessage(
+                authUrl, _drive._psDrive.RedirectUrl,
+                "A browser is being opened for the sign-in.", browserLaunched: true));
+        }
+    }
+
+    // X11 or Wayland is what xdg-open needs to show a browser on Linux and the BSDs.
+    internal static bool HasGraphicalSession(string? display, string? waylandDisplay)
+        => !string.IsNullOrEmpty(display) || !string.IsNullOrEmpty(waylandDisplay);
+
+    // What to do when the browser has to be opened by hand. The redirect goes to the
+    // loopback listener on THIS machine, so a browser on another machine only completes
+    // the sign-in through a forwarded port -- the ssh -L line says which one.
+    // browserLaunched: a browser was started but may never appear, so the URL is a fallback
+    // rather than the only way in.
+    internal static string BuildManualSignInMessage(string authUrl, string? redirectUrl, string reason, bool browserLaunched = false)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine();
+        sb.AppendLine(reason);
+        sb.AppendLine(browserLaunched
+            ? "If it does not appear, open this URL in a browser:"
+            : "To sign in, open this URL in a browser:");
+        sb.AppendLine();
+        sb.AppendLine("  " + authUrl);
+        sb.AppendLine();
+        if (Uri.TryCreate(redirectUrl, UriKind.Absolute, out var redirect) && redirect.IsLoopback)
+        {
+            sb.AppendLine($"After sign-in the browser is redirected to {redirectUrl}, which this machine is listening on.");
+            sb.AppendLine("If the browser runs on another machine, forward that port to this one first, for example:");
+            sb.AppendLine($"  ssh -L {redirect.Port}:localhost:{redirect.Port} <user>@<this machine>");
+        }
+        sb.Append("Waiting up to 3 minutes for the sign-in. Press Ctrl+C to cancel.");
+        return sb.ToString();
+    }
+
+    // Console.Error rather than WriteWarning: this runs inside the provider's auth path, which
+    // is not always on the pipeline thread (see WriteCancelNotice for the same choice), and
+    // the message must be on screen BEFORE the wait starts, not drained after it. A host with
+    // no console is a normal thing to be running in, hence the catch.
+    private static void WriteManualSignInMessage(string message)
+    {
+        try
+        {
+            Console.Error.WriteLine(message);
+        }
+        catch
+        {
+        }
+    }
+
+    private void StartSignInBrowser(string authUrl)
     {
         if (UseInPrivate && OperatingSystem.IsWindows())
         {

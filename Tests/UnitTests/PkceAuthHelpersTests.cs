@@ -125,6 +125,70 @@ public class PkceAuthHelpersTests
         Assert.DoesNotContain("code_challenge", url);
     }
 
+    // ---- HasGraphicalSession / BuildManualSignInMessage ----
+    // An SSH login to a Linux server has no X11/Wayland: xdg-open failed with "no DISPLAY
+    // environment variable specified" and the URL was nowhere on screen.
+
+    [Theory]
+    [InlineData(null, null, false)]
+    [InlineData("", "", false)]
+    [InlineData(":0", null, true)]
+    [InlineData("localhost:10.0", "", true)]   // ssh -X
+    [InlineData(null, "wayland-0", true)]
+    public void Graphical_session_needs_display_or_wayland(string? display, string? wayland, bool expected)
+        => Assert.Equal(expected, OrchestratorAuthManager.HasGraphicalSession(display, wayland));
+
+    [Fact]
+    public void Manual_sign_in_message_shows_the_url_and_the_port_to_forward()
+    {
+        var msg = OrchestratorAuthManager.BuildManualSignInMessage(
+            "https://id.example/connect/authorize?x=1",
+            "http://localhost:8085/Temporary_Listen_Addresses",
+            "No browser can be opened here.");
+
+        Assert.Contains("No browser can be opened here.", msg);
+        Assert.Contains("  https://id.example/connect/authorize?x=1" + Environment.NewLine, msg);
+        Assert.Contains("ssh -L 8085:localhost:8085 ", msg);
+        Assert.EndsWith("Press Ctrl+C to cancel.", msg);
+    }
+
+    [Fact]
+    public void Launched_browser_message_offers_the_url_as_a_fallback()
+    {
+        // ssh -X to a server without a browser: DISPLAY is set, xdg-open "succeeds", and no
+        // browser ever appears. The URL must still be on screen, worded as the way out.
+        var msg = OrchestratorAuthManager.BuildManualSignInMessage(
+            "https://id.example/a", "http://localhost:8085/x", "A browser is being opened.",
+            browserLaunched: true);
+
+        Assert.Contains("If it does not appear, open this URL in a browser:", msg);
+        Assert.DoesNotContain("To sign in, open this URL", msg);
+        Assert.Contains("  https://id.example/a" + Environment.NewLine, msg);
+        Assert.Contains("ssh -L 8085:localhost:8085 ", msg);
+    }
+
+    [Fact]
+    public void Unlaunched_browser_message_makes_the_url_the_way_in()
+    {
+        var msg = OrchestratorAuthManager.BuildManualSignInMessage(
+            "https://id.example/a", "http://localhost:8085/x", "No browser.");
+
+        Assert.Contains("To sign in, open this URL in a browser:", msg);
+        Assert.DoesNotContain("If it does not appear", msg);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("not a url")]
+    [InlineData("https://app.example.com/callback")]   // not loopback: forwarding would not help
+    public void No_port_forwarding_hint_without_a_loopback_redirect(string? redirectUrl)
+    {
+        var msg = OrchestratorAuthManager.BuildManualSignInMessage("https://id.example/a", redirectUrl, "r");
+
+        Assert.Contains("https://id.example/a", msg);
+        Assert.DoesNotContain("ssh -L", msg);
+    }
+
     // ---- ResolveNotificationLang ----
 
     [Theory]
