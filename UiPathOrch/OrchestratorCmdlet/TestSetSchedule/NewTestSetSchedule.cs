@@ -76,7 +76,7 @@ public class NewTestSetScheduleCmdlet : OrchestratorPSCmdlet
                 newSchedule.CronExpression ??= "0 0/1 * 1/1 * ? *";
 
                 newSchedule.AssignStringIfNotNullOrEmpty(TimeZoneId, (s, v) => s.TimeZoneId = v);
-                newSchedule.TimeZoneId ??= TimeZoneInfo.Local.Id;
+                newSchedule.TimeZoneId ??= OrchTimeZones.LocalId();
 
                 // Resolve CalendarName -> CalendarId (matches the New-OrchTrigger
                 // calendar binding behaviour).

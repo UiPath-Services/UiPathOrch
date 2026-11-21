@@ -1675,17 +1675,19 @@ internal class TimeZoneCompleter : OrchArgumentCompleter
     {
         var wp = CreateWPFromWordToComplete(wordToComplete);
 
-        foreach (var timeZone in TimeZoneInfo.GetSystemTimeZones()
-            .Where(t => wp.IsMatch(t.DisplayName)))
+        // The same list -TimeZone is resolved against (OrchTimeZones): on Linux/macOS the OS's
+        // own names resolve to IANA ids, which Orchestrator rejects, so offering them made every
+        // completion a failure there.
+        foreach (var (id, displayName) in OrchTimeZones.All().Where(z => wp.IsMatch(z.DisplayName)))
         {
-            string tiphelp = $"{timeZone.DisplayName} (Id = '{timeZone.Id}')";
-            yield return new CompletionResult(PathTools.EscapePSText(timeZone.DisplayName), timeZone.DisplayName, CompletionResultType.ParameterValue, tiphelp);
+            string tiphelp = $"{displayName} (Id = '{id}')";
+            yield return new CompletionResult(PathTools.EscapePSText(displayName), displayName, CompletionResultType.ParameterValue, tiphelp);
         }
     }
 }
 
 // Sister completer for parameters that bind to a TimeZoneInfo.Id value
-// (e.g. "Tokyo Standard Time" / "Asia/Tokyo"), not the human DisplayName.
+// (a Windows id such as "Tokyo Standard Time"), not the human DisplayName.
 // Use this on `-TimeZoneId`-named parameters; use TimeZoneCompleter on
 // `-TimeZone`-named ones that get resolved name→id at submit time.
 internal class TimeZoneIdCompleter : OrchArgumentCompleter
@@ -1703,12 +1705,8 @@ internal class TimeZoneIdCompleter : OrchArgumentCompleter
         // "Asia/Tokyo" are rejected with "not a valid windows time zone id"). On Windows
         // the live OS list already provides Windows ids; on Linux/macOS the OS list is
         // IANA, so fall back to the embedded Windows table so completions stay
-        // Orchestrator-valid cross-platform. See WindowsTimeZones.
-        IEnumerable<(string Id, string DisplayName)> zones = OperatingSystem.IsWindows()
-            ? TimeZoneInfo.GetSystemTimeZones().Select(t => (Id: t.Id, DisplayName: t.DisplayName))
-            : WindowsTimeZones.All;
-
-        foreach (var (id, displayName) in zones.Where(z => wp.IsMatch(z.Id) || wp.IsMatch(z.DisplayName)))
+        // Orchestrator-valid cross-platform. See OrchTimeZones.
+        foreach (var (id, displayName) in OrchTimeZones.All().Where(z => wp.IsMatch(z.Id) || wp.IsMatch(z.DisplayName)))
         {
             string tiphelp = $"{displayName} (Id = '{id}')";
             yield return new CompletionResult(PathTools.EscapePSText(id), id, CompletionResultType.ParameterValue, tiphelp);

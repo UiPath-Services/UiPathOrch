@@ -264,7 +264,7 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
                     // maintenance window in a time zone the caller did not ask for.
                     if (!tzProbe.AssignIdFromName(
                         maintenanceTimeZone,
-                        TimeZoneInfo.GetSystemTimeZones,
+                        OrchTimeZones.All,
                         e => e.DisplayName,
                         e => e.Id!,
                         (m, v) => m.TimezoneId = v,
@@ -471,7 +471,7 @@ public class UpdateMachineCmdlet : OrchestratorPSCmdlet
             // absent), then default to the local zone — matching the original resolution order.
             mw.AssignStringIfNotNull(input.MaintenanceTimeZoneId, (m, v) => m.TimezoneId = v);
             if (input.ResolvedTimezoneIdFromName is not null) mw.TimezoneId = input.ResolvedTimezoneIdFromName;
-            mw.TimezoneId ??= TimeZoneInfo.Local.Id;
+            mw.TimezoneId ??= OrchTimeZones.LocalId();
 
             // Include the window in the PATCH only when it actually changed.
             if (!OrchStringExtensions.MaintenanceWindowEquals(mwSource, mw))

@@ -264,7 +264,7 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
 
                 string? resolvedTimeZoneId = null; bool timeZoneResolved = false;
                 allResolved &= new ProcessSchedule().AssignIdFromName(
-                    TimeZone, TimeZoneInfo.GetSystemTimeZones, e => e.DisplayName, e => e.Id!,
+                    TimeZone, OrchTimeZones.All, e => e.DisplayName, e => e.Id,
                     (s, v) => { resolvedTimeZoneId = v; timeZoneResolved = true; }, this, target, "TimeZone");
 
                 if (!allResolved) continue;
@@ -390,7 +390,7 @@ public class UpdateTriggerCmdlet : OrchestratorPSCmdlet
                 postTrigger.RunAsMe ??= false;
                 postTrigger.StartProcessCron ??= "0 0/1 * 1/1 * ? *";
                 postTrigger.StartProcessCronDetails ??= $"{{\"advancedCron\":{System.Text.Json.JsonSerializer.Serialize(postTrigger.StartProcessCron ?? "")}}}";
-                postTrigger.TimeZoneId ??= TimeZoneInfo.Local.Id;
+                postTrigger.TimeZoneId ??= OrchTimeZones.LocalId();
                 postTrigger.UseCalendar = (postTrigger.CalendarId is not null);
                 if (postTrigger.SpecificPriorityValue is not null)
                 {

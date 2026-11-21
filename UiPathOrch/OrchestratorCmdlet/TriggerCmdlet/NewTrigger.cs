@@ -318,13 +318,13 @@ public class NewTriggerCmdlet : OrchestratorPSCmdlet
 
                 resolved &= schedule.AssignIdFromName(
                     TimeZone,
-                    TimeZoneInfo.GetSystemTimeZones,
+                    OrchTimeZones.All,
                     e => e.DisplayName,
                     e => e.Id!,
                     (s, v) => s.TimeZoneId = v,
                     this, target, "TimeZone");
 
-                schedule.TimeZoneId ??= TimeZoneInfo.Local.Id;
+                schedule.TimeZoneId ??= OrchTimeZones.LocalId();
                 #endregion
 
                 schedule.AssignDateTimeIfNotNull(StopProcessDate, (s, v) => s.StopProcessDate = v);
