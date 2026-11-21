@@ -757,8 +757,10 @@ Describe 'AssetLink' {
     }
 
     It 'Add-OrchAssetLink shares the asset to a target folder' {
-        Add-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName `
-            -Link $script:LinkSubFolder -Confirm:$false
+        . "$PSScriptRoot\Invoke-UntilFolderPermitted.ps1" {
+            Add-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName `
+                -Link $script:LinkSubFolder -Confirm:$false -ErrorAction Stop
+        }
         Clear-OrchCache -Path $script:RootFolder
 
         $links = Get-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName
@@ -802,12 +804,19 @@ Describe 'AssetLink' {
         $second = "${script:LinkSubFolder}_2"
         $null = New-Item -Path $second -ItemType Directory -ErrorAction SilentlyContinue
         try {
-            Add-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName `
-                -Link $script:LinkSubFolder, $second -Confirm:$false
-            Clear-OrchCache -Path $script:RootFolder
-
-            $links = Get-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName |
-                Sort-Object Link
+            . "$PSScriptRoot\Invoke-UntilFolderPermitted.ps1" {
+                Add-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName `
+                    -Link $script:LinkSubFolder, $second -Confirm:$false -ErrorAction Stop
+            }
+            # The new folder can be missing from the share list until the server lets the user see it.
+            $deadline = (Get-Date).AddSeconds(60)
+            while ($true) {
+                Clear-OrchCache -Path $script:RootFolder
+                $links = @(Get-OrchAssetLink -Path $script:RootFolder -Name $script:LinkAssetName |
+                    Sort-Object Link)
+                if ($links.Count -ge 2 -or (Get-Date) -ge $deadline) { break }
+                Start-Sleep -Seconds 3
+            }
             @($links).Count | Should -Be 2
             $links.Link     | Should -Contain $script:LinkSubFolder
             $links.Link     | Should -Contain $second
@@ -1560,8 +1569,10 @@ Describe 'QueueLink' {
     }
 
     It 'Add-OrchQueueLink shares the queue to a target folder' {
-        Add-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName `
-            -Link $script:QueueLinkSubFolder -Confirm:$false
+        . "$PSScriptRoot\Invoke-UntilFolderPermitted.ps1" {
+            Add-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName `
+                -Link $script:QueueLinkSubFolder -Confirm:$false -ErrorAction Stop
+        }
         Clear-OrchCache -Path $script:RootFolder
 
         $links = Get-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName
@@ -1598,12 +1609,19 @@ Describe 'QueueLink' {
         $second = "${script:QueueLinkSubFolder}_2"
         $null = New-Item -Path $second -ItemType Directory -ErrorAction SilentlyContinue
         try {
-            Add-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName `
-                -Link $script:QueueLinkSubFolder, $second -Confirm:$false
-            Clear-OrchCache -Path $script:RootFolder
-
-            $links = Get-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName |
-                Sort-Object Link
+            . "$PSScriptRoot\Invoke-UntilFolderPermitted.ps1" {
+                Add-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName `
+                    -Link $script:QueueLinkSubFolder, $second -Confirm:$false -ErrorAction Stop
+            }
+            # The new folder can be missing from the share list until the server lets the user see it.
+            $deadline = (Get-Date).AddSeconds(60)
+            while ($true) {
+                Clear-OrchCache -Path $script:RootFolder
+                $links = @(Get-OrchQueueLink -Path $script:RootFolder -Name $script:LinkQueueName |
+                    Sort-Object Link)
+                if ($links.Count -ge 2 -or (Get-Date) -ge $deadline) { break }
+                Start-Sleep -Seconds 3
+            }
             @($links).Count | Should -Be 2
             $links.Link     | Should -Contain $script:QueueLinkSubFolder
             $links.Link     | Should -Contain $second
@@ -1644,8 +1662,10 @@ Describe 'BucketLink' {
     }
 
     It 'Add-OrchBucketLink shares the bucket to a target folder' {
-        Add-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName `
-            -Link $script:BucketLinkSubFolder -Confirm:$false
+        . "$PSScriptRoot\Invoke-UntilFolderPermitted.ps1" {
+            Add-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName `
+                -Link $script:BucketLinkSubFolder -Confirm:$false -ErrorAction Stop
+        }
         Clear-OrchCache -Path $script:RootFolder
 
         $links = Get-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName
@@ -1682,12 +1702,19 @@ Describe 'BucketLink' {
         $second = "${script:BucketLinkSubFolder}_2"
         $null = New-Item -Path $second -ItemType Directory -ErrorAction SilentlyContinue
         try {
-            Add-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName `
-                -Link $script:BucketLinkSubFolder, $second -Confirm:$false
-            Clear-OrchCache -Path $script:RootFolder
-
-            $links = Get-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName |
-                Sort-Object Link
+            . "$PSScriptRoot\Invoke-UntilFolderPermitted.ps1" {
+                Add-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName `
+                    -Link $script:BucketLinkSubFolder, $second -Confirm:$false -ErrorAction Stop
+            }
+            # The new folder can be missing from the share list until the server lets the user see it.
+            $deadline = (Get-Date).AddSeconds(60)
+            while ($true) {
+                Clear-OrchCache -Path $script:RootFolder
+                $links = @(Get-OrchBucketLink -Path $script:RootFolder -Name $script:LinkBucketName |
+                    Sort-Object Link)
+                if ($links.Count -ge 2 -or (Get-Date) -ge $deadline) { break }
+                Start-Sleep -Seconds 3
+            }
             @($links).Count | Should -Be 2
             $links.Link     | Should -Contain $script:BucketLinkSubFolder
             $links.Link     | Should -Contain $second

@@ -397,7 +397,10 @@ Describe 'Copy-Item -Recurse cross-tenant leaves no stale destination queue cach
             # A queue shared by two folders needs the source server's queue-link API, which
             # 20.10 (API 11.1) does not have ("Not Found"); there is nothing to test there.
             try {
-                Add-OrchQueueLink -Path $script:StaleSrcA -Name xtSharedQueue -Link $script:StaleSrcB -ErrorAction Stop | Out-Null
+                # A folder created moments ago can be refused for a while ("permissions in folder").
+                . "$PSScriptRoot\Invoke-UntilFolderPermitted.ps1" {
+                    Add-OrchQueueLink -Path $script:StaleSrcA -Name xtSharedQueue -Link $script:StaleSrcB -ErrorAction Stop | Out-Null
+                }
             }
             catch {
                 if ("$($_.Exception.Message)" -notmatch 'Not Found') { throw }

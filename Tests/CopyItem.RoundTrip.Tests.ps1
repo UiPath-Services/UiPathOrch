@@ -222,6 +222,11 @@ BeforeAll {
 
 AfterAll {
     Pop-Location -ErrorAction SilentlyContinue
+    # Pop-Location returns to the previous location, but the target drive keeps DstRoot as
+    # its own current folder; once DstRoot is removed, a later test file in the same session
+    # that resolves a drive-relative path ("Orch2:") fails with "Cannot find path".
+    Push-Location "$($script:TargetDrive):\"
+    Pop-Location
     if (Test-Path $script:ExportDir) {
         Remove-Item $script:ExportDir -Recurse -Force -ErrorAction SilentlyContinue
     }
